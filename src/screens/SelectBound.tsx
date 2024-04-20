@@ -20,6 +20,8 @@ import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
+import { TOEI_OEDO_LINE_ID } from '../constants'
+import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import useStationList from '../hooks/useStationList'
@@ -79,12 +81,7 @@ const SelectBoundScreen: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState)
 
   const { loading, error, fetchInitialStation } = useStationList()
-  const {
-    isLoopLine,
-    isMeijoLine,
-    inboundStationsForLoopLine,
-    outboundStationsForLoopLine,
-  } = useLoopLine()
+  const { isLoopLine, isMeijoLine } = useLoopLine()
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds()
@@ -137,9 +134,15 @@ const SelectBoundScreen: React.FC = () => {
         }))
       }
 
+      const oedoLineTerminus =
+        direction === 'INBOUND' ? stations[stations.length - 1] : stations[0]
+
       setStationState((prev) => ({
         ...prev,
-        selectedBound: selectedStation,
+        selectedBound:
+          selectedLine?.id === TOEI_OEDO_LINE_ID
+            ? oedoLineTerminus
+            : selectedStation,
         selectedDirection: direction,
       }))
       navigation.navigate('Main')
@@ -203,12 +206,31 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, setNavigation, setStationState, stations, trainType]
   )
 
-  const normalLineDirectionText = useCallback((boundStations: Station[]) => {
-    if (isJapanese) {
-      return `${boundStations.map((s) => s.name)}方面`
-    }
-    return `for ${boundStations.map((s) => s.nameRoman).join('and')}`
-  }, [])
+  const normalLineDirectionText = useCallback(
+    (boundStations: Station[]) => {
+      if (
+        selectedLine?.id === TOEI_OEDO_LINE_ID &&
+        boundStations[1]?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID
+      ) {
+        if (isJapanese) {
+          return `${boundStations[0]?.name}経由 都庁前行`
+        }
+        return `for Tochomae via ${boundStations[0]?.nameRoman}`
+      }
+
+      if (isJapanese) {
+        return `${boundStations
+          .map((s) => s.name)
+          .slice(0, 2)
+          .join('・')}方面`
+      }
+      return `for ${boundStations
+        .slice(0, 2)
+        .map((s) => s.nameRoman)
+        .join(' and ')}`
+    },
+    [selectedLine?.id]
+  )
 
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {
@@ -216,24 +238,20 @@ const SelectBoundScreen: React.FC = () => {
 
       if (isJapanese) {
         if (direction === 'INBOUND') {
-          return `${directionName}(${inboundStationsForLoopLine
+          return `${directionName}(${inboundStations
             .map((s) => s.name)
             .join('・')}方面)`
         }
-        return `${directionName}(${outboundStationsForLoopLine
+        return `${directionName}(${outboundStations
           .map((s) => s.name)
           .join('・')}方面)`
       }
       if (direction === 'INBOUND') {
-        return `for ${inboundStationsForLoopLine
-          .map((s) => s.nameRoman)
-          .join(' and ')}`
+        return `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`
       }
-      return `for ${outboundStationsForLoopLine
-        .map((s) => s.nameRoman)
-        .join(' and ')}`
+      return `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`
     },
-    [inboundStationsForLoopLine, outboundStationsForLoopLine, selectedLine]
+    [inboundStations, outboundStations, selectedLine]
   )
 
   const renderButton: React.FC<RenderButtonProps> = useCallback(

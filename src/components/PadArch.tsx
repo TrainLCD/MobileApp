@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import Svg, { Path } from 'react-native-svg'
+import { Path, Svg } from 'react-native-svg'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
 import {
   MANY_LINES_THRESHOLD,
@@ -277,10 +277,12 @@ class PadArch extends React.PureComponent<Props, State> {
   componentDidUpdate(prevProps: Props): void {
     const { arrived, appState } = this.props
 
-    // 発車ごとにアニメーションをかける
-    if (arrived !== prevProps.arrived && appState === 'active') {
+    if (appState === 'active') {
       this.animated()
-      this.startSlidingAnimation()
+      // 発車ごとにアニメーションをかける
+      if (arrived !== prevProps.arrived) {
+        this.startSlidingAnimation()
+      }
     }
   }
 
@@ -441,7 +443,7 @@ class PadArch extends React.PureComponent<Props, State> {
           isEn={isEn}
         />
 
-        <Svg width={windowWidth} height={windowHeight}>
+        <Svg width={windowWidth} height={windowHeight} fill="transparent">
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
         </Svg>
@@ -451,6 +453,7 @@ class PadArch extends React.PureComponent<Props, State> {
             style={styles.animatedSurface}
             width={windowWidth}
             height={windowHeight}
+            fill="transparent"
           >
             <Path
               d={pathD1}
@@ -464,15 +467,17 @@ class PadArch extends React.PureComponent<Props, State> {
             style={styles.animatedSurface}
             width={windowWidth}
             height={windowHeight}
+            fill="transparent"
           >
             <Path d={pathD3} stroke={hexLineColor} strokeWidth={128} />
           </Svg>
         </Animated.View>
         <Animated.View
           style={[
-            arrived ? {} : { bottom: chevronBottom, opacity: chevronOpacity },
             styles.chevron,
-            arrived ? styles.chevronArrived : undefined,
+            arrived
+              ? styles.chevronArrived
+              : { bottom: chevronBottom, opacity: chevronOpacity },
           ]}
         >
           <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
@@ -539,4 +544,4 @@ class PadArch extends React.PureComponent<Props, State> {
   }
 }
 
-export default React.memo(PadArch)
+export default PadArch

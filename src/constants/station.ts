@@ -23,3 +23,15 @@ export const MEIJO_LINE_MAJOR_STATIONS_ID = [
   9951413, // 金山
   9951419, // 新瑞橋
 ]
+
+export const TOEI_OEDO_LINE_MAJOR_STATIONS_ID = [
+  9930101, // 都庁前
+  9930107, // 飯田橋
+  9930108, // 春日
+  9930113, // 両国
+  9930121, // 大門
+  9930124, // 六本木
+  9930138, // 光が丘
+]
+
+export const TOEI_OEDO_LINE_TOCHOMAE_STATION_ID = 9930101

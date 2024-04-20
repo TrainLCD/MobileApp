@@ -3,10 +3,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
+import { useBoundText } from '../hooks/useBoundText'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useLoopLine } from '../hooks/useLoopLine'
-import useLoopLineBound from '../hooks/useLoopLineBound'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
@@ -108,19 +108,22 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
 
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
   const [stationText, setStationText] = useState(station?.name || '')
-  const [boundText, setBoundText] = useState('TrainLCD')
   const { headerState } = useRecoilValue(navigationState)
   const { selectedBound, arrived } = useRecoilValue(stationState)
-  const loopLineBound = useLoopLineBound()
   const isLast = useIsNextLastStop()
   const trainType = useCurrentTrainType()
+  const boundStationNameList = useBoundText(true)
 
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
 
   const headerLangState = useMemo(
-    () => headerState.split('_')[1] as HeaderLangState,
+    () =>
+      headerState.split('_')[1]?.length
+        ? headerState.split('_')[1]
+        : ('JA' as HeaderLangState),
     [headerState]
   )
+  const boundText = boundStationNameList[headerLangState]
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
 
@@ -134,37 +137,6 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
   )
-
-  useEffect(() => {
-    if (!selectedBound) {
-      setBoundText('TrainLCD')
-      return
-    }
-    if (isLoopLine && !trainType) {
-      setBoundText(loopLineBound?.boundFor ?? '')
-      return
-    }
-    const selectedBoundName = (() => {
-      switch (headerLangState) {
-        case 'EN':
-          return selectedBound.nameRoman
-        case 'ZH':
-          return selectedBound.nameChinese
-        case 'KO':
-          return selectedBound.nameKorean
-        default:
-          return selectedBound.name
-      }
-    })()
-
-    setBoundText(selectedBoundName ?? '')
-  }, [
-    headerLangState,
-    isLoopLine,
-    loopLineBound?.boundFor,
-    selectedBound,
-    trainType,
-  ])
 
   useEffect(() => {
     if (!station) {
@@ -311,11 +283,11 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       case 'ZH':
         return ''
       case 'KO':
-        return isLoopLine ? '방면' : '행'
+        return isLoopLine || isPartiallyLoopLine ? '방면' : '행'
       default:
-        return isLoopLine ? '方面' : 'ゆき'
+        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき'
     }
-  }, [headerLangState, isLoopLine])
+  }, [headerLangState, isLoopLine, isPartiallyLoopLine])
 
   const boundContainerMarginTop = useMemo(() => {
     if (!isJO) {

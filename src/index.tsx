@@ -33,6 +33,11 @@ const options = {
   },
 }
 
+const updateLocationState = (location: Location.LocationObject) =>
+  useLocationStore.setState(() => ({
+    location,
+  }))
+
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   if (error) {
     console.error(error)
@@ -40,7 +45,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }): void => {
   }
   if (data) {
     const { locations } = data as { locations: Location.LocationObject[] }
-    useLocationStore.setState({ location: locations[0] })
+    updateLocationState(locations[0])
   }
 })
 
