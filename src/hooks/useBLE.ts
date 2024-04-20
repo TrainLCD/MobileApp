@@ -8,10 +8,10 @@ import {
   BLE_TARGET_SERVICE_UUID,
 } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
-import { Station } from '../gen/stationapi_pb'
+import { Station } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
-import useCurrentStation from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 import useTransferLines from './useTransferLines'
 
@@ -20,7 +20,7 @@ const manager = new BleManager()
 const useBLE = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState)
   const [device, setDevice] = useState<Device | null>(null)
-  const station = useCurrentStation()
+  const station = useRecoilValue(currentStationSelector({}))
   const nextStation = useNextStation()
   const transferAllLines = useTransferLines()
   const transferLines = transferAllLines
@@ -45,7 +45,7 @@ const useBLE = (): void => {
     [arrived, station]
   )
 
-  const getStationNameWithNumber = useCallback((s: Station.AsObject) => {
+  const getStationNameWithNumber = useCallback((s: Station) => {
     const stationNameR = s?.nameRoman
       ? s?.nameRoman
           .replaceAll('ō', 'o')
@@ -53,9 +53,7 @@ const useBLE = (): void => {
           .replaceAll('ū', 'u')
           .replaceAll('Ū', 'U')
       : ''
-    return `${stationNameR}\n${
-      s?.stationNumbersList[0]?.stationNumber ?? 'N/A'
-    }`
+    return `${stationNameR}\n${s?.stationNumbers[0]?.stationNumber ?? 'N/A'}`
   }, [])
 
   const payloadStr = useMemo(() => {
