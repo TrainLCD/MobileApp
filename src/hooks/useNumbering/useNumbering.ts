@@ -83,12 +83,12 @@ export const useNumbering = (
       priorCurrent === false // priorCurrentを特に指定していない時にデグレしないようにした
     ) {
       if (isJobanLineRapid) {
-        const jjNumber = nextStation?.lines.find((l) =>
-          l.station?.stationNumbers.some((num) => num.lineSymbol === 'JJ')
+        const jjNumber = nextStation?.stationNumbers.find(
+          (num) => num.lineSymbol === 'JJ'
         )
 
         if (jjNumber) {
-          // setStationNumber(jjNumber)
+          setStationNumber(jjNumber)
         }
       } else {
         setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
