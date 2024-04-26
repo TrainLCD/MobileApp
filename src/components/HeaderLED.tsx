@@ -141,9 +141,13 @@ const HeaderLED = () => {
   }, [selectedBound])
 
   const headerLangState = useMemo(
-    () => headerState.split('_')[1] as HeaderLangState,
+    () =>
+      headerState.split('_')[1]?.length
+        ? headerState.split('_')[1]
+        : ('JA' as HeaderLangState),
     [headerState]
   )
+
   const stationTextBlocks = useMemo(
     () =>
       headerLangState === 'JA' || headerLangState === 'KANA'
