@@ -4,7 +4,6 @@ import React, { useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { useLocationStore } from '../hooks/useLocationStore'
-import { useThreshold } from '../hooks/useThreshold'
 import powerSavingState from '../store/atoms/powerSaving'
 import Typography from './Typography'
 
@@ -33,7 +32,6 @@ const styles = StyleSheet.create({
 const DevOverlay: React.FC = () => {
   const location = useLocationStore((state) => state.location)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
-  const { approachingThreshold, arrivedThreshold } = useThreshold()
 
   const coordsSpeed =
     ((location?.coords.speed ?? 0) < 0 ? 0 : location?.coords.speed) ?? 0
@@ -64,11 +62,6 @@ const DevOverlay: React.FC = () => {
       <Typography style={styles.Typography}>
         Speed: {speedKMH}
         km/h
-      </Typography>
-
-      <Typography style={styles.Typography}>
-        Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
-        Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
 
       <Typography

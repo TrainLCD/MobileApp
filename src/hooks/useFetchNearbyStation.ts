@@ -32,15 +32,11 @@ export const useFetchNearbyStation = (): ((
         const { stations } = data
         setStation((prev) => ({
           ...prev,
-          station:
-            prev.station?.id !== stations[0]?.id ? stations[0] : prev.station,
+          station: stations[0],
         }))
         setNavigation((prev) => ({
           ...prev,
-          stationForHeader:
-            prev.stationForHeader?.id !== stations[0]?.id
-              ? stations[0]
-              : prev.stationForHeader,
+          stationForHeader: stations[0],
         }))
       }
     },

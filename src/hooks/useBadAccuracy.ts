@@ -1,18 +1,17 @@
 import { useMemo } from 'react'
 import { useLocationStore } from './useLocationStore'
-import { useThreshold } from './useThreshold'
 
 export const useBadAccuracy = (): boolean => {
   const location = useLocationStore((state) => state.location)
-  const { arrivedThreshold } = useThreshold()
+  const badAccuracyThreshold = 500
 
   return useMemo(() => {
     if (!location?.coords?.accuracy) {
       return false
     }
-    if ((location.coords.accuracy || 0) > arrivedThreshold) {
+    if ((location.coords.accuracy || 0) > badAccuracyThreshold) {
       return true
     }
     return false
-  }, [arrivedThreshold, location?.coords.accuracy])
+  }, [location?.coords.accuracy])
 }
