@@ -12,7 +12,7 @@ export const useTTSCache = () => {
   const cacheArray = useRef<TTSCache[]>([])
 
   const store = useCallback(
-    async (id: string, ja: TTSCacheData, en: TTSCacheData) => {
+    (id: string, ja: TTSCacheData, en: TTSCacheData) => {
       cacheArray.current = [
         ...cacheArray.current,
         {
