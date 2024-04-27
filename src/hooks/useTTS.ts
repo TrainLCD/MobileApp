@@ -163,13 +163,13 @@ export const useTTS = (): void => {
 
       const { id, pathJa, pathEn } = fetched
 
-      await speakFromPath(pathJa, pathEn)
-
-      await store(
+      store(
         id,
         { text: textJa, path: fetched.pathJa },
         { text: textEn, path: fetched.pathEn }
       )
+
+      await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
   )
@@ -215,7 +215,6 @@ export const useTTS = (): void => {
       }
     }
 
-    cleanup()
     return () => {
       cleanup()
     }
