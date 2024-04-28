@@ -1,12 +1,12 @@
 import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants'
-import useStationList from '../hooks/useStationList'
+import { useStationList } from '../hooks/useStationList'
 import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -23,8 +23,6 @@ const styles = StyleSheet.create({
 })
 
 const TrainTypeSettings: React.FC = () => {
-  const [loading, setLoading] = useState(false)
-
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
@@ -32,7 +30,7 @@ const TrainTypeSettings: React.FC = () => {
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const navigation = useNavigation()
-  const { fetchSelectedTrainTypeStations } = useStationList()
+  const { fetchTrainTypeStations, loading } = useStationList()
 
   const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
 
@@ -46,14 +44,15 @@ const TrainTypeSettings: React.FC = () => {
   )
 
   const onPressBack = useCallback(async () => {
-    setLoading(true)
-    await fetchSelectedTrainTypeStations()
-    setLoading(false)
+    if (!trainType) {
+      return
+    }
+    await fetchTrainTypeStations({ lineGroupId: trainType.groupId })
 
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [fetchSelectedTrainTypeStations, navigation])
+  }, [fetchTrainTypeStations, navigation, trainType])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
