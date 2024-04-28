@@ -1,32 +1,33 @@
 import { useMemo } from 'react'
+import { useRecoilValue } from 'recoil'
 import { APPROACHING_MAX_THRESHOLD, ARRIVED_MAX_THRESHOLD } from '../constants'
-import useAverageDistance from './useAverageDistance'
+import { currentLineSelector } from '../store/selectors/currentLine'
 
 export const useThreshold = () => {
-  const avgDistance = useAverageDistance()
+  const currentLine = useRecoilValue(currentLineSelector)
 
   const approachingThreshold = useMemo(() => {
-    if (!avgDistance) {
+    if (!currentLine) {
       return APPROACHING_MAX_THRESHOLD
     }
 
-    const threshold = avgDistance / 2
+    const threshold = currentLine.averageDistance / 2
     if (threshold > APPROACHING_MAX_THRESHOLD) {
       return APPROACHING_MAX_THRESHOLD
     }
     return threshold
-  }, [avgDistance])
+  }, [currentLine])
 
   const arrivedThreshold = useMemo(() => {
-    if (!avgDistance) {
+    if (!currentLine) {
       return ARRIVED_MAX_THRESHOLD
     }
-    const threshold = avgDistance / 4
+    const threshold = currentLine.averageDistance / 4.5
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD
     }
     return threshold
-  }, [avgDistance])
+  }, [currentLine])
 
   return { approachingThreshold, arrivedThreshold }
 }
