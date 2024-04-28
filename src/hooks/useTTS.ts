@@ -20,7 +20,7 @@ import useTTSText from './useTTSText'
 export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
-  const { selectedBound, arrived } = useRecoilValue(stationState)
+  const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
@@ -163,13 +163,13 @@ export const useTTS = (): void => {
 
       const { id, pathJa, pathEn } = fetched
 
-      await speakFromPath(pathJa, pathEn)
-
-      await store(
+      store(
         id,
         { text: textJa, path: fetched.pathJa },
         { text: textEn, path: fetched.pathEn }
       )
+
+      await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
   )
@@ -182,7 +182,6 @@ export const useTTS = (): void => {
         playingRef.current ||
         !enabled ||
         !isInternetAvailable ||
-        arrived ||
         prevTextJa === textJa ||
         prevTextEn === textEn
       ) {
@@ -195,15 +194,7 @@ export const useTTS = (): void => {
       })
     }
     speechAsync()
-  }, [
-    arrived,
-    enabled,
-    isInternetAvailable,
-    prevTTSText,
-    speech,
-    textEn,
-    textJa,
-  ])
+  }, [enabled, isInternetAvailable, prevTTSText, speech, textEn, textJa])
 
   useEffect(() => {
     const cleanup = async () => {
@@ -215,7 +206,6 @@ export const useTTS = (): void => {
       }
     }
 
-    cleanup()
     return () => {
       cleanup()
     }

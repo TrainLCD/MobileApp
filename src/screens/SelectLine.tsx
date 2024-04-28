@@ -22,6 +22,7 @@ import useGetLineMark from '../hooks/useGetLineMark'
 import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
@@ -53,7 +54,8 @@ const styles = StyleSheet.create({
 const SelectLineScreen: React.FC = () => {
   const location = useLocationStore((state) => state.location)
   const setLocation = useLocationStore((state) => state.setLocation)
-  const setNavigation = useSetRecoilState(navigationState)
+  const setStationState = useSetRecoilState(stationState)
+  const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const fetchStationFunc = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
@@ -66,16 +68,27 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      if (station) {
-        return
-      }
-
       const pos = await fetchCurrentPosition()
       if (!pos) {
         return
       }
       setLocation(pos)
-      await fetchStationFunc(pos)
+      const station =
+        (await fetchStationFunc({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        })) ?? null
+      setStationState((prev) => ({
+        ...prev,
+        station: prev.station?.id !== station?.id ? station : prev.station,
+      }))
+      setNavigationState((prev) => ({
+        ...prev,
+        stationForHeader:
+          prev.stationForHeader?.id !== station?.id
+            ? station
+            : prev.stationForHeader,
+      }))
     }
     init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,7 +132,7 @@ const SelectLineScreen: React.FC = () => {
 
   const handleLineSelected = useCallback(
     (line: Line): void => {
-      setNavigation((prev) => ({
+      setNavigationState((prev) => ({
         ...prev,
         trainType: line.station?.trainType ?? null,
         leftStations: [],
@@ -131,7 +144,7 @@ const SelectLineScreen: React.FC = () => {
       }))
       navigation.navigate('SelectBound')
     },
-    [navigation, setLineState, setNavigation]
+    [navigation, setLineState, setNavigationState]
   )
 
   const getLineMarkFunc = useGetLineMark()
@@ -185,14 +198,36 @@ const SelectLineScreen: React.FC = () => {
       return
     }
     setLocation(pos)
-    setNavigation((prev) => ({
+    setNavigationState((prev) => ({
       ...prev,
       stationForHeader: null,
       stationFromCoordinates: null,
     }))
 
-    await fetchStationFunc(pos)
-  }, [fetchCurrentPosition, fetchStationFunc, setLocation, setNavigation])
+    const station =
+      (await fetchStationFunc({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      })) ?? null
+
+    setStationState((prev) => ({
+      ...prev,
+      station: prev.station?.id !== station?.id ? station : prev.station,
+    }))
+    setNavigationState((prev) => ({
+      ...prev,
+      stationForHeader:
+        prev.stationForHeader?.id !== station?.id
+          ? station
+          : prev.stationForHeader,
+    }))
+  }, [
+    fetchCurrentPosition,
+    fetchStationFunc,
+    setLocation,
+    setNavigationState,
+    setStationState,
+  ])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
