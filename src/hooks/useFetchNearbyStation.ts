@@ -27,7 +27,7 @@ export const useFetchNearbyStation = () => {
   )
 
   const { trigger } = useSWRMutation(
-    '/app.grpc.trainlcd/getStationsByCoordinates',
+    '/app.trainlcd.grpc/getStationsByCoordinates',
     fetchStation
   )
 
