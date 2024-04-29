@@ -6,7 +6,6 @@ import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isDevApp } from '../utils/isDevApp'
 import useAnonymousUser from './useAnonymousUser'
 import useConnectivity from './useConnectivity'
@@ -18,21 +17,13 @@ export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
-  const currentStation = useRecoilValue(currentStationSelector({}))
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
   const { store, getByText } = useTTSCache()
-
   const ttsText = useTTSText(firstSpeechRef.current)
-  const prevStationId = usePrevious(currentStation?.groupId)
-  const isStationChanged = useMemo(
-    () => prevStationId !== currentStation?.groupId,
-    [currentStation?.groupId, prevStationId]
-  )
-
+  const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
-
   const isInternetAvailable = useConnectivity()
   const user = useAnonymousUser()
 
@@ -82,7 +73,7 @@ export const useTTS = (): void => {
 
     soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
-        soundEnRef.current?.unloadAsync()
+        await soundEnRef.current?.unloadAsync()
         playingRef.current = false
       }
     }
@@ -184,36 +175,39 @@ export const useTTS = (): void => {
   )
 
   useEffect(() => {
-    const speechAsync = async () => {
-      if (
-        playingRef.current ||
-        !enabled ||
-        !isInternetAvailable ||
-        isStationChanged
-      ) {
-        return
-      }
-
-      await speech({
-        textJa,
-        textEn,
-      })
+    if (
+      playingRef.current ||
+      !enabled ||
+      !isInternetAvailable ||
+      prevTextJa === textJa ||
+      prevTextEn === textEn
+    ) {
+      return
     }
-    speechAsync()
-  }, [enabled, isInternetAvailable, isStationChanged, speech, textEn, textJa])
+
+    speech({
+      textJa,
+      textEn,
+    })
+  }, [
+    enabled,
+    isInternetAvailable,
+    prevTextEn,
+    prevTextJa,
+    speech,
+    textEn,
+    textJa,
+  ])
 
   useEffect(() => {
-    const cleanup = () => {
-      if (!selectedBound) {
+    if (!selectedBound) {
+      const unload = async () => {
         firstSpeechRef.current = true
+        await soundJaRef.current?.unloadAsync()
+        await soundEnRef.current?.unloadAsync()
         playingRef.current = false
-        soundJaRef.current?.unloadAsync()
-        soundEnRef.current?.unloadAsync()
       }
-    }
-
-    return () => {
-      cleanup()
+      unload()
     }
   }, [selectedBound])
 }
