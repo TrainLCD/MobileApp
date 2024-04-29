@@ -2,11 +2,7 @@ import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import DeviceInfo from 'react-native-device-info'
-import {
-  DEV_TTS_API_URL,
-  LOCAL_TTS_API_URL,
-  PRODUCTION_TTS_API_URL,
-} from 'react-native-dotenv'
+import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
@@ -61,25 +57,32 @@ export const useTTS = (): void => {
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     firstSpeechRef.current = false
 
-    await soundJaRef.current?.unloadAsync()
-    await soundEnRef.current?.unloadAsync()
+    if (!soundJaRef.current) {
+      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
+      soundJaRef.current = soundJa
+    } else {
+      await soundJaRef.current?.loadAsync({ uri: pathJa })
+    }
+    if (!soundEnRef.current) {
+      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
+      soundEnRef.current = soundEn
+    } else {
+      await soundEnRef.current?.loadAsync({ uri: pathEn })
+    }
 
-    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-    soundJaRef.current = soundJa
-    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
-    soundEnRef.current = soundEn
-
-    await soundJa.playAsync()
+    await soundJaRef.current?.playAsync()
     playingRef.current = true
 
-    soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
+    soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundEn.playAsync()
+        await soundJaRef.current?.unloadAsync()
+        await soundEnRef.current?.playAsync()
       }
     }
 
-    soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+    soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
+        soundEnRef.current?.unloadAsync()
         playingRef.current = false
       }
     }
@@ -87,7 +90,7 @@ export const useTTS = (): void => {
 
   const ttsApiUrl = useMemo(() => {
     if (__DEV__ && DeviceInfo.isEmulatorSync()) {
-      return LOCAL_TTS_API_URL
+      return DEV_TTS_API_URL
     }
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL
   }, [])
@@ -200,12 +203,12 @@ export const useTTS = (): void => {
   }, [enabled, isInternetAvailable, isStationChanged, speech, textEn, textJa])
 
   useEffect(() => {
-    const cleanup = async () => {
+    const cleanup = () => {
       if (!selectedBound) {
         firstSpeechRef.current = true
         playingRef.current = false
-        await soundJaRef.current?.unloadAsync()
-        await soundEnRef.current?.unloadAsync()
+        soundJaRef.current?.unloadAsync()
+        soundEnRef.current?.unloadAsync()
       }
     }
 
