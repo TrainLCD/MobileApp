@@ -67,6 +67,8 @@ const DevOverlay: React.FC = () => {
       <Typography
         style={styles.Typography}
       >{`Power saving preset: ${powerSavingPreset}`}</Typography>
+
+      <Typography style={styles.Typography}>Processing Mode: Device</Typography>
     </View>
   )
 }
