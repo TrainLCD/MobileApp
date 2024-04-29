@@ -10,7 +10,6 @@ import {
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isDevApp } from '../utils/isDevApp'
 import useAnonymousUser from './useAnonymousUser'
 import useConnectivity from './useConnectivity'
@@ -22,21 +21,13 @@ export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
-  const currentStation = useRecoilValue(currentStationSelector({}))
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
   const { store, getByText } = useTTSCache()
-
   const ttsText = useTTSText(firstSpeechRef.current)
-  const prevStationId = usePrevious(currentStation?.groupId)
-  const isStationChanged = useMemo(
-    () => prevStationId !== currentStation?.groupId,
-    [currentStation?.groupId, prevStationId]
-  )
-
+  const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
-
   const isInternetAvailable = useConnectivity()
   const user = useAnonymousUser()
 
@@ -61,25 +52,32 @@ export const useTTS = (): void => {
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     firstSpeechRef.current = false
 
-    await soundJaRef.current?.unloadAsync()
-    await soundEnRef.current?.unloadAsync()
+    if (!soundJaRef.current) {
+      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
+      soundJaRef.current = soundJa
+    } else {
+      await soundJaRef.current?.loadAsync({ uri: pathJa })
+    }
+    if (!soundEnRef.current) {
+      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
+      soundEnRef.current = soundEn
+    } else {
+      await soundEnRef.current?.loadAsync({ uri: pathEn })
+    }
 
-    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-    soundJaRef.current = soundJa
-    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
-    soundEnRef.current = soundEn
-
-    await soundJa.playAsync()
+    await soundJaRef.current?.playAsync()
     playingRef.current = true
 
-    soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
+    soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundEn.playAsync()
+        await soundJaRef.current?.unloadAsync()
+        await soundEnRef.current?.playAsync()
       }
     }
 
-    soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+    soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
+        await soundEnRef.current?.unloadAsync()
         playingRef.current = false
       }
     }
@@ -181,36 +179,39 @@ export const useTTS = (): void => {
   )
 
   useEffect(() => {
-    const speechAsync = async () => {
-      if (
-        playingRef.current ||
-        !enabled ||
-        !isInternetAvailable ||
-        isStationChanged
-      ) {
-        return
-      }
-
-      await speech({
-        textJa,
-        textEn,
-      })
+    if (
+      playingRef.current ||
+      !enabled ||
+      !isInternetAvailable ||
+      prevTextJa === textJa ||
+      prevTextEn === textEn
+    ) {
+      return
     }
-    speechAsync()
-  }, [enabled, isInternetAvailable, isStationChanged, speech, textEn, textJa])
+
+    speech({
+      textJa,
+      textEn,
+    })
+  }, [
+    enabled,
+    isInternetAvailable,
+    prevTextEn,
+    prevTextJa,
+    speech,
+    textEn,
+    textJa,
+  ])
 
   useEffect(() => {
-    const cleanup = async () => {
-      if (!selectedBound) {
+    if (!selectedBound) {
+      const unload = async () => {
         firstSpeechRef.current = true
-        playingRef.current = false
         await soundJaRef.current?.unloadAsync()
         await soundEnRef.current?.unloadAsync()
+        playingRef.current = false
       }
-    }
-
-    return () => {
-      cleanup()
+      unload()
     }
   }, [selectedBound])
 }
