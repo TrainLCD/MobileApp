@@ -2,7 +2,11 @@ import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import DeviceInfo from 'react-native-device-info'
-import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
+import {
+  DEV_TTS_API_URL,
+  LOCAL_TTS_API_URL,
+  PRODUCTION_TTS_API_URL,
+} from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
@@ -81,7 +85,7 @@ export const useTTS = (): void => {
 
   const ttsApiUrl = useMemo(() => {
     if (__DEV__ && DeviceInfo.isEmulatorSync()) {
-      return DEV_TTS_API_URL
+      return LOCAL_TTS_API_URL
     }
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL
   }, [])
