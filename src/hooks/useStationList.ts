@@ -65,6 +65,20 @@ export const useStationList = (fetchAutomatically = true) => {
         const res = await grpcClient.getTrainTypesByStationId(req, {})
 
         const trainTypes = res.trainTypes ?? []
+        const localType = new TrainType({
+          id: 0,
+          typeId: 0,
+          groupId: 0,
+          name: '普通/各駅停車',
+          nameKatakana: '',
+          nameRoman: 'Local',
+          nameChinese: '慢车/每站停车',
+          nameKorean: '보통/각역정차',
+          color: '',
+          lines: [],
+          direction: TrainDirection.Both,
+          kind: TrainTypeKind.Default,
+        })
 
         // 普通種別が登録済み: 非表示
         // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
@@ -78,28 +92,14 @@ export const useStationList = (fetchAutomatically = true) => {
         ) {
           setNavigationState((prev) => ({
             ...prev,
-            fetchedTrainTypes: [
-              {
-                id: 0,
-                typeId: 0,
-                groupId: 0,
-                name: '普通/各駅停車',
-                nameKatakana: '',
-                nameRoman: 'Local',
-                nameChinese: '慢车/每站停车',
-                nameKorean: '보통/각역정차',
-                color: '',
-                lines: [],
-                direction: TrainDirection.Both,
-                kind: TrainTypeKind.Default,
-              },
-            ].map((tt) => new TrainType(tt)),
+            fetchedTrainTypes: [localType, ...trainTypes],
           }))
+          return trainTypes
         }
 
         setNavigationState((prev) => ({
           ...prev,
-          fetchedTrainTypes: [...prev.fetchedTrainTypes, ...trainTypes],
+          fetchedTrainTypes: trainTypes,
         }))
 
         return trainTypes
