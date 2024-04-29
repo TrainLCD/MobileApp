@@ -10,6 +10,7 @@ import {
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import { isDevApp } from '../utils/isDevApp'
 import useAnonymousUser from './useAnonymousUser'
 import useConnectivity from './useConnectivity'
@@ -21,13 +22,18 @@ export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
   const { selectedBound } = useRecoilValue(stationState)
+  const currentStation = useRecoilValue(currentStationSelector({}))
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
   const { store, getByText } = useTTSCache()
 
   const ttsText = useTTSText(firstSpeechRef.current)
-  const prevTTSText = usePrevious(ttsText)
+  const prevStationId = usePrevious(currentStation?.groupId)
+  const isStationChanged = useMemo(
+    () => prevStationId !== currentStation?.groupId,
+    [currentStation?.groupId, prevStationId]
+  )
 
   const [textJa, textEn] = ttsText
 
@@ -176,14 +182,11 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     const speechAsync = async () => {
-      const [prevTextJa, prevTextEn] = prevTTSText
-
       if (
         playingRef.current ||
         !enabled ||
         !isInternetAvailable ||
-        prevTextJa === textJa ||
-        prevTextEn === textEn
+        isStationChanged
       ) {
         return
       }
@@ -194,7 +197,7 @@ export const useTTS = (): void => {
       })
     }
     speechAsync()
-  }, [enabled, isInternetAvailable, prevTTSText, speech, textEn, textJa])
+  }, [enabled, isInternetAvailable, isStationChanged, speech, textEn, textJa])
 
   useEffect(() => {
     const cleanup = async () => {
