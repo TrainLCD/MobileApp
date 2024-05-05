@@ -4,9 +4,9 @@ import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import { isLEDSelector } from '../store/selectors/isLED'
 import useIntervalEffect from './useIntervalEffect'
-import useNextOperatorTrainTypeIsDifferent from './useNextOperatorTrainTypeIsDifferent'
 import useShouldHideTypeChange from './useShouldHideTypeChange'
 import useTransferLines from './useTransferLines'
+import { useTypeWillChange } from './useTypeWillChange'
 import useValueRef from './useValueRef'
 
 const useUpdateBottomState = (): { pause: () => void } => {
@@ -15,10 +15,8 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const bottomStateRef = useValueRef(bottomState)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
-  const nextOperatorTrainTypeIsDifferent = useNextOperatorTrainTypeIsDifferent()
-  const nextOperatorTrainTypeIsDifferentRef = useValueRef(
-    nextOperatorTrainTypeIsDifferent
-  )
+  const isTypeWillChange = useTypeWillChange()
+  const isTypeWillChangeRef = useValueRef(isTypeWillChange)
   const transferLines = useTransferLines()
   const isLEDThemeRef = useRef(isLEDTheme)
   const shouldHideTypeChange = useShouldHideTypeChange()
@@ -42,10 +40,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
             setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }))
             return
           }
-          if (
-            nextOperatorTrainTypeIsDifferentRef.current &&
-            !shouldHideTypeChangeRef.current
-          ) {
+          if (isTypeWillChangeRef.current && !shouldHideTypeChangeRef.current) {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
@@ -53,10 +48,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
           }
           break
         case 'TRANSFER':
-          if (
-            nextOperatorTrainTypeIsDifferentRef.current &&
-            !shouldHideTypeChangeRef.current
-          ) {
+          if (isTypeWillChangeRef.current && !shouldHideTypeChangeRef.current) {
             setNavigation((prev) => ({
               ...prev,
               bottomState: 'TYPE_CHANGE',
@@ -76,7 +68,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
       }
     }, [
       bottomStateRef,
-      nextOperatorTrainTypeIsDifferentRef,
+      isTypeWillChangeRef,
       setNavigation,
       transferLines.length,
     ]),

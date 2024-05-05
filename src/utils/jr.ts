@@ -27,6 +27,10 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
   const withoutJR = lines.filter((line: Line) => !isJRLine(line))
   const jrLines = lines.filter((line: Line) => isJRLine(line))
 
+  if (!withoutJR.length) {
+    return jrLines
+  }
+
   const jrLinesWithoutBT = jrLines.filter(
     (line: Line) => line.lineType !== LineType.BulletTrain
   )

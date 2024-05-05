@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -21,6 +21,8 @@ import {
   NEARBY_STATIONS_LIMIT,
   SEARCH_STATION_RESULT_LIMIT,
 } from 'react-native-dotenv'
+import useSWRImmutable from 'swr/immutable'
+import useSWRMutation from 'swr/mutation'
 import {
   GetStationByCoordinatesRequest,
   GetStationsByNameRequest,
@@ -102,14 +104,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const FakeStationSettings: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [foundStations, setFoundStations] = useState<Station[]>([])
-  const [dirty, setDirty] = useState(false)
-  const [byNameError, setByNameError] = useState<Error | null>(null)
-  const [byCoordinatesError, setByCoordinatesError] = useState<Error | null>(
-    null
-  )
-  const [loading, setLoading] = useState(false)
-
   const navigation = useNavigation()
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
@@ -118,7 +112,55 @@ const FakeStationSettings: React.FC = () => {
   const setLocation = useLocationStore((state) => state.setLocation)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
-  const prevQueryRef = useRef<string>()
+  const {
+    data: byCoordsData,
+    isLoading: isByCoordsLoading,
+    error: byCoordsError,
+  } = useSWRImmutable(
+    [
+      '/app.trainlcd.grpc/getStationsByCoords',
+      location?.coords.latitude,
+      location?.coords.longitude,
+    ],
+    async ([, latitude, longitude]) => {
+      if (!latitude || !longitude) {
+        return
+      }
+      const req = new GetStationByCoordinatesRequest({
+        latitude,
+        longitude,
+        limit: Number(NEARBY_STATIONS_LIMIT),
+      })
+
+      const res = await grpcClient.getStationsByCoordinates(req)
+      return res.stations
+    }
+  )
+  const {
+    data: byNameData,
+    isMutating: isByNameLoading,
+    trigger: fetchByName,
+    error: byNameError,
+  } = useSWRMutation(
+    [
+      '/app.trainlcd.grpc/getStationsByName',
+      query,
+      SEARCH_STATION_RESULT_LIMIT,
+    ],
+    async ([, query, limit]) => {
+      if (!query.length) {
+        return
+      }
+
+      const trimmedQuery = query.trim()
+      const req = new GetStationsByNameRequest({
+        stationName: trimmedQuery,
+        limit: Number(limit),
+      })
+      const res = await grpcClient.getStationsByName(req)
+      return res.stations
+    }
+  )
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -128,70 +170,18 @@ const FakeStationSettings: React.FC = () => {
     navigation.navigate('MainStack')
   }, [navigation])
 
-  const triggerChange = useCallback(async () => {
-    const trimmedQuery = query.trim()
-    const trimmedPrevQuery = prevQueryRef.current?.trim()
-    if (!trimmedQuery.length || trimmedQuery === trimmedPrevQuery) {
-      return
-    }
-
-    setDirty(true)
-    prevQueryRef.current = trimmedQuery
-
-    try {
-      setLoading(true)
-
-      const byNameReq = new GetStationsByNameRequest()
-      byNameReq.stationName = trimmedQuery
-      byNameReq.limit = Number(SEARCH_STATION_RESULT_LIMIT)
-      const byNameData = await grpcClient.getStationsByName(byNameReq)
-
-      if (byNameData?.stations) {
-        setFoundStations(byNameData?.stations?.filter((s) => !!s))
-      }
-      setLoading(false)
-    } catch (err) {
-      setByNameError(err as Error)
-      setLoading(false)
-    }
-  }, [query])
+  const handleSubmit = useCallback(() => fetchByName(), [fetchByName])
 
   useEffect(() => {
-    const fetchAsync = async () => {
-      if (!location?.coords) {
-        return
-      }
-      try {
-        setLoading(true)
-
-        const byCoordinatesReq = new GetStationByCoordinatesRequest()
-        byCoordinatesReq.latitude = location.coords.latitude
-        byCoordinatesReq.longitude = location.coords.longitude
-        byCoordinatesReq.limit = Number(NEARBY_STATIONS_LIMIT)
-        const byCoordinatesData = await grpcClient.getStationsByCoordinates(
-          byCoordinatesReq,
-          {}
-        )
-
-        if (byCoordinatesData?.stations) {
-          setFoundStations(byCoordinatesData.stations.filter((s) => !!s))
-        }
-        setLoading(false)
-      } catch (err) {
-        setByCoordinatesError(err as Error)
-        setLoading(false)
-      }
-    }
-
-    fetchAsync()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (byNameError || byCoordinatesError) {
+    if (byNameError || byCoordsError) {
       Alert.alert(translate('errorTitle'), translate('apiErrorText'))
     }
-  }, [byCoordinatesError, byNameError])
+  }, [byCoordsError, byNameError])
+
+  const foundStations = useMemo(
+    () => byNameData ?? byCoordsData ?? [],
+    [byCoordsData, byNameData]
+  )
 
   const handleStationPress = useCallback(
     (stationFromSearch: Station) => {
@@ -245,10 +235,10 @@ const FakeStationSettings: React.FC = () => {
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (e.nativeEvent.key === 'Enter') {
-        triggerChange()
+        handleSubmit()
       }
     },
-    [triggerChange]
+    [handleSubmit]
   )
 
   const onChange = useCallback(
@@ -259,7 +249,7 @@ const FakeStationSettings: React.FC = () => {
   )
 
   const ListEmptyComponent: React.FC = () => {
-    if (!dirty || loading) {
+    if (isByCoordsLoading || isByNameLoading) {
       return null
     }
 
@@ -297,7 +287,7 @@ const FakeStationSettings: React.FC = () => {
             }}
             placeholderTextColor={isLEDTheme ? '#fff' : undefined}
             onChange={onChange}
-            onSubmitEditing={triggerChange}
+            onSubmitEditing={handleSubmit}
             onKeyPress={onKeyPress}
           />
           <View
@@ -306,7 +296,7 @@ const FakeStationSettings: React.FC = () => {
               height: '65%',
             }}
           >
-            {loading ? (
+            {isByCoordsLoading || isByNameLoading ? (
               <ActivityIndicator size="large" />
             ) : (
               <FlatList

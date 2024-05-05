@@ -24,7 +24,7 @@ import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
-import useStationList from '../hooks/useStationList'
+import { useStationList } from '../hooks/useStationList'
 import { LineDirection, directionToDirectionName } from '../models/Bound'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -80,7 +80,7 @@ const SelectBoundScreen: React.FC = () => {
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
 
-  const { loading, error, fetchInitialStation } = useStationList()
+  const { loading, error, updateStations } = useStationList()
   const { isLoopLine, isMeijoLine } = useLoopLine()
   const {
     bounds: [inboundStations, outboundStations],
@@ -342,7 +342,7 @@ const SelectBoundScreen: React.FC = () => {
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={fetchInitialStation}
+        onRetryPress={updateStations}
       />
     )
   }
