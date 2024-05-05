@@ -20,11 +20,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-        env:
-          PRIVATE_KEY: ${{ secrets.FONTS_SSH_KEY }}
         with:
           submodules: recursive
-          ssh-key: $PRIVATE_KEY
+          ssh-key: ${{ secrets.SSH_KEY }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
