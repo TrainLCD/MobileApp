@@ -13,19 +13,12 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - name: Initialize id_rsa for Fonts
+      - uses: actions/checkout@v4
         env:
           PRIVATE_KEY: ${{ secrets.FONTS_SSH_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 700 ~/.ssh/id_rsa
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-      - uses: actions/checkout@v4
         with:
           submodules: recursive
+          ssh-key: $PRIVATE_KEY
       - uses: actions/setup-node@v4
         with:
           node-version: 20
