@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
       - name: Initialize id_rsa for Fonts
         env:
           PRIVATE_KEY: ${{ secrets.FONTS_SSH_KEY }}
@@ -28,8 +30,6 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-      - name: Initialize submodules
-        run: git submodule update --init --recursive
       - uses: actions/setup-node@v4
         with:
           node-version: 20

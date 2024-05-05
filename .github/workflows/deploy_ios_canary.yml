@@ -19,11 +19,11 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v3
-      - name: Initialize submodules
-        run: git submodule update --init --recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
       - name: Install dependencies
-        run: npm i
+        run: npm ci
       - name: Run pod install
         working-directory: ./ios
         shell: bash
