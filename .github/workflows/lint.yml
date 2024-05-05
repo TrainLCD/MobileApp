@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - '**'
-    paths:
-      - 'package.json'
-      - 'package-lock.json'
-      - 'src/**'
 
 jobs:
   eslint:
