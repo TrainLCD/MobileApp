@@ -21,7 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: recursive
+          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
       - name: Install dependencies
         run: npm ci
       - name: Run pod install
