@@ -6,6 +6,8 @@ export const accuracySelector = selector({
   key: RECOIL_STATES.accuracySelector,
   get: ({ get }) => {
     const powerState = get(powerSavingState)
-    return POWER_SETTING_VALUES[powerState.preset]
+    return (
+      POWER_SETTING_VALUES[powerState.preset] ?? POWER_SETTING_VALUES.BALANCED
+    )
   },
 })
