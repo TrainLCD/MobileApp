@@ -20,17 +20,14 @@ import useTTSText from './useTTSText'
 export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
-  const { selectedBound, arrived } = useRecoilValue(stationState)
+  const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
   const { store, getByText } = useTTSCache()
-
   const ttsText = useTTSText(firstSpeechRef.current)
-  const prevTTSText = usePrevious(ttsText)
-
+  const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
-
   const isInternetAvailable = useConnectivity()
   const user = useAnonymousUser()
 
@@ -55,25 +52,32 @@ export const useTTS = (): void => {
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     firstSpeechRef.current = false
 
-    await soundJaRef.current?.unloadAsync()
-    await soundEnRef.current?.unloadAsync()
+    if (!soundJaRef.current) {
+      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
+      soundJaRef.current = soundJa
+    } else {
+      await soundJaRef.current?.loadAsync({ uri: pathJa })
+    }
+    if (!soundEnRef.current) {
+      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
+      soundEnRef.current = soundEn
+    } else {
+      await soundEnRef.current?.loadAsync({ uri: pathEn })
+    }
 
-    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-    soundJaRef.current = soundJa
-    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
-    soundEnRef.current = soundEn
-
-    await soundJa.playAsync()
+    await soundJaRef.current?.playAsync()
     playingRef.current = true
 
-    soundJa._onPlaybackStatusUpdate = async (jaStatus) => {
+    soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundEn.playAsync()
+        await soundJaRef.current?.unloadAsync()
+        await soundEnRef.current?.playAsync()
       }
     }
 
-    soundEn._onPlaybackStatusUpdate = async (enStatus) => {
+    soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
+        await soundEnRef.current?.unloadAsync()
         playingRef.current = false
       }
     }
@@ -163,61 +167,51 @@ export const useTTS = (): void => {
 
       const { id, pathJa, pathEn } = fetched
 
-      await speakFromPath(pathJa, pathEn)
-
-      await store(
+      store(
         id,
         { text: textJa, path: fetched.pathJa },
         { text: textEn, path: fetched.pathEn }
       )
+
+      await speakFromPath(pathJa, pathEn)
     },
     [fetchSpeech, getByText, speakFromPath, store]
   )
 
   useEffect(() => {
-    const speechAsync = async () => {
-      const [prevTextJa, prevTextEn] = prevTTSText
-
-      if (
-        playingRef.current ||
-        !enabled ||
-        !isInternetAvailable ||
-        arrived ||
-        prevTextJa === textJa ||
-        prevTextEn === textEn
-      ) {
-        return
-      }
-
-      await speech({
-        textJa,
-        textEn,
-      })
+    if (
+      playingRef.current ||
+      !enabled ||
+      !isInternetAvailable ||
+      prevTextJa === textJa ||
+      prevTextEn === textEn
+    ) {
+      return
     }
-    speechAsync()
+
+    speech({
+      textJa,
+      textEn,
+    })
   }, [
-    arrived,
     enabled,
     isInternetAvailable,
-    prevTTSText,
+    prevTextEn,
+    prevTextJa,
     speech,
     textEn,
     textJa,
   ])
 
   useEffect(() => {
-    const cleanup = async () => {
-      if (!selectedBound) {
+    if (!selectedBound) {
+      const unload = async () => {
         firstSpeechRef.current = true
-        playingRef.current = false
         await soundJaRef.current?.unloadAsync()
         await soundEnRef.current?.unloadAsync()
+        playingRef.current = false
       }
-    }
-
-    cleanup()
-    return () => {
-      cleanup()
+      unload()
     }
   }, [selectedBound])
 }

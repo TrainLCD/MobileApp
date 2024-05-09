@@ -149,7 +149,7 @@ const useRefreshStation = (): void => {
       setStation((prev) => ({
         ...prev,
         station:
-          !prev.station || prev.station.id !== nearestStation.id
+          prev.station?.id !== nearestStation.id
             ? nearestStation
             : prev.station,
       }))
@@ -157,8 +157,7 @@ const useRefreshStation = (): void => {
         setNavigation((prev) => ({
           ...prev,
           stationForHeader:
-            !prev.stationForHeader ||
-            prev.stationForHeader.id !== nearestStation.id
+            prev.stationForHeader?.id !== nearestStation.id
               ? nearestStation
               : prev.stationForHeader,
         }))
