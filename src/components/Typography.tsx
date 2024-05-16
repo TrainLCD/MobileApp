@@ -3,6 +3,7 @@ import { Platform, StyleProp, Text, TextProps, TextStyle } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { FONTS } from '../constants'
 import { isLEDSelector } from '../store/selectors/isLED'
+import isTablet from '../utils/isTablet'
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
   const isLEDTheme = useRecoilValue(isLEDSelector)
@@ -23,7 +24,10 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
-        marginTop: Platform.select({ ios: 0, android: isLEDTheme ? 0 : -6 }),
+        marginTop: Platform.select({
+          ios: 0,
+          android: isLEDTheme || !isTablet ? 0 : -6,
+        }),
       },
       overrideStyle,
     ],

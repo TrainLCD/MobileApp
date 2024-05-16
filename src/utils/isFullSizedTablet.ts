@@ -1,3 +1,4 @@
 import isSmallTablet from './isSmallTablet'
+import isTablet from './isTablet'
 
-export default !isSmallTablet
+export default isTablet && !isSmallTablet
