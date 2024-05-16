@@ -1,5 +1,5 @@
 import React, { LegacyRef, forwardRef, useMemo } from 'react'
-import { Text, TextProps } from 'react-native'
+import { Platform, StyleProp, Text, TextProps, TextStyle } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { FONTS } from '../constants'
 import { isLEDSelector } from '../store/selectors/isLED'
@@ -18,11 +18,12 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
       : FONTS.RobotoRegular
   }, [isLEDTheme, overrideStyle])
 
-  const style = useMemo(
+  const style = useMemo<StyleProp<TextStyle>>(
     () => [
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
+        marginTop: Platform.select({ ios: 0, android: isLEDTheme ? 0 : -6 }),
       },
       overrideStyle,
     ],

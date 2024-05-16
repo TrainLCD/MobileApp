@@ -116,17 +116,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginBottom: Platform.select({ ios: 0, android: -6 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
-    paddingBottom: isTablet ? 48 * 0.25 : 24 * 0.25,
+    paddingBottom: isTablet
+      ? Platform.select({ ios: 48 * 0.25, android: 0 })
+      : 24 * 0.25,
   },
   verticalStationName: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
   grayColor: {
     color: '#ccc',
