@@ -601,11 +601,7 @@ const HeaderJRWest: React.FC = () => {
             <View style={styles.emptyNumbering} />
           )}
           <View style={styles.trainTypeImageContainer}>
-            <Image
-              style={styles.trainTypeImage}
-              source={trainTypeImage}
-              cachePolicy="memory"
-            />
+            <Image style={styles.trainTypeImage} source={trainTypeImage} />
           </View>
         </View>
         <View style={styles.left}>

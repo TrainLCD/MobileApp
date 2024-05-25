@@ -68,23 +68,13 @@ const TransferLineMark: React.FC<Props> = ({
   if (mark.btUnionSignPaths) {
     return (
       <View style={styles.signPathWrapper}>
-        <Image
-          style={lineMarkImageStyle}
-          source={mark.btUnionSignPaths[0]}
-          cachePolicy="memory"
-        />
+        <Image style={lineMarkImageStyle} source={mark.btUnionSignPaths[0]} />
       </View>
     )
   }
 
   if (mark.signPath) {
-    return (
-      <Image
-        style={lineMarkImageStyle}
-        source={mark.signPath}
-        cachePolicy="memory"
-      />
-    )
+    return <Image style={lineMarkImageStyle} source={mark.signPath} />
   }
 
   return (
