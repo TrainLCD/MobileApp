@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
       ios: 0,
       android: isTablet ? -4 : 0,
     }),
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
   },
   stationNameHorizontalWrapper: {
     position: 'absolute',
