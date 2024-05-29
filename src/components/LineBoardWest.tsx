@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
+import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { FONTS, parenthesisRegexp } from '../constants'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
@@ -112,14 +112,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginBottom: Platform.select({ ios: 0, android: -6 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
-    paddingBottom: isTablet ? 48 * 0.25 : 24 * 0.25,
+    paddingBottom: isTablet
+      ? Platform.select({
+          ios: 48 * 0.25,
+          android: 0,
+        })
+      : 24 * 0.25,
   },
   verticalStationName: {
     marginBottom: 8,
@@ -334,11 +338,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const omittedTransferLines = useMemo(
     () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
-        ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-      })),
+      omitJRLinesIfThresholdExceeded(transferLines).map(
+        (l) =>
+          new Line({
+            ...l,
+            nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+            nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+          })
+      ),
     [transferLines]
   )
 

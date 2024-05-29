@@ -1,8 +1,10 @@
+import isArray from 'lodash/isArray'
 import React, { LegacyRef, forwardRef, useMemo } from 'react'
-import { Text, TextProps } from 'react-native'
+import { Platform, StyleProp, Text, TextProps, TextStyle } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { FONTS } from '../constants'
 import { isLEDSelector } from '../store/selectors/isLED'
+import isTablet from '../utils/isTablet'
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
   const isLEDTheme = useRecoilValue(isLEDSelector)
@@ -18,15 +20,31 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
       : FONTS.RobotoRegular
   }, [isLEDTheme, overrideStyle])
 
-  const style = useMemo(
+  const overrideFontFamily = isArray(overrideStyle)
+    ? overrideStyle
+        .flat()
+        .find((s) => (s?.valueOf() as TextStyle | undefined)?.fontFamily)
+    : (overrideStyle as TextStyle | undefined)?.fontFamily
+
+  const style = useMemo<StyleProp<TextStyle>>(
     () => [
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
+        marginTop: Platform.select({
+          ios: 0,
+          android:
+            isLEDTheme ||
+            !isTablet ||
+            overrideFontFamily === FONTS.MyriadPro ||
+            overrideFontFamily === FONTS.FrutigerNeueLTProBold
+              ? 0
+              : -6,
+        }),
       },
       overrideStyle,
     ],
-    [fontFamily, isLEDTheme, overrideStyle]
+    [fontFamily, isLEDTheme, overrideFontFamily, overrideStyle]
   )
   return <Text {...props} ref={ref} allowFontScaling={false} style={style} />
 })

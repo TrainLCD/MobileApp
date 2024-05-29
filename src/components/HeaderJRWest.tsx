@@ -604,7 +604,7 @@ const HeaderJRWest: React.FC = () => {
             <Image
               style={styles.trainTypeImage}
               source={trainTypeImage}
-              cachePolicy="memory"
+              cachePolicy="memory-disk"
             />
           </View>
         </View>

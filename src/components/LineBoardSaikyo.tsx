@@ -141,7 +141,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3a3a3a',
     marginLeft: isFullSizedTablet ? 10 : 5,
-    marginBottom: Platform.select({ ios: 0, android: -6 }),
+    marginBottom: Platform.select({
+      ios: 0,
+      android: isTablet ? 0 : -6,
+    }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
@@ -341,11 +344,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const transferLines = useTransferLinesFromStation(station)
   const omittedTransferLines = useMemo(
     () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
-        ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-      })),
+      omitJRLinesIfThresholdExceeded(transferLines).map(
+        (l) =>
+          new Line({
+            ...l,
+            nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+            nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+          })
+      ),
     [transferLines]
   )
   const currentStationIndex = stations.findIndex(
