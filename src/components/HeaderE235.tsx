@@ -306,13 +306,6 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
     return RFValue(25)
   }, [isJO])
 
-  const boundHeight = useMemo(() => {
-    if (isJO) {
-      return isTablet ? 40 : 35
-    }
-    return isTablet ? 75 : 50
-  }, [isJO])
-
   return (
     <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
       <View style={styles.left}>
@@ -326,10 +319,11 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
         >
           {selectedBound && (
             <Typography
+              adjustsFontSizeToFit
+              numberOfLines={1}
               style={{
                 ...styles.boundGrayText,
                 fontSize: RFValue(isJO ? 14 : 18),
-                maxHeight: RFValue(isJO ? 14 : 18),
               }}
             >
               {boundPrefix}
@@ -339,10 +333,9 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
             style={{
               ...styles.bound,
               fontSize: boundFontSize,
-              maxHeight: boundHeight,
             }}
             adjustsFontSizeToFit
-            numberOfLines={2}
+            numberOfLines={1}
           >
             {boundText}
           </Typography>
@@ -352,7 +345,6 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
                 {
                   ...styles.boundSuffix,
                   fontSize: RFValue(isJO ? 14 : 18),
-                  maxHeight: RFValue(isJO ? 14 : 18),
                 },
                 headerLangState === 'KO' ? styles.boundGrayText : null,
               ]}

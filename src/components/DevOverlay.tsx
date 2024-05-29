@@ -19,11 +19,11 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     padding: 4,
   },
-  Typography: {
+  text: {
     color: 'white',
     fontSize: 11,
   },
-  TypographyHeading: {
+  textHeading: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 11,
@@ -46,36 +46,38 @@ const DevOverlay: React.FC = () => {
 
   return (
     <View style={styles.root}>
-      <Typography style={styles.TypographyHeading}>
+      <Typography style={styles.textHeading}>
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
-      <Typography style={styles.Typography}>{`Latitude: ${
+      <Typography style={styles.text}>{`Latitude: ${
         location?.coords.latitude ?? ''
       }`}</Typography>
-      <Typography style={styles.Typography}>{`Longitude: ${
+      <Typography style={styles.text}>{`Longitude: ${
         location?.coords.longitude ?? ''
       }`}</Typography>
 
-      <Typography style={styles.Typography}>{`Accuracy: ${
+      <Typography style={styles.text}>{`Accuracy: ${
         location?.coords.accuracy ?? ''
       }m`}</Typography>
 
-      <Typography style={styles.Typography}>
+      <Typography style={styles.text}>
         Speed: {speedKMH}
         km/h
       </Typography>
 
-      <Typography style={styles.Typography}>
-        Approaching: {approachingThreshold.toLocaleString()}m{'\n'}
+      <Typography style={styles.text}>
+        Approaching: {approachingThreshold.toLocaleString()}m
+      </Typography>
+      <Typography style={styles.text}>
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
 
       <Typography
-        style={styles.Typography}
+        style={styles.text}
       >{`Power saving preset: ${powerSavingPreset}`}</Typography>
 
-      <Typography style={styles.Typography}>Processing Mode: Device</Typography>
+      <Typography style={styles.text}>Processing Mode: Device</Typography>
     </View>
   )
 }

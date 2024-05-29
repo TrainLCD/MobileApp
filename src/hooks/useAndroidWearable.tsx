@@ -35,18 +35,14 @@ const useAndroidWearable = (): void => {
       if (!station || Platform.OS !== 'android') {
         return
       }
-      try {
-        await sendStationInfoToWatch({
-          stationName: station.name,
-          stationNameRoman: station.nameRoman ?? '',
-          currentStateKey: stoppingState ?? 'CURRENT',
-          stationNumber: currentNumbering?.stationNumber ?? '',
-          badAccuracy,
-          isNextLastStop,
-        })
-      } catch (err) {
-        console.error(err)
-      }
+      await sendStationInfoToWatch({
+        stationName: station.name,
+        stationNameRoman: station.nameRoman ?? '',
+        currentStateKey: stoppingState ?? 'CURRENT',
+        stationNumber: currentNumbering?.stationNumber ?? '',
+        badAccuracy,
+        isNextLastStop,
+      })
     })()
   }, [
     badAccuracy,
