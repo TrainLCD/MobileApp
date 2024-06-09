@@ -43,7 +43,6 @@ const { width: windowWidth } = Dimensions.get('window')
 
 const styles = StyleSheet.create({
   root: {
-    elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.25,
     shadowOffset: {
@@ -114,7 +113,8 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     alignSelf: 'stretch',
-    height: isTablet ? 10 : 4,
+    height: isTablet ? 6 : 4,
+    elevation: 2,
   },
   headerTexts: {
     flexDirection: 'row',
