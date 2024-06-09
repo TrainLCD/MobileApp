@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import * as Application from 'expo-application'
 import React, { useMemo } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThreshold } from '../hooks/useThreshold'
@@ -22,11 +22,13 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
     fontSize: 11,
+    lineHeight: Platform.OS === 'android' ? 18 : undefined,
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 11,
+    lineHeight: Platform.OS === 'android' ? 18 : undefined,
   },
 })
 
