@@ -122,14 +122,17 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
-    marginBottom: Platform.select({ ios: 0, android: -4 }),
+    marginBottom: Platform.select({
+      ios: 0,
+      android: isTablet ? 0 : -4,
+    }),
   },
   stationNameExtra: {
     width: RFValue(10),
     textAlign: 'center',
     fontSize: RFValue(10),
     fontWeight: 'bold',
-    marginBottom: Platform.select({ ios: 0, android: -4 }),
+    marginBottom: Platform.select({ ios: 0, android: isTablet ? 0 : -4 }),
   },
   stationNameEn: {
     fontSize: RFValue(16),
@@ -139,8 +142,11 @@ const styles = StyleSheet.create({
   },
   stationNameHorizontalContainer: {
     position: 'relative',
-    bottom: 0,
-    justifyContent: 'flex-end',
+    bottom: Platform.select({
+      ios: 0,
+      android: isTablet ? -4 : 0,
+    }),
+    justifyContent: 'flex-start',
   },
   stationNameHorizontalWrapper: {
     position: 'absolute',
@@ -417,11 +423,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const transferLines = useTransferLinesFromStation(station)
   const omittedTransferLines = useMemo(
     () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map((l) => ({
-        ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-      })),
+      omitJRLinesIfThresholdExceeded(transferLines).map(
+        (l) =>
+          new Line({
+            ...l,
+            nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+            nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+          })
+      ),
     [transferLines]
   )
 

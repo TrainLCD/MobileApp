@@ -71,7 +71,7 @@ const TransferLineMark: React.FC<Props> = ({
         <Image
           style={lineMarkImageStyle}
           source={mark.btUnionSignPaths[0]}
-          cachePolicy="memory"
+          cachePolicy="memory-disk"
         />
       </View>
     )
@@ -82,7 +82,7 @@ const TransferLineMark: React.FC<Props> = ({
       <Image
         style={lineMarkImageStyle}
         source={mark.signPath}
-        cachePolicy="memory"
+        cachePolicy="memory-disk"
       />
     )
   }
