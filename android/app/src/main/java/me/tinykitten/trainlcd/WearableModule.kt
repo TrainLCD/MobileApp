@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
@@ -14,6 +15,7 @@ import java.util.concurrent.ExecutionException
 class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
   private val context = reactApplicationContext.applicationContext
   private val dataClient = Wearable.getDataClient(context)
+  private var isWearableApiAvailable = true
 
   override fun getName() = "WearableModule"
 
@@ -22,6 +24,18 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     readableMap: ReadableMap,
     promise: Promise
   ) {
+    if (!isWearableApiAvailable){
+      return promise.resolve(null)
+    }
+    
+    try {
+      Tasks.await(GoogleApiAvailability.getInstance().checkApiAvailability(dataClient))
+    } catch (e: Exception) {
+      isWearableApiAvailable = false
+      Log.e(TAG, "Exception: $e")
+      return promise.resolve(null)
+    }
+
     try {
       val req = PutDataMapRequest.create(STATION_PATH).run {
         dataMap.putString(STATION_NAME_KEY, readableMap.getString(STATION_NAME_KEY).orEmpty())
