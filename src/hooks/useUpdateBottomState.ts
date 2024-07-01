@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useTransition } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
@@ -22,6 +22,8 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const shouldHideTypeChange = useShouldHideTypeChange()
   const shouldHideTypeChangeRef = useRef(shouldHideTypeChange)
 
+  const [, startTransition] = useTransition()
+
   useEffect(() => {
     if (!transferLines.length) {
       setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
@@ -34,38 +36,46 @@ const useUpdateBottomState = (): { pause: () => void } => {
         return
       }
 
-      switch (bottomStateRef.current) {
-        case 'LINE':
-          if (transferLines.length) {
-            setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }))
-            return
-          }
-          if (isTypeWillChangeRef.current && !shouldHideTypeChangeRef.current) {
+      startTransition(() => {
+        switch (bottomStateRef.current) {
+          case 'LINE':
+            if (transferLines.length) {
+              setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }))
+              return
+            }
+            if (
+              isTypeWillChangeRef.current &&
+              !shouldHideTypeChangeRef.current
+            ) {
+              setNavigation((prev) => ({
+                ...prev,
+                bottomState: 'TYPE_CHANGE',
+              }))
+            }
+            break
+          case 'TRANSFER':
+            if (
+              isTypeWillChangeRef.current &&
+              !shouldHideTypeChangeRef.current
+            ) {
+              setNavigation((prev) => ({
+                ...prev,
+                bottomState: 'TYPE_CHANGE',
+              }))
+            } else {
+              setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
+            }
+            break
+          case 'TYPE_CHANGE':
             setNavigation((prev) => ({
               ...prev,
-              bottomState: 'TYPE_CHANGE',
+              bottomState: 'LINE',
             }))
-          }
-          break
-        case 'TRANSFER':
-          if (isTypeWillChangeRef.current && !shouldHideTypeChangeRef.current) {
-            setNavigation((prev) => ({
-              ...prev,
-              bottomState: 'TYPE_CHANGE',
-            }))
-          } else {
-            setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
-          }
-          break
-        case 'TYPE_CHANGE':
-          setNavigation((prev) => ({
-            ...prev,
-            bottomState: 'LINE',
-          }))
-          break
-        default:
-          break
-      }
+            break
+          default:
+            break
+        }
+      })
     }, [
       bottomStateRef,
       isTypeWillChangeRef,
