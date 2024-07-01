@@ -7,7 +7,8 @@ export const accuracySelector = selector({
   get: ({ get }) => {
     const powerState = get(powerSavingState)
     return (
-      POWER_SETTING_VALUES[powerState.preset] ?? POWER_SETTING_VALUES.BALANCED
+      POWER_SETTING_VALUES[powerState.preset]?.locationServiceAccuracy ??
+      POWER_SETTING_VALUES.BALANCED.locationServiceAccuracy
     )
   },
 })
