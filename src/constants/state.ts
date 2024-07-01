@@ -18,4 +18,5 @@ export const RECOIL_STATES = {
   isEnSelector: 'isEnSelector',
   currentStationSelector: 'currentStationSelector',
   currentLineSelector: 'currentLineSelector',
+  autoModeEnabledSelector: 'autoModeEnabledSelector',
 }
