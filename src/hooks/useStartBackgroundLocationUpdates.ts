@@ -8,12 +8,10 @@ import { translate } from '../translation'
 
 export const useStartBackgroundLocationUpdates = () => {
   const { autoModeEnabled } = useRecoilValue(navigationState)
-  const { locationServiceAccuracy, locationServiceDistanceFilter } =
-    useRecoilValue(accuracySelector)
+  const { locationServiceAccuracy } = useRecoilValue(accuracySelector)
 
   const autoModeEnabledRef = useRef(autoModeEnabled)
   const locationAccuracyRef = useRef(locationServiceAccuracy)
-  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
 
   useEffect(() => {
     const startAsync = async () => {
@@ -26,7 +24,6 @@ export const useStartBackgroundLocationUpdates = () => {
       if (!autoModeEnabledRef.current) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: locationAccuracyRef.current,
-          deferredUpdatesDistance: locationServiceDistanceFilterRef.current,
           activityType: Location.ActivityType.OtherNavigation,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
