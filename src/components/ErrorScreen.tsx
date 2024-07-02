@@ -55,6 +55,7 @@ type Props = {
   onRetryPress?: () => void
   showSearchStation?: boolean
   showStatus?: boolean
+  isFetching?: boolean
 }
 
 const ErrorScreen: React.FC<Props> = ({
@@ -63,6 +64,7 @@ const ErrorScreen: React.FC<Props> = ({
   onRetryPress,
   showSearchStation,
   showStatus,
+  isFetching,
 }: Props) => {
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
   const navigation = useNavigation()
@@ -91,7 +93,8 @@ const ErrorScreen: React.FC<Props> = ({
         {showSearchStation ? (
           <TouchableOpacity
             onPress={handleToStationSearch}
-            style={styles.button}
+            disabled={isFetching}
+            style={[{ opacity: isFetching ? 0.5 : 1 }, styles.button]}
           >
             <Text style={styles.buttonText}>
               {translate('searchFirstStationTitle')}
