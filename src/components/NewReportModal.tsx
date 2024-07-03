@@ -37,7 +37,6 @@ type Props = {
 
 const styles = StyleSheet.create({
   modalContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -45,8 +44,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   modalView: {
-    flex: 1,
     paddingVertical: 32,
+    height: !isTablet ? '100%' : undefined,
     width: '100%',
   },
   textInput: {
@@ -55,7 +54,6 @@ const styles = StyleSheet.create({
     padding: 12,
     width: '100%',
     fontSize: RFValue(14),
-    flex: 1,
     marginVertical: 16,
     textAlignVertical: 'top',
     minHeight: windowHeight * 0.25,
@@ -64,6 +62,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: 'bold',
     textAlign: 'center',
+    marginTop: 16,
   },
   buttonContainer: {
     alignItems: 'center',
@@ -76,13 +75,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     width: widthScale(64),
   },
-  fill: {
-    flex: 1,
-  },
+  fill: {},
   charCount: {
     fontWeight: 'bold',
     textAlign: 'right',
-    marginBottom: 24,
     color: '#555555',
   },
 })
@@ -125,7 +121,6 @@ const NewReportModal: React.FC<Props> = ({
             isTablet
               ? {
                   width: '80%',
-                  flex: 0.8,
                   shadowOpacity: 0.25,
                   shadowColor: '#000',
                   shadowRadius: 1,
@@ -134,11 +129,9 @@ const NewReportModal: React.FC<Props> = ({
               : undefined,
           ]}
         >
-          <Heading>{translate('report')}</Heading>
-          <KeyboardAvoidingView
-            style={styles.fill}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
+          <KeyboardAvoidingView style={styles.fill} behavior="position">
+            <Heading>{translate('report')}</Heading>
+
             <TextInput
               autoFocus
               value={description}
@@ -161,36 +154,33 @@ const NewReportModal: React.FC<Props> = ({
             ) : (
               <Typography style={styles.charCount}>送信可能です</Typography>
             )}
-            <Typography
-              style={{
-                ...styles.caution,
-                color: isLEDTheme ? '#fff' : '#555',
-              }}
-            >
-              {translate('reportCaution')}
-            </Typography>
-            <View style={styles.buttonContainer}>
-              <Button
-                style={styles.button}
-                disabled={
-                  description.trim().length < descriptionLowerLimit || sending
-                }
-                color={isLEDTheme ? undefined : '#008ffe'}
-                onPress={onSubmit}
-              >
-                {sending
-                  ? translate('reportSendInProgress')
-                  : translate('reportSend')}
-              </Button>
-              <Button
-                disabled={sending}
-                style={styles.button}
-                onPress={onClose}
-              >
-                {translate('cancel')}
-              </Button>
-            </View>
           </KeyboardAvoidingView>
+          <Typography
+            style={{
+              ...styles.caution,
+              color: isLEDTheme ? '#fff' : '#555',
+              lineHeight: Platform.select({ ios: RFValue(18) }),
+            }}
+          >
+            {translate('reportCaution')}
+          </Typography>
+          <View style={styles.buttonContainer}>
+            <Button
+              style={styles.button}
+              disabled={
+                description.trim().length < descriptionLowerLimit || sending
+              }
+              color={isLEDTheme ? undefined : '#008ffe'}
+              onPress={onSubmit}
+            >
+              {sending
+                ? translate('reportSendInProgress')
+                : translate('reportSend')}
+            </Button>
+            <Button disabled={sending} style={styles.button} onPress={onClose}>
+              {translate('cancel')}
+            </Button>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
