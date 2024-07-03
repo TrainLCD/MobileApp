@@ -11,26 +11,17 @@ export const useStartBackgroundLocationUpdates = () => {
   const locationServiceAccuracy = useRecoilValue(accuracySelector)
 
   useEffect(() => {
-    const startAsync = async () => {
-      const isStarted = await Location.hasStartedLocationUpdatesAsync(
-        LOCATION_TASK_NAME
-      )
-      if (isStarted) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-      if (!autoModeEnabled) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: locationServiceAccuracy,
-          activityType: Location.ActivityType.OtherNavigation,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        })
-      }
+    if (!autoModeEnabled) {
+      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        accuracy: locationServiceAccuracy,
+        activityType: Location.ActivityType.OtherNavigation,
+        foregroundService: {
+          notificationTitle: translate('bgAlertTitle'),
+          notificationBody: translate('bgAlertContent'),
+          killServiceOnDestroy: true,
+        },
+      })
     }
-    startAsync()
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)

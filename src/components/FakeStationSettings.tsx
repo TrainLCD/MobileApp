@@ -108,7 +108,10 @@ const FakeStationSettings: React.FC = () => {
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const location = useLocationStore((state) => state.location)
+  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const longitude = useLocationStore(
+    (state) => state.location?.coords.longitude
+  )
   const setLocation = useLocationStore((state) => state.setLocation)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
@@ -117,11 +120,7 @@ const FakeStationSettings: React.FC = () => {
     isLoading: isByCoordsLoading,
     error: byCoordsError,
   } = useSWRImmutable(
-    [
-      '/app.trainlcd.grpc/getStationsByCoords',
-      location?.coords.latitude,
-      location?.coords.longitude,
-    ],
+    ['/app.trainlcd.grpc/getStationsByCoords', latitude, longitude],
     async ([, latitude, longitude]) => {
       if (!latitude || !longitude) {
         return

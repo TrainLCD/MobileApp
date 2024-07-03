@@ -400,6 +400,7 @@ exports.tts = functions
       },
       audioConfig: {
         audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        speakingRate: isPremium ? 1.1 : 1,
       },
     };
 
@@ -413,6 +414,7 @@ exports.tts = functions
       },
       audioConfig: {
         audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        speakingRate: isPremium ? 1.1 : 1,
       },
     };
 

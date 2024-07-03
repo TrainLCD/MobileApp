@@ -33,11 +33,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
     paddingHorizontal: 32,
+    lineHeight: Platform.select({
+      ios: RFValue(18),
+    }),
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(21),
     fontWeight: 'bold',
+    lineHeight: Platform.select({
+      ios: RFValue(24),
+    }),
   },
   buttons: {
     flexDirection: 'row',
@@ -115,6 +121,7 @@ const PrivacyScreen: React.FC = () => {
       }
 
       const { status } = await Location.requestForegroundPermissionsAsync()
+      await Location.requestBackgroundPermissionsAsync()
       await Notifications.requestPermissionsAsync()
       if (Platform.OS === 'android') {
         await PermissionsAndroid.request(
