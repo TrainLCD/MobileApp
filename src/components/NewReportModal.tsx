@@ -75,7 +75,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     width: widthScale(64),
   },
-  fill: {},
   charCount: {
     fontWeight: 'bold',
     textAlign: 'right',
@@ -129,7 +128,7 @@ const NewReportModal: React.FC<Props> = ({
               : undefined,
           ]}
         >
-          <KeyboardAvoidingView style={styles.fill} behavior="position">
+          <KeyboardAvoidingView behavior="position">
             <Heading>{translate('report')}</Heading>
 
             <TextInput

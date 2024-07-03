@@ -35,7 +35,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     lineHeight: Platform.select({
       ios: RFValue(18),
-      android: undefined,
     }),
   },
   headingText: {
