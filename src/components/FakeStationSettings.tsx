@@ -312,7 +312,7 @@ const FakeStationSettings: React.FC = () => {
           </View>
         </KeyboardAvoidingView>
       </View>
-      {(location || stationFromState) && (
+      {((latitude && longitude) || stationFromState) && (
         <FAB onPress={onPressBack} icon="close" />
       )}
     </>
