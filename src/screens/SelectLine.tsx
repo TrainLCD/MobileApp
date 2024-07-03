@@ -57,7 +57,11 @@ const SelectLineScreen: React.FC = () => {
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
-  const fetchStationFunc = useFetchNearbyStation()
+  const {
+    trigger: fetchStationFunc,
+    isLoading: nearbyStationLoading,
+    error: nearbyStationFetchError,
+  } = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
   const {
     fetchCurrentPosition,
@@ -241,6 +245,18 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
+  if (nearbyStationFetchError) {
+    return (
+      <ErrorScreen
+        showStatus
+        title={translate('errorTitle')}
+        text={translate('apiErrorText')}
+        onRetryPress={fetchStationFunc}
+        isFetching={nearbyStationLoading}
+      />
+    )
+  }
+
   if (fetchLocationError && !station) {
     return (
       <ErrorScreen
@@ -248,6 +264,7 @@ const SelectLineScreen: React.FC = () => {
         title={translate('errorTitle')}
         text={translate('couldNotGetLocation')}
         onRetryPress={handleUpdateStation}
+        isFetching={locationLoading}
       />
     )
   }

@@ -343,6 +343,7 @@ const SelectBoundScreen: React.FC = () => {
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
         onRetryPress={updateStations}
+        isFetching={loading}
       />
     )
   }
