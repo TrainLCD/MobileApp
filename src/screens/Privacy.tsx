@@ -121,6 +121,7 @@ const PrivacyScreen: React.FC = () => {
       }
 
       const { status } = await Location.requestForegroundPermissionsAsync()
+      await Location.requestBackgroundPermissionsAsync()
       await Notifications.requestPermissionsAsync()
       if (Platform.OS === 'android') {
         await PermissionsAndroid.request(
