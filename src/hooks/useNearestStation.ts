@@ -6,15 +6,16 @@ import stationState from '../store/atoms/station'
 import { useLocationStore } from './useLocationStore'
 
 export const useNearestStation = (): Station | null => {
-  const location = useLocationStore((state) => state.location)
+  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const longitude = useLocationStore(
+    (state) => state.location?.coords.longitude
+  )
   const { stations } = useRecoilValue(stationState)
 
   const nearestStation = useMemo<Station | null>(() => {
-    if (!location?.coords) {
+    if (!latitude || !longitude) {
       return null
     }
-
-    const { latitude, longitude } = location.coords
 
     const nearestCoordinates = stations.length
       ? (findNearest(
@@ -40,7 +41,7 @@ export const useNearestStation = (): Station | null => {
           sta.longitude === nearestCoordinates.longitude
       ) ?? null
     )
-  }, [location?.coords, stations])
+  }, [latitude, longitude, stations])
 
   return nearestStation
 }

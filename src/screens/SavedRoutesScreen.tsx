@@ -67,7 +67,11 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const location = useLocationStore((state) => state.location)
+  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const longitude = useLocationStore(
+    (state) => state.location?.coords.longitude
+  )
+
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const navigation = useNavigation()
@@ -110,11 +114,9 @@ const SavedRoutesScreen: React.FC = () => {
     async (route: SavedRoute) => {
       const stations = await fetchStationsByRoute(route)
 
-      if (!stations?.length || !location) {
+      if (!stations?.length || !latitude || !longitude) {
         return
       }
-
-      const { latitude, longitude } = location.coords
 
       const nearestCoordinates = findNearest(
         { latitude, longitude },
@@ -138,7 +140,7 @@ const SavedRoutesScreen: React.FC = () => {
         new Station(nearestStation)
       )
     },
-    [fetchStationsByRoute, location, updateStateAndNavigate]
+    [fetchStationsByRoute, latitude, longitude, updateStateAndNavigate]
   )
 
   const renderItem = useCallback(
