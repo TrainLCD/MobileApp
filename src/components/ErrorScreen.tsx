@@ -86,7 +86,10 @@ const ErrorScreen: React.FC<Props> = ({
 
       <View style={styles.buttons}>
         {onRetryPress ? (
-          <TouchableOpacity onPress={onRetryPress} style={styles.button}>
+          <TouchableOpacity
+            onPress={onRetryPress}
+            style={[{ opacity: isFetching ? 0.5 : 1 }, styles.button]}
+          >
             <Text style={styles.buttonText}>{translate('retry')}</Text>
           </TouchableOpacity>
         ) : null}
@@ -94,7 +97,7 @@ const ErrorScreen: React.FC<Props> = ({
           <TouchableOpacity
             onPress={handleToStationSearch}
             disabled={isFetching}
-            style={[{ opacity: isFetching ? 0.5 : 1 }, styles.button]}
+            style={styles.button}
           >
             <Text style={styles.buttonText}>
               {translate('searchFirstStationTitle')}
