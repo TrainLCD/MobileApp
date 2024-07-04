@@ -44,46 +44,34 @@ const useRefreshStation = (): void => {
   const { arrivedThreshold, approachingThreshold } = useThreshold()
 
   const isArrived = useMemo((): boolean => {
-    if (!latitude || !longitude) {
+    if (!latitude || !longitude || !nearestStation) {
       return true
     }
 
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nearestStation?.latitude ?? 0,
-        longitude: nearestStation?.longitude ?? 0,
+        latitude: nearestStation.latitude,
+        longitude: nearestStation.longitude,
       },
       arrivedThreshold
     )
-  }, [
-    arrivedThreshold,
-    latitude,
-    longitude,
-    nearestStation?.latitude,
-    nearestStation?.longitude,
-  ])
+  }, [arrivedThreshold, latitude, longitude, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!latitude || !longitude) {
+    if (!latitude || !longitude || !nextStation) {
       return false
     }
 
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation?.latitude ?? 0,
-        longitude: nextStation?.longitude ?? 0,
+        latitude: nextStation.latitude,
+        longitude: nextStation.longitude,
       },
       approachingThreshold
     )
-  }, [
-    approachingThreshold,
-    latitude,
-    longitude,
-    nextStation?.latitude,
-    nextStation?.longitude,
-  ])
+  }, [approachingThreshold, latitude, longitude, nextStation])
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
