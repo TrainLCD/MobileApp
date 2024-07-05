@@ -14,7 +14,6 @@ export const useStartBackgroundLocationUpdates = () => {
     if (!autoModeEnabled) {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationServiceAccuracy,
-        activityType: Location.ActivityType.OtherNavigation,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
