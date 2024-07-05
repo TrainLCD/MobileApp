@@ -7,6 +7,6 @@
 */
 "NSLocationWhenInUseUsageDescription" = "Use location information continuously while using the app to get the nearest station.";
 "NSLocationAlwaysAndWhenInUseUsageDescription" = "Location information is continuously used while the application is in use to retrieve the nearest station.";
-"NSLocationAlwaysUsageDescription" = "Location information is continuously used while the application is in use to retrieve the nearest station. If you do not allow it, you can still use the app, but it may become unstable.";
+"NSLocationAlwaysUsageDescription" = "Location information is continuously used while the application is in use to retrieve the nearest station.";
 "NSPhotoLibraryAddUsageDescription" = "Save the screenshot image to your iPhone.";
 "NSMicrophoneUsageDescription" = "This app does not require access to the microphone.";
