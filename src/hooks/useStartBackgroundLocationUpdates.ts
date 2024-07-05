@@ -1,5 +1,6 @@
+import { useFocusEffect } from '@react-navigation/native'
 import * as Location from 'expo-location'
-import { useEffect } from 'react'
+import { useCallback } from 'react'
 import { useRecoilValue } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants'
 import { accuracySelector } from '../store/selectors/accuracy'
@@ -10,21 +11,28 @@ export const useStartBackgroundLocationUpdates = () => {
   const autoModeEnabled = useRecoilValue(autoModeEnabledSelector)
   const locationServiceAccuracy = useRecoilValue(accuracySelector)
 
-  useEffect(() => {
-    if (!autoModeEnabled) {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationServiceAccuracy,
-        activityType: Location.ActivityType.OtherNavigation,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-          killServiceOnDestroy: true,
-        },
-      })
-    }
+  useFocusEffect(
+    useCallback(() => {
+      Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then(
+        (started) => {
+          if (!started && !autoModeEnabled) {
+            Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+              accuracy: locationServiceAccuracy,
+              foregroundService: {
+                notificationTitle: translate('bgAlertTitle'),
+                notificationBody: translate('bgAlertContent'),
+                killServiceOnDestroy: true,
+              },
+            }).catch((err) => {
+              throw err
+            })
+          }
+        }
+      )
 
-    return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    }
-  }, [autoModeEnabled, locationServiceAccuracy])
+      return () => {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
+    }, [autoModeEnabled, locationServiceAccuracy])
+  )
 }
