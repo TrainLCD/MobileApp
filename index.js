@@ -6,22 +6,20 @@ import App from './src'
 import { LOCATION_TASK_NAME } from './src/constants'
 import { useLocationStore } from './src/hooks/useLocationStore'
 
-const isTaskDefined = TaskManager.isTaskDefined(LOCATION_TASK_NAME)
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+  if (error) {
+    console.error(error)
+    return
+  }
 
-if (!isTaskDefined) {
-  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
-    if (error) {
-      console.error(error)
-      return
+  useLocationStore.setState((state) => {
+    if (!data || data.locations[0]?.timestamp === state.location?.timestamp) {
+      return state
     }
-    if (data) {
-      const { locations } = data
-      useLocationStore.setState(() => ({
-        location: locations[0],
-      }))
-    }
+
+    return { ...state, location: data.locations[0] }
   })
-}
+})
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in the Expo client or in a native build,
