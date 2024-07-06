@@ -13,22 +13,17 @@ export const useStartBackgroundLocationUpdates = () => {
 
   useFocusEffect(
     useCallback(() => {
-      Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME).then(
-        (started) => {
-          if (!started && !autoModeEnabled) {
-            Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-              accuracy: locationServiceAccuracy,
-              foregroundService: {
-                notificationTitle: translate('bgAlertTitle'),
-                notificationBody: translate('bgAlertContent'),
-                killServiceOnDestroy: true,
-              },
-            }).catch((err) => {
-              throw err
-            })
-          }
-        }
-      )
+      if (!autoModeEnabled) {
+        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: locationServiceAccuracy,
+          activityType: Location.LocationActivityType.OtherNavigation,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        })
+      }
 
       return () => {
         Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
