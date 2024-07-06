@@ -13,7 +13,12 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
   }
 
   useLocationStore.setState((state) => {
-    if (!data || data.locations[0]?.timestamp === state.location?.timestamp) {
+    if (
+      !data ||
+      (state.location?.coords.latitude === data.locations[0]?.coords.latitude &&
+        state.location?.coords.longitude ===
+          data.locations[0]?.coords.longitude)
+    ) {
       return state
     }
 
