@@ -135,6 +135,16 @@ const useRefreshStation = (): void => {
   }, [isApproaching, isArrived, setStation])
 
   useEffect(() => {
+    // 接近時最寄駅の前の駅を現在の駅とする
+    if (isApproaching && !isArrived && nearestStation) {
+      setStation((prev) => ({ ...prev, station: nearestStation }))
+      setNavigation((prev) => ({
+        ...prev,
+        stationForHeader: nextStation ?? null,
+      }))
+      return
+    }
+
     if (isArrived && nearestStation) {
       setStation((prev) => ({
         ...prev,
@@ -143,18 +153,6 @@ const useRefreshStation = (): void => {
             ? nearestStation
             : prev.station,
       }))
-
-      // 接近時最寄駅の前の駅を現在の駅とする
-      if (isApproaching && !isArrived && nearestStation) {
-        setStation((prev) => ({ ...prev, station: nearestStation }))
-
-        setNavigation((prev) => ({
-          ...prev,
-          stationForHeader: nextStation ?? null,
-        }))
-
-        return
-      }
 
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
