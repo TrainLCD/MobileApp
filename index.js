@@ -12,13 +12,20 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
     return
   }
 
-  useLocationStore.setState((state) => {
-    if (!data || state.location?.timestamp === data.locations[0]?.timestamp) {
-      return state
-    }
+  const curLocation = useLocationStore.getState().location
+  if (
+    !data ||
+    curLocation?.timestamp === data.locations[0]?.timestamp ||
+    (curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
+      curLocation?.coords.longitude === data.locations[0]?.coords.longitude)
+  ) {
+    return
+  }
 
-    return { ...state, location: data.locations[0] }
-  })
+  useLocationStore.setState((state) => ({
+    ...state,
+    location: data.locations[0],
+  }))
 })
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
