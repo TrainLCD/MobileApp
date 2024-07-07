@@ -33,6 +33,7 @@ const useRefreshStation = (): void => {
   const longitude = useLocationStore(
     (state) => state.location?.coords.longitude
   )
+
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()
@@ -157,24 +158,6 @@ const useRefreshStation = (): void => {
               : prev.stationForHeader,
         }))
       }
-    }
-
-    // 接近時最寄駅の前の駅を現在の駅とする
-    if (isApproaching && !isArrived) {
-      setStation((prev) => ({
-        ...prev,
-        station:
-          prev.station?.id !== nearestStation.id
-            ? nearestStation
-            : prev.station,
-      }))
-      setNavigation((prev) => ({
-        ...prev,
-        stationForHeader:
-          prev.stationForHeader?.id !== nextStation.id
-            ? nextStation
-            : prev.stationForHeader,
-      }))
     }
   }, [
     isApproaching,
