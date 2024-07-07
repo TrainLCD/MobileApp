@@ -139,7 +139,7 @@ const useRefreshStation = (): void => {
       return
     }
 
-    if (isArrived && !isApproaching) {
+    if (isArrived) {
       setStation((prev) => ({
         ...prev,
         station:
