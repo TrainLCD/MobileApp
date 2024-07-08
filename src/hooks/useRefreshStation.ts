@@ -159,14 +159,7 @@ const useRefreshStation = (): void => {
         }))
       }
     }
-  }, [
-    isApproaching,
-    isArrived,
-    nearestStation,
-    nextStation,
-    setNavigation,
-    setStation,
-  ])
+  }, [isArrived, nearestStation, nextStation, setNavigation, setStation])
 }
 
 export default useRefreshStation
