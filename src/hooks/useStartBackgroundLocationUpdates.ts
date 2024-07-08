@@ -1,8 +1,7 @@
 import * as Location from 'expo-location'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRecoilValue } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants'
-import stationState from '../store/atoms/station'
 import { accuracySelector } from '../store/selectors/accuracy'
 import { autoModeEnabledSelector } from '../store/selectors/autoMode'
 import { translate } from '../translation'
@@ -10,12 +9,14 @@ import { translate } from '../translation'
 export const useStartBackgroundLocationUpdates = () => {
   const autoModeEnabled = useRecoilValue(autoModeEnabledSelector)
   const locationServiceAccuracy = useRecoilValue(accuracySelector)
-  const { selectedBound } = useRecoilValue(stationState)
+
+  const autoModeEnabledRef = useRef(autoModeEnabled)
+  const locationServiceAccuracyRef = useRef(locationServiceAccuracy)
 
   useEffect(() => {
-    if (!autoModeEnabled && selectedBound) {
+    if (!autoModeEnabledRef.current) {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationServiceAccuracy,
+        accuracy: locationServiceAccuracyRef.current,
         activityType: Location.LocationActivityType.OtherNavigation,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
@@ -28,5 +29,5 @@ export const useStartBackgroundLocationUpdates = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
-  }, [autoModeEnabled, locationServiceAccuracy, selectedBound])
+  }, [])
 }
