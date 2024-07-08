@@ -6,7 +6,7 @@ import App from './src'
 import { LOCATION_TASK_NAME } from './src/constants'
 import { useLocationStore } from './src/hooks/useLocationStore'
 
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data: { locations }, error }) => {
   if (error) {
     console.error(error)
     return
@@ -14,18 +14,16 @@ TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
 
   const curLocation = useLocationStore.getState().location
   if (
-    !data ||
-    curLocation?.timestamp === data.locations[0]?.timestamp ||
-    (curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
-      curLocation?.coords.longitude === data.locations[0]?.coords.longitude)
+    locations?.length &&
+    curLocation?.timestamp !== locations[0].timestamp &&
+    curLocation?.coords.latitude !== locations[0].coords.latitude &&
+    curLocation?.coords.longitude !== locations[0].coords.longitude
   ) {
-    return
+    useLocationStore.setState((state) => ({
+      ...state,
+      location: locations[0],
+    }))
   }
-
-  useLocationStore.setState((state) => ({
-    ...state,
-    location: data.locations[0],
-  }))
 })
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
