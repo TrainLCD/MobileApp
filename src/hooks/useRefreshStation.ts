@@ -136,7 +136,7 @@ const useRefreshStation = (): void => {
   }, [isApproaching, isArrived, setStation])
 
   useEffect(() => {
-    if (!nearestStation || !nextStation) {
+    if (!nearestStation) {
       return
     }
 
@@ -159,7 +159,7 @@ const useRefreshStation = (): void => {
         }))
       }
     }
-  }, [isArrived, nearestStation, nextStation, setNavigation, setStation])
+  }, [isArrived, nearestStation, setNavigation, setStation])
 }
 
 export default useRefreshStation
