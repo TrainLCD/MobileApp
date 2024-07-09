@@ -18,6 +18,8 @@ export const useStartBackgroundLocationUpdates = () => {
       Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationServiceAccuracyRef.current,
         activityType: Location.LocationActivityType.OtherNavigation,
+        deferredUpdatesDistance: 1,
+        deferredUpdatesInterval: 1000,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
