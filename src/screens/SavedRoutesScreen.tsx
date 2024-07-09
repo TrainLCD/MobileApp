@@ -67,9 +67,9 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const latitude = useLocationStore((state) => state.location?.coords?.latitude)
   const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
+    (state) => state.location?.coords?.longitude
   )
 
   const isLEDTheme = useRecoilValue(isLEDSelector)

@@ -1,5 +1,5 @@
-import * as Location from 'expo-location'
 import { useCallback, useState } from 'react'
+import BackgroundGeolocation from 'react-native-background-geolocation'
 
 export const useCurrentPosition = () => {
   const [loading, setLoading] = useState(false)
@@ -8,8 +8,8 @@ export const useCurrentPosition = () => {
   const fetchCurrentPosition = useCallback(async () => {
     setLoading(true)
     try {
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+      const pos = await BackgroundGeolocation.getCurrentPosition({
+        desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_MEDIUM,
       })
       setLoading(false)
       return pos

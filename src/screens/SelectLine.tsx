@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import * as Location from 'expo-location'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
@@ -10,11 +9,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
-import {
-  ASYNC_STORAGE_KEYS,
-  LOCATION_TASK_NAME,
-  parenthesisRegexp,
-} from '../constants'
+import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
@@ -118,18 +113,6 @@ const SelectLineScreen: React.FC = () => {
       }
     }
     f()
-  }, [])
-
-  useEffect(() => {
-    const stopLocationUpdatesAsync = async () => {
-      const isStarted = await Location.hasStartedLocationUpdatesAsync(
-        LOCATION_TASK_NAME
-      )
-      if (isStarted) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
-    }
-    stopLocationUpdatesAsync()
   }, [])
 
   const navigation = useNavigation()

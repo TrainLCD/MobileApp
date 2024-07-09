@@ -1,9 +1,9 @@
-import { LocationObject } from 'expo-location'
+import { Location } from 'react-native-background-geolocation'
 import { create } from 'zustand'
 
 type LocationState = {
-  location: LocationObject | null
-  setLocation: (location: LocationObject) => void
+  location: Location | null
+  setLocation: (location: Location) => void
 }
 
 export const useLocationStore = create<LocationState>((set) => ({

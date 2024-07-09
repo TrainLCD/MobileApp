@@ -33,12 +33,12 @@ const styles = StyleSheet.create({
 })
 
 const DevOverlay: React.FC = () => {
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const latitude = useLocationStore((state) => state.location?.coords?.latitude)
   const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
+    (state) => state.location?.coords?.longitude
   )
-  const speed = useLocationStore((state) => state.location?.coords.speed)
-  const accuracy = useLocationStore((state) => state.location?.coords.accuracy)
+  const speed = useLocationStore((state) => state.location?.coords?.speed)
+  const accuracy = useLocationStore((state) => state.location?.coords?.accuracy)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 

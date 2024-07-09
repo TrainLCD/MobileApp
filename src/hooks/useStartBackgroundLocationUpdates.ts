@@ -1,33 +1,41 @@
-import * as Location from 'expo-location'
 import { useEffect, useRef } from 'react'
+import BackgroundGeolocation from 'react-native-background-geolocation'
 import { useRecoilValue } from 'recoil'
-import { LOCATION_TASK_NAME } from '../constants'
 import { accuracySelector } from '../store/selectors/accuracy'
 import { autoModeEnabledSelector } from '../store/selectors/autoMode'
-import { translate } from '../translation'
+import { distanceFilterSelector } from '../store/selectors/distanceFilter'
+import { useLocationStore } from './useLocationStore'
 
 export const useStartBackgroundLocationUpdates = () => {
+  const setLocation = useLocationStore((state) => state.setLocation)
+
   const autoModeEnabled = useRecoilValue(autoModeEnabledSelector)
   const locationServiceAccuracy = useRecoilValue(accuracySelector)
+  const distanceFilter = useRecoilValue(distanceFilterSelector)
 
   const autoModeEnabledRef = useRef(autoModeEnabled)
   const locationServiceAccuracyRef = useRef(locationServiceAccuracy)
+  const distanceFilterRef = useRef(distanceFilter)
 
   useEffect(() => {
-    if (!autoModeEnabledRef.current) {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationServiceAccuracyRef.current,
-        activityType: Location.LocationActivityType.OtherNavigation,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-          killServiceOnDestroy: true,
-        },
-      })
-    }
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
+    ;(async () => {
+      if (!autoModeEnabledRef.current) {
+        BackgroundGeolocation.onLocation((location) => {
+          setLocation(location)
+        })
 
+        await BackgroundGeolocation.ready({
+          desiredAccuracy: locationServiceAccuracyRef.current,
+          distanceFilter: distanceFilterRef.current,
+          stopOnTerminate: false,
+          startOnBoot: false,
+        })
+        await BackgroundGeolocation.start()
+      }
+    })()
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      BackgroundGeolocation.stop()
     }
   }, [])
 }
