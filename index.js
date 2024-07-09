@@ -6,24 +6,29 @@ import App from './src'
 import { LOCATION_TASK_NAME } from './src/constants'
 import { useLocationStore } from './src/hooks/useLocationStore'
 
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data: { locations }, error }) => {
-  if (error) {
-    console.error(error)
-    return
-  }
+TaskManager.unregisterAllTasksAsync().then(() => {
+  TaskManager.defineTask(
+    LOCATION_TASK_NAME,
+    ({ data: { locations }, error }) => {
+      if (error) {
+        console.error(error)
+        return
+      }
 
-  const curLocation = useLocationStore.getState().location
-  if (
-    locations?.length &&
-    curLocation?.timestamp !== locations[0].timestamp &&
-    curLocation?.coords.latitude !== locations[0].coords.latitude &&
-    curLocation?.coords.longitude !== locations[0].coords.longitude
-  ) {
-    useLocationStore.setState((state) => ({
-      ...state,
-      location: locations[0],
-    }))
-  }
+      const curLocation = useLocationStore.getState().location
+      if (
+        locations?.length &&
+        curLocation?.timestamp !== locations[0].timestamp &&
+        curLocation?.coords.latitude !== locations[0].coords.latitude &&
+        curLocation?.coords.longitude !== locations[0].coords.longitude
+      ) {
+        useLocationStore.setState((state) => ({
+          ...state,
+          location: locations[0],
+        }))
+      }
+    }
+  )
 })
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
