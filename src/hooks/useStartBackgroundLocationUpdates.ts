@@ -19,8 +19,17 @@ export const useStartBackgroundLocationUpdates = () => {
   const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
 
   useEffect(() => {
-    if (!autoModeEnabledRef.current) {
-      Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
+    ;(async () => {
+      if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      }
+
+      if (autoModeEnabledRef.current) {
+        return
+      }
+
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: locationServiceAccuracyRef.current,
         activityType: Location.LocationActivityType.OtherNavigation,
         deferredUpdatesDistance: locationServiceDistanceFilterRef.current,
@@ -30,7 +39,7 @@ export const useStartBackgroundLocationUpdates = () => {
           killServiceOnDestroy: true,
         },
       })
-    }
+    })()
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
