@@ -1,32 +1,41 @@
 import 'fast-text-encoding'
 
 import { registerRootComponent } from 'expo'
+import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import App from './src'
 import { LOCATION_TASK_NAME } from './src/constants'
 import { useLocationStore } from './src/hooks/useLocationStore'
+;(async () => {
+  await TaskManager.unregisterAllTasksAsync()
 
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
-  if (error) {
-    console.error(error)
-    return
+  const isUpdatesStarted = await Location.hasStartedLocationUpdatesAsync(
+    LOCATION_TASK_NAME
+  )
+  if (isUpdatesStarted) {
+    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
   }
 
-  const curLocation = useLocationStore.getState().location
-  if (
-    !data ||
-    curLocation?.timestamp === data.locations[0]?.timestamp ||
-    (curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
-      curLocation?.coords.longitude === data.locations[0]?.coords.longitude)
-  ) {
-    return
-  }
+  TaskManager.defineTask(
+    LOCATION_TASK_NAME,
+    ({ data: { locations }, error }) => {
+      if (error) {
+        return
+      }
 
-  useLocationStore.setState((state) => ({
-    ...state,
-    location: data.locations[0],
-  }))
-})
+      const curLocation = useLocationStore.getState().location
+      // 多分暴走してる
+      if (curLocation?.timestamp === locations[0]?.timestamp) {
+        return
+      }
+
+      useLocationStore.setState((state) => ({
+        ...state,
+        location: locations[0],
+      }))
+    }
+  )
+})()
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in the Expo client or in a native build,
