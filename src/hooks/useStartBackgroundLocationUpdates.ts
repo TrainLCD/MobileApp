@@ -1,5 +1,5 @@
 import * as Location from 'expo-location'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useRecoilValue } from 'recoil'
 import { LOCATION_TASK_NAME } from '../constants'
 import { accuracySelector } from '../store/selectors/accuracy'
@@ -14,10 +14,6 @@ export const useStartBackgroundLocationUpdates = () => {
     locationServiceDistanceFilterSelector
   )
 
-  const autoModeEnabledRef = useRef(autoModeEnabled)
-  const locationServiceAccuracyRef = useRef(locationServiceAccuracy)
-  const locationServiceDistanceFilterRef = useRef(locationServiceDistanceFilter)
-
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
@@ -25,14 +21,14 @@ export const useStartBackgroundLocationUpdates = () => {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
       }
 
-      if (autoModeEnabledRef.current) {
+      if (autoModeEnabled) {
         return
       }
 
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationServiceAccuracyRef.current,
+        accuracy: locationServiceAccuracy,
         activityType: Location.LocationActivityType.OtherNavigation,
-        deferredUpdatesDistance: locationServiceDistanceFilterRef.current,
+        deferredUpdatesDistance: locationServiceDistanceFilter,
         foregroundService: {
           notificationTitle: translate('bgAlertTitle'),
           notificationBody: translate('bgAlertContent'),
@@ -44,5 +40,6 @@ export const useStartBackgroundLocationUpdates = () => {
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
