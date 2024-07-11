@@ -33,6 +33,7 @@ const useRefreshStation = (): void => {
   const longitude = useLocationStore(
     (state) => state.location?.coords.longitude
   )
+
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()
@@ -135,7 +136,11 @@ const useRefreshStation = (): void => {
   }, [isApproaching, isArrived, setStation])
 
   useEffect(() => {
-    if (isArrived && nearestStation) {
+    if (!nearestStation) {
+      return
+    }
+
+    if (isArrived) {
       setStation((prev) => ({
         ...prev,
         station:
@@ -143,6 +148,7 @@ const useRefreshStation = (): void => {
             ? nearestStation
             : prev.station,
       }))
+
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
@@ -153,7 +159,7 @@ const useRefreshStation = (): void => {
         }))
       }
     }
-  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation])
+  }, [isArrived, nearestStation, setNavigation, setStation])
 }
 
 export default useRefreshStation

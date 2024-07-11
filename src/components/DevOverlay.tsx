@@ -22,13 +22,13 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 18 : undefined,
+    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 18 : undefined,
+    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
 })
 
