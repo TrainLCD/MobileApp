@@ -16,7 +16,10 @@ func getStationNumberText(_ stationNumber: String) -> String {
   return "(\(stationNumber))"
 }
 
-func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool) -> String {
+func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool, isPassing: Bool = false) -> String {
+  if (isPassing){
+    return NSLocalizedString("pass", comment: "")
+  }
   if (approaching) {
     if (isNextLastStop) {
       return NSLocalizedString("soonLast", comment: "")
@@ -136,7 +139,8 @@ struct RideSessionWidget: Widget {
           getRunningStateText(
             approaching: context.state.approaching,
             stopping: context.state.stopping,
-            isNextLastStop: context.state.isNextLastStop
+            isNextLastStop: context.state.isNextLastStop,
+            isPassing: !context.state.passingStationName.isEmpty
           ))
         .multilineTextAlignment(.center)
         .font(.caption)
@@ -166,12 +170,12 @@ struct RideSessionWidget: Widget {
           .padding(.trailing, 8)
         } else {
           VStack {
-            Text(context.state.nextStationName)
+            Text(context.state.passingStationName.isEmpty ? context.state.nextStationName : context.state.passingStationName)
               .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
-            if (!context.state.nextStationNumber.isEmpty) {
-              Text(getStationNumberText(context.state.nextStationNumber))
+            if (!context.state.nextStationNumber.isEmpty || !context.state.passingStationNumber.isEmpty) {
+              Text(getStationNumberText(context.state.passingStationName.isEmpty ? context.state.nextStationNumber : context.state.passingStationNumber))
                 .font(.caption2)
                 .bold()
                 .multilineTextAlignment(.center)
