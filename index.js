@@ -9,13 +9,6 @@ import { useLocationStore } from './src/hooks/useLocationStore'
 ;(async () => {
   await TaskManager.unregisterAllTasksAsync()
 
-  const isUpdatesStarted = await Location.hasStartedLocationUpdatesAsync(
-    LOCATION_TASK_NAME
-  )
-  if (isUpdatesStarted) {
-    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-  }
-
   TaskManager.defineTask(
     LOCATION_TASK_NAME,
     ({ data: { locations }, error }) => {
@@ -24,17 +17,21 @@ import { useLocationStore } from './src/hooks/useLocationStore'
       }
 
       const curLocation = useLocationStore.getState().location
-      // 多分暴走してる
-      if (curLocation?.timestamp === locations[0]?.timestamp) {
-        return
+      if (curLocation?.timestamp !== locations[0]?.timestamp) {
+        useLocationStore.setState((state) => ({
+          ...state,
+          location: locations[0],
+        }))
       }
-
-      useLocationStore.setState((state) => ({
-        ...state,
-        location: locations[0],
-      }))
     }
   )
+
+  const isUpdatesStarted = await Location.hasStartedLocationUpdatesAsync(
+    LOCATION_TASK_NAME
+  )
+  if (isUpdatesStarted) {
+    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+  }
 })()
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
