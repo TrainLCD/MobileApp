@@ -17,3 +17,4 @@
 "passingStation" = "Passing %@";
 "boundStation" = "Bound for %@";
 "boundStationLoopline" = "Bound for %@";
+"pass" = "Pass";

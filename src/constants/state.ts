@@ -14,8 +14,11 @@ export const RECOIL_STATES = {
 
   // selectors
   accuracySelector: 'accuracySelector',
+  locationServiceDistanceFilterSelector:
+    'locationServiceDistanceFilterSelector',
   isLEDSelector: 'isLEDSelector',
   isEnSelector: 'isEnSelector',
   currentStationSelector: 'currentStationSelector',
   currentLineSelector: 'currentLineSelector',
+  autoModeEnabledSelector: 'autoModeEnabledSelector',
 }

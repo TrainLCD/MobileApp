@@ -26,10 +26,10 @@ export const useFetchNearbyStation = () => {
     []
   )
 
-  const { trigger } = useSWRMutation(
+  const { trigger, isMutating, error } = useSWRMutation(
     '/app.trainlcd.grpc/getStationsByCoordinates',
     fetchStation
   )
 
-  return trigger
+  return { trigger, isLoading: isMutating, error }
 }

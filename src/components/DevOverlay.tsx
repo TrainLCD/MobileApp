@@ -22,28 +22,31 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 18 : undefined,
+    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 18 : undefined,
+    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
 })
 
 const DevOverlay: React.FC = () => {
-  const location = useLocationStore((state) => state.location)
+  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const longitude = useLocationStore(
+    (state) => state.location?.coords.longitude
+  )
+  const speed = useLocationStore((state) => state.location?.coords.speed)
+  const accuracy = useLocationStore((state) => state.location?.coords.accuracy)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 
-  const coordsSpeed =
-    ((location?.coords.speed ?? 0) < 0 ? 0 : location?.coords.speed) ?? 0
+  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
 
   const speedKMH = useMemo(
-    () =>
-      (location?.coords.speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
-    [coordsSpeed, location?.coords.speed]
+    () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
+    [coordsSpeed, speed]
   )
 
   return (
@@ -53,14 +56,14 @@ const DevOverlay: React.FC = () => {
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
       <Typography style={styles.text}>{`Latitude: ${
-        location?.coords.latitude ?? ''
+        latitude ?? ''
       }`}</Typography>
       <Typography style={styles.text}>{`Longitude: ${
-        location?.coords.longitude ?? ''
+        longitude ?? ''
       }`}</Typography>
 
       <Typography style={styles.text}>{`Accuracy: ${
-        location?.coords.accuracy ?? ''
+        accuracy ?? ''
       }m`}</Typography>
 
       <Typography style={styles.text}>

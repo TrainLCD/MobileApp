@@ -29,7 +29,11 @@ Notifications.setNotificationHandler({
 const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const location = useLocationStore((state) => state.location)
+  const latitude = useLocationStore((state) => state.location?.coords.latitude)
+  const longitude = useLocationStore(
+    (state) => state.location?.coords.longitude
+  )
+
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()
   const arrivedNotifiedIdRef = useRef<number>()
@@ -41,47 +45,34 @@ const useRefreshStation = (): void => {
   const { arrivedThreshold, approachingThreshold } = useThreshold()
 
   const isArrived = useMemo((): boolean => {
-    if (!location) {
+    if (!latitude || !longitude || !nearestStation) {
       return true
     }
 
-    const { latitude, longitude } = location.coords
-
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nearestStation?.latitude ?? 0,
-        longitude: nearestStation?.longitude ?? 0,
+        latitude: nearestStation.latitude,
+        longitude: nearestStation.longitude,
       },
       arrivedThreshold
     )
-  }, [
-    arrivedThreshold,
-    location,
-    nearestStation?.latitude,
-    nearestStation?.longitude,
-  ])
+  }, [arrivedThreshold, latitude, longitude, nearestStation])
 
   const isApproaching = useMemo((): boolean => {
-    if (!location) {
+    if (!latitude || !longitude || !nextStation) {
       return false
     }
-    const { latitude, longitude } = location.coords
 
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation?.latitude ?? 0,
-        longitude: nextStation?.longitude ?? 0,
+        latitude: nextStation.latitude,
+        longitude: nextStation.longitude,
       },
       approachingThreshold
     )
-  }, [
-    approachingThreshold,
-    location,
-    nextStation?.latitude,
-    nextStation?.longitude,
-  ])
+  }, [approachingThreshold, latitude, longitude, nextStation])
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -145,7 +136,11 @@ const useRefreshStation = (): void => {
   }, [isApproaching, isArrived, setStation])
 
   useEffect(() => {
-    if (isArrived && nearestStation) {
+    if (!nearestStation) {
+      return
+    }
+
+    if (isArrived) {
       setStation((prev) => ({
         ...prev,
         station:
@@ -153,6 +148,7 @@ const useRefreshStation = (): void => {
             ? nearestStation
             : prev.station,
       }))
+
       if (!getIsPass(nearestStation)) {
         setNavigation((prev) => ({
           ...prev,
@@ -163,7 +159,7 @@ const useRefreshStation = (): void => {
         }))
       }
     }
-  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation])
+  }, [isArrived, nearestStation, setNavigation, setStation])
 }
 
 export default useRefreshStation
