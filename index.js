@@ -17,7 +17,11 @@ import { useLocationStore } from './src/hooks/useLocationStore'
       }
 
       const curLocation = useLocationStore.getState().location
-      if (curLocation?.timestamp !== locations[0]?.timestamp) {
+      if (
+        curLocation?.timestamp !== locations[0]?.timestamp &&
+        curLocation?.coords.latitude !== locations[0]?.coords.latitude &&
+        curLocation?.coords.longitude !== locations[0]?.coords.longitude
+      ) {
         useLocationStore.setState((state) => ({
           ...state,
           location: locations[0],
