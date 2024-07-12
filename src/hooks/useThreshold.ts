@@ -22,7 +22,8 @@ export const useThreshold = () => {
     if (!currentLine) {
       return ARRIVED_MAX_THRESHOLD
     }
-    const threshold = currentLine.averageDistance / 4.5
+
+    const threshold = currentLine.averageDistance / 4
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD
     }

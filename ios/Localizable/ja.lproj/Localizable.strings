@@ -17,3 +17,4 @@
 "passingStation" = "%@を通過中";
 "boundStation" = "%@ゆき";
 "boundStationLoopline" = "%@";
+"pass" = "通過中";
