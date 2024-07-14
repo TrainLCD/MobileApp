@@ -4,14 +4,18 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import getIsPass from '../utils/isPass'
 
-const usePreviousStation = (): Station | undefined => {
+const usePreviousStation = (skipPass = true): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
 
   const stations = useMemo(
-    () => dropEitherJunctionStation(stationsFromState, selectedDirection),
-    [selectedDirection, stationsFromState]
+    () =>
+      dropEitherJunctionStation(stationsFromState, selectedDirection).filter(
+        (s) => (skipPass ? getIsPass(s) : true)
+      ),
+    [selectedDirection, skipPass, stationsFromState]
   )
 
   const station = useRecoilValue(

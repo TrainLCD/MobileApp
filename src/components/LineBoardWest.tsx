@@ -290,7 +290,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const station = useRecoilValue(currentStationSelector({}))
   const transferLines = useTransferLinesFromStation(stationInLoop)
   const nextStation = useNextStation(true, stationInLoop)
-  const prevStation = usePreviousStation()
+  const prevStation = usePreviousStation(false)
 
   const currentStationIndex = useMemo(
     () =>
