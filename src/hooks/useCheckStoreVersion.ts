@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Alert, Linking } from 'react-native'
-import VersionCheck from 'react-native-version-check'
+import VersionCheck from 'react-native-version-check-expo'
 import { translate } from '../translation'
 
 const useCheckStoreVersion = (): void => {
