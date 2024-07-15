@@ -130,34 +130,32 @@ const useRefreshStation = (): void => {
   useEffect(() => {
     setStation((prev) => ({
       ...prev,
-      arrived: isArrived,
       approaching: isApproaching,
     }))
-  }, [isApproaching, isArrived, setStation])
+  }, [isApproaching, setStation])
 
   useEffect(() => {
     if (!nearestStation) {
       return
     }
 
-    if (isArrived) {
-      setStation((prev) => ({
-        ...prev,
-        station:
-          prev.station?.id !== nearestStation.id
-            ? nearestStation
-            : prev.station,
-      }))
+    setStation((prev) => ({
+      ...prev,
+      arrived: isArrived,
+      station:
+        isArrived && prev.station?.id !== nearestStation.id
+          ? nearestStation
+          : prev.station,
+    }))
 
-      if (!getIsPass(nearestStation)) {
-        setNavigation((prev) => ({
-          ...prev,
-          stationForHeader:
-            prev.stationForHeader?.id !== nearestStation.id
-              ? nearestStation
-              : prev.stationForHeader,
-        }))
-      }
+    if (isArrived && !getIsPass(nearestStation)) {
+      setNavigation((prev) => ({
+        ...prev,
+        stationForHeader:
+          prev.stationForHeader?.id !== nearestStation.id
+            ? nearestStation
+            : prev.stationForHeader,
+      }))
     }
   }, [isArrived, nearestStation, setNavigation, setStation])
 }
