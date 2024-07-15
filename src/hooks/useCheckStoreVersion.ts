@@ -1,10 +1,10 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Alert, Linking } from 'react-native'
-import VersionCheck from 'react-native-version-check-expo'
+import VersionCheck from 'react-native-version-check'
 import { translate } from '../translation'
 
 const useCheckStoreVersion = (): void => {
-  const showUpdateRequestDialog = (storeURL: string) => {
+  const showUpdateRequestDialog = useCallback((storeURL: string) => {
     Alert.alert(
       translate('annoucementTitle'),
       translate('newVersionAvailableText'),
@@ -19,7 +19,7 @@ const useCheckStoreVersion = (): void => {
         },
       ]
     )
-  }
+  }, [])
 
   useEffect(() => {
     const f = async () => {
@@ -27,12 +27,12 @@ const useCheckStoreVersion = (): void => {
         return
       }
       const res = await VersionCheck.needUpdate()
-      if (res?.isNeeded) {
+      if (res.isNeeded) {
         showUpdateRequestDialog(res.storeUrl)
       }
     }
     f()
-  }, [])
+  }, [showUpdateRequestDialog])
 }
 
 export default useCheckStoreVersion
