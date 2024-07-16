@@ -7,9 +7,11 @@ import { initializeApp } from "firebase-admin/app";
 import { Timestamp } from "firebase-admin/firestore";
 import * as functions from "firebase-functions";
 import { HttpsError } from "firebase-functions/v1/auth";
+import * as cognitiveSdk from "microsoft-cognitiveservices-speech-sdk";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
 import { DiscordEmbed } from "./models/common";
 import { Report } from "./models/feedback";
+import { base64ArrayBuffer } from "./utils/base64ArrayBuffer";
 
 process.env.TZ = "Asia/Tokyo";
 
@@ -357,7 +359,7 @@ exports.tts = functions
 
     const isPremium = data.premium;
     const jaVoiceName = isPremium ? "ja-JP-Neural2-B" : "ja-JP-Standard-B";
-    const enVoiceName = isPremium ? "en-US-Studio-O" : "en-US-Standard-G";
+    const enVoiceName = isPremium ? "en-US-JennyNeural" : "en-US-Standard-G";
 
     const voicesCollection = firestore
       .collection("caches")
@@ -388,7 +390,7 @@ exports.tts = functions
       return { id, jaAudioContent, enAudioContent };
     }
 
-    const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
+    const gcpTtsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
     const reqBodyJa = {
       input: {
@@ -399,10 +401,53 @@ exports.tts = functions
         name: jaVoiceName,
       },
       audioConfig: {
-        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        audioEncoding: "MP3",
         speakingRate: isPremium ? 1.1 : 1,
       },
     };
+
+    const { audioContent: jaAudioContent } = await (
+      await fetch(gcpTtsUrl, {
+        headers: {
+          "content-type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify(reqBodyJa),
+        method: "POST",
+      })
+    ).json();
+
+    if (isPremium) {
+      const speechKey = process.env.AZURE_SPEECH_KEY;
+      const serviceRegion = process.env.AZURE_REGION;
+
+      if (!speechKey || !serviceRegion) {
+        throw new Error("Azure credentials are not set!");
+      }
+
+      const enAudioBuffer = await azureTextToSpeech(
+        speechKey,
+        serviceRegion,
+        enVoiceName,
+        ssmlEn,
+      );
+
+      const enAudioContent = base64ArrayBuffer(enAudioBuffer);
+      const cacheTopic = pubsub.topic("tts-cache");
+      await cacheTopic.publishMessage({
+        json: {
+          id,
+          isPremium,
+          jaAudioContent,
+          enAudioContent,
+          ssmlJa,
+          ssmlEn,
+          voiceJa: jaVoiceName,
+          voiceEn: enVoiceName,
+        },
+      });
+
+      return { id, jaAudioContent, enAudioContent };
+    }
 
     const reqBodyEn = {
       input: {
@@ -413,23 +458,13 @@ exports.tts = functions
         name: enVoiceName,
       },
       audioConfig: {
-        audioEncoding: isPremium ? "LINEAR16" : "MP3",
-        speakingRate: isPremium ? 1.1 : 1,
+        audioEncoding: "MP3",
+        speakingRate: 1,
       },
     };
 
-    const { audioContent: jaAudioContent } = await (
-      await fetch(ttsUrl, {
-        headers: {
-          "content-type": "application/json; charset=UTF-8",
-        },
-        body: JSON.stringify(reqBodyJa),
-        method: "POST",
-      })
-    ).json();
-
     const { audioContent: enAudioContent } = await (
-      await fetch(ttsUrl, {
+      await fetch(gcpTtsUrl, {
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
@@ -472,15 +507,11 @@ exports.ttsCachePubSub = functions.pubsub
     }) => {
       const jaTtsCachePathBase = "caches/tts/ja";
       const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
-      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}${
-        isPremium ? ".wav" : ".mp3"
-      }`;
+      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
 
       const enTtsCachePathBase = "caches/tts/en";
       const enTtsBuf = Buffer.from(enAudioContent, "base64");
-      const enTtsCachePath = `${enTtsCachePathBase}/${id}${
-        isPremium ? ".wav" : ".mp3"
-      }`;
+      const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
 
       await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
       await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
@@ -502,3 +533,46 @@ exports.ttsCachePubSub = functions.pubsub
         });
     },
   );
+
+const azureTextToSpeech = async (
+  key: string,
+  region: string,
+  voiceName: string,
+  ssml: string,
+): Promise<ArrayBuffer> =>
+  new Promise((resolve, reject) => {
+    const speechConfig = cognitiveSdk.SpeechConfig.fromSubscription(
+      key,
+      region,
+    );
+
+    speechConfig.speechSynthesisOutputFormat =
+      cognitiveSdk.SpeechSynthesisOutputFormat.Audio48Khz192KBitRateMonoMp3;
+
+    const synthesizer = new cognitiveSdk.SpeechSynthesizer(speechConfig);
+
+    synthesizer.speakSsmlAsync(
+      ssml
+        .replace(
+          "<speak>",
+          `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US"><voice name="${voiceName}" style="newscast"><emphasis level="strong"><prosody volume="+20.00%">`,
+        )
+        .replace("</speak>", "</prosody></emphasis></voice></speak>"),
+      (result) => {
+        const { audioData } = result;
+        synthesizer.close();
+
+        if (result.errorDetails) {
+          console.error(result.errorDetails);
+          reject(result.errorDetails);
+        } else {
+          resolve(audioData);
+        }
+      },
+      (error) => {
+        console.error(error);
+        synthesizer.close();
+        reject(error);
+      },
+    );
+  });
