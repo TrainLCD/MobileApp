@@ -555,9 +555,12 @@ const azureTextToSpeech = async (
       ssml
         .replace(
           "<speak>",
-          `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US"><voice name="${voiceName}" style="newscast"><emphasis level="strong"><prosody volume="+20.00%">`,
+          `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US"><voice name="${voiceName}"><mstts:express-as style="newscast" styledegree="0.5" role="OlderAdultFemale"><emphasis level="strong"><prosody volume="+50.00%">`,
         )
-        .replace("</speak>", "</prosody></emphasis></voice></speak>"),
+        .replace(
+          "</speak>",
+          "</prosody></emphasis></mstts:express-as></voice></speak>",
+        ),
       (result) => {
         const { audioData } = result;
         synthesizer.close();
