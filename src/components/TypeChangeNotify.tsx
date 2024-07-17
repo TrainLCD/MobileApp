@@ -910,6 +910,13 @@ const TypeChangeNotify: React.FC = () => {
     }
   }, [theme])
 
+  if (
+    !selectedBound ||
+    currentTypeLastStation.groupId === selectedBound.groupId
+  ) {
+    return null
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
