@@ -418,25 +418,25 @@ exports.tts = functions
       },
     };
 
-    const { audioContent: jaAudioContent } = await (
-      await fetch(ttsUrl, {
+    const [jaRes, enRes] = await Promise.all([
+      fetch(ttsUrl, {
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
         body: JSON.stringify(reqBodyJa),
         method: "POST",
-      })
-    ).json();
-
-    const { audioContent: enAudioContent } = await (
-      await fetch(ttsUrl, {
+      }),
+      fetch(ttsUrl, {
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
         body: JSON.stringify(reqBodyEn),
         method: "POST",
-      })
-    ).json();
+      }),
+    ]);
+
+    const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
+      await Promise.all([jaRes.json(), enRes.json()]);
 
     const cacheTopic = pubsub.topic("tts-cache");
     await cacheTopic.publishMessage({
@@ -482,23 +482,24 @@ exports.ttsCachePubSub = functions.pubsub
         isPremium ? ".wav" : ".mp3"
       }`;
 
-      await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
-      await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
-
-      await firestore
-        .collection("caches")
-        .doc("tts")
-        .collection("voices")
-        .doc(id)
-        .set({
-          id,
-          ssmlJa,
-          pathJa: jaTtsCachePath,
-          voiceJa,
-          ssmlEn,
-          pathEn: enTtsCachePath,
-          voiceEn,
-          createdAt: Timestamp.now(),
-        });
+      await Promise.all([
+        storage.bucket().file(jaTtsCachePath).save(jaTtsBuf),
+        storage.bucket().file(enTtsCachePath).save(enTtsBuf),
+        firestore
+          .collection("caches")
+          .doc("tts")
+          .collection("voices")
+          .doc(id)
+          .set({
+            id,
+            ssmlJa,
+            pathJa: jaTtsCachePath,
+            voiceJa,
+            ssmlEn,
+            pathEn: enTtsCachePath,
+            voiceEn,
+            createdAt: Timestamp.now(),
+          }),
+      ]);
     },
   );
