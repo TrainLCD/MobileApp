@@ -3,12 +3,14 @@ import { useRecoilValue } from 'recoil'
 import { TrainType } from '../../gen/proto/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import useNextLine from './useNextLine'
 
 const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
   const { trainType } = useRecoilValue(navigationState)
+  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const currentStation = useRecoilValue(currentStationSelector({}))
 
@@ -16,8 +18,8 @@ const useNextTrainType = (): TrainType | null => {
   const sameLineNextType = useMemo(() => {
     if (
       !(
-        trainType?.line?.id === nextLine?.id &&
-        trainType?.line?.company?.id === nextLine?.company?.id
+        trainType?.line?.id === currentLine?.id &&
+        trainType?.line?.company?.id === currentLine?.company?.id
       )
     ) {
       return
@@ -46,9 +48,9 @@ const useNextTrainType = (): TrainType | null => {
       .filter((tt) => tt)
       .find((tt) => tt?.typeId !== trainType?.typeId)
   }, [
+    currentLine?.company?.id,
+    currentLine?.id,
     currentStation?.groupId,
-    nextLine?.company?.id,
-    nextLine?.id,
     selectedDirection,
     stations,
     trainType?.line?.company?.id,
