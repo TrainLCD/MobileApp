@@ -12,6 +12,7 @@ import useNextTrainType from '../hooks/useNextTrainType'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
+import { currentStationSelector } from '../store/selectors/currentStation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
@@ -724,16 +725,19 @@ const JOBars: React.FC = () => {
   )
 }
 const TypeChangeNotify: React.FC = () => {
-  const { selectedDirection, stations, selectedBound, station } =
+  const { selectedDirection, stations, selectedBound } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
+  const station = useRecoilValue(currentStationSelector({}))
   const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const currentTypeStations = stations.filter(
-    (s) => s.trainType?.typeId === trainType?.typeId
+    (s) =>
+      s.trainType?.typeId === trainType?.typeId &&
+      s.line?.id === currentLine?.id
   )
 
   const reversedStations = stations.slice().reverse()

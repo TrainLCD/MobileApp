@@ -1,11 +1,10 @@
 import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import navigationState from '../store/atoms/navigation'
 import { getIsLocal } from '../utils/trainTypeString'
+import useCurrentTrainType from './useCurrentTrainType'
 import useNextTrainType from './useNextTrainType'
 
 export const useTypeWillChange = (): boolean => {
-  const { trainType } = useRecoilValue(navigationState)
+  const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
 
   const nextTrainTypeIsDifferent = useMemo(() => {
