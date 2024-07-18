@@ -15,8 +15,9 @@ const useNextTrainType = (): TrainType | null => {
   // 同じ路線でも種別が変わる場合を想定(小田急線等)
   const sameLineNextType = useMemo(() => {
     if (
-      trainType?.line?.id !== nextLine?.id &&
-      trainType?.line?.company?.id !== nextLine?.company?.id
+      nextLine &&
+      trainType?.line?.id !== nextLine.id &&
+      trainType?.line?.company?.id !== nextLine.company?.id
     ) {
       return
     }
@@ -45,8 +46,7 @@ const useNextTrainType = (): TrainType | null => {
       .find((tt) => tt?.typeId !== trainType?.typeId)
   }, [
     currentStation?.groupId,
-    nextLine?.company?.id,
-    nextLine?.id,
+    nextLine,
     selectedDirection,
     stations,
     trainType?.line?.company?.id,
