@@ -3,24 +3,20 @@ import { useRecoilValue } from 'recoil'
 import { TrainType } from '../../gen/proto/stationapi_pb'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import useNextLine from './useNextLine'
 
 const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
   const { trainType } = useRecoilValue(navigationState)
-  const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()
   const currentStation = useRecoilValue(currentStationSelector({}))
 
   // 同じ路線でも種別が変わる場合を想定(小田急線等)
   const sameLineNextType = useMemo(() => {
     if (
-      !(
-        trainType?.line?.id === currentLine?.id &&
-        trainType?.line?.company?.id === currentLine?.company?.id
-      )
+      trainType?.line?.id !== nextLine?.id &&
+      trainType?.line?.company?.id !== nextLine?.company?.id
     ) {
       return
     }
@@ -48,9 +44,9 @@ const useNextTrainType = (): TrainType | null => {
       .filter((tt) => tt)
       .find((tt) => tt?.typeId !== trainType?.typeId)
   }, [
-    currentLine?.company?.id,
-    currentLine?.id,
     currentStation?.groupId,
+    nextLine?.company?.id,
+    nextLine?.id,
     selectedDirection,
     stations,
     trainType?.line?.company?.id,
@@ -58,14 +54,17 @@ const useNextTrainType = (): TrainType | null => {
     trainType?.typeId,
   ])
 
-  const nextTrainType = useMemo(() => {
-    return (
-      sameLineNextType ??
-      trainType?.lines?.find((l) => l.id === nextLine?.id)?.trainType
-    )
-  }, [nextLine?.id, sameLineNextType, trainType?.lines])
+  const nextLineTrainType = useMemo(
+    () =>
+      trainType?.lines?.find((l) => l.id === nextLine?.id)?.trainType ?? null,
+    [nextLine?.id, trainType?.lines]
+  )
 
-  return nextTrainType ?? null
+  const nextTrainType = useMemo(() => {
+    return sameLineNextType ?? nextLineTrainType
+  }, [nextLineTrainType, sameLineNextType])
+
+  return nextTrainType
 }
 
 export default useNextTrainType

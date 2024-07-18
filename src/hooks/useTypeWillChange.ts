@@ -9,11 +9,11 @@ export const useTypeWillChange = (): boolean => {
   const nextTrainType = useNextTrainType()
 
   const nextTrainTypeIsDifferent = useMemo(() => {
-    if (!trainType) {
+    if (!trainType || !nextTrainType) {
       return false
     }
 
-    if (!nextTrainType) {
+    if (trainType.typeId === nextTrainType.typeId) {
       return false
     }
 
