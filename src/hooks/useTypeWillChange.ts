@@ -12,16 +12,12 @@ export const useTypeWillChange = (): boolean => {
       return false
     }
 
-    if (getIsLocal(trainType) && getIsLocal(nextTrainType)) {
+    if (trainType.typeId === nextTrainType.typeId) {
       return false
     }
 
-    // 小田急の路線同一で途中種別が変わる対応
-    if (
-      trainType.line?.id === nextTrainType.line?.id &&
-      trainType.line?.company?.id === nextTrainType.line?.company?.id
-    ) {
-      return true
+    if (getIsLocal(trainType) && getIsLocal(nextTrainType)) {
+      return false
     }
 
     return trainType?.typeId !== nextTrainType?.typeId
