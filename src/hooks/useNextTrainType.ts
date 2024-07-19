@@ -16,7 +16,7 @@ const useNextTrainType = (): TrainType | null => {
   const sameLineNextType = useMemo(() => {
     if (selectedDirection === 'INBOUND') {
       const currentIndex = stations.findIndex(
-        (sta) => sta.groupId === currentStation?.groupId
+        (sta) => sta.id === currentStation?.id
       )
       return stations
         .slice(currentIndex, stations.length)
@@ -28,7 +28,7 @@ const useNextTrainType = (): TrainType | null => {
     const currentIndex = stations
       .slice()
       .reverse()
-      .findIndex((sta) => sta.groupId === currentStation?.groupId)
+      .findIndex((sta) => sta.id === currentStation?.id)
     return stations
       .slice()
       .reverse()
@@ -36,16 +36,19 @@ const useNextTrainType = (): TrainType | null => {
       .map((sta) => sta.trainType)
       .filter((tt) => tt)
       .find((tt) => tt?.typeId !== trainType?.typeId)
-  }, [currentStation?.groupId, selectedDirection, stations, trainType?.typeId])
+  }, [currentStation?.id, selectedDirection, stations, trainType?.typeId])
+
+  const nextLineTrainType = useMemo(
+    () =>
+      trainType?.lines?.find((l) => l.id === nextLine?.id)?.trainType ?? null,
+    [nextLine?.id, trainType?.lines]
+  )
 
   const nextTrainType = useMemo(() => {
-    return (
-      sameLineNextType ??
-      trainType?.lines?.find((l) => l.id === nextLine?.id)?.trainType
-    )
-  }, [nextLine?.id, sameLineNextType, trainType?.lines])
+    return sameLineNextType ?? nextLineTrainType
+  }, [nextLineTrainType, sameLineNextType])
 
-  return nextTrainType ?? null
+  return nextTrainType
 }
 
 export default useNextTrainType

@@ -44,10 +44,9 @@ const TrainTypeSettings: React.FC = () => {
   )
 
   const onPressBack = useCallback(async () => {
-    if (!trainType) {
-      return
+    if (trainType) {
+      await fetchTrainTypeStations({ lineGroupId: trainType.groupId })
     }
-    await fetchTrainTypeStations({ lineGroupId: trainType.groupId })
 
     if (navigation.canGoBack()) {
       navigation.goBack()
@@ -71,9 +70,10 @@ const TrainTypeSettings: React.FC = () => {
           ...prev,
           trainType: null,
         }))
+        // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
         setStationState((prev) => ({
           ...prev,
-          stations: [],
+          wantedDestination: null,
         }))
         return
       }
