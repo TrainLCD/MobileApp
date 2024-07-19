@@ -1,30 +1,22 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { TrainType } from '../../gen/proto/stationapi_pb'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
+import useCurrentTrainType from './useCurrentTrainType'
 import useNextLine from './useNextLine'
 
 const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
-  const { trainType } = useRecoilValue(navigationState)
   const nextLine = useNextLine()
   const currentStation = useRecoilValue(currentStationSelector({}))
+  const trainType = useCurrentTrainType()
 
   // 同じ路線でも種別が変わる場合を想定(小田急線等)
   const sameLineNextType = useMemo(() => {
-    if (
-      nextLine &&
-      trainType?.line?.id !== nextLine.id &&
-      trainType?.line?.company?.id !== nextLine.company?.id
-    ) {
-      return
-    }
-
     if (selectedDirection === 'INBOUND') {
       const currentIndex = stations.findIndex(
-        (sta) => sta.groupId === currentStation?.groupId
+        (sta) => sta.id === currentStation?.id
       )
       return stations
         .slice(currentIndex, stations.length)
@@ -36,7 +28,7 @@ const useNextTrainType = (): TrainType | null => {
     const currentIndex = stations
       .slice()
       .reverse()
-      .findIndex((sta) => sta.groupId === currentStation?.groupId)
+      .findIndex((sta) => sta.id === currentStation?.id)
     return stations
       .slice()
       .reverse()
@@ -44,15 +36,7 @@ const useNextTrainType = (): TrainType | null => {
       .map((sta) => sta.trainType)
       .filter((tt) => tt)
       .find((tt) => tt?.typeId !== trainType?.typeId)
-  }, [
-    currentStation?.groupId,
-    nextLine,
-    selectedDirection,
-    stations,
-    trainType?.line?.company?.id,
-    trainType?.line?.id,
-    trainType?.typeId,
-  ])
+  }, [currentStation?.id, selectedDirection, stations, trainType?.typeId])
 
   const nextLineTrainType = useMemo(
     () =>

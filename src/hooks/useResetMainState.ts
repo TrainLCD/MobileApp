@@ -14,12 +14,14 @@ const useResetMainState = (): (() => void) => {
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
       bottomState: 'LINE',
       leftStations: [],
+      stationForHeader: null,
     }))
     setStationState((prev) => ({
       ...prev,
       selectedDirection: null,
       selectedBound: null,
       arrived: true,
+      approaching: false,
       averageDistance: null,
     }))
   }, [setNavigationState, setStationState])

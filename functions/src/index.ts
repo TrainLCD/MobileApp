@@ -439,7 +439,7 @@ exports.tts = functions
       await Promise.all([jaRes.json(), enRes.json()]);
 
     const cacheTopic = pubsub.topic("tts-cache");
-    await cacheTopic.publishMessage({
+    cacheTopic.publishMessage({
       json: {
         id,
         isPremium,
@@ -482,24 +482,22 @@ exports.ttsCachePubSub = functions.pubsub
         isPremium ? ".wav" : ".mp3"
       }`;
 
-      await Promise.all([
-        storage.bucket().file(jaTtsCachePath).save(jaTtsBuf),
-        storage.bucket().file(enTtsCachePath).save(enTtsBuf),
-        firestore
-          .collection("caches")
-          .doc("tts")
-          .collection("voices")
-          .doc(id)
-          .set({
-            id,
-            ssmlJa,
-            pathJa: jaTtsCachePath,
-            voiceJa,
-            ssmlEn,
-            pathEn: enTtsCachePath,
-            voiceEn,
-            createdAt: Timestamp.now(),
-          }),
-      ]);
+      await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
+      await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
+      await firestore
+        .collection("caches")
+        .doc("tts")
+        .collection("voices")
+        .doc(id)
+        .set({
+          id,
+          ssmlJa,
+          pathJa: jaTtsCachePath,
+          voiceJa,
+          ssmlEn,
+          pathEn: enTtsCachePath,
+          voiceEn,
+          createdAt: Timestamp.now(),
+        });
     },
   );
