@@ -32,6 +32,7 @@ export const MARK_SHAPE = {
   KEISEI: 'KEISEI',
   NTL: 'NTL',
   SMR: 'SMR',
+  NISHITETSU: 'NISHITETSU',
 } as const
 
 export const NUMBERING_ICON_SIZE = {
