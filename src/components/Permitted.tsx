@@ -27,7 +27,6 @@ import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
-import useResetMainState from '../hooks/useResetMainState'
 import { useTTS } from '../hooks/useTTS'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
@@ -93,7 +92,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useRecoilValue(currentLineSelector)
-  const resetMainState = useResetMainState()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
@@ -137,7 +135,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           // iOS: back, Android: share
           case 0:
             if (Platform.OS === 'ios') {
-              resetMainState()
               navigation.navigate('SelectBound')
               break
             }
