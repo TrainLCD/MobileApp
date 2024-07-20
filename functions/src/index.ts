@@ -399,7 +399,7 @@ exports.tts = functions
         name: jaVoiceName,
       },
       audioConfig: {
-        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        audioEncoding: "MP3",
         speakingRate: isPremium ? 1.1 : 1,
       },
     };
@@ -413,7 +413,7 @@ exports.tts = functions
         name: enVoiceName,
       },
       audioConfig: {
-        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        audioEncoding: "MP3",
         speakingRate: isPremium ? 1.1 : 1,
       },
     };
@@ -472,15 +472,11 @@ exports.ttsCachePubSub = functions.pubsub
     }) => {
       const jaTtsCachePathBase = "caches/tts/ja";
       const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
-      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}${
-        isPremium ? ".wav" : ".mp3"
-      }`;
+      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
 
       const enTtsCachePathBase = "caches/tts/en";
       const enTtsBuf = Buffer.from(enAudioContent, "base64");
-      const enTtsCachePath = `${enTtsCachePathBase}/${id}${
-        isPremium ? ".wav" : ".mp3"
-      }`;
+      const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
 
       await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
       await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
