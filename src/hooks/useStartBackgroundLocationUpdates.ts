@@ -15,27 +15,20 @@ export const useStartBackgroundLocationUpdates = () => {
   )
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ;(async () => {
-      if (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      }
+    if (autoModeEnabled) {
+      return
+    }
 
-      if (autoModeEnabled) {
-        return
-      }
-
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: locationServiceAccuracy,
-        activityType: Location.LocationActivityType.OtherNavigation,
-        deferredUpdatesDistance: locationServiceDistanceFilter,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-          killServiceOnDestroy: true,
-        },
-      })
-    })()
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      accuracy: locationServiceAccuracy,
+      activityType: Location.LocationActivityType.OtherNavigation,
+      deferredUpdatesDistance: locationServiceDistanceFilter,
+      foregroundService: {
+        notificationTitle: translate('bgAlertTitle'),
+        notificationBody: translate('bgAlertContent'),
+        killServiceOnDestroy: true,
+      },
+    })
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
