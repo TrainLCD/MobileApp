@@ -142,10 +142,10 @@ struct RideSessionWidget: Widget {
             isNextLastStop: context.state.isNextLastStop,
             isPassing: !context.state.passingStationName.isEmpty
           ))
-        .multilineTextAlignment(.center)
+        .multilineTextAlignment(.trailing)
         .font(.caption)
         .bold()
-        .padding(.leading, 4)
+        .padding(.leading, 8)
       } compactTrailing: {
         if (context.state.stopping) {
           VStack {
