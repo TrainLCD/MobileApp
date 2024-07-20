@@ -7,7 +7,12 @@ import App from './src'
 import { LOCATION_TASK_NAME } from './src/constants'
 import { useLocationStore } from './src/hooks/useLocationStore'
 ;(async () => {
-  await TaskManager.unregisterAllTasksAsync()
+  try {
+    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+    await TaskManager.unregisterAllTasksAsync()
+  } catch (e) {
+    console.warn(e)
+  }
 
   TaskManager.defineTask(
     LOCATION_TASK_NAME,
@@ -29,13 +34,6 @@ import { useLocationStore } from './src/hooks/useLocationStore'
       }
     }
   )
-
-  const isUpdatesStarted = await Location.hasStartedLocationUpdatesAsync(
-    LOCATION_TASK_NAME
-  )
-  if (isUpdatesStarted) {
-    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-  }
 })()
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
