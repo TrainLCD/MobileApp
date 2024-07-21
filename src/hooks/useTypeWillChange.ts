@@ -12,7 +12,10 @@ export const useTypeWillChange = (): boolean => {
       return false
     }
 
-    if (trainType.typeId === nextTrainType.typeId) {
+    if (
+      trainType.typeId === nextTrainType.typeId ||
+      trainType.name === nextTrainType.name
+    ) {
       return false
     }
 
