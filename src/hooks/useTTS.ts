@@ -9,7 +9,6 @@ import {
 } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
-import stationState from '../store/atoms/station'
 import { isDevApp } from '../utils/isDevApp'
 import useAnonymousUser from './useAnonymousUser'
 import useConnectivity from './useConnectivity'
@@ -20,7 +19,6 @@ import useTTSText from './useTTSText'
 export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
-  const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
@@ -35,49 +33,38 @@ export const useTTS = (): void => {
   const soundEnRef = useRef<Audio.Sound | null>(null)
 
   useEffect(() => {
-    const setAudioModeAsync = async () => {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: backgroundEnabled,
-        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-        playsInSilentModeIOS: backgroundEnabled,
-        shouldDuckAndroid: true,
-        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-        playThroughEarpieceAndroid: false,
-      })
-    }
-    setAudioModeAsync()
-  }, [backgroundEnabled])
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      staysActiveInBackground: backgroundEnabled,
+      interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+      playsInSilentModeIOS: backgroundEnabled,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+      playThroughEarpieceAndroid: false,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     firstSpeechRef.current = false
 
-    if (!soundJaRef.current) {
-      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-      soundJaRef.current = soundJa
-    } else {
-      await soundJaRef.current?.loadAsync({ uri: pathJa })
-    }
-    if (!soundEnRef.current) {
-      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
-      soundEnRef.current = soundEn
-    } else {
-      await soundEnRef.current?.loadAsync({ uri: pathEn })
-    }
+    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
+    soundJaRef.current = soundJa
+
+    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
+    soundEnRef.current = soundEn
 
     await soundJaRef.current?.playAsync()
     playingRef.current = true
 
     soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundJaRef.current?.unloadAsync()
         await soundEnRef.current?.playAsync()
       }
     }
 
     soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
-        await soundEnRef.current?.unloadAsync()
         playingRef.current = false
       }
     }
@@ -119,10 +106,7 @@ export const useTTS = (): void => {
 
       const baseDir = FileSystem.cacheDirectory
 
-      const extension =
-        monetizedPlanEnabled && losslessEnabled ? '.wav' : '.mp3'
-
-      const pathJa = `${baseDir}${ttsJson.result.id}_ja${extension}`
+      const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`
       if (ttsJson?.result?.jaAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathJa,
@@ -132,7 +116,7 @@ export const useTTS = (): void => {
           }
         )
       }
-      const pathEn = `${baseDir}/${ttsJson.result.id}_en${extension}`
+      const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`
       if (ttsJson?.result?.enAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathEn,
@@ -204,14 +188,9 @@ export const useTTS = (): void => {
   ])
 
   useEffect(() => {
-    if (!selectedBound) {
-      const unload = async () => {
-        firstSpeechRef.current = true
-        await soundJaRef.current?.unloadAsync()
-        await soundEnRef.current?.unloadAsync()
-        playingRef.current = false
-      }
-      unload()
+    return () => {
+      soundJaRef.current?.unloadAsync()
+      soundEnRef.current?.unloadAsync()
     }
-  }, [selectedBound])
+  }, [])
 }
