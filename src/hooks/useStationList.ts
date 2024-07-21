@@ -1,9 +1,7 @@
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import useSWR from 'swr'
-import useSWRMutation from 'swr/mutation'
 import {
   GetStationByLineIdRequest,
-  GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
   TrainType,
@@ -106,41 +104,10 @@ export const useStationList = (fetchAutomatically = true) => {
       }
     )
 
-  const {
-    isMutating: isLoadingTrainTypeStations,
-    trigger: fetchTrainTypeStations,
-    error: loadingTrainTypeStationsError,
-  } = useSWRMutation(
-    '/app.trainlcd.grpc/getStationsByLineGroupId',
-    async (_: string, { arg }: { arg: { lineGroupId: number } }) => {
-      if (!arg || fromBuilder) {
-        return
-      }
-
-      const { lineGroupId } = arg
-
-      const req = new GetStationsByLineGroupIdRequest({ lineGroupId })
-      const data = await grpcClient.getStationsByLineGroupId(req)
-
-      if (!data) {
-        return
-      }
-      setStationState((prev) => ({
-        ...prev,
-        stations: data.stations,
-        allStations: data.stations,
-      }))
-    }
-  )
-
   return {
     updateStations,
-    fetchTrainTypeStations,
-    loading:
-      isLoadingStations || isTrainTypesLoading || isLoadingTrainTypeStations,
-    error:
-      loadingStationsError ||
-      loadingTrainTypesError ||
-      loadingTrainTypeStationsError,
+
+    loading: isLoadingStations || isTrainTypesLoading,
+    error: loadingStationsError || loadingTrainTypesError,
   }
 }
