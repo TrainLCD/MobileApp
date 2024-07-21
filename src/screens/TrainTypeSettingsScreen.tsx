@@ -1,19 +1,15 @@
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilValue } from 'recoil'
-import useSWR from 'swr'
-import {
-  GetStationsByLineGroupIdRequest,
-  TrainType,
-} from '../../gen/proto/stationapi_pb'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { TrainType } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal'
 import { TrainTypeList } from '../components/TrainTypeList'
 import { useStationList } from '../hooks/useStationList'
-import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
+import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -26,25 +22,13 @@ const TrainTypeSettings: React.FC = () => {
     null
   )
 
-  const {
-    data: trainTypeStations,
-    isLoading: isStationsLoading,
-    error: stationsLoadingError,
-  } = useSWR(
-    ['/app.trainlcd.grpc/GetStationsByLineGroupId', selectedTrainType?.groupId],
-    async ([, lineGroupId]) => {
-      const req = new GetStationsByLineGroupIdRequest({
-        lineGroupId,
-      })
-      const res = await grpcClient.getStationsByLineGroupId(req)
-      return res.stations
-    }
-  )
-
   const { fetchedTrainTypes } = useRecoilValue(navigationState)
 
+  const [{ stations }, setStationState] = useRecoilState(stationState)
+  const setNavigationState = useSetRecoilState(navigationState)
+
   const navigation = useNavigation()
-  const { loading } = useStationList()
+  const { loading, error } = useStationList()
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -67,7 +51,48 @@ const TrainTypeSettings: React.FC = () => {
     setIsTrainTypeModalVisible(true)
   }
 
-  const handleTrainTypeConfirmed = () => {}
+  const handleTrainTypeConfirmed = useCallback(
+    async (trainType: TrainType) => {
+      if (trainType.id === 0) {
+        setNavigationState((prev) => ({
+          ...prev,
+          trainType: null,
+        }))
+        // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
+        setStationState((prev) => ({
+          ...prev,
+          wantedDestination: null,
+        }))
+        return
+      }
+
+      const selectedTrainType = fetchedTrainTypes?.find(
+        (tt) => tt.id === trainType.id
+      )
+
+      if (!selectedTrainType) {
+        return
+      }
+
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: selectedTrainType,
+      }))
+      // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
+      setStationState((prev) => ({
+        ...prev,
+        wantedDestination: null,
+        stations: [],
+      }))
+
+      setIsTrainTypeModalVisible(false)
+
+      if (navigation.canGoBack()) {
+        navigation.goBack()
+      }
+    },
+    [fetchedTrainTypes, navigation, setNavigationState, setStationState]
+  )
 
   return (
     <View style={styles.root}>
@@ -75,15 +100,15 @@ const TrainTypeSettings: React.FC = () => {
 
       <TrainTypeList data={fetchedTrainTypes} onSelect={handleSelect} />
 
-      <FAB disabled={loading} onPress={onPressBack} icon="close" />
+      <FAB onPress={onPressBack} icon="close" />
 
       {selectedTrainType ? (
         <TrainTypeInfoModal
           visible={isTrainTypeModalVisible}
           trainType={selectedTrainType}
-          stations={trainTypeStations ?? []}
-          loading={isStationsLoading}
-          error={stationsLoadingError}
+          stations={stations ?? []}
+          loading={loading}
+          error={error}
           onConfirmed={handleTrainTypeConfirmed}
           onClose={() => setIsTrainTypeModalVisible(false)}
         />

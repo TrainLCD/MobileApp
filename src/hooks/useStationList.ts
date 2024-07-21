@@ -2,6 +2,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import useSWR from 'swr'
 import {
   GetStationByLineIdRequest,
+  GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
   TrainType,
@@ -15,7 +16,8 @@ import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 
 export const useStationList = (fetchAutomatically = true) => {
   const setStationState = useSetRecoilState(stationState)
-  const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState)
+  const [{ fromBuilder, trainType }, setNavigationState] =
+    useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
 
   const {
@@ -50,7 +52,7 @@ export const useStationList = (fetchAutomatically = true) => {
   const { isLoading: isTrainTypesLoading, error: loadingTrainTypesError } =
     useSWR(
       [
-        '/app.trainlcd.grpc/getTrainTypesByStationId',
+        '/app.trainlcd.grpc/GetTrainTypesByStationId',
         selectedLine?.station?.id,
         selectedLine?.station?.hasTrainTypes,
       ],
@@ -99,15 +101,38 @@ export const useStationList = (fetchAutomatically = true) => {
           ...prev,
           fetchedTrainTypes: trainTypes,
         }))
-
-        return trainTypes
       }
     )
 
+  const {
+    isLoading: isStationsByLineGroupIdLoading,
+    error: errorStationsByLineGroupId,
+  } = useSWR(
+    ['/app.trainlcd.grpc/GetStationsByLineGroupId', trainType?.groupId],
+    async ([, lineGroupId]) => {
+      if (!lineGroupId) {
+        return
+      }
+
+      const req = new GetStationsByLineGroupIdRequest({ lineGroupId })
+      const res = await grpcClient.getStationsByLineGroupId(req, {})
+
+      setStationState((prev) => ({
+        ...prev,
+        stations: res.stations,
+      }))
+    }
+  )
+
   return {
     updateStations,
-
-    loading: isLoadingStations || isTrainTypesLoading,
-    error: loadingStationsError || loadingTrainTypesError,
+    loading:
+      isLoadingStations ||
+      isTrainTypesLoading ||
+      isStationsByLineGroupIdLoading,
+    error:
+      loadingStationsError ||
+      loadingTrainTypesError ||
+      errorStationsByLineGroupId,
   }
 }

@@ -4,6 +4,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
+import lineState from '../store/atoms/line'
 import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
@@ -20,7 +21,7 @@ type Props = {
   loading: boolean
   error: Error
   onClose: () => void
-  onConfirmed: () => void
+  onConfirmed: (trainType: TrainType) => void
 }
 
 const styles = StyleSheet.create({
@@ -32,19 +33,19 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   modalView: {
-    paddingVertical: 32,
-    height: !isTablet ? '100%' : undefined,
+    paddingVertical: isTablet ? 32 : 24,
+    height: isTablet ? undefined : 'auto',
     width: '100%',
   },
   buttons: {
-    marginTop: 12,
+    marginTop: isTablet ? 12 : 6,
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
     alignItems: 'center',
     alignSelf: 'center',
+    gap: 16,
   },
-  button: { marginHorizontal: 8 },
 })
 
 export const TrainTypeInfoModal: React.FC<Props> = ({
@@ -55,6 +56,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
   onConfirmed,
 }: Props) => {
   const isLEDTheme = useRecoilValue(isLEDSelector)
+  const { selectedLine } = useRecoilValue(lineState)
 
   const trainTypeLines = useMemo(
     () =>
@@ -86,24 +88,23 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   width: '80%',
                   shadowOpacity: 0.25,
                   shadowColor: '#000',
-                  shadowRadius: 1,
                   borderRadius: 16,
                 }
-              : undefined,
+              : { borderRadius: 8 },
           ]}
         >
           <Heading>
             {isJapanese
-              ? `${trainType.line?.nameShort} ${trainType.name}`
-              : `${trainType.line?.nameRoman} ${trainType.nameRoman}`}
+              ? `${selectedLine?.nameShort} ${trainType.name}`
+              : `${selectedLine?.nameRoman} ${trainType.nameRoman}`}
           </Heading>
 
-          <View style={{ padding: 32 }}>
+          <View style={{ padding: isTablet ? 32 : 24 }}>
             <Typography
               style={{
                 fontSize: RFValue(14),
                 fontWeight: 'bold',
-                marginTop: 16,
+                marginTop: isTablet ? 16 : 8,
               }}
             >
               停車駅:
@@ -111,7 +112,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             <Typography
               style={{
                 fontSize: RFValue(11),
-                marginTop: 8,
+                marginTop: isTablet ? 8 : 4,
               }}
             >
               {dropEitherJunctionStation(stations)
@@ -123,14 +124,14 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               style={{
                 fontSize: RFValue(14),
                 fontWeight: 'bold',
-                marginTop: 16,
+                marginTop: isTablet ? 16 : 8,
               }}
             >
               各線の種別:
             </Typography>
             <View
               style={{
-                marginTop: 8,
+                marginTop: isTablet ? 8 : 4,
               }}
             >
               {trainTypeLines.map((l) => (
@@ -140,6 +141,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   </Typography>
                   <Typography
                     style={{
+                      color: l.trainType?.color,
                       textAlign: 'right',
                       fontSize: RFValue(11),
                       fontWeight: 'bold',
@@ -155,16 +157,11 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
           <View style={styles.buttons}>
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
-              style={styles.button}
-              onPress={onConfirmed}
+              onPress={() => onConfirmed(trainType)}
             >
               確定
             </Button>
-            <Button
-              color={isLEDTheme ? undefined : '#333'}
-              style={styles.button}
-              onPress={onClose}
-            >
+            <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
               キャンセル
             </Button>
           </View>

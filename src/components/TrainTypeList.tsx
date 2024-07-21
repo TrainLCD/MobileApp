@@ -43,16 +43,13 @@ const ItemCell = ({
     [item.lines]
   )
 
-  const isEveryLineSameType = useMemo(
+  const isAllSameType = useMemo(
     () =>
-      lines.every((l) => {
-        const first = lines[0]
-        return l.trainType?.typeId === first.trainType?.typeId
-      }),
+      Array.from(new Set(lines.map((l) => l.trainType?.typeId))).length === 1,
     [lines]
   )
 
-  if (lines.length === 1) {
+  if (lines.length === 1 || item.typeId === 0) {
     return (
       <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
         <Typography style={styles.stationNameText}>
@@ -60,12 +57,14 @@ const ItemCell = ({
             ? item.name
             : `${currentLine?.nameRoman} ${item.nameRoman}`}
         </Typography>
-        <Typography style={styles.descriptionText}>直通運転なし</Typography>
+        <Typography style={styles.descriptionText}>
+          {isJapanese ? '直通運転なし' : ''}
+        </Typography>
       </TouchableOpacity>
     )
   }
 
-  if (isEveryLineSameType) {
+  if (isAllSameType) {
     return (
       <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
         <Typography style={styles.stationNameText}>
@@ -80,7 +79,7 @@ const ItemCell = ({
                 .map((l) => l.nameShort)
                 .join('・')
             : lines.map((l) => l.nameRoman).join(', ')}
-          直通
+          {isJapanese ? '直通' : ''}
         </Typography>
       </TouchableOpacity>
     )
