@@ -29,6 +29,7 @@ import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
+import { useTTS } from '../hooks/useTTS'
 import { useTypeWillChange } from '../hooks/useTypeWillChange'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
@@ -149,6 +150,7 @@ const MainScreen: React.FC = () => {
   useKeepAwake()
   useStartBackgroundLocationUpdates()
   useResetMainState()
+  useTTS()
 
   const { pause: pauseBottomTimer } = useUpdateBottomState()
 
