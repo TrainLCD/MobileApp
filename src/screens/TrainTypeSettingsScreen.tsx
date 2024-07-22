@@ -1,19 +1,24 @@
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import { TrainType } from '../../gen/proto/stationapi_pb'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
+import useSWR from 'swr'
+import {
+  GetStationsByLineGroupIdRequest,
+  TrainType,
+} from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal'
 import { TrainTypeList } from '../components/TrainTypeList'
 import { useStationList } from '../hooks/useStationList'
+import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 24, paddingTop: 24 },
+  root: { flex: 1, paddingHorizontal: 48, paddingTop: 24 },
 })
 
 const TrainTypeSettings: React.FC = () => {
@@ -24,11 +29,26 @@ const TrainTypeSettings: React.FC = () => {
 
   const { fetchedTrainTypes } = useRecoilValue(navigationState)
 
-  const [{ stations }, setStationState] = useRecoilState(stationState)
+  const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
 
   const navigation = useNavigation()
-  const { loading, error } = useStationList()
+  /* const { loading, error } = */ useStationList()
+
+  const {
+    data: trainTypeStations = [],
+    isLoading: isTrainTypeStationsLoading,
+    error: trainTypeStationsError,
+  } = useSWR(
+    ['/app.trainlcd.grpc/GetStationsByLineGroupId', selectedTrainType?.groupId],
+    async ([, lineGroupId]) => {
+      const req = new GetStationsByLineGroupIdRequest({
+        lineGroupId,
+      })
+      const res = await grpcClient.getStationsByLineGroupId(req)
+      return res.stations
+    }
+  )
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -106,9 +126,9 @@ const TrainTypeSettings: React.FC = () => {
         <TrainTypeInfoModal
           visible={isTrainTypeModalVisible}
           trainType={selectedTrainType}
-          stations={stations ?? []}
-          loading={loading}
-          error={error}
+          stations={trainTypeStations}
+          loading={isTrainTypeStationsLoading}
+          error={trainTypeStationsError}
           onConfirmed={handleTrainTypeConfirmed}
           onClose={() => setIsTrainTypeModalVisible(false)}
         />

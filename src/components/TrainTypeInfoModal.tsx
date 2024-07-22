@@ -117,7 +117,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             >
               {dropEitherJunctionStation(stations)
                 .filter((s) => !getIsPass(s))
-                .map((sta) => sta.name)
+                .map((s) => s.name)
                 .join('、')}
             </Typography>
             <Typography
