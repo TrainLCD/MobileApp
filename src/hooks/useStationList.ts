@@ -1,6 +1,5 @@
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import useSWR from 'swr'
-import useSWRMutation from 'swr/mutation'
 import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
@@ -17,7 +16,8 @@ import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 
 export const useStationList = (fetchAutomatically = true) => {
   const setStationState = useSetRecoilState(stationState)
-  const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState)
+  const [{ fromBuilder, trainType }, setNavigationState] =
+    useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
 
   const {
@@ -52,7 +52,7 @@ export const useStationList = (fetchAutomatically = true) => {
   const { isLoading: isTrainTypesLoading, error: loadingTrainTypesError } =
     useSWR(
       [
-        '/app.trainlcd.grpc/getTrainTypesByStationId',
+        '/app.trainlcd.grpc/GetTrainTypesByStationId',
         selectedLine?.station?.id,
         selectedLine?.station?.hasTrainTypes,
       ],
@@ -101,46 +101,38 @@ export const useStationList = (fetchAutomatically = true) => {
           ...prev,
           fetchedTrainTypes: trainTypes,
         }))
-
-        return trainTypes
       }
     )
 
   const {
-    isMutating: isLoadingTrainTypeStations,
-    trigger: fetchTrainTypeStations,
-    error: loadingTrainTypeStationsError,
-  } = useSWRMutation(
-    '/app.trainlcd.grpc/getStationsByLineGroupId',
-    async (_: string, { arg }: { arg: { lineGroupId: number } }) => {
-      if (!arg || fromBuilder) {
+    isLoading: isStationsByLineGroupIdLoading,
+    error: errorStationsByLineGroupId,
+  } = useSWR(
+    ['/app.trainlcd.grpc/GetStationsByLineGroupId', trainType?.groupId],
+    async ([, lineGroupId]) => {
+      if (!lineGroupId) {
         return
       }
-
-      const { lineGroupId } = arg
 
       const req = new GetStationsByLineGroupIdRequest({ lineGroupId })
-      const data = await grpcClient.getStationsByLineGroupId(req)
+      const res = await grpcClient.getStationsByLineGroupId(req, {})
 
-      if (!data) {
-        return
-      }
       setStationState((prev) => ({
         ...prev,
-        stations: data.stations,
-        allStations: data.stations,
+        stations: res.stations,
       }))
     }
   )
 
   return {
     updateStations,
-    fetchTrainTypeStations,
     loading:
-      isLoadingStations || isTrainTypesLoading || isLoadingTrainTypeStations,
+      isLoadingStations ||
+      isTrainTypesLoading ||
+      isStationsByLineGroupIdLoading,
     error:
       loadingStationsError ||
       loadingTrainTypesError ||
-      loadingTrainTypeStationsError,
+      errorStationsByLineGroupId,
   }
 }
