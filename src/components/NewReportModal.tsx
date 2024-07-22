@@ -122,10 +122,11 @@ const NewReportModal: React.FC<Props> = ({
                   width: '80%',
                   shadowOpacity: 0.25,
                   shadowColor: '#000',
-                  shadowRadius: 1,
                   borderRadius: 16,
                 }
-              : undefined,
+              : {
+                  borderRadius: 8,
+                },
           ]}
         >
           <KeyboardAvoidingView behavior="position">

@@ -36,7 +36,7 @@ export const useTTS = (): void => {
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       staysActiveInBackground: backgroundEnabled,
-      interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+      interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
       playsInSilentModeIOS: backgroundEnabled,
       shouldDuckAndroid: true,
       interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
@@ -48,23 +48,32 @@ export const useTTS = (): void => {
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     firstSpeechRef.current = false
 
-    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-    soundJaRef.current = soundJa
-
-    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
-    soundEnRef.current = soundEn
+    if (!soundJaRef.current) {
+      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
+      soundJaRef.current = soundJa
+    } else {
+      await soundJaRef.current?.loadAsync({ uri: pathJa })
+    }
+    if (!soundEnRef.current) {
+      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
+      soundEnRef.current = soundEn
+    } else {
+      await soundEnRef.current?.loadAsync({ uri: pathEn })
+    }
 
     await soundJaRef.current?.playAsync()
     playingRef.current = true
 
     soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
+        await soundJaRef.current?.unloadAsync()
         await soundEnRef.current?.playAsync()
       }
     }
 
     soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
+        await soundEnRef.current?.unloadAsync()
         playingRef.current = false
       }
     }
