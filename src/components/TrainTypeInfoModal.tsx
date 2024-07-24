@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react'
-import { Modal, SafeAreaView, StyleSheet, View } from 'react-native'
+import { Modal, Platform, SafeAreaView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { Station, TrainType } from '../../gen/proto/stationapi_pb'
+import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
 import lineState from '../store/atoms/line'
 import { isLEDSelector } from '../store/selectors/isLED'
-import { isJapanese } from '../translation'
+import { isJapanese, translate } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
@@ -60,12 +60,21 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
 
   const trainTypeLines = useMemo(
     () =>
-      trainType.lines
-        .slice()
-        .sort((a, b) =>
-          !a.trainType || !b.trainType ? 0 : a.trainType?.id - b.trainType?.id
-        ),
-    [trainType.lines]
+      trainType.lines.length
+        ? trainType.lines
+            .slice()
+            .sort((a, b) =>
+              !a.trainType || !b.trainType
+                ? 0
+                : a.trainType?.id - b.trainType?.id
+            )
+        : ([selectedLine] as Line[]),
+    [selectedLine, trainType.lines]
+  )
+
+  const stopStations = useMemo(
+    () => dropEitherJunctionStation(stations).filter((s) => !getIsPass(s)),
+    [stations]
   )
 
   return (
@@ -115,10 +124,9 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                 marginTop: isTablet ? 8 : 4,
               }}
             >
-              {dropEitherJunctionStation(stations)
-                .filter((s) => !getIsPass(s))
-                .map((s) => s.name)
-                .join('、')}
+              {stopStations.length
+                ? stopStations.map((s) => s.name).join('、')
+                : `${translate('loadingAPI')}...`}
             </Typography>
             <Typography
               style={{
@@ -136,7 +144,13 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             >
               {trainTypeLines.map((l) => (
                 <View style={{ flexDirection: 'row' }} key={l.id}>
-                  <Typography style={{ width: '30%', fontSize: RFValue(11) }}>
+                  <Typography
+                    style={{
+                      width: '30%',
+                      fontSize: RFValue(11),
+                      lineHeight: Platform.select({ android: RFValue(18) }),
+                    }}
+                  >
                     {l.nameShort}:
                   </Typography>
                   <Typography
@@ -145,9 +159,10 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       textAlign: 'right',
                       fontSize: RFValue(11),
                       fontWeight: 'bold',
+                      lineHeight: Platform.select({ android: RFValue(18) }),
                     }}
                   >
-                    {l.trainType?.name}
+                    {l.trainType?.name ?? '普通/各駅停車'}
                   </Typography>
                 </View>
               ))}

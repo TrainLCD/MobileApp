@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import useSWR from 'swr'
 import {
   GetStationsByLineGroupIdRequest,
@@ -11,7 +11,6 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal'
 import { TrainTypeList } from '../components/TrainTypeList'
-import { useStationList } from '../hooks/useStationList'
 import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -27,13 +26,11 @@ const TrainTypeSettings: React.FC = () => {
     null
   )
 
-  const { fetchedTrainTypes } = useRecoilValue(navigationState)
-
+  const [{ fetchedTrainTypes }, setNavigationState] =
+    useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const setNavigationState = useSetRecoilState(navigationState)
 
   const navigation = useNavigation()
-  /* const { loading, error } = */ useStationList()
 
   const {
     data: trainTypeStations = [],
@@ -83,6 +80,11 @@ const TrainTypeSettings: React.FC = () => {
           ...prev,
           wantedDestination: null,
         }))
+        setIsTrainTypeModalVisible(false)
+
+        if (navigation.canGoBack()) {
+          navigation.goBack()
+        }
         return
       }
 
@@ -102,7 +104,7 @@ const TrainTypeSettings: React.FC = () => {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: null,
-        stations: [],
+        stations: trainTypeStations,
       }))
 
       setIsTrainTypeModalVisible(false)
@@ -111,7 +113,13 @@ const TrainTypeSettings: React.FC = () => {
         navigation.goBack()
       }
     },
-    [fetchedTrainTypes, navigation, setNavigationState, setStationState]
+    [
+      fetchedTrainTypes,
+      navigation,
+      setNavigationState,
+      setStationState,
+      trainTypeStations,
+    ]
   )
 
   return (
