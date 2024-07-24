@@ -3,7 +3,7 @@ name: Deploy iOS Canary App
 on:
   push:
     branches:
-      - canary
+      - fix/ios-cd
     paths:
       - 'ios/**'
       - 'src/**'
