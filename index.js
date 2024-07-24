@@ -1,39 +1,32 @@
 import 'fast-text-encoding'
 
 import { registerRootComponent } from 'expo'
-import * as Location from 'expo-location'
 import * as TaskManager from 'expo-task-manager'
 import App from './src'
-import { LOCATION_TASK_NAME } from './src/constants'
 import { useLocationStore } from './src/hooks/useLocationStore'
+import { locationTaskName } from './src/utils/locationTaskName'
 ;(async () => {
-  try {
-    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-    await TaskManager.unregisterAllTasksAsync()
-  } catch (e) {
-    console.warn(e)
-  }
+  await TaskManager.unregisterAllTasksAsync()
 
-  TaskManager.defineTask(
-    LOCATION_TASK_NAME,
-    ({ data: { locations }, error }) => {
-      if (error) {
-        return
-      }
-
-      const curLocation = useLocationStore.getState().location
-      if (
-        curLocation?.timestamp !== locations[0]?.timestamp &&
-        curLocation?.coords.latitude !== locations[0]?.coords.latitude &&
-        curLocation?.coords.longitude !== locations[0]?.coords.longitude
-      ) {
-        useLocationStore.setState((state) => ({
-          ...state,
-          location: locations[0],
-        }))
-      }
+  TaskManager.defineTask(locationTaskName, ({ data, error }) => {
+    if (error) {
+      console.error(error)
+      return
     }
-  )
+
+    const curLocation = useLocationStore.getState().location
+    if (
+      curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
+      curLocation?.coords.longitude === data.locations[0]?.coords.longitude
+    ) {
+      return
+    }
+
+    useLocationStore.setState((state) => ({
+      ...state,
+      location: data.locations[0],
+    }))
+  })
 })()
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);

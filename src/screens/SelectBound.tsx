@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState } from 'recoil'
 import {
   Line,
   Station,
@@ -75,12 +75,11 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(stationState)
   const [
     { trainType, fetchedTrainTypes, autoModeEnabled, fromBuilder },
-    setNavigation,
+    setNavigationState,
   ] = useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
-  const setNavigationState = useSetRecoilState(navigationState)
 
-  const { loading, error, updateStations } = useStationList()
+  const { loading, error, mutateStations } = useStationList()
   const { isLoopLine, isMeijoLine } = useLoopLine()
   const {
     bounds: [inboundStations, outboundStations],
@@ -111,6 +110,7 @@ const SelectBoundScreen: React.FC = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
+      fetchedTrainTypes: [],
     }))
     navigation.navigate('SelectLine')
   }, [navigation, setLineState, setNavigationState, setStationState])
@@ -142,11 +142,11 @@ const SelectBoundScreen: React.FC = () => {
   }
 
   const handleAutoModeButtonPress = useCallback(async () => {
-    setNavigation((prev) => ({
+    setNavigationState((prev) => ({
       ...prev,
       autoModeEnabled: !prev.autoModeEnabled,
     }))
-  }, [setNavigation])
+  }, [setNavigationState])
 
   const handleAllStopsButtonPress = useCallback(() => {
     const stopStations = stations.filter(
@@ -183,10 +183,10 @@ const SelectBoundScreen: React.FC = () => {
         selectedBound: destination,
         selectedDirection: direction,
       }))
-      setNavigation((prev) => ({ ...prev, trainType: updatedTrainType }))
+      setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }))
       navigation.navigate('Main')
     },
-    [navigation, setNavigation, setStationState, stations, trainType]
+    [navigation, setNavigationState, setStationState, stations, trainType]
   )
 
   const normalLineDirectionText = useCallback(
@@ -325,7 +325,7 @@ const SelectBoundScreen: React.FC = () => {
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={updateStations}
+        onRetryPress={mutateStations}
         isFetching={loading}
       />
     )
