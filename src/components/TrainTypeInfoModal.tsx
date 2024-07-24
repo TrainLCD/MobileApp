@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   modalView: {
-    paddingVertical: isTablet ? 32 : 24,
+    paddingVertical: 24,
     height: isTablet ? undefined : 'auto',
     width: '100%',
   },
