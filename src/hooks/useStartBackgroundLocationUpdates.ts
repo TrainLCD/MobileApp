@@ -1,11 +1,11 @@
 import * as Location from 'expo-location'
 import { useEffect } from 'react'
 import { useRecoilValue } from 'recoil'
-import { LOCATION_TASK_NAME } from '../constants'
 import { accuracySelector } from '../store/selectors/accuracy'
 import { autoModeEnabledSelector } from '../store/selectors/autoMode'
 import { locationServiceDistanceFilterSelector } from '../store/selectors/locationServiceDistanceFilter'
 import { translate } from '../translation'
+import { locationTaskName } from '../utils/locationTaskName'
 
 export const useStartBackgroundLocationUpdates = () => {
   const autoModeEnabled = useRecoilValue(autoModeEnabledSelector)
@@ -19,10 +19,11 @@ export const useStartBackgroundLocationUpdates = () => {
       return
     }
 
-    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    Location.startLocationUpdatesAsync(locationTaskName, {
       accuracy: locationServiceAccuracy,
       activityType: Location.LocationActivityType.OtherNavigation,
       deferredUpdatesDistance: locationServiceDistanceFilter,
+      distanceInterval: 0,
       foregroundService: {
         notificationTitle: translate('bgAlertTitle'),
         notificationBody: translate('bgAlertContent'),
@@ -31,7 +32,7 @@ export const useStartBackgroundLocationUpdates = () => {
     })
 
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      Location.stopLocationUpdatesAsync(locationTaskName)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
