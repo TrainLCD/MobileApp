@@ -67,26 +67,24 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
+      if (station) return
       const pos = await fetchCurrentPosition()
       if (!pos) {
         return
       }
       setLocation(pos)
-      const station =
+      const stationFromAPI =
         (await fetchStationFunc({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
         })) ?? null
       setStationState((prev) => ({
         ...prev,
-        station: prev.station?.id !== station?.id ? station : prev.station,
+        station: stationFromAPI,
       }))
       setNavigationState((prev) => ({
         ...prev,
-        stationForHeader:
-          prev.stationForHeader?.id !== station?.id
-            ? station
-            : prev.stationForHeader,
+        stationForHeader: stationFromAPI,
       }))
     }
     init()
