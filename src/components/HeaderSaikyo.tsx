@@ -14,7 +14,6 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
-import useAppState from '../hooks/useAppState'
 import { useBoundText } from '../hooks/useBoundText'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
@@ -179,7 +178,6 @@ const HeaderSaikyo: React.FC = () => {
   const bottomNameScaleYAnim = useSharedValue<number>(1)
 
   const { right: safeAreaRight } = useSafeAreaInsets()
-  const appState = useAppState()
   const headerLangState = useMemo(
     () =>
       headerState.split('_')[1]?.length
@@ -209,11 +207,6 @@ const HeaderSaikyo: React.FC = () => {
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
-        if (appState !== 'active') {
-          resolve()
-          return
-        }
-
         if (!selectedBound) {
           if (prevHeaderState === headerState) {
             topNameScaleYAnim.value = 0
@@ -263,7 +256,6 @@ const HeaderSaikyo: React.FC = () => {
         }
       }),
     [
-      appState,
       bottomNameScaleYAnim,
       boundOpacityAnim,
       headerState,
