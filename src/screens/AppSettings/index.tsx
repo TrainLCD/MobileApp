@@ -95,27 +95,6 @@ const AppSettingsScreen: React.FC = () => {
 
   const onLosslessAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
-      const losslessNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_NOTICE
-      )
-      if (flag && losslessNoticeConfirmed === null) {
-        Alert.alert(translate('warning'), translate('losslessAlertText'), [
-          {
-            text: translate('dontShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.QA_LOSSLESS_NOTICE,
-                'true'
-              )
-            },
-          },
-          {
-            text: 'OK',
-          },
-        ])
-      }
-
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
         flag ? 'true' : 'false'
