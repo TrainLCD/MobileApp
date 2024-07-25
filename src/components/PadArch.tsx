@@ -1,12 +1,6 @@
 import { darken } from 'polished'
 import React, { useCallback } from 'react'
-import {
-  Animated,
-  AppStateStatus,
-  Dimensions,
-  StyleSheet,
-  View,
-} from 'react-native'
+import { Animated, Dimensions, StyleSheet, View } from 'react-native'
 import { Path, Svg } from 'react-native-svg'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
 import {
@@ -38,7 +32,6 @@ type Props = {
   line: Line
   stations: Station[]
   arrived: boolean
-  appState: AppStateStatus
   transferLines: Line[]
   station: Station | null
   numberingInfo: (NumberingInfo | null)[]
@@ -275,14 +268,12 @@ class PadArch extends React.PureComponent<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props): void {
-    const { arrived, appState } = this.props
+    const { arrived } = this.props
 
-    if (appState === 'active') {
-      this.animated()
-      // 発車ごとにアニメーションをかける
-      if (arrived !== prevProps.arrived) {
-        this.startSlidingAnimation()
-      }
+    this.animated()
+    // 発車ごとにアニメーションをかける
+    if (arrived !== prevProps.arrived) {
+      this.startSlidingAnimation()
     }
   }
 
