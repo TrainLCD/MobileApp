@@ -23,7 +23,6 @@ export const useStartBackgroundLocationUpdates = () => {
       accuracy: locationServiceAccuracy,
       activityType: Location.LocationActivityType.OtherNavigation,
       deferredUpdatesDistance: locationServiceDistanceFilter,
-      distanceInterval: 1,
       foregroundService: {
         notificationTitle: translate('bgAlertTitle'),
         notificationBody: translate('bgAlertContent'),
