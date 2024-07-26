@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
-import { Modal, Platform, SafeAreaView, StyleSheet, View } from 'react-native'
+import { Modal, Platform, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
@@ -34,8 +35,8 @@ const styles = StyleSheet.create({
   },
   modalView: {
     paddingVertical: 24,
-    height: isTablet ? undefined : 'auto',
-    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttons: {
     marginTop: isTablet ? 12 : 6,
@@ -57,6 +58,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
 }: Props) => {
   const isLEDTheme = useRecoilValue(isLEDSelector)
   const { selectedLine } = useRecoilValue(lineState)
+
+  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets()
 
   const trainTypeLines = useMemo(
     () =>
@@ -85,7 +88,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
       onRequestClose={onClose}
       supportedOrientations={['landscape']}
     >
-      <SafeAreaView style={styles.modalContainer}>
+      <View style={styles.modalContainer}>
         <View
           style={[
             styles.modalView,
@@ -95,11 +98,17 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             isTablet
               ? {
                   width: '80%',
+                  maxHeight: '90%',
                   shadowOpacity: 0.25,
                   shadowColor: '#000',
                   borderRadius: 16,
                 }
-              : { borderRadius: 8 },
+              : {
+                  width: '100%',
+                  height: '100%',
+                  paddingLeft: leftSafeArea,
+                  paddingRight: rightSafeArea,
+                },
           ]}
         >
           <Heading>
@@ -108,7 +117,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               : `${selectedLine?.nameRoman} ${trainType.nameRoman}`}
           </Heading>
 
-          <View style={{ padding: isTablet ? 32 : 24 }}>
+          <View style={{ width: '100%', padding: isTablet ? 32 : 24 }}>
             <Typography
               style={{
                 fontSize: RFValue(14),
@@ -181,7 +190,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             </Button>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   )
 }
