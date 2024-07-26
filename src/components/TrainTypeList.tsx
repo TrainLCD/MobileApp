@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, TrainType } from '../../gen/proto/stationapi_pb'
 import { currentLineSelector } from '../store/selectors/currentLine'
@@ -117,15 +118,14 @@ export const TrainTypeList = ({
   onSelect: (item: TrainType) => void
 }) => {
   const isLEDTheme = useRecoilValue(isLEDSelector)
-
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
       return <ItemCell item={item} onSelect={onSelect} />
     },
     [onSelect]
   )
-
   const keyExtractor = useCallback((item: TrainType) => item.id.toString(), [])
+  const { bottom: safeAreaBottom } = useSafeAreaInsets()
 
   return (
     <FlatList
@@ -135,11 +135,13 @@ export const TrainTypeList = ({
         borderWidth: 1,
         flex: 1,
         marginVertical: 24,
+        paddingBottom: safeAreaBottom + 24,
       }}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
+      ListFooterComponent={Separator}
     />
   )
 }
