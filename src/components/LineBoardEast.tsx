@@ -11,7 +11,6 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
-import { parenthesisRegexp } from '../constants'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
@@ -23,7 +22,6 @@ import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
-import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { heightScale, widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
@@ -326,18 +324,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     getIsPass(station) ||
     (arrived && currentStationIndex === index ? false : passed)
 
-  const transferLines = useTransferLinesFromStation(station)
-  const omittedTransferLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(transferLines)
-        .map((l) => ({
-          ...l,
-          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-          nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-        }))
-        .map((l) => new Line(l)),
-    [transferLines]
-  )
+  const transferLines = useTransferLinesFromStation(station, { omitJR: true })
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
@@ -465,7 +452,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LineDot
           station={station}
           shouldGrayscale={shouldGrayscale}
-          transferLines={omittedTransferLines}
+          transferLines={transferLines}
           arrived={arrived}
           passed={passed}
         />

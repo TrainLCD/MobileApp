@@ -9,8 +9,7 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
-import { parenthesisRegexp } from '../constants'
+import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import useIsPassing from '../hooks/useIsPassing'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
@@ -22,7 +21,6 @@ import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
-import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { getNumberingColor } from '../utils/numbering'
 import { heightScale } from '../utils/scale'
 import ChevronJO from './ChevronJO'
@@ -260,20 +258,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const isEn = useRecoilValue(isEnSelector)
 
-  const transferLines = useTransferLinesFromStation(stationInLoop)
-  const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop])
+  const transferLines = useTransferLinesFromStation(stationInLoop, {
+    omitJR: true,
+  })
 
-  const omittedTransferLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(transferLines)
-        .map((l) => ({
-          ...l,
-          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-          nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-        }))
-        .map((l) => new Line(l)),
-    [transferLines]
-  )
+  const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop])
 
   const includesLongStationName = useMemo(
     () =>
@@ -328,7 +317,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         <PadLineMarks
           shouldGrayscale={isPass}
-          transferLines={omittedTransferLines}
+          transferLines={transferLines}
           station={stationInLoop}
         />
       </View>
