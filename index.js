@@ -15,6 +15,8 @@ TaskManager.defineTask(locationTaskName, ({ data, error }) => {
   }
 
   const curLocation = useLocationStore.getState().location
+  const setLocation = useLocationStore.getState().setLocation
+
   if (
     curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
     curLocation?.coords.longitude === data.locations[0]?.coords.longitude
@@ -22,18 +24,16 @@ TaskManager.defineTask(locationTaskName, ({ data, error }) => {
     return BackgroundFetchResult.NoData
   }
 
-  const now = dayjs()
+  const receivedTimestamp =
+    data.locations[0] && dayjs(data.locations[0].timestamp)
   const stateTimestamp = curLocation && dayjs(curLocation.timestamp)
   const diffSeconds =
-    (stateTimestamp && now.diff(stateTimestamp, 'seconds')) ?? 0
+    (stateTimestamp && receivedTimestamp.diff(stateTimestamp, 'seconds')) ?? 0
   if (diffSeconds < 1) {
     return BackgroundFetchResult.NoData
   }
 
-  useLocationStore.setState((state) => ({
-    ...state,
-    location: data.locations[0],
-  }))
+  setLocation(data.locations[0])
 
   return BackgroundFetchResult.NewData
 })
