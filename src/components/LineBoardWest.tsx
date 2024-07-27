@@ -289,6 +289,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const station = useRecoilValue(currentStationSelector({}))
   const transferLines = useTransferLinesFromStation(stationInLoop, {
     omitJR: true,
+    omitRepeatingLine: true,
   })
 
   const nextStation = useNextStation(true, stationInLoop)

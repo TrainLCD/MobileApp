@@ -260,6 +260,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const transferLines = useTransferLinesFromStation(stationInLoop, {
     omitJR: true,
+    omitRepeatingLine: true,
   })
 
   const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop])

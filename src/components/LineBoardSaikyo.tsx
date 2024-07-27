@@ -339,7 +339,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { station: currentStation, arrived } = useRecoilValue(stationState)
   const isEn = useRecoilValue(isEnSelector)
 
-  const transferLines = useTransferLinesFromStation(station, { omitJR: true })
+  const transferLines = useTransferLinesFromStation(station, {
+    omitJR: true,
+    omitRepeatingLine: true,
+  })
 
   const currentStationIndex = stations.findIndex(
     (s) => s.groupId === currentStation?.groupId

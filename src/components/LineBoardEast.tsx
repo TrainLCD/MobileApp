@@ -324,7 +324,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     getIsPass(station) ||
     (arrived && currentStationIndex === index ? false : passed)
 
-  const transferLines = useTransferLinesFromStation(station, { omitJR: true })
+  const transferLines = useTransferLinesFromStation(station, {
+    omitJR: true,
+    omitRepeatingLine: true,
+  })
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
