@@ -41,7 +41,7 @@ const useTTSText = (firstSpeech = true): string[] => {
   const currentLineOrigin = useRecoilValue(currentLineSelector)
 
   const connectedLinesOrigin = useConnectedLines()
-  const transferLines = useTransferLines()
+  const transferLinesOriginal = useTransferLines()
   const [nextStationNumber] = useNumbering(false)
   const currentTrainTypeOrigin = useCurrentTrainType()
   const loopLineBoundJa = useLoopLineBound(false)
@@ -59,6 +59,15 @@ const useTTSText = (firstSpeech = true): string[] => {
         ? undefined
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
+  )
+
+  const transferLines = useMemo(
+    () =>
+      transferLinesOriginal.map((l) => ({
+        ...l,
+        nameRoman: normalizeRomanText(l.nameRoman ?? ''),
+      })),
+    [transferLinesOriginal]
   )
 
   const currentLine = useMemo(
