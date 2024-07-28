@@ -4,7 +4,6 @@ export const RECOIL_STATES = {
   line: 'lineState',
   navigation: 'navigationState',
   notify: 'notifyState',
-  theme: 'themeState',
   speech: 'speechState',
   dev: 'devState',
   tuningState: 'tuningState',
@@ -16,7 +15,6 @@ export const RECOIL_STATES = {
   accuracySelector: 'accuracySelector',
   locationServiceDistanceFilterSelector:
     'locationServiceDistanceFilterSelector',
-  isLEDSelector: 'isLEDSelector',
   isEnSelector: 'isEnSelector',
   currentStationSelector: 'currentStationSelector',
   currentLineSelector: 'currentLineSelector',

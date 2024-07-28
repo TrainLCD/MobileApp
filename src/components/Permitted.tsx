@@ -27,13 +27,13 @@ import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
+import { useStore } from '../hooks/useStore'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
-import { APP_THEME, AppTheme } from '../models/Theme'
+import { AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
@@ -72,7 +72,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
-  const setTheme = useSetRecoilState(themeState)
+  const setTheme = useStore((state) => state.setTheme)
   const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
   const setPowerSavingState = useSetRecoilState(powerSavingState)
@@ -173,10 +173,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       )) as AppTheme | null
 
       if (prevThemeKey) {
-        setTheme((prev) => ({
-          ...prev,
-          theme: prevThemeKey || APP_THEME.TOKYO_METRO,
-        }))
+        setTheme(prevThemeKey)
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES

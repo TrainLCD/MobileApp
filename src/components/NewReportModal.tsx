@@ -13,9 +13,9 @@ import {
 import { hasNotch } from 'react-native-device-info'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useRecoilValue } from 'recoil'
 import { FONTS, LED_THEME_BG_COLOR } from '../constants'
-import { isLEDSelector } from '../store/selectors/isLED'
+import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
@@ -92,7 +92,7 @@ const NewReportModal: React.FC<Props> = ({
   descriptionLowerLimit,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
 
   const needsLeftCount = useMemo(
     () => description.trim().length - descriptionLowerLimit,

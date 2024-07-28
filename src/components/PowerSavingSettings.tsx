@@ -4,15 +4,16 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import {
   ASYNC_STORAGE_KEYS,
   LED_THEME_BG_COLOR,
   POWER_SAVING_PRESETS,
   PowerSavingPreset,
 } from '../constants'
+import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import powerSavingState from '../store/atoms/powerSaving'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
@@ -24,7 +25,7 @@ const styles = StyleSheet.create({
 })
 
 const PowerSavingSettings: React.FC = () => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
 
   const [{ preset: presetFromState }, setPowerSavingState] =
     useRecoilState(powerSavingState)

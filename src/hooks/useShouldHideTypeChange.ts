@@ -1,9 +1,8 @@
-import { useRecoilValue } from 'recoil'
 import { TYPE_CHANGE_HIDE_THEMES } from '../constants'
-import themeState from '../store/atoms/theme'
+import { useStore } from './useStore'
 
 const useShouldHideTypeChange = (): boolean => {
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
   return TYPE_CHANGE_HIDE_THEMES.includes(theme)
 }
 

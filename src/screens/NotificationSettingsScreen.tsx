@@ -18,9 +18,10 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
+import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -112,7 +113,7 @@ const ListItem: React.FC<ListItemProps> = ({
 }
 
 const NotificationSettings: React.FC = () => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
 
   const { stations } = useRecoilValue(stationState)
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)

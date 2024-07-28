@@ -6,6 +6,7 @@ import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station'
 import { setupMockUseNextStation } from '../../__mocks__/useNextStation'
 import { StationNumber } from '../../gen/proto/stationapi_pb'
 import { setupMockUseNumbering } from '../../src/hooks/useNumbering/__mocks__'
+import { useStore } from '../../src/hooks/useStore'
 import useTTSText from '../../src/hooks/useTTSText'
 import { LineDirection } from '../../src/models/Bound'
 import { HeaderStoppingState } from '../../src/models/HeaderTransitionState'
@@ -13,7 +14,6 @@ import { AppTheme } from '../../src/models/Theme'
 import lineState from '../../src/store/atoms/line'
 import navigationState from '../../src/store/atoms/navigation'
 import stationState from '../../src/store/atoms/station'
-import themeState from '../../src/store/atoms/theme'
 
 jest.mock('../../src/translation', () => ({ isJapanese: true }))
 
@@ -21,7 +21,8 @@ const useTTSTextWithRecoilAndNumbering = (
   theme: AppTheme,
   headerState: HeaderStoppingState
 ) => {
-  const setThemeState = useSetRecoilState(themeState)
+  const setTheme = useStore((state) => state.setTheme)
+
   const setLineState = useSetRecoilState(lineState)
   const setStationState = useSetRecoilState(stationState)
   const setNaivgationState = useSetRecoilState(navigationState)
@@ -37,7 +38,7 @@ const useTTSTextWithRecoilAndNumbering = (
     const arrived = headerState === 'CURRENT'
     const approaching = headerState === 'ARRIVING'
 
-    setThemeState((prev) => ({ ...prev, theme }))
+    setTheme(theme)
     setStationState((prev) => ({
       ...prev,
       station,
@@ -53,7 +54,7 @@ const useTTSTextWithRecoilAndNumbering = (
     setLineState,
     setNaivgationState,
     setStationState,
-    setThemeState,
+    setTheme,
     theme,
   ])
 

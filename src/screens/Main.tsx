@@ -27,6 +27,7 @@ import useRefreshStation from '../hooks/useRefreshStation'
 import { useResetMainState } from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates'
+import { useStore } from '../hooks/useStore'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import { useTTS } from '../hooks/useTTS'
@@ -35,10 +36,8 @@ import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import { getIsHoliday } from '../utils/isHoliday'
@@ -53,11 +52,12 @@ const styles = StyleSheet.create({
 })
 
 const MainScreen: React.FC = () => {
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
+  const isLEDTheme = theme === APP_THEME.LED
+
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
   const currentLine = useRecoilValue(currentLineSelector)
   const currentStation = useRecoilValue(currentStationSelector({}))
 

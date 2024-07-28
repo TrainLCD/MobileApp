@@ -8,11 +8,11 @@ import { Line, StationNumber } from '../../gen/proto/stationapi_pb'
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
 import useGetLineMark from '../hooks/useGetLineMark'
 import { useNextStation } from '../hooks/useNextStation'
+import { useStore } from '../hooks/useStore'
 import useTransferLines from '../hooks/useTransferLines'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Heading from './Heading'
@@ -92,7 +92,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines()
   const nextStation = useNextStation()
   const getLineMarkFunc = useGetLineMark()
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),

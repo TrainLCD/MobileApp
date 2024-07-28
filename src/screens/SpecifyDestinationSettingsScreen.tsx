@@ -7,9 +7,9 @@ import { Station, StopCondition } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants'
+import { useStore } from '../hooks/useStore'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
 const SpecifyDestinationSettingsScreen: React.FC = () => {
   const [{ wantedDestination, allStations }, setStationState] =
     useRecoilState(stationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme)
   const station = useRecoilValue(currentStationSelector({}))
 
   const stopStations = useMemo(

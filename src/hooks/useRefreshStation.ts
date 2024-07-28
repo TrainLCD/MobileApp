@@ -10,10 +10,10 @@ import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
 import useCanGoForward from './useCanGoForward'
-import { useLocationStore } from './useLocationStore'
 import { useNearestStation } from './useNearestStation'
 import { useNextStation } from './useNextStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { useStore } from './useStore'
 import { useThreshold } from './useThreshold'
 
 type NotifyType = 'ARRIVED' | 'APPROACHING'
@@ -29,10 +29,8 @@ Notifications.setNotificationHandler({
 const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
-  const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
-  )
+  const latitude = useStore((state) => state.location?.coords.latitude)
+  const longitude = useStore((state) => state.location?.coords.longitude)
 
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()

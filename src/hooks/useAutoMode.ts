@@ -8,8 +8,8 @@ import {
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import { useLocationStore } from './useLocationStore'
 import { useLoopLine } from './useLoopLine'
+import { useStore } from './useStore'
 import useValueRef from './useValueRef'
 
 const useAutoMode = (enabled: boolean): void => {
@@ -19,7 +19,7 @@ const useAutoMode = (enabled: boolean): void => {
     station,
   } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const setLocation = useLocationStore((state) => state.setLocation)
+  const setLocation = useStore((state) => state.setLocation)
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),

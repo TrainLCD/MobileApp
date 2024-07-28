@@ -3,15 +3,16 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants'
+import { useStore } from '../../hooks/useStore'
+import { APP_THEME } from '../../models/Theme'
 import speechState from '../../store/atoms/speech'
-import { isLEDSelector } from '../../store/selectors/isLED'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 
@@ -48,7 +49,7 @@ const AppSettingsScreen: React.FC = () => {
     { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
     setSpeechState,
   ] = useRecoilState(speechState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
 
   const navigation = useNavigation()
 

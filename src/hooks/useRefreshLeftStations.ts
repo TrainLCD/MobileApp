@@ -4,13 +4,13 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
 import useCurrentTrainType from './useCurrentTrainType'
 import { useLoopLine } from './useLoopLine'
+import { useStore } from './useStore'
 
 const useRefreshLeftStations = (): void => {
   const {
@@ -19,7 +19,7 @@ const useRefreshLeftStations = (): void => {
     selectedDirection,
   } = useRecoilValue(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
   const currentLine = useRecoilValue(currentLineSelector)
   const trainType = useCurrentTrainType()
   const { isOsakaLoopLine, isYamanoteLine, isMeijoLine } = useLoopLine()

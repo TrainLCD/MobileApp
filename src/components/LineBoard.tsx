@@ -4,11 +4,10 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { StopCondition } from '../../gen/proto/stationapi_pb'
+import { useStore } from '../hooks/useStore'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
-import themeState from '../store/atoms/theme'
 import { currentStationSelector } from '../store/selectors/currentStation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import isTablet from '../utils/isTablet'
@@ -35,10 +34,10 @@ const styles = StyleSheet.create({
 })
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
   const { leftStations } = useRecoilValue(navigationState)
   const station = useRecoilValue(currentStationSelector({}))
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = theme === APP_THEME.LED
 
   const slicedLeftStations = useMemo(
     () => leftStations.slice(0, 8),

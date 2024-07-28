@@ -4,8 +4,9 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, TrainType } from '../../gen/proto/stationapi_pb'
+import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import Typography from './Typography'
 
@@ -117,7 +118,8 @@ export const TrainTypeList = ({
   data: TrainType[]
   onSelect: (item: TrainType) => void
 }) => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
       return <ItemCell item={item} onSelect={onSelect} />

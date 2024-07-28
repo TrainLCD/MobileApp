@@ -17,10 +17,10 @@ import {
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import { usePrevious } from '../hooks/usePrevious'
+import { useStore } from '../hooks/useStore'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
-import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
@@ -77,7 +77,7 @@ const AnimatedTypography = Animated.createAnimatedComponent(Typography)
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerState } = useRecoilValue(navigationState)
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
   const currentLine = useRecoilValue(currentLineSelector)
 
   const textOpacityAnim = useSharedValue(0)

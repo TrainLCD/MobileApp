@@ -9,8 +9,8 @@ import { parenthesisRegexp } from '../constants'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
+import { useStore } from '../hooks/useStore'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import isTablet from '../utils/isTablet'
@@ -727,7 +727,7 @@ const JOBars: React.FC = () => {
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
     useRecoilValue(stationState)
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
   const station = useRecoilValue(currentStationSelector({}))
   const currentLine = useRecoilValue(currentLineSelector)
   const nextLine = useNextLine()

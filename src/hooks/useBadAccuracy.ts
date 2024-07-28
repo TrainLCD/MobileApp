@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { useLocationStore } from './useLocationStore'
+import { useStore } from './useStore'
 import { useThreshold } from './useThreshold'
 
 export const useBadAccuracy = (): boolean => {
-  const accuracy = useLocationStore((state) => state.location?.coords.accuracy)
+  const accuracy = useStore((state) => state.location?.coords.accuracy)
   const { arrivedThreshold } = useThreshold()
 
   return useMemo(() => {

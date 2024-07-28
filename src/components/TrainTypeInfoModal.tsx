@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
+import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
@@ -56,7 +57,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
   onClose,
   onConfirmed,
 }: Props) => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+
   const { selectedLine } = useRecoilValue(lineState)
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets()

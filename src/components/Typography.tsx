@@ -1,13 +1,13 @@
 import isArray from 'lodash/isArray'
 import React, { LegacyRef, forwardRef, useMemo } from 'react'
 import { Platform, StyleProp, Text, TextProps, TextStyle } from 'react-native'
-import { useRecoilValue } from 'recoil'
 import { FONTS } from '../constants'
-import { isLEDSelector } from '../store/selectors/isLED'
+import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import isTablet from '../utils/isTablet'
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
 
   const { style: overrideStyle } = props
 

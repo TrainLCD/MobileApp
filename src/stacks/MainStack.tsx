@@ -5,6 +5,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import Permitted from '../components/Permitted'
 import PowerSavingSettings from '../components/PowerSavingSettings'
 import useConnectivity from '../hooks/useConnectivity'
+import { useStore } from '../hooks/useStore'
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 import AppSettings from '../screens/AppSettings'
 import ThemeSettings from '../screens/AppSettings/ThemeSettings'
@@ -16,7 +17,6 @@ import SelectLine from '../screens/SelectLine'
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 
 const Stack = createStackNavigator()
@@ -27,7 +27,7 @@ const screenOptions = {
 
 const MainStack: React.FC = () => {
   const { station } = useRecoilValue(stationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useStore((state) => state.theme)
 
   const isUnderMaintenance = useUnderMaintenance()
   const isInternetAvailable = useConnectivity()

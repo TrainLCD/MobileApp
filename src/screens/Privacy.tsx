@@ -16,7 +16,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import { useLocationStore } from '../hooks/useLocationStore'
+import { useStore } from '../hooks/useStore'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
-  const setLocation = useLocationStore((state) => state.setLocation)
+  const setLocation = useStore((state) => state.setLocation)
 
   const { fetchCurrentPosition } = useCurrentPosition()
 

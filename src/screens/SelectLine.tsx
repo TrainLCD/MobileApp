@@ -14,7 +14,7 @@ import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
-import { useLocationStore } from '../hooks/useLocationStore'
+import { useStore } from '../hooks/useStore'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const location = useLocationStore((state) => state.location)
-  const setLocation = useLocationStore((state) => state.setLocation)
+  const location = useStore((state) => state.location)
+  const setLocation = useStore((state) => state.setLocation)
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)

@@ -1,6 +1,6 @@
 import { LocationObject } from 'expo-location'
 import { StateCreator } from 'zustand'
-import { devtools } from 'zustand/middleware/devtools'
+import { devtools } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 
 export type LocationSlice = {

@@ -3,7 +3,6 @@ import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import {
@@ -11,6 +10,7 @@ import {
   getNextOutboundStopStation,
 } from '../utils/nextStation'
 import { useLoopLine } from './useLoopLine'
+import { useStore } from './useStore'
 
 export const useNextStation = (
   ignorePass = true,
@@ -18,7 +18,7 @@ export const useNextStation = (
 ): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
-  const { theme } = useRecoilValue(themeState)
+  const theme = useStore((state) => state.theme)
   const currentStation = useRecoilValue(
     currentStationSelector({
       skipPassStation: theme === APP_THEME.JR_WEST || theme === APP_THEME.LED,
