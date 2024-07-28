@@ -2,7 +2,7 @@ import 'fast-text-encoding'
 
 import dayjs from 'dayjs'
 import { registerRootComponent } from 'expo'
-import * as Location from 'expo-location'
+import { BackgroundFetchResult } from 'expo-background-fetch'
 import * as TaskManager from 'expo-task-manager'
 import App from './src'
 import { useLocationStore } from './src/hooks/useLocationStore'
@@ -11,31 +11,34 @@ import { locationTaskName } from './src/utils/locationTaskName'
 TaskManager.defineTask(locationTaskName, ({ data, error }) => {
   if (error) {
     console.error(error)
-    return
+    return BackgroundFetchResult.Failed
   }
 
-  const curLocation = useLocationStore.getState().location
+  const stateLat = useLocationStore.getState().location?.coords.latitude
+  const stateLon = useLocationStore.getState().location?.coords.longitude
+  const stateTimestamp = useLocationStore.getState().location?.timestamp
+  const setLocation = useLocationStore.getState().setLocation
+
   if (
-    curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
-    curLocation?.coords.longitude === data.locations[0]?.coords.longitude
+    stateLat === data.locations[0]?.coords.latitude &&
+    stateLon === data.locations[0]?.coords.longitude
   ) {
-    return
+    return BackgroundFetchResult.NoData
   }
 
-  const now = dayjs()
-  const stateTimestamp = curLocation && dayjs(curLocation.timestamp)
-  if (stateTimestamp && now.diff(stateTimestamp, 'seconds') < 1) {
-    return
-  }
+  const receivedTimestamp =
+    data.locations[0] && dayjs(data.locations[0].timestamp)
+  const diffSeconds =
+    stateTimestamp && receivedTimestamp.diff(stateTimestamp, 'seconds')
+  if (!diffSeconds) return BackgroundFetchResult.NoData
+  if (diffSeconds < 1) return BackgroundFetchResult.NoData
 
-  useLocationStore.setState((state) => ({
-    ...state,
-    location: data.locations[0],
-  }))
+  setLocation(data.locations[0])
+
+  return BackgroundFetchResult.NewData
 })
 ;(async () => {
   await TaskManager.unregisterAllTasksAsync()
-  await Location.stopLocationUpdatesAsync(locationTaskName)
 })()
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);

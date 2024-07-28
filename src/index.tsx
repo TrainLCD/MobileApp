@@ -34,15 +34,13 @@ const App: React.FC = () => {
   const [readyForLaunch, setReadyForLaunch] = useState(false)
   const [permissionsGranted, setPermissionsGranted] = useState(false)
 
-  const loadTranslate = useCallback((): Promise<void> => setI18nConfig(), [])
-
   useEffect(() => {
-    const initAsync = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
+    ;(async () => {
       await remoteConfig().fetchAndActivate()
-      await loadTranslate()
+      await setI18nConfig()
 
-      const { locationServicesEnabled } =
-        await Location.getProviderStatusAsync()
+      const locationServicesEnabled = await Location.hasServicesEnabledAsync()
       if (!locationServicesEnabled) {
         setReadyForLaunch(true)
         setPermissionsGranted(false)
@@ -51,9 +49,8 @@ const App: React.FC = () => {
       const { status } = await Location.getForegroundPermissionsAsync()
       setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
       setReadyForLaunch(true)
-    }
-    initAsync()
-  }, [loadTranslate])
+    })()
+  }, [])
 
   useEffect(() => {
     type TextProps = {
