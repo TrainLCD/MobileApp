@@ -12,6 +12,7 @@ import Typography from '../components/Typography'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { useStore } from '../hooks/useStore'
 import { SavedRoute } from '../models/SavedRoute'
+import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -68,7 +69,7 @@ const SavedRoutesScreen: React.FC = () => {
   const setStationState = useSetRecoilState(stationState)
   const latitude = useStore((state) => state.location?.coords.latitude)
   const longitude = useStore((state) => state.location?.coords.longitude)
-  const isLEDTheme = useStore((state) => state.theme)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
   const navigation = useNavigation()
   const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
 

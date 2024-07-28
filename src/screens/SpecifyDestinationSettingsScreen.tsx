@@ -8,6 +8,7 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants'
 import { useStore } from '../hooks/useStore'
+import { APP_THEME } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese, translate } from '../translation'
@@ -24,7 +25,7 @@ const styles = StyleSheet.create({
 const SpecifyDestinationSettingsScreen: React.FC = () => {
   const [{ wantedDestination, allStations }, setStationState] =
     useRecoilState(stationState)
-  const isLEDTheme = useStore((state) => state.theme)
+  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
   const station = useRecoilValue(currentStationSelector({}))
 
   const stopStations = useMemo(
