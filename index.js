@@ -14,26 +14,26 @@ TaskManager.defineTask(locationTaskName, ({ data, error }) => {
     return BackgroundFetchResult.Failed
   }
 
-  const curLocation = useLocationStore.getState().location
+  const stateLat = useLocationStore.getState().location?.coords.latitude
+  const stateLon = useLocationStore.getState().location?.coords.longitude
+  const stateTimestamp = useLocationStore.getState().location?.timestamp
+  const setLocation = useLocationStore.getState().setLocation
+
   if (
-    curLocation?.coords.latitude === data.locations[0]?.coords.latitude &&
-    curLocation?.coords.longitude === data.locations[0]?.coords.longitude
+    stateLat === data.locations[0]?.coords.latitude &&
+    stateLon === data.locations[0]?.coords.longitude
   ) {
     return BackgroundFetchResult.NoData
   }
 
-  const now = dayjs()
-  const stateTimestamp = curLocation && dayjs(curLocation.timestamp)
+  const receivedTimestamp =
+    data.locations[0] && dayjs(data.locations[0].timestamp)
   const diffSeconds =
-    (stateTimestamp && now.diff(stateTimestamp, 'seconds')) ?? 0
-  if (diffSeconds < 1) {
-    return BackgroundFetchResult.NoData
-  }
+    stateTimestamp && receivedTimestamp.diff(stateTimestamp, 'seconds')
+  if (!diffSeconds) return BackgroundFetchResult.NoData
+  if (diffSeconds < 1) return BackgroundFetchResult.NoData
 
-  useLocationStore.setState((state) => ({
-    ...state,
-    location: data.locations[0],
-  }))
+  setLocation(data.locations[0])
 
   return BackgroundFetchResult.NewData
 })
