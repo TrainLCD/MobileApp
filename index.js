@@ -5,7 +5,7 @@ import { registerRootComponent } from 'expo'
 import { BackgroundFetchResult } from 'expo-background-fetch'
 import * as TaskManager from 'expo-task-manager'
 import App from './src'
-import { useLocationStore } from './src/hooks/useLocationStore'
+import { useStore } from './src/hooks/useStore'
 import { locationTaskName } from './src/utils/locationTaskName'
 
 TaskManager.defineTask(locationTaskName, ({ data, error }) => {
@@ -14,10 +14,10 @@ TaskManager.defineTask(locationTaskName, ({ data, error }) => {
     return BackgroundFetchResult.Failed
   }
 
-  const stateLat = useLocationStore((state) => state.location.coords.latitude)
-  const stateLon = useLocationStore((state) => state.location.coords.longitude)
-  const stateTimestamp = useLocationStore((state) => state.location.timestamp)
-  const setLocation = useLocationStore((state) => state.setLocation)
+  const stateLat = useStore((state) => state.location.coords.latitude)
+  const stateLon = useStore((state) => state.location.coords.longitude)
+  const stateTimestamp = useStore((state) => state.location.timestamp)
+  const setLocation = useStore((state) => state.setLocation)
 
   if (
     stateLat === data.locations[0]?.coords.latitude &&
