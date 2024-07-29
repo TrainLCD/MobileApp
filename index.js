@@ -14,10 +14,10 @@ TaskManager.defineTask(locationTaskName, ({ data, error }) => {
     return BackgroundFetchResult.Failed
   }
 
-  const stateLat = useStore.getState((state) => state.location.coords.latitude)
-  const stateLon = useStore.getState((state) => state.location.coords.longitude)
-  const stateTimestamp = useStore.getState((state) => state.location.timestamp)
-  const setLocation = useStore.getState((state) => state.setLocation)
+  const stateLat = useStore.getState().location.coords.latitude
+  const stateLon = useStore.getState().location.coords.longitude
+  const stateTimestamp = useStore.getState().location.timestamp
+  const setLocation = useStore.getState().setLocation
 
   if (
     stateLat === data.locations[0]?.coords.latitude &&
