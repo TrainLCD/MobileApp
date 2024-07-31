@@ -11,12 +11,11 @@ export const useStartBackgroundLocationUpdates = () => {
   const locationServiceAccuracy = useRecoilValue(accuracySelector)
 
   useEffect(() => {
+    if (autoModeEnabled) {
+      return
+    }
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
-      if (autoModeEnabled) {
-        return
-      }
-
       await Location.startLocationUpdatesAsync(locationTaskName, {
         accuracy: locationServiceAccuracy,
         activityType: Location.ActivityType.OtherNavigation,
