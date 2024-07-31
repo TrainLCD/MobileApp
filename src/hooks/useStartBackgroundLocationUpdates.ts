@@ -1,5 +1,4 @@
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import { useEffect } from 'react'
 import { useRecoilValue } from 'recoil'
 import { accuracySelector } from '../store/selectors/accuracy'
@@ -12,14 +11,11 @@ export const useStartBackgroundLocationUpdates = () => {
   const locationServiceAccuracy = useRecoilValue(accuracySelector)
 
   useEffect(() => {
+    if (autoModeEnabled) {
+      return
+    }
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
-      await TaskManager.unregisterAllTasksAsync()
-
-      if (autoModeEnabled) {
-        return
-      }
-
       await Location.startLocationUpdatesAsync(locationTaskName, {
         accuracy: locationServiceAccuracy,
         activityType: Location.ActivityType.OtherNavigation,
@@ -32,7 +28,7 @@ export const useStartBackgroundLocationUpdates = () => {
     })()
 
     return () => {
-      TaskManager.unregisterAllTasksAsync()
+      Location.stopLocationUpdatesAsync(locationTaskName)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
