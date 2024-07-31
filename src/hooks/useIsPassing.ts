@@ -20,7 +20,7 @@ const useIsPassing = (): boolean => {
     if (stationForHeader?.id === station?.id && !arrived) {
       return true
     }
-    return !arrived
+    return false
   }, [arrived, nextStation, station, stationForHeader?.id])
 
   return passing
