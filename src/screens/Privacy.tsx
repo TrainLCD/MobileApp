@@ -113,8 +113,7 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { locationServicesEnabled } =
-        await Location.getProviderStatusAsync()
+      const locationServicesEnabled = await Location.hasServicesEnabledAsync()
       if (!locationServicesEnabled) {
         handleLocationDenied(true)
         return

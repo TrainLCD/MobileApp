@@ -9,8 +9,8 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
-import { FONTS, parenthesisRegexp } from '../constants'
+import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
+import { FONTS } from '../constants'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsPassing from '../hooks/useIsPassing'
@@ -30,7 +30,6 @@ import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
-import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
 import PadLineMarks from './PadLineMarks'
@@ -288,9 +287,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const isEn = useRecoilValue(isEnSelector)
 
   const station = useRecoilValue(currentStationSelector({}))
-  const transferLines = useTransferLinesFromStation(stationInLoop)
+  const transferLines = useTransferLinesFromStation(stationInLoop, {
+    omitJR: true,
+    omitRepeatingLine: true,
+  })
+
   const nextStation = useNextStation(true, stationInLoop)
-  const prevStation = usePreviousStation()
+  const prevStation = usePreviousStation(false)
 
   const currentStationIndex = useMemo(
     () =>
@@ -335,19 +338,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
     return '#fff'
   }, [passed, numberingObj?.lineSymbolShape])
-
-  const omittedTransferLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(transferLines).map(
-        (l) =>
-          new Line({
-            ...l,
-            nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-            nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-          })
-      ),
-    [transferLines]
-  )
 
   const getLineMarks = useGetLineMark()
 
@@ -432,7 +422,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {!passed ? (
           <PadLineMarks
             shouldGrayscale={passed}
-            transferLines={omittedTransferLines}
+            transferLines={transferLines}
             station={stationInLoop}
             theme={APP_THEME.JR_WEST}
           />

@@ -357,7 +357,7 @@ exports.tts = functions
 
     const isPremium = data.premium;
     const jaVoiceName = isPremium ? "ja-JP-Neural2-B" : "ja-JP-Standard-B";
-    const enVoiceName = isPremium ? "en-US-Neural2-G" : "en-US-Standard-G";
+    const enVoiceName = isPremium ? "en-US-Studio-O" : "en-US-Standard-G";
 
     const voicesCollection = firestore
       .collection("caches")
@@ -399,7 +399,7 @@ exports.tts = functions
         name: jaVoiceName,
       },
       audioConfig: {
-        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        audioEncoding: "MP3",
         speakingRate: isPremium ? 1.1 : 1,
       },
     };
@@ -413,33 +413,33 @@ exports.tts = functions
         name: enVoiceName,
       },
       audioConfig: {
-        audioEncoding: isPremium ? "LINEAR16" : "MP3",
+        audioEncoding: "MP3",
         speakingRate: isPremium ? 1.1 : 1,
       },
     };
 
-    const { audioContent: jaAudioContent } = await (
-      await fetch(ttsUrl, {
+    const [jaRes, enRes] = await Promise.all([
+      fetch(ttsUrl, {
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
         body: JSON.stringify(reqBodyJa),
         method: "POST",
-      })
-    ).json();
-
-    const { audioContent: enAudioContent } = await (
-      await fetch(ttsUrl, {
+      }),
+      fetch(ttsUrl, {
         headers: {
           "content-type": "application/json; charset=UTF-8",
         },
         body: JSON.stringify(reqBodyEn),
         method: "POST",
-      })
-    ).json();
+      }),
+    ]);
+
+    const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
+      await Promise.all([jaRes.json(), enRes.json()]);
 
     const cacheTopic = pubsub.topic("tts-cache");
-    await cacheTopic.publishMessage({
+    cacheTopic.publishMessage({
       json: {
         id,
         isPremium,
@@ -472,19 +472,14 @@ exports.ttsCachePubSub = functions.pubsub
     }) => {
       const jaTtsCachePathBase = "caches/tts/ja";
       const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
-      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}${
-        isPremium ? ".wav" : ".mp3"
-      }`;
+      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
 
       const enTtsCachePathBase = "caches/tts/en";
       const enTtsBuf = Buffer.from(enAudioContent, "base64");
-      const enTtsCachePath = `${enTtsCachePathBase}/${id}${
-        isPremium ? ".wav" : ".mp3"
-      }`;
+      const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
 
       await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
       await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
-
       await firestore
         .collection("caches")
         .doc("tts")

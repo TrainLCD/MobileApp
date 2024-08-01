@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { GetStationByIdListRequest } from '../../gen/proto/stationapi_pb'
 import { grpcClient } from '../lib/grpc'
 import { SavedRoute } from '../models/SavedRoute'
-import useAnonymousUser from './useAnonymousUser'
+import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
 export const useSavedRoutes = () => {
-  useAnonymousUser()
+  useCachedInitAnonymousUser()
   const [routes, setRoutes] = useState<SavedRoute[]>([])
   const [loading, setLoading] = useState(false)
 

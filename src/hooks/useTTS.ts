@@ -1,18 +1,11 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import DeviceInfo from 'react-native-device-info'
-import {
-  DEV_TTS_API_URL,
-  LOCAL_TTS_API_URL,
-  PRODUCTION_TTS_API_URL,
-} from 'react-native-dotenv'
+import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
-import stationState from '../store/atoms/station'
 import { isDevApp } from '../utils/isDevApp'
-import useAnonymousUser from './useAnonymousUser'
-import useConnectivity from './useConnectivity'
+import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 import { usePrevious } from './usePrevious'
 import { useTTSCache } from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -20,7 +13,6 @@ import useTTSText from './useTTSText'
 export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState)
-  const { selectedBound } = useRecoilValue(stationState)
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
@@ -28,26 +20,24 @@ export const useTTS = (): void => {
   const ttsText = useTTSText(firstSpeechRef.current)
   const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
-  const isInternetAvailable = useConnectivity()
-  const user = useAnonymousUser()
+
+  const user = useCachedInitAnonymousUser()
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
   const soundEnRef = useRef<Audio.Sound | null>(null)
 
   useEffect(() => {
-    const setAudioModeAsync = async () => {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: backgroundEnabled,
-        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-        playsInSilentModeIOS: backgroundEnabled,
-        shouldDuckAndroid: true,
-        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-        playThroughEarpieceAndroid: false,
-      })
-    }
-    setAudioModeAsync()
-  }, [backgroundEnabled])
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      staysActiveInBackground: backgroundEnabled,
+      interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+      playsInSilentModeIOS: backgroundEnabled,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+      playThroughEarpieceAndroid: false,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     firstSpeechRef.current = false
@@ -84,9 +74,6 @@ export const useTTS = (): void => {
   }, [])
 
   const ttsApiUrl = useMemo(() => {
-    if (__DEV__ && DeviceInfo.isEmulatorSync()) {
-      return LOCAL_TTS_API_URL
-    }
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL
   }, [])
 
@@ -119,10 +106,7 @@ export const useTTS = (): void => {
 
       const baseDir = FileSystem.cacheDirectory
 
-      const extension =
-        monetizedPlanEnabled && losslessEnabled ? '.wav' : '.mp3'
-
-      const pathJa = `${baseDir}${ttsJson.result.id}_ja${extension}`
+      const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`
       if (ttsJson?.result?.jaAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathJa,
@@ -132,7 +116,7 @@ export const useTTS = (): void => {
           }
         )
       }
-      const pathEn = `${baseDir}/${ttsJson.result.id}_en${extension}`
+      const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`
       if (ttsJson?.result?.enAudioContent) {
         await FileSystem.writeAsStringAsync(
           pathEn,
@@ -180,9 +164,8 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     if (
-      playingRef.current ||
       !enabled ||
-      !isInternetAvailable ||
+      playingRef.current ||
       prevTextJa === textJa ||
       prevTextEn === textEn
     ) {
@@ -193,25 +176,12 @@ export const useTTS = (): void => {
       textJa,
       textEn,
     })
-  }, [
-    enabled,
-    isInternetAvailable,
-    prevTextEn,
-    prevTextJa,
-    speech,
-    textEn,
-    textJa,
-  ])
+  }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa])
 
   useEffect(() => {
-    if (!selectedBound) {
-      const unload = async () => {
-        firstSpeechRef.current = true
-        await soundJaRef.current?.unloadAsync()
-        await soundEnRef.current?.unloadAsync()
-        playingRef.current = false
-      }
-      unload()
+    return () => {
+      soundJaRef.current?.unloadAsync()
+      soundEnRef.current?.unloadAsync()
     }
-  }, [selectedBound])
+  }, [])
 }

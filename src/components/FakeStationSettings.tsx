@@ -112,7 +112,6 @@ const FakeStationSettings: React.FC = () => {
   const longitude = useLocationStore(
     (state) => state.location?.coords.longitude
   )
-  const setLocation = useLocationStore((state) => state.setLocation)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const {
@@ -196,27 +195,9 @@ const FakeStationSettings: React.FC = () => {
         ...prev,
         stationForHeader: station,
       }))
-      setLocation({
-        timestamp: -1,
-        coords: {
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: -1,
-          heading: 0,
-          speed: 0,
-          latitude: station.latitude,
-          longitude: station.longitude,
-        },
-      })
       onPressBack()
     },
-    [
-      foundStations,
-      onPressBack,
-      setLocation,
-      setNavigationState,
-      setStationState,
-    ]
+    [foundStations, onPressBack, setNavigationState, setStationState]
   )
 
   const renderStationNameCell = useCallback(

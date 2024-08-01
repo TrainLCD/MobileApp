@@ -26,11 +26,8 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import useListenMessaging from '../hooks/useListenMessaging'
-import { usePurgeTTSCache } from '../hooks/usePurgeTTSCache'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
-import useResetMainState from '../hooks/useResetMainState'
-import { useTTS } from '../hooks/useTTS'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
@@ -93,12 +90,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useListenMessaging()
   // 実験用
   useBLE()
-  useTTS()
-  usePurgeTTSCache()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useRecoilValue(currentLineSelector)
-  const resetMainState = useResetMainState()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
@@ -142,7 +136,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           // iOS: back, Android: share
           case 0:
             if (Platform.OS === 'ios') {
-              resetMainState()
               navigation.navigate('SelectBound')
               break
             }

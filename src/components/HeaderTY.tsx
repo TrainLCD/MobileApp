@@ -13,7 +13,6 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
-import useAppState from '../hooks/useAppState'
 import { useBoundText } from '../hooks/useBoundText'
 import useConnectedLines from '../hooks/useConnectedLines'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
@@ -171,8 +170,6 @@ const HeaderTY: React.FC = () => {
   const boundOpacityAnim = useSharedValue<number>(0)
   const bottomNameScaleYAnim = useSharedValue<number>(1)
 
-  const appState = useAppState()
-
   const prevBoundIsDifferent = useMemo(
     () => prevBoundText !== boundText,
     [boundText, prevBoundText]
@@ -180,11 +177,6 @@ const HeaderTY: React.FC = () => {
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
-        if (appState !== 'active') {
-          resolve()
-          return
-        }
-
         if (!selectedBound) {
           if (prevHeaderState === headerState) {
             topNameScaleYAnim.value = 0
@@ -234,7 +226,6 @@ const HeaderTY: React.FC = () => {
         }
       }),
     [
-      appState,
       bottomNameScaleYAnim,
       boundOpacityAnim,
       headerState,

@@ -25,6 +25,7 @@ import NumberingIconSMR from './NumberingIconSMR'
 import NumberingIconSanyo from './NumberingIconSanyo'
 import NumberingIconSquare from './NumberingIconSquare'
 import NumberingIconTWR from './NumberingIconTWR'
+import NumberingNishitetsu from './NumberingNishitetsu'
 
 type Props = {
   shape: string
@@ -241,6 +242,14 @@ const NumberingIconOriginal: React.FC<Props> = ({
           withDarkTheme={withDarkTheme ?? false}
           size={size}
           stationNumber={stationNumber}
+        />
+      )
+    case MARK_SHAPE.NISHITETSU:
+      return (
+        <NumberingNishitetsu
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          size={size}
         />
       )
     default:

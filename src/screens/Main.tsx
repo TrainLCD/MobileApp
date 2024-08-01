@@ -24,11 +24,12 @@ import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
-import useResetMainState from '../hooks/useResetMainState'
+import { useResetMainState } from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
+import { useTTS } from '../hooks/useTTS'
 import { useTypeWillChange } from '../hooks/useTypeWillChange'
 import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
@@ -148,8 +149,9 @@ const MainScreen: React.FC = () => {
   useRefreshStation()
   useKeepAwake()
   useStartBackgroundLocationUpdates()
+  useResetMainState()
+  useTTS()
 
-  const resetMainState = useResetMainState()
   const { pause: pauseBottomTimer } = useUpdateBottomState()
 
   const transferStation = useMemo(
@@ -254,13 +256,12 @@ const MainScreen: React.FC = () => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        resetMainState()
         navigation.navigate('SelectBound')
         return true
       }
     )
     return subscription.remove
-  }, [navigation, resetMainState])
+  }, [navigation])
 
   const marginForMetroThemeStyle = useMemo(
     () => ({

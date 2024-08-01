@@ -7,7 +7,9 @@ import getIsPass from '../utils/isPass'
 import { useNextStation } from './useNextStation'
 import useTransferLinesFromStation from './useTransferLinesFromStation'
 
-const useTransferLines = (): Line[] => {
+type Option = { omitRepeatingLine?: boolean; omitJR?: boolean }
+
+const useTransferLines = (options?: Option): Line[] => {
   const { arrived } = useRecoilValue(stationState)
   const currentStation = useRecoilValue(
     currentStationSelector({
@@ -23,7 +25,15 @@ const useTransferLines = (): Line[] => {
     [arrived, currentStation, nextStation]
   )
 
-  const transferLines = useTransferLinesFromStation(targetStation)
+  const { omitRepeatingLine, omitJR } = options ?? {
+    omitRepeatingLines: false,
+    omitJR: false,
+  }
+
+  const transferLines = useTransferLinesFromStation(targetStation, {
+    omitRepeatingLine,
+    omitJR,
+  })
 
   return transferLines
 }

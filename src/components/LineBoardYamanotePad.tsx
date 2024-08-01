@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
-import useAppState from '../hooks/useAppState'
 import useGetLineMark from '../hooks/useGetLineMark'
 import { useNextStation } from '../hooks/useNextStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
@@ -18,7 +17,6 @@ interface Props {
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
-  const appState = useAppState()
   const { station, arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
   const isEn = useRecoilValue(isEnSelector)
@@ -104,7 +102,6 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       stations={archStations}
       line={line}
       arrived={arrived}
-      appState={appState}
       transferLines={transferLines}
       station={switchedStation}
       numberingInfo={numberingInfo}

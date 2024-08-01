@@ -9,7 +9,6 @@ import themeState from '../store/atoms/theme'
 import { currentLineSelector } from '../store/selectors/currentLine'
 import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
-import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { useAfterNextStation } from './useAfterNextStation'
 import useBounds from './useBounds'
@@ -60,6 +59,15 @@ const useTTSText = (firstSpeech = true): string[] => {
         ? undefined
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
+  )
+
+  const transferLines = useMemo(
+    () =>
+      transferLinesOriginal.map((l) => ({
+        ...l,
+        nameRoman: normalizeRomanText(l.nameRoman ?? ''),
+      })),
+    [transferLinesOriginal]
   )
 
   const currentLine = useMemo(
@@ -152,15 +160,6 @@ const useTTSText = (firstSpeech = true): string[] => {
         : 'Station Number '
     }${symbol} ${num}.`
   }, [nextStationNumber, theme])
-
-  const transferLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(transferLinesOriginal).map((l) => ({
-        ...l,
-        nameRoman: normalizeRomanText(l.nameRoman ?? ''),
-      })),
-    [transferLinesOriginal]
-  )
 
   const connectedLines = useMemo(
     () =>
