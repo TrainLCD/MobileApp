@@ -4,6 +4,7 @@ import { MARK_SHAPE, NumberingIconSize } from '../constants'
 import NumberingIconHalfSquare from './NumberingIconHalfSquare'
 import NumberingIconHankyu from './NumberingIconHankyu'
 import NumberingIconHanshin from './NumberingIconHanshin'
+import NumberingIconIzuhakone from './NumberingIconIzuhakone'
 import NumberingIconKeihan from './NumberingIconKeihan'
 import NumberingIconKeikyu from './NumberingIconKeikyu'
 import NumberingIconKeio from './NumberingIconKeio'
@@ -250,6 +251,14 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+        />
+      )
+    case MARK_SHAPE.IZUHAKONE:
+      return (
+        <NumberingIconIzuhakone
+          lineColor={lineColor}
+          size={size}
+          stationNumber={stationNumber}
         />
       )
     default:
