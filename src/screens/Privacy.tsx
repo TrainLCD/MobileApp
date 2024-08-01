@@ -16,7 +16,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import { useLocationStore } from '../hooks/useLocationStore'
+import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -66,7 +66,6 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
-  const setLocation = useLocationStore((state) => state.setLocation)
 
   const { fetchCurrentPosition } = useCurrentPosition()
 
@@ -80,9 +79,9 @@ const PrivacyScreen: React.FC = () => {
 
     const location = (await fetchCurrentPosition()) ?? null
     if (location) {
-      setLocation(location)
+      locationStore.setState(location)
     }
-  }, [fetchCurrentPosition, navigation, setLocation])
+  }, [fetchCurrentPosition, navigation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
     navigation.dispatch(
@@ -113,7 +112,8 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const locationServicesEnabled = await Location.hasServicesEnabledAsync()
+      const { locationServicesEnabled } =
+        await Location.getProviderStatusAsync()
       if (!locationServicesEnabled) {
         handleLocationDenied(true)
         return
