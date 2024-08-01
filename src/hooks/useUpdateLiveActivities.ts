@@ -17,6 +17,7 @@ import {
 import useBounds from './useBounds'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
+import useIsPassing from './useIsPassing'
 import { useLoopLine } from './useLoopLine'
 import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
@@ -39,6 +40,7 @@ export const useUpdateLiveActivities = (): void => {
   const trainType = useCurrentTrainType()
   const { isLoopLine, isPartiallyLoopLine, isYamanoteLine, isOsakaLoopLine } =
     useLoopLine()
+  const isPassing = useIsPassing()
 
   const trainTypeName = useMemo(() => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
@@ -86,8 +88,6 @@ export const useUpdateLiveActivities = (): void => {
   }, [directionalStops, getStationNumberIndex])
 
   const activityState = useMemo(() => {
-    const isPassing = currentStation && getIsPass(currentStation) && arrived
-
     const stoppedStation = stoppedCurrentStation ?? previousStation
     const passingStationName =
       (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
@@ -138,6 +138,7 @@ export const useUpdateLiveActivities = (): void => {
     isLoopLine,
     isNextLastStop,
     isPartiallyLoopLine,
+    isPassing,
     nextStation,
     previousStation,
     stoppedCurrentStation,
