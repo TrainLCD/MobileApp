@@ -5,7 +5,7 @@ import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
 import speechState from '../store/atoms/speech'
 import { isDevApp } from '../utils/isDevApp'
-import useAnonymousUser from './useAnonymousUser'
+import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 import { usePrevious } from './usePrevious'
 import { useTTSCache } from './useTTSCache'
 import useTTSText from './useTTSText'
@@ -21,7 +21,7 @@ export const useTTS = (): void => {
   const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
 
-  const user = useAnonymousUser()
+  const user = useCachedInitAnonymousUser()
 
   const soundJaRef = useRef<Audio.Sound | null>(null)
   const soundEnRef = useRef<Audio.Sound | null>(null)
