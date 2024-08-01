@@ -14,11 +14,11 @@ import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
-import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { currentStationSelector } from '../store/selectors/currentStation'
+import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
@@ -47,8 +47,7 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const location = useLocationStore((state) => state.location)
-  const setLocation = useLocationStore((state) => state.setLocation)
+  const location = locationStore.getState()
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
@@ -72,7 +71,7 @@ const SelectLineScreen: React.FC = () => {
       if (!pos) {
         return
       }
-      setLocation(pos)
+      locationStore.setState(pos)
       const stationFromAPI =
         (await fetchStationFunc({
           latitude: pos.coords.latitude,
@@ -182,7 +181,7 @@ const SelectLineScreen: React.FC = () => {
     if (!pos) {
       return
     }
-    setLocation(pos)
+    locationStore.setState(pos)
     setNavigationState((prev) => ({
       ...prev,
       stationForHeader: null,
@@ -209,7 +208,6 @@ const SelectLineScreen: React.FC = () => {
   }, [
     fetchCurrentPosition,
     fetchStationFunc,
-    setLocation,
     setNavigationState,
     setStationState,
   ])

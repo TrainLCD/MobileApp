@@ -9,13 +9,13 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
-import { useLocationStore } from '../hooks/useLocationStore'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
 import { SavedRoute } from '../models/SavedRoute'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isLEDSelector } from '../store/selectors/isLED'
+import { locationStore } from '../store/vanillaLocation'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -67,10 +67,9 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
-  const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
-  )
+  const locationState = locationStore.getState()
+  const latitude = locationState?.coords.latitude
+  const longitude = locationState?.coords.longitude
 
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
