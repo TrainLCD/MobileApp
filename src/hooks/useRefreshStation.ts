@@ -30,12 +30,12 @@ const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
 
+  const state = locationStore.getState()
   const { latitude, longitude } = useMemo(() => {
-    const state = locationStore.getState()
     const latitude = state?.coords.latitude
     const longitude = state?.coords.longitude
     return { latitude, longitude }
-  }, [])
+  }, [state?.coords.latitude, state?.coords.longitude])
 
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()

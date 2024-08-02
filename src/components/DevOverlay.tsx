@@ -35,14 +35,19 @@ const DevOverlay: React.FC = () => {
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 
+  const state = locationStore.getState()
   const { latitude, longitude, speed, accuracy } = useMemo(() => {
-    const state = locationStore.getState()
     const latitude = state?.coords.latitude
     const longitude = state?.coords.longitude
     const speed = state?.coords.speed
     const accuracy = state?.coords.accuracy
     return { latitude, longitude, speed, accuracy }
-  }, [])
+  }, [
+    state?.coords.accuracy,
+    state?.coords.latitude,
+    state?.coords.longitude,
+    state?.coords.speed,
+  ])
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
 

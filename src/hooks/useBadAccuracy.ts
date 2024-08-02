@@ -5,11 +5,11 @@ import { useThreshold } from './useThreshold'
 export const useBadAccuracy = (): boolean => {
   const { arrivedThreshold } = useThreshold()
 
+  const state = locationStore.getState()
   const { accuracy } = useMemo(() => {
-    const state = locationStore.getState()
     const accuracy = state?.coords.accuracy
     return { accuracy }
-  }, [])
+  }, [state?.coords.accuracy])
 
   return useMemo(() => {
     if (!accuracy) {

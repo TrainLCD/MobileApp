@@ -110,12 +110,12 @@ const FakeStationSettings: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState)
   const isLEDTheme = useRecoilValue(isLEDSelector)
 
+  const state = locationStore.getState()
   const { latitude, longitude } = useMemo(() => {
-    const state = locationStore.getState()
     const latitude = state?.coords.latitude
     const longitude = state?.coords.longitude
     return { latitude, longitude }
-  }, [])
+  }, [state?.coords.latitude, state?.coords.longitude])
 
   const {
     data: byCoordsData,
