@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import findNearest from 'geolib/es/findNearest'
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
@@ -67,9 +67,12 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const locationState = locationStore.getState()
-  const latitude = locationState?.coords.latitude
-  const longitude = locationState?.coords.longitude
+  const { latitude, longitude } = useMemo(() => {
+    const state = locationStore.getState()
+    const latitude = state?.coords.latitude
+    const longitude = state?.coords.longitude
+    return { latitude, longitude }
+  }, [])
 
   const isLEDTheme = useRecoilValue(isLEDSelector)
 

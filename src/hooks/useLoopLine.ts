@@ -12,15 +12,15 @@ import {
 } from '../constants'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
+import { useCurrentLine } from './useCurrentLine'
+import { useCurrentStation } from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 
 export const useLoopLine = () => {
   const { stations } = useRecoilValue(stationState)
   const { fromBuilder } = useRecoilValue(navigationState)
-  const station = useRecoilValue(currentStationSelector({}))
-  const line = useRecoilValue(currentLineSelector)
+  const station = useCurrentStation()
+  const line = useCurrentLine()
 
   const trainType = useCurrentTrainType()
 

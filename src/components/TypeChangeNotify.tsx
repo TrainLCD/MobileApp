@@ -6,13 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
 const MetroBars: React.FC = () => {
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
   const nextLine = useNextLine()
 
   const leftNumberOfLines = useMemo(
@@ -353,7 +353,7 @@ const MetroBars: React.FC = () => {
 }
 
 const SaikyoBars: React.FC = () => {
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
@@ -559,7 +559,7 @@ const SaikyoBars: React.FC = () => {
 }
 
 const JOBars: React.FC = () => {
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
@@ -728,8 +728,8 @@ const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
     useRecoilValue(stationState)
   const { theme } = useRecoilValue(themeState)
-  const station = useRecoilValue(currentStationSelector({}))
-  const currentLine = useRecoilValue(currentLineSelector)
+  const station = useCurrentStation()
+  const currentLine = useCurrentLine()
   const nextLine = useNextLine()
   const trainType = useCurrentTrainType()
   const nextTrainType = useNextTrainType()
