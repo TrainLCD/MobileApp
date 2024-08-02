@@ -1,9 +1,9 @@
 import * as Location from 'expo-location'
 import { useCallback, useState } from 'react'
-import { locationStore } from '../store/vanillaLocation'
+import { useLocationStore } from './useLocationStore'
 
 export const useFetchCurrentLocationOnce = () => {
-  const lastKnownLocation = locationStore.getState()
+  const lastKnownLocation = useLocationStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 

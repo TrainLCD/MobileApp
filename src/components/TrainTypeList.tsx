@@ -2,10 +2,10 @@ import React, { useCallback, useMemo } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useRecoilValue } from 'recoil'
 import { Line, TrainType } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import { isLEDSelector } from '../store/selectors/isLED'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import { isJapanese } from '../translation'
 import Typography from './Typography'
 
@@ -117,7 +117,8 @@ export const TrainTypeList = ({
   data: TrainType[]
   onSelect: (item: TrainType) => void
 }) => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
       return <ItemCell item={item} onSelect={onSelect} />

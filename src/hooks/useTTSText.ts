@@ -5,7 +5,6 @@ import { normalizeRomanText } from '../../src/utils/normalize'
 import { parenthesisRegexp } from '../constants'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
 import getIsPass from '../utils/isPass'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { useAfterNextStation } from './useAfterNextStation'
@@ -21,6 +20,7 @@ import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
 import { useSlicedStations } from './useSlicedStations'
 import { useStoppingState } from './useStoppingState'
+import { useThemeStore } from './useThemeStore'
 import useTransferLines from './useTransferLines'
 
 const EMPTY_TTS_TEXT = {
@@ -35,7 +35,8 @@ const EMPTY_TTS_TEXT = {
 }
 
 const useTTSText = (firstSpeech = true): string[] => {
-  const { theme } = useRecoilValue(themeState)
+  const theme = useThemeStore()
+
   const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState)
   const station = useCurrentStation()
   const currentLineOrigin = useCurrentLine()

@@ -5,9 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native'
-import { useRecoilValue } from 'recoil'
 import { GlyphNames } from '../@types/ionicons'
-import { isLEDSelector } from '../store/selectors/isLED'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 
 interface Props {
   icon: GlyphNames
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
 })
 
 const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   return (
     <TouchableOpacity

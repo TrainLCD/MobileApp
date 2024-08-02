@@ -3,15 +3,11 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
-import { locationStore } from '../store/vanillaLocation'
+import { useLocationStore } from './useLocationStore'
 
 export const useNearestStation = (): Station | null => {
-  const { latitude, longitude } = useMemo(() => {
-    const state = locationStore.getState()
-    const latitude = state?.coords.latitude
-    const longitude = state?.coords.longitude
-    return { latitude, longitude }
-  }, [])
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
   const { stations } = useRecoilValue(stationState)
 
   const nearestStation = useMemo<Station | null>(() => {

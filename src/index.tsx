@@ -12,11 +12,11 @@ import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
+import { useLocationStore } from './hooks/useLocationStore'
 import useReport from './hooks/useReport'
 import PrivacyScreen from './screens/Privacy'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
-import { locationStore } from './store/vanillaLocation'
 import { setI18nConfig } from './translation'
 import { locationTaskName } from './utils/locationTaskName'
 
@@ -34,7 +34,7 @@ TaskManager.defineTask(
       return
     }
 
-    const state = locationStore.getState()
+    const state = useLocationStore.getState()
     const stateLat = state?.coords.latitude
     const stateLon = state?.coords.longitude
 
@@ -42,7 +42,7 @@ TaskManager.defineTask(
       stateLat !== data.locations[0]?.coords.latitude &&
       stateLon !== data.locations[0]?.coords.longitude
     ) {
-      locationStore.setState(data.locations[0])
+      useLocationStore.setState(data.locations[0])
     }
   }
 )
