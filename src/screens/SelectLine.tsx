@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
@@ -11,14 +11,14 @@ import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
 import useConnectivity from '../hooks/useConnectivity'
-import { useCurrentPosition } from '../hooks/useCurrentPosition'
+import { useCurrentStation } from '../hooks/useCurrentStation'
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
+import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
-import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const location = locationStore.getState()
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
@@ -58,20 +57,21 @@ const SelectLineScreen: React.FC = () => {
   } = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
   const {
-    fetchCurrentPosition,
+    fetchCurrentLocation,
     loading: locationLoading,
     error: fetchLocationError,
-  } = useCurrentPosition()
-  const station = useRecoilValue(currentStationSelector({}))
+  } = useFetchCurrentLocationOnce()
+  const station = useCurrentStation()
+  const locationState = useLocationStore()
 
   useEffect(() => {
     const init = async () => {
       if (station) return
-      const pos = await fetchCurrentPosition()
+      const pos = await fetchCurrentLocation(true)
       if (!pos) {
         return
       }
-      locationStore.setState(pos)
+      useLocationStore.setState(pos)
       const stationFromAPI =
         (await fetchStationFunc({
           latitude: pos.coords.latitude,
@@ -177,11 +177,11 @@ const SelectLineScreen: React.FC = () => {
   )
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await fetchCurrentPosition()
+    const pos = await fetchCurrentLocation()
     if (!pos) {
       return
     }
-    locationStore.setState(pos)
+    useLocationStore.setState(pos)
     setNavigationState((prev) => ({
       ...prev,
       stationForHeader: null,
@@ -206,7 +206,7 @@ const SelectLineScreen: React.FC = () => {
           : prev.stationForHeader,
     }))
   }, [
-    fetchCurrentPosition,
+    fetchCurrentLocation,
     fetchStationFunc,
     setNavigationState,
     setStationState,
@@ -249,7 +249,7 @@ const SelectLineScreen: React.FC = () => {
   }
 
   // NOTE: 駅検索ができるボタンが表示されるので、!stationがないと一生loadingになる
-  if (!location && !station) {
+  if (!locationState && !station) {
     return (
       <Loading
         message={translate('loadingLocation')}

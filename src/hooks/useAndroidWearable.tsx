@@ -2,10 +2,10 @@ import { useEffect, useMemo } from 'react'
 import { Platform } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
 import sendStationInfoToWatch from '../utils/native/android/wearableModule'
 import { useBadAccuracy } from './useBadAccuracy'
+import { useCurrentStation } from './useCurrentStation'
 import useIsNextLastStop from './useIsNextLastStop'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
@@ -13,7 +13,7 @@ import { useStoppingState } from './useStoppingState'
 
 const useAndroidWearable = (): void => {
   const { arrived } = useRecoilValue(stationState)
-  const currentStation = useRecoilValue(currentStationSelector({}))
+  const currentStation = useCurrentStation()
 
   const nextStation = useNextStation()
   const stoppingState = useStoppingState()

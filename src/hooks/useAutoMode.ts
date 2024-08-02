@@ -7,8 +7,8 @@ import {
 } from '../constants'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
-import { locationStore } from '../store/vanillaLocation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import { useLocationStore } from './useLocationStore'
 import { useLoopLine } from './useLoopLine'
 import useValueRef from './useValueRef'
 
@@ -53,7 +53,7 @@ const useAutoMode = (enabled: boolean): void => {
         const index = autoModeInboundIndexRef.current
 
         if (!index) {
-          locationStore.setState({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               accuracy: 0,

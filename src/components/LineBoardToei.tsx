@@ -4,12 +4,12 @@ import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
@@ -650,7 +650,7 @@ const LineBoardToei: React.FC<Props> = ({
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE')
   const { selectedLine } = useRecoilValue(lineState)
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,

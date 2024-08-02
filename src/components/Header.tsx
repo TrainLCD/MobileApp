@@ -1,8 +1,7 @@
 import React from 'react'
-import { useRecoilValue } from 'recoil'
+import { useCurrentStation } from '../hooks/useCurrentStation'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
-import themeState from '../store/atoms/theme'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import HeaderE235 from './HeaderE235'
 import HeaderJRWest from './HeaderJRWest'
 import HeaderLED from './HeaderLED'
@@ -11,8 +10,8 @@ import HeaderTY from './HeaderTY'
 import HeaderTokyoMetro from './HeaderTokyoMetro'
 
 const Header = () => {
-  const { theme } = useRecoilValue(themeState)
-  const station = useRecoilValue(currentStationSelector({}))
+  const theme = useThemeStore((state) => state)
+  const station = useCurrentStation()
 
   if (!station) {
     return null
