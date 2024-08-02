@@ -9,12 +9,8 @@ export const RECOIL_STATES = {
   tuningState: 'tuningState',
   authState: 'authState',
   configState: 'configState',
-  powerSavingState: 'powerSavingState',
 
   // selectors
-  accuracySelector: 'accuracySelector',
-  locationServiceDistanceFilterSelector:
-    'locationServiceDistanceFilterSelector',
   isEnSelector: 'isEnSelector',
   autoModeEnabledSelector: 'autoModeEnabledSelector',
 }
