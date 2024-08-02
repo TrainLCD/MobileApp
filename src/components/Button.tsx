@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
@@ -52,7 +52,7 @@ const Button: React.FC<Props> = ({
   style,
   disabled,
 }: Props) => {
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   return (
     <TouchableOpacity

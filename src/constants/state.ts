@@ -16,7 +16,5 @@ export const RECOIL_STATES = {
   locationServiceDistanceFilterSelector:
     'locationServiceDistanceFilterSelector',
   isEnSelector: 'isEnSelector',
-  currentStationSelector: 'currentStationSelector',
-  currentLineSelector: 'currentLineSelector',
   autoModeEnabledSelector: 'autoModeEnabledSelector',
 }

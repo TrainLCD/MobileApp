@@ -4,9 +4,9 @@ import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
+import { useCurrentLine } from './useCurrentLine'
+import { useCurrentStation } from './useCurrentStation'
 import { useLoopLine } from './useLoopLine'
 import { useNextStation } from './useNextStation'
 import { useNumbering } from './useNumbering'
@@ -14,8 +14,8 @@ import { useStoppingState } from './useStoppingState'
 
 const useAppleWatch = (): void => {
   const { arrived, stations, selectedDirection } = useRecoilValue(stationState)
-  const station = useRecoilValue(currentStationSelector({}))
-  const currentLine = useRecoilValue(currentLineSelector)
+  const station = useCurrentStation()
+  const currentLine = useCurrentLine()
 
   const reachable = useReachability()
   const [currentNumbering] = useNumbering()

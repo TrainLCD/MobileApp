@@ -15,8 +15,8 @@ import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
-import { useCurrentPosition } from '../hooks/useCurrentPosition'
-import { useStore } from '../hooks/useStore'
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -66,9 +66,7 @@ const styles = StyleSheet.create({
 
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
-  const setLocation = useStore((state) => state.setLocation)
-
-  const { fetchCurrentPosition } = useCurrentPosition()
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce()
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
@@ -78,11 +76,11 @@ const PrivacyScreen: React.FC = () => {
       })
     )
 
-    const location = (await fetchCurrentPosition()) ?? null
+    const location = (await fetchCurrentLocation()) ?? null
     if (location) {
-      setLocation(location)
+      useLocationStore.setState(location)
     }
-  }, [fetchCurrentPosition, navigation, setLocation])
+  }, [fetchCurrentLocation, navigation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
     navigation.dispatch(
@@ -113,7 +111,8 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const locationServicesEnabled = await Location.hasServicesEnabledAsync()
+      const { locationServicesEnabled } =
+        await Location.getProviderStatusAsync()
       if (!locationServicesEnabled) {
         handleLocationDenied(true)
         return

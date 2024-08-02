@@ -6,7 +6,6 @@ import {
 } from '../constants'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
@@ -15,8 +14,10 @@ import {
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
 import useBounds from './useBounds'
+import { useCurrentStation } from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
+import useIsPassing from './useIsPassing'
 import { useLoopLine } from './useLoopLine'
 import { useNextStation } from './useNextStation'
 import usePreviousStation from './usePreviousStation'
@@ -28,10 +29,8 @@ export const useUpdateLiveActivities = (): void => {
     useRecoilValue(stationState)
 
   const previousStation = usePreviousStation()
-  const currentStation = useRecoilValue(currentStationSelector({}))
-  const stoppedCurrentStation = useRecoilValue(
-    currentStationSelector({ skipPassStation: true })
-  )
+  const currentStation = useCurrentStation()
+  const stoppedCurrentStation = useCurrentStation(true)
   const nextStation = useNextStation()
   const { directionalStops } = useBounds()
   const isNextLastStop = useIsNextLastStop()
@@ -39,6 +38,7 @@ export const useUpdateLiveActivities = (): void => {
   const trainType = useCurrentTrainType()
   const { isLoopLine, isPartiallyLoopLine, isYamanoteLine, isOsakaLoopLine } =
     useLoopLine()
+  const isPassing = useIsPassing()
 
   const trainTypeName = useMemo(() => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
@@ -86,8 +86,6 @@ export const useUpdateLiveActivities = (): void => {
   }, [directionalStops, getStationNumberIndex])
 
   const activityState = useMemo(() => {
-    const isPassing = currentStation && getIsPass(currentStation) && arrived
-
     const stoppedStation = stoppedCurrentStation ?? previousStation
     const passingStationName =
       (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
@@ -138,6 +136,7 @@ export const useUpdateLiveActivities = (): void => {
     isLoopLine,
     isNextLastStop,
     isPartiallyLoopLine,
+    isPassing,
     nextStation,
     previousStation,
     stoppedCurrentStation,

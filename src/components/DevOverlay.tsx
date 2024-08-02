@@ -1,9 +1,8 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import * as Application from 'expo-application'
 import React, { useMemo } from 'react'
 import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
-import { useStore } from '../hooks/useStore'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { useThreshold } from '../hooks/useThreshold'
 import powerSavingState from '../store/atoms/powerSaving'
 import Typography from './Typography'
@@ -33,10 +32,10 @@ const styles = StyleSheet.create({
 })
 
 const DevOverlay: React.FC = () => {
-  const latitude = useStore((state) => state.location?.coords.latitude)
-  const longitude = useStore((state) => state.location?.coords.longitude)
-  const speed = useStore((state) => state.location?.coords.speed)
-  const accuracy = useStore((state) => state.location?.coords.accuracy)
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const speed = useLocationStore((state) => state?.coords.speed)
+  const accuracy = useLocationStore((state) => state?.coords.accuracy)
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 

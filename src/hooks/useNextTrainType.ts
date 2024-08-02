@@ -2,14 +2,14 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { TrainType } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
+import { useCurrentStation } from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useNextLine from './useNextLine'
 
 const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState)
   const nextLine = useNextLine()
-  const currentStation = useRecoilValue(currentStationSelector({}))
+  const currentStation = useCurrentStation()
   const trainType = useCurrentTrainType()
 
   // 同じ路線でも種別が変わる場合を想定(小田急線等)

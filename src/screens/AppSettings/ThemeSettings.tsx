@@ -6,7 +6,7 @@ import { StyleSheet, View } from 'react-native'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
-import { useStore } from '../../hooks/useStore'
+import { useThemeStore } from '../../hooks/useThemeStore'
 import { APP_THEME, AppTheme } from '../../models/Theme'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
@@ -19,17 +19,13 @@ const styles = StyleSheet.create({
 })
 
 const ThemeSettingsScreen: React.FC = () => {
-  const theme = useStore((state) => state.theme)
-  const setTheme = useStore((state) => state.setTheme)
+  const theme = useThemeStore((state) => state)
 
   const isLEDTheme = theme === APP_THEME.LED
 
-  const onThemeValueChange = useCallback(
-    (t: AppTheme) => {
-      setTheme(t)
-    },
-    [setTheme]
-  )
+  const onThemeValueChange = useCallback((t: AppTheme) => {
+    useThemeStore.setState(t)
+  }, [])
 
   const navigation = useNavigation()
   const settingsThemes = getSettingsThemes()

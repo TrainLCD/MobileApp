@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import { isJapanese, translate } from '../translation'
@@ -57,7 +57,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
   onClose,
   onConfirmed,
 }: Props) => {
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const { selectedLine } = useRecoilValue(lineState)
 

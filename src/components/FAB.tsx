@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { GlyphNames } from '../@types/ionicons'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 
 interface Props {
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
 })
 
 const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   return (
     <TouchableOpacity

@@ -20,6 +20,8 @@ import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
 import { ASYNC_STORAGE_KEYS } from '../constants'
 import useAutoMode from '../hooks/useAutoMode'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
@@ -27,7 +29,7 @@ import useRefreshStation from '../hooks/useRefreshStation'
 import { useResetMainState } from '../hooks/useResetMainState'
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange'
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import { useTTS } from '../hooks/useTTS'
@@ -36,8 +38,6 @@ import useUpdateBottomState from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import { getIsHoliday } from '../utils/isHoliday'
@@ -52,14 +52,14 @@ const styles = StyleSheet.create({
 })
 
 const MainScreen: React.FC = () => {
-  const theme = useStore((state) => state.theme)
+  const theme = useThemeStore()
   const isLEDTheme = theme === APP_THEME.LED
 
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
   const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
     useRecoilState(navigationState)
-  const currentLine = useRecoilValue(currentLineSelector)
-  const currentStation = useRecoilValue(currentStationSelector({}))
+  const currentLine = useCurrentLine()
+  const currentStation = useCurrentStation()
 
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)

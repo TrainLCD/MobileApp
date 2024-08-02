@@ -21,7 +21,7 @@ import {
   ASYNC_STORAGE_KEYS,
   AvailableLanguage,
 } from '../constants'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
@@ -69,7 +69,7 @@ const ListItem: React.FC<ListItemProps> = ({
   item,
   onPress,
 }: ListItemProps) => {
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const localizedAvailableLanguage = useMemo(() => {
     switch (item) {

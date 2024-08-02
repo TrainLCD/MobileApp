@@ -9,8 +9,9 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { SavedRoute } from '../models/SavedRoute'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
@@ -67,9 +68,9 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const latitude = useStore((state) => state.location?.coords.latitude)
-  const longitude = useStore((state) => state.location?.coords.longitude)
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const navigation = useNavigation()
   const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
 

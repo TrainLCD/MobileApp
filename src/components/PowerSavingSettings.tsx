@@ -11,7 +11,7 @@ import {
   POWER_SAVING_PRESETS,
   PowerSavingPreset,
 } from '../constants'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import powerSavingState from '../store/atoms/powerSaving'
 import { translate } from '../translation'
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
 })
 
 const PowerSavingSettings: React.FC = () => {
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const [{ preset: presetFromState }, setPowerSavingState] =
     useRecoilState(powerSavingState)

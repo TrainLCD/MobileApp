@@ -1,8 +1,8 @@
 import { TYPE_CHANGE_HIDE_THEMES } from '../constants'
-import { useStore } from './useStore'
+import { useThemeStore } from './useThemeStore'
 
 const useShouldHideTypeChange = (): boolean => {
-  const theme = useStore((state) => state.theme)
+  const theme = useThemeStore()
   return TYPE_CHANGE_HIDE_THEMES.includes(theme)
 }
 

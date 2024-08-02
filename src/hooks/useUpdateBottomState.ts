@@ -5,7 +5,7 @@ import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
 import useIntervalEffect from './useIntervalEffect'
 import useShouldHideTypeChange from './useShouldHideTypeChange'
-import { useStore } from './useStore'
+import { useThemeStore } from './useThemeStore'
 import useTransferLines from './useTransferLines'
 import { useTypeWillChange } from './useTypeWillChange'
 import useValueRef from './useValueRef'
@@ -14,7 +14,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState)
   const { bottomTransitionInterval } = useRecoilValue(tuningState)
   const bottomStateRef = useValueRef(bottomState)
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const isTypeWillChange = useTypeWillChange()
   const isTypeWillChangeRef = useValueRef(isTypeWillChange)

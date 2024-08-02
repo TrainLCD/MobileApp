@@ -6,13 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, StationNumber } from '../../gen/proto/stationapi_pb'
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import { useNextStation } from '../hooks/useNextStation'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import useTransferLines from '../hooks/useTransferLines'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import Heading from './Heading'
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const { arrived } = useRecoilValue(stationState)
-  const currentStation = useRecoilValue(currentStationSelector({}))
+  const currentStation = useCurrentStation()
 
   const lines = useTransferLines()
   const nextStation = useNextStation()
   const getLineMarkFunc = useGetLineMark()
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),

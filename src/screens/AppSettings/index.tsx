@@ -10,7 +10,7 @@ import Heading from '../../components/Heading'
 import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants'
-import { useStore } from '../../hooks/useStore'
+import { useThemeStore } from '../../hooks/useThemeStore'
 import { APP_THEME } from '../../models/Theme'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
@@ -49,7 +49,7 @@ const AppSettingsScreen: React.FC = () => {
     { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
     setSpeechState,
   ] = useRecoilState(speechState)
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const navigation = useNavigation()
 

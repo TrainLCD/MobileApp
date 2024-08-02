@@ -5,7 +5,7 @@ import ErrorScreen from '../components/ErrorScreen'
 import Permitted from '../components/Permitted'
 import PowerSavingSettings from '../components/PowerSavingSettings'
 import useConnectivity from '../hooks/useConnectivity'
-import { useStore } from '../hooks/useStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
 import { APP_THEME } from '../models/Theme'
 import AppSettings from '../screens/AppSettings'
@@ -28,7 +28,7 @@ const screenOptions = {
 
 const MainStack: React.FC = () => {
   const { station } = useRecoilValue(stationState)
-  const isLEDTheme = useStore((state) => state.theme === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const isUnderMaintenance = useUnderMaintenance()
   const isInternetAvailable = useConnectivity()
