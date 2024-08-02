@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
+import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import { useCurrentStation } from './useCurrentStation'
 import useIntervalEffect from './useIntervalEffect'
 import useIsPassing from './useIsPassing'
 import { useNextStation } from './useNextStation'
+import { useThemeStore } from './useThemeStore'
 import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
@@ -18,7 +19,7 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const [
     {
       headerState,

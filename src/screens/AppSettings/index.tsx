@@ -3,15 +3,16 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants'
+import { useThemeStore } from '../../hooks/useThemeStore'
+import { APP_THEME } from '../../models/Theme'
 import speechState from '../../store/atoms/speech'
-import { isLEDSelector } from '../../store/selectors/isLED'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 
@@ -48,7 +49,7 @@ const AppSettingsScreen: React.FC = () => {
     { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
     setSpeechState,
   ] = useRecoilState(speechState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const navigation = useNavigation()
 
@@ -125,7 +126,6 @@ const AppSettingsScreen: React.FC = () => {
     navigation.navigate('EnabledLanguagesSettings')
 
   const toTuning = () => navigation.navigate('TuningSettings')
-  const toPowerSave = () => navigation.navigate('PowerSavingSettings')
 
   return (
     <>
@@ -229,10 +229,6 @@ const AppSettingsScreen: React.FC = () => {
             <Button onPress={toEnabledLanguagesSettings}>
               {translate('selectLanguagesTitle')}
             </Button>
-          </View>
-
-          <View style={styles.settingItem}>
-            <Button onPress={toPowerSave}>{translate('powerSave')}</Button>
           </View>
 
           {isDevApp ? (

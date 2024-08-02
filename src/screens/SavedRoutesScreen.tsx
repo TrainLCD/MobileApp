@@ -1,21 +1,22 @@
 import { useNavigation } from '@react-navigation/native'
 import findNearest from 'geolib/es/findNearest'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useSetRecoilState } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import Typography from '../components/Typography'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { SavedRoute } from '../models/SavedRoute'
+import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
-import { locationStore } from '../store/vanillaLocation'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -67,15 +68,9 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const { latitude, longitude } = useMemo(() => {
-    const state = locationStore.getState()
-    const latitude = state?.coords.latitude
-    const longitude = state?.coords.longitude
-    return { latitude, longitude }
-  }, [])
-
-  const isLEDTheme = useRecoilValue(isLEDSelector)
-
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const navigation = useNavigation()
   const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
 

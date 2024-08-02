@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 
 import {
   NEARBY_STATIONS_LIMIT,
@@ -29,11 +29,12 @@ import {
   Station,
 } from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
+import { useLocationStore } from '../hooks/useLocationStore'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { grpcClient } from '../lib/grpc'
+import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
-import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
 import FAB from './FAB'
@@ -108,14 +109,9 @@ const FakeStationSettings: React.FC = () => {
   const [{ station: stationFromState }, setStationState] =
     useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
-
-  const { latitude, longitude } = useMemo(() => {
-    const state = locationStore.getState()
-    const latitude = state?.coords.latitude
-    const longitude = state?.coords.longitude
-    return { latitude, longitude }
-  }, [])
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const {
     data: byCoordsData,

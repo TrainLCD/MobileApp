@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
@@ -15,10 +15,10 @@ import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
+import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const locationState = useMemo(() => locationStore.getState(), [])
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
@@ -63,6 +62,7 @@ const SelectLineScreen: React.FC = () => {
     error: fetchLocationError,
   } = useFetchCurrentLocationOnce()
   const station = useCurrentStation()
+  const locationState = useLocationStore()
 
   useEffect(() => {
     const init = async () => {
@@ -71,7 +71,7 @@ const SelectLineScreen: React.FC = () => {
       if (!pos) {
         return
       }
-      locationStore.setState(pos)
+      useLocationStore.setState(pos)
       const stationFromAPI =
         (await fetchStationFunc({
           latitude: pos.coords.latitude,
@@ -181,7 +181,7 @@ const SelectLineScreen: React.FC = () => {
     if (!pos) {
       return
     }
-    locationStore.setState(pos)
+    useLocationStore.setState(pos)
     setNavigationState((prev) => ({
       ...prev,
       stationForHeader: null,
