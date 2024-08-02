@@ -11,8 +11,8 @@ import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
 import useConnectivity from '../hooks/useConnectivity'
-import { useCurrentPosition } from '../hooks/useCurrentPosition'
 import { useCurrentStation } from '../hooks/useCurrentStation'
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import lineState from '../store/atoms/line'
@@ -58,16 +58,16 @@ const SelectLineScreen: React.FC = () => {
   } = useFetchNearbyStation()
   const isInternetAvailable = useConnectivity()
   const {
-    fetchCurrentPosition,
+    fetchCurrentLocation,
     loading: locationLoading,
     error: fetchLocationError,
-  } = useCurrentPosition()
+  } = useFetchCurrentLocationOnce()
   const station = useCurrentStation()
 
   useEffect(() => {
     const init = async () => {
       if (station) return
-      const pos = await fetchCurrentPosition()
+      const pos = await fetchCurrentLocation(true)
       if (!pos) {
         return
       }
@@ -177,7 +177,7 @@ const SelectLineScreen: React.FC = () => {
   )
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await fetchCurrentPosition()
+    const pos = await fetchCurrentLocation()
     if (!pos) {
       return
     }
@@ -206,7 +206,7 @@ const SelectLineScreen: React.FC = () => {
           : prev.stationForHeader,
     }))
   }, [
-    fetchCurrentPosition,
+    fetchCurrentLocation,
     fetchStationFunc,
     setNavigationState,
     setStationState,

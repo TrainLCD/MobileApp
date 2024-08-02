@@ -15,7 +15,7 @@ import { TouchableOpacity } from 'react-native-gesture-handler'
 import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
-import { useCurrentPosition } from '../hooks/useCurrentPosition'
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
 import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
 const PrivacyScreen: React.FC = () => {
   const navigation = useNavigation()
 
-  const { fetchCurrentPosition } = useCurrentPosition()
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce()
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
@@ -77,11 +77,11 @@ const PrivacyScreen: React.FC = () => {
       })
     )
 
-    const location = (await fetchCurrentPosition()) ?? null
+    const location = (await fetchCurrentLocation()) ?? null
     if (location) {
       locationStore.setState(location)
     }
-  }, [fetchCurrentPosition, navigation])
+  }, [fetchCurrentLocation, navigation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
     navigation.dispatch(

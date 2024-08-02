@@ -14,18 +14,15 @@ export const useStartBackgroundLocationUpdates = () => {
     if (autoModeEnabled) {
       return
     }
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ;(async () => {
-      await Location.startLocationUpdatesAsync(locationTaskName, {
-        accuracy: locationServiceAccuracy,
-        activityType: Location.ActivityType.OtherNavigation,
-        foregroundService: {
-          notificationTitle: translate('bgAlertTitle'),
-          notificationBody: translate('bgAlertContent'),
-          killServiceOnDestroy: true,
-        },
-      })
-    })()
+    Location.startLocationUpdatesAsync(locationTaskName, {
+      accuracy: locationServiceAccuracy,
+      activityType: Location.ActivityType.OtherNavigation,
+      foregroundService: {
+        notificationTitle: translate('bgAlertTitle'),
+        notificationBody: translate('bgAlertContent'),
+        killServiceOnDestroy: true,
+      },
+    })
 
     return () => {
       Location.stopLocationUpdatesAsync(locationTaskName)

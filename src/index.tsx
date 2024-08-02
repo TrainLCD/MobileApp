@@ -34,10 +34,19 @@ TaskManager.defineTask(
       return
     }
 
-    locationStore.setState(data.locations[0])
+    const state = locationStore.getState()
+    const stateLat = state?.coords.latitude
+    const stateLon = state?.coords.longitude
+
+    if (
+      stateLat !== data.locations[0]?.coords.latitude &&
+      stateLon !== data.locations[0]?.coords.longitude
+    ) {
+      locationStore.setState(data.locations[0])
+    }
   }
 )
-TaskManager.unregisterAllTasksAsync()
+TaskManager.unregisterTaskAsync(locationTaskName)
 
 const Stack = createStackNavigator()
 
