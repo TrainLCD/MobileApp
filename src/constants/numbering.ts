@@ -33,6 +33,7 @@ export const MARK_SHAPE = {
   NTL: 'NTL',
   SMR: 'SMR',
   NISHITETSU: 'NISHITETSU',
+  IZUHAKONE: 'IZUHAKONE',
 } as const
 
 export const NUMBERING_ICON_SIZE = {

@@ -11,6 +11,8 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
 import useIsPassing from '../hooks/useIsPassing'
@@ -22,8 +24,6 @@ import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
@@ -286,7 +286,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { stations: allStations } = useRecoilValue(stationState)
   const isEn = useRecoilValue(isEnSelector)
 
-  const station = useRecoilValue(currentStationSelector({}))
+  const station = useCurrentStation()
   const transferLines = useTransferLinesFromStation(stationInLoop, {
     omitJR: true,
     omitRepeatingLine: true,
@@ -435,7 +435,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { selectedLine } = useRecoilValue(lineState)
   const isPassing = useIsPassing()
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,

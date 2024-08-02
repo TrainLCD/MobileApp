@@ -4,10 +4,10 @@ import { HeaderTransitionState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
+import { useCurrentStation } from './useCurrentStation'
 import useIntervalEffect from './useIntervalEffect'
 import useIsPassing from './useIsPassing'
 import { useNextStation } from './useNextStation'
@@ -28,7 +28,7 @@ const useTransitionHeaderState = (): void => {
     setNavigation,
   ] = useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
-  const station = useRecoilValue(currentStationSelector({}))
+  const station = useCurrentStation()
 
   const headerStateRef = useValueRef(headerState)
 
@@ -189,7 +189,7 @@ const useTransitionHeaderState = (): void => {
           break
       }
 
-      if (approaching && !arrived) {
+      if (approaching) {
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
@@ -228,7 +228,6 @@ const useTransitionHeaderState = (): void => {
       }
     }, [
       approaching,
-      arrived,
       enabledLanguages,
       headerStateRef,
       isExtraLangAvailable,

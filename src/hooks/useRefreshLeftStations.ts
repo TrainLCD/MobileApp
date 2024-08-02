@@ -5,10 +5,10 @@ import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import themeState from '../store/atoms/theme'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 import getIsPass from '../utils/isPass'
+import { useCurrentLine } from './useCurrentLine'
 import useCurrentTrainType from './useCurrentTrainType'
 import { useLoopLine } from './useLoopLine'
 
@@ -20,7 +20,7 @@ const useRefreshLeftStations = (): void => {
   } = useRecoilValue(stationState)
   const setNavigation = useSetRecoilState(navigationState)
   const { theme } = useRecoilValue(themeState)
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
   const trainType = useCurrentTrainType()
   const { isOsakaLoopLine, isYamanoteLine, isMeijoLine } = useLoopLine()
 

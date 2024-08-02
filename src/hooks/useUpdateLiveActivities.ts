@@ -6,7 +6,6 @@ import {
 } from '../constants'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import {
@@ -15,6 +14,7 @@ import {
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
 import useBounds from './useBounds'
+import { useCurrentStation } from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
 import useIsPassing from './useIsPassing'
@@ -29,10 +29,8 @@ export const useUpdateLiveActivities = (): void => {
     useRecoilValue(stationState)
 
   const previousStation = usePreviousStation()
-  const currentStation = useRecoilValue(currentStationSelector({}))
-  const stoppedCurrentStation = useRecoilValue(
-    currentStationSelector({ skipPassStation: true })
-  )
+  const currentStation = useCurrentStation()
+  const stoppedCurrentStation = useCurrentStation(true)
   const nextStation = useNextStation()
   const { directionalStops } = useBounds()
   const isNextLastStop = useIsNextLastStop()
