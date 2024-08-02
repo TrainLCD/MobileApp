@@ -3,9 +3,13 @@ import { locationStore } from '../store/vanillaLocation'
 import { useThreshold } from './useThreshold'
 
 export const useBadAccuracy = (): boolean => {
-  const locationState = locationStore.getState()
-  const accuracy = locationState?.coords.accuracy
   const { arrivedThreshold } = useThreshold()
+
+  const { accuracy } = useMemo(() => {
+    const state = locationStore.getState()
+    const accuracy = state?.coords.accuracy
+    return { accuracy }
+  }, [])
 
   return useMemo(() => {
     if (!accuracy) {

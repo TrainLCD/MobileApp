@@ -1,13 +1,12 @@
 import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
+import { useCurrentStation } from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 import { useSlicedStations } from './useSlicedStations'
 
 export const useAfterNextStation = () => {
-  const currentStation = useRecoilValue(currentStationSelector({}))
+  const currentStation = useCurrentStation()
   const nextStation = useNextStation()
   const slicedStationsOrigin = useSlicedStations()
 

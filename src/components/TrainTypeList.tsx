@@ -4,7 +4,7 @@ import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, TrainType } from '../../gen/proto/stationapi_pb'
-import { currentLineSelector } from '../store/selectors/currentLine'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import Typography from './Typography'
@@ -30,7 +30,7 @@ const ItemCell = ({
   item: TrainType
   onSelect: (item: TrainType) => void
 }) => {
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
 
   const lines = useMemo(
     () =>

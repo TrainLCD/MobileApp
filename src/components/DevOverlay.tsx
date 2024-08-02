@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import * as Application from 'expo-application'
 import React, { useMemo } from 'react'
 import { Dimensions, Platform, StyleSheet, View } from 'react-native'
@@ -33,13 +32,17 @@ const styles = StyleSheet.create({
 })
 
 const DevOverlay: React.FC = () => {
-  const locationState = locationStore.getState()
-  const latitude = locationState?.coords.latitude
-  const longitude = locationState?.coords.longitude
-  const speed = locationState?.coords.speed
-  const accuracy = locationState?.coords.accuracy
   const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
+
+  const { latitude, longitude, speed, accuracy } = useMemo(() => {
+    const state = locationStore.getState()
+    const latitude = state?.coords.latitude
+    const longitude = state?.coords.longitude
+    const speed = state?.coords.speed
+    const accuracy = state?.coords.accuracy
+    return { latitude, longitude, speed, accuracy }
+  }, [])
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
 

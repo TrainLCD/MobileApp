@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
 import Button from '../components/Button'
 import ErrorScreen from '../components/ErrorScreen'
@@ -12,12 +12,12 @@ import Loading from '../components/Loading'
 import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentPosition } from '../hooks/useCurrentPosition'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
 import useGetLineMark from '../hooks/useGetLineMark'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { locationStore } from '../store/vanillaLocation'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
 })
 
 const SelectLineScreen: React.FC = () => {
-  const location = locationStore.getState()
+  const locationState = useMemo(() => locationStore.getState(), [])
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
@@ -62,7 +62,7 @@ const SelectLineScreen: React.FC = () => {
     loading: locationLoading,
     error: fetchLocationError,
   } = useCurrentPosition()
-  const station = useRecoilValue(currentStationSelector({}))
+  const station = useCurrentStation()
 
   useEffect(() => {
     const init = async () => {
@@ -249,7 +249,7 @@ const SelectLineScreen: React.FC = () => {
   }
 
   // NOTE: 駅検索ができるボタンが表示されるので、!stationがないと一生loadingになる
-  if (!location && !station) {
+  if (!locationState && !station) {
     return (
       <Loading
         message={translate('loadingLocation')}

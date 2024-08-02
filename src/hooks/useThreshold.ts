@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
 import { APPROACHING_MAX_THRESHOLD, ARRIVED_MAX_THRESHOLD } from '../constants'
-import { currentLineSelector } from '../store/selectors/currentLine'
+import { useCurrentLine } from './useCurrentLine'
 
 export const useThreshold = () => {
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
 
   const approachingThreshold = useMemo(() => {
     if (!currentLine) {
