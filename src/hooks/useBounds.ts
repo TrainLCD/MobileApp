@@ -6,8 +6,8 @@ import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_MAJOR_STATIONS_ID } from '../constants/station'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
+import { useCurrentLine } from './useCurrentLine'
+import { useCurrentStation } from './useCurrentStation'
 import { useLoopLine } from './useLoopLine'
 
 const useBounds = (): {
@@ -17,8 +17,8 @@ const useBounds = (): {
   const { stations, selectedDirection, selectedBound } =
     useRecoilValue(stationState)
   const { trainType } = useRecoilValue(navigationState)
-  const currentStation = useRecoilValue(currentStationSelector({}))
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentStation = useCurrentStation()
+  const currentLine = useCurrentLine()
 
   const {
     isLoopLine,

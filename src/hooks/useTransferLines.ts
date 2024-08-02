@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import getIsPass from '../utils/isPass'
+import { useCurrentStation } from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 import useTransferLinesFromStation from './useTransferLinesFromStation'
 
@@ -11,11 +11,7 @@ type Option = { omitRepeatingLine?: boolean; omitJR?: boolean }
 
 const useTransferLines = (options?: Option): Line[] => {
   const { arrived } = useRecoilValue(stationState)
-  const currentStation = useRecoilValue(
-    currentStationSelector({
-      withTrainTypes: true,
-    })
-  )
+  const currentStation = useCurrentStation(false, true)
   const nextStation = useNextStation()
   const targetStation = useMemo(
     () =>

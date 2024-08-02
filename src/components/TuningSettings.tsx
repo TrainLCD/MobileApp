@@ -12,10 +12,11 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import { FONTS } from '../constants'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import tuningState from '../store/atoms/tuning'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 import FAB from './FAB'
 import Heading from './Heading'
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
 
 const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useRecoilState(tuningState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const navigation = useNavigation()
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()

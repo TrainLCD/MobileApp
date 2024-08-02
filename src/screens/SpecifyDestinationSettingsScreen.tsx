@@ -2,14 +2,15 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import { Station, StopCondition } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { LED_THEME_BG_COLOR } from '../constants'
+import { useCurrentStation } from '../hooks/useCurrentStation'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import stationState from '../store/atoms/station'
-import { currentStationSelector } from '../store/selectors/currentStation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
 
@@ -24,8 +25,8 @@ const styles = StyleSheet.create({
 const SpecifyDestinationSettingsScreen: React.FC = () => {
   const [{ wantedDestination, allStations }, setStationState] =
     useRecoilState(stationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
-  const station = useRecoilValue(currentStationSelector({}))
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const station = useCurrentStation()
 
   const stopStations = useMemo(
     () =>

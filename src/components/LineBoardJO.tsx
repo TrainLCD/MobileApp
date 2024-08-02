@@ -10,13 +10,13 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import useIsPassing from '../hooks/useIsPassing'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
@@ -330,8 +330,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
   const isPassing = useIsPassing()
-  const station = useRecoilValue(currentStationSelector({}))
-  const currentLine = useRecoilValue(currentLineSelector)
+  const station = useCurrentStation()
+  const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,

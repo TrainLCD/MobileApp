@@ -3,13 +3,11 @@ import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue } from 'recoil'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants'
-import { AppTheme } from '../../models/Theme'
-import themeState from '../../store/atoms/theme'
-import { isLEDSelector } from '../../store/selectors/isLED'
+import { useThemeStore } from '../../hooks/useThemeStore'
+import { APP_THEME, AppTheme } from '../../models/Theme'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 import getSettingsThemes from './themes'
@@ -21,18 +19,13 @@ const styles = StyleSheet.create({
 })
 
 const ThemeSettingsScreen: React.FC = () => {
-  const [{ theme }, setTheme] = useRecoilState(themeState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const theme = useThemeStore((state) => state)
 
-  const onThemeValueChange = useCallback(
-    (t: AppTheme) => {
-      setTheme((prev) => ({
-        ...prev,
-        theme: t,
-      }))
-    },
-    [setTheme]
-  )
+  const isLEDTheme = theme === APP_THEME.LED
+
+  const onThemeValueChange = useCallback((t: AppTheme) => {
+    useThemeStore.setState(t)
+  }, [])
 
   const navigation = useNavigation()
   const settingsThemes = getSettingsThemes()
