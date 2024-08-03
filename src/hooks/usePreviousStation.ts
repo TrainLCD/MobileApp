@@ -9,6 +9,7 @@ import { useCurrentStation } from './useCurrentStation'
 const usePreviousStation = (skipPass = true): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState)
+  const station = useCurrentStation(true)
 
   const stations = useMemo(
     () =>
@@ -18,7 +19,6 @@ const usePreviousStation = (skipPass = true): Station | undefined => {
     [selectedDirection, skipPass, stationsFromState]
   )
 
-  const station = useCurrentStation(true)
   const reversedStations = useMemo(
     () =>
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
