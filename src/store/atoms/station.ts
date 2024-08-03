@@ -9,7 +9,6 @@ export interface StationState {
   averageDistance: number | null
   station: Station | null
   stations: Station[]
-  allStations: Station[] // 行先指定用。フィルターされても全駅を行先に指定できるようにするため
   selectedDirection: LineDirection | null
   selectedBound: Station | null
   wantedDestination: Station | null
@@ -21,7 +20,6 @@ export const initialStationState: StationState = {
   averageDistance: null,
   station: null,
   stations: [],
-  allStations: [],
   selectedDirection: null,
   selectedBound: null,
   wantedDestination: null,

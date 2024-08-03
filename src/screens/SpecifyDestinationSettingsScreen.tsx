@@ -23,17 +23,17 @@ const styles = StyleSheet.create({
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ wantedDestination, allStations }, setStationState] =
+  const [{ wantedDestination, stations }, setStationState] =
     useRecoilState(stationState)
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const station = useCurrentStation()
 
   const stopStations = useMemo(
     () =>
-      dropEitherJunctionStation(allStations).filter(
+      dropEitherJunctionStation(stations).filter(
         (s) => s.stopCondition !== StopCondition.Not
       ),
-    [allStations]
+    [stations]
   )
 
   const navigation = useNavigation()
@@ -56,28 +56,28 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
 
   const slicedStations = useMemo<Station[]>(() => {
     if (!wantedDestination) {
-      return allStations
+      return stations
     }
 
-    const destinationIndex = allStations.findIndex(
+    const destinationIndex = stations.findIndex(
       (s) => s.groupId === wantedDestination.groupId
     )
-    const currentStationIndex = allStations.findIndex(
+    const currentStationIndex = stations.findIndex(
       (s) => s.groupId === station?.groupId
     )
 
     if (currentStationIndex < destinationIndex) {
-      return allStations.slice(0, destinationIndex + 1)
+      return stations.slice(0, destinationIndex + 1)
     }
-    return allStations.slice(destinationIndex)
-  }, [allStations, station?.groupId, wantedDestination])
+    return stations.slice(destinationIndex)
+  }, [stations, station?.groupId, wantedDestination])
 
   const handlePressFAB = useCallback(() => {
     if (!wantedDestination) {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: null,
-        stations: prev.allStations,
+        stations: prev.stations,
       }))
       if (navigation.canGoBack()) {
         navigation.goBack()
@@ -116,7 +116,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
         return
       }
 
-      const wantedDestination = allStations.find((s) => s.id === trainTypeId)
+      const wantedDestination = stations.find((s) => s.id === trainTypeId)
       if (wantedDestination) {
         setStationState((prev) => ({
           ...prev,
@@ -124,7 +124,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
         }))
       }
     },
-    [allStations, setStationState]
+    [stations, setStationState]
   )
 
   return (
