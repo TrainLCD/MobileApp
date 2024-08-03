@@ -1,8 +1,8 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -46,13 +46,21 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,
   },
-  stationNumber: {
+  stationNumberMedium: {
     color: 'white',
     fontSize: isTablet ? 24 * 1.5 : 24,
     lineHeight: isTablet ? 24 * 1.5 : 24,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
-    marginTop: isTablet ? 4 : 2,
+    marginTop: isTablet ? 8 : 4,
+  },
+  stationNumber: {
+    color: 'white',
+    fontSize: isTablet ? 32 * 1.5 : 32,
+    lineHeight: isTablet ? 32 * 1.5 : 32,
+    textAlign: 'center',
+    fontFamily: FONTS.MyriadPro,
+    marginTop: isTablet ? 8 : 4,
   },
 })
 
@@ -75,7 +83,7 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
-        <Typography style={styles.stationNumber}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumberMedium}>{lineSymbol}</Typography>
       </View>
     )
   }
