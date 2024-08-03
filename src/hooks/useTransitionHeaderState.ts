@@ -42,7 +42,8 @@ const useTransitionHeaderState = (): void => {
   )
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
-    if (!nextStation) {
+    // 停車中は等前ながらfalse
+    if (!nextStation || arrived) {
       return false
     }
     // 最寄駅が通過駅の場合は無条件でtrue
