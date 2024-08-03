@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
+import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 
@@ -12,11 +13,17 @@ export const useCurrentStation = (
     station: stationFromState,
     selectedDirection,
   } = useRecoilValue(stationState)
+  const { selectedLine } = useRecoilValue(lineState)
 
   // NOTE: 選択した路線と現在の駅の路線を一致させる
   const station = useMemo(
-    () => stations.find((s) => s.id === stationFromState?.id) ?? null,
-    [stationFromState?.id, stations]
+    () =>
+      stations.find(
+        (s) =>
+          s.groupId === stationFromState?.groupId ??
+          s.line?.id === selectedLine?.id
+      ),
+    [selectedLine?.id, stationFromState?.groupId, stations]
   )
 
   const withTrainTypeStation = useMemo(() => {
