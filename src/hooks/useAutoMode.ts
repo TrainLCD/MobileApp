@@ -84,7 +84,7 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            locationStore.setState({
+            useLocationStore.setState({
               timestamp: 0,
               coords: {
                 ...center,
@@ -101,7 +101,7 @@ const useAutoMode = (enabled: boolean): void => {
         const index = autoModeOutboundIndexRef.current
 
         if (index === stations.length - 1) {
-          locationStore.setState({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               accuracy: 0,
@@ -132,7 +132,7 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            locationStore.setState({
+            useLocationStore.setState({
               timestamp: 0,
               coords: {
                 ...center,
@@ -196,7 +196,7 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          locationStore.setState({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               latitude: next.latitude,
@@ -224,7 +224,7 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          locationStore.setState({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               latitude: next.latitude,
