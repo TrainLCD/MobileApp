@@ -142,6 +142,7 @@ export const TrainTypeList = ({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
+      ListHeaderComponent={Separator}
       ListFooterComponent={Separator}
     />
   )
