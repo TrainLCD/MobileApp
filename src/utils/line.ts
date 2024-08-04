@@ -1,11 +1,11 @@
 import { Line, Station } from '../../gen/proto/stationapi_pb'
 
 export const filterWithoutCurrentLine = (
-  allStations: Station[],
+  stations: Station[],
   currentLine: Line | null,
   stationIndex: number
 ): Line[] => {
-  const currentStation = allStations[stationIndex]
+  const currentStation = stations[stationIndex]
   if (!currentLine || !currentStation) {
     return []
   }
@@ -17,13 +17,13 @@ export const filterWithoutCurrentLine = (
 }
 
 export const getCurrentStationLinesWithoutCurrentLine = (
-  allStations: Station[],
+  stations: Station[],
   selectedLine: Line | null
-): Line[] => filterWithoutCurrentLine(allStations, selectedLine, 0)
+): Line[] => filterWithoutCurrentLine(stations, selectedLine, 0)
 
 export const getNextStationLinesWithoutCurrentLine = (
-  allStations: Station[],
+  stations: Station[],
   selectedLine: Line | null,
   forceStationIndex?: number
 ): Line[] =>
-  filterWithoutCurrentLine(allStations, selectedLine, forceStationIndex ?? 1)
+  filterWithoutCurrentLine(stations, selectedLine, forceStationIndex ?? 1)

@@ -40,7 +40,6 @@ export const useStationList = (fetchAutomatically = true) => {
       setStationState((prev) => ({
         ...prev,
         stations: res.stations,
-        allStations: res.stations,
       }))
 
       return res.stations
