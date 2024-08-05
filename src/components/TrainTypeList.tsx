@@ -34,32 +34,33 @@ const ItemCell = ({
 
   const lines = useMemo(
     () =>
-      item.lines.reduce<Line[]>((acc, cur) => {
-        if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
-          return [...acc, cur]
-        }
+      item.lines
+        .reduce<Line[]>((acc, cur) => {
+          if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
+            return [...acc, cur]
+          }
 
-        return acc
-      }, []),
-    [item.lines]
+          return acc
+        }, [])
+        .filter((l) => l.id !== currentLine?.id),
+    [currentLine?.id, item.lines]
   )
 
   const isAllSameType = useMemo(
     () =>
-      Array.from(new Set(lines.map((l) => l.trainType?.typeId))).length === 1,
-    [lines]
+      Array.from(new Set(item.lines.map((l) => l.trainType?.typeId))).length ===
+      1,
+    [item.lines]
   )
 
-  if (lines.length === 1 || item.typeId === 0) {
+  if (!lines.length) {
     return (
       <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
         <Typography style={styles.stationNameText}>
-          {isJapanese
-            ? item.name
-            : `${currentLine?.nameRoman} ${item.nameRoman}`}
+          {isJapanese ? item.name : item.nameRoman}
         </Typography>
         <Typography style={styles.descriptionText}>
-          {isJapanese ? '直通運転なし' : ''}
+          {isJapanese ? '直通運転なし' : 'Not connected to other line'}
         </Typography>
       </TouchableOpacity>
     )
@@ -74,12 +75,10 @@ const ItemCell = ({
             : `${currentLine?.nameRoman} ${item.nameRoman}`}
         </Typography>
         <Typography style={styles.descriptionText}>
+          {isJapanese ? '種別変更なし' : ''}{' '}
           {isJapanese
-            ? lines
-                .filter((l) => l.id !== currentLine?.id)
-                .map((l) => l.nameShort)
-                .join('・')
-            : lines.map((l) => l.nameRoman).join(', ')}
+            ? lines.map((l) => l?.nameShort).join('、')
+            : lines.map((l) => l.nameRoman ?? '').join(', ')}
           {isJapanese ? '直通' : ''}
         </Typography>
       </TouchableOpacity>
@@ -94,9 +93,8 @@ const ItemCell = ({
       <Typography style={styles.descriptionText}>
         {isJapanese
           ? lines
-              .filter((l) => l.id !== currentLine?.id)
-              .map((l) => `${l.nameShort}${l.trainType?.name ?? ''}`)
-              .join('・')
+              .map((l) => `${l.nameShort}内${l.trainType?.name ?? ''}`)
+              .join('、')
           : lines
               .map(
                 (l) =>
