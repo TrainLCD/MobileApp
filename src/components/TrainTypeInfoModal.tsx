@@ -154,7 +154,23 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               }}
             >
               {trainTypeLines.map((l) => (
-                <View style={{ flexDirection: 'row' }} key={l.id}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    marginBottom: 2,
+                    alignItems: 'center',
+                  }}
+                  key={l.id}
+                >
+                  <View
+                    style={{
+                      backgroundColor: l.color,
+                      width: 10,
+                      height: 10,
+                      borderRadius: 8,
+                      marginRight: 2,
+                    }}
+                  />
                   <Typography
                     style={{
                       width: '30%',

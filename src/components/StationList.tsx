@@ -9,7 +9,7 @@ import { isJapanese } from '../translation'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
-  cell: { paddingHorizontal: 12, paddingVertical: 18 },
+  cell: { padding: 12 },
   stationNameText: {
     fontSize: RFValue(14),
   },
