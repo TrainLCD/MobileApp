@@ -3,7 +3,6 @@ import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
@@ -12,41 +11,11 @@ import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
-import { useLocationStore } from './hooks/useLocationStore'
 import useReport from './hooks/useReport'
 import PrivacyScreen from './screens/Privacy'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
-import { locationTaskName } from './utils/locationTaskName'
-
-TaskManager.defineTask(
-  locationTaskName,
-  ({
-    data,
-    error,
-  }: {
-    data: { locations: Location.LocationObject[] }
-    error: TaskManager.TaskManagerError | null
-  }) => {
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    const state = useLocationStore.getState()
-    const stateLat = state?.coords.latitude
-    const stateLon = state?.coords.longitude
-
-    if (
-      stateLat !== data.locations[0]?.coords.latitude &&
-      stateLon !== data.locations[0]?.coords.longitude
-    ) {
-      useLocationStore.setState(data.locations[0])
-    }
-  }
-)
-TaskManager.unregisterTaskAsync(locationTaskName)
 
 const Stack = createStackNavigator()
 
