@@ -1,5 +1,4 @@
 import * as Location from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import { useEffect } from 'react'
 import { useRecoilValue } from 'recoil'
 import { autoModeEnabledSelector } from '../store/selectors/autoMode'
@@ -24,7 +23,7 @@ export const useStartBackgroundLocationUpdates = () => {
     })
 
     return () => {
-      TaskManager.unregisterTaskAsync(locationTaskName)
+      Location.stopLocationUpdatesAsync(locationTaskName)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

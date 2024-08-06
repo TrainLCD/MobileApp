@@ -1,5 +1,6 @@
 import { LocationObject } from 'expo-location'
 import { create } from 'zustand'
+import { MINIMUM_UPDATE_INTERVAL } from '../constants/location'
 
 export const useLocationStore = create<LocationObject | null>(() => null)
 
@@ -9,11 +10,14 @@ export const setLocation = (location: LocationObject) =>
       return location
     }
 
-    const { latitude: inputLat, longitude: inputLon } = location.coords
-    const { latitude: stateLat, longitude: stateLon } = state.coords
-    if (inputLat === stateLat && inputLon === stateLon) {
-      return state
+    const { timestamp: inputTimestamp } = location
+    const { timestamp: stateTimestamp } = state
+
+    const diffInMs = inputTimestamp - stateTimestamp
+
+    if (diffInMs > MINIMUM_UPDATE_INTERVAL) {
+      return { ...state, ...location }
     }
 
-    return location
+    return state
   })
