@@ -14,6 +14,8 @@ import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
   LONG_PRESS_DURATION,
+  POWER_SAVING_PRESETS,
+  PowerSavingPreset,
   parenthesisRegexp,
 } from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
@@ -30,6 +32,7 @@ import { useThemeStore } from '../hooks/useThemeStore'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
+import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
@@ -71,6 +74,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useRecoilValue(stationState)
   const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
+  const setPowerSavingState = useSetRecoilState(powerSavingState)
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
@@ -202,6 +206,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         backgroundEnabled: bgTTSEnabledStr === 'true',
       }))
 
+      const preferredPowerSavingPresetName = (await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.PREFERRED_POWER_SAVING_PRESET
+      )) as PowerSavingPreset | null
+      setPowerSavingState((prev) => ({
+        ...prev,
+        preset:
+          POWER_SAVING_PRESETS[
+            preferredPowerSavingPresetName ?? POWER_SAVING_PRESETS.BALANCED
+          ],
+      }))
+
       setLongPressNoticeDismissed(
         (await AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED
@@ -210,7 +225,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     loadSettingsAsync()
-  }, [setNavigation, setSpeech])
+  }, [setNavigation, setPowerSavingState, setSpeech])
 
   useEffect(() => {
     if (autoModeEnabled) {
