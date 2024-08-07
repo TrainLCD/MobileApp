@@ -9,7 +9,7 @@ import RNFS from 'react-native-fs'
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
@@ -18,6 +18,7 @@ import {
 } from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import { useBadAccuracy } from '../hooks/useBadAccuracy'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
@@ -69,13 +70,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
-  const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
+  const setNavigation = useSetRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
   const [screenShotBase64, setScreenShotBase64] = useState('')
   const [screenshotTaken, setScreenshotTaken] = useState(false)
+
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
 
   useCheckStoreVersion()
   useAppleWatch()
