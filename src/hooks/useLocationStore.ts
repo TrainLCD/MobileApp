@@ -16,7 +16,7 @@ export const setLocation = (location: LocationObject) =>
     const diffInMs = inputTimestamp - stateTimestamp
 
     if (diffInMs > MINIMUM_UPDATE_INTERVAL) {
-      return { ...state, ...location }
+      return location
     }
 
     return state
