@@ -21,6 +21,7 @@ import Transfers from '../components/Transfers'
 import TransfersYamanote from '../components/TransfersYamanote'
 import TypeChangeNotify from '../components/TypeChangeNotify'
 import { ASYNC_STORAGE_KEYS } from '../constants'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import { useCurrentStation } from '../hooks/useCurrentStation'
@@ -60,6 +61,7 @@ TaskManager.defineTask(
       console.error(error)
       return
     }
+
     setLocation(data.locations[0])
   }
 )
@@ -77,10 +79,14 @@ const MainScreen: React.FC = () => {
   const isLEDTheme = theme === APP_THEME.LED
 
   const { stations, selectedDirection, arrived } = useRecoilValue(stationState)
-  const [{ leftStations, bottomState, autoModeEnabled }, setNavigation] =
+  const [{ leftStations, bottomState }, setNavigation] =
     useRecoilState(navigationState)
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
+
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
 
   const nextStation = useNextStation()
   useAutoMode(autoModeEnabled)
