@@ -22,6 +22,7 @@ import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useStationList } from '../hooks/useStationList'
@@ -73,10 +74,8 @@ const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations, wantedDestination }, setStationState] =
     useRecoilState(stationState)
-  const [
-    { trainType, fetchedTrainTypes, autoModeEnabled, fromBuilder },
-    setNavigationState,
-  ] = useRecoilState(navigationState)
+  const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
+    useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
 
   const { loading, error, mutateStations } = useStationList()
@@ -84,6 +83,13 @@ const SelectBoundScreen: React.FC = () => {
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds()
+
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
+  const toggleAutoModeEnabled = useApplicationFlagStore(
+    (state) => state.toggleAutoModeEnabled
+  )
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -140,13 +146,6 @@ const SelectBoundScreen: React.FC = () => {
   const handleTrainTypeButtonPress = (): void => {
     navigation.navigate('TrainType')
   }
-
-  const handleAutoModeButtonPress = useCallback(async () => {
-    setNavigationState((prev) => ({
-      ...prev,
-      autoModeEnabled: !prev.autoModeEnabled,
-    }))
-  }, [setNavigationState])
 
   const handleAllStopsButtonPress = useCallback(() => {
     const stopStations = stations.filter(
@@ -399,9 +398,7 @@ const SelectBoundScreen: React.FC = () => {
               {translate('selectBoundSettings')}
             </Button>
           ) : null}
-          <Button onPress={handleAutoModeButtonPress}>
-            {autoModeButtonText}
-          </Button>
+          <Button onPress={toggleAutoModeEnabled}>{autoModeButtonText}</Button>
         </View>
       </View>
     </ScrollView>

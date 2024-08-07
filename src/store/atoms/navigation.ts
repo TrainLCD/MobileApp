@@ -18,7 +18,6 @@ export interface NavigationState {
   // 実際の次の停車駅を保持している
   stationForHeader: Station | null
   enabledLanguages: AvailableLanguage[]
-  autoModeEnabled: boolean
   fetchedTrainTypes: TrainType[]
   fromBuilder: boolean
 }
@@ -30,7 +29,6 @@ export const initialNavigationState: NavigationState = {
   leftStations: [],
   stationForHeader: null,
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
-  autoModeEnabled: false,
   fetchedTrainTypes: [],
   fromBuilder: false,
 }
