@@ -3,6 +3,7 @@ import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import ErrorScreen from '../components/ErrorScreen'
 import Permitted from '../components/Permitted'
+import PowerSavingSettings from '../components/PowerSavingSettings'
 import useConnectivity from '../hooks/useConnectivity'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
@@ -109,6 +110,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="SpecifyDestinationSettings"
           component={SpecifyDestinationSettingsScreen}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="PowerSavingSettings"
+          component={PowerSavingSettings}
         />
       </Stack.Navigator>
     </Permitted>
