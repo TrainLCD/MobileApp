@@ -1,27 +1,22 @@
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import * as Linking from 'expo-linking'
 import React, { useCallback } from 'react'
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { STATUS_URL } from '../constants'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import { translate } from '../translation'
+import Typography from './Typography'
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fcfcfc',
   },
   text: {
     fontSize: RFValue(16),
-    color: '#333',
     textAlign: 'center',
     marginBottom: 4,
     paddingHorizontal: 32,
@@ -78,11 +73,17 @@ const ErrorScreen: React.FC<Props> = ({
       ),
     [navigation]
   )
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   return (
-    <SafeAreaView style={styles.root}>
-      <Text style={[styles.text, styles.headingText]}>{title}</Text>
-      <Text style={styles.text}>{text}</Text>
+    <SafeAreaView
+      style={{
+        ...styles.root,
+        backgroundColor: isLEDTheme ? '#212121' : '#fff',
+      }}
+    >
+      <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
+      <Typography style={styles.text}>{text}</Typography>
 
       <View style={styles.buttons}>
         {onRetryPress ? (
@@ -91,7 +92,9 @@ const ErrorScreen: React.FC<Props> = ({
             disabled={isFetching}
             style={[{ opacity: isFetching ? 0.5 : 1 }, styles.button]}
           >
-            <Text style={styles.buttonText}>{translate('retry')}</Text>
+            <Typography style={styles.buttonText}>
+              {translate('retry')}
+            </Typography>
           </TouchableOpacity>
         ) : null}
         {showSearchStation ? (
@@ -99,14 +102,16 @@ const ErrorScreen: React.FC<Props> = ({
             onPress={handleToStationSearch}
             style={styles.button}
           >
-            <Text style={styles.buttonText}>
+            <Typography style={styles.buttonText}>
               {translate('searchFirstStationTitle')}
-            </Text>
+            </Typography>
           </TouchableOpacity>
         ) : null}
         {showStatus ? (
           <TouchableOpacity onPress={openStatusPage} style={styles.button}>
-            <Text style={styles.buttonText}>{translate('openStatusText')}</Text>
+            <Typography style={styles.buttonText}>
+              {translate('openStatusText')}
+            </Typography>
           </TouchableOpacity>
         ) : null}
       </View>
