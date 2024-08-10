@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingItem: {
-    width: '50%',
+    width: '65%',
     alignItems: 'center',
   },
   heading: {

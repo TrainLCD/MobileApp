@@ -17,7 +17,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 48, paddingTop: 24 },
+  root: { flex: 1, paddingHorizontal: 48, paddingTop: 12 },
 })
 
 const TrainTypeSettings: React.FC = () => {
