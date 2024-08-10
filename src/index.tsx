@@ -3,6 +3,8 @@ import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
+import { LocationObject } from 'expo-location'
+import * as TaskManager from 'expo-task-manager'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
@@ -11,11 +13,31 @@ import ErrorFallback from './components/ErrorBoundary'
 import FakeStationSettings from './components/FakeStationSettings'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
+import { setLocation } from './hooks/useLocationStore'
 import useReport from './hooks/useReport'
 import PrivacyScreen from './screens/Privacy'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
+import { locationTaskName } from './utils/locationTaskName'
+
+TaskManager.defineTask(
+  locationTaskName,
+  ({
+    data,
+    error,
+  }: {
+    data: { locations: LocationObject[] }
+    error: TaskManager.TaskManagerError | null
+  }) => {
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    setLocation(data.locations[0])
+  }
+)
 
 const Stack = createStackNavigator()
 
