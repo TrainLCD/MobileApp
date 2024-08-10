@@ -965,7 +965,7 @@ PODS:
     - ExpoModulesCore
   - EXNotifications (0.28.9):
     - ExpoModulesCore
-  - Expo (51.0.22):
+  - Expo (51.0.26):
     - ExpoModulesCore
   - ExpoAsset (10.0.10):
     - ExpoModulesCore
@@ -990,7 +990,7 @@ PODS:
     - ExpoModulesCore
   - ExpoLocalization (15.0.3):
     - ExpoModulesCore
-  - ExpoModulesCore (1.12.19):
+  - ExpoModulesCore (1.12.20):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2942,7 +2942,7 @@ SPEC CHECKSUMS:
   EXConstants: 409690fbfd5afea964e5e9d6c4eb2c2b59222c59
   EXLocation: 43e9b582ca63a23c6f0a18d8cbe2145b3a388b55
   EXNotifications: fcecd5a47fc8448d4f6173490b6fa8ee747f687d
-  Expo: 8b7948e45627e848c2d7b6be7cf5851a505aef19
+  Expo: f3e39cddde295c79d206e972a59693cbb329ef46
   ExpoAsset: 323700f291684f110fb55f0d4022a3362ea9f875
   ExpoDevice: fc94f0e42ecdfd897e7590f2874fc64dfa7e9b1c
   ExpoFileSystem: 80bfe850b1f9922c16905822ecbf97acd711dc51
@@ -2952,7 +2952,7 @@ SPEC CHECKSUMS:
   ExpoKeepAwake: 3b8815d9dd1d419ee474df004021c69fdd316d08
   ExpoLinearGradient: 8cec4a09426d8934c433e83cb36262d72c667fce
   ExpoLocalization: f04eeec2e35bed01ab61c72ee1768ec04d093d01
-  ExpoModulesCore: 0095fc6f64a1c1e2b939da5752f081adcb8fd8d3
+  ExpoModulesCore: 17a5163fddddcc6472ccf9d57a64f5a075a4c6db
   ExpoScreenCapture: ece7593264d1384aff2481eea29f9a238b484090
   ExpoWebBrowser: 7595ccac6938eb65b076385fd23d035db9ecdc8e
   EXSplashScreen: d8b3c547b9b18a41d80c6f6b274c4c26664febd4
