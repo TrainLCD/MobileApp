@@ -13,9 +13,9 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation'
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 48,
     flex: 1,
-    paddingTop: 24,
+    paddingTop: 12,
   },
 })
 
@@ -84,7 +84,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('selectBoundSettings')}</Heading>
       <StationList data={stopStations} onSelect={handleDestinationPress} />
-      <FAB onPress={handlePressFAB} icon="checkmark" />
+      <FAB onPress={handlePressFAB} icon="close" />
     </View>
   )
 }

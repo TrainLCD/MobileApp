@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -13,6 +13,10 @@ const styles = StyleSheet.create({
   stationNameText: {
     fontSize: RFValue(14),
   },
+  descriptionText: {
+    fontSize: RFValue(11),
+    marginTop: 8,
+  },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
 })
 
@@ -25,10 +29,24 @@ const ItemCell = ({
   item: Station
   onSelect: (item: Station) => void
 }) => {
+  const ownLine = item.line
+  const otherLines = useMemo(
+    () => item.lines.filter((l) => l.id !== ownLine?.id),
+    [item.lines, ownLine?.id]
+  )
+  const transferText = isJapanese ? '接続路線: ' : 'Transfers: '
+
   return (
     <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
       <Typography style={styles.stationNameText}>
         {isJapanese ? item.name : item.nameRoman}
+      </Typography>
+      <Typography style={styles.descriptionText}>
+        {isJapanese ? ownLine?.nameShort : ownLine?.nameRoman}{' '}
+        {otherLines.length ? transferText : ''}
+        {otherLines
+          .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
+          .join(isJapanese ? '、' : ', ')}
       </Typography>
     </TouchableOpacity>
   )
@@ -56,18 +74,18 @@ export const StationList = ({
     <FlatList
       initialNumToRender={data.length}
       style={{
+        width: '80%',
+        alignSelf: 'center',
         borderColor: isLEDTheme ? '#fff' : '#aaa',
         borderWidth: 1,
         flex: 1,
-        marginVertical: 24,
-        paddingBottom: safeAreaBottom + 24,
+        marginVertical: 12,
+        marginBottom: safeAreaBottom,
       }}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
-      ListHeaderComponent={Separator}
-      ListFooterComponent={Separator}
     />
   )
 }

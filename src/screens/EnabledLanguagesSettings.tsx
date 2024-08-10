@@ -28,7 +28,7 @@ import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    padding: 24,
     height: '100%',
   },
   itemRoot: {
