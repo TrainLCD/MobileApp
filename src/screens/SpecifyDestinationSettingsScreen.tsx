@@ -84,7 +84,7 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('selectBoundSettings')}</Heading>
       <StationList data={stopStations} onSelect={handleDestinationPress} />
-      <FAB onPress={handlePressFAB} icon="checkmark" />
+      <FAB onPress={handlePressFAB} icon="close" />
     </View>
   )
 }
