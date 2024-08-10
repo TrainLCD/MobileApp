@@ -2,8 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
-import { LocationObject } from 'expo-location'
-import * as TaskManager from 'expo-task-manager'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -25,7 +23,6 @@ import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useAutoMode from '../hooks/useAutoMode'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import { useCurrentStation } from '../hooks/useCurrentStation'
-import { setLocation } from '../hooks/useLocationStore'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
@@ -46,25 +43,6 @@ import { translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
 import { getIsHoliday } from '../utils/isHoliday'
 import getIsPass from '../utils/isPass'
-import { locationTaskName } from '../utils/locationTaskName'
-
-TaskManager.defineTask(
-  locationTaskName,
-  ({
-    data,
-    error,
-  }: {
-    data: { locations: LocationObject[] }
-    error: TaskManager.TaskManagerError | null
-  }) => {
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    setLocation(data.locations[0])
-  }
-)
 
 const { height: windowHeight } = Dimensions.get('window')
 
