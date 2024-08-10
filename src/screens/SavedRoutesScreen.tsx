@@ -3,6 +3,7 @@ import findNearest from 'geolib/es/findNearest'
 import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSetRecoilState } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
@@ -21,9 +22,10 @@ import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 48,
+    paddingTop: 12,
     flex: 1,
-    paddingTop: 24,
+    alignItems: 'center',
   },
   emptyText: {
     textAlign: 'center',
@@ -31,18 +33,13 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
-  rootPadding: {
-    padding: 72,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
   heading: {
     marginBottom: 24,
   },
   listContainer: {
     width: '65%',
-    alignItems: 'center',
+    height: '100%',
+    alignSelf: 'center',
   },
   routeNameText: {
     fontSize: RFValue(14),
@@ -154,38 +151,40 @@ const SavedRoutesScreen: React.FC = () => {
     },
     [handleItemPress]
   )
+
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, [])
+  const { bottom: safeAreaBottom } = useSafeAreaInsets()
 
   if (loading) {
     return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
   }
 
   return (
-    <>
-      <View
-        style={{
-          ...styles.rootPadding,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-        }}
-      >
-        <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
+    <View
+      style={{
+        ...styles.root,
+        backgroundColor: isLEDTheme ? '#212121' : '#fff',
+      }}
+    >
+      <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
 
-        <View style={styles.listContainer}>
-          <FlatList
-            style={{
-              borderColor: isLEDTheme ? '#fff' : '#aaa',
-              borderWidth: routes.length ? 1 : 0,
-            }}
-            data={routes}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ListEmptyComponent={ListEmptyComponent}
-          />
-        </View>
-      </View>
+      <FlatList
+        style={{
+          width: '65%',
+          alignSelf: 'center',
+          borderColor: isLEDTheme ? '#fff' : '#aaa',
+          borderWidth: 1,
+          flex: 1,
+          marginBottom: safeAreaBottom,
+        }}
+        data={routes}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ListEmptyComponent={ListEmptyComponent}
+      />
 
       <FAB onPress={onPressBack} icon="close" />
-    </>
+    </View>
   )
 }
 

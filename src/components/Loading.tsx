@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import { translate } from '../translation'
 import Typography from './Typography'
 
@@ -63,9 +65,15 @@ const Loading = ({
   linkType?: 'serverStatus' | 'searchStation'
 }) => {
   const navigation = useNavigation()
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   return (
-    <View style={styles.loading}>
+    <View
+      style={{
+        ...styles.loading,
+        backgroundColor: isLEDTheme ? '#212121' : '#fff',
+      }}
+    >
       <ActivityIndicator size="large" />
       {message ? (
         <Typography style={styles.loadingText}>{message}</Typography>
