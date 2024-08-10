@@ -74,7 +74,7 @@ export const StationList = ({
     <FlatList
       initialNumToRender={data.length}
       style={{
-        width: '80%',
+        width: '100%',
         alignSelf: 'center',
         borderColor: isLEDTheme ? '#fff' : '#aaa',
         borderWidth: 1,
@@ -86,6 +86,7 @@ export const StationList = ({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
+      ListFooterComponent={Separator}
     />
   )
 }

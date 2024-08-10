@@ -18,6 +18,7 @@ import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 48, paddingTop: 12 },
+  listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
 })
 
 const TrainTypeSettings: React.FC = () => {
@@ -126,7 +127,9 @@ const TrainTypeSettings: React.FC = () => {
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
 
-      <TrainTypeList data={fetchedTrainTypes} onSelect={handleSelect} />
+      <View style={styles.listContainer}>
+        <TrainTypeList data={fetchedTrainTypes} onSelect={handleSelect} />
+      </View>
 
       <FAB onPress={onPressBack} icon="close" />
 

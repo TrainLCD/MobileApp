@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 12,
   },
+  listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
@@ -83,7 +84,9 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
   return (
     <View style={styles.root}>
       <Heading>{translate('selectBoundSettings')}</Heading>
-      <StationList data={stopStations} onSelect={handleDestinationPress} />
+      <View style={styles.listContainer}>
+        <StationList data={stopStations} onSelect={handleDestinationPress} />
+      </View>
       <FAB onPress={handlePressFAB} icon="close" />
     </View>
   )
