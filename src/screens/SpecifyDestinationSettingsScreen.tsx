@@ -13,9 +13,9 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation'
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 48,
     flex: 1,
-    paddingTop: 24,
+    paddingTop: 12,
   },
 })
 

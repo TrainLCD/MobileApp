@@ -130,18 +130,18 @@ export const TrainTypeList = ({
     <FlatList
       initialNumToRender={data.length}
       style={{
+        width: '80%',
+        alignSelf: 'center',
         borderColor: isLEDTheme ? '#fff' : '#aaa',
         borderWidth: 1,
         flex: 1,
-        marginVertical: 24,
-        paddingBottom: safeAreaBottom + 24,
+        marginVertical: 12,
+        marginBottom: safeAreaBottom,
       }}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
-      ListHeaderComponent={Separator}
-      ListFooterComponent={Separator}
     />
   )
 }
