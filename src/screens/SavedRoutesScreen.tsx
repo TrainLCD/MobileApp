@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   listContainer: {
-    width: '50%',
-    height: '75%',
+    width: '65%',
+    alignItems: 'center',
   },
   routeNameText: {
     fontSize: RFValue(14),
