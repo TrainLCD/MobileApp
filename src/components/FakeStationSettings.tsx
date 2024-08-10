@@ -218,7 +218,11 @@ const FakeStationSettings: React.FC = () => {
           {isByCoordsLoading || isByNameLoading ? (
             <ActivityIndicator size="large" />
           ) : (
-            <StationList data={groupedStations} onSelect={handleStationPress} />
+            <StationList
+              withoutTransfer
+              data={groupedStations}
+              onSelect={handleStationPress}
+            />
           )}
         </KeyboardAvoidingView>
       </View>

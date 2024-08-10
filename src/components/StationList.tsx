@@ -25,29 +25,49 @@ const Separator = () => <View style={styles.separator} />
 const ItemCell = ({
   item,
   onSelect,
+  withoutTransfer,
 }: {
   item: Station
   onSelect: (item: Station) => void
+  withoutTransfer?: boolean
 }) => {
   const ownLine = item.line
   const otherLines = useMemo(
     () => item.lines.filter((l) => l.id !== ownLine?.id),
     [item.lines, ownLine?.id]
   )
-  const transferText = isJapanese ? '接続路線: ' : 'Transfers: '
+  const transferLabel = useMemo(
+    () => (isJapanese ? '接続路線: ' : 'Transfer: '),
+    []
+  )
+  const transferText: string = useMemo(() => {
+    if (withoutTransfer) {
+      return item.lines
+        .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
+        .join(isJapanese ? '、' : ', ')
+    }
+
+    return `${isJapanese ? ownLine?.nameShort : ownLine?.nameRoman}${' '}${
+      otherLines.length ? transferLabel : ''
+    }${' '}${otherLines
+      .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
+      .join(isJapanese ? '、' : ', ')
+      .replaceAll('\n', '')}`
+  }, [
+    item.lines,
+    otherLines,
+    ownLine?.nameRoman,
+    ownLine?.nameShort,
+    transferLabel,
+    withoutTransfer,
+  ])
 
   return (
     <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
       <Typography style={styles.stationNameText}>
         {isJapanese ? item.name : item.nameRoman}
       </Typography>
-      <Typography style={styles.descriptionText}>
-        {isJapanese ? ownLine?.nameShort : ownLine?.nameRoman}{' '}
-        {otherLines.length ? transferText : ''}
-        {otherLines
-          .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
-          .join(isJapanese ? '、' : ', ')}
-      </Typography>
+      <Typography style={styles.descriptionText}>{transferText}</Typography>
     </TouchableOpacity>
   )
 }
@@ -55,15 +75,23 @@ const ItemCell = ({
 export const StationList = ({
   data,
   onSelect,
+  withoutTransfer,
 }: {
   data: Station[]
   onSelect: (item: Station) => void
+  withoutTransfer?: boolean
 }) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const renderItem = useCallback(
     ({ item }: { item: Station; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} />
+      return (
+        <ItemCell
+          withoutTransfer={withoutTransfer}
+          item={item}
+          onSelect={onSelect}
+        />
+      )
     },
     [onSelect]
   )
