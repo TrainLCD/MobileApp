@@ -14,7 +14,7 @@ export const setLocation = (location: LocationObject) =>
 
     const diffInMs = inputTimestamp - stateTimestamp
 
-    if (diffInMs > 5000) {
+    if (diffInMs > 10 * 1000) {
       return location
     }
 
