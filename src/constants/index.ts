@@ -20,13 +20,7 @@ export {
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
 } from './line'
-export {
-  DISTANCE_FILTER_BALANCED,
-  DISTANCE_FILTER_HIGH,
-  DISTANCE_FILTER_LOW,
-  LOCATION_TASK_NAME_CANARY,
-  LOCATION_TASK_NAME_PROD,
-} from './location'
+export { LOCATION_TASK_NAME_CANARY, LOCATION_TASK_NAME_PROD } from './location'
 export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native'
 export { MARK_SHAPE, NUMBERING_ICON_SIZE, NumberingIconSize } from './numbering'
 export { PREFECTURES_JA, PREFECTURES_ROMAN } from './province'
