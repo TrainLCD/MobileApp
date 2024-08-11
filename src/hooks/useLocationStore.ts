@@ -19,6 +19,7 @@ export const setLocation = (location: Location.LocationObject) =>
       coords: { latitude: stateLatitude, longitude: stateLongitude },
     } = state
 
+    // NOTE: 多分ここを通るということはアプリが暴走している
     if (newLatitude === stateLatitude && newLongitude === stateLongitude) {
       // eslint-disable-next-line @typescript-eslint/no-extra-semi
       ;(async () => {
