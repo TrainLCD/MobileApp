@@ -1,7 +1,7 @@
 import * as Location from 'expo-location'
 import { useEffect } from 'react'
+import { LOCATION_TASK_NAME } from '../constants'
 import { translate } from '../translation'
-import { locationTaskName } from '../utils/locationTaskName'
 import { useApplicationFlagStore } from './useApplicationFlagStore'
 
 export const useStartBackgroundLocationUpdates = () => {
@@ -10,9 +10,9 @@ export const useStartBackgroundLocationUpdates = () => {
     if (autoModeEnabled) {
       return
     }
-    Location.startLocationUpdatesAsync(locationTaskName, {
+    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
       accuracy: Location.Accuracy.High,
-      activityType: Location.ActivityType.OtherNavigation,
+      distanceInterval: 100,
       foregroundService: {
         notificationTitle: translate('bgAlertTitle'),
         notificationBody: translate('bgAlertContent'),
@@ -21,7 +21,7 @@ export const useStartBackgroundLocationUpdates = () => {
     })
 
     return () => {
-      Location.stopLocationUpdatesAsync(locationTaskName).catch(console.debug)
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(console.debug)
     }
   }, [])
 }
