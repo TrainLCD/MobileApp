@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Station } from '../../gen/proto/stationapi_pb'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
-import { isJapanese } from '../translation'
+import { isJapanese, translate } from '../translation'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
@@ -18,9 +18,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+  },
 })
 
 const Separator = () => <View style={styles.separator} />
+
+const ListEmptyComponent = () => (
+  <Typography style={styles.emptyText}>
+    {translate('stationListEmpty')}
+  </Typography>
+)
 
 const ItemCell = ({
   item,
@@ -93,7 +105,7 @@ export const StationList = ({
         />
       )
     },
-    [onSelect]
+    [onSelect, withoutTransfer]
   )
   const keyExtractor = useCallback((item: Station) => item.id.toString(), [])
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
@@ -114,7 +126,7 @@ export const StationList = ({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
-      ListFooterComponent={Separator}
+      ListEmptyComponent={ListEmptyComponent}
     />
   )
 }
