@@ -19,7 +19,7 @@ import {
   NEARBY_STATIONS_LIMIT,
   SEARCH_STATION_RESULT_LIMIT,
 } from 'react-native-dotenv'
-import useSWRImmutable from 'swr/immutable'
+import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import {
   GetStationByCoordinatesRequest,
@@ -82,22 +82,19 @@ const FakeStationSettings: React.FC = () => {
     data: byCoordsData,
     isLoading: isByCoordsLoading,
     error: byCoordsError,
-  } = useSWRImmutable(
-    ['/app.trainlcd.grpc/getStationsByCoords', latitude, longitude],
-    async ([, latitude, longitude]) => {
-      if (!latitude || !longitude) {
-        return
-      }
-      const req = new GetStationByCoordinatesRequest({
-        latitude,
-        longitude,
-        limit: Number(NEARBY_STATIONS_LIMIT),
-      })
-
-      const res = await grpcClient.getStationsByCoordinates(req)
-      return res.stations
+  } = useSWR(['/app.trainlcd.grpc/getStationsByCoords'], async () => {
+    if (!latitude || !longitude) {
+      return
     }
-  )
+    const req = new GetStationByCoordinatesRequest({
+      latitude,
+      longitude,
+      limit: Number(NEARBY_STATIONS_LIMIT),
+    })
+
+    const res = await grpcClient.getStationsByCoordinates(req)
+    return res.stations
+  })
   const {
     data: byNameData,
     isMutating: isByNameLoading,

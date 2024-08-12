@@ -13,7 +13,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 
-export const useStationList = (fetchAutomatically = true) => {
+export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState)
   const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
@@ -27,10 +27,9 @@ export const useStationList = (fetchAutomatically = true) => {
       '/app.trainlcd.grpc/getStationsByLineId',
       selectedLine?.station?.id,
       selectedLine?.id,
-      fetchAutomatically,
     ],
-    async ([, stationId, lineId, shouldFetch]) => {
-      if (fromBuilder || !stationId || !lineId || !shouldFetch) {
+    async ([, stationId, lineId]) => {
+      if (fromBuilder || !stationId || !lineId) {
         return
       }
 
