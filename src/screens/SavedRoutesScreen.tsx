@@ -23,7 +23,7 @@ import { translate } from '../translation'
 const styles = StyleSheet.create({
   root: {
     paddingHorizontal: 48,
-    paddingTop: 12,
+    paddingVertical: 12,
     flex: 1,
     alignItems: 'center',
   },
