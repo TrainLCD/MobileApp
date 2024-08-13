@@ -1,27 +1,21 @@
 import { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
-import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
+import { useCurrentStation } from './useCurrentStation'
 import { useNextStation } from './useNextStation'
 
 const useIsPassing = (): boolean => {
-  const { station, arrived } = useRecoilValue(stationState)
-  const { stationForHeader } = useRecoilValue(navigationState)
+  const { arrived } = useRecoilValue(stationState)
+  const currentStation = useCurrentStation()
   const nextStation = useNextStation()
 
   const passing = useMemo(() => {
     if (!nextStation) {
       return false
     }
-    if (station && getIsPass(station)) {
-      return true
-    }
-    if (stationForHeader?.id === station?.id && !arrived) {
-      return true
-    }
-    return !arrived
-  }, [arrived, nextStation, station, stationForHeader?.id])
+    return !!(currentStation && getIsPass(currentStation) && arrived)
+  }, [arrived, currentStation, nextStation])
 
   return passing
 }

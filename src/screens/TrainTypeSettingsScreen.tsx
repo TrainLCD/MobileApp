@@ -1,57 +1,58 @@
-import { Picker } from '@react-native-picker/picker'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
+import useSWR from 'swr'
+import {
+  GetStationsByLineGroupIdRequest,
+  TrainType,
+} from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
-import { LED_THEME_BG_COLOR } from '../constants'
-import { useStationList } from '../hooks/useStationList'
-import useTrainTypeLabels from '../hooks/useTrainTypeLabels'
-import lineState from '../store/atoms/line'
+import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal'
+import { TrainTypeList } from '../components/TrainTypeList'
+import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
-  root: {
-    paddingHorizontal: 24,
-    flex: 1,
-    paddingTop: 24,
-  },
+  root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
+  listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
 })
 
 const TrainTypeSettings: React.FC = () => {
-  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
+  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false)
+  const [selectedTrainType, setSelectedTrainType] = useState<TrainType | null>(
+    null
+  )
+
+  const [{ fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const { selectedLine } = useRecoilValue(lineState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
 
   const navigation = useNavigation()
-  const { fetchTrainTypeStations, loading } = useStationList()
 
-  const trainTypeLabels = useTrainTypeLabels(fetchedTrainTypes)
-
-  const items = useMemo(
-    () =>
-      fetchedTrainTypes.map((tt, idx) => ({
-        label: trainTypeLabels[idx] ?? '',
-        value: tt.id,
-      })) ?? [],
-    [fetchedTrainTypes, trainTypeLabels]
+  const {
+    data: trainTypeStations = [],
+    isLoading: isTrainTypeStationsLoading,
+    error: trainTypeStationsError,
+  } = useSWR(
+    ['/app.trainlcd.grpc/GetStationsByLineGroupId', selectedTrainType?.groupId],
+    async ([, lineGroupId]) => {
+      const req = new GetStationsByLineGroupIdRequest({
+        lineGroupId,
+      })
+      const res = await grpcClient.getStationsByLineGroupId(req)
+      return res.stations
+    }
   )
 
   const onPressBack = useCallback(async () => {
-    if (trainType) {
-      await fetchTrainTypeStations({ lineGroupId: trainType.groupId })
-    }
-
     if (navigation.canGoBack()) {
       navigation.goBack()
     }
-  }, [fetchTrainTypeStations, navigation, trainType])
+  }, [navigation])
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -63,9 +64,14 @@ const TrainTypeSettings: React.FC = () => {
     }
   }, [onPressBack])
 
-  const handleTrainTypeChange = useCallback(
-    (trainTypeId: number) => {
-      if (trainTypeId === 0) {
+  const handleSelect = (tt: TrainType) => {
+    setSelectedTrainType(tt)
+    setIsTrainTypeModalVisible(true)
+  }
+
+  const handleTrainTypeConfirmed = useCallback(
+    async (trainType: TrainType) => {
+      if (trainType.id === 0) {
         setNavigationState((prev) => ({
           ...prev,
           trainType: null,
@@ -75,12 +81,18 @@ const TrainTypeSettings: React.FC = () => {
           ...prev,
           wantedDestination: null,
         }))
+        setIsTrainTypeModalVisible(false)
+
+        if (navigation.canGoBack()) {
+          navigation.goBack()
+        }
         return
       }
 
       const selectedTrainType = fetchedTrainTypes?.find(
-        (tt) => tt.id === trainTypeId
+        (tt) => tt.id === trainType.id
       )
+
       if (!selectedTrainType) {
         return
       }
@@ -93,41 +105,45 @@ const TrainTypeSettings: React.FC = () => {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: null,
+        stations: trainTypeStations,
       }))
-    },
-    [fetchedTrainTypes, setNavigationState, setStationState]
-  )
 
-  const numberOfLines = useMemo(
-    () =>
-      items
-        .map((item) => item.label.split('\n').length)
-        .reduce((a, b) => Math.max(a, b), 0),
-    [items]
+      setIsTrainTypeModalVisible(false)
+
+      if (navigation.canGoBack()) {
+        navigation.goBack()
+      }
+    },
+    [
+      fetchedTrainTypes,
+      navigation,
+      setNavigationState,
+      setStationState,
+      trainTypeStations,
+    ]
   )
 
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
-      <Picker
-        selectedValue={trainType?.id ?? selectedLine?.station?.trainType?.id}
-        onValueChange={(id) => handleTrainTypeChange(Number(id))}
-        numberOfLines={numberOfLines}
-        dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
-      >
-        {items.map((it) => (
-          <Picker.Item
-            color={isLEDTheme ? '#fff' : '#000'}
-            style={{
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
-            }}
-            key={it.value}
-            label={it.label}
-            value={it.value}
-          />
-        ))}
-      </Picker>
-      <FAB disabled={loading} onPress={onPressBack} icon="checkmark" />
+
+      <View style={styles.listContainer}>
+        <TrainTypeList data={fetchedTrainTypes} onSelect={handleSelect} />
+      </View>
+
+      <FAB onPress={onPressBack} icon="close" />
+
+      {selectedTrainType ? (
+        <TrainTypeInfoModal
+          visible={isTrainTypeModalVisible}
+          trainType={selectedTrainType}
+          stations={trainTypeStations}
+          loading={isTrainTypeStationsLoading}
+          error={trainTypeStationsError}
+          onConfirmed={handleTrainTypeConfirmed}
+          onClose={() => setIsTrainTypeModalVisible(false)}
+        />
+      ) : null}
     </View>
   )
 }

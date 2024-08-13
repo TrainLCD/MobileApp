@@ -19,7 +19,6 @@ const useAutoMode = (enabled: boolean): void => {
     station,
   } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
-  const setLocation = useLocationStore((state) => state.setLocation)
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -54,7 +53,7 @@ const useAutoMode = (enabled: boolean): void => {
         const index = autoModeInboundIndexRef.current
 
         if (!index) {
-          setLocation({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               accuracy: 0,
@@ -85,7 +84,7 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            setLocation({
+            useLocationStore.setState({
               timestamp: 0,
               coords: {
                 ...center,
@@ -102,7 +101,7 @@ const useAutoMode = (enabled: boolean): void => {
         const index = autoModeOutboundIndexRef.current
 
         if (index === stations.length - 1) {
-          setLocation({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               accuracy: 0,
@@ -133,7 +132,7 @@ const useAutoMode = (enabled: boolean): void => {
           ])
 
           if (center) {
-            setLocation({
+            useLocationStore.setState({
               timestamp: 0,
               coords: {
                 ...center,
@@ -155,14 +154,13 @@ const useAutoMode = (enabled: boolean): void => {
 
     autoModeApproachingTimerRef.current = interval
   }, [
+    autoModeInboundIndexRef,
+    autoModeOutboundIndexRef,
     enabled,
+    isLoopLine,
     selectedDirection,
     selectedLine,
-    autoModeInboundIndexRef,
     stations,
-    isLoopLine,
-    setLocation,
-    autoModeOutboundIndexRef,
   ])
 
   useEffect(() => {
@@ -198,7 +196,7 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          setLocation({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               latitude: next.latitude,
@@ -226,7 +224,7 @@ const useAutoMode = (enabled: boolean): void => {
         }
 
         if (next) {
-          setLocation({
+          useLocationStore.setState({
             timestamp: 0,
             coords: {
               latitude: next.latitude,
@@ -247,14 +245,13 @@ const useAutoMode = (enabled: boolean): void => {
     const interval = setInterval(intervalInternal, AUTO_MODE_WHOLE_DURATION)
     autoModeArriveTimerRef.current = interval
   }, [
-    selectedDirection,
-    enabled,
-    selectedLine,
     autoModeInboundIndexRef,
-    stations,
-    isLoopLine,
-    setLocation,
     autoModeOutboundIndexRef,
+    enabled,
+    isLoopLine,
+    selectedDirection,
+    selectedLine,
+    stations,
   ])
 
   useEffect(() => {

@@ -9,33 +9,30 @@ import RNFS from 'react-native-fs'
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
   LONG_PRESS_DURATION,
-  POWER_SAVING_PRESETS,
-  PowerSavingPreset,
   parenthesisRegexp,
 } from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import { useBadAccuracy } from '../hooks/useBadAccuracy'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
-import { useTTS } from '../hooks/useTTS'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
-import { APP_THEME, AppTheme } from '../models/Theme'
+import { AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
-import powerSavingState from '../store/atoms/powerSaving'
 import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
-import themeState from '../store/atoms/theme'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
@@ -73,25 +70,26 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
 
   const { selectedBound } = useRecoilValue(stationState)
-  const setTheme = useSetRecoilState(themeState)
-  const [{ autoModeEnabled }, setNavigation] = useRecoilState(navigationState)
+  const setNavigation = useSetRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
-  const setPowerSavingState = useSetRecoilState(powerSavingState)
   const [reportModalShow, setReportModalShow] = useState(false)
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
   const [screenShotBase64, setScreenShotBase64] = useState('')
   const [screenshotTaken, setScreenshotTaken] = useState(false)
 
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
+
   useCheckStoreVersion()
   useAppleWatch()
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
-  useTTS()
 
   const user = useCachedInitAnonymousUser()
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
   const { showActionSheetWithOptions } = useActionSheet()
@@ -175,10 +173,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       )) as AppTheme | null
 
       if (prevThemeKey) {
-        setTheme((prev) => ({
-          ...prev,
-          theme: prevThemeKey || APP_THEME.TOKYO_METRO,
-        }))
+        useThemeStore.setState(prevThemeKey)
       }
       const enabledLanguagesStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES
@@ -212,17 +207,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         backgroundEnabled: bgTTSEnabledStr === 'true',
       }))
 
-      const preferredPowerSavingPresetName = (await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.PREFERRED_POWER_SAVING_PRESET
-      )) as PowerSavingPreset | null
-      setPowerSavingState((prev) => ({
-        ...prev,
-        preset:
-          POWER_SAVING_PRESETS[
-            preferredPowerSavingPresetName ?? POWER_SAVING_PRESETS.BALANCED
-          ],
-      }))
-
       setLongPressNoticeDismissed(
         (await AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED
@@ -231,7 +215,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     loadSettingsAsync()
-  }, [setNavigation, setPowerSavingState, setSpeech, setTheme])
+  }, [setNavigation, setSpeech])
 
   useEffect(() => {
     if (autoModeEnabled) {

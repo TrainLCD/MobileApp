@@ -29,10 +29,8 @@ Notifications.setNotificationHandler({
 const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState)
   const setNavigation = useSetRecoilState(navigationState)
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
-  const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
-  )
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
 
   const nextStation = useNextStation(true)
   const approachingNotifiedIdRef = useRef<number>()

@@ -11,16 +11,16 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Path, Svg } from 'react-native-svg'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   itemRoot: {
-    width: Dimensions.get('window').width / 4,
+    width: Dimensions.get('window').width / 5,
     marginBottom: 12,
   },
   item: {
@@ -50,11 +50,10 @@ const styles = StyleSheet.create({
     borderColor: '#555',
     marginRight: 12,
   },
-  listContainerStyle: {
-    paddingBottom: 24,
-  },
+  listContainerStyle: { alignSelf: 'center', paddingBottom: 24 },
   headingStyle: {
-    marginVertical: 24,
+    marginTop: 24,
+    marginBottom: 24,
   },
 })
 
@@ -112,7 +111,7 @@ const ListItem: React.FC<ListItemProps> = ({
 }
 
 const NotificationSettings: React.FC = () => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const { stations } = useRecoilValue(stationState)
   const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)
@@ -207,24 +206,20 @@ const NotificationSettings: React.FC = () => {
     []
   )
 
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
-
   return (
-    <View style={styles.root}>
-      <FlatList
-        ListHeaderComponent={listHeaderComponent}
-        contentContainerStyle={{
-          ...styles.listContainerStyle,
-          marginLeft: safeAreaLeft || 24,
-          marginRight: safeAreaRight || 24,
-        }}
-        numColumns={4}
-        data={stations}
-        renderItem={renderItem}
-        keyExtractor={(item: Station): string => item.id.toString()}
-      />
+    <>
+      <View style={styles.root}>
+        <FlatList
+          ListHeaderComponent={listHeaderComponent}
+          contentContainerStyle={styles.listContainerStyle}
+          numColumns={4}
+          data={stations}
+          renderItem={renderItem}
+          keyExtractor={(item: Station): string => item.id.toString()}
+        />
+      </View>
       <FAB onPress={onPressBack} icon="checkmark" />
-    </View>
+    </>
   )
 }
 

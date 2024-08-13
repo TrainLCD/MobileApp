@@ -3,7 +3,8 @@ import findNearest from 'geolib/es/findNearest'
 import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useSetRecoilState } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -11,18 +12,20 @@ import Loading from '../components/Loading'
 import Typography from '../components/Typography'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useSavedRoutes } from '../hooks/useSavedRoutes'
+import { useThemeStore } from '../hooks/useThemeStore'
 import { SavedRoute } from '../models/SavedRoute'
+import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 48,
+    paddingVertical: 12,
     flex: 1,
-    paddingTop: 24,
+    alignItems: 'center',
   },
   emptyText: {
     textAlign: 'center',
@@ -30,18 +33,13 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
-  rootPadding: {
-    padding: 72,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
   heading: {
     marginBottom: 24,
   },
   listContainer: {
-    width: '50%',
-    height: '75%',
+    width: '65%',
+    height: '100%',
+    alignSelf: 'center',
   },
   routeNameText: {
     fontSize: RFValue(14),
@@ -67,13 +65,9 @@ const SavedRoutesScreen: React.FC = () => {
   const setLineState = useSetRecoilState(lineState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setStationState = useSetRecoilState(stationState)
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
-  const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
-  )
-
-  const isLEDTheme = useRecoilValue(isLEDSelector)
-
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const navigation = useNavigation()
   const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
 
@@ -157,38 +151,40 @@ const SavedRoutesScreen: React.FC = () => {
     },
     [handleItemPress]
   )
+
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, [])
+  const { bottom: safeAreaBottom } = useSafeAreaInsets()
 
   if (loading) {
     return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
   }
 
   return (
-    <>
-      <View
-        style={{
-          ...styles.rootPadding,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-        }}
-      >
-        <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
+    <View
+      style={{
+        ...styles.root,
+        backgroundColor: isLEDTheme ? '#212121' : '#fff',
+      }}
+    >
+      <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
 
-        <View style={styles.listContainer}>
-          <FlatList
-            style={{
-              borderColor: isLEDTheme ? '#fff' : '#aaa',
-              borderWidth: routes.length ? 1 : 0,
-            }}
-            data={routes}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ListEmptyComponent={ListEmptyComponent}
-          />
-        </View>
-      </View>
+      <FlatList
+        style={{
+          width: '65%',
+          alignSelf: 'center',
+          borderColor: isLEDTheme ? '#fff' : '#aaa',
+          borderWidth: 1,
+          flex: 1,
+          marginBottom: safeAreaBottom,
+        }}
+        data={routes}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ListEmptyComponent={ListEmptyComponent}
+      />
 
       <FAB onPress={onPressBack} icon="close" />
-    </>
+    </View>
   )
 }
 

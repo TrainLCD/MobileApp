@@ -3,8 +3,22 @@ import { useRecoilValue } from 'recoil'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
 import stationState from '../store/atoms/station'
+import omitJRLinesIfThresholdExceeded from '../utils/jr'
 
-const useTransferLinesFromStation = (station: Station | null): Line[] => {
+type Option = {
+  omitRepeatingLine?: boolean
+  omitJR?: boolean
+}
+
+const useTransferLinesFromStation = (
+  station: Station | null,
+  option?: Option
+): Line[] => {
+  const { omitRepeatingLine, omitJR } = option ?? {
+    omitRepeatingLine: false,
+    omitJR: false,
+  }
+
   const { stations } = useRecoilValue(stationState)
 
   const transferLines = useMemo(
@@ -41,15 +55,42 @@ const useTransferLinesFromStation = (station: Station | null): Line[] => {
           ) {
             return true
           }
-          if (hasSameLineInPrevStationLine && hasSameLineInNextStationLine) {
+          if (
+            omitRepeatingLine &&
+            hasSameLineInPrevStationLine &&
+            hasSameLineInNextStationLine
+          ) {
             return false
           }
           return true
         }),
-    [station, stations]
+    [
+      omitRepeatingLine,
+      station?.id,
+      station?.line?.id,
+      station?.line?.nameShort,
+      station?.lines,
+      stations,
+    ]
   )
 
-  return transferLines ?? []
+  if (omitJR) {
+    return omitJRLinesIfThresholdExceeded(transferLines ?? [])
+      .map((l) => ({
+        ...l,
+        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+      }))
+      .map((l) => new Line(l))
+  }
+
+  return (transferLines ?? [])
+    .map((l) => ({
+      ...l,
+      nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+      nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
+    }))
+    .map((l) => new Line(l))
 }
 
 export default useTransferLinesFromStation

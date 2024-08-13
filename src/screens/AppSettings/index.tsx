@@ -3,15 +3,16 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
 import Heading from '../../components/Heading'
 import LEDThemeSwitch from '../../components/LEDThemeSwitch'
 import Typography from '../../components/Typography'
 import { ASYNC_STORAGE_KEYS } from '../../constants'
+import { useThemeStore } from '../../hooks/useThemeStore'
+import { APP_THEME } from '../../models/Theme'
 import speechState from '../../store/atoms/speech'
-import { isLEDSelector } from '../../store/selectors/isLED'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
 
@@ -39,6 +40,7 @@ const styles = StyleSheet.create({
     width: '50%',
     alignSelf: 'center',
     alignItems: 'flex-start',
+    marginTop: 12,
     marginBottom: 8,
   },
 })
@@ -48,7 +50,7 @@ const AppSettingsScreen: React.FC = () => {
     { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
     setSpeechState,
   ] = useRecoilState(speechState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const navigation = useNavigation()
 
@@ -95,27 +97,6 @@ const AppSettingsScreen: React.FC = () => {
 
   const onLosslessAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
-      const losslessNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_NOTICE
-      )
-      if (flag && losslessNoticeConfirmed === null) {
-        Alert.alert(translate('warning'), translate('losslessAlertText'), [
-          {
-            text: translate('dontShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.QA_LOSSLESS_NOTICE,
-                'true'
-              )
-            },
-          },
-          {
-            text: 'OK',
-          },
-        ])
-      }
-
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
         flag ? 'true' : 'false'
@@ -146,7 +127,6 @@ const AppSettingsScreen: React.FC = () => {
     navigation.navigate('EnabledLanguagesSettings')
 
   const toTuning = () => navigation.navigate('TuningSettings')
-  const toPowerSave = () => navigation.navigate('PowerSavingSettings')
 
   return (
     <>
@@ -250,10 +230,6 @@ const AppSettingsScreen: React.FC = () => {
             <Button onPress={toEnabledLanguagesSettings}>
               {translate('selectLanguagesTitle')}
             </Button>
-          </View>
-
-          <View style={styles.settingItem}>
-            <Button onPress={toPowerSave}>{translate('powerSave')}</Button>
           </View>
 
           {isDevApp ? (

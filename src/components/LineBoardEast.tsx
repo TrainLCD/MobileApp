@@ -11,19 +11,17 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
-import { parenthesisRegexp } from '../constants'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
 import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
-import omitJRLinesIfThresholdExceeded from '../utils/jr'
 import { heightScale, widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
@@ -326,18 +324,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     getIsPass(station) ||
     (arrived && currentStationIndex === index ? false : passed)
 
-  const transferLines = useTransferLinesFromStation(station)
-  const omittedTransferLines = useMemo(
-    () =>
-      omitJRLinesIfThresholdExceeded(transferLines)
-        .map((l) => ({
-          ...l,
-          nameShort: l.nameShort.replace(parenthesisRegexp, ''),
-          nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-        }))
-        .map((l) => new Line(l)),
-    [transferLines]
-  )
+  const transferLines = useTransferLinesFromStation(station, {
+    omitJR: true,
+    omitRepeatingLine: true,
+  })
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
@@ -465,7 +455,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LineDot
           station={station}
           shouldGrayscale={shouldGrayscale}
-          transferLines={omittedTransferLines}
+          transferLines={transferLines}
           arrived={arrived}
           passed={passed}
         />
@@ -547,7 +537,7 @@ const LineBoardEast: React.FC<Props> = ({
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE')
   const { selectedLine } = useRecoilValue(lineState)
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
 
   const line = useMemo(
     () => currentLine || selectedLine,

@@ -1,14 +1,13 @@
 import React, { useMemo } from 'react'
 import { useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
-import useAppState from '../hooks/useAppState'
+import { useCurrentLine } from '../hooks/useCurrentLine'
 import useGetLineMark from '../hooks/useGetLineMark'
 import { useNextStation } from '../hooks/useNextStation'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLines from '../hooks/useTransferLines'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
 import { isEnSelector } from '../store/selectors/isEn'
 import getIsPass from '../utils/isPass'
 import PadArch from './PadArch'
@@ -18,12 +17,11 @@ interface Props {
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
-  const appState = useAppState()
   const { station, arrived } = useRecoilValue(stationState)
   const { selectedLine } = useRecoilValue(lineState)
   const isEn = useRecoilValue(isEnSelector)
 
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
   const getLineMarkFunc = useGetLineMark()
   const nextStation = useNextStation()
   const transferLines = useTransferLines()
@@ -104,7 +102,6 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       stations={archStations}
       line={line}
       arrived={arrived}
-      appState={appState}
       transferLines={transferLines}
       station={switchedStation}
       numberingInfo={numberingInfo}

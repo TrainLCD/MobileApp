@@ -30,7 +30,7 @@
     "@react-navigation/native": "^5.9.8",
     "@react-navigation/stack": "^5.14.9",
     "dayjs": "^1.10.7",
-    "expo": "^51.0.0",
+    "expo": "~51.0.26",
     "expo-application": "~5.9.1",
     "expo-av": "~14.0.5",
     "expo-constants": "~16.0.2",

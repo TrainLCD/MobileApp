@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { HeaderTransitionState } from '../models/HeaderTransitionState'
+import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
-import { currentStationSelector } from '../store/selectors/currentStation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
+import { useCurrentStation } from './useCurrentStation'
 import useIntervalEffect from './useIntervalEffect'
 import useIsPassing from './useIsPassing'
 import { useNextStation } from './useNextStation'
+import { useThemeStore } from './useThemeStore'
 import useValueRef from './useValueRef'
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
@@ -18,7 +19,7 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
   const { arrived, approaching } = useRecoilValue(stationState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const [
     {
       headerState,
@@ -28,7 +29,7 @@ const useTransitionHeaderState = (): void => {
     setNavigation,
   ] = useRecoilState(navigationState)
   const { headerTransitionInterval } = useRecoilValue(tuningState)
-  const station = useRecoilValue(currentStationSelector({}))
+  const station = useCurrentStation()
 
   const headerStateRef = useValueRef(headerState)
 
@@ -41,7 +42,8 @@ const useTransitionHeaderState = (): void => {
   )
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
-    if (!nextStation) {
+    // 停車中は等前ながらfalse
+    if (!nextStation || arrived) {
       return false
     }
     // 最寄駅が通過駅の場合は無条件でtrue
@@ -189,7 +191,7 @@ const useTransitionHeaderState = (): void => {
           break
       }
 
-      if (approaching && !arrived) {
+      if (approaching) {
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
@@ -228,7 +230,6 @@ const useTransitionHeaderState = (): void => {
       }
     }, [
       approaching,
-      arrived,
       enabledLanguages,
       headerStateRef,
       isExtraLangAvailable,

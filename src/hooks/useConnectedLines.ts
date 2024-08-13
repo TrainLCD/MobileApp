@@ -3,12 +3,12 @@ import { useRecoilValue } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
+import { useCurrentLine } from './useCurrentLine'
 
 const useConnectedLines = (excludePassed = true): Line[] => {
   const { selectedBound, selectedDirection, stations } =
     useRecoilValue(stationState)
-  const currentLine = useRecoilValue(currentLineSelector)
+  const currentLine = useCurrentLine()
 
   const belongLines = useMemo(
     () =>

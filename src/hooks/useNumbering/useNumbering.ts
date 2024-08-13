@@ -3,9 +3,9 @@ import { useRecoilValue } from 'recoil'
 import { StationNumber, TrainTypeKind } from '../../../gen/proto/stationapi_pb'
 import { JOBAN_LINE_IDS } from '../../constants'
 import stationState from '../../store/atoms/station'
-import { currentLineSelector } from '../../store/selectors/currentLine'
-import { currentStationSelector } from '../../store/selectors/currentStation'
 import getIsPass from '../../utils/isPass'
+import { useCurrentLine } from '../useCurrentLine'
+import { useCurrentStation } from '../useCurrentStation'
 import useCurrentTrainType from '../useCurrentTrainType'
 import { useNextStation } from '../useNextStation'
 import useStationNumberIndexFunc from '../useStationNumberIndexFunc'
@@ -14,16 +14,14 @@ export const useNumbering = (
   priorCurrent?: boolean
 ): [StationNumber | undefined, string | undefined] => {
   const { arrived, selectedBound } = useRecoilValue(stationState)
-  const stoppedCurrentStation = useRecoilValue(
-    currentStationSelector({ skipPassStation: true })
-  )
+  const stoppedCurrentStation = useCurrentStation(true)
   const trainType = useCurrentTrainType()
 
   const [stationNumber, setStationNumber] = useState<StationNumber>()
   const [threeLetterCode, setThreeLetterCode] = useState<string>()
 
-  const currentLine = useRecoilValue(currentLineSelector)
-  const currentStation = useRecoilValue(currentStationSelector({}))
+  const currentLine = useCurrentLine()
+  const currentStation = useCurrentStation()
   const nextStation = useNextStation(true, currentLine?.station)
 
   const getStationNumberIndex = useStationNumberIndexFunc()

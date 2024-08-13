@@ -10,7 +10,7 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Path, Svg } from 'react-native-svg'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
@@ -21,13 +21,14 @@ import {
   ASYNC_STORAGE_KEYS,
   AvailableLanguage,
 } from '../constants'
+import { useThemeStore } from '../hooks/useThemeStore'
+import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
-import { isLEDSelector } from '../store/selectors/isLED'
 import { isJapanese, translate } from '../translation'
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    padding: 24,
     height: '100%',
   },
   itemRoot: {
@@ -68,7 +69,7 @@ const ListItem: React.FC<ListItemProps> = ({
   item,
   onPress,
 }: ListItemProps) => {
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const localizedAvailableLanguage = useMemo(() => {
     switch (item) {

@@ -20,16 +20,9 @@ export {
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
 } from './line'
-export {
-  DISTANCE_FILTER_BALANCED,
-  DISTANCE_FILTER_HIGH,
-  DISTANCE_FILTER_LOW,
-  LOCATION_TASK_NAME,
-} from './location'
+export { LOCATION_TASK_NAME } from './location'
 export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native'
 export { MARK_SHAPE, NUMBERING_ICON_SIZE, NumberingIconSize } from './numbering'
-export { POWER_SAVING_PRESETS, POWER_SETTING_VALUES } from './powerSaving'
-export type { PowerPresetValue, PowerSavingPreset } from './powerSaving'
 export { PREFECTURES_JA, PREFECTURES_ROMAN } from './province'
 export {
   alphabetOrNumberRegexp,

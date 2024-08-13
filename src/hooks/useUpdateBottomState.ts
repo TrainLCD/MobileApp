@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useTransition } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
+import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
-import { isLEDSelector } from '../store/selectors/isLED'
 import useIntervalEffect from './useIntervalEffect'
 import useShouldHideTypeChange from './useShouldHideTypeChange'
+import { useThemeStore } from './useThemeStore'
 import useTransferLines from './useTransferLines'
 import { useTypeWillChange } from './useTypeWillChange'
 import useValueRef from './useValueRef'
@@ -13,7 +14,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState)
   const { bottomTransitionInterval } = useRecoilValue(tuningState)
   const bottomStateRef = useValueRef(bottomState)
-  const isLEDTheme = useRecoilValue(isLEDSelector)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const isTypeWillChange = useTypeWillChange()
   const isTypeWillChangeRef = useValueRef(isTypeWillChange)

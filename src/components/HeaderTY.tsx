@@ -13,9 +13,10 @@ import Animated, {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
-import useAppState from '../hooks/useAppState'
 import { useBoundText } from '../hooks/useBoundText'
 import useConnectedLines from '../hooks/useConnectedLines'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
@@ -25,8 +26,6 @@ import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import tuningState from '../store/atoms/tuning'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -126,8 +125,8 @@ const HeaderTY: React.FC = () => {
   const { selectedBound, arrived } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
   const { headerTransitionDelay } = useRecoilValue(tuningState)
-  const station = useRecoilValue(currentStationSelector({}))
-  const currentLine = useRecoilValue(currentLineSelector)
+  const station = useCurrentStation()
+  const currentLine = useCurrentLine()
 
   const nextStation = useNextStation()
   const isLast = useIsNextLastStop()
@@ -171,8 +170,6 @@ const HeaderTY: React.FC = () => {
   const boundOpacityAnim = useSharedValue<number>(0)
   const bottomNameScaleYAnim = useSharedValue<number>(1)
 
-  const appState = useAppState()
-
   const prevBoundIsDifferent = useMemo(
     () => prevBoundText !== boundText,
     [boundText, prevBoundText]
@@ -180,11 +177,6 @@ const HeaderTY: React.FC = () => {
   const fadeIn = useCallback(
     (): Promise<void> =>
       new Promise((resolve) => {
-        if (appState !== 'active') {
-          resolve()
-          return
-        }
-
         if (!selectedBound) {
           if (prevHeaderState === headerState) {
             topNameScaleYAnim.value = 0
@@ -234,7 +226,6 @@ const HeaderTY: React.FC = () => {
         }
       }),
     [
-      appState,
       bottomNameScaleYAnim,
       boundOpacityAnim,
       headerState,

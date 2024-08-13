@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState } from 'recoil'
 import {
   Line,
   Station,
@@ -22,6 +22,7 @@ import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useStationList } from '../hooks/useStationList'
@@ -73,18 +74,22 @@ const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation()
   const [{ station, stations, wantedDestination }, setStationState] =
     useRecoilState(stationState)
-  const [
-    { trainType, fetchedTrainTypes, autoModeEnabled, fromBuilder },
-    setNavigation,
-  ] = useRecoilState(navigationState)
+  const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
+    useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
-  const setNavigationState = useSetRecoilState(navigationState)
 
-  const { loading, error, updateStations } = useStationList()
+  const { loading, error, mutateStations } = useStationList()
   const { isLoopLine, isMeijoLine } = useLoopLine()
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds()
+
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
+  const toggleAutoModeEnabled = useApplicationFlagStore(
+    (state) => state.toggleAutoModeEnabled
+  )
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -111,6 +116,7 @@ const SelectBoundScreen: React.FC = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
+      fetchedTrainTypes: [],
     }))
     navigation.navigate('SelectLine')
   }, [navigation, setLineState, setNavigationState, setStationState])
@@ -140,13 +146,6 @@ const SelectBoundScreen: React.FC = () => {
   const handleTrainTypeButtonPress = (): void => {
     navigation.navigate('TrainType')
   }
-
-  const handleAutoModeButtonPress = useCallback(async () => {
-    setNavigation((prev) => ({
-      ...prev,
-      autoModeEnabled: !prev.autoModeEnabled,
-    }))
-  }, [setNavigation])
 
   const handleAllStopsButtonPress = useCallback(() => {
     const stopStations = stations.filter(
@@ -183,10 +182,10 @@ const SelectBoundScreen: React.FC = () => {
         selectedBound: destination,
         selectedDirection: direction,
       }))
-      setNavigation((prev) => ({ ...prev, trainType: updatedTrainType }))
+      setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }))
       navigation.navigate('Main')
     },
-    [navigation, setNavigation, setStationState, stations, trainType]
+    [navigation, setNavigationState, setStationState, stations, trainType]
   )
 
   const normalLineDirectionText = useCallback(
@@ -325,7 +324,7 @@ const SelectBoundScreen: React.FC = () => {
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={updateStations}
+        onRetryPress={mutateStations}
         isFetching={loading}
       />
     )
@@ -399,9 +398,7 @@ const SelectBoundScreen: React.FC = () => {
               {translate('selectBoundSettings')}
             </Button>
           ) : null}
-          <Button onPress={handleAutoModeButtonPress}>
-            {autoModeButtonText}
-          </Button>
+          <Button onPress={toggleAutoModeEnabled}>{autoModeButtonText}</Button>
         </View>
       </View>
     </ScrollView>

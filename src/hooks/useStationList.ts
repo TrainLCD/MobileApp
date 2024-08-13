@@ -1,9 +1,7 @@
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import useSWR from 'swr'
-import useSWRMutation from 'swr/mutation'
 import {
   GetStationByLineIdRequest,
-  GetStationsByLineGroupIdRequest,
   GetTrainTypesByStationIdRequest,
   TrainDirection,
   TrainType,
@@ -15,7 +13,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 
-export const useStationList = (fetchAutomatically = true) => {
+export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState)
   const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState)
   const { selectedLine } = useRecoilValue(lineState)
@@ -23,16 +21,15 @@ export const useStationList = (fetchAutomatically = true) => {
   const {
     isLoading: isLoadingStations,
     error: loadingStationsError,
-    mutate: updateStations,
+    mutate: mutateStations,
   } = useSWR(
     [
       '/app.trainlcd.grpc/getStationsByLineId',
       selectedLine?.station?.id,
       selectedLine?.id,
-      fetchAutomatically,
     ],
-    async ([, stationId, lineId, shouldFetch]) => {
-      if (fromBuilder || !stationId || !lineId || !shouldFetch) {
+    async ([, stationId, lineId]) => {
+      if (fromBuilder || !stationId || !lineId) {
         return
       }
 
@@ -42,7 +39,6 @@ export const useStationList = (fetchAutomatically = true) => {
       setStationState((prev) => ({
         ...prev,
         stations: res.stations,
-        allStations: res.stations,
       }))
 
       return res.stations
@@ -52,7 +48,7 @@ export const useStationList = (fetchAutomatically = true) => {
   const { isLoading: isTrainTypesLoading, error: loadingTrainTypesError } =
     useSWR(
       [
-        '/app.trainlcd.grpc/getTrainTypesByStationId',
+        '/app.trainlcd.grpc/GetTrainTypesByStationId',
         selectedLine?.station?.id,
         selectedLine?.station?.hasTrainTypes,
       ],
@@ -101,46 +97,12 @@ export const useStationList = (fetchAutomatically = true) => {
           ...prev,
           fetchedTrainTypes: trainTypes,
         }))
-
-        return trainTypes
       }
     )
 
-  const {
-    isMutating: isLoadingTrainTypeStations,
-    trigger: fetchTrainTypeStations,
-    error: loadingTrainTypeStationsError,
-  } = useSWRMutation(
-    '/app.trainlcd.grpc/getStationsByLineGroupId',
-    async (_: string, { arg }: { arg: { lineGroupId: number } }) => {
-      if (!arg || fromBuilder) {
-        return
-      }
-
-      const { lineGroupId } = arg
-
-      const req = new GetStationsByLineGroupIdRequest({ lineGroupId })
-      const data = await grpcClient.getStationsByLineGroupId(req)
-
-      if (!data) {
-        return
-      }
-      setStationState((prev) => ({
-        ...prev,
-        stations: data.stations,
-        allStations: data.stations,
-      }))
-    }
-  )
-
   return {
-    updateStations,
-    fetchTrainTypeStations,
-    loading:
-      isLoadingStations || isTrainTypesLoading || isLoadingTrainTypeStations,
-    error:
-      loadingStationsError ||
-      loadingTrainTypesError ||
-      loadingTrainTypeStationsError,
+    mutateStations,
+    loading: isLoadingStations || isTrainTypesLoading,
+    error: loadingStationsError || loadingTrainTypesError,
   }
 }

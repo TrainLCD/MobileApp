@@ -1,11 +1,8 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import * as Application from 'expo-application'
 import React, { useMemo } from 'react'
 import { Dimensions, Platform, StyleSheet, View } from 'react-native'
-import { useRecoilValue } from 'recoil'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThreshold } from '../hooks/useThreshold'
-import powerSavingState from '../store/atoms/powerSaving'
 import Typography from './Typography'
 
 const { width: windowWidth } = Dimensions.get('window')
@@ -33,13 +30,10 @@ const styles = StyleSheet.create({
 })
 
 const DevOverlay: React.FC = () => {
-  const latitude = useLocationStore((state) => state.location?.coords.latitude)
-  const longitude = useLocationStore(
-    (state) => state.location?.coords.longitude
-  )
-  const speed = useLocationStore((state) => state.location?.coords.speed)
-  const accuracy = useLocationStore((state) => state.location?.coords.accuracy)
-  const { preset: powerSavingPreset } = useRecoilValue(powerSavingState)
+  const latitude = useLocationStore((state) => state?.coords.latitude)
+  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const speed = useLocationStore((state) => state?.coords.speed)
+  const accuracy = useLocationStore((state) => state?.coords.accuracy)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
@@ -77,10 +71,6 @@ const DevOverlay: React.FC = () => {
       <Typography style={styles.text}>
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
-
-      <Typography
-        style={styles.text}
-      >{`Power saving preset: ${powerSavingPreset}`}</Typography>
 
       <Typography style={styles.text}>Processing Mode: Device</Typography>
     </View>

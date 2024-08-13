@@ -4,6 +4,8 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { useBoundText } from '../hooks/useBoundText'
+import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import useCurrentTrainType from '../hooks/useCurrentTrainType'
 import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import { useLoopLine } from '../hooks/useLoopLine'
@@ -12,8 +14,6 @@ import { useNumbering } from '../hooks/useNumbering'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { currentLineSelector } from '../store/selectors/currentLine'
-import { currentStationSelector } from '../store/selectors/currentStation'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -102,8 +102,8 @@ type Props = {
 }
 
 const HeaderE235: React.FC<Props> = ({ isJO }) => {
-  const station = useRecoilValue(currentStationSelector({}))
-  const currentLine = useRecoilValue(currentLineSelector)
+  const station = useCurrentStation()
+  const currentLine = useCurrentLine()
   const nextStation = useNextStation()
 
   const [stateText, setStateText] = useState(translate('nowStoppingAt'))
