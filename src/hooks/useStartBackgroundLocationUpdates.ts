@@ -10,15 +10,22 @@ export const useStartBackgroundLocationUpdates = () => {
     if (autoModeEnabled) {
       return
     }
-    Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      accuracy: Location.Accuracy.High,
-      distanceInterval: 100,
-      foregroundService: {
-        notificationTitle: translate('bgAlertTitle'),
-        notificationBody: translate('bgAlertContent'),
-        killServiceOnDestroy: true,
-      },
-    })
+    // eslint-disable-next-line @typescript-eslint/no-extra-semi
+    ;(async () => {
+      if (
+        !(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
+      ) {
+        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 100,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        })
+      }
+    })()
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(console.debug)
