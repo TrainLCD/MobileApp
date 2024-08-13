@@ -115,6 +115,7 @@ android {
         }
     }
 
+    flavorDimensions "environment"
     productFlavors {
       dev {
         dimension "environment"
