@@ -200,6 +200,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
               onPress={() => onConfirmed(trainType)}
+              disabled={!stopStations.length}
             >
               確定
             </Button>
