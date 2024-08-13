@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Modal, Platform, StyleSheet, View } from 'react-native'
+import { Modal, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttons: {
-    marginTop: isTablet ? 12 : 6,
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
@@ -49,6 +48,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 })
+
+const SAFE_AREA_FALLBACK = 32
 
 export const TrainTypeInfoModal: React.FC<Props> = ({
   visible,
@@ -108,8 +109,6 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               : {
                   width: '100%',
                   height: '100%',
-                  paddingLeft: leftSafeArea,
-                  paddingRight: rightSafeArea,
                 },
           ]}
         >
@@ -119,45 +118,66 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               : `${selectedLine?.nameRoman} ${trainType.nameRoman}`}
           </Heading>
 
-          <View style={{ width: '100%', padding: isTablet ? 32 : 24 }}>
-            <Typography
-              style={{
-                fontSize: RFValue(14),
-                fontWeight: 'bold',
-                marginTop: isTablet ? 16 : 8,
-              }}
-            >
-              停車駅:
-            </Typography>
-            <Typography
-              style={{
-                fontSize: RFValue(11),
-                marginTop: isTablet ? 8 : 4,
-              }}
-            >
-              {stopStations.length
-                ? stopStations.map((s) => s.name).join('、')
-                : `${translate('loadingAPI')}...`}
-            </Typography>
-            <Typography
-              style={{
-                fontSize: RFValue(14),
-                fontWeight: 'bold',
-                marginTop: isTablet ? 16 : 8,
-              }}
-            >
-              各線の種別:
-            </Typography>
+          <View
+            style={{
+              width: '100%',
+            }}
+          >
             <View
               style={{
-                marginTop: isTablet ? 8 : 4,
+                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
+              }}
+            >
+              <Typography
+                style={{
+                  fontSize: RFValue(14),
+                  fontWeight: 'bold',
+                  marginTop: 8,
+                }}
+              >
+                停車駅:
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: RFValue(11),
+                  marginTop: 8,
+                  lineHeight: RFValue(14),
+                }}
+              >
+                {stopStations.length
+                  ? stopStations.map((s) => s.name).join('、')
+                  : `${translate('loadingAPI')}...`}
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: RFValue(14),
+                  fontWeight: 'bold',
+                  marginTop: 16,
+                }}
+              >
+                各線の種別:
+              </Typography>
+            </View>
+            <ScrollView
+              horizontal
+              style={{
+                marginTop: 8,
+                maxHeight: '35%',
+              }}
+              contentContainerStyle={{
+                flexWrap: 'wrap',
+                flexDirection: 'column',
+                rowGap: 4,
+                columnGap: 48,
+                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
             >
               {trainTypeLines.map((l) => (
                 <View
                   style={{
                     flexDirection: 'row',
-                    marginBottom: 2,
                     alignItems: 'center',
                   }}
                   key={l.id}
@@ -173,12 +193,12 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   />
                   <Typography
                     style={{
-                      width: '30%',
                       fontSize: RFValue(11),
-                      lineHeight: Platform.select({ android: RFValue(18) }),
+                      lineHeight: RFValue(14),
+                      flex: 1,
                     }}
                   >
-                    {l.nameShort}:
+                    {l.nameShort}:{' '}
                   </Typography>
                   <Typography
                     style={{
@@ -186,20 +206,21 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       textAlign: 'right',
                       fontSize: RFValue(11),
                       fontWeight: 'bold',
-                      lineHeight: Platform.select({ android: RFValue(18) }),
+                      lineHeight: RFValue(14),
                     }}
                   >
                     {l.trainType?.name ?? '普通/各駅停車'}
                   </Typography>
                 </View>
               ))}
-            </View>
+            </ScrollView>
           </View>
 
           <View style={styles.buttons}>
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
               onPress={() => onConfirmed(trainType)}
+              disabled={!stopStations.length}
             >
               確定
             </Button>

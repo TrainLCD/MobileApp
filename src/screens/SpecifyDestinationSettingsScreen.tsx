@@ -15,9 +15,13 @@ const styles = StyleSheet.create({
   root: {
     paddingHorizontal: 48,
     flex: 1,
-    paddingTop: 12,
+    paddingVertical: 12,
   },
-  listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
+  listContainer: {
+    flex: 1,
+    width: '65%',
+    alignSelf: 'center',
+  },
 })
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
