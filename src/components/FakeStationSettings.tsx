@@ -223,7 +223,7 @@ const FakeStationSettings: React.FC = () => {
           ) : (
             <StationList
               withoutTransfer
-              data={foundStations}
+              data={groupedStations}
               onSelect={handleStationPress}
             />
           )}
