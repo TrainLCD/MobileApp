@@ -10,7 +10,6 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     setLocation(data.locations[0])
   })
 }
-TaskManager.unregisterAllTasksAsync().catch(console.error)
 
 import 'fast-text-encoding'
 
@@ -18,6 +17,8 @@ import { registerRootComponent } from 'expo'
 import App from './src'
 import { LOCATION_TASK_NAME } from './src/constants'
 import { setLocation } from './src/hooks/useLocationStore'
+
+TaskManager.unregisterAllTasksAsync().catch(console.error)
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in the Expo client or in a native build,
