@@ -17,7 +17,7 @@ import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 48, paddingTop: 12 },
+  root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
   listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
 })
 
