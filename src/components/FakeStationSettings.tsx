@@ -41,7 +41,7 @@ import { StationList } from './StationList'
 const styles = StyleSheet.create({
   root: {
     paddingHorizontal: 48,
-    paddingTop: 12,
+    paddingVertical: 12,
     flex: 1,
     alignItems: 'center',
   },
@@ -204,7 +204,6 @@ const FakeStationSettings: React.FC = () => {
             {translate('searchFirstStationTitle')}
           </Heading>
           <TextInput
-            autoFocus
             placeholder={translate('searchByStationNamePlaceholder')}
             value={query}
             style={{
@@ -223,7 +222,7 @@ const FakeStationSettings: React.FC = () => {
           ) : (
             <StationList
               withoutTransfer
-              data={foundStations}
+              data={groupedStations}
               onSelect={handleStationPress}
             />
           )}
