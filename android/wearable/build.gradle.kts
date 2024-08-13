@@ -34,6 +34,8 @@ android {
   productFlavors {
     create("prod") {
       dimension = "environment"
+      versionCode = 80000011
+      versionName = "8.0.0"
     }
     create("dev") {
       dimension = "environment"
@@ -54,11 +56,6 @@ android {
   }
   composeOptions {
       kotlinCompilerExtensionVersion = "1.5.10"
-  }
-  packagingOptions {
-      resources {
-          excludes += "/META-INF/{AL2.0,LGPL2.1}"
-      }
   }
 }
 

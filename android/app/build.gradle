@@ -118,10 +118,11 @@ android {
         }
     }
 
-    flavorDimensions "environment"
     productFlavors {
       prod {
         dimension "environment"
+        versionCode 80000010
+        versionName "8.0.0"
       }
       dev {
         dimension "environment"
