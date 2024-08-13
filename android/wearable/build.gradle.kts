@@ -11,9 +11,6 @@ android {
       applicationId = "me.tinykitten.trainlcd"
       minSdk = 30
       targetSdk = 33
-      // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 80000221
-      versionName = "8.0.0"
       vectorDrawables {
           useSupportLibrary = true
       }
@@ -32,13 +29,18 @@ android {
 
   flavorDimensions.add("environment")
   productFlavors {
-    create("prod") {
-      dimension = "environment"
-    }
     create("dev") {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
+      // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
+      versionCode = 80000031
+      versionName = "8.0.0"
+    }
+    create("prod") {
+      dimension = "environment"
+      versionCode = 70700021
+      versionName = "7.7.0"
     }
   }
 
@@ -54,11 +56,6 @@ android {
   }
   composeOptions {
       kotlinCompilerExtensionVersion = "1.5.10"
-  }
-  packagingOptions {
-      resources {
-          excludes += "/META-INF/{AL2.0,LGPL2.1}"
-      }
   }
 }
 
