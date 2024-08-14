@@ -9,7 +9,7 @@ module.exports = function (api) {
     ],
     env: {
       production: {
-        // plugins: ['transform-remove-console'],
+        plugins: ['transform-remove-console'],
       },
     },
   }
