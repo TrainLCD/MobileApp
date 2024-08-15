@@ -17,7 +17,7 @@ export const useStartBackgroundLocationUpdates = () => {
       ) {
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
-          distanceInterval: 250,
+          distanceInterval: 500,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
