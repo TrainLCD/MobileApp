@@ -434,7 +434,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { selectedLine } = useRecoilValue(lineState)
-  const { arrived } = useRecoilValue(stationState)
+  const { arrived, approaching } = useRecoilValue(stationState)
 
   const isPassing = useIsPassing()
   const currentLine = useCurrentLine()
@@ -450,11 +450,11 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         key={s.groupId}
         station={s}
         stations={stations}
-        arrived={!isPassing && arrived}
+        arrived={!isPassing && !approaching && arrived}
         index={i}
       />
     ),
-    [arrived, isPassing, stations]
+    [approaching, arrived, isPassing, stations]
   )
 
   const emptyArray = useMemo(
