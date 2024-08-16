@@ -16,7 +16,11 @@ export const useStartBackgroundLocationUpdates = () => {
         !(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
       ) {
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
+          // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
+          accuracy: Location.Accuracy.BestForNavigation,
+          // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+          // OtherNavigationは必須
+          activityType: Location.ActivityType.OtherNavigation,
           distanceInterval: 250,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
