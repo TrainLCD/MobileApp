@@ -32,9 +32,10 @@ export const useSavedRoutes = () => {
     req.ids = route.stations.map((sta) => sta.id)
     const res = await grpcClient.getStationByIdList(req, {})
     const stations = res?.stations ?? []
-    return stations.map((sta, idx) => ({
+    return stations.map((sta) => ({
       ...sta,
-      stopCondition: route.stations[idx].stopCondition,
+      stopCondition: route.stations.find((rs) => rs.id === sta.id)
+        ?.stopCondition,
       trainType: route.trainType,
     }))
   }, [])
