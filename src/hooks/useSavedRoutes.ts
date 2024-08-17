@@ -1,4 +1,3 @@
-import firestore from '@react-native-firebase/firestore'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/dist/mutation'
 import { GetStationByIdListRequest } from '../../gen/proto/stationapi_pb'
@@ -14,15 +13,7 @@ export const useSavedRoutes = () => {
     isLoading: isRoutesLoading,
     error: fetchRoutesError,
   } = useSWR<SavedRoute[]>('/firestore/uploadedCommunityRoutes', async () => {
-    const routesSnapshot = await firestore()
-      .collection('uploadedCommunityRoutes')
-      .orderBy('createdAt', 'desc')
-      .get()
-
-    return routesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as SavedRoute[]
+    return []
   })
 
   const {

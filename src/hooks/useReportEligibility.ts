@@ -1,34 +1,12 @@
-import firestore from '@react-native-firebase/firestore'
 import { useCallback, useEffect, useState } from 'react'
-import EligibilityDocData, {
-  EligibilityType,
-} from '../models/FeedbackEligibility'
-import useCachedInitAnonymousUser from './useCachedAnonymousUser'
+import { EligibilityType } from '../models/FeedbackEligibility'
 
 const useReportEligibility = (): EligibilityType | undefined => {
   const [eligibility, setEligibility] = useState<EligibilityType>()
 
-  const user = useCachedInitAnonymousUser()
-
   const getEligibility = useCallback(async (): Promise<EligibilityType> => {
-    if (!user) {
-      return 'eligible'
-    }
-
-    const eligibilitiesDoc = await firestore()
-      .collection('eligibilities')
-      .doc(user.uid)
-      .get()
-
-    if (!eligibilitiesDoc.exists) {
-      return 'eligible'
-    }
-
-    const eligibilityDocData = eligibilitiesDoc.data() as
-      | EligibilityDocData
-      | undefined
-    return eligibilityDocData?.eligibilityType ?? 'eligible'
-  }, [user])
+    return 'banned'
+  }, [])
 
   useEffect(() => {
     const updateStateAsync = async () => {

@@ -1,5 +1,4 @@
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
-import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import * as Location from 'expo-location'
@@ -37,7 +36,6 @@ const App: React.FC = () => {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
-      await remoteConfig().fetchAndActivate()
       await setI18nConfig()
 
       const locationServicesEnabled = await Location.hasServicesEnabledAsync()
@@ -46,8 +44,7 @@ const App: React.FC = () => {
         setPermissionsGranted(false)
         return
       }
-      const { status } = await Location.getForegroundPermissionsAsync()
-      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
+      setPermissionsGranted(true)
       setReadyForLaunch(true)
     })()
   }, [])

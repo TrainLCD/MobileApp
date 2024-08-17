@@ -1,4 +1,3 @@
-import messaging from '@react-native-firebase/messaging'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
@@ -111,13 +110,6 @@ const PrivacyScreen: React.FC = () => {
 
   const handleApprovePress = useCallback(async () => {
     try {
-      const { locationServicesEnabled } =
-        await Location.getProviderStatusAsync()
-      if (!locationServicesEnabled) {
-        handleLocationDenied(true)
-        return
-      }
-
       const { status } = await Location.requestForegroundPermissionsAsync()
       await Notifications.requestPermissionsAsync()
       if (Platform.OS === 'android') {
@@ -125,7 +117,6 @@ const PrivacyScreen: React.FC = () => {
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         )
       }
-      await messaging().requestPermission()
 
       switch (status) {
         case Location.PermissionStatus.GRANTED:
