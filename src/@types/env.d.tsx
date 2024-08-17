@@ -7,4 +7,5 @@ declare module 'react-native-dotenv' {
   export const DEV_API_URL: string
   export const PRODUCTION_API_URL: string
   export const STAGING_API_URL: string
+  export const GOOGLE_GEOLOCATION_API_KEY: string
 }

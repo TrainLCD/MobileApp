@@ -67,15 +67,15 @@ const SelectLineScreen: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       if (station) return
-      const pos = await fetchCurrentLocation(true)
+      const pos = await fetchCurrentLocation()
       if (!pos) {
         return
       }
       useLocationStore.setState(pos)
       const stationFromAPI =
         (await fetchStationFunc({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
+          latitude: pos.location.lat,
+          longitude: pos.location.lng,
         })) ?? null
       setStationState((prev) => ({
         ...prev,
@@ -190,8 +190,8 @@ const SelectLineScreen: React.FC = () => {
 
     const station =
       (await fetchStationFunc({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
+        latitude: pos.location.lat,
+        longitude: pos.location.lng,
       })) ?? null
 
     setStationState((prev) => ({

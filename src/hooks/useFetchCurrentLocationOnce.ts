@@ -1,32 +1,64 @@
-import * as Location from 'expo-location'
-import { useCallback, useState } from 'react'
-import { useLocationStore } from './useLocationStore'
+import { Platform } from 'react-native'
+import { GOOGLE_GEOLOCATION_API_KEY } from 'react-native-dotenv'
+import WifiManager from 'react-native-wifi-reborn'
+import useSWRMutation from 'swr/dist/mutation'
+import { setLocation, useLocationStore } from './useLocationStore'
+
+type WifiAccessPoints = {
+  macAddress: string
+  signalStrength: number
+  age: number
+  channel: number
+  signalToNoiseRatio: number
+}
 
 export const useFetchCurrentLocationOnce = () => {
   const lastKnownLocation = useLocationStore()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
 
-  const fetchCurrentLocation = useCallback(
-    async (useLastKnown = false) => {
-      if (useLastKnown && lastKnownLocation) {
-        return lastKnownLocation
-      }
-      setLoading(true)
-      try {
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        })
-        setLoading(false)
-        return pos
-      } catch (err) {
-        setLoading(false)
-        setError(err as Error)
-        return Promise.reject(err)
-      }
-    },
-    [lastKnownLocation]
-  )
+  const {
+    isMutating: loading,
+    error,
+    trigger: fetchCurrentLocation,
+  } = useSWRMutation(['/geolocation/v1/geolocate'], async () => {
+    if (Platform.OS !== 'android' || lastKnownLocation) {
+      return null
+    }
+
+    const wifiList = await WifiManager.loadWifiList()
+    const wifiAccessPoints = wifiList.map<WifiAccessPoints>((ent) => ({
+      macAddress: ent.BSSID,
+      signalStrength: ent.level,
+      age: ent.timestamp,
+      channel: ent.frequency,
+      signalToNoiseRatio: 0,
+    }))
+
+    const url = `https://www.googleapis.com/geolocation/v1/geolocate?key=${GOOGLE_GEOLOCATION_API_KEY}`
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        wifiAccessPoints,
+      }),
+    })
+    const json = await res.json()
+    const { accuracy } = json
+    const { lat: latitude, lng: longitude } = json.location
+
+    setLocation({
+      coords: {
+        latitude,
+        longitude,
+        altitude: null,
+        accuracy,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: 0,
+    })
+
+    return json
+  })
 
   return { fetchCurrentLocation, loading, error }
 }
