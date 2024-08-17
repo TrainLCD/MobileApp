@@ -72,9 +72,7 @@ const DevOverlay: React.FC = () => {
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
 
-      <Typography style={styles.text}>
-        Processing Mode: Google Geolocation
-      </Typography>
+      <Typography style={styles.text}>Processing Mode: Google API</Typography>
     </View>
   )
 }
