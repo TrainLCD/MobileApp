@@ -127,8 +127,8 @@ android {
       }
       prod {
         dimension "environment"
-        versionCode 70701000
-        versionName "7.7.1"
+        versionCode 70702000
+        versionName "7.7.2"
       }
     }
 }// Apply static values from `gradle.properties` to the `android.packagingOptions`
