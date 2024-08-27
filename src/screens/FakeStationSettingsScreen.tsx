@@ -25,6 +25,9 @@ import {
   GetStationsByNameRequest,
   Station,
 } from '../../gen/proto/stationapi_pb'
+import FAB from '../components/FAB'
+import Heading from '../components/Heading'
+import { StationList } from '../components/StationList'
 import { FONTS } from '../constants'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThemeStore } from '../hooks/useThemeStore'
@@ -34,9 +37,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
-import FAB from './FAB'
-import Heading from './Heading'
-import { StationList } from './StationList'
 
 const styles = StyleSheet.create({
   root: {
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const FakeStationSettings: React.FC = () => {
+const FakeStationSettingsScreen: React.FC = () => {
   const [query, setQuery] = useState('')
   const navigation = useNavigation()
   const [{ station: stationFromState }, setStationState] =
@@ -235,4 +235,4 @@ const FakeStationSettings: React.FC = () => {
   )
 }
 
-export default React.memo(FakeStationSettings)
+export default React.memo(FakeStationSettingsScreen)

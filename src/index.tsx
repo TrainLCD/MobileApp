@@ -8,10 +8,10 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
-import FakeStationSettings from './components/FakeStationSettings'
 import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
+import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen'
 import PrivacyScreen from './screens/Privacy'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
@@ -111,7 +111,7 @@ const App: React.FC = () => {
               <Stack.Screen
                 options={options}
                 name="FakeStation"
-                component={FakeStationSettings}
+                component={FakeStationSettingsScreen}
               />
 
               <Stack.Screen
@@ -123,6 +123,12 @@ const App: React.FC = () => {
               <Stack.Screen
                 options={options}
                 name="SavedRoutes"
+                component={SavedRoutesScreen}
+              />
+
+              <Stack.Screen
+                options={options}
+                name="RouteSearch"
                 component={SavedRoutesScreen}
               />
 
