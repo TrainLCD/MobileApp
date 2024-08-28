@@ -13,6 +13,7 @@ import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen'
 import PrivacyScreen from './screens/Privacy'
+import RouteSearchScreen from './screens/RouteSearchScreen'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
@@ -129,7 +130,7 @@ const App: React.FC = () => {
               <Stack.Screen
                 options={options}
                 name="RouteSearch"
-                component={SavedRoutesScreen}
+                component={RouteSearchScreen}
               />
 
               <Stack.Screen

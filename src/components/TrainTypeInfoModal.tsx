@@ -55,6 +55,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
   visible,
   trainType,
   stations,
+  loading,
   onClose,
   onConfirmed,
 }: Props) => {
@@ -136,7 +137,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   marginTop: 8,
                 }}
               >
-                停車駅:
+                {translate('allStops')}:
               </Typography>
               <Typography
                 style={{
@@ -147,7 +148,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               >
                 {stopStations.length
                   ? stopStations.map((s) => s.name).join('、')
-                  : `${translate('loadingAPI')}...`}
+                  : ''}
+                {loading ? `${translate('loadingAPI')}...` : ''}
               </Typography>
               <Typography
                 style={{
@@ -156,6 +158,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   marginTop: 16,
                 }}
               >
+                {/* FIXME: translate */}
                 各線の種別:
               </Typography>
             </View>
@@ -222,10 +225,10 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               onPress={() => onConfirmed(trainType)}
               disabled={!stopStations.length}
             >
-              確定
+              確定{/* FIXME: translate */}
             </Button>
             <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-              キャンセル
+              {translate('cancel')}
             </Button>
           </View>
         </View>
