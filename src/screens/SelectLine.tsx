@@ -224,6 +224,10 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
+  const navigateToRouteSearchScreen = useCallback(() => {
+    navigation.navigate('RouteSearch')
+  }, [navigation])
+
   if (nearbyStationFetchError) {
     return (
       <ErrorScreen
@@ -274,12 +278,20 @@ const SelectLineScreen: React.FC = () => {
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
         <View style={styles.buttons}>
           {isInternetAvailable ? (
-            <Button
-              style={styles.button}
-              onPress={navigateToFakeStationSettingsScreen}
-            >
-              {translate('searchFirstStationTitle')}
-            </Button>
+            <>
+              <Button
+                style={styles.button}
+                onPress={navigateToFakeStationSettingsScreen}
+              >
+                {translate('searchFirstStationTitle')}
+              </Button>
+              <Button
+                style={styles.button}
+                onPress={navigateToRouteSearchScreen}
+              >
+                {translate('routeSearchTitle')}
+              </Button>
+            </>
           ) : null}
           {isInternetAvailable && isDevApp && (
             <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState, useSetRecoilState } from 'recoil'
+import { useRecoilState } from 'recoil'
 import useSWR from 'swr'
 import {
   GetStationsByLineGroupIdRequest,
@@ -29,12 +29,13 @@ const TrainTypeSettings: React.FC = () => {
 
   const [{ fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState)
-  const setStationState = useSetRecoilState(stationState)
+  const [{ stations: stationsFromState }, setStationState] =
+    useRecoilState(stationState)
 
   const navigation = useNavigation()
 
   const {
-    data: trainTypeStations = [],
+    data: trainTypeStations,
     isLoading: isTrainTypeStationsLoading,
     error: trainTypeStationsError,
   } = useSWR(
@@ -46,6 +47,11 @@ const TrainTypeSettings: React.FC = () => {
       const res = await grpcClient.getStationsByLineGroupId(req)
       return res.stations
     }
+  )
+
+  const stations = useMemo(
+    () => (trainTypeStations?.length ? trainTypeStations : stationsFromState),
+    [stationsFromState, trainTypeStations]
   )
 
   const onPressBack = useCallback(async () => {
@@ -105,7 +111,7 @@ const TrainTypeSettings: React.FC = () => {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: null,
-        stations: trainTypeStations,
+        stations,
       }))
 
       setIsTrainTypeModalVisible(false)
@@ -119,7 +125,7 @@ const TrainTypeSettings: React.FC = () => {
       navigation,
       setNavigationState,
       setStationState,
-      trainTypeStations,
+      stations,
     ]
   )
 
@@ -137,7 +143,7 @@ const TrainTypeSettings: React.FC = () => {
         <TrainTypeInfoModal
           visible={isTrainTypeModalVisible}
           trainType={selectedTrainType}
-          stations={trainTypeStations}
+          stations={stations}
           loading={isTrainTypeStationsLoading}
           error={trainTypeStationsError}
           onConfirmed={handleTrainTypeConfirmed}
