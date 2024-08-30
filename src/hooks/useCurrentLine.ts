@@ -22,5 +22,6 @@ export const useCurrentLine = () => {
     [currentStation?.groupId, selectedDirection, selectedLine?.id, stations]
   )
 
-  return actualCurrentStation?.line
+  // NOTE: selectedLineがnullishの時はcurrentLineもnullishであってほしい
+  return selectedLine && actualCurrentStation?.line
 }

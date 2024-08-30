@@ -18,7 +18,7 @@ type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING'
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO'
 
 const useTransitionHeaderState = (): void => {
-  const { arrived, approaching } = useRecoilValue(stationState)
+  const { arrived, approaching, selectedBound } = useRecoilValue(stationState)
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const [
     {
@@ -93,6 +93,10 @@ const useTransitionHeaderState = (): void => {
 
   useIntervalEffect(
     useCallback(() => {
+      if (!selectedBound) {
+        return
+      }
+
       const currentHeaderState = headerStateRef.current.split(
         '_'
       )[0] as HeaderState
@@ -235,6 +239,7 @@ const useTransitionHeaderState = (): void => {
       isExtraLangAvailable,
       isPassing,
       nextStation,
+      selectedBound,
       setNavigation,
       showNextExpression,
     ]),

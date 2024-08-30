@@ -356,7 +356,7 @@ exports.tts = functions
     }
 
     const isPremium = data.premium;
-    const jaVoiceName = isPremium ? "ja-JP-Neural2-B" : "ja-JP-Standard-B";
+    const jaVoiceName = "ja-JP-Neural2-B";
     const enVoiceName = isPremium ? "en-US-Studio-O" : "en-US-Standard-G";
 
     const voicesCollection = firestore
@@ -400,7 +400,6 @@ exports.tts = functions
       },
       audioConfig: {
         audioEncoding: "MP3",
-        speakingRate: isPremium ? 1.1 : 1,
       },
     };
 
@@ -414,7 +413,6 @@ exports.tts = functions
       },
       audioConfig: {
         audioEncoding: "MP3",
-        speakingRate: isPremium ? 1.1 : 1,
       },
     };
 
