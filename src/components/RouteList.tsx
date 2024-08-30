@@ -32,46 +32,31 @@ const ItemCell = ({
   const currentStation = useCurrentStation()
 
   const lineNameTitle = useMemo(() => {
+    const trainType = item.stops.find(
+      (stop) => stop.groupId === Number(currentStation?.groupId)
+    )?.trainType
+
     if (!isJapanese) {
       const lineName = item.stops.find(
         (s) => s.groupId === currentStation?.groupId
       )?.line?.nameRoman
-      const typeName =
-        item.stops.find(
-          (stop) => stop.groupId === Number(currentStation?.groupId)
-        )?.trainType?.nameRoman ?? 'Local'
+      const typeName = trainType?.nameRoman ?? 'Local'
 
       return `${lineName} ${typeName}`
     }
     const lineName = item.stops.find(
       (s) => s.groupId === currentStation?.groupId
     )?.line?.nameShort
-    const typeName =
-      item.stops.find(
-        (stop) => stop.groupId === Number(currentStation?.groupId)
-      )?.trainType?.name ?? '普通または各駅停車'
+    const typeName = trainType?.name ?? '普通または各駅停車'
 
     return `${lineName} ${typeName}`
   }, [currentStation?.groupId, item.stops])
 
-  const isAllSameType = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          item.stops.flatMap((r) => r.lines).map((l) => l.trainType?.typeId)
-        )
-      ).length === 1,
-    [item.stops]
-  )
-
   const bottomText = useMemo(() => {
-    const stopsLabel = `${item.stops[0]?.name}から${
+    return `${item.stops[0]?.name}から${
       item.stops[item.stops.length - 1]?.name
     }まで`
-    if (!isAllSameType) {
-      return `${isJapanese ? `種別変更あり ${stopsLabel}` : ''}`
-    }
-  }, [isAllSameType, item.stops])
+  }, [item.stops])
 
   return (
     <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>

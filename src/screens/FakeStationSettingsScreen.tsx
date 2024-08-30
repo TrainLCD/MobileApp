@@ -29,6 +29,7 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { StationList } from '../components/StationList'
 import { FONTS } from '../constants'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { grpcClient } from '../lib/grpc'
@@ -76,6 +77,8 @@ const FakeStationSettingsScreen: React.FC = () => {
   const latitude = useLocationStore((state) => state?.coords.latitude)
   const longitude = useLocationStore((state) => state?.coords.longitude)
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+
+  const currentStation = useCurrentStation()
 
   const {
     data: byCoordsData,
@@ -148,9 +151,13 @@ const FakeStationSettingsScreen: React.FC = () => {
     [byCoordsData, byNameData]
   )
 
+  // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
-    () => groupStations(foundStations),
-    [foundStations]
+    () =>
+      groupStations(foundStations).filter(
+        (sta) => sta.groupId !== currentStation?.groupId
+      ),
+    [currentStation?.groupId, foundStations]
   )
 
   const handleStationPress = useCallback(

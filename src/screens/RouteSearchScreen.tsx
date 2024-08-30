@@ -23,6 +23,9 @@ import {
   GetStationsByNameRequest,
   Route,
   Station,
+  TrainDirection,
+  TrainType,
+  TrainTypeKind,
 } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -102,6 +105,7 @@ const RouteSearchScreen = () => {
       const req = new GetStationsByNameRequest({
         stationName: trimmedQuery,
         limit: Number(limit),
+        fromStationGroupId: currentStation?.groupId,
       })
       const res = await grpcClient.getStationsByName(req)
       return res.stations
@@ -147,9 +151,13 @@ const RouteSearchScreen = () => {
 
   const foundStations = useMemo(() => byNameData ?? [], [byNameData])
 
+  // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
-    () => groupStations(foundStations),
-    [foundStations]
+    () =>
+      groupStations(foundStations).filter(
+        (sta) => sta.groupId != currentStation?.groupId
+      ),
+    [currentStation?.groupId, foundStations]
   )
 
   const handleStationPress = useCallback(
@@ -195,28 +203,66 @@ const RouteSearchScreen = () => {
       const direction =
         matchedStationIndex < boundStationIndex ? 'INBOUND' : 'OUTBOUND'
 
+      const stops =
+        direction === 'INBOUND' ? route.stops : route.stops.slice().reverse()
+      const currentStationIndex = stops.findIndex(
+        (stop) => stop.groupId === currentStation?.groupId
+      )
+      const stopsAfterCurrentStation = stops.slice(currentStationIndex)
+
       if (line) {
         setStationState((prev) => ({
           ...prev,
-          stations: route.stops,
-          selectedBound: selectedStation,
-          selectedDirection: direction,
+          stations: stopsAfterCurrentStation,
         }))
+
+        const trainTypes =
+          routesData
+            ?.flatMap((route) =>
+              route.stops.find(
+                (stop) => stop.groupId === matchedStation.groupId
+              )
+            )
+            .map((stop) => {
+              if (stop?.trainType) {
+                return stop?.trainType
+              }
+
+              return new TrainType({
+                id: 0,
+                typeId: 0,
+                groupId: 0,
+                name: '普通/各駅停車',
+                nameKatakana: '',
+                nameRoman: 'Local',
+                nameChinese: '慢车/每站停车',
+                nameKorean: '보통/각역정차',
+                color: '',
+                lines: stop?.lines,
+                direction: TrainDirection.Both,
+                kind: TrainTypeKind.Default,
+              })
+            }) ?? []
+
         setNavigationState((prev) => ({
           ...prev,
           trainType: matchedStation.trainType ?? null,
+          fetchedTrainTypes: trainTypes,
+          leftStations: [],
+          fromBuilder: true,
         }))
         setLineState((prev) => ({
           ...prev,
           selectedLine: line,
         }))
-        navigation.navigate('Main')
+        navigation.navigate('SelectBound')
       }
     },
     [
       currentStation?.groupId,
       navigation,
-      selectedStation,
+      routesData,
+      selectedStation?.groupId,
       setLineState,
       setNavigationState,
       setStationState,
