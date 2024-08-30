@@ -70,9 +70,7 @@ const ItemCell = ({
     return (
       <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
         <Typography style={styles.stationNameText}>
-          {isJapanese
-            ? item.name
-            : `${currentLine?.nameRoman} ${item.nameRoman}`}
+          {isJapanese ? item.name : item.nameRoman}
         </Typography>
         <Typography style={styles.descriptionText}>
           {isJapanese ? '種別変更なし' : ''}{' '}
