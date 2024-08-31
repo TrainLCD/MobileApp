@@ -137,9 +137,16 @@ const RouteSearchScreen = () => {
   const withoutPassStationRoutes = useMemo(
     () =>
       routesData?.filter((route) =>
-        route.stops.every((stop) => !getIsPass(stop, true))
+        // NOTE: 両方の駅どちらも停車する種別を探す
+        route.stops
+          .filter(
+            (stop) =>
+              stop.groupId === currentStation?.groupId ||
+              stop.groupId === selectedStation?.groupId
+          )
+          .every((stop) => !getIsPass(stop, true))
       ) ?? [],
-    [routesData]
+    [currentStation?.groupId, routesData, selectedStation?.groupId]
   )
 
   const onPressBack = useCallback(() => {
@@ -226,13 +233,10 @@ const RouteSearchScreen = () => {
         }))
 
         const trainTypes =
-          routesData
-            ?.filter((route) =>
-              route.stops.every((stop) => !getIsPass(stop, true))
-            )
-            ?.flatMap((route) =>
+          withoutPassStationRoutes
+            ?.map((route) =>
               route.stops.find(
-                (stop) => stop.groupId === matchedStation.groupId
+                (stop) => stop.groupId === currentStation?.groupId
               )
             )
             .map((stop) => {
