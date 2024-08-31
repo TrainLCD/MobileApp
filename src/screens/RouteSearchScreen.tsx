@@ -41,6 +41,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
+import getIsPass from '../utils/isPass'
 
 const styles = StyleSheet.create({
   root: {
@@ -133,6 +134,14 @@ const RouteSearchScreen = () => {
     }
   )
 
+  const withoutPassStationRoutes = useMemo(
+    () =>
+      routesData?.filter((route) =>
+        route.stops.every((stop) => !getIsPass(stop, true))
+      ) ?? [],
+    [routesData]
+  )
+
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack()
@@ -218,6 +227,9 @@ const RouteSearchScreen = () => {
 
         const trainTypes =
           routesData
+            ?.filter((route) =>
+              route.stops.every((stop) => !getIsPass(stop, true))
+            )
             ?.flatMap((route) =>
               route.stops.find(
                 (stop) => stop.groupId === matchedStation.groupId
@@ -313,7 +325,7 @@ const RouteSearchScreen = () => {
       {routesData?.length ? (
         <RouteListModal
           visible={isRouteListModalVisible}
-          routes={routesData}
+          routes={withoutPassStationRoutes}
           loading={isRoutesLoading}
           error={fetchRoutesError}
           onClose={() => setIsRouteListModalVisible(false)}
