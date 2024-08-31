@@ -1,7 +1,10 @@
 import { Station, StopCondition } from '../../gen/proto/stationapi_pb'
 import { getIsHoliday } from './isHoliday'
 
-const getIsPass = (station: Station | null): boolean => {
+const getIsPass = (
+  station: Station | null,
+  ignoreDayCondition?: boolean
+): boolean => {
   if (!station) {
     return false
   }
@@ -15,9 +18,9 @@ const getIsPass = (station: Station | null): boolean => {
       return true
     case StopCondition.Weekday:
       // 若干分かりづらい感じはするけど休日に飛ばすという意味
-      return getIsHoliday()
+      return ignoreDayCondition || getIsHoliday()
     case StopCondition.Holiday:
-      return !getIsHoliday()
+      return ignoreDayCondition || !getIsHoliday()
     default:
       return false
   }
