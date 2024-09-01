@@ -1,5 +1,5 @@
 import React from 'react'
-import { Modal, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Route } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
@@ -40,6 +40,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 12,
   },
+  loading: { marginTop: 12 },
 })
 
 const SAFE_AREA_FALLBACK = 32
@@ -100,9 +101,11 @@ export const RouteListModal: React.FC<Props> = ({
             >
               <Heading>{translate('routeSearchTitle')}</Heading>
             </View>
-            {routes.length ? (
+            {loading ? (
+              <ActivityIndicator style={styles.loading} />
+            ) : (
               <RouteList data={routes} onSelect={onSelect} />
-            ) : null}
+            )}
           </View>
         </View>
         <FAB onPress={onClose} icon="close" />
