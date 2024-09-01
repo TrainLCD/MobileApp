@@ -277,11 +277,11 @@ const RouteSearchScreen = () => {
     [
       currentStation?.groupId,
       navigation,
-      routesData,
       selectedStation?.groupId,
       setLineState,
       setNavigationState,
       setStationState,
+      withoutPassStationRoutes,
     ]
   )
 
@@ -326,16 +326,15 @@ const RouteSearchScreen = () => {
         </KeyboardAvoidingView>
       </View>
       <FAB onPress={onPressBack} icon="close" />
-      {routesData?.length ? (
-        <RouteListModal
-          visible={isRouteListModalVisible}
-          routes={withoutPassStationRoutes}
-          loading={isRoutesLoading}
-          error={fetchRoutesError}
-          onClose={() => setIsRouteListModalVisible(false)}
-          onSelect={handleSelect}
-        />
-      ) : null}
+
+      <RouteListModal
+        visible={isRouteListModalVisible}
+        routes={withoutPassStationRoutes}
+        loading={isRoutesLoading}
+        error={fetchRoutesError}
+        onClose={() => setIsRouteListModalVisible(false)}
+        onSelect={handleSelect}
+      />
     </>
   )
 }
