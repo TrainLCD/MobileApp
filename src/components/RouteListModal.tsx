@@ -1,7 +1,7 @@
 import React from 'react'
 import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { TrainType } from '../../gen/proto/stationapi_pb'
+import { Route } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
@@ -9,15 +9,15 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import FAB from './FAB'
 import Heading from './Heading'
-import { TrainTypeList } from './TrainTypeList'
+import { RouteList } from './RouteList'
 
 type Props = {
-  trainTypes: TrainType[]
+  routes: Route[]
   visible: boolean
   loading: boolean
   error: Error
   onClose: () => void
-  onSelect: (trainType: TrainType) => void
+  onSelect: (route: Route) => void
 }
 
 const styles = StyleSheet.create({
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
 const SAFE_AREA_FALLBACK = 32
 
 export const RouteListModal: React.FC<Props> = ({
-  trainTypes,
+  routes,
   visible,
   loading,
   onClose,
@@ -105,7 +105,7 @@ export const RouteListModal: React.FC<Props> = ({
               {loading ? (
                 <ActivityIndicator size="large" style={styles.loading} />
               ) : (
-                <TrainTypeList data={trainTypes} onSelect={onSelect} />
+                <RouteList data={routes} onSelect={onSelect} />
               )}
             </View>
           </View>

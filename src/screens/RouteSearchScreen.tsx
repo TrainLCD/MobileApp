@@ -21,8 +21,8 @@ import useSWRMutation from 'swr/mutation'
 import {
   GetRouteRequest,
   GetStationsByNameRequest,
+  Route,
   Station,
-  TrainType,
 } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -30,7 +30,6 @@ import { RouteListModal } from '../components/RouteListModal'
 import { StationList } from '../components/StationList'
 import { FONTS } from '../constants'
 import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useStationList } from '../hooks/useStationList'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useTrainTypeStations } from '../hooks/useTrainTypeStations'
 import { grpcClient } from '../lib/grpc'
@@ -85,20 +84,6 @@ const RouteSearchScreen = () => {
   const currentStation = useCurrentStation()
   const { fetchStations: fetchTrainTypeFromTrainTypeId } =
     useTrainTypeStations()
-  const { trainTypes, fetchTrainTypes } = useStationList()
-
-  const lineIds = useMemo(
-    () => currentStation?.lines.map((l) => l.id),
-    [currentStation?.lines]
-  )
-
-  const reachableTrainTypes = useMemo(
-    () =>
-      trainTypes.filter((tt) =>
-        lineIds?.some((lid) => tt.lines.some((l) => l.id === lid))
-      ),
-    [lineIds, trainTypes]
-  )
 
   const {
     data: byNameData,
@@ -127,7 +112,11 @@ const RouteSearchScreen = () => {
     }
   )
 
-  const { isLoading: isRoutesLoading, error: fetchRoutesError } = useSWR(
+  const {
+    data: routes,
+    isLoading: isRoutesLoading,
+    error: fetchRoutesError,
+  } = useSWR(
     ['/app.trainlcd.grpc/getRoutes', selectedStation?.groupId],
     async ([, toStationGroupId]) => {
       if (!currentStation || !toStationGroupId) {
@@ -180,16 +169,13 @@ const RouteSearchScreen = () => {
       setSelectedStation(stationFromSearch)
 
       if (stationFromSearch.hasTrainTypes) {
-        await fetchTrainTypes({
-          stationId: stationFromSearch.id,
-        })
         setIsRouteListModalVisible(true)
         return
       }
 
       navigation.navigate('SelectBound')
     },
-    [fetchTrainTypes, navigation, setLineState]
+    [navigation, setLineState]
   )
 
   const onKeyPress = useCallback(
@@ -209,8 +195,12 @@ const RouteSearchScreen = () => {
   )
 
   const handleSelect = useCallback(
-    async (trainType: TrainType) => {
-      if (!trainType.id) {
+    async (route: Route) => {
+      const trainType = route.stops.find(
+        (s) => s.groupId === currentStation?.groupId
+      )?.trainType
+
+      if (!trainType?.id) {
         setNavigationState((prev) => ({ ...prev, trainType: null }))
         navigation.navigate('SelectBound')
         return
@@ -225,6 +215,7 @@ const RouteSearchScreen = () => {
       navigation.navigate('SelectBound')
     },
     [
+      currentStation?.groupId,
       fetchTrainTypeFromTrainTypeId,
       navigation,
       setNavigationState,
@@ -275,7 +266,7 @@ const RouteSearchScreen = () => {
       <FAB onPress={onPressBack} icon="close" />
 
       <RouteListModal
-        trainTypes={reachableTrainTypes}
+        routes={routes ?? []}
         visible={isRouteListModalVisible}
         loading={isRoutesLoading}
         error={fetchRoutesError}

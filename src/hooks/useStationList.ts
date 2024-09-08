@@ -68,7 +68,7 @@ export const useStationList = () => {
       }
 
       const req = new GetTrainTypesByStationIdRequest({ stationId })
-      const res = await grpcClient.getTrainTypesByStationId(req, {})
+      const res = await grpcClient.getTrainTypesByStationId(req)
 
       const trainTypes = res.trainTypes
 
