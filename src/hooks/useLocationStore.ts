@@ -7,12 +7,3 @@ export const useLocationStore = create<Location.LocationObject | null>(
 
 export const setLocation = (location: Location.LocationObject) =>
   useLocationStore.setState(location)
-
-export const setLatLon = (latitude: number, longitude: number) =>
-  useLocationStore.setState((prev) => {
-    if (!prev) {
-      return null
-    }
-
-    return { ...prev, coords: { ...prev.coords, latitude, longitude } }
-  })
