@@ -87,6 +87,14 @@ const RouteSearchScreen = () => {
     useTrainTypeStations()
   const { trainTypes, fetchTrainTypes } = useStationList()
 
+  const reachableTrainTypes = useMemo(
+    () =>
+      trainTypes.filter((tt) =>
+        tt.lines.some((l) => l.id === currentStation?.line?.id)
+      ),
+    [currentStation?.line?.id, trainTypes]
+  )
+
   const {
     data: byNameData,
     isMutating: isByNameLoading,
@@ -262,7 +270,7 @@ const RouteSearchScreen = () => {
       <FAB onPress={onPressBack} icon="close" />
 
       <RouteListModal
-        trainTypes={trainTypes}
+        trainTypes={reachableTrainTypes}
         visible={isRouteListModalVisible}
         loading={isRoutesLoading}
         error={fetchRoutesError}

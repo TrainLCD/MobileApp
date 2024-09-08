@@ -30,7 +30,7 @@ import Heading from '../components/Heading'
 import { StationList } from '../components/StationList'
 import { FONTS } from '../constants'
 import { useCurrentStation } from '../hooks/useCurrentStation'
-import { setLatLon, useLocationStore } from '../hooks/useLocationStore'
+import { useLocationStore } from '../hooks/useLocationStore'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { grpcClient } from '../lib/grpc'
 import { APP_THEME } from '../models/Theme'
@@ -174,7 +174,6 @@ const FakeStationSettingsScreen: React.FC = () => {
         ...prev,
         stationForHeader: station,
       }))
-      setLatLon(station.latitude, station.longitude)
       onPressBack()
     },
     [foundStations, onPressBack, setNavigationState, setStationState]
