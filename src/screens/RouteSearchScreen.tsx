@@ -87,12 +87,17 @@ const RouteSearchScreen = () => {
     useTrainTypeStations()
   const { trainTypes, fetchTrainTypes } = useStationList()
 
+  const lineIds = useMemo(
+    () => currentStation?.lines.map((l) => l.id),
+    [currentStation?.lines]
+  )
+
   const reachableTrainTypes = useMemo(
     () =>
       trainTypes.filter((tt) =>
-        tt.lines.some((l) => l.id === currentStation?.line?.id)
+        lineIds?.some((lid) => tt.lines.some((l) => l.id === lid))
       ),
-    [currentStation?.line?.id, trainTypes]
+    [lineIds, trainTypes]
   )
 
   const {
