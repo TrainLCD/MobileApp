@@ -21,11 +21,8 @@ import useSWRMutation from 'swr/mutation'
 import {
   GetRouteRequest,
   GetStationsByNameRequest,
-  Route,
   Station,
-  TrainDirection,
   TrainType,
-  TrainTypeKind,
 } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
@@ -33,7 +30,9 @@ import { RouteListModal } from '../components/RouteListModal'
 import { StationList } from '../components/StationList'
 import { FONTS } from '../constants'
 import { useCurrentStation } from '../hooks/useCurrentStation'
+import { useStationList } from '../hooks/useStationList'
 import { useThemeStore } from '../hooks/useThemeStore'
+import { useTrainTypeStations } from '../hooks/useTrainTypeStations'
 import { grpcClient } from '../lib/grpc'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
@@ -41,7 +40,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
-import getIsPass from '../utils/isPass'
 
 const styles = StyleSheet.create({
   root: {
@@ -85,6 +83,9 @@ const RouteSearchScreen = () => {
   const setNavigationState = useSetRecoilState(navigationState)
 
   const currentStation = useCurrentStation()
+  const { fetchStations: fetchTrainTypeFromTrainTypeId } =
+    useTrainTypeStations()
+  const { trainTypes, fetchTrainTypes } = useStationList()
 
   const {
     data: byNameData,
@@ -113,14 +114,10 @@ const RouteSearchScreen = () => {
     }
   )
 
-  const {
-    data: routesData,
-    isLoading: isRoutesLoading,
-    error: fetchRoutesError,
-  } = useSWR(
+  const { isLoading: isRoutesLoading, error: fetchRoutesError } = useSWR(
     ['/app.trainlcd.grpc/getRoutes', selectedStation?.groupId],
     async ([, toStationGroupId]) => {
-      if (!currentStation) {
+      if (!currentStation || !toStationGroupId) {
         return []
       }
 
@@ -132,21 +129,6 @@ const RouteSearchScreen = () => {
 
       return res.routes
     }
-  )
-
-  const withoutPassStationRoutes = useMemo(
-    () =>
-      routesData?.filter((route) =>
-        // NOTE: 両方の駅どちらも停車する種別を探す
-        route.stops
-          .filter(
-            (stop) =>
-              stop.groupId === currentStation?.groupId ||
-              stop.groupId === selectedStation?.groupId
-          )
-          .every((stop) => !getIsPass(stop, true))
-      ) ?? [],
-    [currentStation?.groupId, routesData, selectedStation?.groupId]
   )
 
   const onPressBack = useCallback(() => {
@@ -177,15 +159,24 @@ const RouteSearchScreen = () => {
   )
 
   const handleStationPress = useCallback(
-    (stationFromSearch: Station) => {
-      const station = foundStations.find((s) => s.id === stationFromSearch.id)
-      if (!station) {
+    async (stationFromSearch: Station) => {
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine: stationFromSearch.line ?? null,
+      }))
+      setSelectedStation(stationFromSearch)
+
+      if (stationFromSearch.hasTrainTypes) {
+        await fetchTrainTypes({
+          stationId: stationFromSearch.id,
+        })
+        setIsRouteListModalVisible(true)
         return
       }
-      setSelectedStation(station)
-      setIsRouteListModalVisible(true)
+
+      navigation.navigate('SelectBound')
     },
-    [foundStations]
+    [fetchTrainTypes, navigation, setLineState]
   )
 
   const onKeyPress = useCallback(
@@ -205,83 +196,26 @@ const RouteSearchScreen = () => {
   )
 
   const handleSelect = useCallback(
-    (route: Route) => {
-      const matchedStation = route.stops.find(
-        (s) => s.groupId === currentStation?.groupId
-      )
-      const line = matchedStation?.line
-      const matchedStationIndex = route.stops.findIndex(
-        (s) => s.groupId === matchedStation?.groupId
-      )
-      const boundStationIndex = route.stops.findIndex(
-        (s) => s?.groupId === selectedStation?.groupId
-      )
-      const direction =
-        matchedStationIndex < boundStationIndex ? 'INBOUND' : 'OUTBOUND'
-
-      const stops =
-        direction === 'INBOUND' ? route.stops : route.stops.slice().reverse()
-      const currentStationIndex = stops.findIndex(
-        (stop) => stop.groupId === currentStation?.groupId
-      )
-      const stopsAfterCurrentStation = stops.slice(currentStationIndex)
-
-      if (line) {
-        setStationState((prev) => ({
-          ...prev,
-          stations: stopsAfterCurrentStation,
-        }))
-
-        const trainTypes =
-          withoutPassStationRoutes
-            ?.map((route) =>
-              route.stops.find(
-                (stop) => stop.groupId === currentStation?.groupId
-              )
-            )
-            .map((stop) => {
-              if (stop?.trainType) {
-                return stop?.trainType
-              }
-
-              return new TrainType({
-                id: 0,
-                typeId: 0,
-                groupId: 0,
-                name: '普通/各駅停車',
-                nameKatakana: '',
-                nameRoman: 'Local',
-                nameChinese: '慢车/每站停车',
-                nameKorean: '보통/각역정차',
-                color: '',
-                lines: stop?.lines,
-                direction: TrainDirection.Both,
-                kind: TrainTypeKind.Default,
-              })
-            }) ?? []
-
-        setNavigationState((prev) => ({
-          ...prev,
-          trainType: matchedStation.trainType ?? null,
-          fetchedTrainTypes: trainTypes,
-          leftStations: [],
-          fromBuilder: true,
-        }))
-        setLineState((prev) => ({
-          ...prev,
-          selectedLine: line,
-        }))
+    async (trainType: TrainType) => {
+      if (!trainType.id) {
+        setNavigationState((prev) => ({ ...prev, trainType: null }))
         navigation.navigate('SelectBound')
+        return
       }
+
+      const stations = await fetchTrainTypeFromTrainTypeId({
+        lineGroupId: trainType.groupId,
+      })
+
+      setNavigationState((prev) => ({ ...prev, trainType }))
+      setStationState((prev) => ({ ...prev, stations }))
+      navigation.navigate('SelectBound')
     },
     [
-      currentStation?.groupId,
+      fetchTrainTypeFromTrainTypeId,
       navigation,
-      selectedStation?.groupId,
-      setLineState,
       setNavigationState,
       setStationState,
-      withoutPassStationRoutes,
     ]
   )
 
@@ -328,8 +262,8 @@ const RouteSearchScreen = () => {
       <FAB onPress={onPressBack} icon="close" />
 
       <RouteListModal
+        trainTypes={trainTypes}
         visible={isRouteListModalVisible}
-        routes={withoutPassStationRoutes}
         loading={isRoutesLoading}
         error={fetchRoutesError}
         onClose={() => setIsRouteListModalVisible(false)}
