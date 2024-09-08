@@ -91,7 +91,6 @@ export const RouteList = ({
       style={{
         width: '100%',
         height: '100%',
-        maxHeight: '50%',
         alignSelf: 'center',
         borderColor: isLEDTheme ? '#fff' : '#aaa',
         borderWidth: 1,
