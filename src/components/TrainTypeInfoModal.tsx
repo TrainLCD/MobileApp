@@ -146,7 +146,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   lineHeight: RFValue(14),
                 }}
               >
-                {stopStations.length
+                {!loading && stopStations.length
                   ? stopStations.map((s) => s.name).join('、')
                   : ''}
                 {loading ? `${translate('loadingAPI')}...` : ''}

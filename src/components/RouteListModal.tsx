@@ -1,7 +1,7 @@
 import React from 'react'
 import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Route } from '../../gen/proto/stationapi_pb'
+import { TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
@@ -9,15 +9,15 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import FAB from './FAB'
 import Heading from './Heading'
-import { RouteList } from './RouteList'
+import { TrainTypeList } from './TrainTypeList'
 
 type Props = {
+  trainTypes: TrainType[]
   visible: boolean
-  routes: Route[]
   loading: boolean
   error: Error
   onClose: () => void
-  onSelect: (route: Route) => void
+  onSelect: (trainType: TrainType) => void
 }
 
 const styles = StyleSheet.create({
@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
 const SAFE_AREA_FALLBACK = 32
 
 export const RouteListModal: React.FC<Props> = ({
+  trainTypes,
   visible,
-  routes,
   loading,
   onClose,
   onSelect,
@@ -96,16 +96,18 @@ export const RouteListModal: React.FC<Props> = ({
           >
             <View
               style={{
-                marginBottom: 12,
+                marginVertical: 16,
               }}
             >
-              <Heading>{translate('routeSearchTitle')}</Heading>
+              <Heading>{translate('trainTypeSettings')}</Heading>
             </View>
-            {loading ? (
-              <ActivityIndicator style={styles.loading} />
-            ) : (
-              <RouteList data={routes} onSelect={onSelect} />
-            )}
+            <View style={{ flex: 1, width: '100%', height: '100%' }}>
+              {loading ? (
+                <ActivityIndicator size="large" style={styles.loading} />
+              ) : (
+                <TrainTypeList data={trainTypes} onSelect={onSelect} />
+              )}
+            </View>
           </View>
         </View>
         <FAB onPress={onClose} icon="close" />
