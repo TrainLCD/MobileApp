@@ -987,6 +987,28 @@ const useTTSText = (firstSpeech = true): string[] => {
         .replaceAll('&', 'and')
         // 明治神宮前駅等で入る
         .replaceAll('`', '')
+        // 〜一丁目
+        .replaceAll(
+          '-itchome',
+          '<phoneme alphabet="ipa" ph="icchome">-itchome</phoneme>'
+        )
+        // 新宿三丁目など
+        .replaceAll(
+          '-sanchome',
+          '<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme>'
+        )
+        // 宇部
+        .replaceAll('Ube', '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+        // 宇部
+        .replaceAll(
+          /isesaki/gi,
+          '<phoneme alphabet="ipa" ph="isesaki">Isesaki</phoneme>'
+        )
+        // カイセイ対策
+        .replaceAll(
+          'Keisei',
+          '<phoneme alphabet="ipa" ph="keisei">Keisei</phoneme>'
+        )
     )
   }, [englishTemplate, stoppingState, theme])
 
