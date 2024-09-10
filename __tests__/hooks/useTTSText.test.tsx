@@ -78,7 +78,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next stop is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next stop is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -90,7 +90,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'Arriving at Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'Arriving at Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
   })
@@ -105,7 +105,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>をご利用のお客様はお乗り換えです。',
-        'The next station is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Passengers changing to the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
+        'The next station is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Passengers changing to the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -117,7 +117,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
-        'We will soon make a brief stop at Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2.',
+        'We will soon make a brief stop at Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2.',
       ])
     })
   })
@@ -132,7 +132,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next station is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -156,7 +156,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next stop is Shinjuku-sanchome station number <say-as interpret-as="characters">S</say-as> 2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next stop is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> station number <say-as interpret-as="characters">S</say-as> 2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -168,7 +168,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、次は、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
-        'We will soon be making a brief stop at Shinjuku-sanchome station number <say-as interpret-as="characters">S</say-as> 2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line. After leaving Shinjuku-sanchome, We will be stopping at Akebonobashi.',
+        'We will soon be making a brief stop at Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> station number <say-as interpret-as="characters">S</say-as> 2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line. After leaving Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme>, We will be stopping at Akebonobashi.',
       ])
     })
   })
@@ -183,7 +183,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。',
-        'The next station is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -195,7 +195,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。',
-        'The next station is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
   })
@@ -210,7 +210,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。 <sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
-        'This is the Local train bound for Motoyawata. The next station is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'This is the Local train bound for Motoyawata. The next station is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -222,7 +222,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'We will soon be arriving at Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'We will soon be arriving at Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
   })
@@ -237,7 +237,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next stop is Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next stop is Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
     test('should be ARRIVING', () => {
@@ -249,7 +249,7 @@ describe('Without trainType & With numbering', () => {
       )
       expect(result.current).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'Arriving at Shinjuku-sanchome <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'Arriving at Shinjuku<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme> <say-as interpret-as="characters">S</say-as> 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ])
     })
   })

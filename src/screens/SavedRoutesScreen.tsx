@@ -106,7 +106,9 @@ const SavedRoutesScreen: React.FC = () => {
 
   const handleItemPress = useCallback(
     async (route: SavedRoute) => {
-      const stations = await fetchStationsByRoute(route)
+      const { stations } = await fetchStationsByRoute({
+        ids: route.stations.map((s) => s.id),
+      })
 
       if (!stations?.length || !latitude || !longitude) {
         return
