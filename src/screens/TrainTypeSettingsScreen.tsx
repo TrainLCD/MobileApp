@@ -1,17 +1,14 @@
+import { useQuery } from '@connectrpc/connect-query'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { BackHandler, StyleSheet, View } from 'react-native'
 import { useRecoilState } from 'recoil'
-import useSWR from 'swr'
-import {
-  GetStationsByLineGroupIdRequest,
-  TrainType,
-} from '../../gen/proto/stationapi_pb'
+import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery'
+import { TrainType } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal'
 import { TrainTypeList } from '../components/TrainTypeList'
-import { grpcClient } from '../lib/grpc'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
@@ -35,23 +32,23 @@ const TrainTypeSettings: React.FC = () => {
   const navigation = useNavigation()
 
   const {
-    data: trainTypeStations,
-    isLoading: isTrainTypeStationsLoading,
-    error: trainTypeStationsError,
-  } = useSWR(
-    ['/app.trainlcd.grpc/GetStationsByLineGroupId', selectedTrainType?.groupId],
-    async ([, lineGroupId]) => {
-      const req = new GetStationsByLineGroupIdRequest({
-        lineGroupId,
-      })
-      const res = await grpcClient.getStationsByLineGroupId(req)
-      return res.stations
-    }
+    data: byLineGroupIdData,
+    isLoading: isLineGroupByIdLoading,
+    error: byLineGroupIdFetchError,
+  } = useQuery(
+    getStationsByLineGroupId,
+    {
+      lineGroupId: selectedTrainType?.groupId,
+    },
+    { enabled: !!selectedTrainType }
   )
 
   const stations = useMemo(
-    () => (trainTypeStations?.length ? trainTypeStations : stationsFromState),
-    [stationsFromState, trainTypeStations]
+    () =>
+      byLineGroupIdData?.stations?.length
+        ? byLineGroupIdData.stations
+        : stationsFromState,
+    [byLineGroupIdData?.stations, stationsFromState]
   )
 
   const onPressBack = useCallback(async () => {
@@ -144,8 +141,8 @@ const TrainTypeSettings: React.FC = () => {
           visible={isTrainTypeModalVisible}
           trainType={selectedTrainType}
           stations={stations}
-          loading={isTrainTypeStationsLoading}
-          error={trainTypeStationsError}
+          loading={isLineGroupByIdLoading}
+          error={byLineGroupIdFetchError}
           onConfirmed={handleTrainTypeConfirmed}
           onClose={() => setIsTrainTypeModalVisible(false)}
         />

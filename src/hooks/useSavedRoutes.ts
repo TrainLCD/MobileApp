@@ -1,8 +1,7 @@
+import { useMutation } from '@connectrpc/connect-query'
 import firestore from '@react-native-firebase/firestore'
-import useSWR from 'swr'
-import useSWRMutation from 'swr/dist/mutation'
-import { GetStationByIdListRequest } from '../../gen/proto/stationapi_pb'
-import { grpcClient } from '../lib/grpc'
+import { useQuery } from '@tanstack/react-query'
+import { getStationByIdList } from '../../gen/proto/stationapi-StationAPI_connectquery'
 import { SavedRoute } from '../models/SavedRoute'
 import useCachedInitAnonymousUser from './useCachedAnonymousUser'
 
@@ -13,42 +12,30 @@ export const useSavedRoutes = () => {
     data: routes,
     isLoading: isRoutesLoading,
     error: fetchRoutesError,
-  } = useSWR<SavedRoute[]>('/firestore/uploadedCommunityRoutes', async () => {
-    const routesSnapshot = await firestore()
-      .collection('uploadedCommunityRoutes')
-      .orderBy('createdAt', 'desc')
-      .get()
+  } = useQuery<SavedRoute[]>({
+    queryKey: ['/firestore/uploadedCommunityRoutes'],
+    queryFn: async () => {
+      const routesSnapshot = await firestore()
+        .collection('uploadedCommunityRoutes')
+        .orderBy('createdAt', 'desc')
+        .get()
 
-    return routesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as SavedRoute[]
+      return routesSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as SavedRoute[]
+    },
   })
 
   const {
-    isMutating: isStationsLoading,
+    status: isStationsLoading,
     error: fetchStationsError,
-    trigger: fetchStationsByRoute,
-  } = useSWRMutation(
-    '/app.trainlcd.grpc/GetStationByIdListRequest',
-    async (_, { arg: route }: { arg: SavedRoute }) => {
-      const req = new GetStationByIdListRequest()
-      req.ids = route.stations.map((sta) => sta.id)
-      const res = await grpcClient.getStationByIdList(req, {})
-      const stations = res?.stations ?? []
-
-      return stations.map((sta) => ({
-        ...sta,
-        stopCondition: route.stations.find((rs) => rs.id === sta.id)
-          ?.stopCondition,
-        trainType: route.trainType,
-      }))
-    }
-  )
+    mutateAsync: fetchStationsByRoute,
+  } = useMutation(getStationByIdList)
 
   return {
     routes,
-    loading: isRoutesLoading || isStationsLoading,
+    loading: isRoutesLoading || isStationsLoading === 'pending',
     error: fetchRoutesError || fetchStationsError,
     fetchStationsByRoute,
   }

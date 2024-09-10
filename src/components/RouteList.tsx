@@ -24,9 +24,11 @@ const Separator = () => <View style={styles.separator} />
 
 const ItemCell = ({
   item,
+  disabled,
   onSelect,
 }: {
   item: Route
+  disabled: boolean
   onSelect: (item: Route) => void
 }) => {
   const currentStation = useCurrentStation()
@@ -59,7 +61,11 @@ const ItemCell = ({
   }, [item.stops])
 
   return (
-    <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
+    <TouchableOpacity
+      style={styles.cell}
+      onPress={() => onSelect(item)}
+      disabled={disabled}
+    >
       <Typography style={styles.stationNameText}>{lineNameTitle}</Typography>
       <Typography style={styles.descriptionText} numberOfLines={1}>
         {bottomText}
@@ -71,17 +77,19 @@ const ItemCell = ({
 export const RouteList = ({
   data,
   onSelect,
+  disabled,
 }: {
   data: Route[]
   onSelect: (item: Route) => void
+  disabled: boolean
 }) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const renderItem = useCallback(
     ({ item }: { item: Route; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} />
+      return <ItemCell item={item} onSelect={onSelect} disabled={disabled} />
     },
-    [onSelect]
+    [disabled, onSelect]
   )
   const keyExtractor = useCallback((item: Route) => item.id.toString(), [])
 
