@@ -1,3 +1,4 @@
+import { ConnectError } from '@connectrpc/connect'
 import React, { useMemo } from 'react'
 import { Modal, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
@@ -21,7 +22,7 @@ type Props = {
   trainType: TrainType
   stations: Station[]
   loading: boolean
-  error: Error
+  error: ConnectError | null
   onClose: () => void
   onConfirmed: (trainType: TrainType) => void
 }

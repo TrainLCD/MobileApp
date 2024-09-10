@@ -4,3 +4,5 @@ plugins:
     out: gen
   - name: connect-es
     out: gen
+  - name: connect-query
+    out: gen

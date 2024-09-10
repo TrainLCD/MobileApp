@@ -1,3 +1,5 @@
+import 'fast-text-encoding'
+
 import * as TaskManager from 'expo-task-manager'
 
 TaskManager.unregisterAllTasksAsync().catch(console.error)
@@ -18,8 +20,6 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
   })
 }
-
-import 'fast-text-encoding'
 
 import { registerRootComponent } from 'expo'
 import App from './src'
