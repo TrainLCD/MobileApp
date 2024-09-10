@@ -14,16 +14,14 @@ import {
 } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 
+import { useMutation, useQuery } from '@connectrpc/connect-query'
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv'
 import { useSetRecoilState } from 'recoil'
-import useSWR from 'swr'
-import useSWRMutation from 'swr/mutation'
 import {
-  GetRouteRequest,
-  GetStationsByNameRequest,
-  Route,
-  Station,
-} from '../../gen/proto/stationapi_pb'
+  getRoutes,
+  getStationsByName,
+} from '../../gen/proto/stationapi-StationAPI_connectquery'
+import { Route, Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { RouteListModal } from '../components/RouteListModal'
@@ -32,7 +30,6 @@ import { FONTS } from '../constants'
 import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useTrainTypeStations } from '../hooks/useTrainTypeStations'
-import { grpcClient } from '../lib/grpc'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -82,55 +79,30 @@ const RouteSearchScreen = () => {
   const setNavigationState = useSetRecoilState(navigationState)
 
   const currentStation = useCurrentStation()
-  const { fetchStations: fetchTrainTypeFromTrainTypeId } =
-    useTrainTypeStations()
+  const {
+    fetchStations: fetchTrainTypeFromTrainTypeId,
+    isLoading: isTrainTypesLoading,
+    error: fetchTrainTypesError,
+  } = useTrainTypeStations()
 
   const {
     data: byNameData,
-    isMutating: isByNameLoading,
-    trigger: fetchByName,
+    status: byNameLoadingStatus,
+    mutate: fetchByName,
     error: byNameError,
-  } = useSWRMutation(
-    [
-      '/app.trainlcd.grpc/getStationsByName',
-      query,
-      SEARCH_STATION_RESULT_LIMIT,
-    ],
-    async ([, query, limit]) => {
-      if (!query.length) {
-        return
-      }
-
-      const trimmedQuery = query.trim()
-      const req = new GetStationsByNameRequest({
-        stationName: trimmedQuery,
-        limit: Number(limit),
-        fromStationGroupId: currentStation?.groupId,
-      })
-      const res = await grpcClient.getStationsByName(req)
-      return res.stations
-    }
-  )
+  } = useMutation(getStationsByName)
 
   const {
-    data: routes,
+    data: routesData,
     isLoading: isRoutesLoading,
     error: fetchRoutesError,
-  } = useSWR(
-    ['/app.trainlcd.grpc/getRoutes', selectedStation?.groupId],
-    async ([, toStationGroupId]) => {
-      if (!currentStation || !toStationGroupId) {
-        return []
-      }
-
-      const req = new GetRouteRequest({
-        fromStationGroupId: currentStation?.groupId,
-        toStationGroupId,
-      })
-      const res = await grpcClient.getRoutes(req)
-
-      return res.routes
-    }
+  } = useQuery(
+    getRoutes,
+    {
+      fromStationGroupId: currentStation?.groupId,
+      toStationGroupId: selectedStation?.groupId,
+    },
+    { enabled: !!currentStation && !!selectedStation }
   )
 
   const onPressBack = useCallback(() => {
@@ -141,7 +113,16 @@ const RouteSearchScreen = () => {
     navigation.navigate('MainStack')
   }, [navigation])
 
-  const handleSubmit = useCallback(() => fetchByName(), [fetchByName])
+  const handleSubmit = useCallback(() => {
+    if (!currentStation || !query.trim().length) {
+      return
+    }
+    fetchByName({
+      stationName: query.trim(),
+      limit: Number(SEARCH_STATION_RESULT_LIMIT),
+      fromStationGroupId: currentStation?.groupId,
+    })
+  }, [currentStation, fetchByName, query])
 
   useEffect(() => {
     if (byNameError) {
@@ -149,15 +130,13 @@ const RouteSearchScreen = () => {
     }
   }, [byNameError])
 
-  const foundStations = useMemo(() => byNameData ?? [], [byNameData])
-
   // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
     () =>
-      groupStations(foundStations).filter(
+      groupStations(byNameData?.stations ?? []).filter(
         (sta) => sta.groupId != currentStation?.groupId
       ),
-    [currentStation?.groupId, foundStations]
+    [byNameData?.stations, currentStation?.groupId]
   )
 
   const handleStationPress = useCallback(
@@ -206,12 +185,12 @@ const RouteSearchScreen = () => {
         return
       }
 
-      const stations = await fetchTrainTypeFromTrainTypeId({
+      const data = await fetchTrainTypeFromTrainTypeId({
         lineGroupId: trainType.groupId,
       })
 
       setNavigationState((prev) => ({ ...prev, trainType }))
-      setStationState((prev) => ({ ...prev, stations }))
+      setStationState((prev) => ({ ...prev, stations: data.stations }))
       navigation.navigate('SelectBound')
     },
     [
@@ -252,8 +231,16 @@ const RouteSearchScreen = () => {
             onSubmitEditing={handleSubmit}
             onKeyPress={onKeyPress}
           />
-          {isByNameLoading ? (
-            <ActivityIndicator size="large" />
+          {byNameLoadingStatus === 'pending' ? (
+            <View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <ActivityIndicator size="large" />
+            </View>
           ) : (
             <StationList
               withoutTransfer
@@ -263,13 +250,13 @@ const RouteSearchScreen = () => {
           )}
         </KeyboardAvoidingView>
       </View>
-      <FAB onPress={onPressBack} icon="close" />
-
+      <FAB onPress={onPressBack} icon="close" disabled={isTrainTypesLoading} />
       <RouteListModal
-        routes={routes ?? []}
+        routes={routesData?.routes ?? []}
         visible={isRouteListModalVisible}
-        loading={isRoutesLoading}
-        error={fetchRoutesError}
+        isRoutesLoading={isRoutesLoading}
+        isTrainTypesLoading={isTrainTypesLoading}
+        error={fetchRoutesError || fetchTrainTypesError}
         onClose={() => setIsRouteListModalVisible(false)}
         onSelect={handleSelect}
       />

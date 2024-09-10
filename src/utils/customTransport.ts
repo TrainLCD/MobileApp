@@ -1,5 +1,3 @@
-// https://github.com/connectrpc/examples-es/blob/main/react-native/custom-transport.ts
-
 import { Message } from '@bufbuild/protobuf'
 
 import type {
@@ -193,12 +191,14 @@ export function createXHRGrpcWebTransport(
             throw 'missing message'
           }
 
-          return <UnaryResponse<I, O>>{
+          return {
             stream: false,
             header: response.headers,
             message,
             trailer,
-          }
+            service,
+            method,
+          } satisfies UnaryResponse<I, O>
         },
       })
     },

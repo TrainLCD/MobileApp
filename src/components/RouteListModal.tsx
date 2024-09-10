@@ -1,5 +1,12 @@
+import { ConnectError } from '@connectrpc/connect'
 import React from 'react'
-import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native'
+import {
+  ActivityIndicator,
+  Modal,
+  SafeAreaView,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Route } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
@@ -14,8 +21,9 @@ import { RouteList } from './RouteList'
 type Props = {
   routes: Route[]
   visible: boolean
-  loading: boolean
-  error: Error
+  isRoutesLoading: boolean
+  isTrainTypesLoading: boolean
+  error: ConnectError | null
   onClose: () => void
   onSelect: (route: Route) => void
 }
@@ -31,6 +39,7 @@ const styles = StyleSheet.create({
   modalView: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 12,
   },
   buttons: {
     flexDirection: 'row',
@@ -48,7 +57,8 @@ const SAFE_AREA_FALLBACK = 32
 export const RouteListModal: React.FC<Props> = ({
   routes,
   visible,
-  loading,
+  isRoutesLoading,
+  isTrainTypesLoading,
   onClose,
   onSelect,
 }: Props) => {
@@ -64,7 +74,7 @@ export const RouteListModal: React.FC<Props> = ({
       supportedOrientations={['landscape']}
     >
       <View style={styles.modalContainer}>
-        <View
+        <SafeAreaView
           style={[
             styles.modalView,
             {
@@ -101,15 +111,37 @@ export const RouteListModal: React.FC<Props> = ({
             >
               <Heading>{translate('trainTypeSettings')}</Heading>
             </View>
-            <View style={{ flex: 1, width: '100%', height: '100%' }}>
-              {loading ? (
-                <ActivityIndicator size="large" style={styles.loading} />
+            <View
+              style={{
+                flex: 1,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              {isRoutesLoading ? (
+                <View
+                  style={{
+                    ...StyleSheet.absoluteFillObject,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <ActivityIndicator size="large" />
+                </View>
               ) : (
-                <RouteList data={routes} onSelect={onSelect} />
+                <View
+                  style={{ flex: 1, opacity: isTrainTypesLoading ? 0.75 : 1 }}
+                >
+                  <RouteList
+                    data={routes}
+                    onSelect={onSelect}
+                    disabled={isTrainTypesLoading}
+                  />
+                </View>
               )}
             </View>
           </View>
-        </View>
+        </SafeAreaView>
         <FAB onPress={onClose} icon="close" />
       </View>
     </Modal>

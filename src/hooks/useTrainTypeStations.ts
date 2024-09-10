@@ -1,23 +1,15 @@
-import useSWRMutation from 'swr/dist/mutation'
-import { GetStationsByLineGroupIdRequest } from '../../gen/proto/stationapi_pb'
-import { grpcClient } from '../lib/grpc'
+import { useMutation } from '@connectrpc/connect-query'
+import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery'
 
 export const useTrainTypeStations = () => {
-  const {
-    data: stations,
-    isMutating: isLoading,
-    error,
-    trigger: fetchStations,
-  } = useSWRMutation(
-    '/app.trainlcd.grpc/GetStationsByLineGroupId',
-    async (_, { arg: { lineGroupId } }: { arg: { lineGroupId: number } }) => {
-      const req = new GetStationsByLineGroupIdRequest({
-        lineGroupId,
-      })
-      const res = await grpcClient.getStationsByLineGroupId(req)
-      return res.stations ?? []
-    }
+  const { data, status, error, mutateAsync } = useMutation(
+    getStationsByLineGroupId
   )
 
-  return { stations, isLoading, error, fetchStations }
+  return {
+    stations: data?.stations ?? [],
+    isLoading: status === 'pending',
+    error,
+    fetchStations: mutateAsync,
+  }
 }

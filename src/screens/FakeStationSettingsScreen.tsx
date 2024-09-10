@@ -15,16 +15,16 @@ import {
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useSetRecoilState } from 'recoil'
 
+import { useMutation, useQuery } from '@connectrpc/connect-query'
 import {
   NEARBY_STATIONS_LIMIT,
   SEARCH_STATION_RESULT_LIMIT,
 } from 'react-native-dotenv'
-import useSWRMutation from 'swr/mutation'
 import {
-  GetStationByCoordinatesRequest,
-  GetStationsByNameRequest,
-  Station,
-} from '../../gen/proto/stationapi_pb'
+  getStationsByCoordinates,
+  getStationsByName,
+} from '../../gen/proto/stationapi-StationAPI_connectquery'
+import { Station } from '../../gen/proto/stationapi_pb'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import { StationList } from '../components/StationList'
@@ -32,7 +32,6 @@ import { FONTS } from '../constants'
 import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThemeStore } from '../hooks/useThemeStore'
-import { grpcClient } from '../lib/grpc'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -82,48 +81,24 @@ const FakeStationSettingsScreen: React.FC = () => {
 
   const {
     data: byCoordsData,
-    isMutating: isByCoordsLoading,
+    isLoading: isByCoordsLoading,
     error: byCoordsError,
-    trigger: mutateByCoords,
-  } = useSWRMutation(['/app.trainlcd.grpc/getStationsByCoords'], async () => {
-    if (!latitude || !longitude) {
-      return
-    }
-
-    const req = new GetStationByCoordinatesRequest({
+  } = useQuery(
+    getStationsByCoordinates,
+    {
       latitude,
       longitude,
       limit: Number(NEARBY_STATIONS_LIMIT),
-    })
+    },
+    { enabled: !!latitude && !!longitude }
+  )
 
-    const res = await grpcClient.getStationsByCoordinates(req)
-    return res.stations
-  })
   const {
     data: byNameData,
-    isMutating: isByNameLoading,
-    trigger: fetchByName,
     error: byNameError,
-  } = useSWRMutation(
-    [
-      '/app.trainlcd.grpc/getStationsByName',
-      query,
-      SEARCH_STATION_RESULT_LIMIT,
-    ],
-    async ([, query, limit]) => {
-      if (!query.length) {
-        return
-      }
-
-      const trimmedQuery = query.trim()
-      const req = new GetStationsByNameRequest({
-        stationName: trimmedQuery,
-        limit: Number(limit),
-      })
-      const res = await grpcClient.getStationsByName(req)
-      return res.stations
-    }
-  )
+    status: byNameFetchStatus,
+    mutate: fetchByName,
+  } = useMutation(getStationsByName)
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -133,7 +108,15 @@ const FakeStationSettingsScreen: React.FC = () => {
     navigation.navigate('MainStack')
   }, [navigation])
 
-  const handleSubmit = useCallback(() => fetchByName(), [fetchByName])
+  const handleSubmit = useCallback(() => {
+    if (!query.trim().length) {
+      return
+    }
+    fetchByName({
+      stationName: query.trim(),
+      limit: Number(SEARCH_STATION_RESULT_LIMIT),
+    })
+  }, [fetchByName, query])
 
   useEffect(() => {
     if (byNameError || byCoordsError) {
@@ -141,13 +124,8 @@ const FakeStationSettingsScreen: React.FC = () => {
     }
   }, [byCoordsError, byNameError])
 
-  useEffect(() => {
-    mutateByCoords()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const foundStations = useMemo(
-    () => byNameData ?? byCoordsData ?? [],
+    () => byNameData?.stations ?? byCoordsData?.stations ?? [],
     [byCoordsData, byNameData]
   )
 
@@ -224,7 +202,7 @@ const FakeStationSettingsScreen: React.FC = () => {
             onSubmitEditing={handleSubmit}
             onKeyPress={onKeyPress}
           />
-          {isByCoordsLoading || isByNameLoading ? (
+          {isByCoordsLoading || byNameFetchStatus === 'pending' ? (
             <ActivityIndicator size="large" />
           ) : (
             <StationList
