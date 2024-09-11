@@ -347,7 +347,30 @@ exports.tts = functions
         `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`,
       );
     }
-    const ssmlEn = data.ssmlEn;
+    const ssmlEn = data.ssmlEn
+      // 〜一丁目
+      .replaceAll(
+        "-itchome",
+        '<phoneme alphabet="ipa" ph="icchome">-itchome</phoneme>',
+      )
+      // 新宿三丁目など
+      .replaceAll(
+        "-sanchome",
+        '<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme>',
+      )
+      // 宇部
+      .replaceAll("Ube", '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+      // 宇部
+      .replaceAll(
+        /isesaki/gi,
+        '<phoneme alphabet="ipa" ph="isesaki">Isesaki</phoneme>',
+      )
+      // カイセイ対策
+      .replaceAll(
+        "Keisei",
+        '<phoneme alphabet="ipa" ph="keisei">Keisei</phoneme>',
+      );
+
     if (!(typeof ssmlEn === "string") || ssmlEn.length === 0) {
       throw new HttpsError(
         "invalid-argument",
