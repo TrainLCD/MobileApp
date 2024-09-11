@@ -990,29 +990,9 @@ const useTTSText = (firstSpeech = true): string[] => {
       // 環状運転のときに入る可能性
       .replaceAll('&', 'and')
       // 明治神宮前駅等で入る
-      .replaceAll('`', '')
-      // 〜一丁目
-      .replaceAll(
-        '-itchome',
-        '<phoneme alphabet="ipa" ph="icchome">-itchome</phoneme>'
-      )
-      // 新宿三丁目など
-      .replaceAll(
-        '-sanchome',
-        '<phoneme alphabet="ipa" ph="santyome">-sanchome</phoneme>'
-      )
-      // 宇部
-      .replaceAll('Ube', '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
-      // 宇部
-      .replaceAll(
-        /isesaki/gi,
-        '<phoneme alphabet="ipa" ph="isesaki">Isesaki</phoneme>'
-      )
-      // カイセイ対策
-      .replaceAll(
-        'Keisei',
-        '<phoneme alphabet="ipa" ph="keisei">Keisei</phoneme>'
-      ),
+      .replaceAll('`', ''),
+    // NOTE: このほかの英語SSMLリプレース処理はFunctionsで行うので
+    // ここに置換処理を入れてはいけない
   ]
 }
 

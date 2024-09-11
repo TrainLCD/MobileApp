@@ -159,8 +159,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   marginTop: 16,
                 }}
               >
-                {/* FIXME: translate */}
-                各線の種別:
+                {translate('eachTrainTypes')}:
               </Typography>
             </View>
             <ScrollView
@@ -224,9 +223,9 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
               onPress={() => onConfirmed(trainType)}
-              disabled={!stopStations.length}
+              disabled={loading}
             >
-              確定{/* FIXME: translate */}
+              {translate('submit')}
             </Button>
             <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
               {translate('cancel')}
