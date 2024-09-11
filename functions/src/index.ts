@@ -5,7 +5,13 @@ import { XMLParser } from "fast-xml-parser";
 import * as admin from "firebase-admin";
 import { initializeApp } from "firebase-admin/app";
 import { Timestamp } from "firebase-admin/firestore";
-import * as functions from "firebase-functions";
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+} from "firebase-functions/firestore";
+import { onCall } from "firebase-functions/https";
+import { onMessagePublished } from "firebase-functions/pubsub";
+import { onSchedule } from "firebase-functions/scheduler";
 import { HttpsError } from "firebase-functions/v1/auth";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
 import { DiscordEmbed } from "./models/common";
@@ -21,9 +27,9 @@ const pubsub = new PubSub();
 
 const xmlParser = new XMLParser();
 
-exports.notifyReportCreatedToDiscord = functions.firestore
-  .document("reports/{docId}")
-  .onCreate(async (change) => {
+exports.notifyReportCreatedToDiscord = onDocumentCreated(
+  "reports/{docId}",
+  async (change) => {
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const {
@@ -35,7 +41,7 @@ exports.notifyReportCreatedToDiscord = functions.firestore
       reporterUid,
       stacktrace,
       reportType,
-    } = change.data() as Report;
+    } = change.data?.data() as Report;
     const embeds: DiscordEmbed[] = deviceInfo
       ? [
           {
@@ -158,17 +164,22 @@ exports.notifyReportCreatedToDiscord = functions.firestore
       default:
         break;
     }
-  });
+  },
+);
 
-exports.notifyReportResolvedToDiscord = functions.firestore
-  .document("reports/{docId}")
-  .onUpdate(async (change) => {
+exports.notifyReportResolvedToDiscord = onDocumentUpdated(
+  "reports/{docId}",
+  async (change) => {
+    if (!change.data?.after) {
+      return;
+    }
+
     const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     if (!whUrl) {
       throw new Error("process.env.DISCORD_CS_WEBHOOK_URL is not set!");
     }
 
-    const report = change.after.data() as Report;
+    const report = change.data.after.data() as Report;
     if (!report.resolved || !report.resolvedReason) {
       return;
     }
@@ -178,7 +189,9 @@ exports.notifyReportResolvedToDiscord = functions.firestore
       .doc(report.resolverUid)
       .get();
 
-    const pngFile = storage.bucket().file(`reports/${change.after.id}.png`);
+    const pngFile = storage
+      .bucket()
+      .file(`reports/${change.data.after.id}.png`);
     const urlResp = await pngFile.getSignedUrl({
       action: "read",
       expires: "03-09-2491",
@@ -197,7 +210,7 @@ exports.notifyReportResolvedToDiscord = functions.firestore
             fields: [
               {
                 name: "チケットID",
-                value: change.after.id,
+                value: change.data.after.id,
               },
               {
                 name: "発行日時",
@@ -233,11 +246,12 @@ exports.notifyReportResolvedToDiscord = functions.firestore
         ] as DiscordEmbed[],
       }),
     });
-  });
+  },
+);
 
-exports.detectHourlyAppStoreNewReview = functions.pubsub
-  .schedule("every 1 hours")
-  .onRun(async () => {
+exports.detectHourlyAppStoreNewReview = onSchedule(
+  "every 1 hours",
+  async () => {
     const APP_STORE_ID = "1486355943";
     const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
     const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
@@ -269,7 +283,7 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
       (ent) =>
         notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
         notifiedFeeds.findIndex(
-          (f) => !dayjs(f.updated).isSame(dayjs(ent.updated)),
+          (f) => !dayjs(f.updatedAt).isSame(dayjs(ent.updated)),
         ),
     );
 
@@ -326,172 +340,211 @@ exports.detectHourlyAppStoreNewReview = functions.pubsub
     await appStoreReviewsDocRef.update({
       notifiedEntryFeeds: [...notifiedFeeds, ...rssEntries],
     });
+  },
+);
+exports.tts = onCall({ region: "asia-northeast1" }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError(
+      "failed-precondition",
+      "The function must be called while authenticated.",
+    );
+  }
 
-    return null;
-  });
+  const ssmlJa = req.data.ssmlJa;
+  if (!(typeof ssmlJa === "string") || ssmlJa.length === 0) {
+    throw new HttpsError(
+      "invalid-argument",
+      `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`,
+    );
+  }
 
-exports.tts = functions
-  .region("asia-northeast1")
-  .https.onCall(async (data, ctx) => {
-    if (!ctx.auth) {
-      throw new HttpsError(
-        "failed-precondition",
-        "The function must be called while authenticated.",
-      );
-    }
+  const ssmlEn = req.data.ssmlEn
+    // Airport Terminal 1･2等
+    .replaceAll("･", " ")
+    // Otsuka・Teikyo-Daigakuなど
+    .replaceAll("・", " ")
+    // 日本語はjoを「ホ」と読まない
+    .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʑo">jo</phoneme>')
+    // 一丁目で終わる駅は全体の駅名を入れないと不自然な発音になる
+    .replaceAll(
+      "Aoyama-itchome",
+      `<phoneme alphabet="ipa" ph="aojama-ɪtʃoome">Aoyama-itchome</phoneme>`,
+    )
+    .replaceAll(
+      "Ginza-itchome",
+      `<phoneme alphabet="ipa" ph="ɡʲiNdza-ɪtʃoome">Ginza-itchome</phoneme>`,
+    )
+    .replaceAll(
+      "Roppongi-itchome",
+      `<phoneme alphabet="ipa" ph="ɾopoNɡʲi-ɪtʃoome">Roppongi-itchome</phoneme>`,
+    )
+    // 新宿三丁目など
+    .replaceAll(
+      "-sanchome",
+      ' <phoneme alphabet="ipa" ph="santʃome">sanchome</phoneme>',
+    )
+    // 宇部
+    .replaceAll(/ube/gi, '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+    // 伊勢崎
+    .replaceAll(
+      /isesaki/gi,
+      '<phoneme alphabet="ipa" ph="isesaki">Isesaki</phoneme>',
+    )
+    // カイセイ対策
+    .replaceAll(
+      /keisei/gi,
+      '<phoneme alphabet="ipa" ph="keisei">Keisei</phoneme>',
+    )
+    // 押上
+    .replaceAll(
+      /oshiage/gi,
+      `<phoneme alphabet="ipa" ph="'oɕiaɡe">Oshiage</phoneme>`,
+    )
+    // 名鉄
+    .replaceAll(
+      /meitetsu/gi,
+      '<phoneme alphabet="ipa" ph="me.itetsɯ">Meitetsu</phoneme>',
+    );
 
-    const ssmlJa = data.ssmlJa;
-    if (!(typeof ssmlJa === "string") || ssmlJa.length === 0) {
-      throw new HttpsError(
-        "invalid-argument",
-        `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`,
-      );
-    }
-    const ssmlEn = data.ssmlEn;
-    if (!(typeof ssmlEn === "string") || ssmlEn.length === 0) {
-      throw new HttpsError(
-        "invalid-argument",
-        `The function must be called with one arguments "ssmlEn" containing the message ssmlEn to add.`,
-      );
-    }
+  if (typeof ssmlEn !== "string" || ssmlEn.length === 0) {
+    throw new HttpsError(
+      "invalid-argument",
+      `The function must be called with one arguments "ssmlEn" containing the message ssmlEn to add.`,
+    );
+  }
 
-    const isPremium = data.premium;
-    const jaVoiceName = "ja-JP-Neural2-B";
-    const enVoiceName = isPremium ? "en-US-Studio-O" : "en-US-Standard-G";
+  const isPremium = req.data.premium;
+  const jaVoiceName = "ja-JP-Neural2-B";
+  const enVoiceName = isPremium ? "en-US-Studio-O" : "en-US-Standard-G";
 
-    const voicesCollection = firestore
-      .collection("caches")
-      .doc("tts")
-      .collection("voices");
+  const voicesCollection = firestore
+    .collection("caches")
+    .doc("tts")
+    .collection("voices");
 
-    const hashAlgorithm = "md5";
-    const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
-    const id = createHash(hashAlgorithm).update(hashData).digest("hex");
+  const hashAlgorithm = "md5";
+  const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
+  const id = createHash(hashAlgorithm).update(hashData).digest("hex");
 
-    const snapshot = await voicesCollection.where("id", "==", id).get();
+  const snapshot = await voicesCollection.where("id", "==", id).get();
 
-    if (!snapshot.empty) {
-      const jaAudioData =
-        (await storage
-          .bucket()
-          .file(snapshot.docs[0]?.data().pathJa)
-          .download()) || null;
-      const enAudioData =
-        (await storage
-          .bucket()
-          .file(snapshot.docs[0]?.data().pathEn)
-          .download()) || null;
+  if (!snapshot.empty) {
+    const jaAudioData =
+      (await storage
+        .bucket()
+        .file(snapshot.docs[0]?.data().pathJa)
+        .download()) || null;
+    const enAudioData =
+      (await storage
+        .bucket()
+        .file(snapshot.docs[0]?.data().pathEn)
+        .download()) || null;
 
-      const jaAudioContent = jaAudioData?.[0]?.toString("base64") || null;
-      const enAudioContent = enAudioData?.[0]?.toString("base64") || null;
-
-      return { id, jaAudioContent, enAudioContent };
-    }
-
-    const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
-
-    const reqBodyJa = {
-      input: {
-        ssml: ssmlJa,
-      },
-      voice: {
-        languageCode: "ja-JP",
-        name: jaVoiceName,
-      },
-      audioConfig: {
-        audioEncoding: "MP3",
-      },
-    };
-
-    const reqBodyEn = {
-      input: {
-        ssml: ssmlEn,
-      },
-      voice: {
-        languageCode: "en-US",
-        name: enVoiceName,
-      },
-      audioConfig: {
-        audioEncoding: "MP3",
-      },
-    };
-
-    const [jaRes, enRes] = await Promise.all([
-      fetch(ttsUrl, {
-        headers: {
-          "content-type": "application/json; charset=UTF-8",
-        },
-        body: JSON.stringify(reqBodyJa),
-        method: "POST",
-      }),
-      fetch(ttsUrl, {
-        headers: {
-          "content-type": "application/json; charset=UTF-8",
-        },
-        body: JSON.stringify(reqBodyEn),
-        method: "POST",
-      }),
-    ]);
-
-    const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
-      await Promise.all([jaRes.json(), enRes.json()]);
-
-    const cacheTopic = pubsub.topic("tts-cache");
-    cacheTopic.publishMessage({
-      json: {
-        id,
-        isPremium,
-        jaAudioContent,
-        enAudioContent,
-        ssmlJa,
-        ssmlEn,
-        voiceJa: jaVoiceName,
-        voiceEn: enVoiceName,
-      },
-    });
+    const jaAudioContent = jaAudioData?.[0]?.toString("base64") || null;
+    const enAudioContent = enAudioData?.[0]?.toString("base64") || null;
 
     return { id, jaAudioContent, enAudioContent };
+  }
+
+  const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
+
+  const reqBodyJa = {
+    input: {
+      ssml: ssmlJa,
+    },
+    voice: {
+      languageCode: "ja-JP",
+      name: jaVoiceName,
+    },
+    audioConfig: {
+      audioEncoding: "MP3",
+    },
+  };
+
+  const reqBodyEn = {
+    input: {
+      ssml: ssmlEn,
+    },
+    voice: {
+      languageCode: "en-US",
+      name: enVoiceName,
+    },
+    audioConfig: {
+      audioEncoding: "MP3",
+    },
+  };
+
+  const [jaRes, enRes] = await Promise.all([
+    fetch(ttsUrl, {
+      headers: {
+        "content-type": "application/json; charset=UTF-8",
+      },
+      body: JSON.stringify(reqBodyJa),
+      method: "POST",
+    }),
+    fetch(ttsUrl, {
+      headers: {
+        "content-type": "application/json; charset=UTF-8",
+      },
+      body: JSON.stringify(reqBodyEn),
+      method: "POST",
+    }),
+  ]);
+
+  const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
+    await Promise.all([jaRes.json(), enRes.json()]);
+
+  const cacheTopic = pubsub.topic("tts-cache");
+  cacheTopic.publishMessage({
+    json: {
+      id,
+      isPremium,
+      jaAudioContent,
+      enAudioContent,
+      ssmlJa,
+      ssmlEn,
+      voiceJa: jaVoiceName,
+      voiceEn: enVoiceName,
+    },
   });
 
-exports.ttsCachePubSub = functions.pubsub
-  .topic("tts-cache")
-  .onPublish(
-    async ({
-      json: {
-        id,
-        isPremium,
-        jaAudioContent,
-        enAudioContent,
-        ssmlJa,
-        ssmlEn,
-        voiceJa,
-        voiceEn,
-      },
-    }) => {
-      const jaTtsCachePathBase = "caches/tts/ja";
-      const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
-      const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
+  return { id, jaAudioContent, enAudioContent };
+});
 
-      const enTtsCachePathBase = "caches/tts/en";
-      const enTtsBuf = Buffer.from(enAudioContent, "base64");
-      const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
+exports.ttsCachePubSub = onMessagePublished("tts-cache", async (event) => {
+  const {
+    id,
+    // isPremium,
+    jaAudioContent,
+    enAudioContent,
+    ssmlJa,
+    ssmlEn,
+    voiceJa,
+    voiceEn,
+  } = event.data.message.json;
+  const jaTtsCachePathBase = "caches/tts/ja";
+  const jaTtsBuf = Buffer.from(jaAudioContent, "base64");
+  const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
 
-      await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
-      await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
-      await firestore
-        .collection("caches")
-        .doc("tts")
-        .collection("voices")
-        .doc(id)
-        .set({
-          id,
-          ssmlJa,
-          pathJa: jaTtsCachePath,
-          voiceJa,
-          ssmlEn,
-          pathEn: enTtsCachePath,
-          voiceEn,
-          createdAt: Timestamp.now(),
-        });
-    },
-  );
+  const enTtsCachePathBase = "caches/tts/en";
+  const enTtsBuf = Buffer.from(enAudioContent, "base64");
+  const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
+
+  await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
+  await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
+  await firestore
+    .collection("caches")
+    .doc("tts")
+    .collection("voices")
+    .doc(id)
+    .set({
+      id,
+      ssmlJa,
+      pathJa: jaTtsCachePath,
+      voiceJa,
+      ssmlEn,
+      pathEn: enTtsCachePath,
+      voiceEn,
+      createdAt: Timestamp.now(),
+    });
+});

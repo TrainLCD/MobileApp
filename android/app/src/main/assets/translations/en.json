@@ -156,5 +156,7 @@
   "autoAnnounceBackgroundTitle":"Enable background voice announcement",
   "loadingLocation": "Getting location information...",
   "loadingAPI": "Communicating with server...",
-  "routeSearchTitle": "Find a route"
+  "routeSearchTitle": "Find a route",
+  "submit": "Submit",
+  "eachTrainTypes": "Train types"
 }
