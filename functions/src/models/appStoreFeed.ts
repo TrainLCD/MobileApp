@@ -34,5 +34,9 @@ export type AppStoreReviewEntry = {
 };
 
 export type AppStoreReviewsDoc = {
-  notifiedEntryFeeds: AppStoreReviewFeedData[];
+  notifiedEntryFeeds: {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+  }[];
 };
