@@ -1,4 +1,4 @@
-import 'fast-text-encoding'
+require('fast-text-encoding')
 
 import * as TaskManager from 'expo-task-manager'
 

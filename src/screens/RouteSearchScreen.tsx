@@ -189,7 +189,14 @@ const RouteSearchScreen = () => {
         lineGroupId: trainType.groupId,
       })
 
-      setNavigationState((prev) => ({ ...prev, trainType }))
+      const station = data.stations.find(
+        (s) => s.groupId === currentStation?.groupId
+      )
+
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: station?.trainType ?? null,
+      }))
       setStationState((prev) => ({ ...prev, stations: data.stations }))
       navigation.navigate('SelectBound')
     },
