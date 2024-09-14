@@ -19,7 +19,7 @@ import Typography from './Typography'
 
 type Props = {
   visible: boolean
-  trainType: TrainType
+  trainType: TrainType | null
   stations: Station[]
   loading: boolean
   error: ConnectError | null
@@ -68,7 +68,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
 
   const trainTypeLines = useMemo(
     () =>
-      trainType.lines.length
+      trainType?.lines.length
         ? trainType.lines
             .slice()
             .sort((a, b) =>
@@ -77,7 +77,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                 : a.trainType?.id - b.trainType?.id
             )
         : ([selectedLine] as Line[]),
-    [selectedLine, trainType.lines]
+    [selectedLine, trainType?.lines]
   )
 
   const stopStations = useMemo(
@@ -116,8 +116,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
         >
           <Heading>
             {isJapanese
-              ? `${selectedLine?.nameShort} ${trainType.name}`
-              : `${selectedLine?.nameRoman} ${trainType.nameRoman}`}
+              ? `${selectedLine?.nameShort} ${trainType?.name ?? ''}`
+              : `${selectedLine?.nameRoman} ${trainType?.nameRoman ?? ''}`}
           </Heading>
 
           <View
@@ -222,8 +222,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
           <View style={styles.buttons}>
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
-              onPress={() => onConfirmed(trainType)}
-              disabled={loading}
+              onPress={() => trainType && onConfirmed(trainType)}
+              disabled={loading || !trainType}
             >
               {translate('submit')}
             </Button>

@@ -1,11 +1,16 @@
-import React, { useCallback, useMemo } from 'react'
+import { useMutation } from '@connectrpc/connect-query'
+import React, { useCallback, useMemo, useState } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
-import { Route } from '../../gen/proto/stationapi_pb'
+import { useSetRecoilState } from 'recoil'
+import { getTrainTypesByStationId } from '../../gen/proto/stationapi-StationAPI_connectquery'
+import { Route, TrainType } from '../../gen/proto/stationapi_pb'
 import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
+import lineState from '../store/atoms/line'
 import { isJapanese } from '../translation'
+import { TrainTypeInfoModal } from './TrainTypeInfoModal'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
@@ -75,40 +80,101 @@ const ItemCell = ({
 }
 
 export const RouteList = ({
-  data,
+  routes,
   onSelect,
   disabled,
 }: {
-  data: Route[]
+  routes: Route[]
   onSelect: (item: Route) => void
   disabled: boolean
 }) => {
+  const [trainTypeInfoModalVisible, setTrainTypeInfoModalVisible] =
+    useState(false)
+  const [selectedRoute, setSelectedRoute] = useState<Route>()
+  const [selectedTrainType, setSelectedTrainType] = useState<TrainType>()
+  const setLineState = useSetRecoilState(lineState)
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const currentStation = useCurrentStation()
+
+  const {
+    data: trainTypes,
+    mutate: fetchTrainTypes,
+    status: fetchTrainTypesStatus,
+    error: fetchTrainTypesError,
+  } = useMutation(getTrainTypesByStationId)
+
+  const trainType = useMemo(
+    () =>
+      trainTypes?.trainTypes.find(
+        (tt) => tt.groupId === selectedTrainType?.groupId
+      ) ?? null,
+    [selectedTrainType?.groupId, trainTypes?.trainTypes]
+  )
+
+  const handleSelect = useCallback(
+    async (route: Route) => {
+      setTrainTypeInfoModalVisible(true)
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine:
+          route.stops?.find((s) => s.groupId === currentStation?.groupId)
+            ?.line ?? null,
+      }))
+      setSelectedRoute(route)
+      setSelectedTrainType(
+        route.stops.find((s) => s.groupId === currentStation?.groupId)
+          ?.trainType
+      )
+      fetchTrainTypes({
+        stationId: route.stops.find((s) => s.groupId == currentStation?.groupId)
+          ?.id,
+      })
+    },
+    [currentStation?.groupId, fetchTrainTypes, setLineState]
+  )
 
   const renderItem = useCallback(
     ({ item }: { item: Route; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} disabled={disabled} />
+      return (
+        <ItemCell
+          item={item}
+          onSelect={() => handleSelect(item)}
+          disabled={disabled}
+        />
+      )
     },
-    [disabled, onSelect]
+    [disabled, handleSelect]
   )
   const keyExtractor = useCallback((item: Route) => item.id.toString(), [])
 
   return (
-    <FlatList
-      initialNumToRender={data.length}
-      style={{
-        width: '100%',
-        height: '100%',
-        alignSelf: 'center',
-        borderColor: isLEDTheme ? '#fff' : '#aaa',
-        borderWidth: 1,
-        flex: 1,
-      }}
-      data={data}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      ItemSeparatorComponent={Separator}
-      ListFooterComponent={Separator}
-    />
+    <>
+      <FlatList
+        initialNumToRender={routes.length}
+        style={{
+          width: '100%',
+          height: '100%',
+          alignSelf: 'center',
+          borderColor: isLEDTheme ? '#fff' : '#aaa',
+          borderWidth: 1,
+          flex: 1,
+        }}
+        data={routes}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={Separator}
+        ListFooterComponent={Separator}
+      />
+      <TrainTypeInfoModal
+        visible={trainTypeInfoModalVisible}
+        trainType={trainType}
+        error={fetchTrainTypesError}
+        loading={fetchTrainTypesStatus === 'pending'}
+        stations={selectedRoute?.stops ?? []}
+        onClose={() => setTrainTypeInfoModalVisible(false)}
+        onConfirmed={() => selectedRoute && onSelect(selectedRoute)}
+      />
+    </>
   )
 }
