@@ -225,7 +225,7 @@ const RouteSearchScreen = () => {
             {translate('routeSearchTitle')}
           </Heading>
           <TextInput
-            placeholder={translate('searchByStationNamePlaceholder')}
+            placeholder={translate('searchDestinationPlaceholder')}
             value={query}
             style={{
               ...styles.stationNameInput,
@@ -251,6 +251,7 @@ const RouteSearchScreen = () => {
           ) : (
             <StationList
               withoutTransfer
+              fromRoutes
               data={groupedStations}
               onSelect={handleStationPress}
             />

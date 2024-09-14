@@ -133,7 +133,7 @@ export const RouteListModal: React.FC<Props> = ({
                   style={{ flex: 1, opacity: isTrainTypesLoading ? 0.5 : 1 }}
                 >
                   <RouteList
-                    data={routes}
+                    routes={routes}
                     onSelect={onSelect}
                     disabled={isTrainTypesLoading}
                   />

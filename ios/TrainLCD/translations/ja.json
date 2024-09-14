@@ -159,5 +159,7 @@
   "loadingAPI": "サーバーと通信中です",
   "routeSearchTitle": "経路を検索",
   "submit": "確定",
-  "eachTrainTypes": "各線の種別"
+  "eachTrainTypes": "各線の種別",
+  "matchedStationListEmpty": "接続駅が見つかりませんでした。",
+  "searchDestinationPlaceholder": "目的地の駅名を入力してください"
 }
