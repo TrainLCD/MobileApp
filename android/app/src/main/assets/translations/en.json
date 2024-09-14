@@ -158,5 +158,7 @@
   "loadingAPI": "Communicating with server...",
   "routeSearchTitle": "Find a route",
   "submit": "Submit",
-  "eachTrainTypes": "Train types"
+  "eachTrainTypes": "Train types",
+  "matchedStationListEmpty": "Transfer station not found.",
+  "searchDestinationPlaceholder": "Please enter the station name of your destination."
 }
