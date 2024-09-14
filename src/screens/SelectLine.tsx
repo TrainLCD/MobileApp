@@ -276,6 +276,14 @@ const SelectLineScreen: React.FC = () => {
               >
                 {translate('searchFirstStationTitle')}
               </Button>
+              {isInternetAvailable && isDevApp && (
+                <Button
+                  style={styles.button}
+                  onPress={navigateToSavedRoutesScreen}
+                >
+                  {translate('savedRoutes')}
+                </Button>
+              )}
               <Button
                 style={styles.button}
                 onPress={navigateToRouteSearchScreen}
@@ -284,11 +292,6 @@ const SelectLineScreen: React.FC = () => {
               </Button>
             </>
           ) : null}
-          {isInternetAvailable && isDevApp && (
-            <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
-              {translate('savedRoutes')}
-            </Button>
-          )}
           <Button style={styles.button} onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>
