@@ -121,10 +121,7 @@ export const TrainTypeList = ({
     },
     [onSelect]
   )
-  const keyExtractor = useCallback(
-    (item: TrainType) => item.groupId.toString(),
-    []
-  )
+  const keyExtractor = useCallback((item: TrainType) => item.id.toString(), [])
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
 
   return (
