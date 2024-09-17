@@ -135,7 +135,7 @@ export const RouteListModal: React.FC<Props> = ({
                   <RouteList
                     routes={routes}
                     onSelect={onSelect}
-                    disabled={isTrainTypesLoading}
+                    loading={isTrainTypesLoading}
                   />
                 </View>
               )}
