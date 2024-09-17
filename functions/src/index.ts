@@ -8,11 +8,10 @@ import { Timestamp } from "firebase-admin/firestore";
 import {
   onDocumentCreated,
   onDocumentUpdated,
-} from "firebase-functions/firestore";
-import { onCall } from "firebase-functions/https";
-import { onMessagePublished } from "firebase-functions/pubsub";
-import { onSchedule } from "firebase-functions/scheduler";
-import { HttpsError } from "firebase-functions/v1/auth";
+} from "firebase-functions/v2/firestore";
+import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { onMessagePublished } from "firebase-functions/v2/pubsub";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { AppStoreReviewFeed, AppStoreReviewsDoc } from "./models/appStoreFeed";
 import { DiscordEmbed } from "./models/common";
 import { Report } from "./models/feedback";
@@ -48,7 +47,7 @@ exports.notifyReportCreatedToDiscord = onDocumentCreated(
             fields: [
               {
                 name: "チケットID",
-                value: change.id,
+                value: change.data?.id ?? "",
               },
               {
                 name: "発行日時",
@@ -86,7 +85,7 @@ exports.notifyReportCreatedToDiscord = onDocumentCreated(
             fields: [
               {
                 name: "チケットID",
-                value: change.id,
+                value: change.data?.id ?? "",
               },
               {
                 name: "発行日時",
@@ -124,7 +123,7 @@ exports.notifyReportCreatedToDiscord = onDocumentCreated(
           throw new Error("process.env.DISCORD_CS_WEBHOOK_URL is not set!");
         }
 
-        const pngFile = storage.bucket().file(`reports/${change.id}.png`);
+        const pngFile = storage.bucket().file(`reports/${change.data?.id}.png`);
         const urlResp = await pngFile.getSignedUrl({
           action: "read",
           expires: "03-09-2491",
