@@ -101,6 +101,8 @@
 		94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
 		94CB9D622588F16C0030FBE2 /* ProdWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* ProdWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
+		94E6881B2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */; };
+		94E6881C2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */; };
 		94F428672ADCE78A002E1175 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.mm */; };
 		94F428682ADCE78A002E1175 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.mm */; };
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
@@ -293,6 +295,7 @@
 		94CB9D582588F16B0030FBE2 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityProvider.swift; sourceTree = "<group>"; };
+		94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigurationExtension.swift; sourceTree = "<group>"; };
 		94F428662ADCE78A002E1175 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -529,6 +532,7 @@
 		94A6A151258DF7BA00A129EB /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */,
 				9407EAA025890E8500E02655 /* ColorExtension.swift */,
 			);
 			path = Extensions;
@@ -1320,6 +1324,7 @@
 				942CB6072A32AAB4008339D2 /* RideSessionActivity.intentdefinition in Sources */,
 				942CB6082A32AAB4008339D2 /* RideSessionActivity.swift in Sources */,
 				942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */,
+				94E6881C2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1331,6 +1336,7 @@
 				94B9CDEA28D3025A00D68287 /* RideSessionActivity.intentdefinition in Sources */,
 				94B9CDE528D3025900D68287 /* RideSessionActivity.swift in Sources */,
 				944C2C4F28DADC380004DA72 /* ColorExtension.swift in Sources */,
+				94E6881B2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
