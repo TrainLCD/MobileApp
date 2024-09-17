@@ -29,11 +29,11 @@ const Separator = () => <View style={styles.separator} />
 
 const ItemCell = ({
   item,
-  disabled,
+  loading,
   onSelect,
 }: {
   item: Route
-  disabled: boolean
+  loading: boolean
   onSelect: (item: Route) => void
 }) => {
   const currentStation = useCurrentStation()
@@ -69,7 +69,7 @@ const ItemCell = ({
     <TouchableOpacity
       style={styles.cell}
       onPress={() => onSelect(item)}
-      disabled={disabled}
+      disabled={loading}
     >
       <Typography style={styles.stationNameText}>{lineNameTitle}</Typography>
       <Typography style={styles.descriptionText} numberOfLines={1}>
@@ -82,11 +82,11 @@ const ItemCell = ({
 export const RouteList = ({
   routes,
   onSelect,
-  disabled,
+  loading,
 }: {
   routes: Route[]
   onSelect: (item: Route) => void
-  disabled: boolean
+  loading: boolean
 }) => {
   const [trainTypeInfoModalVisible, setTrainTypeInfoModalVisible] =
     useState(false)
@@ -140,11 +140,11 @@ export const RouteList = ({
         <ItemCell
           item={item}
           onSelect={() => handleSelect(item)}
-          disabled={disabled}
+          loading={loading}
         />
       )
     },
-    [disabled, handleSelect]
+    [handleSelect, loading]
   )
   const keyExtractor = useCallback((item: Route) => item.id.toString(), [])
 
@@ -171,6 +171,7 @@ export const RouteList = ({
         trainType={trainType}
         error={fetchTrainTypesError}
         loading={fetchTrainTypesStatus === 'pending'}
+        disabled={loading}
         stations={selectedRoute?.stops ?? []}
         onClose={() => setTrainTypeInfoModalVisible(false)}
         onConfirmed={() => selectedRoute && onSelect(selectedRoute)}
