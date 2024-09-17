@@ -22,6 +22,7 @@ type Props = {
   trainType: TrainType | null
   stations: Station[]
   loading: boolean
+  disabled?: boolean
   error: ConnectError | null
   onClose: () => void
   onConfirmed: (trainType: TrainType) => void
@@ -57,6 +58,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
   trainType,
   stations,
   loading,
+  disabled,
   onClose,
   onConfirmed,
 }: Props) => {
@@ -149,8 +151,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
               >
                 {!loading && stopStations.length
                   ? stopStations.map((s) => s.name).join('、')
-                  : ''}
-                {loading ? `${translate('loadingAPI')}...` : ''}
+                  : `${translate('loadingAPI')}...`}
               </Typography>
               <Typography
                 style={{
@@ -223,7 +224,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
               onPress={() => trainType && onConfirmed(trainType)}
-              disabled={loading || !trainType}
+              disabled={loading || !trainType || disabled}
             >
               {translate('submit')}
             </Button>
