@@ -283,7 +283,7 @@ exports.detectHourlyAppStoreNewReview = onSchedule(
       (ent) =>
         notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
         notifiedFeeds.findIndex(
-          (f) => !dayjs(f.updatedAt).isSame(dayjs(ent.updated)),
+          (f) => !dayjs(f.updatedAt.toDate()).isSame(dayjs(ent.updated)),
         ),
     );
 
@@ -338,7 +338,14 @@ exports.detectHourlyAppStoreNewReview = onSchedule(
     });
 
     await appStoreReviewsDocRef.update({
-      notifiedEntryFeeds: [...notifiedFeeds, ...rssEntries],
+      notifiedEntryFeeds: [
+        ...notifiedFeeds,
+        ...rssEntries.map((feed) => ({
+          id: feed.id,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        })),
+      ],
     });
   },
 );
