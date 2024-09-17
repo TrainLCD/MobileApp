@@ -336,7 +336,7 @@ struct LockScreenLiveActivityContentView: View {
 }
 
 struct EarlierLockScreenLiveActivityContentView: View {
-  let context: ActivityViewContext<RideSessionAttributes>
+    let context: ActivityViewContext<RideSessionAttributes>
 
   var body: some View {
     LockScreenLiveActivityContentView(context: context)
@@ -364,7 +364,7 @@ struct SmartStackLiveActivityContentView: View {
         .multilineTextAlignment(.leading)
       HStack {
         if (!context.state.stationNumber.isEmpty) {
-          Text(context.state.stationNumber)
+          Text(context.state.stopping ? context.state.stationNumber : context.state.nextStationNumber)
             .font(.callout)
             .opacity(0.5)
             .multilineTextAlignment(.leading)
