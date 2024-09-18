@@ -4,10 +4,7 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import { APP_THEME } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import {
-  getNextInboundStopStation,
-  getNextOutboundStopStation,
-} from '../utils/nextStation'
+import getIsPass from '../utils/isPass'
 import { useCurrentStation } from './useCurrentStation'
 import { useLoopLine } from './useLoopLine'
 import { useThemeStore } from './useThemeStore'
@@ -58,30 +55,37 @@ export const useNextStation = (
     return stations[notLoopLineStationIndex]
   }, [isLoopLine, selectedDirection, station?.groupId, stations])
 
-  const nextInboundStopStation = useMemo(
-    () =>
-      actualNextStation &&
-      station &&
-      getNextInboundStopStation(
-        stations,
-        actualNextStation,
-        station,
-        ignorePass
-      ),
-    [actualNextStation, ignorePass, station, stations]
-  )
+  const nextInboundStopStation = useMemo(() => {
+    const inboundCurrentStationIndex = stations.findIndex(
+      (s) => s?.groupId === station?.groupId
+    )
 
-  const nextOutboundStopStation = useMemo(
-    () =>
-      actualNextStation &&
-      station &&
-      getNextOutboundStopStation(
-        stations,
-        actualNextStation,
-        station,
-        ignorePass
-      ),
-    [actualNextStation, ignorePass, station, stations]
+    return actualNextStation && getIsPass(actualNextStation) && ignorePass
+      ? stations
+          .slice(inboundCurrentStationIndex - stations.length + 1)
+          .filter((s) => !getIsPass(s))[0]
+      : actualNextStation
+  }, [actualNextStation, ignorePass, station?.groupId, stations])
+
+  const nextOutboundStopStation = useMemo(() => {
+    const outboundCurrentStationIndex = stations
+      .slice()
+      .reverse()
+      .findIndex((s) => s?.groupId === station?.groupId)
+
+    return actualNextStation && getIsPass(actualNextStation) && ignorePass
+      ? stations
+          .slice()
+          .reverse()
+          .slice(outboundCurrentStationIndex - stations.length + 1)
+          .filter((s) => !getIsPass(s))[0]
+      : actualNextStation
+  }, [actualNextStation, ignorePass, station, stations])
+
+  console.warn(
+    (selectedDirection === 'INBOUND'
+      ? nextInboundStopStation
+      : nextOutboundStopStation) ?? undefined
   )
 
   return (
