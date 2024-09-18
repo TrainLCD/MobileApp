@@ -349,38 +349,56 @@ struct SmartStackLiveActivityContentView: View {
   let context: ActivityViewContext<RideSessionAttributes>
   
   var body: some View {
-    VStack(alignment: .leading) {
-      Text(getRunningStateText(
-        approaching: context.state.approaching,
-        stopping: context.state.stopping,
-        isNextLastStop: context.state.isNextLastStop
-      ))
-      .font(.callout)
-      .bold()
-      .multilineTextAlignment(.leading)
-      Text(context.state.stopping ? context.state.stationName : context.state.nextStationName)
-        .font(.headline)
+    ZStack {
+      VStack(alignment: .leading) {
+        Text(context.state.lineName)
+          .font(.caption)
+          .bold()
+          .multilineTextAlignment(.leading)
+          .opacity(0.75)
+        Text(getRunningStateText(
+          approaching: context.state.approaching,
+          stopping: context.state.stopping,
+          isNextLastStop: context.state.isNextLastStop
+        ))
+        .font(.callout)
         .bold()
         .multilineTextAlignment(.leading)
-      HStack {
+        Text(context.state.stopping ? context.state.stationName : context.state.nextStationName)
+          .font(.headline)
+          .bold()
+          .multilineTextAlignment(.leading)
         if (!context.state.stationNumber.isEmpty) {
           Text(context.state.stopping ? context.state.stationNumber : context.state.nextStationNumber)
-            .font(.callout)
-            .opacity(0.5)
+            .font(.caption)
+            .bold()
+            .opacity(0.75)
             .multilineTextAlignment(.leading)
         }
       }
+      .frame(
+        minWidth: 0,
+        maxWidth: .infinity,
+        minHeight: 0,
+        maxHeight: .infinity,
+        alignment: .leading
+      )
+      .padding(.horizontal, 8)
     }
-    .frame(
-      minWidth: 0,
-      maxWidth: .infinity,
-      minHeight: 0,
-      maxHeight: .infinity,
-      alignment: .leading
+    .background(
+      ZStack {
+        Rectangle().fill(Color(hex: context.state.lineColor))
+        Rectangle()
+          .fill(
+            LinearGradient(colors: [.gray, .clear], startPoint: .top, endPoint: .bottom)
+              .opacity(0.5)
+          )
+          .blendMode(.multiply)
+      }
     )
-    .padding(.horizontal, 8)
   }
 }
+
 
 @available(iOS 18.0, *)
 struct NewerLockScreenLiveActivityContentView: View {
