@@ -194,10 +194,11 @@ struct RideSessionWidget: Widget {
         Image(systemName: "tram")
       }
     }
+    .supplementalActivityFamiliesIfAvailable()
   }
 }
 
-struct LockScreenLiveActivityView: View {
+struct LockScreenLiveActivityContentView: View {
   @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
   let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
@@ -280,7 +281,7 @@ struct LockScreenLiveActivityView: View {
         }
       }
       .background(Rectangle().fill(colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
-
+      
       if (!context.state.passingStationName.isEmpty) {
         HStack {
           Text(
@@ -318,7 +319,7 @@ struct LockScreenLiveActivityView: View {
           }
         }
         .padding(.bottom, 8)
-
+        
       }
     }
     .frame(
@@ -331,5 +332,100 @@ struct LockScreenLiveActivityView: View {
     .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5))
     .accentColor(colorScheme == .dark ? .white : .black)
     .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
+  }
+}
+
+struct EarlierLockScreenLiveActivityContentView: View {
+    let context: ActivityViewContext<RideSessionAttributes>
+
+  var body: some View {
+    LockScreenLiveActivityContentView(context: context)
+  }
+}
+
+@available(iOS 18.0, *)
+struct SmartStackLiveActivityContentView: View {
+  @Environment(\.colorScheme) var colorScheme
+  let context: ActivityViewContext<RideSessionAttributes>
+  
+  var body: some View {
+    ZStack {
+      VStack(alignment: .leading) {
+        Text(context.state.lineName)
+          .font(.caption)
+          .bold()
+          .multilineTextAlignment(.leading)
+          .opacity(0.75)
+        Text(getRunningStateText(
+          approaching: context.state.approaching,
+          stopping: context.state.stopping,
+          isNextLastStop: context.state.isNextLastStop
+        ))
+        .font(.callout)
+        .bold()
+        .multilineTextAlignment(.leading)
+        Text(context.state.stopping ? context.state.stationName : context.state.nextStationName)
+          .font(.headline)
+          .bold()
+          .multilineTextAlignment(.leading)
+        if (!context.state.stationNumber.isEmpty) {
+          Text(context.state.stopping ? context.state.stationNumber : context.state.nextStationNumber)
+            .font(.caption)
+            .bold()
+            .opacity(0.75)
+            .multilineTextAlignment(.leading)
+        }
+      }
+      .frame(
+        minWidth: 0,
+        maxWidth: .infinity,
+        minHeight: 0,
+        maxHeight: .infinity,
+        alignment: .leading
+      )
+      .padding(.horizontal, 8)
+    }
+    .background(
+      ZStack {
+        Rectangle().fill(Color(hex: context.state.lineColor))
+        Rectangle()
+          .fill(
+            LinearGradient(colors: [.gray, .clear], startPoint: .top, endPoint: .bottom)
+              .opacity(0.5)
+          )
+          .blendMode(.multiply)
+      }
+    )
+  }
+}
+
+
+@available(iOS 18.0, *)
+struct NewerLockScreenLiveActivityContentView: View {
+  @Environment(\.activityFamily) var activityFamily
+  let context: ActivityViewContext<RideSessionAttributes>
+  
+  var body: some View {
+    switch activityFamily {
+    case .small:
+      SmartStackLiveActivityContentView(context: context)
+    case .medium:
+      LockScreenLiveActivityContentView(context: context)
+    @unknown default:
+      LockScreenLiveActivityContentView(context: context)
+    }
+  }
+}
+
+struct LockScreenLiveActivityView: View {
+  let context: ActivityViewContext<RideSessionAttributes>
+  var body: some View {
+    Group {
+      if #available(iOS 18.0, *) {
+        NewerLockScreenLiveActivityContentView(context: context)
+      } else {
+        EarlierLockScreenLiveActivityContentView(context: context)
+      }
+    }
   }
 }
