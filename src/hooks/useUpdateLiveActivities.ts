@@ -14,6 +14,7 @@ import {
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule'
 import useBounds from './useBounds'
+import { useCurrentLine } from './useCurrentLine'
 import { useCurrentStation } from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
@@ -29,6 +30,7 @@ export const useUpdateLiveActivities = (): void => {
     useRecoilValue(stationState)
 
   const previousStation = usePreviousStation()
+  const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
   const stoppedCurrentStation = useCurrentStation(true)
   const nextStation = useNextStation()
@@ -125,12 +127,18 @@ export const useUpdateLiveActivities = (): void => {
         : '',
       isLoopLine: isLoopLine || isPartiallyLoopLine,
       isNextLastStop,
+      lineColor: currentLine?.color ?? '#000000',
+      lineName:
+        (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ?? '',
     }
   }, [
     approaching,
     arrived,
     boundStationName,
     boundStationNumber,
+    currentLine?.color,
+    currentLine?.nameRoman,
+    currentLine?.nameShort,
     currentStation,
     getStationNumberIndex,
     isLoopLine,

@@ -23,7 +23,9 @@ class LiveActivityModule: NSObject {
       passingStationName: state["passingStationName"] as? String ?? "",
       passingStationNumber: state["passingStationNumber"] as? String ?? "",
       isLoopLine: state["isLoopLine"] as? Bool ?? false,
-      isNextLastStop: state["isNextLastStop"] as? Bool ?? false
+      isNextLastStop: state["isNextLastStop"] as? Bool ?? false,
+      lineColor: state["lineColor"] as? String ?? "#000000",
+      lineName: state["lineName"] as? String ?? ""
     )
   }
   

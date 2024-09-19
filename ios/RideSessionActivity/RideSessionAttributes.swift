@@ -26,5 +26,7 @@ struct RideSessionAttributes: ActivityAttributes {
     var passingStationNumber: String
     var isLoopLine: Bool
     var isNextLastStop: Bool
+    var lineColor: String
+    var lineName: String
   }
 }   
