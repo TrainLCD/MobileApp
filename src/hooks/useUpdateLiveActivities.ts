@@ -155,18 +155,26 @@ export const useUpdateLiveActivities = (): void => {
     if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
       return
     }
-
-    if (!selectedBound) {
-      stopLiveActivity()
-      setStarted(false)
-      return
-    }
-
     if (selectedBound && !started && activityState) {
       startLiveActivity(activityState)
       setStarted(true)
     }
-
-    updateLiveActivity(activityState)
   }, [activityState, selectedBound, started])
+
+  useEffect(() => {
+    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
+      return
+    }
+    if (!selectedBound) {
+      stopLiveActivity()
+      setStarted(false)
+    }
+  }, [selectedBound])
+
+  useEffect(() => {
+    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
+      return
+    }
+    updateLiveActivity(activityState)
+  }, [activityState])
 }
