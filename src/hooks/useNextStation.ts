@@ -82,12 +82,6 @@ export const useNextStation = (
       : actualNextStation
   }, [actualNextStation, ignorePass, station, stations])
 
-  console.warn(
-    (selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation) ?? undefined
-  )
-
   return (
     (selectedDirection === 'INBOUND'
       ? nextInboundStopStation
