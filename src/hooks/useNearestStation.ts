@@ -32,13 +32,22 @@ export const useNearestStation = (): Station | null => {
       return null
     }
 
-    return (
-      stations.find(
-        (sta) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
-      ) ?? null
+    const nearestStations = stations.filter(
+      (sta) =>
+        sta.latitude === nearestCoordinates.latitude &&
+        sta.longitude === nearestCoordinates.longitude
     )
+
+    // NOTE: 都営大江戸線特例
+    if (
+      // NOTE: どちらのIDも都庁前
+      nearestStations[0]?.id === 9930100 &&
+      nearestStations[1]?.id === 9930101
+    ) {
+      return nearestStations.slice().reverse()[0]
+    }
+
+    return nearestStations[0] ?? null
   }, [latitude, longitude, stations])
 
   return nearestStation
