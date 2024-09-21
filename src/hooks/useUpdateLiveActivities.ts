@@ -87,67 +87,117 @@ export const useUpdateLiveActivities = (): void => {
       .join('/')
   }, [directionalStops, getStationNumberIndex])
 
+  const stoppedStation = useMemo(
+    () => stoppedCurrentStation ?? previousStation,
+    [previousStation, stoppedCurrentStation]
+  )
+  const stoppedStationName = useMemo(
+    () => stoppedStation?.name,
+    [stoppedStation?.name]
+  )
+  const stoppedStationNameRoman = useMemo(
+    () => stoppedStation?.nameRoman,
+    [stoppedStation?.nameRoman]
+  )
+
+  const nextStationName = useMemo(() => nextStation?.name, [nextStation?.name])
+  const nextStationNameRoman = useMemo(
+    () => nextStation?.nameRoman,
+    [nextStation?.nameRoman]
+  )
+
+  const passingStationName = useMemo(
+    () => (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? '',
+    [currentStation?.name, currentStation?.nameRoman]
+  )
+
+  const stoppedStationNumberingIndex = getStationNumberIndex(stoppedStation)
+  const stoppedStationNumber = useMemo(
+    () =>
+      stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
+        ?.stationNumber ?? '',
+    [stoppedStation?.stationNumbers, stoppedStationNumberingIndex]
+  )
+
+  const currentStationNumberingIndex = getStationNumberIndex(
+    currentStation ?? undefined
+  )
+  const nextStationNumberingIndex = getStationNumberIndex(nextStation)
+  const nextStationNumber = useMemo(
+    () =>
+      nextStation?.stationNumbers?.[nextStationNumberingIndex]?.stationNumber ??
+      '',
+    [nextStation?.stationNumbers, nextStationNumberingIndex]
+  )
+
+  const isApproachingForLA = useMemo(
+    () => !!(approaching && !arrived && !getIsPass(nextStation ?? null)),
+    [approaching, arrived, nextStation]
+  )
+  const isStoppingForLA = useMemo(
+    () => !!(arrived && currentStation && !getIsPass(currentStation)),
+    [arrived, currentStation]
+  )
+
+  const passingStationNumber = useMemo(
+    () =>
+      isPassing
+        ? currentStation?.stationNumbers[currentStationNumberingIndex]
+            ?.stationNumber ?? ''
+        : '',
+    [currentStation?.stationNumbers, currentStationNumberingIndex, isPassing]
+  )
+
+  const lineColor = useMemo(
+    () => currentLine?.color ?? '#000000',
+    [currentLine?.color]
+  )
+  const lineName = useMemo(
+    () => (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ?? '',
+    [currentLine?.nameRoman, currentLine?.nameShort]
+  )
+
   const activityState = useMemo(() => {
-    const stoppedStation = stoppedCurrentStation ?? previousStation
-    const passingStationName =
-      (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
-
-    const stoppedStationNumberingIndex = getStationNumberIndex(stoppedStation)
-    const currentStationNumberingIndex = getStationNumberIndex(
-      currentStation ?? undefined
-    )
-    const nextStationNumberingIndex = getStationNumberIndex(nextStation)
-
     return {
       stationName: isJapanese
-        ? stoppedStation?.name ?? ''
-        : stoppedStation?.nameRoman ?? '',
+        ? stoppedStationName ?? ''
+        : stoppedStationNameRoman ?? '',
       nextStationName: isJapanese
-        ? nextStation?.name ?? ''
-        : nextStation?.nameRoman ?? '',
-      stationNumber:
-        stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
-          ?.stationNumber ?? '',
-      nextStationNumber:
-        nextStation?.stationNumbers?.[nextStationNumberingIndex]
-          ?.stationNumber ?? '',
-      approaching: !!(
-        approaching &&
-        !arrived &&
-        !getIsPass(nextStation ?? null)
-      ),
-      stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
+        ? nextStationName ?? ''
+        : nextStationNameRoman ?? '',
+      stationNumber: stoppedStationNumber,
+      nextStationNumber: nextStationNumber,
+      approaching: isApproachingForLA,
+      stopping: isStoppingForLA,
       boundStationName,
       boundStationNumber,
       trainTypeName,
       passingStationName: isPassing ? passingStationName : '',
-      passingStationNumber: isPassing
-        ? currentStation?.stationNumbers[currentStationNumberingIndex]
-            ?.stationNumber ?? ''
-        : '',
+      passingStationNumber,
       isLoopLine: isLoopLine || isPartiallyLoopLine,
       isNextLastStop,
-      lineColor: currentLine?.color ?? '#000000',
-      lineName:
-        (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ?? '',
+      lineColor,
+      lineName,
     }
   }, [
-    approaching,
-    arrived,
     boundStationName,
     boundStationNumber,
-    currentLine?.color,
-    currentLine?.nameRoman,
-    currentLine?.nameShort,
-    currentStation,
-    getStationNumberIndex,
+    isApproachingForLA,
     isLoopLine,
     isNextLastStop,
     isPartiallyLoopLine,
     isPassing,
-    nextStation,
-    previousStation,
-    stoppedCurrentStation,
+    isStoppingForLA,
+    lineColor,
+    lineName,
+    nextStationName,
+    nextStationNameRoman,
+    nextStationNumber,
+    passingStationName,
+    passingStationNumber,
+    stoppedStationName,
+    stoppedStationNameRoman,
+    stoppedStationNumber,
     trainTypeName,
   ])
 
