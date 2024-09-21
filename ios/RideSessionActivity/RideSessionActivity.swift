@@ -351,11 +351,19 @@ struct SmartStackLiveActivityContentView: View {
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
-        Text(context.state.lineName)
-          .font(.caption)
-          .bold()
-          .multilineTextAlignment(.leading)
-          .opacity(0.75)
+        HStack(spacing: 2) {
+          Text(context.state.lineName)
+            .font(.caption)
+            .bold()
+            .multilineTextAlignment(.leading)
+            .opacity(0.75)
+          Text(context.state.trainTypeName)
+            .font(.caption)
+            .bold()
+            .multilineTextAlignment(.leading)
+            .opacity(0.75)
+
+        }
         Text(getRunningStateText(
           approaching: context.state.approaching,
           stopping: context.state.stopping,
