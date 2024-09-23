@@ -13,7 +13,11 @@ import {
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { findBranchLine, findLocalType } from '../utils/trainTypeString'
+import {
+  findBranchLine,
+  findLocalType,
+  findRapidType,
+} from '../utils/trainTypeString'
 
 export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState)
@@ -33,15 +37,6 @@ export const useStationList = () => {
     }
   )
 
-  useEffect(() => {
-    setStationState((prev) => ({
-      ...prev,
-      stations: prev.stations.length
-        ? prev.stations
-        : byLineIdData?.stations ?? [],
-    }))
-  }, [byLineIdData?.stations, setStationState])
-
   const {
     data: fetchedTrainTypesData,
     isLoading: isTrainTypesLoading,
@@ -54,6 +49,36 @@ export const useStationList = () => {
     },
     { enabled: !!selectedLine?.station?.id }
   )
+
+  useEffect(() => {
+    setStationState((prev) => ({
+      ...prev,
+      stations: prev.stations.length
+        ? prev.stations
+        : byLineIdData?.stations ?? [],
+    }))
+
+    const trainTypes = fetchedTrainTypesData?.trainTypes ?? []
+
+    const localType = findLocalType(trainTypes)
+    const branchLineType = findBranchLine(trainTypes)
+    const rapidType = findRapidType(trainTypes)
+
+    const orderedType = localType ?? branchLineType ?? rapidType
+
+    if (orderedType) {
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: orderedType,
+      }))
+    }
+  }, [
+    byLineIdData?.stations,
+    fetchedTrainTypesData?.trainTypes,
+    selectedLine?.id,
+    setNavigationState,
+    setStationState,
+  ])
 
   useEffect(() => {
     const localType = new TrainType({
