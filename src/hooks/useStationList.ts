@@ -33,15 +33,6 @@ export const useStationList = () => {
     }
   )
 
-  useEffect(() => {
-    setStationState((prev) => ({
-      ...prev,
-      stations: prev.stations.length
-        ? prev.stations
-        : byLineIdData?.stations ?? [],
-    }))
-  }, [byLineIdData?.stations, setStationState])
-
   const {
     data: fetchedTrainTypesData,
     isLoading: isTrainTypesLoading,
@@ -54,6 +45,28 @@ export const useStationList = () => {
     },
     { enabled: !!selectedLine?.station?.id }
   )
+
+  useEffect(() => {
+    const selectedTrainType = fetchedTrainTypesData?.trainTypes?.find(
+      (tt) => tt.line?.id === selectedLine?.id
+    )
+
+    setStationState((prev) => ({
+      ...prev,
+      stations: prev.stations.length
+        ? prev.stations
+        : byLineIdData?.stations ?? [],
+    }))
+    if (selectedTrainType) {
+      setNavigationState((prev) => ({ ...prev, trainType: selectedTrainType }))
+    }
+  }, [
+    byLineIdData?.stations,
+    fetchedTrainTypesData?.trainTypes,
+    selectedLine?.id,
+    setNavigationState,
+    setStationState,
+  ])
 
   useEffect(() => {
     const localType = new TrainType({
