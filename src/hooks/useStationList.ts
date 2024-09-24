@@ -112,6 +112,7 @@ export const useStationList = () => {
         ...prev,
         fetchedTrainTypes: [localType, ...fetchedTrainTypes],
       }))
+      return
     }
 
     setNavigationState((prev) => ({
