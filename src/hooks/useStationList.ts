@@ -1,5 +1,5 @@
 import { useQuery } from '@connectrpc/connect-query'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 import {
   getStationsByLineId,
@@ -13,11 +13,6 @@ import {
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import {
-  findBranchLine,
-  findLocalType,
-  findRapidType,
-} from '../utils/trainTypeString'
 
 export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState)
@@ -50,6 +45,13 @@ export const useStationList = () => {
     { enabled: !!selectedLine?.station?.id }
   )
 
+  const designatedTrainType = useMemo(
+    () =>
+      byLineIdData?.stations.find((s) => s.id === selectedLine?.station?.id)
+        ?.trainType ?? null,
+    [byLineIdData?.stations, selectedLine?.station?.id]
+  )
+
   useEffect(() => {
     setStationState((prev) => ({
       ...prev,
@@ -57,25 +59,13 @@ export const useStationList = () => {
         ? prev.stations
         : byLineIdData?.stations ?? [],
     }))
-
-    const trainTypes = fetchedTrainTypesData?.trainTypes ?? []
-
-    const localType = findLocalType(trainTypes)
-    const branchLineType = findBranchLine(trainTypes)
-    const rapidType = findRapidType(trainTypes)
-
-    const orderedType = localType ?? branchLineType ?? rapidType
-
-    if (orderedType) {
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: orderedType,
-      }))
-    }
+    setNavigationState((prev) => ({
+      ...prev,
+      trainType: designatedTrainType,
+    }))
   }, [
     byLineIdData?.stations,
-    fetchedTrainTypesData?.trainTypes,
-    selectedLine?.id,
+    designatedTrainType,
     setNavigationState,
     setStationState,
   ])
@@ -98,27 +88,23 @@ export const useStationList = () => {
 
     const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? []
 
-    // 普通種別が登録済み: 非表示
-    // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
-    // 特例で普通列車以外の種別で表示を設定されている場合(中央線快速等): 表示
-    // 上記以外: 表示
-    if (
-      !(
-        findLocalType(fetchedTrainTypes) ||
-        (findBranchLine(fetchedTrainTypes) && !findLocalType(fetchedTrainTypes))
-      )
-    ) {
+    if (!designatedTrainType) {
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes: [localType, ...fetchedTrainTypes],
       }))
+      return
     }
 
     setNavigationState((prev) => ({
       ...prev,
       fetchedTrainTypes,
     }))
-  }, [fetchedTrainTypesData?.trainTypes, setNavigationState])
+  }, [
+    designatedTrainType,
+    fetchedTrainTypesData?.trainTypes,
+    setNavigationState,
+  ])
 
   return {
     refetchStations,
