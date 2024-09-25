@@ -7,7 +7,7 @@ import {
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
-import getIsPass from '../utils/isPass'
+import { getIsPassFromStopCondition } from '../utils/isPass'
 import {
   startLiveActivity,
   stopLiveActivity,
@@ -18,10 +18,8 @@ import { useCurrentLine } from './useCurrentLine'
 import { useCurrentStation } from './useCurrentStation'
 import useCurrentTrainType from './useCurrentTrainType'
 import useIsNextLastStop from './useIsNextLastStop'
-import useIsPassing from './useIsPassing'
 import { useLoopLine } from './useLoopLine'
 import { useNextStation } from './useNextStation'
-import usePreviousStation from './usePreviousStation'
 import useStationNumberIndexFunc from './useStationNumberIndexFunc'
 
 export const useUpdateLiveActivities = (): void => {
@@ -29,10 +27,9 @@ export const useUpdateLiveActivities = (): void => {
   const { arrived, selectedBound, selectedDirection, approaching } =
     useRecoilValue(stationState)
 
-  const previousStation = usePreviousStation()
   const currentLine = useCurrentLine()
+  const previousStation = useCurrentStation(true)
   const currentStation = useCurrentStation()
-  const stoppedCurrentStation = useCurrentStation(true)
   const nextStation = useNextStation()
   const { directionalStops } = useBounds()
   const isNextLastStop = useIsNextLastStop()
@@ -40,7 +37,15 @@ export const useUpdateLiveActivities = (): void => {
   const trainType = useCurrentTrainType()
   const { isLoopLine, isPartiallyLoopLine, isYamanoteLine, isOsakaLoopLine } =
     useLoopLine()
-  const isPassing = useIsPassing()
+
+  const currentStationStopCond = useMemo(
+    () => currentStation?.stopCondition,
+    [currentStation?.stopCondition]
+  )
+  const nextStationStopCond = useMemo(
+    () => nextStation?.stopCondition,
+    [nextStation?.stopCondition]
+  )
 
   const trainTypeName = useMemo(() => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
@@ -88,64 +93,56 @@ export const useUpdateLiveActivities = (): void => {
   }, [directionalStops, getStationNumberIndex])
 
   const stoppedStation = useMemo(
-    () => stoppedCurrentStation ?? previousStation,
-    [previousStation, stoppedCurrentStation]
+    () => previousStation ?? currentStation,
+    [currentStation, previousStation]
   )
-  const stoppedStationName = useMemo(
-    () => stoppedStation?.name,
-    [stoppedStation?.name]
-  )
-  const stoppedStationNameRoman = useMemo(
-    () => stoppedStation?.nameRoman,
-    [stoppedStation?.nameRoman]
+  const stationName = useMemo(
+    () => (isJapanese ? stoppedStation?.name : stoppedStation?.nameRoman) ?? '',
+    [stoppedStation?.name, stoppedStation?.nameRoman]
   )
 
-  const nextStationName = useMemo(() => nextStation?.name, [nextStation?.name])
-  const nextStationNameRoman = useMemo(
-    () => nextStation?.nameRoman,
-    [nextStation?.nameRoman]
-  )
-
-  const passingStationName = useMemo(
-    () => (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? '',
-    [currentStation?.name, currentStation?.nameRoman]
-  )
-
-  const stoppedStationNumberingIndex = getStationNumberIndex(stoppedStation)
-  const stoppedStationNumber = useMemo(
+  const nextStationName = useMemo(
     () =>
+      arrived && !getIsPassFromStopCondition(currentStationStopCond)
+        ? ''
+        : (isJapanese ? nextStation?.name : nextStation?.nameRoman) ?? '',
+    [arrived, currentStationStopCond, nextStation?.name, nextStation?.nameRoman]
+  )
+
+  const stoppedStationNumber = useMemo(() => {
+    const stoppedStationNumberingIndex = getStationNumberIndex(
+      stoppedStation ?? null
+    )
+    return (
       stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
-        ?.stationNumber ?? '',
-    [stoppedStation?.stationNumbers, stoppedStationNumberingIndex]
-  )
+        ?.stationNumber ?? ''
+    )
+  }, [getStationNumberIndex, stoppedStation])
 
-  const currentStationNumberingIndex = getStationNumberIndex(
-    currentStation ?? undefined
-  )
-  const nextStationNumberingIndex = getStationNumberIndex(nextStation)
-  const nextStationNumber = useMemo(
-    () =>
+  const nextStationNumber = useMemo(() => {
+    if (arrived && !getIsPassFromStopCondition(currentStationStopCond)) {
+      return ''
+    }
+
+    const nextStationNumberingIndex = getStationNumberIndex(nextStation ?? null)
+    return (
       nextStation?.stationNumbers?.[nextStationNumberingIndex]?.stationNumber ??
-      '',
-    [nextStation?.stationNumbers, nextStationNumberingIndex]
-  )
+      ''
+    )
+  }, [arrived, currentStationStopCond, getStationNumberIndex, nextStation])
 
   const isApproachingForLA = useMemo(
-    () => !!(approaching && !arrived && !getIsPass(nextStation ?? null)),
-    [approaching, arrived, nextStation]
-  )
-  const isStoppingForLA = useMemo(
-    () => !!(arrived && currentStation && !getIsPass(currentStation)),
-    [arrived, currentStation]
-  )
-
-  const passingStationNumber = useMemo(
     () =>
-      isPassing
-        ? currentStation?.stationNumbers[currentStationNumberingIndex]
-            ?.stationNumber ?? ''
-        : '',
-    [currentStation?.stationNumbers, currentStationNumberingIndex, isPassing]
+      !!(
+        approaching &&
+        !arrived &&
+        !getIsPassFromStopCondition(nextStationStopCond)
+      ),
+    [approaching, arrived, nextStationStopCond]
+  )
+  const isStoppedForLA = useMemo(
+    () => !!(arrived && !getIsPassFromStopCondition(currentStationStopCond)),
+    [arrived, currentStationStopCond]
   )
 
   const lineColor = useMemo(
@@ -157,49 +154,39 @@ export const useUpdateLiveActivities = (): void => {
     [currentLine?.nameRoman, currentLine?.nameShort]
   )
 
-  const activityState = useMemo(() => {
-    return {
-      stationName: isJapanese
-        ? stoppedStationName ?? ''
-        : stoppedStationNameRoman ?? '',
-      nextStationName: isJapanese
-        ? nextStationName ?? ''
-        : nextStationNameRoman ?? '',
+  const activityState = useMemo(
+    () => ({
+      stationName,
+      nextStationName,
       stationNumber: stoppedStationNumber,
       nextStationNumber: nextStationNumber,
       approaching: isApproachingForLA,
-      stopping: isStoppingForLA,
+      stopped: isStoppedForLA,
       boundStationName,
       boundStationNumber,
       trainTypeName,
-      passingStationName: isPassing ? passingStationName : '',
-      passingStationNumber,
       isLoopLine: isLoopLine || isPartiallyLoopLine,
       isNextLastStop,
       lineColor,
       lineName,
-    }
-  }, [
-    boundStationName,
-    boundStationNumber,
-    isApproachingForLA,
-    isLoopLine,
-    isNextLastStop,
-    isPartiallyLoopLine,
-    isPassing,
-    isStoppingForLA,
-    lineColor,
-    lineName,
-    nextStationName,
-    nextStationNameRoman,
-    nextStationNumber,
-    passingStationName,
-    passingStationNumber,
-    stoppedStationName,
-    stoppedStationNameRoman,
-    stoppedStationNumber,
-    trainTypeName,
-  ])
+    }),
+    [
+      boundStationName,
+      boundStationNumber,
+      isApproachingForLA,
+      isLoopLine,
+      isNextLastStop,
+      isPartiallyLoopLine,
+      isStoppedForLA,
+      lineColor,
+      lineName,
+      nextStationName,
+      nextStationNumber,
+      stationName,
+      stoppedStationNumber,
+      trainTypeName,
+    ]
+  )
 
   useEffect(() => {
     if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {

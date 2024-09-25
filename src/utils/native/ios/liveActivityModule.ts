@@ -12,9 +12,9 @@ type LiveActivityWidgetState = {
   stationNumber: string;
   nextStationNumber: string;
   approaching: boolean;
-  stopping: boolean;
-  passingStationName: string;
-  passingStationNumber: string;
+  stopped: boolean;
+  lineName:string
+  lineColor:string
 };
 
 export const startLiveActivity = (

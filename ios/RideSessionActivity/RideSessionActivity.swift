@@ -6,30 +6,29 @@
 //  Copyright © 2022 Facebook. All rights reserved.
 //
 
-import WidgetKit
 import SwiftUI
+import WidgetKit
 
 func getStationNumberText(_ stationNumber: String) -> String {
-  if (stationNumber.isEmpty) {
+  if stationNumber.isEmpty {
     return ""
   }
   return "(\(stationNumber))"
 }
 
-func getRunningStateText(approaching: Bool, stopping: Bool, isNextLastStop: Bool, isPassing: Bool = false) -> String {
-  if (isPassing){
-    return NSLocalizedString("pass", comment: "")
-  }
-  if (approaching) {
-    if (isNextLastStop) {
+func getRunningStateText(
+  approaching: Bool, stopped: Bool, isNextLastStop: Bool
+) -> String {
+  if approaching {
+    if isNextLastStop {
       return NSLocalizedString("soonLast", comment: "")
     }
     return NSLocalizedString("soon", comment: "")
   }
-  if (stopping) {
+  if stopped {
     return NSLocalizedString("stop", comment: "")
   }
-  if (isNextLastStop) {
+  if isNextLastStop {
     return NSLocalizedString("nextLast", comment: "")
   }
   return NSLocalizedString("next", comment: "")
@@ -40,10 +39,10 @@ struct RideSessionWidget: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RideSessionAttributes.self) { context in
       LockScreenLiveActivityView(context: context)
-    } dynamicIsland: {context in
+    } dynamicIsland: { context in
       DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
-          if (context.state.stopping) {
+          if context.state.stopped {
             EmptyView()
           } else {
             VStack(alignment: .center) {
@@ -51,7 +50,7 @@ struct RideSessionWidget: Widget {
                 .font(.callout)
                 .opacity(0.5)
                 .multilineTextAlignment(.center)
-              if (!context.state.stationNumber.isEmpty) {
+              if !context.state.stationNumber.isEmpty {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .opacity(0.5)
@@ -60,9 +59,9 @@ struct RideSessionWidget: Widget {
             }
           }
         }
-        
+
         DynamicIslandExpandedRegion(.trailing) {
-          if (context.state.stopping) {
+          if context.state.stopped {
             EmptyView()
           } else {
             VStack(alignment: .center) {
@@ -70,7 +69,7 @@ struct RideSessionWidget: Widget {
                 .font(.callout)
                 .bold()
                 .multilineTextAlignment(.center)
-              if (!context.state.nextStationNumber.isEmpty) {
+              if !context.state.nextStationNumber.isEmpty {
                 Text(getStationNumberText(context.state.nextStationNumber))
                   .font(.caption)
                   .bold()
@@ -79,22 +78,24 @@ struct RideSessionWidget: Widget {
             }
           }
         }
-        
+
         DynamicIslandExpandedRegion(.center) {
-          if (context.state.stopping) {
-            VStack(alignment: .center ) {
-              Text(getRunningStateText(
-                approaching: context.state.approaching,
-                stopping: context.state.stopping,
-                isNextLastStop: context.state.isNextLastStop
-              ))
+          if context.state.stopped {
+            VStack(alignment: .center) {
+              Text(
+                getRunningStateText(
+                  approaching: context.state.approaching,
+                  stopped: context.state.stopped,
+                  isNextLastStop: context.state.isNextLastStop
+                )
+              )
               .bold()
               .font(.caption)
               .multilineTextAlignment(.center)
               Text(context.state.stationName)
                 .bold()
                 .multilineTextAlignment(.center)
-              if (!context.state.stationNumber.isEmpty) {
+              if !context.state.stationNumber.isEmpty {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .bold()
@@ -103,34 +104,22 @@ struct RideSessionWidget: Widget {
             }
           } else {
             VStack(alignment: .center) {
-              Text(getRunningStateText(
-                approaching: context.state.approaching,
-                stopping: context.state.stopping,
-                isNextLastStop: context.state.isNextLastStop
-              ))
+              Text(
+                getRunningStateText(
+                  approaching: context.state.approaching,
+                  stopped: context.state.stopped,
+                  isNextLastStop: context.state.isNextLastStop
+                )
+              )
               .bold()
               .font(.caption)
               .multilineTextAlignment(.center)
               Image(systemName: "arrow.right")
                 .foregroundColor(.white)
-              if (!context.state.passingStationName.isEmpty) {
-                HStack {
-                  Text(
-                    String(
-                      format: NSLocalizedString("passingStation", comment: ""),
-                      "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
-                    )
-                  )
-                  .font(.caption)
-                  .bold()
-                  .multilineTextAlignment(.center)
-                }
-                .padding(.top, 4)
-              }
             }
           }
         }
-        
+
         DynamicIslandExpandedRegion(.bottom) {
           EmptyView()
         }
@@ -138,22 +127,22 @@ struct RideSessionWidget: Widget {
         Text(
           getRunningStateText(
             approaching: context.state.approaching,
-            stopping: context.state.stopping,
-            isNextLastStop: context.state.isNextLastStop,
-            isPassing: !context.state.passingStationName.isEmpty
-          ))
+            stopped: context.state.stopped,
+            isNextLastStop: context.state.isNextLastStop
+          )
+        )
         .multilineTextAlignment(.trailing)
         .font(.caption)
         .bold()
         .padding(.leading, 8)
       } compactTrailing: {
-        if (context.state.stopping) {
+        if context.state.stopped {
           VStack {
             Text(context.state.stationName)
               .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
-            if (!context.state.stationNumber.isEmpty) {
+            if !context.state.stationNumber.isEmpty {
               Text(getStationNumberText(context.state.stationNumber))
                 .font(.caption2)
                 .bold()
@@ -170,15 +159,20 @@ struct RideSessionWidget: Widget {
           .padding(.trailing, 8)
         } else {
           VStack {
-            Text(context.state.passingStationName.isEmpty ? context.state.nextStationName : context.state.passingStationName)
+            Text(
+              context.state.nextStationName
+            )
+            .font(.caption2)
+            .bold()
+            .multilineTextAlignment(.center)
+            if !context.state.nextStationNumber.isEmpty {
+              Text(
+                getStationNumberText(
+                  context.state.nextStationNumber)
+              )
               .font(.caption2)
               .bold()
               .multilineTextAlignment(.center)
-            if (!context.state.nextStationNumber.isEmpty || !context.state.passingStationNumber.isEmpty) {
-              Text(getStationNumberText(context.state.passingStationName.isEmpty ? context.state.nextStationNumber : context.state.passingStationNumber))
-                .font(.caption2)
-                .bold()
-                .multilineTextAlignment(.center)
             }
           }
           .frame(
@@ -206,13 +200,15 @@ struct LockScreenLiveActivityContentView: View {
   var body: some View {
     VStack {
       Group {
-        if (context.state.stopping) {
+        if context.state.stopped {
           VStack {
-            Text(getRunningStateText(
-              approaching: context.state.approaching,
-              stopping: context.state.stopping,
-              isNextLastStop: context.state.isNextLastStop
-            ) )
+            Text(
+              getRunningStateText(
+                approaching: context.state.approaching,
+                stopped: context.state.stopped,
+                isNextLastStop: context.state.isNextLastStop
+              )
+            )
             .bold()
             .font(.caption)
             .multilineTextAlignment(.center)
@@ -222,7 +218,7 @@ struct LockScreenLiveActivityContentView: View {
                 .bold()
                 .multilineTextAlignment(.center)
                 .foregroundColor(.accentColor)
-              if (!context.state.stationNumber.isEmpty) {
+              if !context.state.stationNumber.isEmpty {
                 Text(getStationNumberText(context.state.stationNumber))
                   .font(.caption)
                   .bold()
@@ -235,11 +231,13 @@ struct LockScreenLiveActivityContentView: View {
           .padding(8)
         } else {
           VStack {
-            Text(getRunningStateText(
-              approaching: context.state.approaching,
-              stopping: context.state.stopping,
-              isNextLastStop: context.state.isNextLastStop
-            ))
+            Text(
+              getRunningStateText(
+                approaching: context.state.approaching,
+                stopped: context.state.stopped,
+                isNextLastStop: context.state.isNextLastStop
+              )
+            )
             .font(.caption)
             .bold()
             .multilineTextAlignment(.center)
@@ -250,7 +248,7 @@ struct LockScreenLiveActivityContentView: View {
                   .opacity(0.75)
                   .multilineTextAlignment(.center)
                   .foregroundColor(.accentColor)
-                if (!context.state.nextStationNumber.isEmpty) {
+                if !context.state.stationNumber.isEmpty {
                   Text(getStationNumberText(context.state.stationNumber))
                     .font(.caption)
                     .opacity(0.75)
@@ -261,12 +259,12 @@ struct LockScreenLiveActivityContentView: View {
               .frame(minWidth: 0, maxWidth: .infinity)
               Image(systemName: "arrow.right")
                 .foregroundColor(.accentColor)
-              VStack{
+              VStack {
                 Text(context.state.nextStationName)
                   .bold()
                   .multilineTextAlignment(.center)
                   .foregroundColor(.accentColor)
-                if (!context.state.nextStationNumber.isEmpty) {
+                if !context.state.nextStationNumber.isEmpty {
                   Text(getStationNumberText(context.state.nextStationNumber))
                     .font(.caption)
                     .bold()
@@ -280,14 +278,25 @@ struct LockScreenLiveActivityContentView: View {
           .padding(8)
         }
       }
-      .background(Rectangle().fill(colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
-      
-      if (!context.state.passingStationName.isEmpty) {
-        HStack {
+      .background(
+        Rectangle().fill(
+          colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
+
+      HStack {
+        if !context.state.trainTypeName.isEmpty {
+          Text(context.state.trainTypeName)
+            .multilineTextAlignment(.center)
+            .foregroundColor(.accentColor)
+            .bold()
+            .font(.caption)
+        }
+        if !context.state.boundStationName.isEmpty {
           Text(
             String(
-              format: NSLocalizedString("passingStation", comment: ""),
-              "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
+              format: NSLocalizedString(
+                context.state.isLoopLine
+                  ? "boundStationLoopline" : "boundStation", comment: ""),
+              "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
             )
           )
           .multilineTextAlignment(.center)
@@ -295,32 +304,8 @@ struct LockScreenLiveActivityContentView: View {
           .bold()
           .font(.caption)
         }
-        .padding(.bottom, 8)
-      } else {
-        HStack {
-          if (!context.state.trainTypeName.isEmpty) {
-            Text(context.state.trainTypeName)
-              .multilineTextAlignment(.center)
-              .foregroundColor(.accentColor)
-              .bold()
-              .font(.caption)
-          }
-          if (!context.state.boundStationName.isEmpty) {
-            Text(
-              String(
-                format: NSLocalizedString(context.state.isLoopLine ? "boundStationLoopline": "boundStation", comment: ""),
-                "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
-              )
-            )
-            .multilineTextAlignment(.center)
-            .foregroundColor(.accentColor)
-            .bold()
-            .font(.caption)
-          }
-        }
-        .padding(.bottom, 8)
-        
       }
+      .padding(.bottom, 8)
     }
     .frame(
       minWidth: 0,
@@ -329,14 +314,19 @@ struct LockScreenLiveActivityContentView: View {
       maxHeight: .infinity,
       alignment: .center
     )
-    .activityBackgroundTint(colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5))
+    .activityBackgroundTint(
+      colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5)
+    )
     .accentColor(colorScheme == .dark ? .white : .black)
-    .widgetURL(URL(string: schemeName == "CanaryTrainLCD" ? "trainlcd-canary://" : "trainlcd://"))
+    .widgetURL(
+      URL(
+        string: schemeName == "CanaryTrainLCD"
+          ? "trainlcd-canary://" : "trainlcd://"))
   }
 }
 
 struct EarlierLockScreenLiveActivityContentView: View {
-    let context: ActivityViewContext<RideSessionAttributes>
+  let context: ActivityViewContext<RideSessionAttributes>
 
   var body: some View {
     LockScreenLiveActivityContentView(context: context)
@@ -345,9 +335,8 @@ struct EarlierLockScreenLiveActivityContentView: View {
 
 @available(iOS 18.0, *)
 struct SmartStackLiveActivityContentView: View {
-  @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
-  
+
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
@@ -362,27 +351,34 @@ struct SmartStackLiveActivityContentView: View {
             .bold()
             .multilineTextAlignment(.leading)
             .opacity(0.75)
-
         }
-        Text(getRunningStateText(
-          approaching: context.state.approaching,
-          stopping: context.state.stopping,
-          isNextLastStop: context.state.isNextLastStop
-        ))
+
+        Text(
+          getRunningStateText(
+            approaching: context.state.approaching,
+            stopped: context.state.stopped,
+            isNextLastStop: context.state.isNextLastStop
+          )
+        )
         .font(.callout)
         .bold()
         .multilineTextAlignment(.leading)
-        Text(context.state.stopping ? context.state.stationName : context.state.nextStationName)
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-        if (!context.state.stationNumber.isEmpty) {
-          Text(context.state.stopping ? context.state.stationNumber : context.state.nextStationNumber)
-            .font(.caption)
-            .bold()
-            .opacity(0.75)
-            .multilineTextAlignment(.leading)
-        }
+
+        Text(
+          context.state.nextStationName.isEmpty
+            ? context.state.stationName : context.state.nextStationName
+        )
+        .font(.headline)
+        .bold()
+        .multilineTextAlignment(.leading)
+        Text(
+          context.state.nextStationNumber.isEmpty
+            ? context.state.stationNumber : context.state.nextStationNumber
+        )
+        .font(.caption)
+        .bold()
+        .opacity(0.75)
+        .multilineTextAlignment(.leading)
       }
       .frame(
         minWidth: 0,
@@ -398,8 +394,10 @@ struct SmartStackLiveActivityContentView: View {
         Rectangle().fill(Color(hex: context.state.lineColor))
         Rectangle()
           .fill(
-            LinearGradient(colors: [.gray, .clear], startPoint: .top, endPoint: .bottom)
-              .opacity(0.5)
+            LinearGradient(
+              colors: [.gray, .clear], startPoint: .top, endPoint: .bottom
+            )
+            .opacity(0.5)
           )
           .blendMode(.multiply)
       }
@@ -407,12 +405,11 @@ struct SmartStackLiveActivityContentView: View {
   }
 }
 
-
 @available(iOS 18.0, *)
 struct NewerLockScreenLiveActivityContentView: View {
   @Environment(\.activityFamily) var activityFamily
   let context: ActivityViewContext<RideSessionAttributes>
-  
+
   var body: some View {
     switch activityFamily {
     case .small:
@@ -420,7 +417,7 @@ struct NewerLockScreenLiveActivityContentView: View {
     case .medium:
       LockScreenLiveActivityContentView(context: context)
     @unknown default:
-      LockScreenLiveActivityContentView(context: context)
+      EmptyView()
     }
   }
 }

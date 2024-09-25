@@ -4,12 +4,14 @@ import { getIsHoliday } from './isHoliday'
 const getIsPass = (
   station: Station | null,
   ignoreDayCondition?: boolean
-): boolean => {
-  if (!station) {
-    return false
-  }
+): boolean =>
+  getIsPassFromStopCondition(station?.stopCondition, ignoreDayCondition)
 
-  switch (station.stopCondition) {
+export const getIsPassFromStopCondition = (
+  stopCondition: StopCondition | undefined,
+  ignoreDayCondition?: boolean
+) => {
+  switch (stopCondition) {
     case StopCondition.All:
     case StopCondition.PartialStop: // 一部停車は一旦停車扱い
     case StopCondition.Partial: // 一部通過は停車扱い
