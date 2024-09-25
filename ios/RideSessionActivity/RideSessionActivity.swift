@@ -282,30 +282,46 @@ struct LockScreenLiveActivityContentView: View {
         Rectangle().fill(
           colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
 
-      HStack {
-        if !context.state.trainTypeName.isEmpty {
-          Text(context.state.trainTypeName)
+      if context.state.passingStationName.isEmpty {
+        HStack {
+          if !context.state.trainTypeName.isEmpty {
+            Text(context.state.trainTypeName)
+              .multilineTextAlignment(.center)
+              .foregroundColor(.accentColor)
+              .bold()
+              .font(.caption)
+          }
+          if !context.state.boundStationName.isEmpty {
+            Text(
+              String(
+                format: NSLocalizedString(
+                  context.state.isLoopLine
+                    ? "boundStationLoopline" : "boundStation", comment: ""),
+                "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
+              )
+            )
             .multilineTextAlignment(.center)
             .foregroundColor(.accentColor)
             .bold()
             .font(.caption)
+          }
         }
-        if !context.state.boundStationName.isEmpty {
-          Text(
-            String(
-              format: NSLocalizedString(
-                context.state.isLoopLine
-                  ? "boundStationLoopline" : "boundStation", comment: ""),
-              "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
+        .padding(.bottom, 8)
+      } else {
+        HStack {
+            Text(
+              String(
+                format: NSLocalizedString("passingStation", comment: ""),
+                "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
+              )
             )
-          )
-          .multilineTextAlignment(.center)
-          .foregroundColor(.accentColor)
-          .bold()
-          .font(.caption)
-        }
+            .multilineTextAlignment(.center)
+            .foregroundColor(.accentColor)
+            .bold()
+            .font(.caption)
+          }
+        .padding(.bottom, 8)
       }
-      .padding(.bottom, 8)
     }
     .frame(
       minWidth: 0,

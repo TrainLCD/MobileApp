@@ -12,6 +12,8 @@ type LiveActivityWidgetState = {
   stopped: boolean
   lineName: string
   lineColor: string
+  passingStationName: string
+  passingStationNumber: string
 }
 
 export const startLiveActivity = (

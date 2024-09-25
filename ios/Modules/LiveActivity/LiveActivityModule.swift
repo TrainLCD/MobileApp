@@ -19,6 +19,8 @@ class LiveActivityModule: NSObject {
       stopped: state["stopped"] as? Bool ?? false,
       boundStationName: state["boundStationName"] as? String ?? "",
       boundStationNumber: state["boundStationNumber"] as? String ?? "",
+      passingStationName: state["passingStationName"] as? String ?? "",
+      passingStationNumber: state["passingStationNumber"] as? String ?? "",
       trainTypeName: state["trainTypeName"] as? String ?? "",
       isLoopLine: state["isLoopLine"] as? Bool ?? false,
       isNextLastStop: state["isNextLastStop"] as? Bool ?? false,

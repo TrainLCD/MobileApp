@@ -154,6 +154,24 @@ export const useUpdateLiveActivities = (): void => {
     [currentLine?.nameRoman, currentLine?.nameShort]
   )
 
+  const passingStationName = useMemo(
+    () =>
+      getIsPassFromStopCondition(currentStationStopCond)
+        ? (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
+        : '',
+    [currentStation?.name, currentStation?.nameRoman, currentStationStopCond]
+  )
+
+  const passingStationNumber = useMemo(() => {
+    const currentStationNumberingIndex = getStationNumberIndex(
+      currentStation ?? null
+    )
+    return getIsPassFromStopCondition(currentStationStopCond)
+      ? currentStation?.stationNumbers?.[currentStationNumberingIndex]
+          ?.stationNumber ?? ''
+      : ''
+  }, [currentStation, currentStationStopCond, getStationNumberIndex])
+
   const activityState = useMemo(
     () => ({
       stationName,
@@ -169,6 +187,8 @@ export const useUpdateLiveActivities = (): void => {
       isNextLastStop,
       lineColor,
       lineName,
+      passingStationName,
+      passingStationNumber,
     }),
     [
       boundStationName,
@@ -182,6 +202,8 @@ export const useUpdateLiveActivities = (): void => {
       lineName,
       nextStationName,
       nextStationNumber,
+      passingStationName,
+      passingStationNumber,
       stationName,
       stoppedStationNumber,
       trainTypeName,

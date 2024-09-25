@@ -21,6 +21,8 @@ struct RideSessionAttributes: ActivityAttributes {
     var stopped: Bool
     var boundStationName: String
     var boundStationNumber: String
+    var passingStationName: String
+    var passingStationNumber: String
     var trainTypeName: String
     var isLoopLine: Bool
     var isNextLastStop: Bool
