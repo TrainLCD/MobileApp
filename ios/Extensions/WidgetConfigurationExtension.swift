@@ -14,7 +14,7 @@ extension WidgetConfiguration
   func supplementalActivityFamiliesIfAvailable() -> some WidgetConfiguration
   {
     if #available(iOSApplicationExtension 18.0, *) {
-      return self.supplementalActivityFamilies([ActivityFamily.small, ActivityFamily.medium])
+      return self.supplementalActivityFamilies([ActivityFamily.small])
     } else {
       return self
     }
