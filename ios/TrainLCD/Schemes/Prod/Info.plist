@@ -64,6 +64,8 @@
 	</dict>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fonts/FrutigerNeueLTPro-Bold.ttf</string>
