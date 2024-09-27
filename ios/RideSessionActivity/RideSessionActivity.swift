@@ -125,11 +125,40 @@ struct RideSessionWidget: Widget {
           EmptyView()
         }
       } compactLeading: {
+        HStack {
+          if context.state.stopped {
+            Image(systemName: "stop.fill")
+          }
+
+          if context.state.passingStationName.isEmpty {
+            Text(
+              getRunningStateText(
+                approaching: context.state.approaching,
+                stopped: context.state.stopped,
+                isNextLastStop: context.state.isNextLastStop
+              )
+            )
+            .font(.caption)
+            .bold()
+            .multilineTextAlignment(.center)
+          } else {
+            Text("pass")
+          }
+          
+          if !context.state.passingStationName.isEmpty || context.state.stopped {
+            EmptyView()
+          } else if context.state.isNextLastStop {
+            Image(systemName: "chevron.forward.to.line")
+          } else {
+            Image(systemName: "chevron.forward")
+          }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.leading, 8)
+      } compactTrailing: {
         Group {
           if !context.state.passingStationName.isEmpty {
             HStack {
-              Image(systemName: "chevron.left.chevron.left.dotted")
-
               VStack(spacing: 0) {
                 Text(
                   context.state.passingStationName
@@ -147,6 +176,8 @@ struct RideSessionWidget: Widget {
                     .opacity(0.75)
                 }
               }
+              
+              Image(systemName: "chevron.forward.dotted.chevron.forward")
             }
           } else if context.state.stopped {
             VStack(spacing: 0) {
@@ -187,36 +218,7 @@ struct RideSessionWidget: Widget {
           }
         }
         .frame(maxWidth: .infinity)
-        .padding(.leading, 4)
-      } compactTrailing: {
-        HStack {
-          if !context.state.passingStationName.isEmpty {
-            EmptyView()
-          } else if context.state.stopped {
-            Image(systemName: "stop.fill")
-          } else if context.state.isNextLastStop {
-            Image(systemName: "chevron.backward.to.line")
-          } else {
-            Image(systemName: "chevron.backward")
-          }
-
-          if context.state.passingStationName.isEmpty {
-            Text(
-              getRunningStateText(
-                approaching: context.state.approaching,
-                stopped: context.state.stopped,
-                isNextLastStop: context.state.isNextLastStop
-              )
-            )
-            .font(.caption)
-            .bold()
-            .multilineTextAlignment(.center)
-          } else {
-            Text("pass")
-          }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.trailing, 4)
+        .padding(.trailing, 8)
       } minimal: {
         Image(systemName: "tram")
       }
