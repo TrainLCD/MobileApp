@@ -332,7 +332,9 @@ struct LockScreenLiveActivityContentView: View {
                   localized:
                     context.state.isLoopLine
                     ? "boundStationLoopline" : "boundStation"),
-                "\(context.state.boundStationName)(\(context.state.boundStationNumber))"
+                context.state.boundStationNumber.isEmpty
+                  ? "\(context.state.boundStationName)"
+                  : "\(context.state.boundStationName)(\(context.state.boundStationNumber))"
               )
             )
             .multilineTextAlignment(.center)
