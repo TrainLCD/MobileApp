@@ -9,29 +9,30 @@
 import SwiftUI
 import WidgetKit
 
-func getStationNumberText(_ stationNumber: String) -> String {
-  if stationNumber.isEmpty {
-    return ""
-  }
-  return "(\(stationNumber))"
-}
-
+// NOTE: 通過中の値を追加するとなぜかライブアクティビティが死ぬので含めていない
+// ちなみにライブアクティビティにスピナーが表示され固まる
 func getRunningStateText(
   approaching: Bool, stopped: Bool, isNextLastStop: Bool
 ) -> String {
+  if !stopped && !approaching {
+    if isNextLastStop {
+      return String(localized: "nextLast")
+    }
+    return String(localized: "next")
+  }
   if approaching {
     if isNextLastStop {
-      return NSLocalizedString("soonLast", comment: "")
+      return String(localized: "soonLast")
     }
-    return NSLocalizedString("soon", comment: "")
+    return String(localized: "soon")
   }
   if stopped {
-    return NSLocalizedString("stop", comment: "")
+    return String(localized: "stop")
   }
   if isNextLastStop {
-    return NSLocalizedString("nextLast", comment: "")
+    return String(localized: "nextLast")
   }
-  return NSLocalizedString("next", comment: "")
+  return ""
 }
 
 @main
@@ -51,7 +52,7 @@ struct RideSessionWidget: Widget {
                 .opacity(0.5)
                 .multilineTextAlignment(.center)
               if !context.state.stationNumber.isEmpty {
-                Text(getStationNumberText(context.state.stationNumber))
+                Text(context.state.stationNumber)
                   .font(.caption)
                   .opacity(0.5)
                   .multilineTextAlignment(.center)
@@ -70,7 +71,7 @@ struct RideSessionWidget: Widget {
                 .bold()
                 .multilineTextAlignment(.center)
               if !context.state.nextStationNumber.isEmpty {
-                Text(getStationNumberText(context.state.nextStationNumber))
+                Text(context.state.nextStationNumber)
                   .font(.caption)
                   .bold()
                   .multilineTextAlignment(.center)
@@ -96,7 +97,7 @@ struct RideSessionWidget: Widget {
                 .bold()
                 .multilineTextAlignment(.center)
               if !context.state.stationNumber.isEmpty {
-                Text(getStationNumberText(context.state.stationNumber))
+                Text(context.state.stationNumber)
                   .font(.caption)
                   .bold()
                   .multilineTextAlignment(.center)
@@ -124,66 +125,98 @@ struct RideSessionWidget: Widget {
           EmptyView()
         }
       } compactLeading: {
-        Text(
-          getRunningStateText(
-            approaching: context.state.approaching,
-            stopped: context.state.stopped,
-            isNextLastStop: context.state.isNextLastStop
-          )
-        )
-        .multilineTextAlignment(.trailing)
-        .font(.caption)
-        .bold()
-        .padding(.leading, 8)
-      } compactTrailing: {
-        if context.state.stopped {
-          VStack {
-            Text(context.state.stationName)
-              .font(.caption2)
-              .bold()
-              .multilineTextAlignment(.center)
-            if !context.state.stationNumber.isEmpty {
-              Text(getStationNumberText(context.state.stationNumber))
-                .font(.caption2)
+        Group {
+          if !context.state.passingStationName.isEmpty {
+            HStack {
+              Image(systemName: "chevron.left.chevron.left.dotted")
+
+              VStack(spacing: 0) {
+                Text(
+                  context.state.passingStationName
+                )
+                .font(.caption)
                 .bold()
                 .multilineTextAlignment(.center)
+                .opacity(0.75)
+              
+                if !context.state.passingStationNumber.isEmpty {
+                  Text(context.state.passingStationNumber)
+                    .font(.footnote)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .opacity(0.75)
+                }
+              }
             }
-          }
-          .frame(
-            minWidth: 0,
-            maxWidth: .infinity,
-            minHeight: 0,
-            maxHeight: .infinity,
-            alignment: .center
-          )
-          .padding(.trailing, 8)
-        } else {
-          VStack {
-            Text(
-              context.state.nextStationName
-            )
-            .font(.caption2)
-            .bold()
-            .multilineTextAlignment(.center)
-            if !context.state.nextStationNumber.isEmpty {
+          } else if context.state.stopped {
+            VStack(spacing: 0) {
               Text(
-                getStationNumberText(
-                  context.state.nextStationNumber)
+                context.state.stationName
               )
-              .font(.caption2)
+              .font(.caption)
               .bold()
               .multilineTextAlignment(.center)
+
+              if !context.state.stationNumber.isEmpty {
+                Text(
+                  context.state.stationNumber
+                )
+                .font(.footnote)
+                .bold()
+                .multilineTextAlignment(.center)
+              }
+            }
+          } else {
+            VStack(spacing: 0) {
+              Text(
+                context.state.nextStationName
+              )
+              .font(.caption)
+              .bold()
+              .multilineTextAlignment(.center)
+
+              if !context.state.nextStationNumber.isEmpty {
+                Text(
+                  context.state.nextStationNumber
+                )
+                .font(.footnote)
+                .bold()
+                .multilineTextAlignment(.center)
+              }
             }
           }
-          .frame(
-            minWidth: 0,
-            maxWidth: .infinity,
-            minHeight: 0,
-            maxHeight: .infinity,
-            alignment: .center
-          )
-          .padding(.trailing, 8)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.leading, 4)
+      } compactTrailing: {
+        HStack {
+          if !context.state.passingStationName.isEmpty {
+            EmptyView()
+          } else if context.state.stopped {
+            Image(systemName: "stop.fill")
+          } else if context.state.isNextLastStop {
+            Image(systemName: "chevron.backward.to.line")
+          } else {
+            Image(systemName: "chevron.backward")
+          }
+
+          if context.state.passingStationName.isEmpty {
+            Text(
+              getRunningStateText(
+                approaching: context.state.approaching,
+                stopped: context.state.stopped,
+                isNextLastStop: context.state.isNextLastStop
+              )
+            )
+            .font(.caption)
+            .bold()
+            .multilineTextAlignment(.center)
+          } else {
+            Text("pass")
+          }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.trailing, 4)
       } minimal: {
         Image(systemName: "tram")
       }
@@ -219,7 +252,7 @@ struct LockScreenLiveActivityContentView: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(.accentColor)
               if !context.state.stationNumber.isEmpty {
-                Text(getStationNumberText(context.state.stationNumber))
+                Text(context.state.stationNumber)
                   .font(.caption)
                   .bold()
                   .multilineTextAlignment(.center)
@@ -249,7 +282,7 @@ struct LockScreenLiveActivityContentView: View {
                   .multilineTextAlignment(.center)
                   .foregroundColor(.accentColor)
                 if !context.state.stationNumber.isEmpty {
-                  Text(getStationNumberText(context.state.stationNumber))
+                  Text(context.state.stationNumber)
                     .font(.caption)
                     .opacity(0.75)
                     .multilineTextAlignment(.center)
@@ -265,7 +298,7 @@ struct LockScreenLiveActivityContentView: View {
                   .multilineTextAlignment(.center)
                   .foregroundColor(.accentColor)
                 if !context.state.nextStationNumber.isEmpty {
-                  Text(getStationNumberText(context.state.nextStationNumber))
+                  Text(context.state.nextStationNumber)
                     .font(.caption)
                     .bold()
                     .multilineTextAlignment(.center)
@@ -275,6 +308,7 @@ struct LockScreenLiveActivityContentView: View {
               .frame(minWidth: 0, maxWidth: .infinity)
             }
           }
+          
           .padding(8)
         }
       }
@@ -294,10 +328,11 @@ struct LockScreenLiveActivityContentView: View {
           if !context.state.boundStationName.isEmpty {
             Text(
               String(
-                format: NSLocalizedString(
-                  context.state.isLoopLine
-                    ? "boundStationLoopline" : "boundStation", comment: ""),
-                "\(context.state.boundStationName)\(getStationNumberText(context.state.boundStationNumber))"
+                format: String(
+                  localized:
+                    context.state.isLoopLine
+                    ? "boundStationLoopline" : "boundStation"),
+                "\(context.state.boundStationName)(\(context.state.boundStationNumber))"
               )
             )
             .multilineTextAlignment(.center)
@@ -309,27 +344,20 @@ struct LockScreenLiveActivityContentView: View {
         .padding(.bottom, 8)
       } else {
         HStack {
-            Text(
-              String(
-                format: NSLocalizedString("passingStation", comment: ""),
-                "\(context.state.passingStationName)\(getStationNumberText(context.state.passingStationNumber))"
-              )
+          Text(
+            String(
+              format: String(localized: "passingStation"),
+              "\(context.state.passingStationName)(\(context.state.passingStationNumber))"
             )
-            .multilineTextAlignment(.center)
-            .foregroundColor(.accentColor)
-            .bold()
-            .font(.caption)
-          }
+          )
+          .multilineTextAlignment(.center)
+          .foregroundColor(.accentColor)
+          .bold()
+          .font(.caption)
+        }
         .padding(.bottom, 8)
       }
     }
-    .frame(
-      minWidth: 0,
-      maxWidth: .infinity,
-      minHeight: 0,
-      maxHeight: .infinity,
-      alignment: .center
-    )
     .activityBackgroundTint(
       colorScheme == .dark ? .black.opacity(0.5) : .white.opacity(0.5)
     )
@@ -349,14 +377,13 @@ struct EarlierLockScreenLiveActivityContentView: View {
   }
 }
 
-@available(iOS 18.0, *)
 struct SmartStackLiveActivityContentView: View {
   let context: ActivityViewContext<RideSessionAttributes>
 
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
-        HStack(spacing: 2) {
+        HStack {
           Text(context.state.lineName)
             .font(.caption)
             .bold()
@@ -381,14 +408,14 @@ struct SmartStackLiveActivityContentView: View {
         .multilineTextAlignment(.leading)
 
         Text(
-          context.state.nextStationName.isEmpty
+          context.state.stopped
             ? context.state.stationName : context.state.nextStationName
         )
         .font(.headline)
         .bold()
         .multilineTextAlignment(.leading)
         Text(
-          context.state.nextStationNumber.isEmpty
+          context.state.stopped
             ? context.state.stationNumber : context.state.nextStationNumber
         )
         .font(.caption)
