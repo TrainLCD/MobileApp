@@ -138,7 +138,7 @@ struct RideSessionWidget: Widget {
                 .bold()
                 .multilineTextAlignment(.center)
                 .opacity(0.75)
-              
+
                 if !context.state.passingStationNumber.isEmpty {
                   Text(context.state.passingStationNumber)
                     .font(.footnote)
@@ -308,7 +308,7 @@ struct LockScreenLiveActivityContentView: View {
               .frame(minWidth: 0, maxWidth: .infinity)
             }
           }
-          
+
           .padding(8)
         }
       }
@@ -347,7 +347,9 @@ struct LockScreenLiveActivityContentView: View {
           Text(
             String(
               format: String(localized: "passingStation"),
-              "\(context.state.passingStationName)(\(context.state.passingStationNumber))"
+              context.state.passingStationNumber.isEmpty
+                ? "\(context.state.passingStationName)"
+                : "\(context.state.passingStationName)(\(context.state.passingStationNumber))"
             )
           )
           .multilineTextAlignment(.center)
