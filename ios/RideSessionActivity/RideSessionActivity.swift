@@ -401,33 +401,55 @@ struct SmartStackLiveActivityContentView: View {
             .multilineTextAlignment(.leading)
             .opacity(0.75)
         }
-
-        Text(
-          getRunningStateText(
-            approaching: context.state.approaching,
-            stopped: context.state.stopped,
-            isNextLastStop: context.state.isNextLastStop
+        
+        if context.state.passingStationName.isEmpty {
+          Text(
+            getRunningStateText(
+              approaching: context.state.approaching,
+              stopped: context.state.stopped,
+              isNextLastStop: context.state.isNextLastStop
+            )
           )
-        )
-        .font(.callout)
-        .bold()
-        .multilineTextAlignment(.leading)
-
-        Text(
-          context.state.stopped
+          .font(.callout)
+          .bold()
+          .multilineTextAlignment(.leading)
+          
+          Text(
+            context.state.stopped
             ? context.state.stationName : context.state.nextStationName
-        )
-        .font(.headline)
-        .bold()
-        .multilineTextAlignment(.leading)
-        Text(
-          context.state.stopped
+          )
+          .font(.headline)
+          .bold()
+          .multilineTextAlignment(.leading)
+          Text(
+            context.state.stopped
             ? context.state.stationNumber : context.state.nextStationNumber
-        )
-        .font(.caption)
-        .bold()
-        .opacity(0.75)
-        .multilineTextAlignment(.leading)
+          )
+          .font(.caption)
+          .bold()
+          .opacity(0.75)
+          .multilineTextAlignment(.leading)
+        } else {
+          Text("pass")
+            .font(.callout)
+            .bold()
+            .multilineTextAlignment(.leading)
+          
+          Text(
+            context.state.passingStationName
+          )
+          .font(.headline)
+          .bold()
+          .multilineTextAlignment(.leading)
+          
+          Text(
+            context.state.passingStationNumber
+          )
+          .font(.caption)
+          .bold()
+          .opacity(0.75)
+          .multilineTextAlignment(.leading)
+        }
       }
       .frame(
         minWidth: 0,
