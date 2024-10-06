@@ -90,8 +90,11 @@ export const useUpdateLiveActivities = (): void => {
   }, [directionalStops, getStationNumberIndex])
 
   const stoppedStation = useMemo(
-    () => previousStation ?? currentStation,
-    [currentStation, previousStation]
+    () =>
+      arrivedFromState && !approachingFromState
+        ? currentStation
+        : previousStation,
+    [approachingFromState, arrivedFromState, currentStation, previousStation]
   )
   const stationName = useMemo(
     () => (isJapanese ? stoppedStation?.name : stoppedStation?.nameRoman) ?? '',
