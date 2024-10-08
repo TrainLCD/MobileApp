@@ -20,15 +20,18 @@ func getRunningStateText(
     }
     return String(localized: "next")
   }
+  
+  if stopped {
+    return String(localized: "stop")
+  }
+
   if approaching {
     if isNextLastStop {
       return String(localized: "soonLast")
     }
     return String(localized: "soon")
   }
-  if stopped {
-    return String(localized: "stop")
-  }
+
   if isNextLastStop {
     return String(localized: "nextLast")
   }
@@ -126,8 +129,10 @@ struct RideSessionWidget: Widget {
         }
       } compactLeading: {
         HStack {
-          if context.state.stopped {
-            Image(systemName: "stop.fill")
+          if context.state.approaching {
+            EmptyView()
+          } else if context.state.stopped {
+            Image(systemName: "stop.circle")
           }
 
           if context.state.passingStationName.isEmpty {
@@ -144,8 +149,10 @@ struct RideSessionWidget: Widget {
           } else {
             Text("pass")
           }
-          
-          if !context.state.passingStationName.isEmpty || context.state.stopped {
+
+          if !context.state.passingStationName.isEmpty
+            || (context.state.stopped && !context.state.approaching)
+          {
             EmptyView()
           } else if context.state.isNextLastStop {
             Image(systemName: "chevron.forward.to.line")
@@ -176,7 +183,7 @@ struct RideSessionWidget: Widget {
                     .opacity(0.75)
                 }
               }
-              
+
               Image(systemName: "chevron.forward.dotted.chevron.forward")
             }
           } else if context.state.stopped {
@@ -389,7 +396,7 @@ struct SmartStackLiveActivityContentView: View {
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
-        HStack {
+        HStack(spacing: 2) {
           Text(context.state.lineName)
             .font(.caption)
             .bold()
@@ -402,32 +409,54 @@ struct SmartStackLiveActivityContentView: View {
             .opacity(0.75)
         }
 
-        Text(
-          getRunningStateText(
-            approaching: context.state.approaching,
-            stopped: context.state.stopped,
-            isNextLastStop: context.state.isNextLastStop
+        if context.state.passingStationName.isEmpty {
+          Text(
+            getRunningStateText(
+              approaching: context.state.approaching,
+              stopped: context.state.stopped,
+              isNextLastStop: context.state.isNextLastStop
+            )
           )
-        )
-        .font(.callout)
-        .bold()
-        .multilineTextAlignment(.leading)
+          .font(.callout)
+          .bold()
+          .multilineTextAlignment(.leading)
 
-        Text(
-          context.state.stopped
-            ? context.state.stationName : context.state.nextStationName
-        )
-        .font(.headline)
-        .bold()
-        .multilineTextAlignment(.leading)
-        Text(
-          context.state.stopped
-            ? context.state.stationNumber : context.state.nextStationNumber
-        )
-        .font(.caption)
-        .bold()
-        .opacity(0.75)
-        .multilineTextAlignment(.leading)
+          Text(
+            context.state.stopped
+              ? context.state.stationName : context.state.nextStationName
+          )
+          .font(.headline)
+          .bold()
+          .multilineTextAlignment(.leading)
+          Text(
+            context.state.stopped
+              ? context.state.stationNumber : context.state.nextStationNumber
+          )
+          .font(.caption)
+          .bold()
+          .opacity(0.75)
+          .multilineTextAlignment(.leading)
+        } else {
+          Text("pass")
+            .font(.callout)
+            .bold()
+            .multilineTextAlignment(.leading)
+
+          Text(
+            context.state.passingStationName
+          )
+          .font(.headline)
+          .bold()
+          .multilineTextAlignment(.leading)
+
+          Text(
+            context.state.passingStationNumber
+          )
+          .font(.caption)
+          .bold()
+          .opacity(0.75)
+          .multilineTextAlignment(.leading)
+        }
       }
       .frame(
         minWidth: 0,
