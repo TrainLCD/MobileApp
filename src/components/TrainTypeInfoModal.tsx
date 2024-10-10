@@ -150,7 +150,9 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                 }}
               >
                 {!loading && stopStations.length
-                  ? stopStations.map((s) => s.name).join('、')
+                  ? stopStations
+                      .map((s) => (isJapanese ? s.name : s.nameRoman))
+                      .join('、')
                   : `${translate('loadingAPI')}...`}
               </Typography>
               <Typography
@@ -202,7 +204,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       flex: 1,
                     }}
                   >
-                    {l.nameShort}:{' '}
+                    {isJapanese ? l.nameShort : l.nameRoman}:{' '}
                   </Typography>
                   <Typography
                     style={{
@@ -213,7 +215,9 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       lineHeight: RFValue(14),
                     }}
                   >
-                    {l.trainType?.name ?? '普通/各駅停車'}
+                    {isJapanese
+                      ? l.trainType?.name ?? '普通/各駅停車'
+                      : l.trainType?.nameRoman ?? 'Local'}
                   </Typography>
                 </View>
               ))}
