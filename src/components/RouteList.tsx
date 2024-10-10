@@ -60,9 +60,14 @@ const ItemCell = ({
   }, [currentStation?.groupId, item.stops])
 
   const bottomText = useMemo(() => {
-    return `${item.stops[0]?.name}から${
-      item.stops[item.stops.length - 1]?.name
-    }まで`
+    if (isJapanese) {
+      return `${item.stops[0]?.name}から${
+        item.stops[item.stops.length - 1]?.name
+      }まで`
+    }
+    return `${item.stops[0]?.nameRoman} - ${
+      item.stops[item.stops.length - 1]?.nameRoman
+    }`
   }, [item.stops])
 
   return (
