@@ -25,7 +25,7 @@ type Props = {
   disabled?: boolean
   error: ConnectError | null
   onClose: () => void
-  onConfirmed: (trainType: TrainType) => void
+  onConfirmed: (trainType: TrainType | undefined) => void
 }
 
 const styles = StyleSheet.create({
@@ -223,8 +223,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
           <View style={styles.buttons}>
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
-              onPress={() => trainType && onConfirmed(trainType)}
-              disabled={loading || !trainType || disabled}
+              onPress={() => onConfirmed(trainType ?? undefined)}
+              disabled={loading || disabled}
             >
               {translate('submit')}
             </Button>

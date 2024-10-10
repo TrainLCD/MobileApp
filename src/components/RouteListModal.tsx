@@ -25,7 +25,7 @@ type Props = {
   isTrainTypesLoading: boolean
   error: ConnectError | null
   onClose: () => void
-  onSelect: (route: Route) => void
+  onSelect: (route: Route | undefined) => void
 }
 
 const styles = StyleSheet.create({
