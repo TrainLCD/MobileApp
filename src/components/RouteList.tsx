@@ -85,7 +85,7 @@ export const RouteList = ({
   loading,
 }: {
   routes: Route[]
-  onSelect: (item: Route) => void
+  onSelect: (item: Route | undefined) => void
   loading: boolean
 }) => {
   const [trainTypeInfoModalVisible, setTrainTypeInfoModalVisible] =
@@ -174,7 +174,7 @@ export const RouteList = ({
         disabled={loading}
         stations={selectedRoute?.stops ?? []}
         onClose={() => setTrainTypeInfoModalVisible(false)}
-        onConfirmed={() => selectedRoute && onSelect(selectedRoute)}
+        onConfirmed={() => onSelect(selectedRoute)}
       />
     </>
   )

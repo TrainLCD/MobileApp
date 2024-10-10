@@ -146,15 +146,9 @@ const RouteSearchScreen = () => {
         selectedLine: stationFromSearch.line ?? null,
       }))
       setSelectedStation(stationFromSearch)
-
-      if (stationFromSearch.hasTrainTypes) {
-        setIsRouteListModalVisible(true)
-        return
-      }
-
-      navigation.navigate('SelectBound')
+      setIsRouteListModalVisible(true)
     },
-    [navigation, setLineState]
+    [setLineState]
   )
 
   const onKeyPress = useCallback(
@@ -174,8 +168,8 @@ const RouteSearchScreen = () => {
   )
 
   const handleSelect = useCallback(
-    async (route: Route) => {
-      const trainType = route.stops.find(
+    async (route: Route | undefined) => {
+      const trainType = route?.stops.find(
         (s) => s.groupId === currentStation?.groupId
       )?.trainType
 
