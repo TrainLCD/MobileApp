@@ -30,6 +30,7 @@ import { FONTS } from '../constants'
 import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useTrainTypeStations } from '../hooks/useTrainTypeStations'
+import { LineDirection } from '../models/Bound'
 import { APP_THEME } from '../models/Theme'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
@@ -174,8 +175,27 @@ const RouteSearchScreen = () => {
       )?.trainType
 
       if (!trainType?.id) {
+        const direction: LineDirection =
+          (route?.stops ?? []).findIndex(
+            (s) => s.groupId === currentStation?.groupId
+          ) <
+          (route?.stops ?? []).findIndex(
+            (s) => selectedStation?.groupId === s.groupId
+          )
+            ? 'INBOUND'
+            : 'OUTBOUND'
+
+        setStationState((prev) => ({
+          ...prev,
+          stations: route?.stops ?? [],
+          selectedDirection: direction,
+          selectedBound:
+            (direction === 'INBOUND'
+              ? route?.stops[0]
+              : route?.stops[route.stops.length - 1]) ?? null,
+        }))
         setNavigationState((prev) => ({ ...prev, trainType: null }))
-        navigation.navigate('SelectBound')
+        navigation.navigate('Main')
         return
       }
 
@@ -187,17 +207,32 @@ const RouteSearchScreen = () => {
         (s) => s.groupId === currentStation?.groupId
       )
 
+      const direction: LineDirection =
+        data.stations.findIndex((s) => s.groupId === currentStation?.groupId) <
+        data.stations.findIndex((s) => selectedStation?.groupId === s.groupId)
+          ? 'INBOUND'
+          : 'OUTBOUND'
+
       setNavigationState((prev) => ({
         ...prev,
         trainType: station?.trainType ?? null,
       }))
-      setStationState((prev) => ({ ...prev, stations: data.stations }))
-      navigation.navigate('SelectBound')
+      setStationState((prev) => ({
+        ...prev,
+        stations: data.stations,
+        selectedDirection: direction,
+        selectedBound:
+          (direction === 'INBOUND'
+            ? route?.stops[0]
+            : route?.stops[route.stops.length - 1]) ?? null,
+      }))
+      navigation.navigate('Main')
     },
     [
       currentStation?.groupId,
       fetchTrainTypeFromTrainTypeId,
       navigation,
+      selectedStation?.groupId,
       setNavigationState,
       setStationState,
     ]
