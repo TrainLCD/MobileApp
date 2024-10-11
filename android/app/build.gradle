@@ -127,7 +127,7 @@ android {
       }
       prod {
         dimension "environment"
-        versionCode 80000010
+        versionCode 80000020
         versionName "8.0.0"
       }
     }
