@@ -78,7 +78,7 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
 
-  const { loading, error, mutateStations } = useStationList()
+  const { loading, error, refetchStations } = useStationList()
   const { isLoopLine, isMeijoLine } = useLoopLine()
   const {
     bounds: [inboundStations, outboundStations],
@@ -324,7 +324,7 @@ const SelectBoundScreen: React.FC = () => {
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={mutateStations}
+        onRetryPress={refetchStations}
         isFetching={loading}
       />
     )

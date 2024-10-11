@@ -44,7 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1473</string>
+	<string>1653</string>
 	<key>CURRENT_SCHEME_NAME</key>
 	<string>CanaryTrainLCD</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -67,6 +67,8 @@
 		</dict>
 	</dict>
 	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
 	<true/>
 	<key>UIAppFonts</key>
 	<array>

@@ -16,6 +16,7 @@ export const useTTS = (): void => {
 
   const firstSpeechRef = useRef(true)
   const playingRef = useRef(false)
+  const isLoadableRef = useRef(true)
   const { store, getByText } = useTTSCache()
   const ttsText = useTTSText(firstSpeechRef.current)
   const [prevTextJa, prevTextEn] = usePrevious(ttsText)
@@ -40,6 +41,10 @@ export const useTTS = (): void => {
   }, [])
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
+    if (!isLoadableRef.current) {
+      return
+    }
+
     firstSpeechRef.current = false
 
     if (!soundJaRef.current) {
@@ -79,7 +84,7 @@ export const useTTS = (): void => {
 
   const fetchSpeech = useCallback(
     async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (!textJa.length || !textEn.length) {
+      if (!textJa.length || !textEn.length || !isLoadableRef.current) {
         return
       }
 
@@ -180,6 +185,7 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     return () => {
+      isLoadableRef.current = false
       soundJaRef.current?.unloadAsync()
       soundEnRef.current?.unloadAsync()
     }

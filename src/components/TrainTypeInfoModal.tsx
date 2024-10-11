@@ -1,3 +1,4 @@
+import { ConnectError } from '@connectrpc/connect'
 import React, { useMemo } from 'react'
 import { Modal, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
@@ -18,12 +19,13 @@ import Typography from './Typography'
 
 type Props = {
   visible: boolean
-  trainType: TrainType
+  trainType: TrainType | null
   stations: Station[]
   loading: boolean
-  error: Error
+  disabled?: boolean
+  error: ConnectError | null
   onClose: () => void
-  onConfirmed: (trainType: TrainType) => void
+  onConfirmed: (trainType: TrainType | undefined) => void
 }
 
 const styles = StyleSheet.create({
@@ -55,6 +57,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
   visible,
   trainType,
   stations,
+  loading,
+  disabled,
   onClose,
   onConfirmed,
 }: Props) => {
@@ -66,7 +70,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
 
   const trainTypeLines = useMemo(
     () =>
-      trainType.lines.length
+      trainType?.lines.length
         ? trainType.lines
             .slice()
             .sort((a, b) =>
@@ -75,7 +79,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                 : a.trainType?.id - b.trainType?.id
             )
         : ([selectedLine] as Line[]),
-    [selectedLine, trainType.lines]
+    [selectedLine, trainType?.lines]
   )
 
   const stopStations = useMemo(
@@ -114,8 +118,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
         >
           <Heading>
             {isJapanese
-              ? `${selectedLine?.nameShort} ${trainType.name}`
-              : `${selectedLine?.nameRoman} ${trainType.nameRoman}`}
+              ? `${selectedLine?.nameShort} ${trainType?.name ?? ''}`
+              : `${selectedLine?.nameRoman} ${trainType?.nameRoman ?? ''}`}
           </Heading>
 
           <View
@@ -136,7 +140,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   marginTop: 8,
                 }}
               >
-                停車駅:
+                {translate('allStops')}:
               </Typography>
               <Typography
                 style={{
@@ -145,8 +149,10 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   lineHeight: RFValue(14),
                 }}
               >
-                {stopStations.length
-                  ? stopStations.map((s) => s.name).join('、')
+                {!loading && stopStations.length
+                  ? stopStations
+                      .map((s) => (isJapanese ? s.name : s.nameRoman))
+                      .join('、')
                   : `${translate('loadingAPI')}...`}
               </Typography>
               <Typography
@@ -156,7 +162,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                   marginTop: 16,
                 }}
               >
-                各線の種別:
+                {translate('eachTrainTypes')}:
               </Typography>
             </View>
             <ScrollView
@@ -198,7 +204,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       flex: 1,
                     }}
                   >
-                    {l.nameShort}:{' '}
+                    {isJapanese ? l.nameShort : l.nameRoman}:{' '}
                   </Typography>
                   <Typography
                     style={{
@@ -209,7 +215,9 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       lineHeight: RFValue(14),
                     }}
                   >
-                    {l.trainType?.name ?? '普通/各駅停車'}
+                    {isJapanese
+                      ? l.trainType?.name ?? '普通/各駅停車'
+                      : l.trainType?.nameRoman ?? 'Local'}
                   </Typography>
                 </View>
               ))}
@@ -219,13 +227,13 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
           <View style={styles.buttons}>
             <Button
               color={isLEDTheme ? undefined : '#008ffe'}
-              onPress={() => onConfirmed(trainType)}
-              disabled={!stopStations.length}
+              onPress={() => onConfirmed(trainType ?? undefined)}
+              disabled={loading || disabled}
             >
-              確定
+              {translate('submit')}
             </Button>
             <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-              キャンセル
+              {translate('cancel')}
             </Button>
           </View>
         </View>

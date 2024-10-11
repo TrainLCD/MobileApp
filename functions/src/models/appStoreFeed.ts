@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase-admin/firestore";
+
 export type AppStoreReviewFeed = {
   "?xml": string;
   feed: AppStoreReviewFeedData;
@@ -34,5 +36,9 @@ export type AppStoreReviewEntry = {
 };
 
 export type AppStoreReviewsDoc = {
-  notifiedEntryFeeds: AppStoreReviewFeedData[];
+  notifiedEntryFeeds: {
+    id: number;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+  }[];
 };

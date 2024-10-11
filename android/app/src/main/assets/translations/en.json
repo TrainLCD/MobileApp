@@ -155,5 +155,10 @@
   "longPressNotice": "Press and hold the screen to open the menu.",
   "autoAnnounceBackgroundTitle":"Enable background voice announcement",
   "loadingLocation": "Getting location information...",
-  "loadingAPI": "Communicating with server..."
+  "loadingAPI": "Communicating with server...",
+  "routeSearchTitle": "Find a route",
+  "submit": "Submit",
+  "eachTrainTypes": "Train types",
+  "matchedStationListEmpty": "Transfer station not found.",
+  "searchDestinationPlaceholder": "Please enter the station name of your destination."
 }

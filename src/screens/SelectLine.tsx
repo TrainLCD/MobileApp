@@ -51,7 +51,7 @@ const SelectLineScreen: React.FC = () => {
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
   const {
-    trigger: fetchStationFunc,
+    fetchByCoords,
     isLoading: nearbyStationLoading,
     error: nearbyStationFetchError,
   } = useFetchNearbyStation()
@@ -72,11 +72,13 @@ const SelectLineScreen: React.FC = () => {
         return
       }
       useLocationStore.setState(pos)
-      const stationFromAPI =
-        (await fetchStationFunc({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        })) ?? null
+      const data = await fetchByCoords({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        limit: 1,
+      })
+      const stationFromAPI = data.stations[0] ?? null
+
       setStationState((prev) => ({
         ...prev,
         station: stationFromAPI,
@@ -181,36 +183,25 @@ const SelectLineScreen: React.FC = () => {
     if (!pos) {
       return
     }
-    useLocationStore.setState(pos)
-    setNavigationState((prev) => ({
-      ...prev,
-      stationForHeader: null,
-      stationFromCoordinates: null,
-    }))
-
-    const station =
-      (await fetchStationFunc({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      })) ?? null
-
+    const data = await fetchByCoords({
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+      limit: 1,
+    })
+    const stationFromAPI = data.stations[0] ?? null
     setStationState((prev) => ({
       ...prev,
-      station: prev.station?.id !== station?.id ? station : prev.station,
+      station:
+        prev.station?.id !== stationFromAPI?.id ? stationFromAPI : prev.station,
     }))
     setNavigationState((prev) => ({
       ...prev,
       stationForHeader:
-        prev.stationForHeader?.id !== station?.id
-          ? station
+        prev.stationForHeader?.id !== stationFromAPI?.id
+          ? stationFromAPI
           : prev.stationForHeader,
     }))
-  }, [
-    fetchCurrentLocation,
-    fetchStationFunc,
-    setNavigationState,
-    setStationState,
-  ])
+  }, [fetchByCoords, fetchCurrentLocation, setNavigationState, setStationState])
 
   const navigateToSettingsScreen = useCallback(() => {
     navigation.navigate('AppSettings')
@@ -224,13 +215,17 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes')
   }, [navigation])
 
+  const navigateToRouteSearchScreen = useCallback(() => {
+    navigation.navigate('RouteSearch')
+  }, [navigation])
+
   if (nearbyStationFetchError) {
     return (
       <ErrorScreen
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={fetchStationFunc}
+        onRetryPress={handleUpdateStation}
         isFetching={nearbyStationLoading}
       />
     )
@@ -274,18 +269,29 @@ const SelectLineScreen: React.FC = () => {
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
         <View style={styles.buttons}>
           {isInternetAvailable ? (
-            <Button
-              style={styles.button}
-              onPress={navigateToFakeStationSettingsScreen}
-            >
-              {translate('searchFirstStationTitle')}
-            </Button>
+            <>
+              <Button
+                style={styles.button}
+                onPress={navigateToFakeStationSettingsScreen}
+              >
+                {translate('searchFirstStationTitle')}
+              </Button>
+              {isInternetAvailable && isDevApp && (
+                <Button
+                  style={styles.button}
+                  onPress={navigateToSavedRoutesScreen}
+                >
+                  {translate('savedRoutes')}
+                </Button>
+              )}
+              <Button
+                style={styles.button}
+                onPress={navigateToRouteSearchScreen}
+              >
+                {translate('routeSearchTitle')}
+              </Button>
+            </>
           ) : null}
-          {isInternetAvailable && isDevApp && (
-            <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
-              {translate('savedRoutes')}
-            </Button>
-          )}
           <Button style={styles.button} onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>

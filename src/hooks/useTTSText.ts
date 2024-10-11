@@ -981,16 +981,19 @@ const useTTSText = (firstSpeech = true): string[] => {
       return ''
     }
 
-    return (
-      tmpl
-        // 環状運転のときに入る可能性
-        .replaceAll('&', 'and')
-        // 明治神宮前駅等で入る
-        .replaceAll('`', '')
-    )
+    return tmpl
   }, [englishTemplate, stoppingState, theme])
 
-  return [jaText, enText]
+  return [
+    jaText,
+    enText
+      // 環状運転のときに入る可能性
+      .replaceAll('&', 'and')
+      // 明治神宮前駅等で入る
+      .replaceAll('`', ''),
+    // NOTE: このほかの英語SSMLリプレース処理はFunctionsで行うので
+    // ここに置換処理を入れてはいけない
+  ]
 }
 
 export default useTTSText

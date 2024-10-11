@@ -1,17 +1,18 @@
+import { useQuery } from '@connectrpc/connect-query'
+import { useEffect, useMemo } from 'react'
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
-import useSWR from 'swr'
 import {
-  GetStationByLineIdRequest,
-  GetTrainTypesByStationIdRequest,
+  getStationsByLineId,
+  getTrainTypesByStationId,
+} from '../../gen/proto/stationapi-StationAPI_connectquery'
+import {
   TrainDirection,
   TrainType,
   TrainTypeKind,
 } from '../../gen/proto/stationapi_pb'
-import { grpcClient } from '../lib/grpc'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { findBranchLine, findLocalType } from '../utils/trainTypeString'
 
 export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState)
@@ -19,90 +20,98 @@ export const useStationList = () => {
   const { selectedLine } = useRecoilValue(lineState)
 
   const {
+    data: byLineIdData,
     isLoading: isLoadingStations,
     error: loadingStationsError,
-    mutate: mutateStations,
-  } = useSWR(
-    [
-      '/app.trainlcd.grpc/getStationsByLineId',
-      selectedLine?.station?.id,
-      selectedLine?.id,
-    ],
-    async ([, stationId, lineId]) => {
-      if (fromBuilder || !stationId || !lineId) {
-        return
-      }
-
-      const req = new GetStationByLineIdRequest({ lineId, stationId })
-      const res = await grpcClient.getStationsByLineId(req)
-
-      setStationState((prev) => ({
-        ...prev,
-        stations: res.stations,
-      }))
-
-      return res.stations
+    refetch: refetchStations,
+  } = useQuery(
+    getStationsByLineId,
+    { lineId: selectedLine?.id, stationId: selectedLine?.station?.id },
+    {
+      enabled: !!(!fromBuilder && !!selectedLine),
     }
   )
 
-  const { isLoading: isTrainTypesLoading, error: loadingTrainTypesError } =
-    useSWR(
-      [
-        '/app.trainlcd.grpc/GetTrainTypesByStationId',
-        selectedLine?.station?.id,
-        selectedLine?.station?.hasTrainTypes,
-      ],
-      async ([, stationId, shouldFetch]) => {
-        if (!stationId || !shouldFetch) {
-          return
-        }
+  const {
+    data: fetchedTrainTypesData,
+    isLoading: isTrainTypesLoading,
+    error: trainTypesFetchError,
+    refetch: refetchTrainTypes,
+  } = useQuery(
+    getTrainTypesByStationId,
+    {
+      stationId: selectedLine?.station?.id,
+    },
+    { enabled: !!selectedLine?.station?.id }
+  )
 
-        const req = new GetTrainTypesByStationIdRequest({ stationId })
-        const res = await grpcClient.getTrainTypesByStationId(req, {})
+  const designatedTrainType = useMemo(
+    () =>
+      byLineIdData?.stations.find((s) => s.id === selectedLine?.station?.id)
+        ?.trainType ?? null,
+    [byLineIdData?.stations, selectedLine?.station?.id]
+  )
 
-        const trainTypes = res.trainTypes ?? []
-        const localType = new TrainType({
-          id: 0,
-          typeId: 0,
-          groupId: 0,
-          name: '普通/各駅停車',
-          nameKatakana: '',
-          nameRoman: 'Local',
-          nameChinese: '慢车/每站停车',
-          nameKorean: '보통/각역정차',
-          color: '',
-          lines: [],
-          direction: TrainDirection.Both,
-          kind: TrainTypeKind.Default,
-        })
+  useEffect(() => {
+    setStationState((prev) => ({
+      ...prev,
+      stations: prev.stations.length
+        ? prev.stations
+        : byLineIdData?.stations ?? [],
+    }))
+    setNavigationState((prev) => ({
+      ...prev,
+      trainType: designatedTrainType,
+    }))
+  }, [
+    byLineIdData?.stations,
+    designatedTrainType,
+    setNavigationState,
+    setStationState,
+  ])
 
-        // 普通種別が登録済み: 非表示
-        // 支線種別が登録されていているが、普通種別が登録されていない: 非表示
-        // 特例で普通列車以外の種別で表示を設定されている場合(中央線快速等): 表示
-        // 上記以外: 表示
-        if (
-          !(
-            findLocalType(trainTypes) ||
-            (findBranchLine(trainTypes) && !findLocalType(trainTypes))
-          )
-        ) {
-          setNavigationState((prev) => ({
-            ...prev,
-            fetchedTrainTypes: [localType, ...trainTypes],
-          }))
-          return trainTypes
-        }
+  useEffect(() => {
+    const localType = new TrainType({
+      id: 0,
+      typeId: 0,
+      groupId: 0,
+      name: '普通/各駅停車',
+      nameKatakana: '',
+      nameRoman: 'Local',
+      nameChinese: '慢车/每站停车',
+      nameKorean: '보통/각역정차',
+      color: '',
+      lines: [],
+      direction: TrainDirection.Both,
+      kind: TrainTypeKind.Default,
+    })
 
-        setNavigationState((prev) => ({
-          ...prev,
-          fetchedTrainTypes: trainTypes,
-        }))
-      }
-    )
+    const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? []
+
+    if (!designatedTrainType) {
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [localType, ...fetchedTrainTypes],
+      }))
+      return
+    }
+
+    setNavigationState((prev) => ({
+      ...prev,
+      fetchedTrainTypes,
+    }))
+  }, [
+    designatedTrainType,
+    fetchedTrainTypesData?.trainTypes,
+    setNavigationState,
+  ])
 
   return {
-    mutateStations,
+    refetchStations,
+    refetchTrainTypes,
+    stations: byLineIdData?.stations ?? [],
+    trainTypes: fetchedTrainTypesData?.trainTypes ?? [],
     loading: isLoadingStations || isTrainTypesLoading,
-    error: loadingStationsError || loadingTrainTypesError,
+    error: loadingStationsError || trainTypesFetchError,
   }
 }

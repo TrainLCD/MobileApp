@@ -28,9 +28,11 @@ const styles = StyleSheet.create({
 
 const Separator = () => <View style={styles.separator} />
 
-const ListEmptyComponent = () => (
+const ListEmptyComponent = ({ fromRoutes }: { fromRoutes: boolean }) => (
   <Typography style={styles.emptyText}>
-    {translate('stationListEmpty')}
+    {fromRoutes
+      ? translate('matchedStationListEmpty')
+      : translate('stationListEmpty')}
   </Typography>
 )
 
@@ -88,10 +90,12 @@ export const StationList = ({
   data,
   onSelect,
   withoutTransfer,
+  fromRoutes,
 }: {
   data: Station[]
   onSelect: (item: Station) => void
   withoutTransfer?: boolean
+  fromRoutes?: boolean
 }) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
@@ -126,7 +130,9 @@ export const StationList = ({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
-      ListEmptyComponent={ListEmptyComponent}
+      ListEmptyComponent={
+        <ListEmptyComponent fromRoutes={fromRoutes ?? false} />
+      }
     />
   )
 }

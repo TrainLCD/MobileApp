@@ -106,11 +106,19 @@ const SavedRoutesScreen: React.FC = () => {
 
   const handleItemPress = useCallback(
     async (route: SavedRoute) => {
-      const stations = await fetchStationsByRoute(route)
+      const { stations: fetchedStations } = await fetchStationsByRoute({
+        ids: route.stations.map((s) => s.id),
+      })
 
-      if (!stations?.length || !latitude || !longitude) {
+      if (!fetchedStations?.length || !latitude || !longitude) {
         return
       }
+      const stations = fetchedStations.map((sta) => ({
+        ...sta,
+        stopCondition: route.stations.find((rs) => rs.id === sta.id)
+          ?.stopCondition,
+        trainType: route.trainType,
+      }))
 
       const nearestCoordinates = findNearest(
         { latitude, longitude },

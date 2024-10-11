@@ -1,4 +1,5 @@
 import { createPromiseClient } from '@connectrpc/connect'
+import { QueryClient } from '@tanstack/react-query'
 import DeviceInfo from 'react-native-device-info'
 import {
   DEV_API_URL,
@@ -17,9 +18,17 @@ const baseUrl = (() => {
   return isDevApp ? STAGING_API_URL : PRODUCTION_API_URL
 })()
 
-export const grpcClient = createPromiseClient(
-  StationAPI,
-  createXHRGrpcWebTransport({
-    baseUrl,
-  })
-)
+export const transport = createXHRGrpcWebTransport({
+  baseUrl,
+})
+
+export const grpcClient = createPromiseClient(StationAPI, transport)
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    },
+  },
+})

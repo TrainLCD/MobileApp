@@ -11,6 +11,7 @@
 "soon" = "Soon";
 "soonLast" = "Soon last stop"; 
 "next" = "Next";
+"nextLast" = "Next last stop";
 "nowStoppingAt" = "Now stopping at";
 "stop" = "Stopping at";
 "nextLast" = "Next last stop";

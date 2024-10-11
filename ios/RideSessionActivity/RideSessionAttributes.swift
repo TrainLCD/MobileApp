@@ -6,25 +6,27 @@
 //  Copyright © 2022 Facebook. All rights reserved.
 //
 
-import Foundation
 import ActivityKit
+import Foundation
 
 struct RideSessionAttributes: ActivityAttributes {
   public typealias RideSessionStatus = ContentState
-  
+
   public struct ContentState: Codable, Hashable {
     var stationName: String
     var nextStationName: String
     var stationNumber: String
     var nextStationNumber: String
     var approaching: Bool
-    var stopping: Bool
+    var stopped: Bool
     var boundStationName: String
     var boundStationNumber: String
-    var trainTypeName: String
     var passingStationName: String
     var passingStationNumber: String
+    var trainTypeName: String
     var isLoopLine: Bool
     var isNextLastStop: Bool
+    var lineColor: String
+    var lineName: String
   }
-}   
+}
