@@ -1,52 +1,39 @@
-import isArray from 'lodash/isArray'
 import React, { LegacyRef, forwardRef, useMemo } from 'react'
-import { Platform, StyleProp, Text, TextProps, TextStyle } from 'react-native'
+import { StyleProp, Text, TextProps, TextStyle } from 'react-native'
 import { FONTS } from '../constants'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
-import isTablet from '../utils/isTablet'
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const { style: overrideStyle } = props
 
-  const fontFamily = useMemo(() => {
-    if (isLEDTheme) {
-      return FONTS.JFDotJiskan24h
-    }
-    return (overrideStyle as { fontWeight: string })?.fontWeight === 'bold'
-      ? FONTS.RobotoBold
-      : FONTS.RobotoRegular
-  }, [isLEDTheme, overrideStyle])
-
-  const overrideFontFamily = isArray(overrideStyle)
-    ? overrideStyle
-        .flat()
-        .find((s) => (s?.valueOf() as TextStyle | undefined)?.fontFamily)
-    : (overrideStyle as TextStyle | undefined)?.fontFamily
+  const fontFamily = useMemo(
+    () => (isLEDTheme ? FONTS.JFDotJiskan24h : undefined),
+    [isLEDTheme]
+  )
 
   const style = useMemo<StyleProp<TextStyle>>(
     () => [
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
-        marginTop: Platform.select({
-          ios: 0,
-          android:
-            isLEDTheme ||
-            !isTablet ||
-            overrideFontFamily === FONTS.MyriadPro ||
-            overrideFontFamily === FONTS.FrutigerNeueLTProBold
-              ? 0
-              : -6,
-        }),
+        includeFontPadding: false,
       },
       overrideStyle,
     ],
-    [fontFamily, isLEDTheme, overrideFontFamily, overrideStyle]
+    [fontFamily, isLEDTheme, overrideStyle]
   )
-  return <Text {...props} ref={ref} allowFontScaling={false} style={style} />
+  return (
+    <Text
+      {...props}
+      ref={ref}
+      allowFontScaling={false}
+      style={style}
+      textBreakStrategy="highQuality"
+    />
+  )
 })
 
 Typography.displayName = 'Typography'

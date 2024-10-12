@@ -12,9 +12,7 @@ import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
-import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
-import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import { widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
@@ -66,21 +64,15 @@ const getBarTerminalRight = (): number => {
 }
 
 const barBottom = ((): number => {
-  if (isFullSizedTablet) {
+  if (isTablet) {
     return -52
-  }
-  if (isSmallTablet) {
-    return 30
   }
   return 32
 })()
 
 const barTerminalBottom = ((): number => {
-  if (isFullSizedTablet) {
+  if (isTablet) {
     return -54
-  }
-  if (isSmallTablet) {
-    return 28
   }
   return 32
 })()
@@ -89,7 +81,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: windowHeight,
-    bottom: isFullSizedTablet ? windowHeight / 2.5 : undefined,
+    bottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -105,7 +97,7 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    justifyContent: isFullSizedTablet ? 'flex-start' : undefined,
+    justifyContent: isTablet ? 'flex-start' : undefined,
     marginLeft: 32,
     flex: 1,
   },
@@ -171,13 +163,13 @@ const styles = StyleSheet.create({
     height: isTablet ? 36 : 24,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isFullSizedTablet ? -46 : 32 + 4,
+    bottom: isTablet ? -46 : 32 + 4,
     overflow: 'visible',
   },
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: isSmallTablet ? 115 : 32,
+    bottom: 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
@@ -192,14 +184,14 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-end',
-    bottom: isSmallTablet ? 16 : 0,
+    bottom: 0,
   },
   stationNumber: {
     width: isTablet ? 60 : 45,
     marginLeft: -5,
     fontSize: RFValue(12),
     fontWeight: 'bold',
-    bottom: isSmallTablet ? 16 : 0,
+    bottom: 0,
     textAlign: 'center',
   },
   marksContainer: { marginTop: 8 },
@@ -462,7 +454,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(currentStation ?? undefined)
+  const stationNumberIndex = getStationNumberIndex(currentStation)
 
   return (
     <>
@@ -471,7 +463,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         style={[
           styles.stationNameContainer,
           {
-            paddingBottom: !isFullSizedTablet ? 64 : undefined,
+            paddingBottom: !isTablet ? 64 : undefined,
           },
         ]}
       >

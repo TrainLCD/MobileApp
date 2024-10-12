@@ -26,9 +26,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
-import isFullSizedTablet from '../utils/isFullSizedTablet'
 import getIsPass from '../utils/isPass'
-import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
@@ -44,21 +42,15 @@ const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8
 
 const barBottom = ((): number => {
-  if (isFullSizedTablet) {
+  if (isTablet) {
     return 32
-  }
-  if (isSmallTablet) {
-    return 138
   }
   return 48
 })()
 
 const barTerminalBottom = ((): number => {
-  if (isFullSizedTablet) {
+  if (isTablet) {
     return 32
-  }
-  if (isSmallTablet) {
-    return 138
   }
   return 48
 })()
@@ -67,7 +59,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: windowHeight,
-    bottom: isFullSizedTablet ? windowHeight / 2.5 : undefined,
+    bottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -104,7 +96,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
-    paddingBottom: !isFullSizedTablet ? 96 : undefined,
+    paddingBottom: !isTablet ? 96 : undefined,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -136,11 +128,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 9999,
     bottom: (() => {
-      if (isFullSizedTablet) {
+      if (isTablet) {
         return -70
-      }
-      if (isSmallTablet) {
-        return 35
       }
       return 50
     })(),
@@ -391,7 +380,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           backgroundColor: passed ? '#aaa' : '#fff',
         }}
       >
-        {isTablet && !isSmallTablet && lineMarks.length && !passed ? (
+        {isTablet && lineMarks.length && !passed ? (
           <View style={styles.topBar} />
         ) : null}
 
