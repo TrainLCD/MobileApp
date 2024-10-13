@@ -30,18 +30,28 @@ type Props = {
 
 const styles = StyleSheet.create({
   root: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
+    borderBottomLeftRadius: isTablet ? 8 : 4,
+    borderBottomRightRadius: isTablet ? 8 : 4,
+    overflow: 'hidden',
+    borderLeftWidth: isTablet ? 0.5 : 0.75,
+    borderRightWidth: isTablet ? 0.5 : 0.75,
+    borderBottomWidth: isTablet ? 0.5 : 0.75,
     borderColor: 'white',
+  },
+  container: {
+    width: isTablet ? 175 : 96.25,
+    height: isTablet ? 55 : 30.25,
+    borderBottomLeftRadius: isTablet ? 8 : 4,
+    borderBottomRightRadius: isTablet ? 8 : 4,
+    overflow: 'hidden',
+    position: 'relative',
   },
   gradient: {
     width: isTablet ? 175 : 96.25,
     height: isTablet ? 55 : 30.25,
     position: 'absolute',
-    borderBottomLeftRadius: isTablet ? 8 : 4,
-    borderBottomRightRadius: isTablet ? 8 : 4,
   },
   text: {
     color: '#fff',
@@ -55,11 +65,11 @@ const styles = StyleSheet.create({
   },
   textWrapper: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
   },
 })
 
@@ -141,7 +151,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     return 0
   }, [trainTypeName?.length])
 
-  const marginLeft = useMemo(() => {
+  const paddingLeft = useMemo(() => {
     if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
       return 8
     }
@@ -149,7 +159,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     return 0
   }, [trainTypeName?.length])
 
-  const prevMarginLeft = usePrevious(marginLeft)
+  const prevPaddingLeft = usePrevious(paddingLeft)
   const prevTrainTypeText = usePrevious(trainTypeName)
   const prevLetterSpacing = usePrevious(letterSpacing)
 
@@ -186,72 +196,70 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     opacity: textOpacityAnim.value,
   }))
 
-  // 表示に使う１行目のみの文字数で判定
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n')[0].length <= 10 ? 1 : 2),
-    [trainTypeName]
+    () => (trainTypeName.length <= 10 ? 1 : 2),
+    [trainTypeName.length]
   )
   const prevNumberOfLines = useMemo(
-    () =>
-      prevTrainTypeText
-        ? prevTrainTypeText.split('\n')[0].length <= 10
-          ? 1
-          : 2
-        : 0,
-    [prevTrainTypeText]
+    () => ((prevTrainTypeText?.length ?? 0) <= 10 ? 1 : 2),
+    [prevTrainTypeText?.length]
   )
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        colors={['#000', '#000', '#fff']}
-        locations={[0.1, 0.5, 0.9]}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={['#000', '#000', '#fff']}
-        locations={[0.1, 0.5, 0.9]}
-        style={styles.gradient}
-      />
-      <LinearGradient
-        colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
-        style={styles.gradient}
-      />
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#000', '#000', '#fff']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={['#aaaaaaff', '#aaaaaabb']}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={['#000', '#000', '#fff']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
+          style={styles.gradient}
+        />
 
-      <View style={styles.textWrapper}>
-        <AnimatedTypography
-          style={[
-            textTopAnimatedStyles,
-            {
-              ...styles.text,
-              letterSpacing,
-              marginLeft,
-            },
-          ]}
-          adjustsFontSizeToFit
-          numberOfLines={numberOfLines}
-        >
-          {trainTypeName}
-        </AnimatedTypography>
+        <View style={styles.textWrapper}>
+          <AnimatedTypography
+            adjustsFontSizeToFit
+            numberOfLines={numberOfLines}
+            style={[
+              textTopAnimatedStyles,
+              {
+                ...styles.text,
+                paddingLeft,
+                letterSpacing,
+              },
+            ]}
+          >
+            {trainTypeName}
+          </AnimatedTypography>
+        </View>
+        <View style={styles.textWrapper}>
+          <AnimatedTypography
+            adjustsFontSizeToFit
+            numberOfLines={prevNumberOfLines}
+            style={[
+              textBottomAnimatedStyles,
+              {
+                ...styles.text,
+                paddingLeft: prevPaddingLeft,
+                letterSpacing: prevLetterSpacing,
+              },
+            ]}
+          >
+            {prevTrainTypeText}
+          </AnimatedTypography>
+        </View>
       </View>
-      <AnimatedTypography
-        adjustsFontSizeToFit
-        numberOfLines={prevNumberOfLines}
-        style={[
-          textBottomAnimatedStyles,
-          {
-            ...styles.text,
-            marginLeft: prevMarginLeft,
-            letterSpacing: prevLetterSpacing,
-          },
-        ]}
-      >
-        {prevTrainTypeText}
-      </AnimatedTypography>
     </View>
   )
 }
