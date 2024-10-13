@@ -1,6 +1,6 @@
 import * as Application from 'expo-application'
 import React, { useMemo } from 'react'
-import { Dimensions, Platform, StyleSheet, View } from 'react-native'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThreshold } from '../hooks/useThreshold'
 import Typography from './Typography'
@@ -19,13 +19,11 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
 })
 
