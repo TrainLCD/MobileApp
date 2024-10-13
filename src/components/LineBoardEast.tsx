@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
     marginBottom: Platform.select({
-      ios: 0,
+      ios: -6,
       android: isTablet ? 0 : -6,
     }),
   },
