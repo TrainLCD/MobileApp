@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 55 : 30.25,
     justifyContent: 'center',
     alignItems: 'center',
+    borderColor: 'white',
   },
   gradient: {
     width: isTablet ? 175 : 96.25,
