@@ -90,7 +90,6 @@ android {
         applicationId 'me.tinykitten.trainlcd'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-
         buildConfigField("boolean", "REACT_NATIVE_UNSTABLE_USE_RUNTIME_SCHEDULER_ALWAYS", (findProperty("reactNative.unstable_useRuntimeSchedulerAlways") ?: true).toString())
     }
     signingConfigs {
@@ -122,7 +121,7 @@ android {
         applicationIdSuffix ".dev"
         versionNameSuffix "-dev"
         // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-        versionCode 80100000
+        versionCode 80100030
         versionName "8.1.0"
       }
       prod {
