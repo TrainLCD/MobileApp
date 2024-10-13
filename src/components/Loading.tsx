@@ -3,7 +3,6 @@ import { CommonActions, useNavigation } from '@react-navigation/native'
 import React from 'react'
 import {
   ActivityIndicator,
-  Dimensions,
   Linking,
   Pressable,
   StyleSheet,
@@ -15,13 +14,9 @@ import { APP_THEME } from '../models/Theme'
 import { translate } from '../translation'
 import Typography from './Typography'
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
-
 const styles = StyleSheet.create({
   loading: {
-    position: 'absolute',
-    width: windowWidth,
-    height: windowHeight,
+    ...StyleSheet.absoluteFillObject,
     left: 0,
     top: 0,
     justifyContent: 'center',
@@ -32,7 +27,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     alignSelf: 'center',
-    bottom: windowHeight / 3,
+    bottom: '33.33%',
     fontSize: RFValue(14),
   },
   additionalLinkButton: {
