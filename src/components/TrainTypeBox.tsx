@@ -248,7 +248,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
               ...styles.text,
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
-              width: '100%',
             },
           ]}
           adjustsFontSizeToFit
@@ -260,7 +259,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <Typography
           style={[
-            styles.text,
             styles.nextTrainType,
             {
               color: theme === APP_THEME.TY ? '#fff' : '#444',

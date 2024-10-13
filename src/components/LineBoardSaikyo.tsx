@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     color: '#3a3a3a',
     marginLeft: isTablet ? 10 : 5,
     marginBottom: Platform.select({
-      ios: 0,
+      ios: -6,
       android: isTablet ? 0 : -6,
     }),
   },
