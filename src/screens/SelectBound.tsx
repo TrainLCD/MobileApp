@@ -107,7 +107,6 @@ const SelectBoundScreen: React.FC = () => {
       trainType: null,
       bottomState: 'LINE',
       leftStations: [],
-      stationForHeader: null,
       fetchedTrainTypes: [],
     }))
     navigation.navigate('SelectLine')
