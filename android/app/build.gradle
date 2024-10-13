@@ -121,13 +121,13 @@ android {
         applicationIdSuffix ".dev"
         versionNameSuffix "-dev"
         // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-        versionCode 80000490
-        versionName "8.0.0"
+        versionCode 80100000
+        versionName "8.1.0"
       }
       prod {
         dimension "environment"
-        versionCode 70702000
-        versionName "7.7.2"
+        versionCode 80100000
+        versionName "8.1.0"
       }
     }
 }// Apply static values from `gradle.properties` to the `android.packagingOptions`

@@ -9,7 +9,6 @@ import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import { isJapanese, translate } from '../translation'
-import isFullSizedTablet from '../utils/isFullSizedTablet'
 import isTablet from '../utils/isTablet'
 import LineBoardEast from './LineBoardEast'
 import LineBoardJO from './LineBoardJO'
@@ -107,7 +106,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           />
         )
       case APP_THEME.YAMANOTE:
-        if (isFullSizedTablet) {
+        if (isTablet) {
           return (
             <LineBoardYamanotePad stations={slicedLeftStationsForYamanote} />
           )

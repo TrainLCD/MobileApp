@@ -9,7 +9,6 @@ import useGetLineMark from '../hooks/useGetLineMark'
 import useIsDifferentStationName from '../hooks/useIsDifferentStationName'
 import { APP_THEME, AppTheme } from '../models/Theme'
 import { isEnSelector } from '../store/selectors/isEn'
-import isSmallTablet from '../utils/isSmallTablet'
 import isTablet from '../utils/isTablet'
 import TransferLineDot from './TransferLineDot'
 import TransferLineMark from './TransferLineMark'
@@ -92,7 +91,7 @@ const PadLineMarks: React.FC<Props> = ({
 
   const isDifferentStationName = useIsDifferentStationName()
 
-  if (!isTablet || isSmallTablet) {
+  if (!isTablet) {
     return <></>
   }
 
