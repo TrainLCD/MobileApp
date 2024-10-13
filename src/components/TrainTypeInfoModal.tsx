@@ -4,7 +4,7 @@ import { Modal, ScrollView, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
-import { Line, Station, TrainType } from '../../gen/proto/stationapi_pb'
+import { Station, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
@@ -78,7 +78,7 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                 ? 0
                 : a.trainType?.id - b.trainType?.id
             )
-        : ([selectedLine] as Line[]),
+        : [selectedLine],
     [selectedLine, trainType?.lines]
   )
 
@@ -186,11 +186,11 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                     flexDirection: 'row',
                     alignItems: 'center',
                   }}
-                  key={l.id}
+                  key={l?.id}
                 >
                   <View
                     style={{
-                      backgroundColor: l.color,
+                      backgroundColor: l?.color ?? '#000000',
                       width: 10,
                       height: 10,
                       borderRadius: 8,
@@ -204,11 +204,11 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                       flex: 1,
                     }}
                   >
-                    {isJapanese ? l.nameShort : l.nameRoman}:{' '}
+                    {(isJapanese ? l?.nameShort : l?.nameRoman) ?? ''}:{' '}
                   </Typography>
                   <Typography
                     style={{
-                      color: l.trainType?.color,
+                      color: l?.trainType?.color ?? '#000000',
                       textAlign: 'right',
                       fontSize: RFValue(11),
                       fontWeight: 'bold',
@@ -216,8 +216,8 @@ export const TrainTypeInfoModal: React.FC<Props> = ({
                     }}
                   >
                     {isJapanese
-                      ? l.trainType?.name ?? '普通/各駅停車'
-                      : l.trainType?.nameRoman ?? 'Local'}
+                      ? l?.trainType?.name ?? '普通/各駅停車'
+                      : l?.trainType?.nameRoman ?? 'Local'}
                   </Typography>
                 </View>
               ))}
