@@ -192,7 +192,7 @@ const RouteSearchScreen = () => {
           selectedBound:
             (direction === 'INBOUND'
               ? route?.stops[0]
-              : route?.stops[route.stops.length - 1]) ?? null,
+              : route?.stops.slice().reverse()[route.stops.length - 1]) ?? null,
         }))
         setNavigationState((prev) => ({ ...prev, trainType: null }))
         navigation.navigate('Main')
