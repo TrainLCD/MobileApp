@@ -131,7 +131,6 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         trainType: line.station?.trainType ?? null,
         leftStations: [],
-        stationForHeader: null,
       }))
       setLineState((prev) => ({
         ...prev,
