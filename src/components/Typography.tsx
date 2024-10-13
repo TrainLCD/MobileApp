@@ -3,6 +3,7 @@ import { StyleProp, Text, TextProps, TextStyle } from 'react-native'
 import { FONTS } from '../constants'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
+import isTablet from '../utils/isTablet'
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
@@ -19,7 +20,7 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
-        includeFontPadding: false,
+        includeFontPadding: !isTablet,
       },
       overrideStyle,
     ],
