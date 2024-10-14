@@ -232,7 +232,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
                 ...styles.text,
                 letterSpacing,
                 marginLeft,
-                width: '100%',
               },
             ]}
             adjustsFontSizeToFit
@@ -249,7 +248,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
               ...styles.text,
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
-              width: '100%',
             },
           ]}
           adjustsFontSizeToFit

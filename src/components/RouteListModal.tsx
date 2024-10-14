@@ -1,12 +1,6 @@
 import { ConnectError } from '@connectrpc/connect'
 import React from 'react'
-import {
-  ActivityIndicator,
-  Modal,
-  SafeAreaView,
-  StyleSheet,
-  View,
-} from 'react-native'
+import { Modal, SafeAreaView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Route } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
@@ -16,6 +10,7 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import FAB from './FAB'
 import Heading from './Heading'
+import Loading from './Loading'
 import { RouteList } from './RouteList'
 
 type Props = {
@@ -119,15 +114,7 @@ export const RouteListModal: React.FC<Props> = ({
               }}
             >
               {isRoutesLoading ? (
-                <View
-                  style={{
-                    ...StyleSheet.absoluteFillObject,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <ActivityIndicator size="large" />
-                </View>
+                <Loading message={translate('loadingAPI')} />
               ) : (
                 <View
                   style={{ flex: 1, opacity: isTrainTypesLoading ? 0.5 : 1 }}

@@ -203,7 +203,15 @@ const FakeStationSettingsScreen: React.FC = () => {
             onKeyPress={onKeyPress}
           />
           {isByCoordsLoading || byNameFetchStatus === 'pending' ? (
-            <ActivityIndicator size="large" />
+            <View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <ActivityIndicator size="large" />
+            </View>
           ) : (
             <StationList
               withoutTransfer

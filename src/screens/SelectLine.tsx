@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
@@ -10,6 +10,7 @@ import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Loading from '../components/Loading'
 import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
@@ -50,6 +51,14 @@ const SelectLineScreen: React.FC = () => {
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
+
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
+  const toggleAutoModeEnabled = useApplicationFlagStore(
+    (state) => state.toggleAutoModeEnabled
+  )
+
   const {
     fetchByCoords,
     isLoading: nearbyStationLoading,
@@ -122,7 +131,6 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         trainType: line.station?.trainType ?? null,
         leftStations: [],
-        stationForHeader: null,
       }))
       setLineState((prev) => ({
         ...prev,
@@ -219,6 +227,11 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('RouteSearch')
   }, [navigation])
 
+  const autoModeButtonText = useMemo(
+    () => `${translate('autoModeSettings')}: ${autoModeEnabled ? 'ON' : 'OFF'}`,
+    [autoModeEnabled]
+  )
+
   if (nearbyStationFetchError) {
     return (
       <ErrorScreen
@@ -292,6 +305,10 @@ const SelectLineScreen: React.FC = () => {
               </Button>
             </>
           ) : null}
+          <Button style={styles.button} onPress={toggleAutoModeEnabled}>
+            {autoModeButtonText}
+          </Button>
+
           <Button style={styles.button} onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>

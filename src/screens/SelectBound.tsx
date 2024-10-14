@@ -22,7 +22,6 @@ import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
-import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useStationList } from '../hooks/useStationList'
@@ -84,13 +83,6 @@ const SelectBoundScreen: React.FC = () => {
     bounds: [inboundStations, outboundStations],
   } = useBounds()
 
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  )
-  const toggleAutoModeEnabled = useApplicationFlagStore(
-    (state) => state.toggleAutoModeEnabled
-  )
-
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
     (): boolean => fetchedTrainTypes.length > 1,
@@ -115,7 +107,6 @@ const SelectBoundScreen: React.FC = () => {
       trainType: null,
       bottomState: 'LINE',
       leftStations: [],
-      stationForHeader: null,
       fetchedTrainTypes: [],
     }))
     navigation.navigate('SelectLine')
@@ -314,10 +305,6 @@ const SelectBoundScreen: React.FC = () => {
     return subscription.remove
   }, [handleSelectBoundBackButtonPress])
 
-  const autoModeButtonText = `${translate('autoModeSettings')}: ${
-    autoModeEnabled ? 'ON' : 'OFF'
-  }`
-
   if (error) {
     return (
       <ErrorScreen
@@ -398,7 +385,6 @@ const SelectBoundScreen: React.FC = () => {
               {translate('selectBoundSettings')}
             </Button>
           ) : null}
-          <Button onPress={toggleAutoModeEnabled}>{autoModeButtonText}</Button>
         </View>
       </View>
     </ScrollView>

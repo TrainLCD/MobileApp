@@ -27,6 +27,7 @@ import { useCurrentLine } from '../hooks/useCurrentLine'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
+import { useResetMainState } from '../hooks/useResetMainState'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { AppTheme } from '../models/Theme'
@@ -96,6 +97,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { sendReport, descriptionLowerLimit } = useReport(user)
   const reportEligibility = useReportEligibility()
   const badAccuracy = useBadAccuracy()
+  const resetMainState = useResetMainState()
 
   const viewShotRef = useRef<ViewShot>(null)
 
@@ -134,6 +136,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           case 0:
             if (Platform.OS === 'ios') {
               navigation.navigate('SelectBound')
+              resetMainState()
               break
             }
             handleShare()

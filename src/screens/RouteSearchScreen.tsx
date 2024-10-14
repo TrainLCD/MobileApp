@@ -180,7 +180,7 @@ const RouteSearchScreen = () => {
             (s) => s.groupId === currentStation?.groupId
           ) <
           (route?.stops ?? []).findIndex(
-            (s) => selectedStation?.groupId === s.groupId
+            (s) => s.groupId === selectedStation?.groupId
           )
             ? 'INBOUND'
             : 'OUTBOUND'
@@ -189,10 +189,7 @@ const RouteSearchScreen = () => {
           ...prev,
           stations: route?.stops ?? [],
           selectedDirection: direction,
-          selectedBound:
-            (direction === 'INBOUND'
-              ? route?.stops[0]
-              : route?.stops[route.stops.length - 1]) ?? null,
+          selectedBound: route?.stops[route?.stops.length - 1] ?? null,
         }))
         setNavigationState((prev) => ({ ...prev, trainType: null }))
         navigation.navigate('Main')
@@ -209,7 +206,7 @@ const RouteSearchScreen = () => {
 
       const direction: LineDirection =
         data.stations.findIndex((s) => s.groupId === currentStation?.groupId) <
-        data.stations.findIndex((s) => selectedStation?.groupId === s.groupId)
+        data.stations.findIndex((s) => s.groupId === selectedStation?.groupId)
           ? 'INBOUND'
           : 'OUTBOUND'
 
@@ -222,9 +219,9 @@ const RouteSearchScreen = () => {
         stations: data.stations,
         selectedDirection: direction,
         selectedBound:
-          (direction === 'INBOUND'
-            ? route?.stops[0]
-            : route?.stops[route.stops.length - 1]) ?? null,
+          direction === 'INBOUND'
+            ? data.stations[data.stations.length - 1]
+            : data.stations[0],
       }))
       navigation.navigate('Main')
     },
