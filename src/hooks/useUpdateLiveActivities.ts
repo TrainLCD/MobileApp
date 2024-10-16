@@ -4,6 +4,7 @@ import { parenthesisRegexp } from '../constants'
 import { directionToDirectionName } from '../models/Bound'
 import stationState from '../store/atoms/station'
 import { isJapanese } from '../translation'
+import getIsPass from '../utils/isPass'
 import {
   startLiveActivity,
   stopLiveActivity,
@@ -91,7 +92,7 @@ export const useUpdateLiveActivities = (): void => {
 
   const stoppedStation = useMemo(
     () =>
-      arrivedFromState && !approachingFromState
+      arrivedFromState && !approachingFromState && !getIsPass(currentStation)
         ? currentStation
         : previousStation,
     [approachingFromState, arrivedFromState, currentStation, previousStation]
