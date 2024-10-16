@@ -30,8 +30,4 @@ export const useStartBackgroundLocationUpdates = () => {
       }
     })()
 
-    return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(console.debug)
-    }
-  }, [])
 }
