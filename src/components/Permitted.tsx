@@ -28,6 +28,7 @@ import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
 import { useResetMainState } from '../hooks/useResetMainState'
+import { useSubscribeLocation } from '../hooks/useSubscribeLocation'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
 import { AppTheme } from '../models/Theme'
@@ -88,6 +89,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
+  useSubscribeLocation()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()

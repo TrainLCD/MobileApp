@@ -25,6 +25,7 @@ import { useCurrentLine } from '../hooks/useCurrentLine'
 import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useNextStation } from '../hooks/useNextStation'
+import { usePublishLocation } from '../hooks/usePublishLocation'
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations'
 import useRefreshStation from '../hooks/useRefreshStation'
 import { useResetMainState } from '../hooks/useResetMainState'
@@ -61,6 +62,8 @@ const MainScreen: React.FC = () => {
     useRecoilState(navigationState)
   const currentLine = useCurrentLine()
   const currentStation = useCurrentStation()
+
+  usePublishLocation()
 
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled

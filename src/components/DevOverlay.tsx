@@ -1,5 +1,6 @@
 import * as Application from 'expo-application'
-import React, { useMemo } from 'react'
+import * as Location from 'expo-location'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { useThreshold } from '../hooks/useThreshold'
@@ -34,12 +35,25 @@ const DevOverlay: React.FC = () => {
   const accuracy = useLocationStore((state) => state?.coords.accuracy)
   const { approachingThreshold, arrivedThreshold } = useThreshold()
 
-  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
+  const [processingMode, setProcessingMode] = useState('Device')
+
+  const coordsSpeed = useMemo(
+    () => ((speed ?? 0) < 0 ? 0 : speed) ?? 0,
+    [speed]
+  )
 
   const speedKMH = useMemo(
     () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
     [coordsSpeed, speed]
   )
+
+  useEffect(() => {
+    const setProcessingModeAsync = async () => {
+      const status = await Location.getProviderStatusAsync()
+      setProcessingMode(status.gpsAvailable ? 'Publisher' : 'Subscriber')
+    }
+    setProcessingModeAsync()
+  }, [])
 
   return (
     <View style={styles.root}>
@@ -70,7 +84,9 @@ const DevOverlay: React.FC = () => {
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
 
-      <Typography style={styles.text}>Processing Mode: Device</Typography>
+      <Typography style={styles.text}>
+        Processing Mode: {processingMode}
+      </Typography>
     </View>
   )
 }
