@@ -129,12 +129,11 @@ const styles = StyleSheet.create({
     marginLeft: isTablet ? 0 : -30,
   },
   stationNameHorizontalContainer: {
-    position: 'relative',
+    position: isTablet ? 'absolute' : 'relative',
     bottom: 0,
     justifyContent: 'flex-start',
   },
   stationNameHorizontalWrapper: {
-    position: 'absolute',
     bottom: isTablet ? 32 : 24,
   },
   stationNameHorizontalText: {
@@ -142,9 +141,9 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     fontSize: RFValue(16),
     fontWeight: 'bold',
-    bottom: isTablet ? BAR_HEIGHT + 17.5 : BAR_HEIGHT + 35,
+    bottom: isTablet ? BAR_HEIGHT + 15 : BAR_HEIGHT + 35,
     left: isTablet ? -BAR_HEIGHT / 2 : -BAR_HEIGHT,
-    width: isTablet ? windowHeight / 4 : windowHeight / 2,
+    width: isTablet ? 200 : windowHeight / 2,
   },
   stationNameHorizontalTextExtra: {
     fontSize: RFValue(10),
