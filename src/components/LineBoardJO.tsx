@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -110,19 +109,19 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? undefined : 96,
   },
   stationName: {
-    width: isTablet ? 48 : 32,
+    width: RFValue(18),
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    marginLeft: isTablet ? 12 : 4,
+    marginBottom: -6,
   },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
-    paddingBottom: isTablet
-      ? Platform.select({ ios: 48 * 0.25, android: 0 })
-      : 24 * 0.25,
+    paddingBottom: 0,
   },
   verticalStationName: {
     marginBottom: 0,
