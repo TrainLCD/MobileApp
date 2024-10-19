@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
-  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -92,32 +91,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stationNameContainer: {
+    position: 'relative',
     width: windowWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
-    paddingBottom: !isTablet ? 96 : undefined,
+    paddingBottom: 0,
   },
   stationName: {
     width: isTablet ? 48 : 32,
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    marginBottom: -6,
   },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
-    paddingBottom: isTablet
-      ? Platform.select({
-          ios: 48 * 0.25,
-          android: 0,
-        })
-      : 24 * 0.25,
+    paddingBottom: isTablet ? 32 : 0,
   },
   verticalStationName: {
-    marginBottom: 8,
+    marginBottom: isTablet ? 24 : 8,
   },
   grayColor: {
     color: '#ccc',
@@ -166,6 +162,8 @@ const styles = StyleSheet.create({
     top: isTablet ? 48 * 0.45 : 28 * 0.4, // (almost) half dotHeight
   },
   numberingContainer: {
+    position: 'absolute',
+    bottom: isTablet ? 0 : barBottom + 44,
     marginLeft: isTablet ? -48 * 0.125 : -24 * 0.25,
     width: isTablet ? 48 * 1.25 : 24 * 1.75,
     height: isTablet ? 48 / 2 : 24 / 1.5,
@@ -349,7 +347,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   return (
-    <View key={stationInLoop.name} style={styles.stationNameContainer}>
+    <View
+      key={stationInLoop.name}
+      style={{
+        ...styles.stationNameContainer,
+        paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
+      }}
+    >
       <StationName
         stations={stations}
         station={stationInLoop}

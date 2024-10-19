@@ -3,7 +3,7 @@ import React, { useCallback, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
-import { Line, Station } from '../../gen/proto/stationapi_pb'
+import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stationNameContainer: {
+    position: 'relative',
     width: windowWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
-    marginBottom: 0,
+    marginBottom: -3,
   },
   stationNameExtra: {
     width: RFValue(10),
@@ -128,22 +129,21 @@ const styles = StyleSheet.create({
     marginLeft: isTablet ? 0 : -30,
   },
   stationNameHorizontalContainer: {
-    position: 'relative',
+    position: isTablet ? 'absolute' : 'relative',
     bottom: 0,
     justifyContent: 'flex-start',
   },
   stationNameHorizontalWrapper: {
-    position: 'absolute',
-    bottom: 0,
+    bottom: isTablet ? 32 : 24,
   },
   stationNameHorizontalText: {
     position: 'absolute',
     transform: [{ rotate: '-55deg' }],
     fontSize: RFValue(16),
     fontWeight: 'bold',
-    bottom: isTablet ? BAR_HEIGHT + 17.5 : BAR_HEIGHT + 35,
+    bottom: isTablet ? BAR_HEIGHT + 15 : BAR_HEIGHT + 35,
     left: isTablet ? -BAR_HEIGHT / 2 : -BAR_HEIGHT,
-    width: isTablet ? windowHeight / 4 : windowHeight / 2,
+    width: isTablet ? 200 : windowHeight / 2,
   },
   stationNameHorizontalTextExtra: {
     fontSize: RFValue(10),
@@ -178,14 +178,15 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-end',
-    bottom: 0,
+    bottom: 24,
   },
   stationNumber: {
+    position: 'absolute',
+    bottom: isTablet ? 0 : barBottom + 32,
     width: isTablet ? 60 : 45,
     marginLeft: -5,
     fontSize: RFValue(12),
     fontWeight: 'bold',
-    bottom: 0,
     textAlign: 'center',
   },
   marksContainer: { marginTop: 8 },
@@ -449,17 +450,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const getStationNumberIndex = useStationNumberIndexFunc()
   const stationNumberIndex = getStationNumberIndex(currentStation)
+  const numberingObj = useMemo<StationNumber | undefined>(
+    () => station.stationNumbers?.[stationNumberIndex],
+    [station.stationNumbers, stationNumberIndex]
+  )
 
   return (
     <>
       <View
         key={station.name}
-        style={[
-          styles.stationNameContainer,
-          {
-            paddingBottom: !isTablet ? 64 : undefined,
-          },
-        ]}
+        style={{
+          ...styles.stationNameContainer,
+          paddingBottom: isTablet ? 0 : numberingObj ? 64 : 48,
+        }}
       >
         <StationName
           station={station}
@@ -472,8 +475,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             styles.stationNumber,
             getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
           ]}
+          adjustsFontSizeToFit
+          numberOfLines={1}
         >
-          {station.stationNumbers?.[stationNumberIndex]?.stationNumber ?? ''}
+          {numberingObj?.stationNumber ?? ''}
         </Typography>
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
