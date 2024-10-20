@@ -24,6 +24,7 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
+import { useDeepLink } from '../hooks/useDeepLink'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
@@ -88,6 +89,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
+  useDeepLink()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
