@@ -63,6 +63,9 @@ export const useOpenRouteFromLink = () => {
   )
 
   useEffect(() => {
+    if (selectedBound) {
+      return
+    }
     const stations =
       stationsByLineGroupId?.stations ?? stationsByLineId?.stations ?? []
     const nearestCoordinates = findNearest(
@@ -82,7 +85,7 @@ export const useOpenRouteFromLink = () => {
 
     const line = nearestStation?.line
 
-    if (!line || selectedBound) {
+    if (!line) {
       return
     }
 
