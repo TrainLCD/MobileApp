@@ -138,6 +138,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: -30,
     color: '#3a3a3a',
+    paddingBottom: 0,
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
