@@ -2,7 +2,7 @@ import { useMutation } from '@connectrpc/connect-query'
 import { useNavigation } from '@react-navigation/native'
 import { findNearest } from 'geolib'
 import { useCallback, useEffect } from 'react'
-import { useSetRecoilState } from 'recoil'
+import { useRecoilState, useSetRecoilState } from 'recoil'
 import {
   getStationsByLineGroupId,
   getStationsByLineId,
@@ -21,7 +21,7 @@ export const useOpenRouteFromLink = () => {
   const navigation = useNavigation()
   const resetState = useResetMainState()
 
-  const setStationState = useSetRecoilState(stationState)
+  const [{ selectedBound }, setStationState] = useRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
 
@@ -82,7 +82,7 @@ export const useOpenRouteFromLink = () => {
 
     const line = nearestStation?.line
 
-    if (!line) {
+    if (!line || selectedBound) {
       return
     }
 
@@ -110,6 +110,7 @@ export const useOpenRouteFromLink = () => {
     longitude,
     navigation,
     resetState,
+    selectedBound,
     setLineState,
     setNavigationState,
     setStationState,
