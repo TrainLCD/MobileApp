@@ -109,6 +109,7 @@ export const useOpenRouteFromLink = () => {
     latitude,
     longitude,
     navigation,
+    resetState,
     setLineState,
     setNavigationState,
     setStationState,
