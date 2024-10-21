@@ -5,46 +5,53 @@ import { useOpenRouteFromLink } from './useOpenRouteFromLink'
 export const useDeepLink = () => {
   const { openLink: openRoute } = useOpenRouteFromLink()
 
-  const handleURL = useCallback(
-    async (event: Linking.EventType) => {
-      const url = event.url
-      if (url && (await Linking.canOpenURL(url))) {
-        const parsedUrl = Linking.parse(url)
-        if (parsedUrl.queryParams) {
-          const { sgid, dir, lgid, lid } = parsedUrl.queryParams
+  const handleParsedUrl = useCallback(
+    async (parsedUrl: Linking.ParsedURL) => {
+      if (parsedUrl.queryParams) {
+        const { sgid, dir, lgid, lid } = parsedUrl.queryParams
 
-          const stationGroupId = Number(sgid)
-          const direction = Number(dir)
-          const lineGroupId = Number(lgid)
-          const lineId = Number(lid)
+        const stationGroupId = Number(sgid)
+        const direction = Number(dir)
+        const lineGroupId = Number(lgid)
+        const lineId = Number(lid)
 
-          if (
-            typeof stationGroupId === 'undefined' ||
-            typeof direction === 'undefined'
-          ) {
-            return
-          }
-          if (direction !== 0 && direction !== 1) {
-            return
-          }
-
-          openRoute({
-            stationGroupId,
-            direction,
-            lineGroupId,
-            lineId,
-          })
+        if (
+          typeof stationGroupId === 'undefined' ||
+          typeof direction === 'undefined'
+        ) {
+          return
         }
+        if (direction !== 0 && direction !== 1) {
+          return
+        }
+
+        openRoute({
+          stationGroupId,
+          direction,
+          lineGroupId,
+          lineId,
+        })
       }
     },
     [openRoute]
   )
 
+  const handleUrl = useCallback(
+    (url: string) => handleParsedUrl(Linking.parse(url)),
+    [handleParsedUrl]
+  )
+
   useEffect(() => {
-    const listener = Linking.addEventListener('url', handleURL)
+    const handleInitUrlAsync = async () => {
+      const initialUrl = await Linking.parseInitialURLAsync()
+      handleParsedUrl(initialUrl)
+    }
+    handleInitUrlAsync()
+
+    const listener = Linking.addEventListener('url', (e) => handleUrl(e.url))
 
     return () => {
       listener.remove()
     }
-  }, [handleURL])
+  }, [handleParsedUrl, handleUrl])
 }
