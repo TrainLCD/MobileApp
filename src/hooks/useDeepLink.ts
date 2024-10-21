@@ -1,13 +1,13 @@
 import * as Linking from 'expo-linking'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useOpenRouteFromLink } from './useOpenRouteFromLink'
 
 export const useDeepLink = () => {
-  const url = Linking.useURL()
   const { openLink: openRoute } = useOpenRouteFromLink()
 
-  useEffect(() => {
-    const getUrlAsync = async () => {
+  const handleURL = useCallback(
+    async (event: Linking.EventType) => {
+      const url = event.url
       if (url && (await Linking.canOpenURL(url))) {
         const parsedUrl = Linking.parse(url)
         if (parsedUrl.queryParams) {
@@ -36,7 +36,15 @@ export const useDeepLink = () => {
           })
         }
       }
+    },
+    [openRoute]
+  )
+
+  useEffect(() => {
+    const listener = Linking.addEventListener('url', handleURL)
+
+    return () => {
+      listener.remove()
     }
-    getUrlAsync()
-  }, [openRoute, url])
+  }, [handleURL])
 }
