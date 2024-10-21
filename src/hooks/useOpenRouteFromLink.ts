@@ -1,7 +1,6 @@
 import { useMutation } from '@connectrpc/connect-query'
 import { useNavigation } from '@react-navigation/native'
-import { findNearest } from 'geolib'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useRecoilState, useSetRecoilState } from 'recoil'
 import {
   getStationsByLineGroupId,
@@ -10,11 +9,12 @@ import {
 import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
+  Station,
 } from '../../gen/proto/stationapi_pb'
+import { LineDirection } from '../models/Bound'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
-import { useLocationStore } from './useLocationStore'
 import { useResetMainState } from './useResetMainState'
 
 export const useOpenRouteFromLink = () => {
@@ -25,101 +25,111 @@ export const useOpenRouteFromLink = () => {
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
 
-  // NOTE: 位置情報取得を許可していない場合を考慮してデフォで0を設定する
-  const latitude = useLocationStore((state) => state?.coords.latitude) ?? 0
-  const longitude = useLocationStore((state) => state?.coords.longitude) ?? 0
-
   const {
-    data: stationsByLineGroupId,
-    mutate: fetchStationsByLineGroupId,
+    mutateAsync: fetchStationsByLineGroupId,
     status: fetchStationsByLineGroupIdStatus,
     error: fetchStationsByLineGroupIdError,
   } = useMutation(getStationsByLineGroupId)
   const {
-    data: stationsByLineId,
-    mutate: fetchStationsByLineId,
+    mutateAsync: fetchStationsByLineId,
     status: fetchStationsByLineIdStatus,
     error: fetchStationsByLineIdError,
   } = useMutation(getStationsByLineId)
 
+  const handleStationsFetched = useCallback(
+    (
+      station: Station,
+      stations: Station[],
+      direction: LineDirection | null
+    ) => {
+      if (selectedBound) {
+        return
+      }
+
+      const line = station?.line
+      if (!line) {
+        return
+      }
+
+      resetState()
+
+      setStationState((prev) => ({
+        ...prev,
+        stations,
+        station,
+        selectedDirection: direction,
+        selectedBound:
+          direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],
+      }))
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: station.trainType ?? null,
+        leftStations: [],
+        stationForHeader: station,
+        fromBuilder: true,
+      }))
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine: line,
+      }))
+      navigation.navigate('Main')
+    },
+    [
+      navigation,
+      resetState,
+      selectedBound,
+      setLineState,
+      setNavigationState,
+      setStationState,
+    ]
+  )
+
   const openLink = useCallback(
-    (lineGroupId: number | undefined, lineId: number | undefined) => {
+    async ({
+      stationGroupId,
+      direction,
+      lineGroupId,
+      lineId,
+    }: {
+      stationGroupId: number
+      direction: 0 | 1
+      lineGroupId: number | undefined
+      lineId: number | undefined
+    }) => {
+      const lineDirection: LineDirection =
+        direction === 0 ? 'INBOUND' : 'OUTBOUND'
+
       if (lineGroupId) {
-        fetchStationsByLineGroupId(
+        const { stations } = await fetchStationsByLineGroupId(
           new GetStationsByLineGroupIdRequest({ lineGroupId })
         )
+
+        const station = stations.find((sta) => sta.groupId === stationGroupId)
+        if (!station) {
+          return
+        }
+
+        handleStationsFetched(station, stations, lineDirection)
         return
       }
 
       if (lineId) {
-        fetchStationsByLineId(
+        const { stations } = await fetchStationsByLineId(
           new GetStationByLineIdRequest({
             lineId,
           })
         )
+
+        const station = stations.find((sta) => sta.groupId === stationGroupId)
+        if (!station) {
+          return
+        }
+
+        handleStationsFetched(station, stations, lineDirection)
       }
     },
-    [fetchStationsByLineGroupId, fetchStationsByLineId]
+    [fetchStationsByLineGroupId, fetchStationsByLineId, handleStationsFetched]
   )
-
-  useEffect(() => {
-    if (selectedBound) {
-      return
-    }
-    const stations =
-      stationsByLineGroupId?.stations ?? stationsByLineId?.stations ?? []
-    const nearestCoordinates = findNearest(
-      { latitude, longitude },
-      stations.map((sta) => ({
-        latitude: sta.latitude,
-        longitude: sta.longitude,
-      }))
-    ) as { latitude: number; longitude: number }
-
-    const nearestStation =
-      stations.find(
-        (sta) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
-      ) ?? stations[0] // NOTE: 位置情報取得を許可していない場合を考慮
-
-    const line = nearestStation?.line
-
-    if (!line) {
-      return
-    }
-
-    resetState()
-
-    setStationState((prev) => ({
-      ...prev,
-      stations,
-      station: nearestStation,
-    }))
-    setNavigationState((prev) => ({
-      ...prev,
-      trainType: nearestStation.trainType ?? null,
-      leftStations: [],
-      stationForHeader: nearestStation,
-      fromBuilder: true,
-    }))
-    setLineState((prev) => ({
-      ...prev,
-      selectedLine: line,
-    }))
-    navigation.navigate('SelectBound')
-  }, [
-    latitude,
-    longitude,
-    navigation,
-    resetState,
-    selectedBound,
-    setLineState,
-    setNavigationState,
-    setStationState,
-    stationsByLineGroupId?.stations,
-    stationsByLineId?.stations,
-  ])
 
   return {
     openLink,
