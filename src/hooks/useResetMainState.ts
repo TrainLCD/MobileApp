@@ -15,6 +15,7 @@ export const useResetMainState = () => {
       bottomState: 'LINE',
       leftStations: [],
       stationForHeader: null,
+      fromBuilder: false,
     }))
     setStationState((prev) => ({
       ...prev,
