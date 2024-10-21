@@ -11,8 +11,29 @@ export const useDeepLink = () => {
       if (url && (await Linking.canOpenURL(url))) {
         const parsedUrl = Linking.parse(url)
         if (parsedUrl.queryParams) {
-          const { gid, lid } = parsedUrl.queryParams
-          openRoute(Number(gid), Number(lid))
+          const { sgid, dir, lgid, lid } = parsedUrl.queryParams
+
+          const stationGroupId = Number(sgid)
+          const direction = Number(dir)
+          const lineGroupId = Number(lgid)
+          const lineId = Number(lid)
+
+          if (
+            typeof stationGroupId === 'undefined' ||
+            typeof direction === 'undefined'
+          ) {
+            return
+          }
+          if (direction !== 0 && direction !== 1) {
+            return
+          }
+
+          openRoute({
+            stationGroupId,
+            direction,
+            lineGroupId,
+            lineId,
+          })
         }
       }
     }
