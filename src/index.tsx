@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { QueryClientProvider } from '@tanstack/react-query'
 import * as Location from 'expo-location'
+import * as ScreenOrientation from 'expo-screen-orientation'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
@@ -87,6 +88,10 @@ const App: React.FC = () => {
     },
     [sendReport]
   )
+
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE)
+  }, [])
 
   if (!readyForLaunch) {
     return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />
