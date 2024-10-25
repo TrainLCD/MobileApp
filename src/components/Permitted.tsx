@@ -39,6 +39,7 @@ import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
+import Loading from './Loading'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
 
@@ -89,7 +90,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
-  useDeepLink()
+  const { isLoading: isRoutesLoadingByLink, error: fetchRoutesByLinkError } =
+    useDeepLink()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
@@ -103,73 +105,148 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const viewShotRef = useRef<ViewShot>(null)
 
-  const onLongPress = async ({
-    nativeEvent,
-  }: {
-    nativeEvent: {
-      state: State
-    }
-  }): Promise<void> => {
-    if (!selectedBound || nativeEvent.state !== State.ACTIVE) {
+  const handleReport = useCallback(async () => {
+    if (!viewShotRef.current?.capture) {
       return
     }
 
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    try {
+      switch (reportEligibility) {
+        case 'banned':
+          Alert.alert(translate('errorTitle'), translate('feedbackBanned'))
+          return
+        case 'limitExceeded':
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('feedbackSendLimitExceeded')
+          )
+          return
+        default:
+          break
+      }
 
-    const buttons = Platform.select({
-      ios: [
-        translate('back'),
-        translate('share'),
-        translate('report'),
-        translate('cancel'),
-      ],
-      android: [translate('share'), translate('report'), translate('cancel')],
-    })
+      const uri = await viewShotRef.current.capture()
+      setScreenShotBase64(await RNFS.readFile(uri, 'base64'))
 
-    showActionSheetWithOptions(
-      {
-        options: buttons || [],
-        destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-        cancelButtonIndex: buttons && buttons.length - 1,
-      },
-      (buttonIndex) => {
-        switch (buttonIndex) {
-          // iOS: back, Android: share
-          case 0:
-            if (Platform.OS === 'ios') {
-              navigation.navigate('SelectBound')
-              resetMainState()
-              break
-            }
-            handleShare()
-            break
-          // iOS: share, Android: feedback
-          case 1:
-            if (Platform.OS === 'ios') {
+      setReportModalShow(true)
+    } catch (err) {
+      console.error(err)
+      Alert.alert(translate('errorTitle'), translate('reportError'))
+    }
+  }, [reportEligibility])
+
+  const handleShare = useCallback(async () => {
+    if (!viewShotRef || !currentLine) {
+      return
+    }
+    try {
+      if (!viewShotRef.current?.capture || !currentLine) {
+        return
+      }
+
+      const uri = await viewShotRef.current.capture()
+      const res = await RNFS.readFile(uri, 'base64')
+      const urlString = `data:image/jpeg;base64,${res}`
+      const message = isJapanese
+        ? `${currentLine.nameShort.replace(
+            parenthesisRegexp,
+            ''
+          )}で移動中です！ #TrainLCD https://trainlcd.app`
+        : `I'm riding ${currentLine.nameRoman?.replace(
+            parenthesisRegexp,
+            ''
+          )} with #TrainLCD https://trainlcd.app`
+      const options = {
+        title: 'TrainLCD',
+        message,
+        url: urlString,
+        type: 'image/png',
+      }
+      await Share.open(options)
+    } catch (err) {
+      if ((err as { message: string }).message !== 'User did not share') {
+        Alert.alert(`${translate('couldntShare')} ${err}`)
+      }
+    }
+  }, [currentLine])
+
+  const onLongPress = useCallback(
+    async ({
+      nativeEvent,
+    }: {
+      nativeEvent: {
+        state: State
+      }
+    }): Promise<void> => {
+      if (!selectedBound || nativeEvent.state !== State.ACTIVE) {
+        return
+      }
+
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+      const buttons = Platform.select({
+        ios: [
+          translate('back'),
+          translate('share'),
+          translate('report'),
+          translate('cancel'),
+        ],
+        android: [translate('share'), translate('report'), translate('cancel')],
+      })
+
+      showActionSheetWithOptions(
+        {
+          options: buttons || [],
+          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+          cancelButtonIndex: buttons && buttons.length - 1,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            // iOS: back, Android: share
+            case 0:
+              if (Platform.OS === 'ios') {
+                navigation.navigate('SelectBound')
+                resetMainState()
+                break
+              }
               handleShare()
               break
-            }
-            handleReport()
-            break
-          // iOS: feedback, Android: cancel
-          case 2: {
-            if (Platform.OS === 'ios') {
+            // iOS: share, Android: feedback
+            case 1:
+              if (Platform.OS === 'ios') {
+                handleShare()
+                break
+              }
               handleReport()
               break
+            // iOS: feedback, Android: cancel
+            case 2: {
+              if (Platform.OS === 'ios') {
+                handleReport()
+                break
+              }
+              break
             }
-            break
+            // iOS: cancel, Android: will be not passed here
+            case 3: {
+              break
+            }
+            // iOS, Android: will be not passed here
+            default:
+              break
           }
-          // iOS: cancel, Android: will be not passed here
-          case 3: {
-            break
-          }
-          // iOS, Android: will be not passed here
-          default:
-            break
         }
-      }
-    )
-  }
+      )
+    },
+    [
+      handleReport,
+      handleShare,
+      navigation,
+      resetMainState,
+      selectedBound,
+      showActionSheetWithOptions,
+    ]
+  )
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
@@ -244,6 +321,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
     return remove
   }, [selectedBound])
+
+  useEffect(() => {
+    if (fetchRoutesByLinkError) {
+      console.error(fetchRoutesByLinkError)
+      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'))
+    }
+  }, [fetchRoutesByLinkError])
 
   const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
@@ -327,76 +411,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     [onWarningPress, warningInfo]
   )
 
-  const handleShare = useCallback(async () => {
-    if (!viewShotRef || !currentLine) {
-      return
-    }
-    try {
-      if (!viewShotRef.current?.capture || !currentLine) {
-        return
-      }
-
-      const uri = await viewShotRef.current.capture()
-      const res = await RNFS.readFile(uri, 'base64')
-      const urlString = `data:image/jpeg;base64,${res}`
-      const message = isJapanese
-        ? `${currentLine.nameShort.replace(
-            parenthesisRegexp,
-            ''
-          )}で移動中です！ #TrainLCD https://trainlcd.app`
-        : `I'm riding ${currentLine.nameRoman?.replace(
-            parenthesisRegexp,
-            ''
-          )} with #TrainLCD https://trainlcd.app`
-      const options = {
-        title: 'TrainLCD',
-        message,
-        url: urlString,
-        type: 'image/png',
-      }
-      await Share.open(options)
-    } catch (err) {
-      if ((err as { message: string }).message !== 'User did not share') {
-        Alert.alert(`${translate('couldntShare')} ${err}`)
-      }
-    }
-  }, [currentLine])
-
-  const handleReport = async () => {
-    if (!viewShotRef.current?.capture) {
-      return
-    }
-
-    try {
-      switch (reportEligibility) {
-        case 'banned':
-          Alert.alert(translate('errorTitle'), translate('feedbackBanned'))
-          return
-        case 'limitExceeded':
-          Alert.alert(
-            translate('annoucementTitle'),
-            translate('feedbackSendLimitExceeded')
-          )
-          return
-        default:
-          break
-      }
-
-      const uri = await viewShotRef.current.capture()
-      setScreenShotBase64(await RNFS.readFile(uri, 'base64'))
-
-      setReportModalShow(true)
-    } catch (err) {
-      console.error(err)
-      Alert.alert(translate('errorTitle'), translate('reportError'))
-    }
-  }
-
-  const handleNewReportModalClose = () => {
+  const handleNewReportModalClose = useCallback(() => {
     setReportDescription('')
     setScreenShotBase64('')
     setReportModalShow(false)
-  }
+  }, [])
 
   const handleReportSend = useCallback(() => {
     if (reportDescription.length < descriptionLowerLimit) {
@@ -439,7 +458,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         style: 'cancel',
       },
     ])
-  }, [descriptionLowerLimit, reportDescription, screenShotBase64, sendReport])
+  }, [
+    descriptionLowerLimit,
+    handleNewReportModalClose,
+    reportDescription,
+    screenShotBase64,
+    sendReport,
+  ])
+
+  if (isRoutesLoadingByLink && !fetchRoutesByLinkError) {
+    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+  }
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

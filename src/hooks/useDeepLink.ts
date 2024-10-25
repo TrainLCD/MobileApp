@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react'
 import { useOpenRouteFromLink } from './useOpenRouteFromLink'
 
 export const useDeepLink = () => {
-  const { openLink: openRoute } = useOpenRouteFromLink()
+  const { openLink: openRoute, isLoading, error } = useOpenRouteFromLink()
 
   const handleParsedUrl = useCallback(
     async (parsedUrl: Linking.ParsedURL) => {
@@ -54,4 +54,6 @@ export const useDeepLink = () => {
       listener.remove()
     }
   }, [handleParsedUrl, handleUrl])
+
+  return { isLoading, error }
 }
