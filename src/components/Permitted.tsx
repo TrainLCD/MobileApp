@@ -1,10 +1,9 @@
-import { useActionSheet } from '@expo/react-native-action-sheet'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native'
+import { Alert, Dimensions, StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
@@ -37,6 +36,7 @@ import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
+import { BottomSheet } from './BottomSheet'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
 import Loading from './Loading'
@@ -80,6 +80,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [reportDescription, setReportDescription] = useState('')
   const [screenShotBase64, setScreenShotBase64] = useState('')
   const [screenshotTaken, setScreenshotTaken] = useState(false)
+  const [isBottomSheetShow, setIsBottomSheetShow] = useState(false)
 
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled
@@ -97,7 +98,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const currentLine = useCurrentLine()
   const navigation = useNavigation()
   const isInternetAvailable = useConnectivity()
-  const { showActionSheetWithOptions } = useActionSheet()
   const { sendReport, descriptionLowerLimit } = useReport(user)
   const reportEligibility = useReportEligibility()
   const badAccuracy = useBadAccuracy()
@@ -109,6 +109,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     if (!viewShotRef.current?.capture) {
       return
     }
+
+    setIsBottomSheetShow(false)
 
     try {
       switch (reportEligibility) {
@@ -139,6 +141,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     if (!viewShotRef || !currentLine) {
       return
     }
+
+    setIsBottomSheetShow(false)
+
     try {
       if (!viewShotRef.current?.capture || !currentLine) {
         return
@@ -184,68 +189,20 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
-      const buttons = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          translate('report'),
-          translate('cancel'),
-        ],
-        android: [translate('share'), translate('report'), translate('cancel')],
-      })
-
-      showActionSheetWithOptions(
-        {
-          options: buttons || [],
-          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: buttons && buttons.length - 1,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            // iOS: back, Android: share
-            case 0:
-              if (Platform.OS === 'ios') {
-                navigation.navigate('SelectBound')
-                resetMainState()
-                break
-              }
-              handleShare()
-              break
-            // iOS: share, Android: feedback
-            case 1:
-              if (Platform.OS === 'ios') {
-                handleShare()
-                break
-              }
-              handleReport()
-              break
-            // iOS: feedback, Android: cancel
-            case 2: {
-              if (Platform.OS === 'ios') {
-                handleReport()
-                break
-              }
-              break
-            }
-            // iOS: cancel, Android: will be not passed here
-            case 3: {
-              break
-            }
-            // iOS, Android: will be not passed here
-            default:
-              break
-          }
-        }
-      )
+      setIsBottomSheetShow(true)
     },
-    [
-      handleReport,
-      handleShare,
-      navigation,
-      resetMainState,
-      selectedBound,
-      showActionSheetWithOptions,
-    ]
+    [selectedBound]
+  )
+
+  const handleBackPress = useCallback(() => {
+    setIsBottomSheetShow(false)
+    resetMainState()
+    navigation.navigate('SelectBound')
+  }, [navigation, resetMainState])
+
+  const handleBottomSheetDismiss = useCallback(
+    () => setIsBottomSheetShow(false),
+    []
   )
 
   useEffect(() => {
@@ -481,6 +438,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <Header />
           {children}
           <NullableWarningPanel />
+
+          <BottomSheet
+            open={isBottomSheetShow}
+            onDismiss={handleBottomSheetDismiss}
+            onBackPress={handleBackPress}
+            onSharePress={handleShare}
+            onReportPress={handleReport}
+          />
         </View>
       </LongPressGestureHandler>
       <NewReportModal
