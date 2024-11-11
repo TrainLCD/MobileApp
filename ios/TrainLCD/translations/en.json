@@ -160,5 +160,6 @@
   "submit": "Submit",
   "eachTrainTypes": "Train types",
   "matchedStationListEmpty": "Transfer station not found.",
-  "searchDestinationPlaceholder": "Please enter the station name of your destination."
+  "searchDestinationPlaceholder": "Please enter the station name of your destination.",
+  "menu": "Menu"
 }

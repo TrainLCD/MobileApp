@@ -5,7 +5,7 @@ import {
   SNAP_POINT_TYPE,
 } from '@gorhom/bottom-sheet'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
-import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native'
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Animated, {
   Extrapolation,
   interpolate,
@@ -16,6 +16,7 @@ import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import { translate } from '../translation'
 import Button from './Button'
+import Heading from './Heading'
 
 type Props = {
   open: boolean
@@ -94,6 +95,8 @@ export const BottomSheet = ({
       onChange={onChange}
       onDismiss={onDismiss}
       enablePanDownToClose
+      enableDynamicSizing={false}
+      snapPoints={[150]}
       backgroundStyle={{ backgroundColor: isLEDTheme ? 'black' : '#fcfcfc' }}
       handleIndicatorStyle={
         isLEDTheme && {
@@ -120,16 +123,23 @@ export const BottomSheet = ({
         <SafeAreaView
           style={{
             width: '100%',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
             marginBottom: safeAreaBottom,
-            justifyContent: 'center',
-            gap: 12,
           }}
         >
-          <Button onPress={onBackPress}>{translate('back')}</Button>
-          <Button onPress={onSharePress}>{translate('share')}</Button>
-          <Button onPress={onReportPress}>{translate('report')}</Button>
+          <Heading style={{ marginBottom: 18 }}>{translate('menu')}</Heading>
+          <View
+            style={{
+              width: '100%',
+              gap: 12,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            <Button onPress={onBackPress}>{translate('back')}</Button>
+            <Button onPress={onSharePress}>{translate('share')}</Button>
+            <Button onPress={onReportPress}>{translate('report')}</Button>
+          </View>
         </SafeAreaView>
       </BottomSheetView>
     </BottomSheetModal>
