@@ -1,12 +1,10 @@
-import { Message } from '@bufbuild/protobuf'
-
 import type {
   AnyMessage,
   MethodInfo,
   PartialMessage,
   ServiceType,
 } from '@bufbuild/protobuf'
-
+import { Message } from '@bufbuild/protobuf'
 import type {
   ContextValues,
   Transport,
@@ -39,17 +37,6 @@ interface FetchXHRResponse {
   body: Uint8Array
 }
 
-function parseHeaders(allHeaders: string): Headers {
-  return allHeaders
-    .trim()
-    .split(/[\r\n]+/)
-    .reduce((memo, header) => {
-      const [key, value] = header.split(': ')
-      memo.append(key, value)
-      return memo
-    }, new Headers())
-}
-
 function extractDataChunks(initialData: Uint8Array) {
   let buffer = initialData
   const dataChunks: { flags: number; data: Uint8Array }[] = []
@@ -59,7 +46,7 @@ function extractDataChunks(initialData: Uint8Array) {
     const flags = buffer[0]
 
     for (let i = 1; i < 5; i++) {
-      length = (length << 8) + buffer[i] // eslint-disable-line no-bitwise
+      length = (length << 8) + buffer[i]
     }
 
     const data = buffer.subarray(5, 5 + length)
@@ -111,48 +98,34 @@ export function createXHRGrpcWebTransport(
           message,
         },
         next: async (req: UnaryRequest<I, O>): Promise<UnaryResponse<I, O>> => {
-          function fetchXHR(): Promise<FetchXHRResponse> {
-            return new Promise((resolve, reject) => {
-              const xhr = new XMLHttpRequest()
+          async function fetchWithFetchAPI(): Promise<FetchXHRResponse> {
+            const headers = new Headers()
+            req.header.forEach((value, key) => headers.append(key, value))
 
-              xhr.open(req.init.method ?? 'POST', req.url)
+            try {
+              const response = await fetch(req.url, {
+                method: req.init.method ?? 'POST',
+                headers: headers,
+                body: encodeEnvelope(0, serialize(req.message)),
+                signal: req.signal,
+              })
 
-              function onAbort() {
-                xhr.abort()
+              const arrayBuffer = await response.arrayBuffer()
+              return {
+                status: response.status,
+                headers: response.headers,
+                body: new Uint8Array(arrayBuffer),
               }
-
-              req.signal.addEventListener('abort', onAbort)
-
-              xhr.addEventListener('abort', () => {
-                reject(new AbortError('Request aborted'))
-              })
-
-              xhr.addEventListener('load', () => {
-                resolve({
-                  status: xhr.status,
-                  headers: parseHeaders(xhr.getAllResponseHeaders()),
-                  body: new Uint8Array(xhr.response),
-                })
-              })
-
-              xhr.addEventListener('error', () => {
-                reject(new Error('Network Error'))
-              })
-
-              xhr.addEventListener('loadend', () => {
-                req.signal.removeEventListener('abort', onAbort)
-              })
-
-              xhr.responseType = 'arraybuffer'
-
-              req.header.forEach((value: string, key: string) =>
-                xhr.setRequestHeader(key, value)
-              )
-
-              xhr.send(encodeEnvelope(0, serialize(req.message)))
-            })
+            } catch (error) {
+              if (error.name === 'AbortError') {
+                throw new AbortError('Request aborted')
+              } else {
+                throw new Error('Network Error')
+              }
+            }
           }
-          const response = await fetchXHR()
+
+          const response = await fetchWithFetchAPI()
 
           validateResponse(response.status, response.headers)
 
@@ -166,10 +139,6 @@ export function createXHRGrpcWebTransport(
               if (trailer !== undefined) {
                 throw 'extra trailer'
               }
-
-              // Unary responses require exactly one response message, but in
-              // case of an error, it is perfectly valid to have a response body
-              // that only contains error trailers.
               trailer = trailerParse(data)
               return
             }
