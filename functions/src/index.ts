@@ -356,7 +356,7 @@ exports.tts = onCall({ region: "asia-northeast1" }, async (req) => {
     );
   }
 
-  const ssmlJa = req.data.ssmlJa;
+  const ssmlJa: string | undefined = req.data.ssmlJa;
   if (!(typeof ssmlJa === "string") || ssmlJa.length === 0) {
     throw new HttpsError(
       "invalid-argument",
@@ -364,11 +364,15 @@ exports.tts = onCall({ region: "asia-northeast1" }, async (req) => {
     );
   }
 
-  const ssmlEn = req.data.ssmlEn
+  const ssmlEn: string | undefined = req.data.ssmlEn
     // Airport Terminal 1･2等
     .replaceAll("･", " ")
     // Otsuka・Teikyo-Daigakuなど
     .replaceAll("・", " ")
+    // 全角記号
+    .replaceAll(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, " ")
+    // Meiji-jingumae `Harajuku`
+    .replaceAll("`", "")
     // 日本語はjoを「ホ」と読まない
     .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʑo">jo</phoneme>')
     // 一丁目で終わる駅は全体の駅名を入れないと不自然な発音になる
