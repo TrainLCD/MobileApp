@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: isTablet ? 6 : 3,
     marginBottom: -3,
+    includeFontPadding: false,
   },
   stationNameEn: {
     fontSize: RFValue(18),
