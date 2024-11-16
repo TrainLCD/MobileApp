@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
-    marginBottom: -3,
+    marginBottom: -6,
   },
   stationNameExtra: {
     width: RFValue(10),

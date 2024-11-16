@@ -26,7 +26,7 @@ import PadLineMarks from './PadLineMarks'
 import PassChevronTY from './PassChevronTY'
 import Typography from './Typography'
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window')
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
 
 const useBarStyles = ({
   index,
@@ -96,8 +96,8 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: screenHeight,
-    bottom: isTablet ? screenHeight / 2.5 : undefined,
+    height: windowHeight,
+    bottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -118,11 +118,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stationNameContainer: {
-    width: screenWidth / 9,
+    width: windowWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: !isTablet ? 84 : undefined,
+    paddingBottom: isTablet ? 6 : 84,
   },
   stationName: {
     textAlign: 'center',
@@ -130,7 +130,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3a3a3a',
     marginLeft: isTablet ? 10 : 5,
-    marginBottom: isTablet ? -3 : -6,
+    marginBottom: -3,
+    includeFontPadding: false,
   },
   stationNameEn: {
     fontSize: RFValue(18),
