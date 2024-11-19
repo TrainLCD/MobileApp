@@ -76,8 +76,6 @@
 		<string>Fonts/FuturaLTPro-Bold.ttf</string>
 		<string>Fonts/myriadpro-bold.ttf</string>
 		<string>Fonts/verdana-bold.ttf</string>
-		<string>Fonts/Roboto-Regular.ttf</string>
-		<string>Fonts/Roboto-Bold.ttf</string>
 		<string>Fonts/JF-Dot-jiskan24h.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>

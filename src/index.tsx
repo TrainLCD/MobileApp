@@ -1,10 +1,13 @@
 import { TransportProvider } from '@connectrpc/connect-query'
+import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
 import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { useFonts } from 'expo-font'
 import * as Location from 'expo-location'
+import * as SplashScreen from 'expo-splash-screen'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
@@ -20,6 +23,8 @@ import RouteSearchScreen from './screens/RouteSearchScreen'
 import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
+
+SplashScreen.preventAutoHideAsync()
 
 const Stack = createStackNavigator()
 
@@ -87,6 +92,17 @@ const App: React.FC = () => {
     },
     [sendReport]
   )
+
+  const [fontsLoaded, fontsLoadError] = useFonts({
+    Roboto_400Regular,
+    Roboto_700Bold,
+  })
+
+  useEffect(() => {
+    if (readyForLaunch && (fontsLoaded || fontsLoadError)) {
+      SplashScreen.hideAsync()
+    }
+  }, [fontsLoadError, fontsLoaded, readyForLaunch])
 
   if (!readyForLaunch) {
     return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />
