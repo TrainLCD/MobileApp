@@ -18,12 +18,12 @@ export const FONTS = {
     android: 'verdana-bold',
   }),
   RobotoRegular: Platform.select({
-    ios: 'Roboto-Regular',
-    android: 'Roboto-Regular',
+    ios: 'Roboto_400Regular',
+    android: 'Roboto_400Regular',
   }),
   RobotoBold: Platform.select({
-    ios: 'Roboto-Bold',
-    android: 'Roboto-Bold',
+    ios: 'Roboto_700Bold',
+    android: 'Roboto_700Bold',
   }),
   JFDotJiskan24h: Platform.select({
     ios: 'JF Dot jiskan24h',
