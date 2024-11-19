@@ -3,7 +3,11 @@
     "name": "TrainLCD",
     "slug": "trainlcd",
     "privacy": "hidden",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "version": "1.0.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
@@ -15,7 +19,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "package": "me.tinykitten.trainlcd",
       "adaptiveIcon": {
@@ -28,6 +34,9 @@
       "supportsTablet": true,
       "requireFullScreen": true
     },
-    "plugins": ["expo-localization"]
+    "plugins": [
+      "expo-localization",
+      "expo-font"
+    ]
   }
 }

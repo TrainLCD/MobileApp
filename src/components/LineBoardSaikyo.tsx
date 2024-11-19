@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3a3a3a',
     marginLeft: isTablet ? 10 : 5,
-    marginBottom: -3,
+    marginBottom: Platform.select({ android: -3, ios: 0 }),
     includeFontPadding: false,
   },
   stationNameEn: {
