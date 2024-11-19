@@ -22,7 +22,7 @@ interface Props {
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: isTablet ? 12 : 8,
+    paddingVertical: 8,
     paddingHorizontal: isTablet ? 18 : 12,
     elevation: 2,
     borderRadius: 4,
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   buttonLED: {
-    paddingVertical: isTablet ? 12 : 8,
+    paddingVertical: 8,
     paddingHorizontal: isTablet ? 18 : 12,
   },
   text: {
