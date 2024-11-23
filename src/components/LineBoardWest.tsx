@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginBottom: -6,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
