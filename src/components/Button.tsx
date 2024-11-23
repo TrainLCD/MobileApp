@@ -1,6 +1,7 @@
 import React from 'react'
 import {
   GestureResponderEvent,
+  Platform,
   StyleProp,
   StyleSheet,
   TouchableOpacity,
@@ -22,6 +23,8 @@ interface Props {
 
 const styles = StyleSheet.create({
   button: {
+    height: Platform.select({ ios: 55, android: undefined }),
+    justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: isTablet ? 18 : 12,
     elevation: 2,

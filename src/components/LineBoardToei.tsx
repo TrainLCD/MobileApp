@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
-    marginBottom: -6,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameExtra: {
     width: RFValue(10),
