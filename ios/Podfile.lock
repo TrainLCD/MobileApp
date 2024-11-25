@@ -3178,8 +3178,27 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNLocalize (1.4.3):
+  - RNLocalize (3.3.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNReanimated (3.16.2):
     - DoubleConversion
     - glog
@@ -3874,7 +3893,7 @@ SPEC CHECKSUMS:
   RNFBRemoteConfig: 03c559627f94913bde3c0e25911e115417047020
   RNFBStorage: 8711250b4dced8f1e5e7f8d7bb7603c61aee0409
   RNGestureHandler: 1e33ee267aaf61bbab6089d32df3b38c3024e3dd
-  RNLocalize: 1b5c060db74265245b61fe665572b03bdaa0ab82
+  RNLocalize: a2ba805ec142d9e21660c2e0ff157220718f9dea
   RNReanimated: 9ebacf9fbe1b8aeb2fc19de93d4a6779b89d0b89
   RNScreens: 369b1219578f2d43ff7d69783dbe4a703404ecb3
   RNShare: dfb766b0ba56e82ab4b01abba842d7992623a918
