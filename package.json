@@ -70,7 +70,9 @@
     "react-native-screens": "~4.1.0",
     "react-native-share": "^11.1.0",
     "react-native-svg": "15.8.0",
+    "react-native-version-check": "^3.4.7",
     "react-native-view-shot": "4.0.2",
+    "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "~0.19.13",
     "recoil": "^0.7.7",
     "zustand": "^4.5.2"
@@ -93,6 +95,7 @@
     "@types/node": "^12.11.7",
     "@types/react": "~18.3.12",
     "@types/react-native-share": "^3.3.1",
+    "@types/react-native-version-check": "^3.4.8",
     "@typescript-eslint/eslint-plugin": "^5.59.8",
     "@typescript-eslint/parser": "^5.59.8",
     "babel-plugin-transform-remove-console": "^6.9.4",
