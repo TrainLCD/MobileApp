@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   ViewStyle,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 interface Props {

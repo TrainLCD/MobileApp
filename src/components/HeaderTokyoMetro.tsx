@@ -10,7 +10,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import {
   MARK_SHAPE,
@@ -34,6 +33,7 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getNumberingColor } from '../utils/numbering'
+import { RFValue } from '../utils/rfValue'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
 import Typography from './Typography'
@@ -420,11 +420,11 @@ const HeaderTokyoMetro: React.FC = () => {
   ])
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.value,
+    opacity: 1 - stateOpacityAnim.get(),
   }))
 
   const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.value,
+    opacity: stateOpacityAnim.get(),
   }))
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
@@ -433,7 +433,7 @@ const HeaderTokyoMetro: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim.value, [0, 1], [1, 0]),
+          scaleY: interpolate(topNameScaleYAnim.get(), [0, 1], [1, 0]),
         },
       ],
     }
@@ -454,7 +454,7 @@ const HeaderTokyoMetro: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim.value,
+          scaleY: topNameScaleYAnim.get(),
         },
       ],
     }
@@ -470,18 +470,18 @@ const HeaderTokyoMetro: React.FC = () => {
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: nameFadeAnim.value,
+      opacity: nameFadeAnim.get(),
     }
   })
 
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(nameFadeAnim.value, [0, 1], [1, 0]),
+      opacity: interpolate(nameFadeAnim.get(), [0, 1], [1, 0]),
     }
   })
 
   const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.value,
+    opacity: 1 - boundOpacityAnim.get(),
   }))
 
   const boundBottomAnimatedStyles = {

@@ -10,7 +10,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { Path, Svg } from 'react-native-svg'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
@@ -22,6 +21,7 @@ import { APP_THEME } from '../models/Theme'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   root: {

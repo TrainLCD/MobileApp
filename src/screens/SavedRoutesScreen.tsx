@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native'
 import findNearest from 'geolib/es/findNearest'
 import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSetRecoilState } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
@@ -19,6 +18,7 @@ import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   root: {

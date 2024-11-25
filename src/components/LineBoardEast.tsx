@@ -8,7 +8,6 @@ import {
   TextStyle,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -20,6 +19,7 @@ import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import { heightScale, widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'

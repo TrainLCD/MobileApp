@@ -12,8 +12,8 @@ import {
   TextInputKeyPressEventData,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState, useSetRecoilState } from 'recoil'
+import { RFValue } from '../utils/rfValue'
 
 import { useMutation, useQuery } from '@connectrpc/connect-query'
 import {
