@@ -1,7 +1,8 @@
-import * as FileSystem from 'expo-file-system'
 import i18n from 'i18n-js'
 import memoize from 'lodash/memoize'
-import * as RNLocalize from 'react-native-localize'
+import { findBestLanguageTag } from 'react-native-localize'
+import * as en from '../assets/translations/en.json'
+import * as ja from '../assets/translations/ja.json'
 
 export const translate = memoize(
   (key: string, config?: Record<string, string | number>) =>
@@ -10,33 +11,14 @@ export const translate = memoize(
     config ? key + JSON.stringify(config) : key
 )
 
-export const setI18nConfig = async (): Promise<void> => {
-  const translationsDir = `${FileSystem.bundleDirectory}/translations`
-  const translationsDirFiles = await FileSystem.readDirectoryAsync(
-    translationsDir
-  )
-
-  const translationPaths: { [key: string]: string } =
-    translationsDirFiles.reduce((all, fileName) => {
-      const languageTag = fileName.replace('.json', '')
-      return { ...all, [languageTag]: `${translationsDir}/${fileName}` }
-    }, {})
-
-  // fallback if no available language fits
+export const setI18nConfig = (): void => {
   const fallback = { languageTag: 'en', isRTL: false }
 
-  const { languageTag } =
-    RNLocalize.findBestAvailableLanguage(Object.keys(translationPaths)) ||
-    fallback
+  const { languageTag } = findBestLanguageTag(['en', 'ja']) || fallback
 
-  const fileContent = await FileSystem.readAsStringAsync(
-    translationPaths[languageTag]
-  )
-
-  // set i18n-js config
-  i18n.translations = { [languageTag]: JSON.parse(fileContent) }
+  i18n.translations = { en, ja }
   i18n.locale = languageTag
 }
 
 export const isJapanese =
-  RNLocalize.findBestAvailableLanguage(['en', 'ja'])?.languageTag === 'ja'
+  findBestLanguageTag(['en', 'ja'])?.languageTag === 'ja'

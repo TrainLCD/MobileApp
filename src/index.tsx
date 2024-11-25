@@ -47,7 +47,7 @@ const App: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
       await remoteConfig().fetchAndActivate()
-      await setI18nConfig()
+      setI18nConfig()
 
       const locationServicesEnabled = await Location.hasServicesEnabledAsync()
       if (!locationServicesEnabled) {

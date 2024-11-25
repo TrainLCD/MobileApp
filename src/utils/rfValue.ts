@@ -1,18 +1,18 @@
 import { Dimensions, Platform, StatusBar } from 'react-native'
-import { hasNotch } from 'react-native-device-info'
+import { isIphoneX } from 'react-native-iphone-x-helper'
 
-export const RFValue = (fontSize: number, standardScreenHeight = 680) => {
+export function RFValue(fontSize: number, standardScreenHeight = 680) {
   const { height, width } = Dimensions.get('window')
   const standardLength = width > height ? width : height
   const offset =
-    (width > height
+    width > height
       ? 0
       : Platform.OS === 'ios'
       ? 78
-      : StatusBar.currentHeight) ?? 0
+      : StatusBar.currentHeight ?? 0
 
   const deviceHeight =
-    hasNotch() || Platform.OS === 'android'
+    isIphoneX() || Platform.OS === 'android'
       ? standardLength - offset
       : standardLength
 
