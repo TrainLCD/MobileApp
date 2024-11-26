@@ -49,7 +49,7 @@ const useTTSTextWithRecoilAndNumbering = (
     setLineState((prev) => ({ ...prev, selectedLine }))
   }, [headerState, setLineState, setNaivgationState, setStationState, theme])
 
-  const texts = useTTSText(false)
+  const texts = useTTSText(false, true)
   return texts
 }
 
