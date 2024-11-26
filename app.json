@@ -2,41 +2,12 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "privacy": "hidden",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "version": "1.0.0",
-    "orientation": "landscape",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#EEEEEE"
-    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "android": {
-      "package": "me.tinykitten.trainlcd",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-adaptive-fg.png",
-        "backgroundColor": "#EEEEEE"
-      }
-    },
-    "ios": {
-      "bundleIdentifier": "me.tinykitten.trainlcd",
-      "supportsTablet": true,
-      "requireFullScreen": true
-    },
-    "plugins": [
-      "expo-localization",
-      "expo-font"
-    ]
+    "assetBundlePatterns": ["**/*"],
+    "newArchEnabled": true
   }
 }

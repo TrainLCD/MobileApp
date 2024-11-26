@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { FONTS } from '../constants'
@@ -27,6 +27,7 @@ import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import { heightScale } from '../utils/scale'
 import Chevron from './ChevronJRWest'
 import PadLineMarks from './PadLineMarks'
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginBottom: -6,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),

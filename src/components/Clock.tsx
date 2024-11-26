@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react'
 import { StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import useClock from '../hooks/useClock'
 import useIntervalEffect from '../hooks/useIntervalEffect'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({

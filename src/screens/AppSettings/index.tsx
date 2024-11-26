@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState } from 'recoil'
 import Button from '../../components/Button'
 import FAB from '../../components/FAB'
@@ -15,6 +14,7 @@ import { APP_THEME } from '../../models/Theme'
 import speechState from '../../store/atoms/speech'
 import { translate } from '../../translation'
 import { isDevApp } from '../../utils/isDevApp'
+import { RFValue } from '../../utils/rfValue'
 
 const styles = StyleSheet.create({
   rootPadding: {

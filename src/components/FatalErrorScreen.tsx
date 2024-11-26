@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { STATUS_URL } from '../constants'
 import { translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   root: {

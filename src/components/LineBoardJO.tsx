@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   Dimensions,
+  Platform,
   StyleProp,
   StyleSheet,
   TextStyle,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -21,6 +21,7 @@ import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
 import { getNumberingColor } from '../utils/numbering'
+import { RFValue } from '../utils/rfValue'
 import { heightScale } from '../utils/scale'
 import ChevronJO from './ChevronJO'
 import JOCurrentArrowEdge from './JOCurrentArrowEdge'
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: isTablet ? 12 : 4,
-    marginBottom: -6,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),

@@ -57,7 +57,7 @@ const Marquee = ({ children }: Props) => {
   const animatedViewStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: offsetX.value,
+        translateX: offsetX.get(),
       },
     ],
   }))

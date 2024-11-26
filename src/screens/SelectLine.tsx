@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
 import { useSetRecoilState } from 'recoil'
 import { Line } from '../../gen/proto/stationapi_pb'
@@ -33,17 +33,13 @@ const styles = StyleSheet.create({
   },
   buttons: {
     marginTop: 12,
-    flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
     alignItems: 'center',
-    width: '90%',
     alignSelf: 'center',
-  },
-  button: {
-    marginHorizontal: isTablet ? 12 : 8,
-    marginBottom: isTablet ? 24 : 12,
+    rowGap: isTablet ? 12 : 8,
+    columnGap: isTablet ? 24 : 12,
   },
 })
 
@@ -176,7 +172,6 @@ const SelectLineScreen: React.FC = () => {
           color={line.color ?? '#000'}
           key={line.id}
           disabled={!isInternetAvailable}
-          style={styles.button}
           onPress={buttonOnPress}
         >
           {buttonText}
@@ -226,11 +221,6 @@ const SelectLineScreen: React.FC = () => {
   const navigateToRouteSearchScreen = useCallback(() => {
     navigation.navigate('RouteSearch')
   }, [navigation])
-
-  const autoModeButtonText = useMemo(
-    () => `${translate('autoModeSettings')}: ${autoModeEnabled ? 'ON' : 'OFF'}`,
-    [autoModeEnabled]
-  )
 
   if (nearbyStationFetchError) {
     return (
@@ -283,33 +273,24 @@ const SelectLineScreen: React.FC = () => {
         <View style={styles.buttons}>
           {isInternetAvailable ? (
             <>
-              <Button
-                style={styles.button}
-                onPress={navigateToFakeStationSettingsScreen}
-              >
+              <Button onPress={navigateToFakeStationSettingsScreen}>
                 {translate('searchFirstStationTitle')}
               </Button>
               {isInternetAvailable && isDevApp && (
-                <Button
-                  style={styles.button}
-                  onPress={navigateToSavedRoutesScreen}
-                >
+                <Button onPress={navigateToSavedRoutesScreen}>
                   {translate('savedRoutes')}
                 </Button>
               )}
-              <Button
-                style={styles.button}
-                onPress={navigateToRouteSearchScreen}
-              >
+              <Button onPress={navigateToRouteSearchScreen}>
                 {translate('routeSearchTitle')}
               </Button>
             </>
           ) : null}
-          <Button style={styles.button} onPress={toggleAutoModeEnabled}>
-            {autoModeButtonText}
+          <Button onPress={toggleAutoModeEnabled}>
+            {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
           </Button>
 
-          <Button style={styles.button} onPress={navigateToSettingsScreen}>
+          <Button onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>
         </View>

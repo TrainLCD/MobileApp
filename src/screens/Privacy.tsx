@@ -12,12 +12,12 @@ import {
   View,
 } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { isJapanese, translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   root: {

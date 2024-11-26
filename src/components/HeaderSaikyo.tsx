@@ -10,7 +10,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
@@ -31,6 +30,7 @@ import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import katakanaToHiragana from '../utils/kanaToHiragana'
 import { getNumberingColor } from '../utils/numbering'
+import { RFValue } from '../utils/rfValue'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
@@ -446,11 +446,11 @@ const HeaderSaikyo: React.FC = () => {
   ])
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.value,
+    opacity: 1 - stateOpacityAnim.get(),
   }))
 
   const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.value,
+    opacity: stateOpacityAnim.get(),
   }))
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
@@ -459,7 +459,7 @@ const HeaderSaikyo: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim.value, [0, 1], [1, 0]),
+          scaleY: interpolate(topNameScaleYAnim.get(), [0, 1], [1, 0]),
         },
       ],
     }
@@ -480,7 +480,7 @@ const HeaderSaikyo: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim.value,
+          scaleY: topNameScaleYAnim.get(),
         },
       ],
     }
@@ -496,22 +496,22 @@ const HeaderSaikyo: React.FC = () => {
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: nameFadeAnim.value,
+      opacity: nameFadeAnim.get(),
     }
   })
 
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(nameFadeAnim.value, [0, 1], [1, 0]),
+      opacity: interpolate(nameFadeAnim.get(), [0, 1], [1, 0]),
     }
   })
 
   const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.value,
+    opacity: 1 - boundOpacityAnim.get(),
   }))
 
   const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: boundOpacityAnim.value,
+    opacity: boundOpacityAnim.get(),
   }))
 
   const [currentStationNumber, threeLetterCode] = useNumbering()
@@ -636,7 +636,7 @@ const HeaderSaikyo: React.FC = () => {
                     styles.stationName,
                     bottomNameAnimatedAnchorStyle,
                     {
-                      opacity: interpolate(nameFadeAnim.value, [0, 1], [1, 0]),
+                      opacity: interpolate(nameFadeAnim.get(), [0, 1], [1, 0]),
                       fontSize: STATION_NAME_FONT_SIZE,
                     },
                   ]}
