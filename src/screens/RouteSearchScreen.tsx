@@ -12,7 +12,7 @@ import {
   TextInputKeyPressEventData,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
+import { RFValue } from '../utils/rfValue'
 
 import { useMutation, useQuery } from '@connectrpc/connect-query'
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv'

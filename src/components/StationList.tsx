@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Station } from '../../gen/proto/stationapi_pb'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import { isJapanese, translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({

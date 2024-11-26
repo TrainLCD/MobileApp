@@ -8,10 +8,10 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import { translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({

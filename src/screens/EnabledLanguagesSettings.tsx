@@ -7,13 +7,13 @@ import {
   View,
   VirtualizedList,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Path, Svg } from 'react-native-svg'
 import { useRecoilState } from 'recoil'
 import FAB from '../components/FAB'
 import Heading from '../components/Heading'
 import Typography from '../components/Typography'
+import { RFValue } from '../utils/rfValue'
 
 import {
   ALL_AVAILABLE_LANGUAGES,

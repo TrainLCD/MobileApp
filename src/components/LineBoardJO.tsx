@@ -7,7 +7,6 @@ import {
   TextStyle,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -22,6 +21,7 @@ import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
 import { getNumberingColor } from '../utils/numbering'
+import { RFValue } from '../utils/rfValue'
 import { heightScale } from '../utils/scale'
 import ChevronJO from './ChevronJO'
 import JOCurrentArrowEdge from './JOCurrentArrowEdge'

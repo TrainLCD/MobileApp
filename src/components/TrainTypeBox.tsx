@@ -185,10 +185,10 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   ])
 
   const textTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - textOpacityAnim.value,
+    opacity: 1 - textOpacityAnim.get(),
   }))
   const textBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: textOpacityAnim.value,
+    opacity: textOpacityAnim.get(),
   }))
 
   const showNextTrainType = useMemo(

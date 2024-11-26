@@ -1,16 +1,15 @@
 import React from 'react'
 import {
   GestureResponderEvent,
-  Platform,
   StyleProp,
   StyleSheet,
   TouchableOpacity,
   ViewStyle,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 interface Props {
@@ -23,10 +22,8 @@ interface Props {
 
 const styles = StyleSheet.create({
   button: {
-    height: Platform.select({ ios: 55, android: undefined }),
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: isTablet ? 18 : 12,
+    paddingVertical: isTablet ? 12 : 8,
+    paddingHorizontal: isTablet ? 16 : 12,
     elevation: 2,
     borderRadius: 4,
     shadowColor: '#000',
@@ -72,7 +69,9 @@ const Button: React.FC<Props> = ({
         style,
       ]}
     >
-      <Typography style={styles.text}>{children}</Typography>
+      <Typography numberOfLines={1} style={styles.text}>
+        {children}
+      </Typography>
     </TouchableOpacity>
   )
 }
