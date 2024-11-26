@@ -10,7 +10,6 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRecoilState } from 'recoil'
 import { FONTS } from '../constants'
@@ -18,6 +17,7 @@ import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 import FAB from './FAB'
 import Heading from './Heading'
 import Typography from './Typography'

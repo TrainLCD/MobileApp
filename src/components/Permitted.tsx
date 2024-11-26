@@ -1,11 +1,11 @@
 import { useActionSheet } from '@expo/react-native-action-sheet'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
+import * as FileSystem from 'expo-file-system'
 import * as Haptics from 'expo-haptics'
 import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native'
-import RNFS from 'react-native-fs'
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
@@ -126,7 +126,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
 
       const uri = await viewShotRef.current.capture()
-      setScreenShotBase64(await RNFS.readFile(uri, 'base64'))
+      setScreenShotBase64(
+        await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
+      )
 
       setReportModalShow(true)
     } catch (err) {
@@ -145,7 +147,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
 
       const uri = await viewShotRef.current.capture()
-      const res = await RNFS.readFile(uri, 'base64')
+      const res = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      })
       const urlString = `data:image/jpeg;base64,${res}`
       const message = isJapanese
         ? `${currentLine.nameShort.replace(
