@@ -22,8 +22,8 @@ interface Props {
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 8,
-    paddingHorizontal: isTablet ? 18 : 12,
+    paddingVertical: isTablet ? 12 : 8,
+    paddingHorizontal: isTablet ? 16 : 12,
     elevation: 2,
     borderRadius: 4,
     shadowColor: '#000',
