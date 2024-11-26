@@ -34,7 +34,10 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
 }
 
-const useTTSText = (firstSpeech = true): string[] => {
+const useTTSText = (
+  firstSpeech = true,
+  enabled = false
+): [string, string] | undefined[] => {
   const theme = useThemeStore()
 
   const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState)
@@ -955,6 +958,10 @@ const useTTSText = (firstSpeech = true): string[] => {
 
     return tmpl
   }, [englishTemplate, stoppingState, theme])
+
+  if (!enabled) {
+    return []
+  }
 
   return [
     jaText,
