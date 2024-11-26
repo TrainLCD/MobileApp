@@ -4,7 +4,6 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import { normalizeRomanText } from '../../src/utils/normalize'
 import { parenthesisRegexp } from '../constants'
 import { APP_THEME, AppTheme } from '../models/Theme'
-import speechState from '../store/atoms/speech'
 import stationState from '../store/atoms/station'
 import getIsPass from '../utils/isPass'
 import katakanaToHiragana from '../utils/kanaToHiragana'
@@ -35,9 +34,10 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
 }
 
-const useTTSText = (firstSpeech = true): [string, string] | undefined[] => {
-  const { enabled } = useRecoilValue(speechState)
-
+const useTTSText = (
+  firstSpeech = true,
+  enabled = false
+): [string, string] | undefined[] => {
   const theme = useThemeStore()
 
   const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState)

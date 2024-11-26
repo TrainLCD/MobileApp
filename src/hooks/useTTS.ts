@@ -18,7 +18,7 @@ export const useTTS = (): void => {
   const playingRef = useRef(false)
   const isLoadableRef = useRef(true)
   const { store, getByText } = useTTSCache()
-  const ttsText = useTTSText(firstSpeechRef.current)
+  const ttsText = useTTSText(firstSpeechRef.current, enabled)
   const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
 
