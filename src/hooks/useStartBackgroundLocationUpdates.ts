@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { LOCATION_TASK_NAME } from '../constants'
 import { translate } from '../translation'
 import { useApplicationFlagStore } from './useApplicationFlagStore'
+import { setLocation } from './useLocationStore'
 
 export const useStartBackgroundLocationUpdates = () => {
   useEffect(() => {
@@ -11,10 +12,8 @@ export const useStartBackgroundLocationUpdates = () => {
       return
     }
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ;(async () => {
-      if (
-        !(await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
-      ) {
+    ; (async () => {
+      if (await Location.isBackgroundLocationAvailableAsync()) {
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
           accuracy: Location.Accuracy.BestForNavigation,
@@ -28,7 +27,15 @@ export const useStartBackgroundLocationUpdates = () => {
             killServiceOnDestroy: true,
           },
         })
+        return
       }
+      await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 100,
+        },
+        (pos) => setLocation(pos)
+      )
     })()
 
     return () => {
