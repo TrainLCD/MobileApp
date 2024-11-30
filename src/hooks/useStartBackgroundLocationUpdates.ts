@@ -11,9 +11,12 @@ export const useStartBackgroundLocationUpdates = () => {
     if (autoModeEnabled) {
       return
     }
+
+    let watchPositionSub: Location.LocationSubscription | null = null
+
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ; (async () => {
-      if (await Location.isBackgroundLocationAvailableAsync()) {
+    ;(async () => {
+      if ((await Location.getBackgroundPermissionsAsync()).granted) {
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
           accuracy: Location.Accuracy.BestForNavigation,
@@ -29,17 +32,20 @@ export const useStartBackgroundLocationUpdates = () => {
         })
         return
       }
-      await Location.watchPositionAsync(
+      watchPositionSub = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
           distanceInterval: 100,
         },
-        (pos) => setLocation(pos)
+        (pos) => {
+          setLocation(pos)
+        }
       )
     })()
 
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(console.debug)
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+      watchPositionSub?.remove()
     }
   }, [])
 }
