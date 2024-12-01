@@ -5,13 +5,10 @@ buildscript {
     buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
     minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
     compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
-    targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
+    targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '35')
     kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.24'
 
     ndkVersion = "26.1.10909125"
-    wear_compose_version = '1.0.0'
-    horologist_version = '0.1.5'
-    wear_tiles_version = '1.1.0'
   }
   repositories {
     google()

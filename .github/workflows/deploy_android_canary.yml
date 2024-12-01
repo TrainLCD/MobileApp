@@ -78,4 +78,4 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           PACKAGE_NAME: me.tinykitten.trainlcd.dev
-          ANDROID_HOME: ${{ secrets.ANDROID_HOME }}
+          NODE_ENV: production
