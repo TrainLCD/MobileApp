@@ -26,12 +26,13 @@ import {
   validateResponse,
   validateTrailer,
 } from '@connectrpc/connect/protocol-grpc-web'
+import { fetch } from 'expo/fetch'
 
 class AbortError extends Error {
   name = 'AbortError'
 }
 
-interface FetchXHRResponse {
+interface FetchCustomResponse {
   status: number
   headers: Headers
   body: Uint8Array
@@ -57,7 +58,7 @@ function extractDataChunks(initialData: Uint8Array) {
   return dataChunks
 }
 
-export function createXHRGrpcWebTransport(
+export function createCustomGrpcWebTransport(
   options: GrpcWebTransportOptions
 ): Transport {
   const useBinaryFormat = options.useBinaryFormat ?? true
@@ -98,7 +99,7 @@ export function createXHRGrpcWebTransport(
           message,
         },
         next: async (req: UnaryRequest<I, O>): Promise<UnaryResponse<I, O>> => {
-          async function fetchWithFetchAPI(): Promise<FetchXHRResponse> {
+          async function fetchWithFetchAPI(): Promise<FetchCustomResponse> {
             const headers = new Headers()
             req.header.forEach((value, key) => headers.append(key, value))
 
