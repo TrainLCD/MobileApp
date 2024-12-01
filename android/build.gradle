@@ -6,7 +6,7 @@ buildscript {
     minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
     compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
     targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '35')
-    kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.24'
+    kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.22'
 
     ndkVersion = "26.1.10909125"
     wear_compose_version = '1.4.0'
