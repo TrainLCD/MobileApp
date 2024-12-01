@@ -49,5 +49,5 @@ export const useStartBackgroundLocationUpdates = () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
       watchPositionSub?.remove()
     }
-  }, [])
+  }, [permsStatus?.granted])
 }
