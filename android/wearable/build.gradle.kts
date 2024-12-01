@@ -5,7 +5,7 @@ plugins {
 
 android {
   namespace = "me.tinykitten.trainlcd"
-  compileSdk = 33
+  compileSdk = 35
 
   defaultConfig {
       applicationId = "me.tinykitten.trainlcd"
