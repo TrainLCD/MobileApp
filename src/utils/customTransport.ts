@@ -26,6 +26,7 @@ import {
   validateResponse,
   validateTrailer,
 } from '@connectrpc/connect/protocol-grpc-web'
+import { fetch } from 'expo/fetch'
 
 class AbortError extends Error {
   name = 'AbortError'
