@@ -6,6 +6,7 @@ import { useApplicationFlagStore } from './useApplicationFlagStore'
 import { setLocation } from './useLocationStore'
 
 export const useStartBackgroundLocationUpdates = () => {
+  const [permsStatus] = Location.useBackgroundPermissions()
   useEffect(() => {
     const autoModeEnabled = useApplicationFlagStore.getState()?.autoModeEnabled
     if (autoModeEnabled) {
@@ -16,14 +17,15 @@ export const useStartBackgroundLocationUpdates = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
-      if ((await Location.getBackgroundPermissionsAsync()).granted) {
-        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      if (permsStatus?.granted) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
           accuracy: Location.Accuracy.BestForNavigation,
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
           distanceInterval: 100,
+          showsBackgroundLocationIndicator: true,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
