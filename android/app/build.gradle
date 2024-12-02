@@ -92,6 +92,7 @@ android {
     applicationId 'me.tinykitten.trainlcd'
     minSdkVersion rootProject.ext.minSdkVersion
     targetSdkVersion rootProject.ext.targetSdkVersion
+    multiDexEnabled true
   }
   signingConfigs {
     debug {
