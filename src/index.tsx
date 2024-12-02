@@ -41,7 +41,6 @@ const options = {
 
 const App: React.FC = () => {
   const [readyForLaunch, setReadyForLaunch] = useState(false)
-  const [permissionsGranted, setPermissionsGranted] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
@@ -52,11 +51,8 @@ const App: React.FC = () => {
       const locationServicesEnabled = await Location.hasServicesEnabledAsync()
       if (!locationServicesEnabled) {
         setReadyForLaunch(true)
-        setPermissionsGranted(false)
         return
       }
-      const { status } = await Location.getForegroundPermissionsAsync()
-      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
       setReadyForLaunch(true)
     })()
   }, [])
@@ -75,6 +71,7 @@ const App: React.FC = () => {
 
   const user = useAnonymousUser()
   const { sendReport } = useReport(user ?? null)
+  const [permStatus] = Location.useForegroundPermissions()
 
   const handleBoundaryError = useCallback(
     async (error: Error, info: ErrorInfo) => {
@@ -120,16 +117,19 @@ const App: React.FC = () => {
               <NavigationContainer>
                 <StatusBar hidden translucent backgroundColor="transparent" />
 
-                <Stack.Navigator
-                  screenOptions={screenOptions}
-                  initialRouteName={
-                    permissionsGranted ? 'MainStack' : 'Privacy'
-                  }
-                >
+                <Stack.Navigator screenOptions={screenOptions}>
+                  {!permStatus?.granted ? (
+                    <Stack.Screen
+                      options={options}
+                      name="Privacy"
+                      component={PrivacyScreen}
+                    />
+                  ) : null}
+
                   <Stack.Screen
                     options={options}
-                    name="Privacy"
-                    component={PrivacyScreen}
+                    name="MainStack"
+                    component={MainStack}
                   />
 
                   <Stack.Screen
@@ -154,12 +154,6 @@ const App: React.FC = () => {
                     options={options}
                     name="RouteSearch"
                     component={RouteSearchScreen}
-                  />
-
-                  <Stack.Screen
-                    options={options}
-                    name="MainStack"
-                    component={MainStack}
                   />
                 </Stack.Navigator>
               </NavigationContainer>
