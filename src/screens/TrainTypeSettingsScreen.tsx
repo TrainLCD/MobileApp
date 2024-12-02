@@ -73,8 +73,8 @@ const TrainTypeSettings: React.FC = () => {
   }
 
   const handleTrainTypeConfirmed = useCallback(
-    async (trainType: TrainType) => {
-      if (trainType.id === 0) {
+    async (trainType: TrainType | undefined) => {
+      if (trainType?.id === 0) {
         setNavigationState((prev) => ({
           ...prev,
           trainType: null,
@@ -93,7 +93,7 @@ const TrainTypeSettings: React.FC = () => {
       }
 
       const selectedTrainType = fetchedTrainTypes?.find(
-        (tt) => tt.id === trainType.id
+        (tt) => tt.id === trainType?.id
       )
 
       if (!selectedTrainType) {

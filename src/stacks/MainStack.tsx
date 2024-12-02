@@ -16,6 +16,7 @@ import SelectBound from '../screens/SelectBound'
 import SelectLine from '../screens/SelectLine'
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
+import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 
@@ -26,7 +27,8 @@ const screenOptions = {
 }
 
 const MainStack: React.FC = () => {
-  const { station } = useRecoilValue(stationState)
+  const { station, selectedDirection } = useRecoilValue(stationState)
+  const { selectedLine } = useRecoilValue(lineState)
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const isUnderMaintenance = useUnderMaintenance()
@@ -34,7 +36,7 @@ const MainStack: React.FC = () => {
 
   const optionsWithCustomStyle = useMemo(
     () => ({
-      animationEnabled: false,
+      animation: 'none',
       cardStyle: {
         opacity: 1,
         backgroundColor: isLEDTheme ? '#212121' : '#fff',
@@ -65,16 +67,20 @@ const MainStack: React.FC = () => {
   return (
     <Permitted>
       <Stack.Navigator screenOptions={screenOptions}>
-        <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="SelectLine"
-          component={SelectLine}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="SelectBound"
-          component={SelectBound}
-        />
+        {!selectedLine ? (
+          <Stack.Screen
+            options={optionsWithCustomStyle}
+            name="SelectLine"
+            component={SelectLine}
+          />
+        ) : null}
+        {!selectedDirection ? (
+          <Stack.Screen
+            options={optionsWithCustomStyle}
+            name="SelectBound"
+            component={SelectBound}
+          />
+        ) : null}
         <Stack.Screen
           options={optionsWithCustomStyle}
           name="Main"
