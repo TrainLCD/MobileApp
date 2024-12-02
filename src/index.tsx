@@ -32,7 +32,7 @@ const screenOptions = {
   headerShown: false,
 }
 const options = {
-  animationEnabled: false,
+  animation: 'none',
   cardStyle: {
     backgroundColor: '#fff',
     opacity: 1,
