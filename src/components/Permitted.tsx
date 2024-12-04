@@ -1,6 +1,6 @@
 import { useActionSheet } from '@expo/react-native-action-sheet'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import * as FileSystem from 'expo-file-system'
 import * as Haptics from 'expo-haptics'
 import { addScreenshotListener } from 'expo-screen-capture'
@@ -210,7 +210,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             case 0:
               if (Platform.OS === 'ios') {
                 resetMainState()
-                navigation.navigate('MainStack', { screen: 'SelectBound' })
+                navigation.dispatch(
+                  StackActions.replace('MainStack', { screen: 'SelectBound' })
+                )
                 break
               }
               handleShare()

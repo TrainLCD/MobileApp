@@ -1,4 +1,4 @@
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import * as Linking from 'expo-linking'
 import React, { useCallback } from 'react'
 import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -64,13 +64,7 @@ const ErrorScreen: React.FC<Props> = ({
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
   const navigation = useNavigation()
   const handleToStationSearch = useCallback(
-    () =>
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'FakeStation' }],
-        })
-      ),
+    () => navigation.dispatch(StackActions.replace('FakeStation')),
     [navigation]
   )
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)

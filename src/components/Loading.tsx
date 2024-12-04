@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React from 'react'
 import {
   ActivityIndicator,
@@ -90,10 +90,7 @@ const Loading = ({
           style={styles.additionalLinkButton}
           onPress={() =>
             navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'FakeStation' }],
-              })
+              StackActions.replace('MainStack', { screen: 'SelectLine' })
             )
           }
         >
