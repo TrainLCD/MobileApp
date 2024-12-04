@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React from 'react'
 import {
   ActivityIndicator,
@@ -89,12 +89,7 @@ const Loading = ({
         <Pressable
           style={styles.additionalLinkButton}
           onPress={() =>
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'FakeStation' }],
-              })
-            )
+            navigation.dispatch(StackActions.replace('FakeStation'))
           }
         >
           <Ionicons style={styles.icon} name="search-outline" size={32} />
