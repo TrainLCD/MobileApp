@@ -209,8 +209,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             // iOS: back, Android: share
             case 0:
               if (Platform.OS === 'ios') {
-                navigation.navigate('SelectBound')
                 resetMainState()
+                navigation.navigate('MainStack', { screen: 'SelectBound' })
                 break
               }
               handleShare()
