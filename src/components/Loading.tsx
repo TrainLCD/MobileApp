@@ -89,9 +89,7 @@ const Loading = ({
         <Pressable
           style={styles.additionalLinkButton}
           onPress={() =>
-            navigation.dispatch(
-              StackActions.replace('MainStack', { screen: 'SelectLine' })
-            )
+            navigation.dispatch(StackActions.replace('FakeStation'))
           }
         >
           <Ionicons style={styles.icon} name="search-outline" size={32} />
