@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -261,8 +261,10 @@ const MainScreen: React.FC = () => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        navigation.navigate('SelectBound')
         resetMainState()
+        navigation.dispatch(
+          StackActions.replace('MainStack', { screen: 'SelectBound' })
+        )
         return true
       }
     )
