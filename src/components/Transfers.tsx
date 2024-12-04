@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, StationNumber } from '../../gen/proto/stationapi_pb'
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
@@ -277,9 +276,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       <CustomHeading />
       <ScrollView style={styles.scrollViewContainer}>
         <Pressable onPress={onPress}>
-          <SafeAreaView style={styles.transferView}>
-            {renderTransferLines()}
-          </SafeAreaView>
+          <View style={styles.transferView}>{renderTransferLines()}</View>
         </Pressable>
       </ScrollView>
     </>
