@@ -64,7 +64,7 @@ export const useOpenRouteFromLink = () => {
         ...prev,
         selectedLine: line,
       }))
-      navigation.navigate('Main')
+      navigation.navigate('MainStack', { screen: 'Main' })
     },
     [navigation, setLineState, setNavigationState, setStationState]
   )
