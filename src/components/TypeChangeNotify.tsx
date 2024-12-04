@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
@@ -915,7 +914,7 @@ const TypeChangeNotify: React.FC = () => {
   }, [theme])
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.top}>
         <HeadingJa />
         <HeadingEn />
@@ -929,7 +928,7 @@ const TypeChangeNotify: React.FC = () => {
         </Typography>
         <BarsComponent />
       </View>
-    </SafeAreaView>
+    </View>
   )
 }
 
