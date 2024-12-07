@@ -36,11 +36,6 @@ jobs:
         with:
           ruby-version: '3.2'
           bundler-cache: true
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
       - name: Install dependencies
         run: npm ci
       - name: Run bundle install
