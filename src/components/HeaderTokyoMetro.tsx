@@ -428,8 +428,6 @@ const HeaderTokyoMetro: React.FC = () => {
   }))
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    'worklet'
-
     const transform = {
       transform: [
         {
@@ -449,8 +447,6 @@ const HeaderTokyoMetro: React.FC = () => {
   })
 
   const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    'worklet'
-
     const transform = {
       transform: [
         {
