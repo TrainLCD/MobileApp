@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { withAnchorPoint } from 'react-native-anchor-point'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -23,6 +23,13 @@ const styles = StyleSheet.create({
     borderRadius: isTablet ? 12 : 8,
     borderWidth: isTablet ? 7 * 1.5 : 7,
     backgroundColor: 'white',
+  },
+  container: {
+    borderWidth: 1,
+    borderColor: 'white',
+    borderRadius: isTablet ? 16 : 14,
+    paddingVertical: isTablet ? 8 : 4,
+    paddingHorizontal: isTablet ? 8 : 4,
   },
   tlcContainer: {
     backgroundColor: '#231e1f',
@@ -112,21 +119,41 @@ const NumberingIconSquare: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
+  const containerWithTLC = useMemo(
+    () => [
+      styles.tlcContainer,
+      withAnchorPoint(
+        { transform: [{ scale: 0.7 }] },
+        { x: 0, y: 1.2 },
+        {
+          width: isTablet ? 72 * 1.5 : 72,
+          height: isTablet ? 72 * 1.5 : 72,
+        }
+      ),
+    ],
+    []
+  )
+
+  const containerWithoutTLC = useMemo(() => {
+    if (!allowScaling) {
+      return null
+    }
+    return [
+      styles.container,
+      withAnchorPoint(
+        { transform: [{ scale: 0.8 }] },
+        { x: 0, y: 1.2 },
+        {
+          width: isTablet ? 72 * 1.5 : 72,
+          height: isTablet ? 72 * 1.5 : 72,
+        }
+      ),
+    ]
+  }, [allowScaling])
+
   if (threeLetterCode) {
     return (
-      <View
-        style={[
-          styles.tlcContainer,
-          withAnchorPoint(
-            { transform: [{ scale: 0.7 }] },
-            { x: 0, y: 1.2 },
-            {
-              width: isTablet ? 72 * 1.5 : 72,
-              height: isTablet ? 72 * 1.5 : 72,
-            }
-          ),
-        ]}
-      >
+      <View style={containerWithTLC}>
         <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
         <Common
           lineColor={lineColor}
@@ -151,19 +178,7 @@ const NumberingIconSquare: React.FC<Props> = ({
   }
 
   return (
-    <View
-      style={[
-        allowScaling &&
-          withAnchorPoint(
-            { transform: [{ scale: 0.8 }] },
-            { x: 0, y: 1.2 },
-            {
-              width: isTablet ? 72 * 1.5 : 72,
-              height: isTablet ? 72 * 1.5 : 72,
-            }
-          ),
-      ]}
-    >
+    <View style={containerWithoutTLC}>
       <Common
         lineColor={lineColor}
         threeLetterCode={threeLetterCode}
