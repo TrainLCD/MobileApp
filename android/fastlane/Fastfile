@@ -68,7 +68,7 @@ platform :android do
 
   lane :deploy_canary do
     gradle(
-      task: bundle",
+      task: "bundle",
       build_type: "devRelease",
       print_command: false,
       properties: {
