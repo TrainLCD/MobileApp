@@ -429,8 +429,6 @@ const HeaderTY: React.FC = () => {
   }))
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    'worklet'
-
     const transform = {
       transform: [
         {
@@ -450,8 +448,6 @@ const HeaderTY: React.FC = () => {
   })
 
   const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    'worklet'
-
     const transform = {
       transform: [
         {

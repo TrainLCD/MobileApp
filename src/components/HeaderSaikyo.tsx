@@ -454,8 +454,6 @@ const HeaderSaikyo: React.FC = () => {
   }))
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    'worklet'
-
     const transform = {
       transform: [
         {
@@ -475,8 +473,6 @@ const HeaderSaikyo: React.FC = () => {
   })
 
   const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    'worklet'
-
     const transform = {
       transform: [
         {
