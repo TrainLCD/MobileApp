@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
@@ -125,7 +125,7 @@ const SelectBoundScreen: React.FC = () => {
             : selectedStation,
         selectedDirection: direction,
       }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('Main'))
     },
     [navigation, selectedLine, setStationState, stations]
   )
@@ -174,7 +174,7 @@ const SelectBoundScreen: React.FC = () => {
         selectedDirection: direction,
       }))
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('Main'))
     },
     [navigation, setNavigationState, setStationState, stations, trainType]
   )
