@@ -1,5 +1,5 @@
 import { useMutation } from '@connectrpc/connect-query'
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
 import {
@@ -64,7 +64,7 @@ export const useOpenRouteFromLink = () => {
         ...prev,
         selectedLine: line,
       }))
-      navigation.navigate('MainStack', { screen: 'Main' })
+      navigation.dispatch(StackActions.replace('MainStack', { screen: 'Main' }))
     },
     [navigation, setLineState, setNavigationState, setStationState]
   )
