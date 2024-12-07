@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const useIntervalEffect = (
+export const useInterval = (
   handler: () => void,
   timeout: number
 ): {
   isPausing: boolean
   pause: () => void
 } => {
-  const intervalId = useRef<number>()
+  const intervalId = useRef<NodeJS.Timeout>()
   const [isPausing, setIsPausing] = useState(false)
 
   useEffect(() => {
@@ -32,5 +32,3 @@ const useIntervalEffect = (
 
   return { isPausing, pause }
 }
-
-export default useIntervalEffect
