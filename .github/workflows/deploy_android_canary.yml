@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - canary
+      - fix/android-ci-build-fail
     paths:
       - 'android/**'
       - 'src/**'
