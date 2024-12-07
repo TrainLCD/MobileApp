@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import useIntervalEffect from './useIntervalEffect'
+import { useInterval } from './useInterval'
 
 const useClock = (): [string, string] => {
   const [hours, setHours] = useState('00')
@@ -17,7 +17,7 @@ const useClock = (): [string, string] => {
     setMinutes(m)
   }, [])
 
-  useIntervalEffect(updateTime, 1000)
+  useInterval(updateTime, 1000)
 
   return [hours, minutes]
 }

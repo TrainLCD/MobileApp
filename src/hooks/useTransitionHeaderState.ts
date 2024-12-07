@@ -8,7 +8,7 @@ import tuningState from '../store/atoms/tuning'
 import { isJapanese } from '../translation'
 import getIsPass from '../utils/isPass'
 import { useCurrentStation } from './useCurrentStation'
-import useIntervalEffect from './useIntervalEffect'
+import { useInterval } from './useInterval'
 import useIsPassing from './useIsPassing'
 import { useNextStation } from './useNextStation'
 import { useThemeStore } from './useThemeStore'
@@ -91,7 +91,7 @@ const useTransitionHeaderState = (): void => {
     }
   }, [arrived, headerState, setNavigation, station])
 
-  useIntervalEffect(
+  useInterval(
     useCallback(() => {
       if (!selectedBound) {
         return

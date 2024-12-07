@@ -160,11 +160,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const prevLetterSpacing = usePrevious(letterSpacing)
 
   const resetValue = useCallback(() => {
-    'worklet'
     textOpacityAnim.value = 1
   }, [textOpacityAnim])
   const updateOpacity = useCallback(() => {
-    'worklet'
     textOpacityAnim.value = withTiming(0, {
       duration: DEFAULT_HEADER_TRANSITION_DELAY,
       easing: Easing.ease,
