@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import findNearest from 'geolib/es/findNearest'
 import React, { useCallback } from 'react'
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -99,7 +99,9 @@ const SavedRoutesScreen: React.FC = () => {
         ...prev,
         selectedLine,
       }))
-      navigation.navigate('SelectBound')
+      navigation.dispatch(
+        StackActions.replace('MainStack', { screen: 'SelectBound' })
+      )
     },
     [navigation, setLineState, setNavigationState, setStationState]
   )

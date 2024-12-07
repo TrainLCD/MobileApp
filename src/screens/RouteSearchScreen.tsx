@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
@@ -194,7 +194,9 @@ const RouteSearchScreen = () => {
               : route?.stops[0] ?? null,
         }))
         setNavigationState((prev) => ({ ...prev, stationForHeader: station }))
-        navigation.navigate('MainStack', { screen: 'Main' })
+        navigation.dispatch(
+          StackActions.replace('MainStack', { screen: 'Main' })
+        )
         return
       }
 
@@ -226,7 +228,7 @@ const RouteSearchScreen = () => {
             ? data.stations[data.stations.length - 1]
             : data.stations[0],
       }))
-      navigation.navigate('MainStack', { screen: 'Main' })
+      navigation.dispatch(StackActions.replace('MainStack', { screen: 'Main' }))
     },
     [
       currentStation,

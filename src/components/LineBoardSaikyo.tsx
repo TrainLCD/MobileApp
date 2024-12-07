@@ -11,7 +11,7 @@ import {
 import { useRecoilValue } from 'recoil'
 import { Line, Station } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useIntervalEffect from '../hooks/useIntervalEffect'
+import { useInterval } from '../hooks/useInterval'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
 import stationState from '../store/atoms/station'
@@ -523,7 +523,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
     setChevronColor('WHITE')
   }, [])
 
-  useIntervalEffect(intervalStep, 1000)
+  useInterval(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
