@@ -45,6 +45,7 @@ import WarningPanel from './WarningPanel'
 
 const styles = StyleSheet.create({
   root: {
+    overflow: 'hidden',
     height: Dimensions.get('window').height,
   },
 })
