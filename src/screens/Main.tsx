@@ -157,7 +157,7 @@ const MainScreen: React.FC = () => {
   const resetMainState = useResetMainState()
   useTTS()
 
-  const { pause: pauseBottomTimer } = useUpdateBottomState()
+  useUpdateBottomState()
 
   const transferStation = useMemo(
     () =>
@@ -223,28 +223,25 @@ const MainScreen: React.FC = () => {
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
-      pauseBottomTimer()
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'TRANSFER',
       }))
     }
-  }, [pauseBottomTimer, setNavigation, transferLines.length])
+  }, [setNavigation, transferLines.length])
 
   const toLineState = useCallback((): void => {
-    pauseBottomTimer()
     setNavigation((prev) => ({
       ...prev,
       bottomState: 'LINE',
     }))
-  }, [pauseBottomTimer, setNavigation])
+  }, [setNavigation])
 
   const isTypeWillChange = useTypeWillChange()
   const shouldHideTypeChange = useShouldHideTypeChange()
 
   const toTypeChangeState = useCallback(() => {
     if (!isTypeWillChange || shouldHideTypeChange) {
-      pauseBottomTimer()
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'LINE',
@@ -255,7 +252,7 @@ const MainScreen: React.FC = () => {
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }))
-  }, [isTypeWillChange, pauseBottomTimer, setNavigation, shouldHideTypeChange])
+  }, [isTypeWillChange, setNavigation, shouldHideTypeChange])
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(

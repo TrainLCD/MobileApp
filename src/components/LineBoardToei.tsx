@@ -4,7 +4,7 @@ import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useIntervalEffect from '../hooks/useIntervalEffect'
+import { useInterval } from '../hooks/useInterval'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
@@ -657,7 +657,7 @@ const LineBoardToei: React.FC<Props> = ({
     setChevronColor('BLUE')
   }, [])
 
-  useIntervalEffect(intervalStep, 1000)
+  useInterval(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
