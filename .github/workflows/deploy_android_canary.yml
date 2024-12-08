@@ -4,14 +4,13 @@ on:
   push:
     branches:
       - canary
-      - fix/android-ci-build-fail
-    # paths:
-    #   - 'android/**'
-    #   - 'src/**'
-    #   - 'proto/**'
-    #   - 'assets/**'
-    #   - 'package.json'
-    #   - 'package-lock.json'
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'proto/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 env:
   TZ: 'Asia/Tokyo'
