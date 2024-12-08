@@ -35,7 +35,7 @@ import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import { useTTS } from '../hooks/useTTS'
 import { useTypeWillChange } from '../hooks/useTypeWillChange'
-import useUpdateBottomState from '../hooks/useUpdateBottomState'
+import { useUpdateBottomState } from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -157,7 +157,7 @@ const MainScreen: React.FC = () => {
   const resetMainState = useResetMainState()
   useTTS()
 
-  useUpdateBottomState()
+  const { pause: pauseBottomTimer } = useUpdateBottomState()
 
   const transferStation = useMemo(
     () =>
@@ -223,25 +223,28 @@ const MainScreen: React.FC = () => {
 
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
+      pauseBottomTimer()
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'TRANSFER',
       }))
     }
-  }, [setNavigation, transferLines.length])
+  }, [pauseBottomTimer, setNavigation, transferLines.length])
 
   const toLineState = useCallback((): void => {
+    pauseBottomTimer()
     setNavigation((prev) => ({
       ...prev,
       bottomState: 'LINE',
     }))
-  }, [setNavigation])
+  }, [pauseBottomTimer, setNavigation])
 
   const isTypeWillChange = useTypeWillChange()
   const shouldHideTypeChange = useShouldHideTypeChange()
 
   const toTypeChangeState = useCallback(() => {
     if (!isTypeWillChange || shouldHideTypeChange) {
+      pauseBottomTimer()
       setNavigation((prev) => ({
         ...prev,
         bottomState: 'LINE',
@@ -252,7 +255,7 @@ const MainScreen: React.FC = () => {
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }))
-  }, [isTypeWillChange, setNavigation, shouldHideTypeChange])
+  }, [isTypeWillChange, pauseBottomTimer, setNavigation, shouldHideTypeChange])
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(

@@ -10,7 +10,7 @@ import useTransferLines from './useTransferLines'
 import { useTypeWillChange } from './useTypeWillChange'
 import useValueRef from './useValueRef'
 
-const useUpdateBottomState = () => {
+export const useUpdateBottomState = () => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState)
   const { bottomTransitionInterval } = useRecoilValue(tuningState)
   const bottomStateRef = useValueRef(bottomState)
@@ -30,7 +30,7 @@ const useUpdateBottomState = () => {
       setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
     }
   }, [setNavigation, transferLines.length])
-  useInterval(
+  const { pause } = useInterval(
     useCallback(() => {
       if (isLEDThemeRef.current) {
         return
@@ -84,6 +84,6 @@ const useUpdateBottomState = () => {
     ]),
     bottomTransitionInterval
   )
-}
 
-export default useUpdateBottomState
+  return { pause }
+}
