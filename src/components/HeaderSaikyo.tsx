@@ -146,12 +146,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
 )
 
 const HeaderSaikyo: React.FC = () => {
-  const station = useCurrentStation()
+  const currentStation = useCurrentStation()
   const currentLine = useCurrentLine()
   const nextStation = useNextStation()
 
-  const [stateText, setStateText] = useState('')
-  const [stationText, setStationText] = useState(station?.name || '')
   const [fadeOutFinished, setFadeOutFinished] = useState(false)
   const { selectedBound, arrived } = useRecoilValue(stationState)
   const { headerState } = useRecoilValue(navigationState)
@@ -186,88 +184,231 @@ const HeaderSaikyo: React.FC = () => {
     [headerState]
   )
 
+  const boundText = useMemo(
+    () => boundStationNameList[headerLangState],
+    [boundStationNameList, headerLangState]
+  )
+
+  const stationText = useMemo<string>(() => {
+    if (!selectedBound) {
+      return currentStation?.name ?? ''
+    }
+    switch (headerState) {
+      case 'ARRIVING':
+        return nextStation?.name ?? ''
+      case 'ARRIVING_KANA':
+        return katakanaToHiragana(nextStation?.nameKatakana)
+      case 'ARRIVING_EN': {
+        if (nextStation?.nameRoman) {
+          return nextStation.nameRoman
+        }
+        return ''
+      }
+      case 'ARRIVING_ZH': {
+        if (nextStation?.nameChinese) {
+          return nextStation.nameChinese
+        }
+        return ''
+      }
+      case 'ARRIVING_KO': {
+        if (nextStation?.nameKorean) {
+          return nextStation.nameKorean
+        }
+        return ''
+      }
+      case 'CURRENT':
+        return currentStation?.name ?? ''
+      case 'CURRENT_KANA':
+        return katakanaToHiragana(currentStation?.nameKatakana)
+      case 'CURRENT_EN': {
+        if (currentStation?.nameRoman) {
+          return currentStation.nameRoman
+        }
+        return ''
+      }
+      case 'CURRENT_ZH': {
+        if (currentStation?.nameChinese) {
+          return currentStation.nameChinese ?? ''
+        }
+        return ''
+      }
+      case 'CURRENT_KO': {
+        if (currentStation?.nameKorean) {
+          return currentStation.nameKorean ?? ''
+        }
+        return ''
+      }
+      case 'NEXT': {
+        if (nextStation?.name) {
+          return nextStation.name
+        }
+        return ''
+      }
+      case 'NEXT_KANA':
+        if (nextStation?.nameKatakana) {
+          return katakanaToHiragana(nextStation.nameKatakana)
+        }
+        return ''
+      case 'NEXT_EN':
+        if (nextStation?.nameRoman) {
+          return nextStation?.nameRoman ?? ''
+        }
+        return ''
+      case 'NEXT_ZH':
+        if (nextStation?.nameChinese) {
+          return nextStation.nameChinese
+        }
+        return ''
+      case 'NEXT_KO':
+        if (nextStation?.nameKorean) {
+          return nextStation.nameKorean
+        }
+        return ''
+      default:
+        return ''
+    }
+  }, [
+    currentStation?.name,
+    currentStation?.nameChinese,
+    currentStation?.nameKatakana,
+    currentStation?.nameKorean,
+    currentStation?.nameRoman,
+    headerState,
+    nextStation?.name,
+    nextStation?.nameChinese,
+    nextStation?.nameKatakana,
+    nextStation?.nameKorean,
+    nextStation?.nameRoman,
+    selectedBound,
+  ])
+
+  const stateText = useMemo<string>(() => {
+    if (!selectedBound) {
+      return translate('nowStoppingAt')
+    }
+    switch (headerState) {
+      case 'ARRIVING':
+        return translate(isLast ? 'soonLast' : 'soon')
+      case 'ARRIVING_KANA':
+        return translate(isLast ? 'soonKanaLast' : 'soon')
+      case 'ARRIVING_EN':
+        return translate(isLast ? 'soonEnLast' : 'soonEn')
+      case 'ARRIVING_ZH':
+        return translate(isLast ? 'soonZhLast' : 'soonZh')
+      case 'ARRIVING_KO':
+        return translate(isLast ? 'soonKoLast' : 'soonKo')
+      case 'CURRENT':
+        return translate('nowStoppingAt')
+      case 'CURRENT_KANA':
+        return translate('nowStoppingAt')
+      case 'CURRENT_EN':
+      case 'CURRENT_ZH':
+      case 'CURRENT_KO':
+        return ''
+      case 'NEXT':
+        if (nextStation) {
+          return translate(isLast ? 'nextLast' : 'next')
+        }
+        return ''
+      case 'NEXT_KANA':
+        if (nextStation) {
+          return translate(isLast ? 'nextKanaLast' : 'nextKana')
+        }
+        return ''
+      case 'NEXT_EN':
+        if (nextStation) {
+          return translate(isLast ? 'nextEnLast' : 'nextEn')
+        }
+        return ''
+      case 'NEXT_ZH':
+        if (nextStation) {
+          return translate(isLast ? 'nextZhLast' : 'nextZh')
+        }
+        return ''
+      case 'NEXT_KO':
+        if (nextStation) {
+          return translate(isLast ? 'nextKoLast' : 'nextKo')
+        }
+        return ''
+      default:
+        return ''
+    }
+  }, [headerState, isLast, nextStation, selectedBound])
+
   const prevStationText = useLazyPrevious(stationText, fadeOutFinished)
   const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
-  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished)
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished)
+  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished)
+  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished)
 
   const isJapaneseState = useMemo(
     () => headerLangState === 'JA' || headerLangState === 'KANA',
     [headerLangState]
   )
-  const boundText = boundStationNameList[headerLangState]
-
-  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished)
 
   const prevBoundIsDifferent = useMemo(
-    () => prevBoundText !== boundText || prevConnectionText !== connectionText,
-    [boundText, connectionText, prevBoundText, prevConnectionText]
+    () => prevBoundText !== boundText,
+    [boundText, prevBoundText]
   )
 
-  const fadeIn = useCallback(
-    (): Promise<void> =>
-      new Promise((resolve) => {
-        if (!selectedBound) {
-          if (prevHeaderState === headerState) {
-            topNameScaleYAnim.value = 0
-            nameFadeAnim.value = 1
-            bottomNameScaleYAnim.value = 1
-            stateOpacityAnim.value = 0
-            setFadeOutFinished(true)
-            resolve()
-          }
-          return
-        }
+  const fadeIn = useCallback(() => {
+    if (!selectedBound) {
+      if (prevHeaderState === headerState) {
+        topNameScaleYAnim.value = 0
+        nameFadeAnim.value = 1
+        bottomNameScaleYAnim.value = 1
+        stateOpacityAnim.value = 0
+        setFadeOutFinished(true)
+      }
+      return
+    }
 
-        const handleFinish = (finished: boolean | undefined) => {
-          if (finished) {
-            setFadeOutFinished(true)
-            resolve()
-          }
-        }
+    const handleFinish = (finished: boolean | undefined) => {
+      if (finished) {
+        setFadeOutFinished(true)
+      }
+    }
 
-        if (prevHeaderState !== headerState) {
-          topNameScaleYAnim.value = withTiming(0, {
-            duration: headerTransitionDelay,
-            easing: Easing.linear,
-          })
-          nameFadeAnim.value = withTiming(
-            1,
-            {
-              duration: headerTransitionDelay,
-              easing: Easing.linear,
-            },
-            (finished) => runOnJS(handleFinish)(finished)
-          )
-          bottomNameScaleYAnim.value = withTiming(1, {
-            duration: headerTransitionDelay,
-            easing: Easing.linear,
-          })
-          stateOpacityAnim.value = withTiming(0, {
-            duration: headerTransitionDelay,
-            easing: Easing.linear,
-          })
-        }
-        if (prevBoundIsDifferent) {
-          boundOpacityAnim.value = withTiming(0, {
-            duration: headerTransitionDelay,
-            easing: Easing.linear,
-          })
-        }
-      }),
-    [
-      bottomNameScaleYAnim,
-      boundOpacityAnim,
-      headerState,
-      headerTransitionDelay,
-      nameFadeAnim,
-      prevBoundIsDifferent,
-      prevHeaderState,
-      selectedBound,
-      stateOpacityAnim,
-      topNameScaleYAnim,
-    ]
-  )
+    if (prevHeaderState !== headerState) {
+      topNameScaleYAnim.value = withTiming(0, {
+        duration: headerTransitionDelay,
+        easing: Easing.linear,
+      })
+      nameFadeAnim.value = withTiming(
+        1,
+        {
+          duration: headerTransitionDelay,
+          easing: Easing.linear,
+        },
+        (finished) => runOnJS(handleFinish)(finished)
+      )
+      bottomNameScaleYAnim.value = withTiming(1, {
+        duration: headerTransitionDelay,
+        easing: Easing.linear,
+      })
+      stateOpacityAnim.value = withTiming(0, {
+        duration: headerTransitionDelay,
+        easing: Easing.linear,
+      })
+    }
+    if (prevBoundIsDifferent) {
+      boundOpacityAnim.value = withTiming(0, {
+        duration: headerTransitionDelay,
+        easing: Easing.linear,
+      })
+    }
+  }, [
+    bottomNameScaleYAnim,
+    boundOpacityAnim,
+    headerState,
+    headerTransitionDelay,
+    nameFadeAnim,
+    prevBoundIsDifferent,
+    prevHeaderState,
+    selectedBound,
+    stateOpacityAnim,
+    topNameScaleYAnim,
+  ])
 
   const fadeOut = useCallback((): void => {
     if (!selectedBound) {
@@ -290,159 +431,96 @@ const HeaderSaikyo: React.FC = () => {
 
   const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished)
 
+  const fade = useCallback(() => {
+    fadeOut()
+    fadeIn()
+  }, [fadeIn, fadeOut])
+
   useEffect(() => {
-    const updateAsync = async () => {
-      setFadeOutFinished(false)
+    setFadeOutFinished(false)
 
-      if (headerState === prevHeaderState && !!selectedBound) {
-        return
-      }
-
-      if (!selectedBound && station) {
-        setStateText(translate('nowStoppingAt'))
-        setStationText(station.name)
-        setFadeOutFinished(true)
-      }
-
-      switch (headerState) {
-        case 'ARRIVING':
-          if (nextStation) {
-            fadeOut()
-            setStateText(translate(isLast ? 'soonLast' : 'soon'))
-            setStationText(nextStation.name)
-            await fadeIn()
-          }
-          break
-        case 'ARRIVING_KANA':
-          if (nextStation) {
-            fadeOut()
-            setStateText(translate(isLast ? 'soonKanaLast' : 'soon'))
-            setStationText(katakanaToHiragana(nextStation.nameKatakana))
-            await fadeIn()
-          }
-          break
-        case 'ARRIVING_EN':
-          if (nextStation) {
-            fadeOut()
-            setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'))
-            setStationText(nextStation?.nameRoman ?? '')
-            await fadeIn()
-          }
-          break
-        case 'ARRIVING_ZH':
-          if (nextStation?.nameChinese) {
-            fadeOut()
-            setStateText(translate(isLast ? 'soonZhLast' : 'soonZh'))
-            setStationText(nextStation.nameChinese)
-            await fadeIn()
-          }
-          break
-        case 'ARRIVING_KO':
-          if (nextStation?.nameKorean) {
-            fadeOut()
-            setStateText(translate(isLast ? 'soonKoLast' : 'soonKo'))
-            setStationText(nextStation.nameKorean)
-            await fadeIn()
-          }
-          break
-        case 'CURRENT':
-          if (station) {
-            fadeOut()
-            setStateText(translate('nowStoppingAt'))
-            setStationText(station.name)
-            await fadeIn()
-          }
-          break
-        case 'CURRENT_KANA':
-          if (station) {
-            fadeOut()
-            setStateText(translate('nowStoppingAt'))
-            setStationText(katakanaToHiragana(station.nameKatakana))
-            await fadeIn()
-          }
-          break
-        case 'CURRENT_EN':
-          if (station) {
-            fadeOut()
-            setStateText('')
-            setStationText(station?.nameRoman ?? '')
-            await fadeIn()
-          }
-          break
-        case 'CURRENT_ZH':
-          if (!station?.nameChinese) {
-            break
-          }
-          fadeOut()
-          setStateText('')
-          setStationText(station.nameChinese)
-          await fadeIn()
-
-          break
-        case 'CURRENT_KO':
-          if (!station?.nameKorean) {
-            break
-          }
-          fadeOut()
-          setStateText('')
-          setStationText(station.nameKorean)
-          await fadeIn()
-          break
-        case 'NEXT':
-          if (nextStation) {
-            fadeOut()
-            setStateText(translate(isLast ? 'nextLast' : 'next'))
-            setStationText(nextStation.name)
-            await fadeIn()
-          }
-          break
-        case 'NEXT_KANA':
-          if (nextStation) {
-            fadeOut()
-            setStateText(translate(isLast ? 'nextKanaLast' : 'nextKana'))
-            setStationText(katakanaToHiragana(nextStation.nameKatakana))
-            await fadeIn()
-          }
-          break
-        case 'NEXT_EN':
-          if (nextStation) {
-            fadeOut()
-            setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'))
-            setStationText(nextStation?.nameRoman ?? '')
-            await fadeIn()
-          }
-          break
-        case 'NEXT_ZH':
-          if (nextStation?.nameChinese) {
-            fadeOut()
-            setStateText(translate(isLast ? 'nextZhLast' : 'nextZh'))
-            setStationText(nextStation.nameChinese)
-            await fadeIn()
-          }
-          break
-        case 'NEXT_KO':
-          if (nextStation?.nameKorean) {
-            fadeOut()
-            setStateText(translate(isLast ? 'nextKoLast' : 'nextKo'))
-            setStationText(nextStation.nameKorean)
-            await fadeIn()
-          }
-          break
-        default:
-          break
-      }
+    if (headerState === prevHeaderState && !!selectedBound) {
+      return
     }
 
-    updateAsync()
+    if (!selectedBound) {
+      setFadeOutFinished(true)
+    }
+
+    switch (headerState) {
+      case 'ARRIVING':
+        if (nextStation) {
+          fade()
+        }
+        break
+      case 'ARRIVING_KANA':
+        if (nextStation) {
+          fade()
+        }
+        break
+      case 'ARRIVING_EN':
+        if (nextStation) {
+          fade()
+        }
+        break
+      case 'ARRIVING_ZH':
+        if (nextStation?.nameChinese) {
+          fade()
+        }
+        break
+      case 'ARRIVING_KO':
+        if (nextStation?.nameKorean) {
+          fade()
+        }
+        break
+      case 'CURRENT_ZH':
+        if (!currentStation?.nameChinese) {
+          break
+        }
+        fade()
+        break
+      case 'CURRENT_KO':
+        if (!currentStation?.nameKorean) {
+          break
+        }
+        fade()
+        break
+      case 'NEXT':
+        if (nextStation) {
+          fade()
+        }
+        break
+      case 'NEXT_KANA':
+        if (nextStation) {
+          fade()
+        }
+        break
+      case 'NEXT_EN':
+        if (nextStation) {
+          fade()
+        }
+        break
+      case 'NEXT_ZH':
+        if (nextStation?.nameChinese) {
+          fade()
+        }
+        break
+      case 'NEXT_KO':
+        if (nextStation?.nameKorean) {
+          fade()
+        }
+        break
+      default:
+        break
+    }
   }, [
-    fadeIn,
-    fadeOut,
+    currentStation?.nameChinese,
+    currentStation?.nameKorean,
+    fade,
     headerState,
-    isLast,
     nextStation,
     prevHeaderState,
     selectedBound,
-    station,
   ])
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
