@@ -97,9 +97,8 @@ const barTerminalBottom = ((): number => {
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
-    height: windowHeight,
-    bottom: isTablet ? windowHeight / 2.5 : undefined,
+    height: '100%',
+    paddingBottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
   grayColor: {
     color: '#ccc',
   },
-  lineDot: {
+  stationArea: {
     width: isTablet ? 48 : 32,
     height: isTablet ? 36 : 24,
     position: 'absolute',
@@ -160,10 +159,9 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 32,
     marginTop: isTablet ? -6 : -4,
   },
-  passChevron: {
+  chevronArea: {
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
-    marginLeft: isTablet ? 0 : widthScale(5),
   },
   stationNumber: {
     width: windowWidth / 9,
@@ -171,7 +169,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     bottom: 0,
   },
-  marksContainer: { marginTop: 8 },
+  marksContainer: { top: 38, position: 'absolute' },
 })
 interface StationNameProps {
   station: Station
@@ -256,8 +254,8 @@ const LineDot: React.FC<LineDotProps> = ({
 }) => {
   if (getIsPass(station)) {
     return (
-      <View style={styles.lineDot}>
-        <View style={styles.passChevron}>
+      <View style={styles.stationArea}>
+        <View style={styles.chevronArea}>
           <PassChevronTY />
         </View>
         <View style={styles.marksContainer}>
@@ -272,23 +270,23 @@ const LineDot: React.FC<LineDotProps> = ({
   }
 
   return (
-    <LinearGradient
-      colors={passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
-      style={styles.lineDot}
-    >
-      <View
-        style={{
-          position: 'absolute',
-          top: 38,
-        }}
-      >
+    <View style={styles.stationArea}>
+      <View style={styles.chevronArea}>
+        <LinearGradient
+          style={{ width: isTablet ? 48 : 32, height: isTablet ? 36 : 24 }}
+          colors={
+            passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+          }
+        />
+      </View>
+      <View style={styles.marksContainer}>
         <PadLineMarks
           shouldGrayscale={shouldGrayscale}
           transferLines={transferLines}
           station={station}
         />
       </View>
-    </LinearGradient>
+    </View>
   )
 }
 
