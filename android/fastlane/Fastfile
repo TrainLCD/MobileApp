@@ -32,7 +32,7 @@ platform :android do
 
   lane :deploy do
     gradle(
-      task: "clean bundle",
+      task: "bundle",
       build_type: "prodRelease",
       print_command: false,
       properties: {
@@ -68,7 +68,7 @@ platform :android do
 
   lane :deploy_canary do
     gradle(
-      task: "clean bundle",
+      task: "bundle",
       build_type: "devRelease",
       print_command: false,
       properties: {
