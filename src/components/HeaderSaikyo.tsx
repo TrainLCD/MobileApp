@@ -446,73 +446,7 @@ const HeaderSaikyo: React.FC = () => {
     if (!selectedBound) {
       setFadeOutFinished(true)
     }
-
-    switch (headerState) {
-      case 'ARRIVING':
-        if (nextStation) {
-          fade()
-        }
-        break
-      case 'ARRIVING_KANA':
-        if (nextStation) {
-          fade()
-        }
-        break
-      case 'ARRIVING_EN':
-        if (nextStation) {
-          fade()
-        }
-        break
-      case 'ARRIVING_ZH':
-        if (nextStation?.nameChinese) {
-          fade()
-        }
-        break
-      case 'ARRIVING_KO':
-        if (nextStation?.nameKorean) {
-          fade()
-        }
-        break
-      case 'CURRENT_ZH':
-        if (!currentStation?.nameChinese) {
-          break
-        }
-        fade()
-        break
-      case 'CURRENT_KO':
-        if (!currentStation?.nameKorean) {
-          break
-        }
-        fade()
-        break
-      case 'NEXT':
-        if (nextStation) {
-          fade()
-        }
-        break
-      case 'NEXT_KANA':
-        if (nextStation) {
-          fade()
-        }
-        break
-      case 'NEXT_EN':
-        if (nextStation) {
-          fade()
-        }
-        break
-      case 'NEXT_ZH':
-        if (nextStation?.nameChinese) {
-          fade()
-        }
-        break
-      case 'NEXT_KO':
-        if (nextStation?.nameKorean) {
-          fade()
-        }
-        break
-      default:
-        break
-    }
+    fade()
   }, [
     currentStation?.nameChinese,
     currentStation?.nameKorean,
