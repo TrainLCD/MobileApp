@@ -163,6 +163,11 @@ const styles = StyleSheet.create({
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
   },
+  chevronAreaPass: {
+    width: isTablet ? 48 : 16,
+    height: isTablet ? 32 : 24,
+    marginLeft: isTablet ? 0 : widthScale(5),
+  },
   stationNumber: {
     width: windowWidth / 9,
     fontSize: RFValue(12),
@@ -255,7 +260,7 @@ const LineDot: React.FC<LineDotProps> = ({
   if (getIsPass(station)) {
     return (
       <View style={styles.stationArea}>
-        <View style={styles.chevronArea}>
+        <View style={styles.chevronAreaPass}>
           <PassChevronTY />
         </View>
         <View style={styles.marksContainer}>
