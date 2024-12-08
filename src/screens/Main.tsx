@@ -288,7 +288,6 @@ const MainScreen: React.FC = () => {
         <View
           style={{
             flex: 1,
-            height: windowHeight,
             ...marginForMetroThemeStyle,
           }}
         >
