@@ -22,6 +22,7 @@ import useIsNextLastStop from '../hooks/useIsNextLastStop'
 import useLazyPrevious from '../hooks/useLazyPrevious'
 import { useNextStation } from '../hooks/useNextStation'
 import { useNumbering } from '../hooks/useNumbering'
+import { usePrevious } from '../hooks/usePrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -199,71 +200,38 @@ const HeaderSaikyo: React.FC = () => {
       case 'ARRIVING_KANA':
         return katakanaToHiragana(nextStation?.nameKatakana)
       case 'ARRIVING_EN': {
-        if (nextStation?.nameRoman) {
-          return nextStation.nameRoman
-        }
-        return ''
+        return nextStation?.nameRoman ?? ''
       }
       case 'ARRIVING_ZH': {
-        if (nextStation?.nameChinese) {
-          return nextStation.nameChinese
-        }
-        return ''
+        return nextStation?.nameChinese ?? ''
       }
       case 'ARRIVING_KO': {
-        if (nextStation?.nameKorean) {
-          return nextStation.nameKorean
-        }
-        return ''
+        return nextStation?.nameKorean ?? ''
       }
       case 'CURRENT':
         return currentStation?.name ?? ''
       case 'CURRENT_KANA':
         return katakanaToHiragana(currentStation?.nameKatakana)
       case 'CURRENT_EN': {
-        if (currentStation?.nameRoman) {
-          return currentStation.nameRoman
-        }
-        return ''
+        return currentStation?.nameRoman ?? ''
       }
       case 'CURRENT_ZH': {
-        if (currentStation?.nameChinese) {
-          return currentStation.nameChinese ?? ''
-        }
-        return ''
+        return currentStation?.nameChinese ?? ''
       }
       case 'CURRENT_KO': {
-        if (currentStation?.nameKorean) {
-          return currentStation.nameKorean ?? ''
-        }
-        return ''
+        return currentStation?.nameKorean ?? ''
       }
       case 'NEXT': {
-        if (nextStation?.name) {
-          return nextStation.name
-        }
-        return ''
+        return nextStation?.name ?? ''
       }
       case 'NEXT_KANA':
-        if (nextStation?.nameKatakana) {
-          return katakanaToHiragana(nextStation.nameKatakana)
-        }
-        return ''
+        return katakanaToHiragana(nextStation?.nameKatakana)
       case 'NEXT_EN':
-        if (nextStation?.nameRoman) {
-          return nextStation?.nameRoman ?? ''
-        }
-        return ''
+        return nextStation?.nameRoman ?? ''
       case 'NEXT_ZH':
-        if (nextStation?.nameChinese) {
-          return nextStation.nameChinese
-        }
-        return ''
+        return nextStation?.nameChinese ?? ''
       case 'NEXT_KO':
-        if (nextStation?.nameKorean) {
-          return nextStation.nameKorean
-        }
-        return ''
+        return nextStation?.nameKorean ?? ''
       default:
         return ''
     }
@@ -306,40 +274,26 @@ const HeaderSaikyo: React.FC = () => {
       case 'CURRENT_KO':
         return ''
       case 'NEXT':
-        if (nextStation) {
-          return translate(isLast ? 'nextLast' : 'next')
-        }
-        return ''
+        return translate(isLast ? 'nextLast' : 'next')
       case 'NEXT_KANA':
-        if (nextStation) {
-          return translate(isLast ? 'nextKanaLast' : 'nextKana')
-        }
-        return ''
+        return translate(isLast ? 'nextKanaLast' : 'nextKana')
       case 'NEXT_EN':
-        if (nextStation) {
-          return translate(isLast ? 'nextEnLast' : 'nextEn')
-        }
-        return ''
+        return translate(isLast ? 'nextEnLast' : 'nextEn')
       case 'NEXT_ZH':
-        if (nextStation) {
-          return translate(isLast ? 'nextZhLast' : 'nextZh')
-        }
-        return ''
+        return translate(isLast ? 'nextZhLast' : 'nextZh')
       case 'NEXT_KO':
-        if (nextStation) {
-          return translate(isLast ? 'nextKoLast' : 'nextKo')
-        }
-        return ''
+        return translate(isLast ? 'nextKoLast' : 'nextKo')
       default:
         return ''
     }
-  }, [headerState, isLast, nextStation, selectedBound])
+  }, [headerState, isLast, selectedBound])
 
-  const prevStationText = useLazyPrevious(stationText, fadeOutFinished)
-  const prevStateText = useLazyPrevious(stateText, fadeOutFinished)
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished)
-  const prevBoundText = useLazyPrevious(boundText, fadeOutFinished)
-  const prevConnectionText = useLazyPrevious(connectionText, fadeOutFinished)
+
+  const prevStationText = usePrevious(stationText)
+  const prevStateText = usePrevious(stateText)
+  const prevBoundText = usePrevious(boundText)
+  const prevConnectionText = usePrevious(connectionText)
 
   const isJapaneseState = useMemo(
     () => headerLangState === 'JA' || headerLangState === 'KANA',
@@ -438,24 +392,11 @@ const HeaderSaikyo: React.FC = () => {
 
   useEffect(() => {
     setFadeOutFinished(false)
-
-    if (headerState === prevHeaderState && !!selectedBound) {
-      return
-    }
-
     if (!selectedBound) {
       setFadeOutFinished(true)
     }
     fade()
-  }, [
-    currentStation?.nameChinese,
-    currentStation?.nameKorean,
-    fade,
-    headerState,
-    nextStation,
-    prevHeaderState,
-    selectedBound,
-  ])
+  }, [fade, selectedBound])
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
     opacity: 1 - stateOpacityAnim.get(),
