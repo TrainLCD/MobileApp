@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { withAnchorPoint } from 'react-native-anchor-point'
 import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
@@ -119,48 +118,18 @@ const NumberingIconSquare: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
   const stationNumber = stationNumberRest.join('')
 
-  const containerWithTLC = useMemo(
-    () => [
-      styles.tlcContainer,
-      withAnchorPoint(
-        { transform: [{ scale: 0.7 }] },
-        { x: 0, y: 1.2 },
-        {
-          width: isTablet ? 72 * 1.5 : 72,
-          height: isTablet ? 72 * 1.5 : 72,
-        }
-      ),
-    ],
-    []
-  )
-
-  const containerWithoutTLC = useMemo(() => {
-    if (!allowScaling) {
-      return null
-    }
-    return [
-      styles.container,
-      withAnchorPoint(
-        { transform: [{ scale: 0.8 }] },
-        { x: 0, y: 1.2 },
-        {
-          width: isTablet ? 72 * 1.5 : 72,
-          height: isTablet ? 72 * 1.5 : 72,
-        }
-      ),
-    ]
-  }, [allowScaling])
-
   if (threeLetterCode) {
     return (
-      <View style={containerWithTLC}>
-        <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
-        <Common
-          lineColor={lineColor}
-          threeLetterCode={threeLetterCode}
-          lineSymbol={lineSymbol}
-          stationNumber={stationNumber}
-        />
+      <View style={{ transform: [{ scale: 0.7 }], transformOrigin: 'bottom' }}>
+        <View style={styles.tlcContainer}>
+          <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
+          <Common
+            lineColor={lineColor}
+            threeLetterCode={threeLetterCode}
+            lineSymbol={lineSymbol}
+            stationNumber={stationNumber}
+          />
+        </View>
       </View>
     )
   }
@@ -178,13 +147,22 @@ const NumberingIconSquare: React.FC<Props> = ({
   }
 
   return (
-    <View style={containerWithoutTLC}>
-      <Common
-        lineColor={lineColor}
-        threeLetterCode={threeLetterCode}
-        lineSymbol={lineSymbol}
-        stationNumber={stationNumber}
-      />
+    <View
+      style={
+        allowScaling && {
+          transform: [{ scale: 0.8 }],
+          transformOrigin: 'bottom',
+        }
+      }
+    >
+      <View style={styles.container}>
+        <Common
+          lineColor={lineColor}
+          threeLetterCode={threeLetterCode}
+          lineSymbol={lineSymbol}
+          stationNumber={stationNumber}
+        />
+      </View>
     </View>
   )
 }
