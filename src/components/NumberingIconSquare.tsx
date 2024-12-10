@@ -23,13 +23,6 @@ const styles = StyleSheet.create({
     borderWidth: isTablet ? 7 * 1.5 : 7,
     backgroundColor: 'white',
   },
-  container: {
-    borderWidth: 1,
-    borderColor: 'white',
-    borderRadius: isTablet ? 16 : 14,
-    paddingVertical: isTablet ? 8 : 4,
-    paddingHorizontal: isTablet ? 8 : 4,
-  },
   tlcContainer: {
     backgroundColor: '#231e1f',
     borderWidth: 1,
@@ -148,21 +141,23 @@ const NumberingIconSquare: React.FC<Props> = ({
 
   return (
     <View
-      style={
-        allowScaling && {
-          transform: [{ scale: 0.8 }],
-          transformOrigin: 'bottom',
-        }
-      }
+      style={{
+        ...(allowScaling
+          ? {
+              transform: [{ scale: 0.8 }],
+              transformOrigin: 'bottom',
+            }
+          : {}),
+        paddingVertical: isTablet ? 8 : 4,
+        paddingHorizontal: isTablet ? 8 : 4,
+      }}
     >
-      <View style={styles.container}>
-        <Common
-          lineColor={lineColor}
-          threeLetterCode={threeLetterCode}
-          lineSymbol={lineSymbol}
-          stationNumber={stationNumber}
-        />
-      </View>
+      <Common
+        lineColor={lineColor}
+        threeLetterCode={threeLetterCode}
+        lineSymbol={lineSymbol}
+        stationNumber={stationNumber}
+      />
     </View>
   )
 }
