@@ -338,8 +338,9 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [currentLine, selectedLine]
   )
 
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === station?.groupId
+  const currentStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === station?.groupId),
+    [station?.groupId, stations]
   )
 
   const stationNameCellForMap = useCallback(
