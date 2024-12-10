@@ -141,16 +141,14 @@ const NumberingIconSquare: React.FC<Props> = ({
 
   return (
     <View
-      style={{
-        ...(allowScaling
-          ? {
-              transform: [{ scale: 0.8 }],
-              transformOrigin: 'bottom',
-            }
-          : {}),
-        paddingVertical: isTablet ? 8 : 4,
-        paddingHorizontal: isTablet ? 8 : 4,
-      }}
+      style={
+        allowScaling && {
+          transform: [{ scale: 0.8 }],
+          transformOrigin: 'bottom',
+          paddingVertical: isTablet ? 8 : 4,
+          paddingHorizontal: isTablet ? 8 : 4,
+        }
+      }
     >
       <Common
         lineColor={lineColor}
