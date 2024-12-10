@@ -25,7 +25,6 @@ export const useStartBackgroundLocationUpdates = () => {
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
           distanceInterval: 100,
-          showsBackgroundLocationIndicator: true,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
