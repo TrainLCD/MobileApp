@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
-import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
   Easing,
   interpolate,
@@ -391,14 +390,7 @@ const HeaderTokyoMetro: React.FC = () => {
       ],
     }
 
-    return withAnchorPoint(
-      transform,
-      { x: 0, y: 0 },
-      {
-        width: windowWidth,
-        height: STATION_NAME_FONT_SIZE,
-      }
-    )
+    return transform
   })
 
   const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
@@ -409,14 +401,8 @@ const HeaderTokyoMetro: React.FC = () => {
         },
       ],
     }
-    return withAnchorPoint(
-      transform,
-      { x: 0, y: 1 },
-      {
-        width: windowWidth,
-        height: STATION_NAME_FONT_SIZE,
-      }
-    )
+
+    return transform
   })
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
@@ -554,6 +540,7 @@ const HeaderTokyoMetro: React.FC = () => {
                   topNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'top',
                   },
                 ]}
               >
@@ -570,6 +557,7 @@ const HeaderTokyoMetro: React.FC = () => {
                   bottomNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'bottom',
                   },
                 ]}
               >

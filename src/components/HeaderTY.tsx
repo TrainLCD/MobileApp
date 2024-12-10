@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
-import { withAnchorPoint } from 'react-native-anchor-point'
 import Animated, {
   Easing,
   interpolate,
@@ -392,14 +391,7 @@ const HeaderTY: React.FC = () => {
       ],
     }
 
-    return withAnchorPoint(
-      transform,
-      { x: 0, y: 0 },
-      {
-        width: windowWidth,
-        height: STATION_NAME_FONT_SIZE,
-      }
-    )
+    return transform
   })
 
   const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
@@ -410,14 +402,7 @@ const HeaderTY: React.FC = () => {
         },
       ],
     }
-    return withAnchorPoint(
-      transform,
-      { x: 0, y: 1 },
-      {
-        width: windowWidth,
-        height: STATION_NAME_FONT_SIZE,
-      }
-    )
+    return transform
   })
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
@@ -547,9 +532,8 @@ const HeaderTY: React.FC = () => {
                   styles.stationName,
                   topNameAnimatedAnchorStyle,
                   {
-                    opacity: nameFadeAnim,
-                    minHeight: STATION_NAME_FONT_SIZE,
                     fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'top',
                   },
                 ]}
               >
@@ -567,6 +551,7 @@ const HeaderTY: React.FC = () => {
                   bottomNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'bottom',
                   },
                 ]}
               >

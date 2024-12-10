@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
   },
   stationNameHorizontalTextExtra: {
     fontSize: RFValue(10),
+    lineHeight: Platform.select({ ios: undefined, android: RFValue(11) }),
     fontWeight: 'bold',
   },
   grayColor: {
@@ -217,120 +218,83 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station)
+  const stationNameR = useMemo(() => getStationNameR(station), [station])
+
   if (en) {
-    if (station.nameChinese?.length) {
-      return (
-        <View style={styles.stationNameHorizontalContainer}>
-          <View style={styles.stationNameHorizontalWrapper}>
+    return (
+      <View style={styles.stationNameHorizontalContainer}>
+        <View style={styles.stationNameHorizontalWrapper}>
+          <Typography
+            style={[
+              styles.stationNameHorizontalText,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {stationNameR}
+            {'\n'}
             <Typography
               style={[
-                styles.stationNameHorizontalText,
+                styles.stationNameHorizontalTextExtra,
                 passed ? styles.grayColor : null,
               ]}
             >
-              {station.nameRoman}
-              {'\n'}
-              <Typography
-                style={[
-                  styles.stationNameHorizontalTextExtra,
-                  passed ? styles.grayColor : null,
-                ]}
-              >
-                {station.nameChinese}
-              </Typography>
+              {station.nameChinese}
             </Typography>
-          </View>
+          </Typography>
         </View>
-      )
-    }
-
-    return (
-      <Typography
-        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
-      >
-        {stationNameR}
-      </Typography>
+      </View>
     )
   }
 
   if (horizontal) {
-    if (station.nameKorean?.length) {
-      return (
-        <View style={styles.stationNameHorizontalContainer}>
-          <View style={styles.stationNameHorizontalWrapper}>
+    return (
+      <View style={styles.stationNameHorizontalContainer}>
+        <View style={styles.stationNameHorizontalWrapper}>
+          <Typography
+            style={[
+              styles.stationNameHorizontalText,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.name}
+            {'\n'}
             <Typography
               style={[
-                styles.stationNameHorizontalText,
+                styles.stationNameHorizontalTextExtra,
                 passed ? styles.grayColor : null,
               ]}
             >
-              {station.name}
-              {'\n'}
-              <Typography
-                style={[
-                  styles.stationNameHorizontalTextExtra,
-                  passed ? styles.grayColor : null,
-                ]}
-              >
-                {station.nameKorean}
-              </Typography>
+              {station.nameKorean}
             </Typography>
-          </View>
-        </View>
-      )
-    }
-
-    return (
-      <Typography
-        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
-      >
-        {station.name}
-      </Typography>
-    )
-  }
-
-  if (station.nameKorean?.length) {
-    return (
-      <View style={styles.splittedStationNameWithExtraLang}>
-        <View>
-          {station.name.split('').map((c, j) => (
-            <Typography
-              style={[styles.stationName, passed ? styles.grayColor : null]}
-              key={`${j + 1}${c}`}
-            >
-              {c}
-            </Typography>
-          ))}
-        </View>
-        <View>
-          {station.nameKorean?.split('').map((c, j) => (
-            <Typography
-              style={[
-                styles.stationNameExtra,
-                passed ? styles.grayColor : null,
-              ]}
-              key={`${j + 1}${c}`}
-            >
-              {c}
-            </Typography>
-          ))}
+          </Typography>
         </View>
       </View>
     )
   }
 
   return (
-    <>
-      {station.name.split('').map((c, j) => (
-        <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Typography>
-      ))}
-    </>
+    <View style={styles.splittedStationNameWithExtraLang}>
+      <View>
+        {station.name.split('').map((c, j) => (
+          <Typography
+            style={[styles.stationName, passed ? styles.grayColor : null]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+      <View>
+        {station.nameKorean?.split('').map((c, j) => (
+          <Typography
+            style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+    </View>
   )
 }
 
@@ -399,14 +363,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { station: currentStation, arrived } = useRecoilValue(stationState)
   const isEn = useRecoilValue(isEnSelector)
 
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === currentStation?.groupId
+  const currentStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
+    [currentStation?.groupId, stations]
   )
 
-  const passed = index <= currentStationIndex || (!index && !arrived)
-  const shouldGrayscale =
-    getIsPass(station) ||
-    (arrived && currentStationIndex === index ? false : passed)
+  const passed = useMemo(
+    () => index <= currentStationIndex || (!index && !arrived),
+    [arrived, currentStationIndex, index]
+  )
+  const shouldGrayscale = useMemo(
+    () =>
+      getIsPass(station) ||
+      (arrived && currentStationIndex === index ? false : passed),
+    [arrived, currentStationIndex, index, passed, station]
+  )
 
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
@@ -415,7 +386,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
-  const additionalChevronStyle = ((): { left: number } | null => {
+  const additionalChevronStyle = useMemo(() => {
     if (!index) {
       if (arrived) {
         return {
@@ -442,7 +413,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return {
       left: widthScale(42 * index),
     }
-  })()
+  }, [arrived, index, passed])
 
   const includesLongStationName = useMemo(
     () =>
@@ -452,7 +423,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(currentStation)
+  const stationNumberIndex = useMemo(
+    () => getStationNumberIndex(currentStation),
+    [currentStation, getStationNumberIndex]
+  )
   const numberingObj = useMemo<StationNumber | undefined>(
     () => station.stationNumbers?.[stationNumberIndex],
     [station.stationNumbers, stationNumberIndex]
