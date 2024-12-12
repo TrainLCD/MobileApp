@@ -17,6 +17,7 @@ import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import { queryClient, transport } from './lib/grpc'
+import DeepLinkProvider from './providers/DeepLinkProvider'
 import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen'
 import PrivacyScreen from './screens/Privacy'
 import RouteSearchScreen from './screens/RouteSearchScreen'
@@ -115,47 +116,49 @@ const App: React.FC = () => {
           <ActionSheetProvider>
             <RecoilRoot>
               <NavigationContainer>
-                <StatusBar hidden translucent backgroundColor="transparent" />
+                <DeepLinkProvider>
+                  <StatusBar hidden translucent backgroundColor="transparent" />
 
-                <Stack.Navigator screenOptions={screenOptions}>
-                  {!permStatus?.granted ? (
+                  <Stack.Navigator screenOptions={screenOptions}>
+                    {!permStatus?.granted ? (
+                      <Stack.Screen
+                        options={options}
+                        name="Privacy"
+                        component={PrivacyScreen}
+                      />
+                    ) : null}
+
                     <Stack.Screen
                       options={options}
-                      name="Privacy"
-                      component={PrivacyScreen}
+                      name="MainStack"
+                      component={MainStack}
                     />
-                  ) : null}
 
-                  <Stack.Screen
-                    options={options}
-                    name="MainStack"
-                    component={MainStack}
-                  />
+                    <Stack.Screen
+                      options={options}
+                      name="FakeStation"
+                      component={FakeStationSettingsScreen}
+                    />
 
-                  <Stack.Screen
-                    options={options}
-                    name="FakeStation"
-                    component={FakeStationSettingsScreen}
-                  />
+                    <Stack.Screen
+                      options={options}
+                      name="TuningSettings"
+                      component={TuningSettings}
+                    />
 
-                  <Stack.Screen
-                    options={options}
-                    name="TuningSettings"
-                    component={TuningSettings}
-                  />
+                    <Stack.Screen
+                      options={options}
+                      name="SavedRoutes"
+                      component={SavedRoutesScreen}
+                    />
 
-                  <Stack.Screen
-                    options={options}
-                    name="SavedRoutes"
-                    component={SavedRoutesScreen}
-                  />
-
-                  <Stack.Screen
-                    options={options}
-                    name="RouteSearch"
-                    component={RouteSearchScreen}
-                  />
-                </Stack.Navigator>
+                    <Stack.Screen
+                      options={options}
+                      name="RouteSearch"
+                      component={RouteSearchScreen}
+                    />
+                  </Stack.Navigator>
+                </DeepLinkProvider>
               </NavigationContainer>
             </RecoilRoot>
           </ActionSheetProvider>
