@@ -1,11 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
 import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import useIntervalEffect from '../hooks/useIntervalEffect'
+import { useInterval } from '../hooks/useInterval'
 import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
 import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
 import lineState from '../store/atoms/line'
@@ -14,6 +13,7 @@ import { isEnSelector } from '../store/selectors/isEn'
 import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import { widthScale } from '../utils/scale'
 import BarTerminal from './BarTerminalEast'
 import Chevron from './ChervronTY'
@@ -79,9 +79,8 @@ const barTerminalBottom = ((): number => {
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
-    height: windowHeight,
-    bottom: isTablet ? windowHeight / 2.5 : undefined,
+    height: '100%',
+    paddingBottom: isTablet ? windowHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -113,7 +112,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(16),
     fontWeight: 'bold',
     marginLeft: isTablet ? 5 : 2.5,
-    marginBottom: -3,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameExtra: {
     width: RFValue(10),
@@ -147,12 +146,13 @@ const styles = StyleSheet.create({
   },
   stationNameHorizontalTextExtra: {
     fontSize: RFValue(10),
+    lineHeight: Platform.select({ ios: undefined, android: RFValue(11) }),
     fontWeight: 'bold',
   },
   grayColor: {
     color: '#ccc',
   },
-  lineDot: {
+  stationArea: {
     width: isTablet ? 48 : 32,
     height: isTablet ? 36 : 24,
     position: 'absolute',
@@ -169,7 +169,11 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 32,
     marginTop: isTablet ? -6 : -4,
   },
-  passChevron: {
+  chevronArea: {
+    width: isTablet ? 48 : 16,
+    height: isTablet ? 32 : 24,
+  },
+  chevronAreaPass: {
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
@@ -189,7 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  marksContainer: { marginTop: 8 },
+  marksContainer: { top: 38, position: 'absolute' },
 })
 interface StationNameProps {
   station: Station
@@ -214,120 +218,83 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station)
+  const stationNameR = useMemo(() => getStationNameR(station), [station])
+
   if (en) {
-    if (station.nameChinese?.length) {
-      return (
-        <View style={styles.stationNameHorizontalContainer}>
-          <View style={styles.stationNameHorizontalWrapper}>
+    return (
+      <View style={styles.stationNameHorizontalContainer}>
+        <View style={styles.stationNameHorizontalWrapper}>
+          <Typography
+            style={[
+              styles.stationNameHorizontalText,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {stationNameR}
+            {'\n'}
             <Typography
               style={[
-                styles.stationNameHorizontalText,
+                styles.stationNameHorizontalTextExtra,
                 passed ? styles.grayColor : null,
               ]}
             >
-              {station.nameRoman}
-              {'\n'}
-              <Typography
-                style={[
-                  styles.stationNameHorizontalTextExtra,
-                  passed ? styles.grayColor : null,
-                ]}
-              >
-                {station.nameChinese}
-              </Typography>
+              {station.nameChinese}
             </Typography>
-          </View>
+          </Typography>
         </View>
-      )
-    }
-
-    return (
-      <Typography
-        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
-      >
-        {stationNameR}
-      </Typography>
+      </View>
     )
   }
 
   if (horizontal) {
-    if (station.nameKorean?.length) {
-      return (
-        <View style={styles.stationNameHorizontalContainer}>
-          <View style={styles.stationNameHorizontalWrapper}>
+    return (
+      <View style={styles.stationNameHorizontalContainer}>
+        <View style={styles.stationNameHorizontalWrapper}>
+          <Typography
+            style={[
+              styles.stationNameHorizontalText,
+              passed ? styles.grayColor : null,
+            ]}
+          >
+            {station.name}
+            {'\n'}
             <Typography
               style={[
-                styles.stationNameHorizontalText,
+                styles.stationNameHorizontalTextExtra,
                 passed ? styles.grayColor : null,
               ]}
             >
-              {station.name}
-              {'\n'}
-              <Typography
-                style={[
-                  styles.stationNameHorizontalTextExtra,
-                  passed ? styles.grayColor : null,
-                ]}
-              >
-                {station.nameKorean}
-              </Typography>
+              {station.nameKorean}
             </Typography>
-          </View>
-        </View>
-      )
-    }
-
-    return (
-      <Typography
-        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
-      >
-        {station.name}
-      </Typography>
-    )
-  }
-
-  if (station.nameKorean?.length) {
-    return (
-      <View style={styles.splittedStationNameWithExtraLang}>
-        <View>
-          {station.name.split('').map((c, j) => (
-            <Typography
-              style={[styles.stationName, passed ? styles.grayColor : null]}
-              key={`${j + 1}${c}`}
-            >
-              {c}
-            </Typography>
-          ))}
-        </View>
-        <View>
-          {station.nameKorean?.split('').map((c, j) => (
-            <Typography
-              style={[
-                styles.stationNameExtra,
-                passed ? styles.grayColor : null,
-              ]}
-              key={`${j + 1}${c}`}
-            >
-              {c}
-            </Typography>
-          ))}
+          </Typography>
         </View>
       </View>
     )
   }
 
   return (
-    <>
-      {station.name.split('').map((c, j) => (
-        <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Typography>
-      ))}
-    </>
+    <View style={styles.splittedStationNameWithExtraLang}>
+      <View>
+        {station.name.split('').map((c, j) => (
+          <Typography
+            style={[styles.stationName, passed ? styles.grayColor : null]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+      <View>
+        {station.nameKorean?.split('').map((c, j) => (
+          <Typography
+            style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+    </View>
   )
 }
 
@@ -348,8 +315,8 @@ const LineDot: React.FC<LineDotProps> = ({
 }) => {
   if (getIsPass(station)) {
     return (
-      <View style={styles.lineDot}>
-        <View style={styles.passChevron}>
+      <View style={styles.stationArea}>
+        <View style={styles.chevronAreaPass}>
           <PassChevronTY />
         </View>
         <View style={styles.marksContainer}>
@@ -364,23 +331,23 @@ const LineDot: React.FC<LineDotProps> = ({
   }
 
   return (
-    <LinearGradient
-      colors={passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']}
-      style={styles.lineDot}
-    >
-      <View
-        style={{
-          position: 'absolute',
-          top: 38,
-        }}
-      >
+    <View style={styles.stationArea}>
+      <View style={styles.chevronArea}>
+        <LinearGradient
+          style={{ width: isTablet ? 48 : 32, height: isTablet ? 36 : 24 }}
+          colors={
+            passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+          }
+        />
+      </View>
+      <View style={styles.marksContainer}>
         <PadLineMarks
           shouldGrayscale={shouldGrayscale}
           transferLines={transferLines}
           station={station}
         />
       </View>
-    </LinearGradient>
+    </View>
   )
 }
 
@@ -396,14 +363,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { station: currentStation, arrived } = useRecoilValue(stationState)
   const isEn = useRecoilValue(isEnSelector)
 
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === currentStation?.groupId
+  const currentStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
+    [currentStation?.groupId, stations]
   )
 
-  const passed = index <= currentStationIndex || (!index && !arrived)
-  const shouldGrayscale =
-    getIsPass(station) ||
-    (arrived && currentStationIndex === index ? false : passed)
+  const passed = useMemo(
+    () => index <= currentStationIndex || (!index && !arrived),
+    [arrived, currentStationIndex, index]
+  )
+  const shouldGrayscale = useMemo(
+    () =>
+      getIsPass(station) ||
+      (arrived && currentStationIndex === index ? false : passed),
+    [arrived, currentStationIndex, index, passed, station]
+  )
 
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
@@ -412,7 +386,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index })
 
-  const additionalChevronStyle = ((): { left: number } | null => {
+  const additionalChevronStyle = useMemo(() => {
     if (!index) {
       if (arrived) {
         return {
@@ -439,7 +413,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return {
       left: widthScale(42 * index),
     }
-  })()
+  }, [arrived, index, passed])
 
   const includesLongStationName = useMemo(
     () =>
@@ -449,7 +423,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   )
 
   const getStationNumberIndex = useStationNumberIndexFunc()
-  const stationNumberIndex = getStationNumberIndex(currentStation)
+  const stationNumberIndex = useMemo(
+    () => getStationNumberIndex(currentStation),
+    [currentStation, getStationNumberIndex]
+  )
   const numberingObj = useMemo<StationNumber | undefined>(
     () => station.stationNumbers?.[stationNumberIndex],
     [station.stationNumbers, stationNumberIndex]
@@ -657,7 +634,7 @@ const LineBoardToei: React.FC<Props> = ({
     setChevronColor('BLUE')
   }, [])
 
-  useIntervalEffect(intervalStep, 1000)
+  useInterval(intervalStep, 1000)
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {

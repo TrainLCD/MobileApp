@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
@@ -12,7 +12,7 @@ import {
   TextInputKeyPressEventData,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
+import { RFValue } from '../utils/rfValue'
 
 import { useMutation, useQuery } from '@connectrpc/connect-query'
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv'
@@ -109,9 +109,7 @@ const RouteSearchScreen = () => {
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack()
-      return
     }
-    navigation.navigate('MainStack')
   }, [navigation])
 
   const handleSubmit = useCallback(() => {
@@ -189,10 +187,14 @@ const RouteSearchScreen = () => {
           ...prev,
           stations: route?.stops ?? [],
           selectedDirection: direction,
-          selectedBound: route?.stops[route?.stops.length - 1] ?? null,
+          selectedBound:
+            direction === 'INBOUND'
+              ? route?.stops[route.stops.length - 1] ?? null
+              : route?.stops[0] ?? null,
         }))
-        setNavigationState((prev) => ({ ...prev, trainType: null }))
-        navigation.navigate('Main')
+        navigation.dispatch(
+          StackActions.replace('MainStack', { screen: 'Main' })
+        )
         return
       }
 
@@ -200,9 +202,8 @@ const RouteSearchScreen = () => {
         lineGroupId: trainType.groupId,
       })
 
-      const station = data.stations.find(
-        (s) => s.groupId === currentStation?.groupId
-      )
+      const station =
+        data.stations.find((s) => s.groupId === currentStation?.groupId) ?? null
 
       const direction: LineDirection =
         data.stations.findIndex((s) => s.groupId === currentStation?.groupId) <
@@ -213,9 +214,11 @@ const RouteSearchScreen = () => {
       setNavigationState((prev) => ({
         ...prev,
         trainType: station?.trainType ?? null,
+        stationForHeader: station,
       }))
       setStationState((prev) => ({
         ...prev,
+        station,
         stations: data.stations,
         selectedDirection: direction,
         selectedBound:
@@ -223,10 +226,10 @@ const RouteSearchScreen = () => {
             ? data.stations[data.stations.length - 1]
             : data.stations[0],
       }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('MainStack', { screen: 'Main' }))
     },
     [
-      currentStation?.groupId,
+      currentStation,
       fetchTrainTypeFromTrainTypeId,
       navigation,
       selectedStation?.groupId,

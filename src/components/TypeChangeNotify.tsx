@@ -1,8 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { StopCondition } from '../../gen/proto/stationapi_pb'
 import { parenthesisRegexp } from '../constants'
@@ -14,6 +12,7 @@ import useNextTrainType from '../hooks/useNextTrainType'
 import { useThemeStore } from '../hooks/useThemeStore'
 import stationState from '../store/atoms/station'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import { getIsLocal } from '../utils/trainTypeString'
 import truncateTrainType from '../utils/truncateTrainType'
 import BarTerminalEast from './BarTerminalEast'
@@ -915,7 +914,7 @@ const TypeChangeNotify: React.FC = () => {
   }, [theme])
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.top}>
         <HeadingJa />
         <HeadingEn />
@@ -929,7 +928,7 @@ const TypeChangeNotify: React.FC = () => {
         </Typography>
         <BarsComponent />
       </View>
-    </SafeAreaView>
+    </View>
   )
 }
 

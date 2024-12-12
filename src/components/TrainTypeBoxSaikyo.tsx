@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
@@ -10,13 +10,12 @@ import Animated, {
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
 import { TrainType } from '../../gen/proto/stationapi_pb'
-import {
-  DEFAULT_HEADER_TRANSITION_DELAY,
-  parenthesisRegexp,
-} from '../constants'
+import { parenthesisRegexp } from '../constants'
+import useLazyPrevious from '../hooks/useLazyPrevious'
 import { usePrevious } from '../hooks/usePrevious'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import navigationState from '../store/atoms/navigation'
+import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString'
@@ -79,7 +78,10 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   trainType,
   lineColor,
 }: Props) => {
+  const [fadeOutFinished, setFadeOutFinished] = useState(false)
+
   const { headerState } = useRecoilValue(navigationState)
+  const { headerTransitionDelay } = useRecoilValue(tuningState)
 
   const textOpacityAnim = useSharedValue(0)
 
@@ -163,37 +165,44 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const prevTrainTypeText = usePrevious(trainTypeName)
   const prevLetterSpacing = usePrevious(letterSpacing)
 
+  const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished)
+
+  const handleFinish = useCallback((finished: boolean | undefined) => {
+    if (finished) {
+      setFadeOutFinished(true)
+    }
+  }, [])
+
   const resetValue = useCallback(() => {
-    'worklet'
-    textOpacityAnim.value = 1
+    textOpacityAnim.value = 0
   }, [textOpacityAnim])
+
   const updateOpacity = useCallback(() => {
-    'worklet'
-    textOpacityAnim.value = withTiming(0, {
-      duration: DEFAULT_HEADER_TRANSITION_DELAY,
-      easing: Easing.ease,
-    })
-  }, [textOpacityAnim])
+    textOpacityAnim.value = withTiming(
+      1,
+      {
+        duration: headerTransitionDelay,
+        easing: Easing.ease,
+      },
+      (finished) => runOnJS(handleFinish)(finished)
+    )
+  }, [handleFinish, headerTransitionDelay, textOpacityAnim])
 
   useEffect(() => {
-    if (trainTypeName !== prevTrainTypeText) {
-      runOnJS(resetValue)()
-      runOnJS(updateOpacity)()
+    setFadeOutFinished(false)
+
+    if (prevTrainTypeName !== trainTypeName) {
+      updateOpacity()
+    } else {
+      resetValue()
     }
-  }, [
-    prevTrainTypeText,
-    resetValue,
-    textOpacityAnim,
-    trainTypeName,
-    updateOpacity,
-  ])
+  }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity])
 
   const textTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - textOpacityAnim.value,
-  }))
-
-  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
     opacity: textOpacityAnim.value,
+  }))
+  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: 1 - textOpacityAnim.value,
   }))
 
   const numberOfLines = useMemo(

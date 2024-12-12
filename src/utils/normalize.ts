@@ -1,4 +1,5 @@
-export const normalizeRomanText = (str: string): string => {
+export const normalizeRomanText = (str: string | undefined): string => {
+  if (!str) return ''
   const isAllCaps = str
     .slice(1)
     .split('')

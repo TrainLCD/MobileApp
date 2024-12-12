@@ -3,14 +3,14 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import tuningState from '../store/atoms/tuning'
-import useIntervalEffect from './useIntervalEffect'
+import { useInterval } from './useInterval'
 import useShouldHideTypeChange from './useShouldHideTypeChange'
 import { useThemeStore } from './useThemeStore'
 import useTransferLines from './useTransferLines'
 import { useTypeWillChange } from './useTypeWillChange'
 import useValueRef from './useValueRef'
 
-const useUpdateBottomState = (): { pause: () => void } => {
+export const useUpdateBottomState = () => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState)
   const { bottomTransitionInterval } = useRecoilValue(tuningState)
   const bottomStateRef = useValueRef(bottomState)
@@ -30,8 +30,7 @@ const useUpdateBottomState = (): { pause: () => void } => {
       setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }))
     }
   }, [setNavigation, transferLines.length])
-
-  const { pause } = useIntervalEffect(
+  const { pause } = useInterval(
     useCallback(() => {
       if (isLEDThemeRef.current) {
         return
@@ -85,7 +84,6 @@ const useUpdateBottomState = (): { pause: () => void } => {
     ]),
     bottomTransitionInterval
   )
+
   return { pause }
 }
-
-export default useUpdateBottomState

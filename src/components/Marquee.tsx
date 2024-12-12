@@ -22,7 +22,6 @@ const Marquee = ({ children }: Props) => {
 
   const startScroll = useCallback(
     (width: number) => {
-      'worklet'
       offsetX.value = Dimensions.get('window').width
       offsetX.value = withRepeat(
         withTiming(-width, {
@@ -57,7 +56,7 @@ const Marquee = ({ children }: Props) => {
   const animatedViewStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: offsetX.value,
+        translateX: offsetX.get(),
       },
     ],
   }))

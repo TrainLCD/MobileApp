@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
+import * as FileSystem from 'expo-file-system'
 import * as Haptics from 'expo-haptics'
 import { addScreenshotListener } from 'expo-screen-capture'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Dimensions, StyleSheet, View } from 'react-native'
-import RNFS from 'react-native-fs'
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler'
 import Share from 'react-native-share'
 import ViewShot from 'react-native-view-shot'
@@ -23,7 +23,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useDeepLink } from '../hooks/useDeepLink'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
@@ -39,15 +38,13 @@ import { isDevApp } from '../utils/isDevApp'
 import { BottomSheet } from './BottomSheet'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
-import Loading from './Loading'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
 
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
-    minHeight: Dimensions.get('window').height,
-    height: '100%',
+    height: Dimensions.get('window').height,
   },
 })
 
@@ -91,8 +88,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
-  const { isLoading: isRoutesLoadingByLink, error: fetchRoutesByLinkError } =
-    useDeepLink()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
@@ -128,7 +123,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
 
       const uri = await viewShotRef.current.capture()
-      setScreenShotBase64(await RNFS.readFile(uri, 'base64'))
+      setScreenShotBase64(
+        await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
+      )
 
       setReportModalShow(true)
     } catch (err) {
@@ -150,7 +147,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }
 
       const uri = await viewShotRef.current.capture()
-      const res = await RNFS.readFile(uri, 'base64')
+      const res = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      })
       const urlString = `data:image/jpeg;base64,${res}`
       const message = isJapanese
         ? `${currentLine.nameShort.replace(
@@ -278,13 +277,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
     return remove
   }, [selectedBound])
-
-  useEffect(() => {
-    if (fetchRoutesByLinkError) {
-      console.error(fetchRoutesByLinkError)
-      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'))
-    }
-  }, [fetchRoutesByLinkError])
 
   const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
@@ -422,10 +414,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
     sendReport,
   ])
-
-  if (isRoutesLoadingByLink && !fetchRoutesByLinkError) {
-    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-  }
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

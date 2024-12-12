@@ -2,17 +2,13 @@
 
 buildscript {
   ext {
-    buildToolsVersion = findProperty('android.buildToolsVersion') ?: '34.0.0'
-    minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '23')
-    compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '34')
+    buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
+    minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
+    compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
     targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
-    kotlinVersion = findProperty('android.kotlinVersion') ?: '1.8.10'
-    frescoVersion = findProperty('expo.frescoVersion') ?: '2.5.0'
+    kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.24'
 
-    ndkVersion = "26.3.11579264"
-    wear_compose_version = '1.0.0'
-    horologist_version = '0.1.5'
-    wear_tiles_version = '1.1.0'
+    ndkVersion = "26.1.10909125"
   }
   repositories {
     google()
@@ -21,9 +17,8 @@ buildscript {
   dependencies {
     classpath('com.android.tools.build:gradle')
     classpath('com.facebook.react:react-native-gradle-plugin')
-    classpath 'com.google.gms:google-services:4.3.15'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-    classpath 'com.google.firebase:perf-plugin:1.4.2'
+    classpath('com.google.gms:google-services:4.4.2')
+    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
   }
 }
 

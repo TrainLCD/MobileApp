@@ -14,8 +14,6 @@ export const useResetMainState = () => {
       headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
       bottomState: 'LINE',
       leftStations: [],
-      stationForHeader: null,
-      fromBuilder: false,
     }))
     setStationState((prev) => ({
       ...prev,
@@ -24,6 +22,7 @@ export const useResetMainState = () => {
       arrived: true,
       approaching: false,
       averageDistance: null,
+      stations: [],
     }))
   }, [setNavigationState, setStationState])
 

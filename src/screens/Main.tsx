@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -35,7 +35,7 @@ import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import { useTTS } from '../hooks/useTTS'
 import { useTypeWillChange } from '../hooks/useTypeWillChange'
-import useUpdateBottomState from '../hooks/useUpdateBottomState'
+import { useUpdateBottomState } from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -261,8 +261,10 @@ const MainScreen: React.FC = () => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        navigation.navigate('SelectBound')
         resetMainState()
+        navigation.dispatch(
+          StackActions.replace('MainStack', { screen: 'SelectBound' })
+        )
         return true
       }
     )
@@ -286,7 +288,6 @@ const MainScreen: React.FC = () => {
         <View
           style={{
             flex: 1,
-            height: windowHeight,
             ...marginForMetroThemeStyle,
           }}
         >

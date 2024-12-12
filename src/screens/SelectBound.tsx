@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
@@ -8,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState } from 'recoil'
 import {
   Line,
@@ -31,6 +30,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -125,7 +125,7 @@ const SelectBoundScreen: React.FC = () => {
             : selectedStation,
         selectedDirection: direction,
       }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('Main'))
     },
     [navigation, selectedLine, setStationState, stations]
   )
@@ -174,7 +174,7 @@ const SelectBoundScreen: React.FC = () => {
         selectedDirection: direction,
       }))
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('Main'))
     },
     [navigation, setNavigationState, setStationState, stations, trainType]
   )

@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleProp, StyleSheet, TextStyle } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 interface Props {

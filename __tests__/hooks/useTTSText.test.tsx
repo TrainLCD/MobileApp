@@ -49,7 +49,7 @@ const useTTSTextWithRecoilAndNumbering = (
     setLineState((prev) => ({ ...prev, selectedLine }))
   }, [headerState, setLineState, setNaivgationState, setStationState, theme])
 
-  const texts = useTTSText(false)
+  const texts = useTTSText(false, true)
   return texts
 }
 
@@ -67,6 +67,40 @@ describe('Without trainType & With numbering', () => {
       '',
     ])
   })
+
+  test.each([
+    ['TOKYO_METRO', 'NEXT'],
+    ['TOKYO_METRO', 'ARRIVING'],
+    ['TY', 'NEXT'],
+    ['TY', 'ARRIVING'],
+    ['YAMANOTE', 'NEXT'],
+    ['YAMANOTE', 'ARRIVING'],
+    ['JR_WEST', 'NEXT'],
+    ['JR_WEST', 'ARRIVING'],
+    ['SAIKYO', 'NEXT'],
+    ['SAIKYO', 'ARRIVING'],
+    ['TOEI', 'NEXT'],
+    ['TOEI', 'ARRIVING'],
+    ['LED', 'NEXT'],
+    ['LED', 'ARRIVING'],
+  ])(
+    'Should not be contained `undefined` in the SSML (theme: %s, state: %s)',
+    (theme, state) => {
+      const { result } = renderHook(
+        () =>
+          useTTSTextWithRecoilAndNumbering(
+            theme as AppTheme,
+            state as HeaderStoppingState
+          ),
+        {
+          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+        }
+      )
+      const [jaSSML, enSSML] = result.current
+      expect(jaSSML.indexOf('undefined')).toBe(-1)
+      expect(enSSML.indexOf('undefined')).toBe(-1)
+    }
+  )
 
   describe('TOKYO_METRO Theme', () => {
     test('should be NEXT', () => {

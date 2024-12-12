@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Dimensions, Platform, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
@@ -10,11 +10,9 @@ import Animated, {
 } from 'react-native-reanimated'
 import { useRecoilValue } from 'recoil'
 import { TrainType } from '../../gen/proto/stationapi_pb'
-import {
-  DEFAULT_HEADER_TRANSITION_DELAY,
-  parenthesisRegexp,
-} from '../constants'
+import { parenthesisRegexp } from '../constants'
 import { useCurrentLine } from '../hooks/useCurrentLine'
+import useLazyPrevious from '../hooks/useLazyPrevious'
 import useNextLine from '../hooks/useNextLine'
 import useNextTrainType from '../hooks/useNextTrainType'
 import { usePrevious } from '../hooks/usePrevious'
@@ -22,6 +20,7 @@ import { useThemeStore } from '../hooks/useThemeStore'
 import { HeaderLangState } from '../models/HeaderTransitionState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
+import tuningState from '../store/atoms/tuning'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import truncateTrainType from '../utils/truncateTrainType'
@@ -76,7 +75,10 @@ const styles = StyleSheet.create({
 const AnimatedTypography = Animated.createAnimatedComponent(Typography)
 
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
+  const [fadeOutFinished, setFadeOutFinished] = useState(false)
+
   const { headerState } = useRecoilValue(navigationState)
+  const { headerTransitionDelay } = useRecoilValue(tuningState)
   const theme = useThemeStore()
   const currentLine = useCurrentLine()
 
@@ -156,39 +158,46 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   }, [trainTypeName?.length])
 
   const prevMarginLeft = usePrevious(marginLeft)
-  const prevTrainTypeText = usePrevious(trainTypeName)
   const prevLetterSpacing = usePrevious(letterSpacing)
 
+  const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished)
+
+  const handleFinish = useCallback((finished: boolean | undefined) => {
+    if (finished) {
+      setFadeOutFinished(true)
+    }
+  }, [])
+
   const resetValue = useCallback(() => {
-    'worklet'
-    textOpacityAnim.value = 1
+    textOpacityAnim.value = 0
   }, [textOpacityAnim])
+
   const updateOpacity = useCallback(() => {
-    'worklet'
-    textOpacityAnim.value = withTiming(0, {
-      duration: DEFAULT_HEADER_TRANSITION_DELAY,
-      easing: Easing.ease,
-    })
-  }, [textOpacityAnim])
+    textOpacityAnim.value = withTiming(
+      1,
+      {
+        duration: headerTransitionDelay,
+        easing: Easing.ease,
+      },
+      (finished) => runOnJS(handleFinish)(finished)
+    )
+  }, [handleFinish, headerTransitionDelay, textOpacityAnim])
 
   useEffect(() => {
-    if (trainTypeName !== prevTrainTypeText) {
-      runOnJS(resetValue)()
-      runOnJS(updateOpacity)()
+    setFadeOutFinished(false)
+
+    if (prevTrainTypeName !== trainTypeName) {
+      updateOpacity()
+    } else {
+      resetValue()
     }
-  }, [
-    prevTrainTypeText,
-    resetValue,
-    textOpacityAnim,
-    trainTypeName,
-    updateOpacity,
-  ])
+  }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity])
 
   const textTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - textOpacityAnim.value,
+    opacity: textOpacityAnim.value,
   }))
   const textBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: textOpacityAnim.value,
+    opacity: 1 - textOpacityAnim.value,
   }))
 
   const showNextTrainType = useMemo(
@@ -203,12 +212,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   )
   const prevNumberOfLines = useMemo(
     () =>
-      prevTrainTypeText
-        ? prevTrainTypeText.split('\n')[0].length <= 10
+      prevTrainTypeName
+        ? prevTrainTypeName.split('\n')[0].length <= 10
           ? 1
           : 2
         : 0,
-    [prevTrainTypeText]
+    [prevTrainTypeName]
   )
 
   return (
@@ -253,7 +262,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           adjustsFontSizeToFit
           numberOfLines={prevNumberOfLines}
         >
-          {prevTrainTypeText}
+          {prevTrainTypeName}
         </AnimatedTypography>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
