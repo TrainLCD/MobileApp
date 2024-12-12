@@ -1,16 +1,20 @@
 import { TransportProvider } from '@connectrpc/connect-query'
-import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'
-import { ActionSheetProvider } from '@expo/react-native-action-sheet'
+import {
+  Roboto_400Regular,
+  Roboto_700Bold,
+  useFonts,
+} from '@expo-google-fonts/roboto'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { useFonts } from 'expo-font'
 import * as Location from 'expo-location'
 import * as SplashScreen from 'expo-splash-screen'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { RecoilRoot } from 'recoil'
 import ErrorFallback from './components/ErrorBoundary'
 import TuningSettings from './components/TuningSettings'
@@ -113,55 +117,61 @@ const App: React.FC = () => {
     >
       <TransportProvider transport={transport}>
         <QueryClientProvider client={queryClient}>
-          <ActionSheetProvider>
-            <RecoilRoot>
-              <NavigationContainer>
-                <DeepLinkProvider>
-                  <StatusBar hidden translucent backgroundColor="transparent" />
+          <GestureHandlerRootView>
+            <BottomSheetModalProvider>
+              <RecoilRoot>
+                <NavigationContainer>
+                  <DeepLinkProvider>
+                    <StatusBar
+                      hidden
+                      translucent
+                      backgroundColor="transparent"
+                    />
 
-                  <Stack.Navigator screenOptions={screenOptions}>
-                    {!permStatus?.granted ? (
+                    <Stack.Navigator screenOptions={screenOptions}>
+                      {!permStatus?.granted ? (
+                        <Stack.Screen
+                          options={options}
+                          name="Privacy"
+                          component={PrivacyScreen}
+                        />
+                      ) : null}
+
                       <Stack.Screen
                         options={options}
-                        name="Privacy"
-                        component={PrivacyScreen}
+                        name="MainStack"
+                        component={MainStack}
                       />
-                    ) : null}
 
-                    <Stack.Screen
-                      options={options}
-                      name="MainStack"
-                      component={MainStack}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="FakeStation"
+                        component={FakeStationSettingsScreen}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="FakeStation"
-                      component={FakeStationSettingsScreen}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="TuningSettings"
+                        component={TuningSettings}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="TuningSettings"
-                      component={TuningSettings}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="SavedRoutes"
+                        component={SavedRoutesScreen}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="SavedRoutes"
-                      component={SavedRoutesScreen}
-                    />
-
-                    <Stack.Screen
-                      options={options}
-                      name="RouteSearch"
-                      component={RouteSearchScreen}
-                    />
-                  </Stack.Navigator>
-                </DeepLinkProvider>
-              </NavigationContainer>
-            </RecoilRoot>
-          </ActionSheetProvider>
+                      <Stack.Screen
+                        options={options}
+                        name="RouteSearch"
+                        component={RouteSearchScreen}
+                      />
+                    </Stack.Navigator>
+                  </DeepLinkProvider>
+                </NavigationContainer>
+              </RecoilRoot>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </QueryClientProvider>
       </TransportProvider>
     </ErrorBoundary>

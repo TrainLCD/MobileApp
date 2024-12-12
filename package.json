@@ -19,6 +19,7 @@
     "@expo-google-fonts/roboto": "^0.2.3",
     "@expo/react-native-action-sheet": "^3.8.0",
     "@expo/vector-icons": "^14.0.4",
+    "@gorhom/bottom-sheet": "^5.0.5",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/cli": "^15.1.2",
     "@react-native-community/netinfo": "11.4.1",
