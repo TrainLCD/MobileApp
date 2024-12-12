@@ -24,7 +24,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
 import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useDeepLink } from '../hooks/useDeepLink'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
 import useReportEligibility from '../hooks/useReportEligibility'
@@ -39,7 +38,6 @@ import { isJapanese, translate } from '../translation'
 import { isDevApp } from '../utils/isDevApp'
 import DevOverlay from './DevOverlay'
 import Header from './Header'
-import Loading from './Loading'
 import NewReportModal from './NewReportModal'
 import WarningPanel from './WarningPanel'
 
@@ -89,8 +87,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useAndroidWearable()
   useUpdateLiveActivities()
   useListenMessaging()
-  const { isLoading: isRoutesLoadingByLink, error: fetchRoutesByLinkError } =
-    useDeepLink()
 
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
@@ -327,13 +323,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     return remove
   }, [selectedBound])
 
-  useEffect(() => {
-    if (fetchRoutesByLinkError) {
-      console.error(fetchRoutesByLinkError)
-      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'))
-    }
-  }, [fetchRoutesByLinkError])
-
   const getWarningInfo = useCallback(() => {
     if (warningDismissed) {
       return null
@@ -470,10 +459,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
     sendReport,
   ])
-
-  if (isRoutesLoadingByLink && !fetchRoutesByLinkError) {
-    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-  }
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

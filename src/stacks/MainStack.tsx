@@ -27,7 +27,7 @@ const screenOptions = {
 }
 
 const MainStack: React.FC = () => {
-  const { station } = useRecoilValue(stationState)
+  const { station, selectedBound } = useRecoilValue(stationState)
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
@@ -65,7 +65,10 @@ const MainStack: React.FC = () => {
 
   return (
     <Permitted>
-      <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Navigator
+        screenOptions={screenOptions}
+        initialRouteName={selectedBound ? 'Main' : 'SelectLine'}
+      >
         <Stack.Screen
           options={optionsWithCustomStyle}
           name="SelectLine"

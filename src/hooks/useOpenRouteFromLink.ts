@@ -1,5 +1,4 @@
 import { useMutation } from '@connectrpc/connect-query'
-import { StackActions, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 import { useSetRecoilState } from 'recoil'
 import {
@@ -17,8 +16,6 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 
 export const useOpenRouteFromLink = () => {
-  const navigation = useNavigation()
-
   const setStationState = useSetRecoilState(stationState)
   const setNavigationState = useSetRecoilState(navigationState)
   const setLineState = useSetRecoilState(lineState)
@@ -44,15 +41,7 @@ export const useOpenRouteFromLink = () => {
       if (!line) {
         return
       }
-
-      setStationState((prev) => ({
-        ...prev,
-        stations,
-        station,
-        selectedDirection: direction,
-        selectedBound:
-          direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],
-      }))
+      setLineState((prev) => ({ ...prev, selectedLine: line }))
       setNavigationState((prev) => ({
         ...prev,
         trainType: station.trainType ?? null,
@@ -60,13 +49,16 @@ export const useOpenRouteFromLink = () => {
         stationForHeader: station,
         fromBuilder: true,
       }))
-      setLineState((prev) => ({
+      setStationState((prev) => ({
         ...prev,
-        selectedLine: line,
+        station,
+        stations,
+        selectedDirection: direction,
+        selectedBound:
+          direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],
       }))
-      navigation.dispatch(StackActions.replace('MainStack', { screen: 'Main' }))
     },
-    [navigation, setLineState, setNavigationState, setStationState]
+    [setLineState, setNavigationState, setStationState]
   )
 
   const openLink = useCallback(

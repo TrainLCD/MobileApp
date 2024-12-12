@@ -185,7 +185,6 @@ const RouteSearchScreen = () => {
 
         setStationState((prev) => ({
           ...prev,
-          station,
           stations: route?.stops ?? [],
           selectedDirection: direction,
           selectedBound:
@@ -193,7 +192,6 @@ const RouteSearchScreen = () => {
               ? route?.stops[route.stops.length - 1] ?? null
               : route?.stops[0] ?? null,
         }))
-        setNavigationState((prev) => ({ ...prev, stationForHeader: station }))
         navigation.dispatch(
           StackActions.replace('MainStack', { screen: 'Main' })
         )
