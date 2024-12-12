@@ -1,10 +1,16 @@
 import { TransportProvider } from '@connectrpc/connect-query'
+import {
+  Roboto_400Regular,
+  Roboto_700Bold,
+  useFonts,
+} from '@expo-google-fonts/roboto'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { QueryClientProvider } from '@tanstack/react-query'
 import * as Location from 'expo-location'
+import * as SplashScreen from 'expo-splash-screen'
 import React, { ErrorInfo, useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native'
@@ -15,6 +21,7 @@ import TuningSettings from './components/TuningSettings'
 import useAnonymousUser from './hooks/useAnonymousUser'
 import useReport from './hooks/useReport'
 import { queryClient, transport } from './lib/grpc'
+import DeepLinkProvider from './providers/DeepLinkProvider'
 import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen'
 import PrivacyScreen from './screens/Privacy'
 import RouteSearchScreen from './screens/RouteSearchScreen'
@@ -22,13 +29,15 @@ import SavedRoutesScreen from './screens/SavedRoutesScreen'
 import MainStack from './stacks/MainStack'
 import { setI18nConfig } from './translation'
 
+SplashScreen.preventAutoHideAsync()
+
 const Stack = createStackNavigator()
 
 const screenOptions = {
   headerShown: false,
 }
 const options = {
-  animationEnabled: false,
+  animation: 'none',
   cardStyle: {
     backgroundColor: '#fff',
     opacity: 1,
@@ -37,22 +46,18 @@ const options = {
 
 const App: React.FC = () => {
   const [readyForLaunch, setReadyForLaunch] = useState(false)
-  const [permissionsGranted, setPermissionsGranted] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
       await remoteConfig().fetchAndActivate()
-      await setI18nConfig()
+      setI18nConfig()
 
       const locationServicesEnabled = await Location.hasServicesEnabledAsync()
       if (!locationServicesEnabled) {
         setReadyForLaunch(true)
-        setPermissionsGranted(false)
         return
       }
-      const { status } = await Location.getForegroundPermissionsAsync()
-      setPermissionsGranted(status === Location.PermissionStatus.GRANTED)
       setReadyForLaunch(true)
     })()
   }, [])
@@ -71,6 +76,7 @@ const App: React.FC = () => {
 
   const user = useAnonymousUser()
   const { sendReport } = useReport(user ?? null)
+  const [permStatus] = Location.useForegroundPermissions()
 
   const handleBoundaryError = useCallback(
     async (error: Error, info: ErrorInfo) => {
@@ -89,6 +95,17 @@ const App: React.FC = () => {
     [sendReport]
   )
 
+  const [fontsLoaded, fontsLoadError] = useFonts({
+    Roboto_400Regular,
+    Roboto_700Bold,
+  })
+
+  useEffect(() => {
+    if (readyForLaunch && (fontsLoaded || fontsLoadError)) {
+      SplashScreen.hideAsync()
+    }
+  }, [fontsLoadError, fontsLoaded, readyForLaunch])
+
   if (!readyForLaunch) {
     return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />
   }
@@ -104,50 +121,53 @@ const App: React.FC = () => {
             <BottomSheetModalProvider>
               <RecoilRoot>
                 <NavigationContainer>
-                  <StatusBar hidden translucent backgroundColor="transparent" />
-
-                  <Stack.Navigator
-                    screenOptions={screenOptions}
-                    initialRouteName={
-                      permissionsGranted ? 'MainStack' : 'Privacy'
-                    }
-                  >
-                    <Stack.Screen
-                      options={options}
-                      name="Privacy"
-                      component={PrivacyScreen}
+                  <DeepLinkProvider>
+                    <StatusBar
+                      hidden
+                      translucent
+                      backgroundColor="transparent"
                     />
 
-                    <Stack.Screen
-                      options={options}
-                      name="FakeStation"
-                      component={FakeStationSettingsScreen}
-                    />
+                    <Stack.Navigator screenOptions={screenOptions}>
+                      {!permStatus?.granted ? (
+                        <Stack.Screen
+                          options={options}
+                          name="Privacy"
+                          component={PrivacyScreen}
+                        />
+                      ) : null}
 
-                    <Stack.Screen
-                      options={options}
-                      name="TuningSettings"
-                      component={TuningSettings}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="MainStack"
+                        component={MainStack}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="SavedRoutes"
-                      component={SavedRoutesScreen}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="FakeStation"
+                        component={FakeStationSettingsScreen}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="RouteSearch"
-                      component={RouteSearchScreen}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="TuningSettings"
+                        component={TuningSettings}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="MainStack"
-                      component={MainStack}
-                    />
-                  </Stack.Navigator>
+                      <Stack.Screen
+                        options={options}
+                        name="SavedRoutes"
+                        component={SavedRoutesScreen}
+                      />
+
+                      <Stack.Screen
+                        options={options}
+                        name="RouteSearch"
+                        component={RouteSearchScreen}
+                      />
+                    </Stack.Navigator>
+                  </DeepLinkProvider>
                 </NavigationContainer>
               </RecoilRoot>
             </BottomSheetModalProvider>
