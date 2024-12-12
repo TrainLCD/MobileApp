@@ -36,24 +36,23 @@ export const useDeepLink = () => {
     [openRoute]
   )
 
-  const handleUrl = useCallback(
-    (url: string) => handleParsedUrl(Linking.parse(url)),
-    [handleParsedUrl]
-  )
-
   useEffect(() => {
     const handleInitUrlAsync = async () => {
-      const initialUrl = await Linking.parseInitialURLAsync()
-      handleParsedUrl(initialUrl)
+      const initialUrl = await Linking.getInitialURL()
+      if (initialUrl) {
+        handleParsedUrl(Linking.parse(initialUrl))
+      }
     }
     handleInitUrlAsync()
+  }, [handleParsedUrl])
 
-    const listener = Linking.addEventListener('url', (e) => handleUrl(e.url))
+  useEffect(() => {
+    const listener = Linking.addEventListener('url', (e) => {
+      handleParsedUrl(Linking.parse(e.url))
+    })
 
-    return () => {
-      listener.remove()
-    }
-  }, [handleParsedUrl, handleUrl])
+    return listener.remove
+  }, [handleParsedUrl])
 
   return { isLoading, error }
 }
