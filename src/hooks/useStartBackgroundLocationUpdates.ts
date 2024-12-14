@@ -3,10 +3,12 @@ import { useEffect } from 'react'
 import { LOCATION_TASK_NAME } from '../constants'
 import { translate } from '../translation'
 import { useApplicationFlagStore } from './useApplicationFlagStore'
+import { useLocationPermissionsGranted } from './useLocationPermissionsGranted'
 import { setLocation } from './useLocationStore'
 
 export const useStartBackgroundLocationUpdates = () => {
-  const [permsStatus] = Location.useBackgroundPermissions()
+  const bgPermGranted = useLocationPermissionsGranted()
+
   useEffect(() => {
     const autoModeEnabled = useApplicationFlagStore.getState()?.autoModeEnabled
     if (autoModeEnabled) {
@@ -17,7 +19,7 @@ export const useStartBackgroundLocationUpdates = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
-      if (permsStatus?.granted) {
+      if (bgPermGranted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
           accuracy: Location.Accuracy.BestForNavigation,
@@ -48,5 +50,5 @@ export const useStartBackgroundLocationUpdates = () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
       watchPositionSub?.remove()
     }
-  }, [permsStatus?.granted])
+  }, [bgPermGranted])
 }
