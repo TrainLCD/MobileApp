@@ -8,6 +8,8 @@ export const ASYNC_STORAGE_KEYS = {
   TTS_NOTICE: '@TrainLCD:ttsNotice',
   LOSSLESS_NOTICE: '@TrainLCD:losslessNotice',
   LONG_PRESS_NOTICE_DISMISSED: '@TrainLCD:longPressNoticeDismissed',
+  ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED:
+    '@TrainLCD:alwaysPermissionNotGrantedWarningDismissed',
   // QA
   QA_SPEECH_ENABLED: '@TrainLCD:qaSpeechEnabled',
   QA_LOSSLESS_ENABLED: '@TrainLCD:qaLosslessEnabled',
