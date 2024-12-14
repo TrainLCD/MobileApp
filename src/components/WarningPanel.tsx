@@ -6,8 +6,8 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 interface Props {

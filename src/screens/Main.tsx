@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
+import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -35,7 +36,7 @@ import useTransferLines from '../hooks/useTransferLines'
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState'
 import { useTTS } from '../hooks/useTTS'
 import { useTypeWillChange } from '../hooks/useTypeWillChange'
-import useUpdateBottomState from '../hooks/useUpdateBottomState'
+import { useUpdateBottomState } from '../hooks/useUpdateBottomState'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
@@ -128,10 +129,12 @@ const MainScreen: React.FC = () => {
             },
             {
               text: translate('settings'),
-              onPress: async (): Promise<void> => {
-                Linking.openSettings().catch(() => {
+              onPress: async () => {
+                try {
+                  await Linking.openSettings()
+                } catch (err) {
                   openFailedToOpenSettingsAlert()
-                })
+                }
                 await AsyncStorage.setItem(
                   ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
                   'true'
@@ -148,6 +151,7 @@ const MainScreen: React.FC = () => {
       f()
     }
   }, [openFailedToOpenSettingsAlert])
+
   const navigation = useNavigation()
   useTransitionHeaderState()
   useRefreshLeftStations()
@@ -261,8 +265,10 @@ const MainScreen: React.FC = () => {
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        navigation.navigate('SelectBound')
         resetMainState()
+        navigation.dispatch(
+          StackActions.replace('MainStack', { screen: 'SelectBound' })
+        )
         return true
       }
     )
@@ -276,6 +282,54 @@ const MainScreen: React.FC = () => {
     [theme]
   )
 
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const warningDismissed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
+      )
+      // NOTE: フォアグラウンドも許可しない設定の場合はそもそもオートモード前提で使われていると思うので警告は不要
+      const fgPermStatus = await Location.getForegroundPermissionsAsync()
+      if (!fgPermStatus.granted) {
+        return
+      }
+
+      const bgPermStatus = await Location.getBackgroundPermissionsAsync()
+      if (warningDismissed !== 'true' && !bgPermStatus?.granted) {
+        Alert.alert(
+          translate('annoucementTitle'),
+          translate('alwaysPermissionNotGrantedText'),
+          [
+            {
+              text: translate('dontShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+                  'true'
+                )
+              },
+            },
+            {
+              text: translate('settings'),
+              onPress: async () => {
+                try {
+                  await Linking.openSettings()
+                } catch (err) {
+                  openFailedToOpenSettingsAlert()
+                }
+              },
+            },
+            {
+              text: 'OK',
+              style: 'cancel',
+            },
+          ]
+        )
+      }
+    }
+    f()
+  }, [openFailedToOpenSettingsAlert])
+
   if (isLEDTheme) {
     return <LineBoard />
   }
@@ -286,7 +340,6 @@ const MainScreen: React.FC = () => {
         <View
           style={{
             flex: 1,
-            height: windowHeight,
             ...marginForMetroThemeStyle,
           }}
         >

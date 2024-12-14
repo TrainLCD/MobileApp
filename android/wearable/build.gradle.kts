@@ -5,57 +5,57 @@ plugins {
 
 android {
   namespace = "me.tinykitten.trainlcd"
-  compileSdk = 33
+  compileSdk = 35
 
   defaultConfig {
-      applicationId = "me.tinykitten.trainlcd"
-      minSdk = 30
-      targetSdk = 33
-      vectorDrawables {
-          useSupportLibrary = true
-      }
+    applicationId = "me.tinykitten.trainlcd"
+    minSdk = 30
+    targetSdk = 33
+    vectorDrawables {
+      useSupportLibrary = true
+    }
 
   }
 
   buildTypes {
-      release {
-          isMinifyEnabled = false
-          proguardFiles(
-              getDefaultProguardFile("proguard-android-optimize.txt"),
-              "proguard-rules.pro"
-          )
-      }
+    release {
+      isMinifyEnabled = false
+      proguardFiles(
+        getDefaultProguardFile("proguard-android-optimize.txt"),
+        "proguard-rules.pro"
+      )
+    }
   }
 
-  flavorDimensions.add("environment")
+  flavorDimensions += "environment"
   productFlavors {
     create("dev") {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 80102001
-      versionName = "8.1.2"
+      versionCode = 80200001
+      versionName = "8.2.0"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 80102001
-      versionName = "8.1.2"
+      versionCode = 80200001
+      versionName = "8.2.0"
     }
   }
 
   compileOptions {
-      sourceCompatibility = JavaVersion.VERSION_1_8
-      targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
   }
   kotlinOptions {
-      jvmTarget = "17"
+    jvmTarget = "17"
   }
   buildFeatures {
-      compose = true
+    compose = true
   }
   composeOptions {
-      kotlinCompilerExtensionVersion = "1.5.10"
+    kotlinCompilerExtensionVersion = "1.5.14"
   }
 }
 
@@ -69,8 +69,8 @@ dependencies {
   implementation("androidx.compose.ui:ui")
   implementation("androidx.compose.ui:ui-tooling-preview")
   implementation("androidx.wear:wear:1.2.0")
-  implementation("androidx.wear.compose:compose-material:${rootProject.extra["wear_compose_version"]}")
-  implementation("androidx.wear.compose:compose-foundation:${rootProject.extra["wear_compose_version"]}")
+  implementation("androidx.wear.compose:compose-material:1.0.0")
+  implementation("androidx.wear.compose:compose-foundation:1.0.0")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
   implementation("androidx.activity:activity-compose:1.5.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")

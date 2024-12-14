@@ -1,9 +1,8 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { withAnchorPoint } from 'react-native-anchor-point'
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 import isTablet from '../utils/isTablet'
 import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
 
 type Props = {
   stationNumber: string
@@ -114,26 +113,16 @@ const NumberingIconSquare: React.FC<Props> = ({
 
   if (threeLetterCode) {
     return (
-      <View
-        style={[
-          styles.tlcContainer,
-          withAnchorPoint(
-            { transform: [{ scale: 0.7 }] },
-            { x: 0, y: 1.2 },
-            {
-              width: isTablet ? 72 * 1.5 : 72,
-              height: isTablet ? 72 * 1.5 : 72,
-            }
-          ),
-        ]}
-      >
-        <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
-        <Common
-          lineColor={lineColor}
-          threeLetterCode={threeLetterCode}
-          lineSymbol={lineSymbol}
-          stationNumber={stationNumber}
-        />
+      <View style={{ transform: [{ scale: 0.7 }], transformOrigin: 'bottom' }}>
+        <View style={styles.tlcContainer}>
+          <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
+          <Common
+            lineColor={lineColor}
+            threeLetterCode={threeLetterCode}
+            lineSymbol={lineSymbol}
+            stationNumber={stationNumber}
+          />
+        </View>
       </View>
     )
   }
@@ -152,17 +141,14 @@ const NumberingIconSquare: React.FC<Props> = ({
 
   return (
     <View
-      style={[
-        allowScaling &&
-          withAnchorPoint(
-            { transform: [{ scale: 0.8 }] },
-            { x: 0, y: 1.2 },
-            {
-              width: isTablet ? 72 * 1.5 : 72,
-              height: isTablet ? 72 * 1.5 : 72,
-            }
-          ),
-      ]}
+      style={
+        allowScaling && {
+          transform: [{ scale: 0.8 }],
+          transformOrigin: 'bottom',
+          paddingVertical: isTablet ? 8 : 4,
+          paddingHorizontal: isTablet ? 8 : 4,
+        }
+      }
     >
       <Common
         lineColor={lineColor}

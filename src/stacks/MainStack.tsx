@@ -22,11 +22,13 @@ import { translate } from '../translation'
 const Stack = createStackNavigator()
 
 const screenOptions = {
+  animation: 'none',
   headerShown: false,
 }
 
 const MainStack: React.FC = () => {
-  const { station } = useRecoilValue(stationState)
+  const { station, selectedBound } = useRecoilValue(stationState)
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
   const isUnderMaintenance = useUnderMaintenance()
@@ -34,7 +36,6 @@ const MainStack: React.FC = () => {
 
   const optionsWithCustomStyle = useMemo(
     () => ({
-      animationEnabled: false,
       cardStyle: {
         opacity: 1,
         backgroundColor: isLEDTheme ? '#212121' : '#fff',
@@ -64,7 +65,10 @@ const MainStack: React.FC = () => {
 
   return (
     <Permitted>
-      <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Navigator
+        screenOptions={screenOptions}
+        initialRouteName={selectedBound ? 'Main' : 'SelectLine'}
+      >
         <Stack.Screen
           options={optionsWithCustomStyle}
           name="SelectLine"

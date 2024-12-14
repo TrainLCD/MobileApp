@@ -1,7 +1,6 @@
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock'
 import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock'
 
-jest.mock('react-native-fs', () => ({}))
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage)
 
 // https://github.com/facebookexperimental/Recoil/issues/904#issuecomment-823755253

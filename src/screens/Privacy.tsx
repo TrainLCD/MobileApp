@@ -1,5 +1,5 @@
 import messaging from '@react-native-firebase/messaging'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import * as WebBrowser from 'expo-web-browser'
@@ -12,12 +12,12 @@ import {
   View,
 } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { RFValue } from 'react-native-responsive-fontsize'
 import Button from '../components/Button'
 import Typography from '../components/Typography'
 import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
 import { useLocationStore } from '../hooks/useLocationStore'
 import { isJapanese, translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   root: {
@@ -70,10 +70,7 @@ const PrivacyScreen: React.FC = () => {
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'MainStack' }],
-      })
+      StackActions.replace('MainStack', { screen: 'SelectLine' })
     )
 
     const location = (await fetchCurrentLocation()) ?? null
@@ -83,12 +80,7 @@ const PrivacyScreen: React.FC = () => {
   }, [fetchCurrentLocation, navigation])
 
   const handleStartWithoutPermissionPress = useCallback(() => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'FakeStation' }],
-      })
-    )
+    navigation.dispatch(StackActions.replace('FakeStation'))
   }, [navigation])
 
   const handleLocationDenied = useCallback(
@@ -129,6 +121,7 @@ const PrivacyScreen: React.FC = () => {
 
       switch (status) {
         case Location.PermissionStatus.GRANTED:
+          await Location.requestBackgroundPermissionsAsync()
           handleLocationGranted()
           break
         case Location.PermissionStatus.DENIED:

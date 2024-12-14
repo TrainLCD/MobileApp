@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react'
 import { StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import useClock from '../hooks/useClock'
-import useIntervalEffect from '../hooks/useIntervalEffect'
+import { useInterval } from '../hooks/useInterval'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
 const styles = StyleSheet.create({
@@ -28,7 +28,7 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   const [hours, minutes] = useClock()
   const [colonOpacity, setColonOpacity] = useState(0)
 
-  useIntervalEffect(
+  useInterval(
     useCallback(() => {
       setColonOpacity((prev) => (prev === 0 ? 1 : 0))
     }, []),

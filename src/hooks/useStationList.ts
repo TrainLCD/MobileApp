@@ -59,13 +59,16 @@ export const useStationList = () => {
         ? prev.stations
         : byLineIdData?.stations ?? [],
     }))
-    setNavigationState((prev) => ({
-      ...prev,
-      trainType: designatedTrainType,
-    }))
+    if (!fromBuilder) {
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: designatedTrainType,
+      }))
+    }
   }, [
     byLineIdData?.stations,
     designatedTrainType,
+    fromBuilder,
     setNavigationState,
     setStationState,
   ])

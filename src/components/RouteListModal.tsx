@@ -1,17 +1,23 @@
 import { ConnectError } from '@connectrpc/connect'
-import React from 'react'
+import { useMutation } from '@connectrpc/connect-query'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Modal, SafeAreaView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Route } from '../../gen/proto/stationapi_pb'
+import { useSetRecoilState } from 'recoil'
+import { getTrainTypesByStationId } from '../../gen/proto/stationapi-StationAPI_connectquery'
+import { Route, TrainType } from '../../gen/proto/stationapi_pb'
 import { LED_THEME_BG_COLOR } from '../constants'
+import { useCurrentStation } from '../hooks/useCurrentStation'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
+import lineState from '../store/atoms/line'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
 import FAB from './FAB'
 import Heading from './Heading'
 import Loading from './Loading'
 import { RouteList } from './RouteList'
+import { TrainTypeInfoPage } from './TrainTypeInfoPage'
 
 type Props = {
   routes: Route[]
@@ -57,8 +63,68 @@ export const RouteListModal: React.FC<Props> = ({
   onClose,
   onSelect,
 }: Props) => {
+  const [trainTypeInfoPageVisible, setTrainTypeInfoPageVisible] =
+    useState(false)
+  const [selectedRoute, setSelectedRoute] = useState<Route>()
+  const [selectedTrainType, setSelectedTrainType] = useState<TrainType>()
+
+  const setLineState = useSetRecoilState(lineState)
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets()
+  const currentStation = useCurrentStation()
+
+  const {
+    data: trainTypes,
+    mutate: fetchTrainTypes,
+    status: fetchTrainTypesStatus,
+    error: fetchTrainTypesError,
+  } = useMutation(getTrainTypesByStationId)
+
+  const trainType = useMemo(
+    () =>
+      trainTypes?.trainTypes.find(
+        (tt) => tt.groupId === selectedTrainType?.groupId
+      ) ?? null,
+    [selectedTrainType?.groupId, trainTypes?.trainTypes]
+  )
+
+  const handleSelect = useCallback(
+    (route: Route | undefined) => {
+      setTrainTypeInfoPageVisible(true)
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine:
+          route?.stops?.find((s) => s.groupId === currentStation?.groupId)
+            ?.line ?? null,
+      }))
+      setSelectedRoute(route)
+      setSelectedTrainType(
+        route?.stops.find((s) => s.groupId === currentStation?.groupId)
+          ?.trainType
+      )
+      fetchTrainTypes({
+        stationId: route?.stops.find(
+          (s) => s.groupId == currentStation?.groupId
+        )?.id,
+      })
+    },
+    [currentStation?.groupId, fetchTrainTypes, setLineState]
+  )
+
+  if (trainTypeInfoPageVisible) {
+    return (
+      <TrainTypeInfoPage
+        trainType={trainType}
+        error={fetchTrainTypesError}
+        loading={fetchTrainTypesStatus === 'pending'}
+        disabled={isTrainTypesLoading}
+        stations={selectedRoute?.stops ?? []}
+        onClose={() => setTrainTypeInfoPageVisible(false)}
+        onConfirmed={() => onSelect(selectedRoute)}
+      />
+    )
+  }
 
   return (
     <Modal
@@ -121,7 +187,7 @@ export const RouteListModal: React.FC<Props> = ({
                 >
                   <RouteList
                     routes={routes}
-                    onSelect={onSelect}
+                    onSelect={handleSelect}
                     loading={isTrainTypesLoading}
                   />
                 </View>

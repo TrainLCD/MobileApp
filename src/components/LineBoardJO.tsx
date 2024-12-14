@@ -7,7 +7,6 @@ import {
   TextStyle,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilValue } from 'recoil'
 import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
 import { useCurrentLine } from '../hooks/useCurrentLine'
@@ -22,6 +21,7 @@ import getStationNameR from '../utils/getStationNameR'
 import getIsPass from '../utils/isPass'
 import isTablet from '../utils/isTablet'
 import { getNumberingColor } from '../utils/numbering'
+import { RFValue } from '../utils/rfValue'
 import { heightScale } from '../utils/scale'
 import ChevronJO from './ChevronJO'
 import JOCurrentArrowEdge from './JOCurrentArrowEdge'
@@ -110,19 +110,19 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? undefined : 96,
   },
   stationName: {
-    width: isTablet ? 48 : 32,
+    width: RFValue(18),
     textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    marginLeft: isTablet ? 12 : 4,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
     transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
     marginLeft: -30,
-    paddingBottom: isTablet
-      ? Platform.select({ ios: 48 * 0.25, android: 0 })
-      : 24 * 0.25,
+    paddingBottom: 0,
   },
   verticalStationName: {
     marginBottom: 0,
@@ -338,8 +338,9 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [currentLine, selectedLine]
   )
 
-  const currentStationIndex = stations.findIndex(
-    (s) => s.groupId === station?.groupId
+  const currentStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === station?.groupId),
+    [station?.groupId, stations]
   )
 
   const stationNameCellForMap = useCallback(

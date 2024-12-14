@@ -1,8 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useMemo } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRecoilValue } from 'recoil'
 import { Line, StationNumber } from '../../gen/proto/stationapi_pb'
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
@@ -15,6 +13,7 @@ import { APP_THEME, AppTheme } from '../models/Theme'
 import stationState from '../store/atoms/station'
 import { translate } from '../translation'
 import isTablet from '../utils/isTablet'
+import { RFValue } from '../utils/rfValue'
 import Heading from './Heading'
 import NumberingIcon from './NumberingIcon'
 import TransferLineDot from './TransferLineDot'
@@ -277,9 +276,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       <CustomHeading />
       <ScrollView style={styles.scrollViewContainer}>
         <Pressable onPress={onPress}>
-          <SafeAreaView style={styles.transferView}>
-            {renderTransferLines()}
-          </SafeAreaView>
+          <View style={styles.transferView}>{renderTransferLines()}</View>
         </Pressable>
       </ScrollView>
     </>

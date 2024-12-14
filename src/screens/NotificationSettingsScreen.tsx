@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import * as Linking from 'expo-linking'
+import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
@@ -10,7 +11,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { Path, Svg } from 'react-native-svg'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { Station } from '../../gen/proto/stationapi_pb'
@@ -22,6 +22,7 @@ import { APP_THEME } from '../models/Theme'
 import notifyState from '../store/atoms/notify'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   root: {
@@ -136,36 +137,65 @@ const NotificationSettings: React.FC = () => {
   const showNotificationNotGrantedAlert = useCallback(() => {
     Alert.alert(translate('errorTitle'), translate('notificationNotGranted'), [
       {
-        text: translate('back'),
+        text: 'OK',
         onPress: handlePressBack,
         style: 'cancel',
       },
       {
         text: translate('settings'),
-        onPress: async (): Promise<void> => {
-          Linking.openSettings().catch(() => {
+        onPress: async () => {
+          try {
+            await Linking.openSettings()
+          } catch (err) {
             openFailedToOpenSettingsAlert()
-          })
+          }
+          handlePressBack()
         },
       },
     ])
   }, [handlePressBack, openFailedToOpenSettingsAlert])
 
+  const showAlwaysPermissionNotGrantedAlert = useCallback(() => {
+    Alert.alert(
+      translate('errorTitle'),
+      translate('alwaysPermissionRequired'),
+      [
+        {
+          text: 'OK',
+          onPress: handlePressBack,
+          style: 'cancel',
+        },
+        {
+          text: translate('settings'),
+          onPress: async () => {
+            try {
+              await Linking.openSettings()
+            } catch (err) {
+              openFailedToOpenSettingsAlert()
+            }
+          },
+        },
+      ]
+    )
+  }, [handlePressBack, openFailedToOpenSettingsAlert])
+
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { status } = await Notifications.requestPermissionsAsync()
-      if (status !== 'granted') {
+      const { granted: notifyPermGranted } =
+        await Notifications.requestPermissionsAsync()
+      if (!notifyPermGranted) {
         showNotificationNotGrantedAlert()
+        return
+      }
+
+      const { granted: bgPermGranted } =
+        await Location.getBackgroundPermissionsAsync()
+      if (!bgPermGranted) {
+        showAlwaysPermissionNotGrantedAlert()
       }
     }
     f()
-  }, [showNotificationNotGrantedAlert])
-
-  const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack()
-    }
-  }, [navigation])
+  }, [showAlwaysPermissionNotGrantedAlert, showNotificationNotGrantedAlert])
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
@@ -218,7 +248,7 @@ const NotificationSettings: React.FC = () => {
           keyExtractor={(item: Station): string => item.id.toString()}
         />
       </View>
-      <FAB onPress={onPressBack} icon="checkmark" />
+      <FAB onPress={handlePressBack} icon="checkmark" />
     </>
   )
 }

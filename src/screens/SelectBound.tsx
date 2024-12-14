@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native'
+import { StackActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
@@ -8,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
 import { useRecoilState } from 'recoil'
 import {
   Line,
@@ -22,6 +21,7 @@ import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useStationList } from '../hooks/useStationList'
@@ -31,6 +31,7 @@ import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
 import { isJapanese, translate } from '../translation'
 import getCurrentStationIndex from '../utils/currentStationIndex'
+import { RFValue } from '../utils/rfValue'
 
 const styles = StyleSheet.create({
   boundLoading: {
@@ -76,6 +77,12 @@ const SelectBoundScreen: React.FC = () => {
   const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
+  const toggleAutoModeEnabled = useApplicationFlagStore(
+    (state) => state.toggleAutoModeEnabled
+  )
 
   const { loading, error, refetchStations } = useStationList()
   const { isLoopLine, isMeijoLine } = useLoopLine()
@@ -125,7 +132,7 @@ const SelectBoundScreen: React.FC = () => {
             : selectedStation,
         selectedDirection: direction,
       }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('Main'))
     },
     [navigation, selectedLine, setStationState, stations]
   )
@@ -174,7 +181,7 @@ const SelectBoundScreen: React.FC = () => {
         selectedDirection: direction,
       }))
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }))
-      navigation.navigate('Main')
+      navigation.dispatch(StackActions.replace('Main'))
     },
     [navigation, setNavigationState, setStationState, stations, trainType]
   )
@@ -385,6 +392,9 @@ const SelectBoundScreen: React.FC = () => {
               {translate('selectBoundSettings')}
             </Button>
           ) : null}
+          <Button onPress={toggleAutoModeEnabled}>
+            {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
+          </Button>
         </View>
       </View>
     </ScrollView>

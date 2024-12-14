@@ -1,5 +1,6 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
 import * as FileSystem from 'expo-file-system'
+import { fetch } from 'expo/fetch'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
 import { useRecoilValue } from 'recoil'
@@ -18,7 +19,7 @@ export const useTTS = (): void => {
   const playingRef = useRef(false)
   const isLoadableRef = useRef(true)
   const { store, getByText } = useTTSCache()
-  const ttsText = useTTSText(firstSpeechRef.current)
+  const ttsText = useTTSText(firstSpeechRef.current, enabled)
   const [prevTextJa, prevTextEn] = usePrevious(ttsText)
   const [textJa, textEn] = ttsText
 
@@ -82,90 +83,84 @@ export const useTTS = (): void => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL
   }, [])
 
-  const fetchSpeech = useCallback(
-    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      if (!textJa.length || !textEn.length || !isLoadableRef.current) {
-        return
-      }
+  const fetchSpeech = useCallback(async () => {
+    if (!textJa?.length || !textEn?.length || !isLoadableRef.current) {
+      return
+    }
 
-      const reqBody = {
-        data: {
-          ssmlJa: `<speak>${textJa.trim()}</speak>`,
-          ssmlEn: `<speak>${textEn.trim()}</speak>`,
-          premium: monetizedPlanEnabled && losslessEnabled,
+    const reqBody = {
+      data: {
+        ssmlJa: `<speak>${textJa.trim()}</speak>`,
+        ssmlEn: `<speak>${textEn.trim()}</speak>`,
+        premium: monetizedPlanEnabled && losslessEnabled,
+      },
+    }
+
+    const idToken = await user?.getIdToken()
+
+    const ttsJson = await (
+      await fetch(ttsApiUrl, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          Authorization: `Bearer ${idToken}`,
         },
-      }
-
-      const idToken = await user?.getIdToken()
-
-      const ttsJson = await (
-        await fetch(ttsApiUrl, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify(reqBody),
-          method: 'POST',
-        })
-      ).json()
-
-      const baseDir = FileSystem.cacheDirectory
-
-      const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`
-      if (ttsJson?.result?.jaAudioContent) {
-        await FileSystem.writeAsStringAsync(
-          pathJa,
-          ttsJson.result.jaAudioContent,
-          {
-            encoding: FileSystem.EncodingType.Base64,
-          }
-        )
-      }
-      const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`
-      if (ttsJson?.result?.enAudioContent) {
-        await FileSystem.writeAsStringAsync(
-          pathEn,
-          ttsJson.result.enAudioContent,
-          {
-            encoding: FileSystem.EncodingType.Base64,
-          }
-        )
-      }
-
-      return { id: ttsJson.result.id, pathJa, pathEn }
-    },
-    [losslessEnabled, monetizedPlanEnabled, ttsApiUrl, user]
-  )
-
-  const speech = useCallback(
-    async ({ textJa, textEn }: { textJa: string; textEn: string }) => {
-      const cache = getByText(textJa)
-
-      if (cache) {
-        await speakFromPath(cache.ja.path, cache.en.path)
-        return
-      }
-
-      const fetched = await fetchSpeech({
-        textJa,
-        textEn,
+        body: JSON.stringify(reqBody),
+        method: 'POST',
       })
-      if (!fetched) {
-        return
-      }
+    ).json()
 
-      const { id, pathJa, pathEn } = fetched
+    const baseDir = FileSystem.cacheDirectory
 
-      store(
-        id,
-        { text: textJa, path: fetched.pathJa },
-        { text: textEn, path: fetched.pathEn }
+    const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`
+    if (ttsJson?.result?.jaAudioContent) {
+      await FileSystem.writeAsStringAsync(
+        pathJa,
+        ttsJson.result.jaAudioContent,
+        {
+          encoding: FileSystem.EncodingType.Base64,
+        }
       )
+    }
+    const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`
+    if (ttsJson?.result?.enAudioContent) {
+      await FileSystem.writeAsStringAsync(
+        pathEn,
+        ttsJson.result.enAudioContent,
+        {
+          encoding: FileSystem.EncodingType.Base64,
+        }
+      )
+    }
 
-      await speakFromPath(pathJa, pathEn)
-    },
-    [fetchSpeech, getByText, speakFromPath, store]
-  )
+    return { id: ttsJson.result.id, pathJa, pathEn }
+  }, [losslessEnabled, monetizedPlanEnabled, textEn, textJa, ttsApiUrl, user])
+
+  const speech = useCallback(async () => {
+    if (!textJa || !textEn) {
+      return
+    }
+    const cache = getByText(textJa)
+
+    if (cache) {
+      await speakFromPath(cache.ja.path, cache.en.path)
+      return
+    }
+
+    const fetched = await fetchSpeech()
+    if (!fetched) {
+      return
+    }
+
+    const { id, pathJa, pathEn } = fetched
+
+    store(
+      id,
+      { text: textJa, path: fetched.pathJa },
+      { text: textEn, path: fetched.pathEn }
+    )
+
+    await speakFromPath(pathJa, pathEn)
+  }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa])
 
   useEffect(() => {
     if (
@@ -177,10 +172,7 @@ export const useTTS = (): void => {
       return
     }
 
-    speech({
-      textJa,
-      textEn,
-    })
+    speech()
   }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa])
 
   useEffect(() => {
