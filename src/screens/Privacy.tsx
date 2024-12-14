@@ -121,6 +121,7 @@ const PrivacyScreen: React.FC = () => {
 
       switch (status) {
         case Location.PermissionStatus.GRANTED:
+          await Location.requestBackgroundPermissionsAsync()
           handleLocationGranted()
           break
         case Location.PermissionStatus.DENIED:

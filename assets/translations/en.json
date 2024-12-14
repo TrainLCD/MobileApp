@@ -46,7 +46,7 @@
   "cancel": "Cancel",
   "notice": "Notice",
   "firstAlertText": "This app is not an official app of the railroad company, but a privately developed app. Please follow the instructions at the actual station and on the train.",
-  "dozeAlertText": "If your smartphone supports battery optimization, please disable battery optimization for the TrainLCD app from the Settings app. Even if it doesn't support the battery optimization, make sure that the location information is always available.",
+  "dozeAlertText": "If your smartphone supports battery optimization features, please disable battery optimization for the TrainLCD app in the settings application.",
   "subwayAlertTitle": "Out of operation guarantee",
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
   "selectThemeTitle": "Themes",
@@ -62,7 +62,7 @@
   "search": "Search",
   "stationListEmpty": "The station was not found.",
   "privacyTitle": "Please read our Privacy Policy",
-  "privacyDescription": "In order to use the navigation features of the TrainLCD app, you must allow us to use your location. Location information is obtained in the background while the app is running to determine the nearest station from your current location. Please see our Privacy Policy for more information. Even if you do not allow the use of location information, you can use the app without checking your current location by using the auto mode.",
+  "privacyDescription": "To use the navigation feature of the TrainLCD app, you need to allow the app to access your location at all times. Location data will be collected in the background while the app is running to identify the nearest station from your current location. For more details, please refer to the privacy policy. Even if you do not grant permission to access your location, you can still use the app without confirming your current location by enabling Auto Mode.",
   "privacyPolicy": "Privacy policy",
   "continue": "Continue",
   "privacyDenied": "The app's settings do not allow it to retrieve location information, so actual location changes will not be reflected. Please enter your preferred departure station and enjoy.",
@@ -160,5 +160,7 @@
   "submit": "Submit",
   "eachTrainTypes": "Train types",
   "matchedStationListEmpty": "Transfer station not found.",
-  "searchDestinationPlaceholder": "Please enter the station name of your destination."
+  "searchDestinationPlaceholder": "Please enter the station name of your destination.",
+  "alwaysPermissionNotGrantedText": "Since location access is not set to “Always Allow,” the TrainLCD app cannot update your location when the app is not displayed. You can enable this setting from your smartphone’s settings screen.",
+  "alwaysPermissionRequired": "To use this feature, you need to allow location access at all times. You can enable this setting from your smartphone’s settings screen."
 }

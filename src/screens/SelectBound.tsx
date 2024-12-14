@@ -21,6 +21,7 @@ import Heading from '../components/Heading'
 import Typography from '../components/Typography'
 import { TOEI_OEDO_LINE_ID } from '../constants'
 import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
 import useBounds from '../hooks/useBounds'
 import { useLoopLine } from '../hooks/useLoopLine'
 import { useStationList } from '../hooks/useStationList'
@@ -76,6 +77,12 @@ const SelectBoundScreen: React.FC = () => {
   const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState)
   const [{ selectedLine }, setLineState] = useRecoilState(lineState)
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  )
+  const toggleAutoModeEnabled = useApplicationFlagStore(
+    (state) => state.toggleAutoModeEnabled
+  )
 
   const { loading, error, refetchStations } = useStationList()
   const { isLoopLine, isMeijoLine } = useLoopLine()
@@ -385,6 +392,9 @@ const SelectBoundScreen: React.FC = () => {
               {translate('selectBoundSettings')}
             </Button>
           ) : null}
+          <Button onPress={toggleAutoModeEnabled}>
+            {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
+          </Button>
         </View>
       </View>
     </ScrollView>
