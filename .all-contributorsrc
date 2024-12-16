@@ -56,6 +56,15 @@
         "userTesting",
         "doc"
       ]
+    },
+    {
+      "login": "coderabbitai",
+      "name": "CodeRabbit",
+      "avatar_url": "https://avatars.githubusercontent.com/u/132028505?v=4",
+      "profile": "http://coderabbit.ai",
+      "contributions": [
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -63,5 +72,7 @@
   "projectOwner": "TrainLCD",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitType": "docs",
+  "commitConvention": "angular"
 }

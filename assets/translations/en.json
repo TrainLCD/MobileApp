@@ -94,7 +94,7 @@
   "offlineText": "It seems that your device is offline. Please try again when you are online.",
   "offlineWarningText": "Some functions are not available because your device is offline.",
   "notificationNotGranted": "To use this feature, you need to be configured to receive notifications.",
-  "dontShowAgain": "Don't show again",
+  "doNotShowAgain": "Don't show again",
   "share": "Share",
   "couldntShare": "Could not share.",
   "bgAlertTitle": "Updating the nearest station",
@@ -161,6 +161,10 @@
   "eachTrainTypes": "Train types",
   "matchedStationListEmpty": "Transfer station not found.",
   "searchDestinationPlaceholder": "Please enter the station name of your destination.",
-  "alwaysPermissionNotGrantedText": "Since location access is not set to “Always Allow,” the TrainLCD app cannot update your location when the app is not displayed. You can enable this setting from your smartphone’s settings screen.",
-  "alwaysPermissionRequired": "To use this feature, you need to allow location access at all times. You can enable this setting from your smartphone’s settings screen."
+  "alwaysPermissionNotGrantedPanelText": "Location access is not set to \"Always Allow\", so location updates will not occur when the TrainLCD app is not displayed. To change this setting, please go to your smartphone’s settings and select \"Always Allow\" for location access.",
+  "alwaysPermissionNotGrantedAlertText": "Location access is not set to \"Always Allow\", so location updates will not occur while the TrainLCD app is not displayed. To use the TrainLCD app in the background, please set location access to “Always Allow.”",
+  "alwaysPermissionRequired": "To use this feature, you need to enable \"Always Allow\" in the location settings. Please configure location access to \"Always Allow\" from your smartphone’s settings.",
+  "backgroundPermissionDenied": "Location updates are not available while the TrainLCD app is not displayed because location access is not set to “Always Allow.” To change this setting, go to your smartphone’s settings and select \"Always Allow\" for location access.",
+  "failedToRequestPermission": "An error occurred while requesting \"Always Allow\" location access. Please manually set location access to \"Always Allow\" from your smartphone's settings.",
+  "failedToOpenSettings": "Failed to open system settings. Please open the app settings manually."
 }
