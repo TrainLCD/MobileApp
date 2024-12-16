@@ -118,7 +118,7 @@ const MainScreen: React.FC = () => {
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
             {
-              text: translate('dontShowAgain'),
+              text: translate('doNotShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
@@ -297,10 +297,10 @@ const MainScreen: React.FC = () => {
       if (warningDismissed !== 'true' && !bgPermStatus?.granted) {
         Alert.alert(
           translate('annoucementTitle'),
-          translate('alwaysPermissionNotGrantedText'),
+          translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
-              text: translate('dontShowAgain'),
+              text: translate('doNotShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
@@ -310,18 +310,38 @@ const MainScreen: React.FC = () => {
               },
             },
             {
-              text: translate('settings'),
+              text: 'OK',
               onPress: async () => {
                 try {
-                  await Linking.openSettings()
-                } catch (err) {
-                  openFailedToOpenSettingsAlert()
+                  const { granted } =
+                    await Location.requestBackgroundPermissionsAsync()
+                  if (!granted) {
+                    Alert.alert(
+                      translate('errorTitle'),
+                      translate('backgroundPermissionDenied'),
+                      [
+                        { text: 'OK' },
+                        {
+                          text: translate('doNotShowAgain'),
+                          style: 'cancel',
+                          onPress: async (): Promise<void> => {
+                            await AsyncStorage.setItem(
+                              ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+                              'true'
+                            )
+                          },
+                        },
+                      ]
+                    )
+                  }
+                } catch (error) {
+                  Alert.alert(
+                    translate('errorTitle'),
+                    translate('failedToRequestPermission'),
+                    [{ text: 'OK' }]
+                  )
                 }
               },
-            },
-            {
-              text: 'OK',
-              style: 'cancel',
             },
           ]
         )
