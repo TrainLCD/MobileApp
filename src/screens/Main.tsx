@@ -319,7 +319,19 @@ const MainScreen: React.FC = () => {
                     Alert.alert(
                       translate('errorTitle'),
                       translate('backgroundPermissionDenied'),
-                      [{ text: 'OK' }]
+                      [
+                        { text: 'OK' },
+                        {
+                          text: translate('doNotShowAgain'),
+                          style: 'cancel',
+                          onPress: async (): Promise<void> => {
+                            await AsyncStorage.setItem(
+                              ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+                              'true'
+                            )
+                          },
+                        },
+                      ]
                     )
                   }
                 } catch (error) {
