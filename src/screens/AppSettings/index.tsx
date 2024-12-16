@@ -68,7 +68,7 @@ const AppSettingsScreen: React.FC = () => {
       if (flag && ttsNoticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
           {
-            text: translate('dontShowAgain'),
+            text: translate('doNotShowAgain'),
             style: 'cancel',
             onPress: async (): Promise<void> => {
               await AsyncStorage.setItem(
