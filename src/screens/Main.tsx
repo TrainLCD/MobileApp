@@ -312,7 +312,23 @@ const MainScreen: React.FC = () => {
             {
               text: 'OK',
               onPress: async () => {
-                await Location.requestBackgroundPermissionsAsync()
+                try {
+                  const { granted } =
+                    await Location.requestBackgroundPermissionsAsync()
+                  if (!granted) {
+                    Alert.alert(
+                      translate('errorTitle'),
+                      translate('backgroundPermissionDenied'),
+                      [{ text: 'OK' }]
+                    )
+                  }
+                } catch (error) {
+                  Alert.alert(
+                    translate('errorTitle'),
+                    translate('failedToRequestPermission'),
+                    [{ text: 'OK' }]
+                  )
+                }
               },
             },
           ]
