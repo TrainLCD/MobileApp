@@ -297,7 +297,7 @@ const MainScreen: React.FC = () => {
       if (warningDismissed !== 'true' && !bgPermStatus?.granted) {
         Alert.alert(
           translate('annoucementTitle'),
-          translate('alwaysPermissionNotGrantedText'),
+          translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
               text: translate('dontShowAgain'),

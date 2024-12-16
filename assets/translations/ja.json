@@ -162,6 +162,7 @@
   "eachTrainTypes": "各線の種別",
   "matchedStationListEmpty": "接続駅が見つかりませんでした。",
   "searchDestinationPlaceholder": "目的地の駅名を入力してください",
-  "alwaysPermissionNotGrantedText": "位置情報の常時取得が許可されていないため、TrainLCDアプリを表示していない時は位置情報が更新されません。お使いのスマートフォンの設定画面より許可できます。",
-  "alwaysPermissionRequired": "この機能を使用するには、位置情報の常時取得を許可していただく必要があります。お使いのスマートフォンの設定画面より位置情報の常時取得を許可できます。"
+  "alwaysPermissionNotGrantedPanelText": "位置情報の常時取得が許可されていないため、TrainLCDアプリを表示していない時は位置情報が更新されません。お使いのスマートフォンの設定画面より許可できます。",
+  "alwaysPermissionRequired": "この機能を使用するには、位置情報の常時取得を許可していただく必要があります。お使いのスマートフォンの設定画面より位置情報の常時取得を許可できます。",
+  "alwaysPermissionNotGrantedAlertText": "位置情報の常時取得が許可されていないため、TrainLCDアプリを表示していない時は位置情報が更新されません。バックグラウンドでもTrainLCDアプリをご使用になられる場合は、位置情報の常時取得を許可してください。"
 }

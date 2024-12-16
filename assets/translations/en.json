@@ -161,6 +161,7 @@
   "eachTrainTypes": "Train types",
   "matchedStationListEmpty": "Transfer station not found.",
   "searchDestinationPlaceholder": "Please enter the station name of your destination.",
-  "alwaysPermissionNotGrantedText": "Since location access is not set to “Always Allow,” the TrainLCD app cannot update your location when the app is not displayed. You can enable this setting from your smartphone’s settings screen.",
-  "alwaysPermissionRequired": "To use this feature, you need to allow location access at all times. You can enable this setting from your smartphone’s settings screen."
+  "alwaysPermissionNotGrantedPanelText": "Since location access is not set to “Always Allow,” the TrainLCD app cannot update your location when the app is not displayed. You can enable this setting from your smartphone’s settings screen.",
+  "alwaysPermissionRequired": "To use this feature, you need to allow location access at all times. You can enable this setting from your smartphone’s settings screen.",
+  "alwaysPermissionNotGrantedAlertText": "Since location access is not always allowed, the location is not updated when the TrainLCD app is not displayed. If you wish to use the TrainLCD app in the background, please enable constant location access."
 }

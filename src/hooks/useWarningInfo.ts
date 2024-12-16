@@ -79,7 +79,7 @@ export const useWarningInfo = () => {
       ) {
         return {
           level: WARNING_PANEL_LEVEL.WARNING,
-          text: translate('alwaysPermissionNotGrantedText'),
+          text: translate('alwaysPermissionNotGrantedPanelText'),
         }
       }
     }
