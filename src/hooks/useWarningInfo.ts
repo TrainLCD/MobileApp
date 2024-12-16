@@ -72,10 +72,14 @@ export const useWarningInfo = () => {
 
     // NOTE: フォアグラウンドも許可しない設定の場合はそもそもオートモード前提で使われていると思うので警告は不要
     if (fgPermStatus?.granted) {
-      if (!bgPermGranted && !isAlwaysPermissionNotGrantedDismissed) {
+      if (
+        !bgPermGranted &&
+        !isAlwaysPermissionNotGrantedDismissed &&
+        !!selectedBound
+      ) {
         return {
           level: WARNING_PANEL_LEVEL.WARNING,
-          text: translate('alwaysPermissionNotGrantedText'),
+          text: translate('alwaysPermissionNotGrantedPanelText'),
         }
       }
     }
