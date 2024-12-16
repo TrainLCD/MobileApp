@@ -1,9 +1,7 @@
 # TrainLCD
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
@@ -23,13 +21,16 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 <table>
-  <tr>
-    <td align="center"><a href="https://github.com/makotia"><img src="https://avatars.githubusercontent.com/u/22451396?v=4?s=100" width="100px;" alt=""/><br /><sub><b>makotia</b></sub></a><br /><a href="https://github.com/TrainLCD/MobileApp/commits?author=makotia" title="Documentation">📖</a> <a href="#userTesting-makotia" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/pulls?q=is%3Apr+reviewed-by%3Amakotia" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="https://sw-saturn.dev"><img src="https://avatars.githubusercontent.com/u/20313668?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Kanta Demizu</b></sub></a><br /><a href="#data-Sw-Saturn" title="Data">🔣</a> <a href="#userTesting-Sw-Saturn" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/pulls?q=is%3Apr+reviewed-by%3ASw-Saturn" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="https://neiro.work"><img src="https://avatars.githubusercontent.com/u/31317056?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Neiro Somemiya</b></sub></a><br /><a href="#userTesting-nirsmmy" title="User Testing">📓</a> <a href="#data-nirsmmy" title="Data">🔣</a></td>
-    <td align="center"><a href="https://github.com/kokoa0429"><img src="https://avatars.githubusercontent.com/u/17563842?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yasuto masuda</b></sub></a><br /><a href="#userTesting-kokoa0429" title="User Testing">📓</a></td>
-    <td align="center"><a href="https://kataba.me"><img src="https://avatars.githubusercontent.com/u/9818101?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Katabame Miaya</b></sub></a><br /><a href="#data-katabame" title="Data">🔣</a> <a href="#userTesting-katabame" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/commits?author=katabame" title="Documentation">📖</a></td>
-  </tr>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/makotia"><img src="https://avatars.githubusercontent.com/u/22451396?v=4?s=100" width="100px;" alt="makotia"/><br /><sub><b>makotia</b></sub></a><br /><a href="https://github.com/TrainLCD/MobileApp/commits?author=makotia" title="Documentation">📖</a> <a href="#userTesting-makotia" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/pulls?q=is%3Apr+reviewed-by%3Amakotia" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://sw-saturn.dev"><img src="https://avatars.githubusercontent.com/u/20313668?v=4?s=100" width="100px;" alt="Kanta Demizu"/><br /><sub><b>Kanta Demizu</b></sub></a><br /><a href="#data-Sw-Saturn" title="Data">🔣</a> <a href="#userTesting-Sw-Saturn" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/pulls?q=is%3Apr+reviewed-by%3ASw-Saturn" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://nrsy.jp"><img src="https://avatars.githubusercontent.com/u/31317056?v=4?s=100" width="100px;" alt="SAIGUSA Tomotada"/><br /><sub><b>SAIGUSA Tomotada</b></sub></a><br /><a href="#userTesting-10mocy" title="User Testing">📓</a> <a href="#data-10mocy" title="Data">🔣</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kokoa0429"><img src="https://avatars.githubusercontent.com/u/17563842?v=4?s=100" width="100px;" alt="yasuto masuda"/><br /><sub><b>yasuto masuda</b></sub></a><br /><a href="#userTesting-kokoa0429" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://kataba.me"><img src="https://avatars.githubusercontent.com/u/9818101?v=4?s=100" width="100px;" alt="Katabame Miaya"/><br /><sub><b>Katabame Miaya</b></sub></a><br /><a href="#data-katabame" title="Data">🔣</a> <a href="#userTesting-katabame" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/commits?author=katabame" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://coderabbit.ai"><img src="https://avatars.githubusercontent.com/u/132028505?v=4?s=100" width="100px;" alt="CodeRabbit"/><br /><sub><b>CodeRabbit</b></sub></a><br /><a href="https://github.com/TrainLCD/MobileApp/pulls?q=is%3Apr+reviewed-by%3Acoderabbitai" title="Reviewed Pull Requests">👀</a></td>
+    </tr>
+  </tbody>
 </table>
 
 <!-- markdownlint-restore -->
