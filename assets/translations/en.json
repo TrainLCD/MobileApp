@@ -94,7 +94,7 @@
   "offlineText": "It seems that your device is offline. Please try again when you are online.",
   "offlineWarningText": "Some functions are not available because your device is offline.",
   "notificationNotGranted": "To use this feature, you need to be configured to receive notifications.",
-  "dontShowAgain": "Don't show again",
+  "doNotShowAgain": "Don't show again",
   "share": "Share",
   "couldntShare": "Could not share.",
   "bgAlertTitle": "Updating the nearest station",

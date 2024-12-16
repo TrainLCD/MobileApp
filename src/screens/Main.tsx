@@ -118,7 +118,7 @@ const MainScreen: React.FC = () => {
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
             {
-              text: translate('dontShowAgain'),
+              text: translate('doNotShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
@@ -300,7 +300,7 @@ const MainScreen: React.FC = () => {
           translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
-              text: translate('dontShowAgain'),
+              text: translate('doNotShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
