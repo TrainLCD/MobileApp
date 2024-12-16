@@ -310,18 +310,10 @@ const MainScreen: React.FC = () => {
               },
             },
             {
-              text: translate('settings'),
-              onPress: async () => {
-                try {
-                  await Linking.openSettings()
-                } catch (err) {
-                  openFailedToOpenSettingsAlert()
-                }
-              },
-            },
-            {
               text: 'OK',
-              style: 'cancel',
+              onPress: async () => {
+                await Location.requestBackgroundPermissionsAsync()
+              },
             },
           ]
         )
