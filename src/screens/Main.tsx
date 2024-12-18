@@ -313,27 +313,7 @@ const MainScreen: React.FC = () => {
               text: 'OK',
               onPress: async () => {
                 try {
-                  const { granted } =
-                    await Location.requestBackgroundPermissionsAsync()
-                  if (!granted) {
-                    Alert.alert(
-                      translate('errorTitle'),
-                      translate('backgroundPermissionDenied'),
-                      [
-                        { text: 'OK' },
-                        {
-                          text: translate('doNotShowAgain'),
-                          style: 'cancel',
-                          onPress: async (): Promise<void> => {
-                            await AsyncStorage.setItem(
-                              ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
-                              'true'
-                            )
-                          },
-                        },
-                      ]
-                    )
-                  }
+                  await Location.requestBackgroundPermissionsAsync()
                 } catch (error) {
                   Alert.alert(
                     translate('errorTitle'),
