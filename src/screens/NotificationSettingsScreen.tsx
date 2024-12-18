@@ -169,7 +169,7 @@ const NotificationSettings: React.FC = () => {
           text: translate('settings'),
           onPress: async () => {
             try {
-              await Linking.openSettings()
+              await Location.requestBackgroundPermissionsAsync()
             } catch (err) {
               openFailedToOpenSettingsAlert()
             }
