@@ -164,7 +164,6 @@
   "alwaysPermissionNotGrantedPanelText": "Location access is not set to \"Always Allow\", so location updates will not occur when the TrainLCD app is not displayed. To change this setting, please go to your smartphone’s settings and select \"Always Allow\" for location access.",
   "alwaysPermissionNotGrantedAlertText": "Location access is not set to \"Always Allow\", so location updates will not occur while the TrainLCD app is not displayed. To use the TrainLCD app in the background, please set location access to “Always Allow.”",
   "alwaysPermissionRequired": "To use this feature, you need to enable \"Always Allow\" in the location settings. Please configure location access to \"Always Allow\" from your smartphone’s settings.",
-  "backgroundPermissionDenied": "Location updates are not available while the TrainLCD app is not displayed because location access is not set to “Always Allow.” To change this setting, go to your smartphone’s settings and select \"Always Allow\" for location access.",
   "failedToRequestPermission": "An error occurred while requesting \"Always Allow\" location access. Please manually set location access to \"Always Allow\" from your smartphone's settings.",
   "failedToOpenSettings": "Failed to open system settings. Please open the app settings manually."
 }
