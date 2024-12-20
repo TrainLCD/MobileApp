@@ -1,7 +1,11 @@
 # TrainLCD
 
+![Billboard](.github/images/billboard.png)
+
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
@@ -45,18 +49,6 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 - View Japanese railway company's LCD display-like navigation with your location.
 - Get notify when you approach/arrive the your specified station.
 - Choose your favorite railway line/company LCD styled theme!
-
-## Screenshots
-
-![Screenshot 1](.github/images/screenshot1.png)
-
-![Screenshot 2](.github/images/screenshot2.png)
-
-![Screenshot 3](.github/images/screenshot3.png)
-
-![Screenshot 4](.github/images/screenshot4.png)
-
-**...Also, FULL ENGLISH SUPPORT!!**
 
 ## Download
 

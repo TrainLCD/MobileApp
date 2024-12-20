@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Dimensions, StyleSheet, View } from 'react-native'
 import { useRecoilValue } from 'recoil'
+import { STATION_NAME_FONT_SIZE } from '../constants'
 import { useBoundText } from '../hooks/useBoundText'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import { useCurrentStation } from '../hooks/useCurrentStation'
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flex: 1,
     textAlign: 'center',
-    fontSize: RFValue(55),
+    fontSize: STATION_NAME_FONT_SIZE,
   },
   left: {
     flex: 0.3,
