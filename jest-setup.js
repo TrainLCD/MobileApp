@@ -1,7 +1,10 @@
-import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock'
-import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock'
+import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
+import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock';
+
+require('react-native-reanimated').setUpTests();
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage)
+jest.mock('react-native-device-info', () => mockRNDeviceInfo)
 
 // https://github.com/facebookexperimental/Recoil/issues/904#issuecomment-823755253
 if (!global.Window) {
@@ -12,5 +15,3 @@ if (!global.Window) {
     configurable: true,
   })
 }
-
-jest.mock('react-native-device-info', () => mockRNDeviceInfo)
