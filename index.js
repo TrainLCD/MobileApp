@@ -15,7 +15,7 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
 
     const latestTimestamp = data.locations[0]?.timestamp ?? 0
-    if (lastTimestamp > latestTimestamp - PERMISSIBLE_DELAY_IN_MS) {
+    if (lastTimestamp < latestTimestamp + PERMISSIBLE_DELAY_IN_MS) {
       setLocation(data.locations[0])
       lastTimestamp = latestTimestamp
     }
