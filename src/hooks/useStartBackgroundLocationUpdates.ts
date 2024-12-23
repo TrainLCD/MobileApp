@@ -27,7 +27,7 @@ export const useStartBackgroundLocationUpdates = () => {
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
-          distanceInterval: 100,
+          distanceInterval: 1,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
