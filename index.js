@@ -4,7 +4,7 @@ import * as TaskManager from 'expo-task-manager'
 
 TaskManager.unregisterAllTasksAsync().catch(console.error)
 
-const PERMISSIBLE_DELAY_IN_MS = 5000
+const PERMISSIBLE_DELAY_IN_MS = 500
 let lastTimestamp = 0
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
