@@ -4,7 +4,6 @@ import * as TaskManager from 'expo-task-manager'
 
 TaskManager.unregisterAllTasksAsync().catch(console.error)
 
-const PERMISSIBLE_DELAY_IN_MS = 5000
 let lastTimestamp = 0
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
@@ -15,7 +14,7 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
 
     const latestTimestamp = data.locations[0]?.timestamp ?? 0
-    if (lastTimestamp < latestTimestamp + PERMISSIBLE_DELAY_IN_MS) {
+    if (lastTimestamp < latestTimestamp) {
       setLocation(data.locations[0])
       lastTimestamp = latestTimestamp
     }
