@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
 import Animated, {
   Easing,
   interpolate,
@@ -34,7 +34,6 @@ import { RFValue } from '../utils/rfValue'
 import Clock from './Clock'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBoxSaikyo'
-import Typography from './Typography'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -72,7 +71,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   stateWrapper: {
-    flex: 1,
+    width: windowWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -84,14 +83,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#3a3a3a',
     textAlign: 'right',
+    lineHeight: Platform.select({ android: RFValue(21) }),
   },
   stationNameWrapper: {
-    width: windowWidth * 0.72,
+    flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
   stationNameContainer: {
     position: 'absolute',
+    alignItems: 'flex-end',
     justifyContent: 'center',
   },
   stationName: {
@@ -479,56 +480,32 @@ const HeaderSaikyo: React.FC = () => {
             <Animated.Text
               style={[boundTopAnimatedStyles, styles.boundTextContainer]}
             >
-              <Typography style={styles.connectedLines}>
+              <Text style={styles.connectedLines}>
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
-              </Typography>
-              <Typography style={styles.boundText}>{boundText}</Typography>
+              </Text>
+              <Text style={styles.boundText}>{boundText}</Text>
             </Animated.Text>
 
             <Animated.Text
               style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
             >
-              <Typography style={styles.connectedLines}>
+              <Text style={styles.connectedLines}>
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
                   : null}
-              </Typography>
-              <Typography style={styles.boundText}>{prevBoundText}</Typography>
+              </Text>
+              <Text style={styles.boundText}>{prevBoundText}</Text>
             </Animated.Text>
           </View>
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text
-              adjustsFontSizeToFit
-              numberOfLines={stateText.includes('\n') ? 2 : 1}
-              style={[
-                stateTopAnimatedStyles,
-                styles.state,
-                {
-                  height: stateText.includes('\n')
-                    ? STATION_NAME_FONT_SIZE
-                    : undefined,
-                },
-              ]}
-            >
+            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
               {stateText}
             </Animated.Text>
-            <Animated.Text
-              adjustsFontSizeToFit
-              numberOfLines={prevStateText.includes('\n') ? 2 : 1}
-              style={[
-                stateBottomAnimatedStyles,
-                styles.state,
-                {
-                  height: prevStateText.includes('\n')
-                    ? STATION_NAME_FONT_SIZE
-                    : undefined,
-                },
-              ]}
-            >
+            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
               {prevStateText}
             </Animated.Text>
           </View>
@@ -542,43 +519,41 @@ const HeaderSaikyo: React.FC = () => {
               allowScaling
             />
           ) : null}
-          <View>
-            <View style={styles.stationNameWrapper}>
-              <View style={styles.stationNameContainer}>
-                <Animated.Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
-                  style={[
-                    topNameAnimatedStyles,
-                    styles.stationName,
-                    topNameAnimatedAnchorStyle,
-                    {
-                      fontSize: STATION_NAME_FONT_SIZE,
-                      transformOrigin: 'top',
-                    },
-                  ]}
-                >
-                  {stationText}
-                </Animated.Text>
-              </View>
+          <View style={styles.stationNameWrapper}>
+            <View style={styles.stationNameContainer}>
+              <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                  topNameAnimatedStyles,
+                  styles.stationName,
+                  topNameAnimatedAnchorStyle,
+                  {
+                    fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'top',
+                  },
+                ]}
+              >
+                {stationText}
+              </Animated.Text>
+            </View>
 
-              <View style={styles.stationNameContainer}>
-                <Animated.Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
-                  style={[
-                    bottomNameAnimatedStyles,
-                    styles.stationName,
-                    bottomNameAnimatedAnchorStyle,
-                    {
-                      fontSize: STATION_NAME_FONT_SIZE,
-                      transformOrigin: 'bottom',
-                    },
-                  ]}
-                >
-                  {prevStationText}
-                </Animated.Text>
-              </View>
+            <View style={styles.stationNameContainer}>
+              <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                  bottomNameAnimatedStyles,
+                  styles.stationName,
+                  bottomNameAnimatedAnchorStyle,
+                  {
+                    fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'bottom',
+                  },
+                ]}
+              >
+                {prevStationText}
+              </Animated.Text>
             </View>
           </View>
         </View>

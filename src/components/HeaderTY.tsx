@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
 import Animated, {
   Easing,
   interpolate,
@@ -32,7 +32,6 @@ import { getNumberingColor } from '../utils/numbering'
 import { RFValue } from '../utils/rfValue'
 import NumberingIcon from './NumberingIcon'
 import TrainTypeBox from './TrainTypeBox'
-import Typography from './Typography'
 
 const { width: windowWidth } = Dimensions.get('window')
 
@@ -73,7 +72,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   stateWrapper: {
-    flex: 1,
+    width: windowWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -85,9 +84,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'right',
+    lineHeight: Platform.select({ android: RFValue(21) }),
   },
   stationNameWrapper: {
-    width: windowWidth * 0.72,
+    flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
@@ -450,7 +450,7 @@ const HeaderTY: React.FC = () => {
             <Animated.Text
               style={[boundTopAnimatedStyles, styles.boundTextContainer]}
             >
-              <Typography
+              <Text
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={styles.connectedLines}
@@ -458,13 +458,13 @@ const HeaderTY: React.FC = () => {
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
-              </Typography>
-              <Typography style={styles.boundText}>{boundText}</Typography>
+              </Text>
+              <Text style={styles.boundText}>{boundText}</Text>
             </Animated.Text>
             <Animated.Text
               style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
             >
-              <Typography
+              <Text
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={styles.connectedLines}
@@ -472,41 +472,17 @@ const HeaderTY: React.FC = () => {
                 {connectedLines?.length && prevIsJapaneseState
                   ? `${prevConnectionText}直通 `
                   : null}
-              </Typography>
-              <Typography style={styles.boundText}>{prevBoundText}</Typography>
+              </Text>
+              <Text style={styles.boundText}>{prevBoundText}</Text>
             </Animated.Text>
           </View>
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text
-              adjustsFontSizeToFit
-              numberOfLines={stateText.includes('\n') ? 2 : 1}
-              style={[
-                stateTopAnimatedStyles,
-                styles.state,
-                {
-                  height: stateText.includes('\n')
-                    ? STATION_NAME_FONT_SIZE
-                    : undefined,
-                },
-              ]}
-            >
+            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
               {stateText}
             </Animated.Text>
-            <Animated.Text
-              adjustsFontSizeToFit
-              numberOfLines={prevStateText.includes('\n') ? 2 : 1}
-              style={[
-                stateBottomAnimatedStyles,
-                styles.state,
-                {
-                  height: prevStateText.includes('\n')
-                    ? STATION_NAME_FONT_SIZE
-                    : undefined,
-                },
-              ]}
-            >
+            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
               {prevStateText}
             </Animated.Text>
           </View>
