@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
-    paddingBottom: 4,
+    paddingBottom: isTablet ? 4 : 2,
   },
   boundWrapper: {
     flex: 1,
