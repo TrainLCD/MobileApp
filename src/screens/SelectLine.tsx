@@ -20,7 +20,9 @@ import { useLocationStore } from '../hooks/useLocationStore'
 import lineState from '../store/atoms/line'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { TestIds } from '../test/e2e'
 import { isJapanese, translate } from '../translation'
+import { generateLineTestId } from '../utils/generateTestID'
 import { isDevApp } from '../utils/isDevApp'
 import isTablet from '../utils/isTablet'
 
@@ -173,6 +175,7 @@ const SelectLineScreen: React.FC = () => {
           key={line.id}
           disabled={!isInternetAvailable}
           onPress={buttonOnPress}
+          testID={generateLineTestId(line)}
         >
           {buttonText}
         </Button>
@@ -273,7 +276,10 @@ const SelectLineScreen: React.FC = () => {
         <View style={styles.buttons}>
           {isInternetAvailable ? (
             <>
-              <Button onPress={navigateToFakeStationSettingsScreen}>
+              <Button
+                onPress={navigateToFakeStationSettingsScreen}
+                testID={TestIds.Button.FakeStationSettings}
+              >
                 {translate('searchFirstStationTitle')}
               </Button>
               {isInternetAvailable && isDevApp && (

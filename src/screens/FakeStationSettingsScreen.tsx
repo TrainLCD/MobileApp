@@ -35,6 +35,7 @@ import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import stationState from '../store/atoms/station'
+import { TestIds } from '../test/e2e'
 import { translate } from '../translation'
 import { groupStations } from '../utils/groupStations'
 
@@ -201,6 +202,7 @@ const FakeStationSettingsScreen: React.FC = () => {
             onChange={onChange}
             onSubmitEditing={handleSubmit}
             onKeyPress={onKeyPress}
+            testID={TestIds.Input.StationNameQuery}
           />
           {isByCoordsLoading || byNameFetchStatus === 'pending' ? (
             <View
