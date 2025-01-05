@@ -61,7 +61,7 @@
   "searchByStationNamePlaceholder": "Please enter the station name",
   "search": "Search",
   "stationListEmpty": "The station was not found.",
-  "privacyTitle": "Please read our Privacy Policy",
+  "privacyTitle": "Enabling the Navigation Functionality",
   "privacyDescription": "To use the navigation feature of the TrainLCD app, you need to allow the app to access your location at all times. Location data will be collected in the background while the app is running to identify the nearest station from your current location. For more details, please refer to the privacy policy. Even if you do not grant permission to access your location, you can still use the app without confirming your current location by enabling Auto Mode.",
   "privacyPolicy": "Privacy policy",
   "continue": "Continue",
