@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { StackActions, useNavigation } from '@react-navigation/native'
 import { useKeepAwake } from 'expo-keep-awake'
 import * as Linking from 'expo-linking'
+import * as Location from 'expo-location'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   Alert,
@@ -117,7 +118,7 @@ const MainScreen: React.FC = () => {
         if (firstOpenPassed === null) {
           Alert.alert(translate('notice'), translate('dozeAlertText'), [
             {
-              text: translate('dontShowAgain'),
+              text: translate('doNotShowAgain'),
               style: 'cancel',
               onPress: async (): Promise<void> => {
                 await AsyncStorage.setItem(
@@ -128,10 +129,12 @@ const MainScreen: React.FC = () => {
             },
             {
               text: translate('settings'),
-              onPress: async (): Promise<void> => {
-                Linking.openSettings().catch(() => {
+              onPress: async () => {
+                try {
+                  await Linking.openSettings()
+                } catch (err) {
                   openFailedToOpenSettingsAlert()
-                })
+                }
                 await AsyncStorage.setItem(
                   ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
                   'true'
@@ -148,6 +151,7 @@ const MainScreen: React.FC = () => {
       f()
     }
   }, [openFailedToOpenSettingsAlert])
+
   const navigation = useNavigation()
   useTransitionHeaderState()
   useRefreshLeftStations()
@@ -277,6 +281,54 @@ const MainScreen: React.FC = () => {
     }),
     [theme]
   )
+
+  useEffect(() => {
+    const f = async (): Promise<void> => {
+      const warningDismissed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
+      )
+      // NOTE: フォアグラウンドも許可しない設定の場合はそもそもオートモード前提で使われていると思うので警告は不要
+      const fgPermStatus = await Location.getForegroundPermissionsAsync()
+      if (!fgPermStatus.granted) {
+        return
+      }
+
+      const bgPermStatus = await Location.getBackgroundPermissionsAsync()
+      if (warningDismissed !== 'true' && !bgPermStatus?.granted) {
+        Alert.alert(
+          translate('annoucementTitle'),
+          translate('alwaysPermissionNotGrantedAlertText'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+                  'true'
+                )
+              },
+            },
+            {
+              text: 'OK',
+              onPress: async () => {
+                try {
+                  await Location.requestBackgroundPermissionsAsync()
+                } catch (error) {
+                  Alert.alert(
+                    translate('errorTitle'),
+                    translate('failedToRequestPermission'),
+                    [{ text: 'OK' }]
+                  )
+                }
+              },
+            },
+          ]
+        )
+      }
+    }
+    f()
+  }, [openFailedToOpenSettingsAlert])
 
   if (isLEDTheme) {
     return <LineBoard />

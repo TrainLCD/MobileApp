@@ -2,11 +2,14 @@ import * as Location from 'expo-location'
 import { useEffect } from 'react'
 import { LOCATION_TASK_NAME } from '../constants'
 import { translate } from '../translation'
+import { isDevApp } from '../utils/isDevApp'
 import { useApplicationFlagStore } from './useApplicationFlagStore'
+import { useLocationPermissionsGranted } from './useLocationPermissionsGranted'
 import { setLocation } from './useLocationStore'
 
 export const useStartBackgroundLocationUpdates = () => {
-  const [permsStatus] = Location.useBackgroundPermissions()
+  const bgPermGranted = useLocationPermissionsGranted()
+
   useEffect(() => {
     const autoModeEnabled = useApplicationFlagStore.getState()?.autoModeEnabled
     if (autoModeEnabled) {
@@ -17,14 +20,14 @@ export const useStartBackgroundLocationUpdates = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-extra-semi
     ;(async () => {
-      if (permsStatus?.granted) {
+      if (bgPermGranted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
           accuracy: Location.Accuracy.BestForNavigation,
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
-          distanceInterval: 100,
+          distanceInterval: isDevApp ? 10 : 100,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -36,7 +39,7 @@ export const useStartBackgroundLocationUpdates = () => {
       watchPositionSub = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: 100,
+          distanceInterval: isDevApp ? 10 : 100,
         },
         (pos) => {
           setLocation(pos)
@@ -48,5 +51,5 @@ export const useStartBackgroundLocationUpdates = () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
       watchPositionSub?.remove()
     }
-  }, [permsStatus?.granted])
+  }, [bgPermGranted])
 }

@@ -7,7 +7,10 @@ import {
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
+import {
+  createStackNavigator,
+  StackNavigationOptions,
+} from '@react-navigation/stack'
 import { QueryClientProvider } from '@tanstack/react-query'
 import * as Location from 'expo-location'
 import * as SplashScreen from 'expo-splash-screen'
@@ -33,11 +36,11 @@ SplashScreen.preventAutoHideAsync()
 
 const Stack = createStackNavigator()
 
-const screenOptions = {
+const screenOptions: StackNavigationOptions = {
   headerShown: false,
 }
-const options = {
-  animation: 'none',
+const options: StackNavigationOptions = {
+  animation: 'none' as const,
   cardStyle: {
     backgroundColor: '#fff',
     opacity: 1,

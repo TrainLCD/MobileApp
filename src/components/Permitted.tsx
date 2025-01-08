@@ -17,11 +17,8 @@ import {
 } from '../constants'
 import useAndroidWearable from '../hooks/useAndroidWearable'
 import useAppleWatch from '../hooks/useAppleWatch'
-import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
-import { useBadAccuracy } from '../hooks/useBadAccuracy'
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser'
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion'
-import useConnectivity from '../hooks/useConnectivity'
 import { useCurrentLine } from '../hooks/useCurrentLine'
 import useListenMessaging from '../hooks/useListenMessaging'
 import useReport from '../hooks/useReport'
@@ -29,6 +26,7 @@ import useReportEligibility from '../hooks/useReportEligibility'
 import { useResetMainState } from '../hooks/useResetMainState'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities'
+import { useWarningInfo } from '../hooks/useWarningInfo'
 import { AppTheme } from '../models/Theme'
 import navigationState from '../store/atoms/navigation'
 import speechState from '../store/atoms/speech'
@@ -52,23 +50,7 @@ type Props = {
   children: React.ReactNode
 }
 
-const WARNING_PANEL_LEVEL = {
-  URGENT: 'URGENT',
-  WARNING: 'WARNING',
-  INFO: 'INFO',
-} as const
-
-export type WarningPanelLevel =
-  (typeof WARNING_PANEL_LEVEL)[keyof typeof WARNING_PANEL_LEVEL]
-
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const [warningDismissed, setWarningDismissed] = useState(false)
-  const [warningInfo, setWarningInfo] = useState<{
-    level: WarningPanelLevel
-    text: string
-  } | null>(null)
-  const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(true)
-
   const { selectedBound } = useRecoilValue(stationState)
   const setNavigation = useSetRecoilState(navigationState)
   const setSpeech = useSetRecoilState(speechState)
@@ -76,12 +58,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [sendingReport, setSendingReport] = useState(false)
   const [reportDescription, setReportDescription] = useState('')
   const [screenShotBase64, setScreenShotBase64] = useState('')
-  const [screenshotTaken, setScreenshotTaken] = useState(false)
   const [isBottomSheetShow, setIsBottomSheetShow] = useState(false)
-
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  )
 
   useCheckStoreVersion()
   useAppleWatch()
@@ -92,11 +69,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const user = useCachedInitAnonymousUser()
   const currentLine = useCurrentLine()
   const navigation = useNavigation()
-  const isInternetAvailable = useConnectivity()
   const { sendReport, descriptionLowerLimit } = useReport(user)
   const reportEligibility = useReportEligibility()
-  const badAccuracy = useBadAccuracy()
   const resetMainState = useResetMainState()
+  const { warningInfo, clearWarningInfo } = useWarningInfo()
 
   const viewShotRef = useRef<ViewShot>(null)
 
@@ -244,120 +220,31 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         backgroundEnabled: bgTTSEnabledStr === 'true',
       }))
-
-      setLongPressNoticeDismissed(
-        (await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED
-        )) === 'true'
-      )
     }
 
     loadSettingsAsync()
   }, [setNavigation, setSpeech])
 
   useEffect(() => {
-    if (autoModeEnabled) {
-      setWarningDismissed(false)
-    }
-  }, [autoModeEnabled])
-
-  useEffect(() => {
-    if (!isInternetAvailable) {
-      setWarningDismissed(false)
-    }
-  }, [isInternetAvailable])
-
-  useEffect(() => {
     const { remove } = addScreenshotListener(() => {
       if (selectedBound) {
-        setWarningDismissed(false)
-        setScreenshotTaken(true)
+        clearWarningInfo()
       }
     })
 
     return remove
-  }, [selectedBound])
-
-  const getWarningInfo = useCallback(() => {
-    if (warningDismissed) {
-      return null
-    }
-
-    if (!longPressNoticeDismissed && selectedBound) {
-      return {
-        level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('longPressNotice'),
-      }
-    }
-
-    if (autoModeEnabled) {
-      return {
-        level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('autoModeInProgress'),
-      }
-    }
-
-    if (!isInternetAvailable && selectedBound) {
-      return {
-        level: WARNING_PANEL_LEVEL.WARNING,
-        text: translate('offlineWarningText'),
-      }
-    }
-
-    if (badAccuracy) {
-      return {
-        level: WARNING_PANEL_LEVEL.URGENT,
-        text: translate('badAccuracy'),
-      }
-    }
-
-    if (screenshotTaken) {
-      return {
-        level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('shareNotice'),
-      }
-    }
-    return null
-  }, [
-    autoModeEnabled,
-    badAccuracy,
-    isInternetAvailable,
-    longPressNoticeDismissed,
-    screenshotTaken,
-    selectedBound,
-    warningDismissed,
-  ])
-
-  useEffect(() => {
-    const info = getWarningInfo()
-    setWarningInfo(info)
-  }, [getWarningInfo])
-
-  const onWarningPress = useCallback((): void => {
-    setWarningDismissed(true)
-    setScreenshotTaken(false)
-
-    if (!longPressNoticeDismissed) {
-      const saveFlagAsync = async () => {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
-          'true'
-        )
-      }
-      saveFlagAsync()
-    }
-  }, [longPressNoticeDismissed])
+  }, [clearWarningInfo, selectedBound])
 
   const NullableWarningPanel: React.FC = useCallback(
     () =>
       warningInfo ? (
         <WarningPanel
-          onPress={onWarningPress}
+          onPress={clearWarningInfo}
           text={warningInfo.text}
           warningLevel={warningInfo.level}
         />
       ) : null,
-    [onWarningPress, warningInfo]
+    [clearWarningInfo, warningInfo]
   )
 
   const handleNewReportModalClose = useCallback(() => {

@@ -8,16 +8,18 @@ import {
 } from 'react-native'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
+import { ButtonTestId } from '../test/e2e'
 import isTablet from '../utils/isTablet'
 import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
-interface Props {
+type Props = {
   children: React.ReactNode
   color?: string
   onPress: (event: GestureResponderEvent) => void
   style?: StyleProp<ViewStyle>
   disabled?: boolean
+  testID?: ButtonTestId | string | undefined
 }
 
 const styles = StyleSheet.create({
@@ -51,6 +53,7 @@ const Button: React.FC<Props> = ({
   onPress,
   style,
   disabled,
+  testID,
 }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
 
@@ -68,6 +71,7 @@ const Button: React.FC<Props> = ({
         },
         style,
       ]}
+      testID={testID}
     >
       <Typography numberOfLines={1} style={styles.text}>
         {children}

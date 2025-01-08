@@ -19,6 +19,7 @@ import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv'
 import { useSetRecoilState } from 'recoil'
 import {
   getRoutes,
+  getStationsByLineId,
   getStationsByName,
 } from '../../gen/proto/stationapi-StationAPI_connectquery'
 import { Route, Station } from '../../gen/proto/stationapi_pb'
@@ -80,6 +81,10 @@ const RouteSearchScreen = () => {
   const setNavigationState = useSetRecoilState(navigationState)
 
   const currentStation = useCurrentStation()
+
+  const { mutateAsync: fetchStationsByLineId } =
+    useMutation(getStationsByLineId)
+
   const {
     fetchStations: fetchTrainTypeFromTrainTypeId,
     isLoading: isTrainTypesLoading,
@@ -168,11 +173,22 @@ const RouteSearchScreen = () => {
 
   const handleSelect = useCallback(
     async (route: Route | undefined) => {
-      const trainType = route?.stops.find(
+      const stop = route?.stops.find(
         (s) => s.groupId === currentStation?.groupId
-      )?.trainType
+      )
+      if (!stop) {
+        return
+      }
+
+      const trainType = stop.trainType
 
       if (!trainType?.id) {
+        const { stations } = await fetchStationsByLineId({
+          lineId: stop.line?.id,
+        })
+        const stationInRoute =
+          stations.find((s) => s.groupId === currentStation?.groupId) ?? null
+
         const direction: LineDirection =
           (route?.stops ?? []).findIndex(
             (s) => s.groupId === currentStation?.groupId
@@ -183,9 +199,12 @@ const RouteSearchScreen = () => {
             ? 'INBOUND'
             : 'OUTBOUND'
 
+        setNavigationState((prev) => ({ ...prev, trainType: null }))
+
         setStationState((prev) => ({
           ...prev,
-          stations: route?.stops ?? [],
+          station: stationInRoute,
+          stations,
           selectedDirection: direction,
           selectedBound:
             direction === 'INBOUND'
@@ -229,7 +248,8 @@ const RouteSearchScreen = () => {
       navigation.dispatch(StackActions.replace('MainStack', { screen: 'Main' }))
     },
     [
-      currentStation,
+      currentStation?.groupId,
+      fetchStationsByLineId,
       fetchTrainTypeFromTrainTypeId,
       navigation,
       selectedStation?.groupId,
