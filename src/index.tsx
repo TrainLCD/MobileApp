@@ -32,7 +32,7 @@ SplashScreen.preventAutoHideAsync()
 
 const Stack = createStackNavigator()
 
-const screenOptions = {
+const screenOptions: StackNavigationOptions = {
   headerShown: false,
 }
 const options: StackNavigationOptions = {
