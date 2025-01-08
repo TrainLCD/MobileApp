@@ -5,6 +5,7 @@ import { Station } from '../../gen/proto/stationapi_pb'
 import { useThemeStore } from '../hooks/useThemeStore'
 import { APP_THEME } from '../models/Theme'
 import { isJapanese, translate } from '../translation'
+import { generateStationGroupTestId } from '../utils/generateTestID'
 import { RFValue } from '../utils/rfValue'
 import Typography from './Typography'
 
@@ -77,7 +78,11 @@ const ItemCell = ({
   ])
 
   return (
-    <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
+    <TouchableOpacity
+      style={styles.cell}
+      onPress={() => onSelect(item)}
+      testID={generateStationGroupTestId(item)}
+    >
       <Typography style={styles.stationNameText}>
         {isJapanese ? item.name : item.nameRoman}
       </Typography>
