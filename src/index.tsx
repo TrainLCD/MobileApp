@@ -3,7 +3,10 @@ import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { ActionSheetProvider } from '@expo/react-native-action-sheet'
 import remoteConfig from '@react-native-firebase/remote-config'
 import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
+import {
+  createStackNavigator,
+  StackNavigationOptions,
+} from '@react-navigation/stack'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import * as Location from 'expo-location'
@@ -32,8 +35,8 @@ const Stack = createStackNavigator()
 const screenOptions = {
   headerShown: false,
 }
-const options = {
-  animation: 'none',
+const options: StackNavigationOptions = {
+  animation: 'none' as const,
   cardStyle: {
     backgroundColor: '#fff',
     opacity: 1,
