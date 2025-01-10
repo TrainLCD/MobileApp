@@ -31,7 +31,7 @@
     "@react-native-firebase/remote-config": "^21.6.0",
     "@react-native-firebase/storage": "^21.6.0",
     "@react-native-picker/picker": "2.9.0",
-    "@react-navigation/native": "^7.0.0",
+    "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.0.0",
     "@tanstack/react-query": "^5.55.4",
     "dayjs": "^1.10.7",
