@@ -1,15 +1,19 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
-import isTablet from '../utils/isTablet'
-import NumberingIconReversedSquare from './NumberingIconReversedSquare'
-import Typography from './Typography'
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import NumberingIconReversedSquare from './NumberingIconReversedSquare';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -52,16 +56,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.RobotoBold,
   },
-})
+});
 
 const NumberingIconNishitetsu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const darkText = false
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const darkText = false;
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -70,7 +74,7 @@ const NumberingIconNishitetsu: React.FC<Props> = ({
         lineColor={lineColor}
         size={NUMBERING_ICON_SIZE.SMALL}
       />
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -80,7 +84,7 @@ const NumberingIconNishitetsu: React.FC<Props> = ({
         lineColor={lineColor}
         size={NUMBERING_ICON_SIZE.MEDIUM}
       />
-    )
+    );
   }
 
   return (
@@ -94,7 +98,7 @@ const NumberingIconNishitetsu: React.FC<Props> = ({
         <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(NumberingIconNishitetsu)
+export default React.memo(NumberingIconNishitetsu);

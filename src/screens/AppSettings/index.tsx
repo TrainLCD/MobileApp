@@ -1,20 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback } from 'react'
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
-import { useRecoilState } from 'recoil'
-import Button from '../../components/Button'
-import FAB from '../../components/FAB'
-import Heading from '../../components/Heading'
-import LEDThemeSwitch from '../../components/LEDThemeSwitch'
-import Typography from '../../components/Typography'
-import { ASYNC_STORAGE_KEYS } from '../../constants'
-import { useThemeStore } from '../../hooks/useThemeStore'
-import { APP_THEME } from '../../models/Theme'
-import speechState from '../../store/atoms/speech'
-import { translate } from '../../translation'
-import { isDevApp } from '../../utils/isDevApp'
-import { RFValue } from '../../utils/rfValue'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { useRecoilState } from 'recoil';
+import Button from '../../components/Button';
+import FAB from '../../components/FAB';
+import Heading from '../../components/Heading';
+import LEDThemeSwitch from '../../components/LEDThemeSwitch';
+import Typography from '../../components/Typography';
+import { ASYNC_STORAGE_KEYS } from '../../constants';
+import { useThemeStore } from '../../hooks/useThemeStore';
+import { APP_THEME } from '../../models/Theme';
+import speechState from '../../store/atoms/speech';
+import { translate } from '../../translation';
+import { isDevApp } from '../../utils/isDevApp';
+import { RFValue } from '../../utils/rfValue';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -43,28 +43,28 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
-})
+});
 
 const AppSettingsScreen: React.FC = () => {
   const [
     { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
     setSpeechState,
-  ] = useRecoilState(speechState)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  ] = useRecoilState(speechState);
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation])
+  }, [navigation]);
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
       const ttsNoticeConfirmed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.QA_TTS_NOTICE
-      )
+      );
       if (flag && ttsNoticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
           {
@@ -74,59 +74,59 @@ const AppSettingsScreen: React.FC = () => {
               await AsyncStorage.setItem(
                 ASYNC_STORAGE_KEYS.QA_TTS_NOTICE,
                 'true'
-              )
+              );
             },
           },
           {
             text: 'OK',
           },
-        ])
+        ]);
       }
 
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
         flag ? 'true' : 'false'
-      )
+      );
       setSpeechState((prev) => ({
         ...prev,
         enabled: flag,
-      }))
+      }));
     },
     [setSpeechState]
-  )
+  );
 
   const onLosslessAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
         flag ? 'true' : 'false'
-      )
+      );
       setSpeechState((prev) => ({
         ...prev,
         losslessEnabled: flag,
-      }))
+      }));
     },
     [setSpeechState]
-  )
+  );
   const onBackgroundAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED,
         flag ? 'true' : 'false'
-      )
+      );
       setSpeechState((prev) => ({
         ...prev,
         backgroundEnabled: flag,
-      }))
+      }));
     },
     [setSpeechState]
-  )
+  );
 
-  const toThemeSettings = () => navigation.navigate('ThemeSettings')
+  const toThemeSettings = () => navigation.navigate('ThemeSettings');
   const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings')
+    navigation.navigate('EnabledLanguagesSettings');
 
-  const toTuning = () => navigation.navigate('TuningSettings')
+  const toTuning = () => navigation.navigate('TuningSettings');
 
   return (
     <>
@@ -241,7 +241,7 @@ const AppSettingsScreen: React.FC = () => {
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />
     </>
-  )
-}
+  );
+};
 
-export default React.memo(AppSettingsScreen)
+export default React.memo(AppSettingsScreen);

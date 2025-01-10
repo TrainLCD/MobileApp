@@ -1,14 +1,14 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { NUMBERING_ICON_SIZE, type NumberingIconSize } from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  withDarkTheme: boolean
-  stationNumber: string
-  size?: NumberingIconSize
-}
+  withDarkTheme: boolean;
+  stationNumber: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -65,16 +65,16 @@ const styles = StyleSheet.create({
     width: isTablet ? 72 * 1.5 : 72,
     backgroundColor: 'black',
   },
-})
+});
 
 const NumberingIconSMR: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   size,
   withDarkTheme,
 }: Props) => {
-  const lineSymbol = stationNumberRaw.split('-')[0]
-  const stationNumber = stationNumberRaw.split('-')[1]
-  const preferColor = withDarkTheme ? 'white' : 'black'
+  const lineSymbol = stationNumberRaw.split('-')[0];
+  const stationNumber = stationNumberRaw.split('-')[1];
+  const preferColor = withDarkTheme ? 'white' : 'black';
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -83,7 +83,7 @@ const NumberingIconSMR: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -93,7 +93,7 @@ const NumberingIconSMR: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -113,7 +113,7 @@ const NumberingIconSMR: React.FC<Props> = ({
         {lineSymbol}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconSMR
+export default NumberingIconSMR;

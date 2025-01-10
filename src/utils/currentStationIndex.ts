@@ -1,4 +1,4 @@
-import { Station } from '../../gen/proto/stationapi_pb'
+import type { Station } from '../../gen/proto/stationapi_pb';
 
 const getCurrentStationIndex = (
   stations: Station[],
@@ -9,6 +9,6 @@ const getCurrentStationIndex = (
       ? // NOTE: 都営大江戸線はname判定をすると都庁前駅でずれるので特別比較しないようにしている
         s.groupId === nearestStation?.groupId
       : s.name === nearestStation?.name || s.groupId === nearestStation?.groupId
-  )
+  );
 
-export default getCurrentStationIndex
+export default getCurrentStationIndex;

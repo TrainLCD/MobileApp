@@ -1,13 +1,13 @@
-import { StackActions, useNavigation } from '@react-navigation/native'
-import * as Linking from 'expo-linking'
-import React, { useCallback } from 'react'
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { STATUS_URL } from '../constants'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { translate } from '../translation'
-import { RFValue } from '../utils/rfValue'
-import Typography from './Typography'
+import { StackActions, useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
+import React, { useCallback } from 'react';
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { STATUS_URL } from '../constants';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import { translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
@@ -42,16 +42,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-})
+});
 
 type Props = {
-  title: string
-  text: string
-  onRetryPress?: () => void
-  showSearchStation?: boolean
-  showStatus?: boolean
-  isFetching?: boolean
-}
+  title: string;
+  text: string;
+  onRetryPress?: () => void;
+  showSearchStation?: boolean;
+  showStatus?: boolean;
+  isFetching?: boolean;
+};
 
 const ErrorScreen: React.FC<Props> = ({
   title,
@@ -61,13 +61,13 @@ const ErrorScreen: React.FC<Props> = ({
   showStatus,
   isFetching,
 }: Props) => {
-  const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
-  const navigation = useNavigation()
+  const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
+  const navigation = useNavigation();
   const handleToStationSearch = useCallback(
     () => navigation.dispatch(StackActions.replace('FakeStation')),
     [navigation]
-  )
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  );
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   return (
     <SafeAreaView
@@ -110,7 +110,7 @@ const ErrorScreen: React.FC<Props> = ({
         ) : null}
       </View>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default React.memo(ErrorScreen)
+export default React.memo(ErrorScreen);

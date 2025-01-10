@@ -1,12 +1,12 @@
-import { useMutation } from '@connectrpc/connect-query'
-import firestore from '@react-native-firebase/firestore'
-import { useQuery } from '@tanstack/react-query'
-import { getStationByIdList } from '../../gen/proto/stationapi-StationAPI_connectquery'
-import { SavedRoute } from '../models/SavedRoute'
-import useCachedInitAnonymousUser from './useCachedAnonymousUser'
+import { useMutation } from '@connectrpc/connect-query';
+import firestore from '@react-native-firebase/firestore';
+import { useQuery } from '@tanstack/react-query';
+import { getStationByIdList } from '../../gen/proto/stationapi-StationAPI_connectquery';
+import type { SavedRoute } from '../models/SavedRoute';
+import useCachedInitAnonymousUser from './useCachedAnonymousUser';
 
 export const useSavedRoutes = () => {
-  useCachedInitAnonymousUser()
+  useCachedInitAnonymousUser();
 
   const {
     data: routes,
@@ -18,25 +18,25 @@ export const useSavedRoutes = () => {
       const routesSnapshot = await firestore()
         .collection('uploadedCommunityRoutes')
         .orderBy('createdAt', 'desc')
-        .get()
+        .get();
 
       return routesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as SavedRoute[]
+      })) as SavedRoute[];
     },
-  })
+  });
 
   const {
     status: isStationsLoading,
     error: fetchStationsError,
     mutateAsync: fetchStationsByRoute,
-  } = useMutation(getStationByIdList)
+  } = useMutation(getStationByIdList);
 
   return {
     routes,
     loading: isRoutesLoading || isStationsLoading === 'pending',
     error: fetchRoutesError || fetchStationsError,
     fetchStationsByRoute,
-  }
-}
+  };
+};

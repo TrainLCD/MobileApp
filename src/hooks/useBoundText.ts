@@ -1,20 +1,20 @@
-import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import { TOEI_OEDO_LINE_ID } from '../constants'
-import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station'
-import lineState from '../store/atoms/line'
-import stationState from '../store/atoms/station'
-import useBounds from './useBounds'
-import { useLoopLine } from './useLoopLine'
+import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import { TOEI_OEDO_LINE_ID } from '../constants';
+import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station';
+import lineState from '../store/atoms/line';
+import stationState from '../store/atoms/station';
+import useBounds from './useBounds';
+import { useLoopLine } from './useLoopLine';
 
 export const useBoundText = (
   excludePrefixAndSuffix?: boolean
 ): Record<string, string> => {
-  const { selectedLine } = useRecoilValue(lineState)
-  const { selectedBound } = useRecoilValue(stationState)
+  const { selectedLine } = useRecoilValue(lineState);
+  const { selectedBound } = useRecoilValue(stationState);
 
-  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
-  const { directionalStops } = useBounds()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
+  const { directionalStops } = useBounds();
 
   const boundText = useMemo(() => {
     if (!selectedBound) {
@@ -23,7 +23,7 @@ export const useBoundText = (
         EN: 'TrainLCD',
         ZH: 'TrainLCD',
         KO: 'TrainLCD',
-      }
+      };
     }
 
     if (
@@ -37,14 +37,14 @@ export const useBoundText = (
           EN: `Tochomae via ${directionalStops[0]?.nameRoman}`,
           ZH: `经由${directionalStops[0]?.nameChinese} 前往都厅前`,
           KO: `${directionalStops[0]?.nameKorean}경유 도초마에`,
-        }
+        };
       }
       return {
         JA: `${directionalStops[0]?.name}経由 都庁前行`,
         EN: `for Tochomae via ${directionalStops[0]?.nameRoman}`,
         ZH: `经由${directionalStops[0]?.nameChinese} 前往都厅前`,
         KO: `${directionalStops[0]?.nameKorean}경유 도초마에 행`,
-      }
+      };
     }
 
     if (excludePrefixAndSuffix) {
@@ -53,7 +53,7 @@ export const useBoundText = (
         EN: directionalStops.map((s) => s.nameRoman).join(' & '),
         ZH: directionalStops.map((s) => s.nameChinese).join('・'),
         KO: directionalStops.map((s) => s.nameKorean).join('・'),
-      }
+      };
     }
 
     return {
@@ -63,7 +63,7 @@ export const useBoundText = (
       EN: `for ${directionalStops.map((s) => s.nameRoman).join(' & ')}`,
       ZH: `开往 ${directionalStops.map((s) => s.nameChinese).join('・')}`,
       KO: `${directionalStops.map((s) => s.nameKorean).join('・')} 행`,
-    }
+    };
   }, [
     directionalStops,
     excludePrefixAndSuffix,
@@ -71,7 +71,7 @@ export const useBoundText = (
     isPartiallyLoopLine,
     selectedBound,
     selectedLine?.id,
-  ])
+  ]);
 
-  return { ...boundText, KANA: boundText.JA }
-}
+  return { ...boundText, KANA: boundText.JA };
+};

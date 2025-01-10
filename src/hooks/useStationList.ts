@@ -1,23 +1,23 @@
-import { useQuery } from '@connectrpc/connect-query'
-import { useEffect, useMemo } from 'react'
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
+import { useQuery } from '@connectrpc/connect-query';
+import { useEffect, useMemo } from 'react';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   getStationsByLineId,
   getTrainTypesByStationId,
-} from '../../gen/proto/stationapi-StationAPI_connectquery'
+} from '../../gen/proto/stationapi-StationAPI_connectquery';
 import {
   TrainDirection,
   TrainType,
   TrainTypeKind,
-} from '../../gen/proto/stationapi_pb'
-import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
+} from '../../gen/proto/stationapi_pb';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
 
 export const useStationList = () => {
-  const setStationState = useSetRecoilState(stationState)
-  const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState)
-  const { selectedLine } = useRecoilValue(lineState)
+  const setStationState = useSetRecoilState(stationState);
+  const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState);
+  const { selectedLine } = useRecoilValue(lineState);
 
   const {
     data: byLineIdData,
@@ -30,7 +30,7 @@ export const useStationList = () => {
     {
       enabled: !!(!fromBuilder && !!selectedLine),
     }
-  )
+  );
 
   const {
     data: fetchedTrainTypesData,
@@ -43,27 +43,27 @@ export const useStationList = () => {
       stationId: selectedLine?.station?.id,
     },
     { enabled: !!selectedLine?.station?.id }
-  )
+  );
 
   const designatedTrainType = useMemo(
     () =>
       byLineIdData?.stations.find((s) => s.id === selectedLine?.station?.id)
         ?.trainType ?? null,
     [byLineIdData?.stations, selectedLine?.station?.id]
-  )
+  );
 
   useEffect(() => {
     setStationState((prev) => ({
       ...prev,
       stations: prev.stations.length
         ? prev.stations
-        : byLineIdData?.stations ?? [],
-    }))
+        : (byLineIdData?.stations ?? []),
+    }));
     if (!fromBuilder) {
       setNavigationState((prev) => ({
         ...prev,
         trainType: designatedTrainType,
-      }))
+      }));
     }
   }, [
     byLineIdData?.stations,
@@ -71,7 +71,7 @@ export const useStationList = () => {
     fromBuilder,
     setNavigationState,
     setStationState,
-  ])
+  ]);
 
   useEffect(() => {
     const localType = new TrainType({
@@ -87,27 +87,27 @@ export const useStationList = () => {
       lines: [],
       direction: TrainDirection.Both,
       kind: TrainTypeKind.Default,
-    })
+    });
 
-    const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? []
+    const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? [];
 
     if (!designatedTrainType) {
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes: [localType, ...fetchedTrainTypes],
-      }))
-      return
+      }));
+      return;
     }
 
     setNavigationState((prev) => ({
       ...prev,
       fetchedTrainTypes,
-    }))
+    }));
   }, [
     designatedTrainType,
     fetchedTrainTypesData?.trainTypes,
     setNavigationState,
-  ])
+  ]);
 
   return {
     refetchStations,
@@ -116,5 +116,5 @@ export const useStationList = () => {
     trainTypes: fetchedTrainTypesData?.trainTypes ?? [],
     loading: isLoadingStations || isTrainTypesLoading,
     error: loadingStationsError || trainTypesFetchError,
-  }
-}
+  };
+};

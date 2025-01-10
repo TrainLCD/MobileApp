@@ -1,24 +1,24 @@
-import { Image } from 'expo-image'
-import { grayscale } from 'polished'
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { Line } from '../../gen/proto/stationapi_pb'
+import { Image } from 'expo-image';
+import { grayscale } from 'polished';
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { Line } from '../../gen/proto/stationapi_pb';
 import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
-  NumberingIconSize,
-} from '../constants'
-import { LineMark } from '../models/LineMark'
-import isTablet from '../utils/isTablet'
-import NumberingIcon from './NumberingIcon'
+  type NumberingIconSize,
+} from '../constants';
+import type { LineMark } from '../models/LineMark';
+import isTablet from '../utils/isTablet';
+import NumberingIcon from './NumberingIcon';
 
 interface Props {
-  line: Line | null | undefined
-  mark: LineMark
-  size?: NumberingIconSize
-  shouldGrayscale?: boolean
-  color?: string
-  withDarkTheme?: boolean
+  line: Line | null | undefined;
+  mark: LineMark;
+  size?: NumberingIconSize;
+  shouldGrayscale?: boolean;
+  color?: string;
+  withDarkTheme?: boolean;
 }
 
 const styles = StyleSheet.create({
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   numberingIconContainerOrigin: {
     marginRight: 4,
   },
-})
+});
 
 const TransferLineMark: React.FC<Props> = ({
   line,
@@ -42,7 +42,7 @@ const TransferLineMark: React.FC<Props> = ({
   color,
   withDarkTheme,
 }: Props) => {
-  const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), [])
+  const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
   const lineMarkImageStyle = useMemo(
     () => ({
       ...styles.lineMarkImageOrigin,
@@ -51,19 +51,19 @@ const TransferLineMark: React.FC<Props> = ({
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [notTinyImageSize, shouldGrayscale, size]
-  )
+  );
   const numberingIconContainerStyle = useMemo(
     () => ({
       ...styles.numberingIconContainerOrigin,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
     [shouldGrayscale]
-  )
+  );
 
   const fadedLineColor = useMemo(
     () => grayscale(color || line?.color || '#ccc'),
     [color, line?.color]
-  )
+  );
 
   if (mark.btUnionSignPaths) {
     return (
@@ -74,7 +74,7 @@ const TransferLineMark: React.FC<Props> = ({
           cachePolicy="memory-disk"
         />
       </View>
-    )
+    );
   }
 
   if (mark.signPath) {
@@ -84,7 +84,7 @@ const TransferLineMark: React.FC<Props> = ({
         source={mark.signPath}
         cachePolicy="memory-disk"
       />
-    )
+    );
   }
 
   return (
@@ -103,7 +103,7 @@ const TransferLineMark: React.FC<Props> = ({
         />
       )}
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(TransferLineMark)
+export default React.memo(TransferLineMark);

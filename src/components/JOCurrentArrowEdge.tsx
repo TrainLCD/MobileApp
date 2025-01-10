@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import {
   ClipPath,
   Defs,
@@ -6,8 +6,8 @@ import {
   Polygon,
   Rect,
   Svg,
-  SvgProps,
-} from 'react-native-svg'
+  type SvgProps,
+} from 'react-native-svg';
 
 const JOCurrentArrowEdge = (props?: SvgProps) => (
   <Svg viewBox="0 0 150 400" {...props}>
@@ -34,6 +34,6 @@ const JOCurrentArrowEdge = (props?: SvgProps) => (
       </G>
     </G>
   </Svg>
-)
+);
 
-export default JOCurrentArrowEdge
+export default JOCurrentArrowEdge;

@@ -1,18 +1,18 @@
-import findNearest from 'geolib/es/findNearest'
-import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import stationState from '../store/atoms/station'
-import { useLocationStore } from './useLocationStore'
+import findNearest from 'geolib/es/findNearest';
+import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import stationState from '../store/atoms/station';
+import { useLocationStore } from './useLocationStore';
 
 export const useNearestStation = (): Station | null => {
-  const latitude = useLocationStore((state) => state?.coords.latitude)
-  const longitude = useLocationStore((state) => state?.coords.longitude)
-  const { stations } = useRecoilValue(stationState)
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const { stations } = useRecoilValue(stationState);
 
   const nearestStation = useMemo<Station | null>(() => {
     if (!latitude || !longitude) {
-      return null
+      return null;
     }
 
     const nearestCoordinates = stations.length
@@ -26,17 +26,17 @@ export const useNearestStation = (): Station | null => {
             longitude: sta.longitude,
           }))
         ) as { latitude: number; longitude: number })
-      : null
+      : null;
 
     if (!nearestCoordinates) {
-      return null
+      return null;
     }
 
     const nearestStations = stations.filter(
       (sta) =>
         sta.latitude === nearestCoordinates.latitude &&
         sta.longitude === nearestCoordinates.longitude
-    )
+    );
 
     // NOTE: 都営大江戸線特例
     if (
@@ -44,11 +44,11 @@ export const useNearestStation = (): Station | null => {
       nearestStations[0]?.id === 9930100 &&
       nearestStations[1]?.id === 9930101
     ) {
-      return nearestStations.slice().reverse()[0]
+      return nearestStations.slice().reverse()[0];
     }
 
-    return nearestStations[0] ?? null
-  }, [latitude, longitude, stations])
+    return nearestStations[0] ?? null;
+  }, [latitude, longitude, stations]);
 
-  return nearestStation
-}
+  return nearestStation;
+};

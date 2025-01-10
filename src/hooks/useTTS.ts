@@ -1,33 +1,34 @@
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av'
-import * as FileSystem from 'expo-file-system'
-import { fetch } from 'expo/fetch'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv'
-import { useRecoilValue } from 'recoil'
-import speechState from '../store/atoms/speech'
-import { isDevApp } from '../utils/isDevApp'
-import useCachedInitAnonymousUser from './useCachedAnonymousUser'
-import { usePrevious } from './usePrevious'
-import { useTTSCache } from './useTTSCache'
-import useTTSText from './useTTSText'
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
+import { fetch } from 'expo/fetch';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
+import { useRecoilValue } from 'recoil';
+import speechState from '../store/atoms/speech';
+import { isDevApp } from '../utils/isDevApp';
+import useCachedInitAnonymousUser from './useCachedAnonymousUser';
+import { usePrevious } from './usePrevious';
+import { useTTSCache } from './useTTSCache';
+import useTTSText from './useTTSText';
 
 export const useTTS = (): void => {
   const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
-    useRecoilValue(speechState)
+    useRecoilValue(speechState);
 
-  const firstSpeechRef = useRef(true)
-  const playingRef = useRef(false)
-  const isLoadableRef = useRef(true)
-  const { store, getByText } = useTTSCache()
-  const ttsText = useTTSText(firstSpeechRef.current, enabled)
-  const [prevTextJa, prevTextEn] = usePrevious(ttsText)
-  const [textJa, textEn] = ttsText
+  const firstSpeechRef = useRef(true);
+  const playingRef = useRef(false);
+  const isLoadableRef = useRef(true);
+  const { store, getByText } = useTTSCache();
+  const ttsText = useTTSText(firstSpeechRef.current, enabled);
+  const [prevTextJa, prevTextEn] = usePrevious(ttsText);
+  const [textJa, textEn] = ttsText;
 
-  const user = useCachedInitAnonymousUser()
+  const user = useCachedInitAnonymousUser();
 
-  const soundJaRef = useRef<Audio.Sound | null>(null)
-  const soundEnRef = useRef<Audio.Sound | null>(null)
+  const soundJaRef = useRef<Audio.Sound | null>(null);
+  const soundEnRef = useRef<Audio.Sound | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
@@ -37,55 +38,54 @@ export const useTTS = (): void => {
       shouldDuckAndroid: true,
       interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
       playThroughEarpieceAndroid: false,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    });
+  }, []);
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     if (!isLoadableRef.current) {
-      return
+      return;
     }
 
-    firstSpeechRef.current = false
+    firstSpeechRef.current = false;
 
     if (!soundJaRef.current) {
-      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa })
-      soundJaRef.current = soundJa
+      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa });
+      soundJaRef.current = soundJa;
     } else {
-      await soundJaRef.current?.loadAsync({ uri: pathJa })
+      await soundJaRef.current?.loadAsync({ uri: pathJa });
     }
     if (!soundEnRef.current) {
-      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn })
-      soundEnRef.current = soundEn
+      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn });
+      soundEnRef.current = soundEn;
     } else {
-      await soundEnRef.current?.loadAsync({ uri: pathEn })
+      await soundEnRef.current?.loadAsync({ uri: pathEn });
     }
 
-    await soundJaRef.current?.playAsync()
-    playingRef.current = true
+    await soundJaRef.current?.playAsync();
+    playingRef.current = true;
 
     soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
       if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundJaRef.current?.unloadAsync()
-        await soundEnRef.current?.playAsync()
+        await soundJaRef.current?.unloadAsync();
+        await soundEnRef.current?.playAsync();
       }
-    }
+    };
 
     soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
       if (enStatus.isLoaded && enStatus.didJustFinish) {
-        await soundEnRef.current?.unloadAsync()
-        playingRef.current = false
+        await soundEnRef.current?.unloadAsync();
+        playingRef.current = false;
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const ttsApiUrl = useMemo(() => {
-    return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL
-  }, [])
+    return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
+  }, []);
 
   const fetchSpeech = useCallback(async () => {
     if (!textJa?.length || !textEn?.length || !isLoadableRef.current) {
-      return
+      return;
     }
 
     const reqBody = {
@@ -94,9 +94,9 @@ export const useTTS = (): void => {
         ssmlEn: `<speak>${textEn.trim()}</speak>`,
         premium: monetizedPlanEnabled && losslessEnabled,
       },
-    }
+    };
 
-    const idToken = await user?.getIdToken()
+    const idToken = await user?.getIdToken();
 
     const ttsJson = await (
       await fetch(ttsApiUrl, {
@@ -107,11 +107,11 @@ export const useTTS = (): void => {
         body: JSON.stringify(reqBody),
         method: 'POST',
       })
-    ).json()
+    ).json();
 
-    const baseDir = FileSystem.cacheDirectory
+    const baseDir = FileSystem.cacheDirectory;
 
-    const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`
+    const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`;
     if (ttsJson?.result?.jaAudioContent) {
       await FileSystem.writeAsStringAsync(
         pathJa,
@@ -119,9 +119,9 @@ export const useTTS = (): void => {
         {
           encoding: FileSystem.EncodingType.Base64,
         }
-      )
+      );
     }
-    const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`
+    const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`;
     if (ttsJson?.result?.enAudioContent) {
       await FileSystem.writeAsStringAsync(
         pathEn,
@@ -129,38 +129,38 @@ export const useTTS = (): void => {
         {
           encoding: FileSystem.EncodingType.Base64,
         }
-      )
+      );
     }
 
-    return { id: ttsJson.result.id, pathJa, pathEn }
-  }, [losslessEnabled, monetizedPlanEnabled, textEn, textJa, ttsApiUrl, user])
+    return { id: ttsJson.result.id, pathJa, pathEn };
+  }, [losslessEnabled, monetizedPlanEnabled, textEn, textJa, ttsApiUrl, user]);
 
   const speech = useCallback(async () => {
     if (!textJa || !textEn) {
-      return
+      return;
     }
-    const cache = getByText(textJa)
+    const cache = getByText(textJa);
 
     if (cache) {
-      await speakFromPath(cache.ja.path, cache.en.path)
-      return
+      await speakFromPath(cache.ja.path, cache.en.path);
+      return;
     }
 
-    const fetched = await fetchSpeech()
+    const fetched = await fetchSpeech();
     if (!fetched) {
-      return
+      return;
     }
 
-    const { id, pathJa, pathEn } = fetched
+    const { id, pathJa, pathEn } = fetched;
 
     store(
       id,
       { text: textJa, path: fetched.pathJa },
       { text: textEn, path: fetched.pathEn }
-    )
+    );
 
-    await speakFromPath(pathJa, pathEn)
-  }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa])
+    await speakFromPath(pathJa, pathEn);
+  }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
 
   useEffect(() => {
     if (
@@ -169,17 +169,17 @@ export const useTTS = (): void => {
       prevTextJa === textJa ||
       prevTextEn === textEn
     ) {
-      return
+      return;
     }
 
-    speech()
-  }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa])
+    speech();
+  }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa]);
 
   useEffect(() => {
     return () => {
-      isLoadableRef.current = false
-      soundJaRef.current?.unloadAsync()
-      soundEnRef.current?.unloadAsync()
-    }
-  }, [])
-}
+      isLoadableRef.current = false;
+      soundJaRef.current?.unloadAsync();
+      soundEnRef.current?.unloadAsync();
+    };
+  }, []);
+};

@@ -1,42 +1,43 @@
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  NativeSyntheticEvent,
+  type NativeSyntheticEvent,
   Platform,
   StyleSheet,
   TextInput,
-  TextInputChangeEventData,
-  TextInputKeyPressEventData,
+  type TextInputChangeEventData,
+  type TextInputKeyPressEventData,
   View,
-} from 'react-native'
-import { useRecoilState, useSetRecoilState } from 'recoil'
-import { RFValue } from '../utils/rfValue'
+} from 'react-native';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import { RFValue } from '../utils/rfValue';
 
-import { useMutation, useQuery } from '@connectrpc/connect-query'
+import { useMutation, useQuery } from '@connectrpc/connect-query';
 import {
   NEARBY_STATIONS_LIMIT,
   SEARCH_STATION_RESULT_LIMIT,
-} from 'react-native-dotenv'
+} from 'react-native-dotenv';
 import {
   getStationsByCoordinates,
   getStationsByName,
-} from '../../gen/proto/stationapi-StationAPI_connectquery'
-import { Station } from '../../gen/proto/stationapi_pb'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import { StationList } from '../components/StationList'
-import { FONTS } from '../constants'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useLocationStore } from '../hooks/useLocationStore'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { translate } from '../translation'
-import { groupStations } from '../utils/groupStations'
+} from '../../gen/proto/stationapi-StationAPI_connectquery';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { StationList } from '../components/StationList';
+import { FONTS } from '../constants';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useLocationStore } from '../hooks/useLocationStore';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { TestIds } from '../test/e2e';
+import { translate } from '../translation';
+import { groupStations } from '../utils/groupStations';
 
 const styles = StyleSheet.create({
   root: {
@@ -65,19 +66,19 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontWeight: 'bold',
   },
-})
+});
 
 const FakeStationSettingsScreen: React.FC = () => {
-  const [query, setQuery] = useState('')
-  const navigation = useNavigation()
+  const [query, setQuery] = useState('');
+  const navigation = useNavigation();
   const [{ station: stationFromState }, setStationState] =
-    useRecoilState(stationState)
-  const setNavigationState = useSetRecoilState(navigationState)
-  const latitude = useLocationStore((state) => state?.coords.latitude)
-  const longitude = useLocationStore((state) => state?.coords.longitude)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+    useRecoilState(stationState);
+  const setNavigationState = useSetRecoilState(navigationState);
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const currentStation = useCurrentStation()
+  const currentStation = useCurrentStation();
 
   const {
     data: byCoordsData,
@@ -91,43 +92,43 @@ const FakeStationSettingsScreen: React.FC = () => {
       limit: Number(NEARBY_STATIONS_LIMIT),
     },
     { enabled: !!latitude && !!longitude }
-  )
+  );
 
   const {
     data: byNameData,
     error: byNameError,
     status: byNameFetchStatus,
     mutate: fetchByName,
-  } = useMutation(getStationsByName)
+  } = useMutation(getStationsByName);
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
-      return
+      navigation.goBack();
+      return;
     }
-    navigation.navigate('MainStack')
-  }, [navigation])
+    navigation.navigate('MainStack');
+  }, [navigation]);
 
   const handleSubmit = useCallback(() => {
     if (!query.trim().length) {
-      return
+      return;
     }
     fetchByName({
       stationName: query.trim(),
       limit: Number(SEARCH_STATION_RESULT_LIMIT),
-    })
-  }, [fetchByName, query])
+    });
+  }, [fetchByName, query]);
 
   useEffect(() => {
     if (byNameError || byCoordsError) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'))
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
-  }, [byCoordsError, byNameError])
+  }, [byCoordsError, byNameError]);
 
   const foundStations = useMemo(
     () => byNameData?.stations ?? byCoordsData?.stations ?? [],
     [byCoordsData, byNameData]
-  )
+  );
 
   // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
@@ -136,42 +137,42 @@ const FakeStationSettingsScreen: React.FC = () => {
         (sta) => sta.groupId !== currentStation?.groupId
       ),
     [currentStation?.groupId, foundStations]
-  )
+  );
 
   const handleStationPress = useCallback(
     (stationFromSearch: Station) => {
-      const station = foundStations.find((s) => s.id === stationFromSearch.id)
+      const station = foundStations.find((s) => s.id === stationFromSearch.id);
       if (!station) {
-        return
+        return;
       }
       setStationState((prev) => ({
         ...prev,
         station,
-      }))
+      }));
       setNavigationState((prev) => ({
         ...prev,
         stationForHeader: station,
-      }))
-      onPressBack()
+      }));
+      onPressBack();
     },
     [foundStations, onPressBack, setNavigationState, setStationState]
-  )
+  );
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (e.nativeEvent.key === 'Enter') {
-        handleSubmit()
+        handleSubmit();
       }
     },
     [handleSubmit]
-  )
+  );
 
   const onChange = useCallback(
     (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-      setQuery(e.nativeEvent.text)
+      setQuery(e.nativeEvent.text);
     },
     []
-  )
+  );
 
   return (
     <>
@@ -201,6 +202,7 @@ const FakeStationSettingsScreen: React.FC = () => {
             onChange={onChange}
             onSubmitEditing={handleSubmit}
             onKeyPress={onKeyPress}
+            testID={TestIds.Input.StationNameQuery}
           />
           {isByCoordsLoading || byNameFetchStatus === 'pending' ? (
             <View
@@ -225,7 +227,7 @@ const FakeStationSettingsScreen: React.FC = () => {
         <FAB onPress={onPressBack} icon="close" />
       )}
     </>
-  )
-}
+  );
+};
 
-export default React.memo(FakeStationSettingsScreen)
+export default React.memo(FakeStationSettingsScreen);

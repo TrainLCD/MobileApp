@@ -1,25 +1,25 @@
-import { atom } from 'recoil'
-import { Station, TrainType } from '../../../gen/proto/stationapi_pb'
+import { atom } from 'recoil';
+import type { Station, TrainType } from '../../../gen/proto/stationapi_pb';
 import {
   ALL_AVAILABLE_LANGUAGES,
-  AvailableLanguage,
+  type AvailableLanguage,
   RECOIL_STATES,
-} from '../../constants'
-import { BottomTransitionState } from '../../models/BottomTransitionState'
-import { HeaderTransitionState } from '../../models/HeaderTransitionState'
-import { isJapanese } from '../../translation'
+} from '../../constants';
+import type { BottomTransitionState } from '../../models/BottomTransitionState';
+import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
+import { isJapanese } from '../../translation';
 
 export interface NavigationState {
-  leftStations: Station[]
-  trainType: TrainType | null
-  headerState: HeaderTransitionState
-  bottomState: BottomTransitionState
+  leftStations: Station[];
+  trainType: TrainType | null;
+  headerState: HeaderTransitionState;
+  bottomState: BottomTransitionState;
   // stationForHeader: 急行等で使用しているとき地理的な最寄り駅と次の停車駅が違う時があるので、
   // 実際の次の停車駅を保持している
-  stationForHeader: Station | null
-  enabledLanguages: AvailableLanguage[]
-  fetchedTrainTypes: TrainType[]
-  fromBuilder: boolean
+  stationForHeader: Station | null;
+  enabledLanguages: AvailableLanguage[];
+  fetchedTrainTypes: TrainType[];
+  fromBuilder: boolean;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -31,11 +31,11 @@ export const initialNavigationState: NavigationState = {
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   fetchedTrainTypes: [],
   fromBuilder: false,
-}
+};
 
 const navigationState = atom<NavigationState>({
   key: RECOIL_STATES.navigation,
   default: initialNavigationState,
-})
+});
 
-export default navigationState
+export default navigationState;

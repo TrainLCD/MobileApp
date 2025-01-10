@@ -12,4 +12,4 @@ export const RECOIL_STATES = {
 
   // selectors
   isEnSelector: 'isEnSelector',
-}
+};

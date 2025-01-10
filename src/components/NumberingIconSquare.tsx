@@ -1,16 +1,20 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  threeLetterCode?: string
-  allowScaling: boolean
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  threeLetterCode?: string;
+  allowScaling: boolean;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -70,15 +74,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-})
+});
 
 type CommonCompProps = {
-  lineColor: string
-  threeLetterCode: string | undefined
-  lineSymbol: string
-  stationNumber: string
-  size?: NumberingIconSize
-}
+  lineColor: string;
+  threeLetterCode: string | undefined;
+  lineSymbol: string;
+  stationNumber: string;
+  size?: NumberingIconSize;
+};
 
 const Common = ({
   lineColor,
@@ -91,15 +95,15 @@ const Common = ({
       <View style={[styles.rootSmall, { borderColor: lineColor }]}>
         <Typography style={styles.lineSymbolSmall}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
-  )
-}
+  );
+};
 
 const NumberingIconSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -108,8 +112,8 @@ const NumberingIconSquare: React.FC<Props> = ({
   allowScaling,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
 
   if (threeLetterCode) {
     return (
@@ -124,7 +128,7 @@ const NumberingIconSquare: React.FC<Props> = ({
           />
         </View>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
@@ -136,7 +140,7 @@ const NumberingIconSquare: React.FC<Props> = ({
         stationNumber={stationNumber}
         size={size}
       />
-    )
+    );
   }
 
   return (
@@ -157,7 +161,7 @@ const NumberingIconSquare: React.FC<Props> = ({
         stationNumber={stationNumber}
       />
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconSquare
+export default NumberingIconSquare;

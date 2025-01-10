@@ -1,39 +1,39 @@
-import { useCallback } from 'react'
-import { Line, LineType } from '../../gen/proto/stationapi_pb'
-import { MARK_SHAPE } from '../constants'
-import { getLineSymbolImage } from '../lineSymbolImage'
-import { LineMark } from '../models/LineMark'
-import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+import { useCallback } from 'react';
+import { type Line, LineType } from '../../gen/proto/stationapi_pb';
+import { MARK_SHAPE } from '../constants';
+import { getLineSymbolImage } from '../lineSymbolImage';
+import type { LineMark } from '../models/LineMark';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
 const useGetLineMark = () => {
-  const getNumberingIndex = useStationNumberIndexFunc()
+  const getNumberingIndex = useStationNumberIndexFunc();
 
   const func = useCallback(
     ({
       line,
       shouldGrayscale = false,
     }: {
-      line: Line | undefined
-      shouldGrayscale?: boolean
+      line: Line | undefined;
+      shouldGrayscale?: boolean;
     }): LineMark | null => {
       if (!line) {
-        return null
+        return null;
       }
 
       if (!line.lineSymbols?.length && line.lineType !== LineType.BulletTrain) {
-        return null
+        return null;
       }
 
-      const firstLineSymbol = line.lineSymbols?.[0]
+      const firstLineSymbol = line.lineSymbols?.[0];
       const isJRLinesOmitted =
-        firstLineSymbol?.shape == MARK_SHAPE.JR_UNION ||
-        firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION
+        firstLineSymbol?.shape === MARK_SHAPE.JR_UNION ||
+        firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION;
       if (isJRLinesOmitted) {
         return {
           sign: firstLineSymbol.symbol,
           signShape: firstLineSymbol.shape,
           signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
-        }
+        };
       }
 
       const lineMarkMap = {
@@ -46,12 +46,12 @@ const useGetLineMark = () => {
         extraSign: line.lineSymbols?.[2]?.symbol,
         extraSignShape: line.lineSymbols?.[2]?.shape,
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
-      }
+      };
 
-      const numberingIndex = getNumberingIndex(line.station, line) ?? 0
+      const numberingIndex = getNumberingIndex(line.station, line) ?? 0;
 
       if (numberingIndex === -1) {
-        return lineMarkMap
+        return lineMarkMap;
       }
 
       const lineMark = [
@@ -73,14 +73,14 @@ const useGetLineMark = () => {
             lineMarkMap.subSignPath ??
             lineMarkMap.signPath,
         },
-      ][numberingIndex]
+      ][numberingIndex];
 
-      return lineMark
+      return lineMark;
     },
     [getNumberingIndex]
-  )
+  );
 
-  return func
-}
+  return func;
+};
 
-export default useGetLineMark
+export default useGetLineMark;

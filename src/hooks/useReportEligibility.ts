@@ -1,43 +1,42 @@
-import firestore from '@react-native-firebase/firestore'
-import { useCallback, useEffect, useState } from 'react'
-import EligibilityDocData, {
-  EligibilityType,
-} from '../models/FeedbackEligibility'
-import useCachedInitAnonymousUser from './useCachedAnonymousUser'
+import firestore from '@react-native-firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import type EligibilityDocData from '../models/FeedbackEligibility';
+import type { EligibilityType } from '../models/FeedbackEligibility';
+import useCachedInitAnonymousUser from './useCachedAnonymousUser';
 
 const useReportEligibility = (): EligibilityType | undefined => {
-  const [eligibility, setEligibility] = useState<EligibilityType>()
+  const [eligibility, setEligibility] = useState<EligibilityType>();
 
-  const user = useCachedInitAnonymousUser()
+  const user = useCachedInitAnonymousUser();
 
   const getEligibility = useCallback(async (): Promise<EligibilityType> => {
     if (!user) {
-      return 'eligible'
+      return 'eligible';
     }
 
     const eligibilitiesDoc = await firestore()
       .collection('eligibilities')
       .doc(user.uid)
-      .get()
+      .get();
 
     if (!eligibilitiesDoc.exists) {
-      return 'eligible'
+      return 'eligible';
     }
 
     const eligibilityDocData = eligibilitiesDoc.data() as
       | EligibilityDocData
-      | undefined
-    return eligibilityDocData?.eligibilityType ?? 'eligible'
-  }, [user])
+      | undefined;
+    return eligibilityDocData?.eligibilityType ?? 'eligible';
+  }, [user]);
 
   useEffect(() => {
     const updateStateAsync = async () => {
-      setEligibility(await getEligibility())
-    }
-    updateStateAsync()
-  }, [getEligibility])
+      setEligibility(await getEligibility());
+    };
+    updateStateAsync();
+  }, [getEligibility]);
 
-  return eligibility
-}
+  return eligibility;
+};
 
-export default useReportEligibility
+export default useReportEligibility;

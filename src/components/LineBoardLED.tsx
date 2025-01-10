@@ -1,20 +1,20 @@
-import React, { useMemo } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
-import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../../gen/proto/stationapi_pb'
-import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants'
-import { useAfterNextStation } from '../hooks/useAfterNextStation'
-import useBounds from '../hooks/useBounds'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
-import { useLoopLine } from '../hooks/useLoopLine'
-import { useNextStation } from '../hooks/useNextStation'
-import { useNumbering } from '../hooks/useNumbering'
-import useTransferLines from '../hooks/useTransferLines'
-import { HeaderStoppingState } from '../models/HeaderTransitionState'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import Marquee from './Marquee'
+import React, { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { useRecoilValue } from 'recoil';
+import { StopCondition } from '../../gen/proto/stationapi_pb';
+import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
+import { useAfterNextStation } from '../hooks/useAfterNextStation';
+import useBounds from '../hooks/useBounds';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import { useLoopLine } from '../hooks/useLoopLine';
+import { useNextStation } from '../hooks/useNextStation';
+import { useNumbering } from '../hooks/useNumbering';
+import useTransferLines from '../hooks/useTransferLines';
+import type { HeaderStoppingState } from '../models/HeaderTransitionState';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import Marquee from './Marquee';
 
 const styles = StyleSheet.create({
   container: {
@@ -30,65 +30,65 @@ const styles = StyleSheet.create({
   green: { color: 'green' },
   orange: { color: 'orange' },
   crimson: { color: 'crimson' },
-})
+});
 
 const GreenText = ({ children }: { children: React.ReactNode }) => (
   <Text style={[styles.text, styles.green]}>{children}</Text>
-)
+);
 const OrangeText = ({ children }: { children: React.ReactNode }) => (
   <Text style={[styles.text, styles.orange]}>{children}</Text>
-)
+);
 const CrimsonText = ({ children }: { children: React.ReactNode }) => (
   <Text style={[styles.text, styles.crimson]}>{children}</Text>
-)
+);
 
 const LineBoardLED = () => {
-  const { selectedDirection } = useRecoilValue(stationState)
-  const { headerState } = useRecoilValue(navigationState)
-  const line = useCurrentLine()
+  const { selectedDirection } = useRecoilValue(stationState);
+  const { headerState } = useRecoilValue(navigationState);
+  const line = useCurrentLine();
 
   const stoppingState = useMemo(
     () => headerState.split('_')[0] as HeaderStoppingState,
     [headerState]
-  )
+  );
 
-  const nextStation = useNextStation()
-  const trainType = useCurrentTrainType()
-  const { directionalStops } = useBounds()
-  const transferLines = useTransferLines()
-  const [nextStationNumber] = useNumbering()
-  const afterNextStation = useAfterNextStation()
+  const nextStation = useNextStation();
+  const trainType = useCurrentTrainType();
+  const { directionalStops } = useBounds();
+  const transferLines = useTransferLines();
+  const [nextStationNumber] = useNumbering();
+  const afterNextStation = useAfterNextStation();
   const {
     isLoopLine,
     isPartiallyLoopLine,
     isMeijoLine,
     isOsakaLoopLine,
     isYamanoteLine,
-  } = useLoopLine()
+  } = useLoopLine();
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
-      return ''
+      return '';
     }
 
     if (isMeijoLine) {
       return [
         selectedDirection === 'INBOUND' ? '左回り' : '右回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-      ]
+      ];
     }
 
     if ((isYamanoteLine || isOsakaLoopLine) && selectedDirection) {
       return [
         selectedDirection === 'INBOUND' ? '内回り' : '外回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-      ]
+      ];
     }
 
     return [
       trainType?.name?.replace(parenthesisRegexp, '') ?? '',
       trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
-    ]
+    ];
   }, [
     isMeijoLine,
     isOsakaLoopLine,
@@ -97,13 +97,13 @@ const LineBoardLED = () => {
     selectedDirection,
     trainType?.name,
     trainType?.nameRoman,
-  ])
+  ]);
 
   const boundTexts = useMemo(() => {
     const jaText = directionalStops
       .filter((station) => station)
       .map((station) => station.name.replace(parenthesisRegexp, ''))
-      .join('・')
+      .join('・');
     const enText = directionalStops
       .filter((station) => station)
       .map(
@@ -114,12 +114,12 @@ const LineBoardLED = () => {
               : ''
           }`
       )
-      .join(' and ')
+      .join(' and ');
     return [
       `${jaText}${isLoopLine || isPartiallyLoopLine ? '方面' : ''}`,
       enText,
-    ]
-  }, [directionalStops, isLoopLine, isPartiallyLoopLine])
+    ];
+  }, [directionalStops, isLoopLine, isPartiallyLoopLine]);
 
   if (stoppingState === 'ARRIVING') {
     return (
@@ -200,11 +200,11 @@ const LineBoardLED = () => {
                     .map((l) => l.nameRoman)
                     .map((name, idx, arr) => {
                       if (!idx) {
-                        return name
+                        return name;
                       }
                       return idx === arr.length - 1 && arr.length > 1
                         ? ` and ${name}`
-                        : `, ${name}`
+                        : `, ${name}`;
                     })
                     .join('')}
                 </OrangeText>
@@ -214,7 +214,7 @@ const LineBoardLED = () => {
           ) : null}
         </View>
       </Marquee>
-    )
+    );
   }
 
   if (stoppingState === 'CURRENT') {
@@ -239,7 +239,7 @@ const LineBoardLED = () => {
           </Text>
         </View>
       </Marquee>
-    )
+    );
   }
 
   return (
@@ -315,11 +315,11 @@ const LineBoardLED = () => {
                   .map((l) => l.nameRoman)
                   .map((name, idx, arr) => {
                     if (!idx) {
-                      return name
+                      return name;
                     }
                     return idx === arr.length - 1 && arr.length > 1
                       ? ` and ${name}`
-                      : `, ${name}`
+                      : `, ${name}`;
                   })
                   .join('')}
               </OrangeText>
@@ -329,7 +329,7 @@ const LineBoardLED = () => {
         ) : null}
       </View>
     </Marquee>
-  )
-}
+  );
+};
 
-export default React.memo(LineBoardLED)
+export default React.memo(LineBoardLED);

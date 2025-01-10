@@ -1,11 +1,11 @@
-import * as Application from 'expo-application'
-import React, { useMemo } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
-import { useLocationStore } from '../hooks/useLocationStore'
-import { useThreshold } from '../hooks/useThreshold'
-import Typography from './Typography'
+import * as Application from 'expo-application';
+import React, { useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { useLocationStore } from '../hooks/useLocationStore';
+import { useThreshold } from '../hooks/useThreshold';
+import Typography from './Typography';
 
-const { width: windowWidth } = Dimensions.get('window')
+const { width: windowWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   root: {
@@ -25,21 +25,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 11,
   },
-})
+});
 
 const DevOverlay: React.FC = () => {
-  const latitude = useLocationStore((state) => state?.coords.latitude)
-  const longitude = useLocationStore((state) => state?.coords.longitude)
-  const speed = useLocationStore((state) => state?.coords.speed)
-  const accuracy = useLocationStore((state) => state?.coords.accuracy)
-  const { approachingThreshold, arrivedThreshold } = useThreshold()
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const speed = useLocationStore((state) => state?.coords.speed);
+  const accuracy = useLocationStore((state) => state?.coords.accuracy);
+  const { approachingThreshold, arrivedThreshold } = useThreshold();
 
-  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
+  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
   const speedKMH = useMemo(
     () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
     [coordsSpeed, speed]
-  )
+  );
 
   return (
     <View style={styles.root}>
@@ -72,7 +72,7 @@ const DevOverlay: React.FC = () => {
 
       <Typography style={styles.text}>Processing Mode: Device</Typography>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(DevOverlay)
+export default React.memo(DevOverlay);

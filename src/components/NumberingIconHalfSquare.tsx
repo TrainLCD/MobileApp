@@ -1,17 +1,21 @@
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import NumberingIconReversedSquare from './NumberingIconReversedSquare'
-import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import NumberingIconReversedSquare from './NumberingIconReversedSquare';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  withRadius: boolean
-  size?: NumberingIconSize
-  darkText: boolean
-}
+  stationNumber: string;
+  lineColor: string;
+  withRadius: boolean;
+  size?: NumberingIconSize;
+  darkText: boolean;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -54,7 +58,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-})
+});
 
 const NumberingIconHalfSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -63,23 +67,23 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   size,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
 
   const borderRadius = useMemo(() => {
     if (!withRadius) {
-      return 0
+      return 0;
     }
 
-    return 8
-  }, [withRadius])
+    return 8;
+  }, [withRadius]);
   const stationNumberContainerBorderRadius = useMemo(() => {
     if (!withRadius) {
-      return 0
+      return 0;
     }
 
-    return 2
-  }, [withRadius])
+    return 2;
+  }, [withRadius]);
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -88,7 +92,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
         lineColor={lineColor}
         size={NUMBERING_ICON_SIZE.SMALL}
       />
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -98,7 +102,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
         lineColor={lineColor}
         size={NUMBERING_ICON_SIZE.MEDIUM}
       />
-    )
+    );
   }
 
   return (
@@ -117,7 +121,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
         <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(NumberingIconHalfSquare)
+export default React.memo(NumberingIconHalfSquare);

@@ -1,13 +1,13 @@
-import React, { useCallback, useMemo } from 'react'
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Line, TrainType } from '../../gen/proto/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { isJapanese } from '../translation'
-import { RFValue } from '../utils/rfValue'
-import Typography from './Typography'
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Line, TrainType } from '../../gen/proto/stationapi_pb';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import { isJapanese } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   cell: { padding: 12 },
@@ -19,39 +19,39 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
-})
+});
 
-const Separator = () => <View style={styles.separator} />
+const Separator = () => <View style={styles.separator} />;
 
 const ItemCell = ({
   item,
   onSelect,
 }: {
-  item: TrainType
-  onSelect: (item: TrainType) => void
+  item: TrainType;
+  onSelect: (item: TrainType) => void;
 }) => {
-  const currentLine = useCurrentLine()
+  const currentLine = useCurrentLine();
 
   const lines = useMemo(
     () =>
       item.lines
         .reduce<Line[]>((acc, cur) => {
           if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
-            return [...acc, cur]
+            return acc.concat(cur);
           }
 
-          return acc
+          return acc;
         }, [])
         .filter((l) => l.id !== currentLine?.id),
     [currentLine?.id, item.lines]
-  )
+  );
 
   const isAllSameType = useMemo(
     () =>
       Array.from(new Set(item.lines.map((l) => l.trainType?.typeId))).length ===
       1,
     [item.lines]
-  )
+  );
 
   if (!lines.length) {
     return (
@@ -63,7 +63,7 @@ const ItemCell = ({
           {isJapanese ? '直通運転なし' : 'Not connected to other line'}
         </Typography>
       </TouchableOpacity>
-    )
+    );
   }
 
   if (isAllSameType) {
@@ -80,7 +80,7 @@ const ItemCell = ({
           {isJapanese ? '直通' : ''}
         </Typography>
       </TouchableOpacity>
-    )
+    );
   }
 
   return (
@@ -103,26 +103,26 @@ const ItemCell = ({
               .join(', ')}
       </Typography>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 export const TrainTypeList = ({
   data,
   onSelect,
 }: {
-  data: TrainType[]
-  onSelect: (item: TrainType) => void
+  data: TrainType[];
+  onSelect: (item: TrainType) => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} />
+      return <ItemCell item={item} onSelect={onSelect} />;
     },
     [onSelect]
-  )
-  const keyExtractor = useCallback((item: TrainType) => item.id.toString(), [])
-  const { bottom: safeAreaBottom } = useSafeAreaInsets()
+  );
+  const keyExtractor = useCallback((item: TrainType) => item.id.toString(), []);
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   return (
     <FlatList
@@ -142,5 +142,5 @@ export const TrainTypeList = ({
       ItemSeparatorComponent={Separator}
       ListFooterComponent={Separator}
     />
-  )
-}
+  );
+};
