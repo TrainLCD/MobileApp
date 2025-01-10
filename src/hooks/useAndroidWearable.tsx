@@ -30,7 +30,6 @@ const useAndroidWearable = (): void => {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
     (async () => {
       if (!station || Platform.OS !== 'android') {
         return;

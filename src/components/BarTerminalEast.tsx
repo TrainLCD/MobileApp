@@ -16,7 +16,6 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
   const { lineColor, hasTerminus } = props;
   if (hasTerminus) {
     return (
-      // eslint-disable-next-line react/jsx-props-no-spreading
       <Svg viewBox="0 0 41.57 48" {...props}>
         <Defs>
           <LinearGradient
@@ -57,7 +56,6 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
   }
 
   return (
-    // eslint-disable-next-line react/jsx-props-no-spreading
     <Svg viewBox="0 0 41.57 48" {...props}>
       <Defs>
         <LinearGradient

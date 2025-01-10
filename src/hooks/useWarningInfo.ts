@@ -50,7 +50,6 @@ export const useWarningInfo = () => {
   }, [isInternetAvailable]);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
     (async () => {
       setLongPressNoticeDismissed(
         (await AsyncStorage.getItem(

@@ -47,7 +47,6 @@ const App: React.FC = () => {
   const [readyForLaunch, setReadyForLaunch] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
     (async () => {
       await remoteConfig().fetchAndActivate();
       setI18nConfig();
@@ -67,7 +66,6 @@ const App: React.FC = () => {
         allowFontScaling: boolean;
       };
     };
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
     (Text as unknown as TextProps).defaultProps =
       (Text as unknown as TextProps).defaultProps || {};
     (Text as unknown as TextProps).defaultProps.allowFontScaling = false;

@@ -18,7 +18,6 @@ export const useStartBackgroundLocationUpdates = () => {
 
     let watchPositionSub: Location.LocationSubscription | null = null;
 
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
     (async () => {
       if (bgPermGranted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
