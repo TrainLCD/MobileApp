@@ -71,6 +71,7 @@ const SelectLineScreen: React.FC = () => {
 	const station = useCurrentStation();
 	const locationState = useLocationStore();
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		const init = async () => {
 			if (station) return;
@@ -96,7 +97,6 @@ const SelectLineScreen: React.FC = () => {
 			}));
 		};
 		init();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {

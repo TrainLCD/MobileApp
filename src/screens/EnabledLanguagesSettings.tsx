@@ -155,28 +155,28 @@ const EnabledLanguagesSettings: React.FC = () => {
 		}
 	}, [enabledLanguages, navigation]);
 
-	const languageSorter = (
-		a: AvailableLanguage,
-		b: AvailableLanguage,
-	): number => {
-		const aWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
-			(l) => l.code === a,
-		);
-		const bWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
-			(l) => l.code === b,
-		);
-		if (!aWithPriority || !bWithPriority) {
-			return 0;
-		}
-		if (aWithPriority.priority < bWithPriority.priority) {
-			return -1;
-		}
-		if (aWithPriority.priority > bWithPriority.priority) {
-			return 1;
-		}
+	const languageSorter = useCallback(
+		(a: AvailableLanguage, b: AvailableLanguage): number => {
+			const aWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
+				(l) => l.code === a,
+			);
+			const bWithPriority = ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY.find(
+				(l) => l.code === b,
+			);
+			if (!aWithPriority || !bWithPriority) {
+				return 0;
+			}
+			if (aWithPriority.priority < bWithPriority.priority) {
+				return -1;
+			}
+			if (aWithPriority.priority > bWithPriority.priority) {
+				return 1;
+			}
 
-		return 0;
-	};
+			return 0;
+		},
+		[],
+	);
 
 	const renderItem = useCallback(
 		({ item }: { item: AvailableLanguage }) => {
@@ -200,7 +200,7 @@ const EnabledLanguagesSettings: React.FC = () => {
 				<ListItem active={isActive} onPress={handleListItemPress} item={item} />
 			);
 		},
-		[enabledLanguages, setNavigation],
+		[enabledLanguages, setNavigation, languageSorter],
 	);
 
 	const getItemCount = () => ALL_AVAILABLE_LANGUAGES.length;

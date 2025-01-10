@@ -110,13 +110,13 @@ const useConnectedLines = (excludePassed = true): Line[] => {
 				// 処理が終わった配列を展開しグループ化されていない
 				// 現在路線~最終直通先の配列を返し、次のループへ
 				if (currentIndex <= idx) {
-					return [...acc, ...notGroupedJoinedLines.slice(currentIndex)];
+					return acc.concat(notGroupedJoinedLines.slice(currentIndex));
 				}
 
 				// 処理中のindexがcurrentIndexより小さい場合、
 				// 処理が終わった配列を展開しグループ化されていない
 				// 配列の最初から現在のindexまでを返し、次のループへ
-				return [...acc, ...notGroupedJoinedLines.slice(0, currentIndex)];
+				return acc.concat(notGroupedJoinedLines.slice(0, currentIndex));
 			}, [])
 			// ループ設計上路線が重複する可能性があるのでここで重複をしばく
 			.filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i);

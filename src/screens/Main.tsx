@@ -1,14 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackActions, useNavigation } from "@react-navigation/native";
 import { useKeepAwake } from "expo-keep-awake";
-import * as Linking from "expo-linking";
 import * as Location from "expo-location";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
 	Alert,
 	BackHandler,
 	Dimensions,
-	Platform,
 	Pressable,
 	StyleSheet,
 	View,
@@ -98,59 +96,6 @@ const MainScreen: React.FC = () => {
 		leftStations,
 		stations,
 	]);
-
-	const openFailedToOpenSettingsAlert = useCallback(
-		() =>
-			Alert.alert(translate("errorTitle"), translate("failedToOpenSettings"), [
-				{
-					text: "OK",
-				},
-			]),
-		[],
-	);
-
-	useEffect(() => {
-		if (Platform.OS === "android") {
-			const f = async (): Promise<void> => {
-				const firstOpenPassed = await AsyncStorage.getItem(
-					ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
-				);
-				if (firstOpenPassed === null) {
-					Alert.alert(translate("notice"), translate("dozeAlertText"), [
-						{
-							text: translate("doNotShowAgain"),
-							style: "cancel",
-							onPress: async (): Promise<void> => {
-								await AsyncStorage.setItem(
-									ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
-									"true",
-								);
-							},
-						},
-						{
-							text: translate("settings"),
-							onPress: async () => {
-								try {
-									await Linking.openSettings();
-								} catch (err) {
-									openFailedToOpenSettingsAlert();
-								}
-								await AsyncStorage.setItem(
-									ASYNC_STORAGE_KEYS.DOSE_CONFIRMED,
-									"true",
-								);
-							},
-						},
-						{
-							text: "OK",
-							style: "cancel",
-						},
-					]);
-				}
-			};
-			f();
-		}
-	}, [openFailedToOpenSettingsAlert]);
 
 	const navigation = useNavigation();
 	useTransitionHeaderState();
@@ -328,7 +273,7 @@ const MainScreen: React.FC = () => {
 			}
 		};
 		f();
-	}, [openFailedToOpenSettingsAlert]);
+	}, []);
 
 	if (isLEDTheme) {
 		return <LineBoard />;

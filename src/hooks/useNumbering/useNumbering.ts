@@ -30,11 +30,11 @@ export const useNumbering = (
 	const getStationNumberIndex = useStationNumberIndexFunc();
 
 	const currentStationNumberIndex = useMemo(
-		() => getStationNumberIndex(stoppedCurrentStation ?? undefined),
+		() => getStationNumberIndex(stoppedCurrentStation ?? null),
 		[getStationNumberIndex, stoppedCurrentStation],
 	);
 	const nextStationNumberIndex = useMemo(
-		() => getStationNumberIndex(nextStation),
+		() => getStationNumberIndex(nextStation ?? null),
 		[getStationNumberIndex, nextStation],
 	);
 
@@ -117,7 +117,6 @@ export const useNumbering = (
 		currentStation,
 		currentStationNumberIndex,
 		isJobanLineRapid,
-		nextStation?.lines,
 		nextStation?.stationNumbers,
 		nextStation?.threeLetterCode,
 		nextStationNumberIndex,

@@ -7,7 +7,7 @@ const useAppState = (): AppStateStatus => {
 	useEffect(() => {
 		const subscription = AppState.addEventListener("change", setAppState);
 		return subscription.remove;
-	}, [setAppState]);
+	}, []);
 
 	return appState;
 };

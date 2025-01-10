@@ -37,7 +37,7 @@ const ItemCell = ({
 			item.lines
 				.reduce<Line[]>((acc, cur) => {
 					if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
-						return [...acc, cur];
+						return acc.concat(cur);
 					}
 
 					return acc;

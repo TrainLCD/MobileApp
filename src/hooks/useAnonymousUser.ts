@@ -14,7 +14,9 @@ const useAnonymousUser = (): FirebaseAuthTypes.User | undefined => {
 			} else {
 				auth()
 					.signInAnonymously()
-					.then((credential) => (userRef.current = credential.user));
+					.then((credential) => {
+						userRef.current = credential.user;
+					});
 			}
 		});
 		return unsubscribe;
