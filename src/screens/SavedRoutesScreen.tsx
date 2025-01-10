@@ -1,24 +1,24 @@
-import { StackActions, useNavigation } from '@react-navigation/native'
-import findNearest from 'geolib/es/findNearest'
-import React, { useCallback } from 'react'
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useSetRecoilState } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import Loading from '../components/Loading'
-import Typography from '../components/Typography'
-import { useLocationStore } from '../hooks/useLocationStore'
-import { useSavedRoutes } from '../hooks/useSavedRoutes'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { SavedRoute } from '../models/SavedRoute'
-import { APP_THEME } from '../models/Theme'
-import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { translate } from '../translation'
-import { RFValue } from '../utils/rfValue'
+import { StackActions, useNavigation } from '@react-navigation/native';
+import findNearest from 'geolib/es/findNearest';
+import React, { useCallback } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSetRecoilState } from 'recoil';
+import { Station } from '../../gen/proto/stationapi_pb';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import Loading from '../components/Loading';
+import Typography from '../components/Typography';
+import { useLocationStore } from '../hooks/useLocationStore';
+import { useSavedRoutes } from '../hooks/useSavedRoutes';
+import { useThemeStore } from '../hooks/useThemeStore';
+import type { SavedRoute } from '../models/SavedRoute';
+import { APP_THEME } from '../models/Theme';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
@@ -53,74 +53,74 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
   },
-})
+});
 
 const ListEmptyComponent: React.FC = () => (
   <Typography style={styles.emptyText}>
     {translate('savedRoutesEmpty')}
   </Typography>
-)
+);
 
 const SavedRoutesScreen: React.FC = () => {
-  const setLineState = useSetRecoilState(lineState)
-  const setNavigationState = useSetRecoilState(navigationState)
-  const setStationState = useSetRecoilState(stationState)
-  const latitude = useLocationStore((state) => state?.coords.latitude)
-  const longitude = useLocationStore((state) => state?.coords.longitude)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
-  const navigation = useNavigation()
-  const { routes, loading, fetchStationsByRoute } = useSavedRoutes()
+  const setLineState = useSetRecoilState(lineState);
+  const setNavigationState = useSetRecoilState(navigationState);
+  const setStationState = useSetRecoilState(stationState);
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const navigation = useNavigation();
+  const { routes, loading, fetchStationsByRoute } = useSavedRoutes();
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation])
+  }, [navigation]);
 
   const updateStateAndNavigate = useCallback(
     (stations: Station[], selectedStation: Station) => {
-      const selectedLine = selectedStation.line
+      const selectedLine = selectedStation.line;
       if (!selectedLine) {
-        return
+        return;
       }
       setStationState((prev) => ({
         ...prev,
         stations,
         station: selectedStation,
-      }))
+      }));
       setNavigationState((prev) => ({
         ...prev,
         trainType: selectedStation.trainType ?? null,
         leftStations: [],
         stationForHeader: selectedStation,
         fromBuilder: true,
-      }))
+      }));
       setLineState((prev) => ({
         ...prev,
         selectedLine,
-      }))
+      }));
       navigation.dispatch(
         StackActions.replace('MainStack', { screen: 'SelectBound' })
-      )
+      );
     },
     [navigation, setLineState, setNavigationState, setStationState]
-  )
+  );
 
   const handleItemPress = useCallback(
     async (route: SavedRoute) => {
       const { stations: fetchedStations } = await fetchStationsByRoute({
         ids: route.stations.map((s) => s.id),
-      })
+      });
 
       if (!fetchedStations?.length || !latitude || !longitude) {
-        return
+        return;
       }
       const stations = fetchedStations.map((sta) => ({
         ...sta,
         stopCondition: route.stations.find((rs) => rs.id === sta.id)
           ?.stopCondition,
         trainType: route.trainType,
-      }))
+      }));
 
       const nearestCoordinates = findNearest(
         { latitude, longitude },
@@ -128,28 +128,28 @@ const SavedRoutesScreen: React.FC = () => {
           latitude: sta.latitude,
           longitude: sta.longitude,
         }))
-      ) as { latitude: number; longitude: number }
+      ) as { latitude: number; longitude: number };
 
       const nearestStation = stations.find(
         (sta) =>
           sta.latitude === nearestCoordinates.latitude &&
           sta.longitude === nearestCoordinates.longitude
-      )
+      );
 
       if (!nearestStation) {
-        return
+        return;
       }
       updateStateAndNavigate(
         stations.map((s) => new Station(s)),
         new Station(nearestStation)
-      )
+      );
     },
     [fetchStationsByRoute, latitude, longitude, updateStateAndNavigate]
-  )
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: SavedRoute }) => {
-      const handlePress = () => handleItemPress(item)
+      const handlePress = () => handleItemPress(item);
       return (
         <>
           <TouchableOpacity style={styles.item} onPress={handlePress}>
@@ -157,16 +157,18 @@ const SavedRoutesScreen: React.FC = () => {
           </TouchableOpacity>
           <View style={styles.divider} />
         </>
-      )
+      );
     },
     [handleItemPress]
-  )
+  );
 
-  const keyExtractor = useCallback(({ id }: SavedRoute) => id, [])
-  const { bottom: safeAreaBottom } = useSafeAreaInsets()
+  const keyExtractor = useCallback(({ id }: SavedRoute) => id, []);
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   if (loading) {
-    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+    return (
+      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+    );
   }
 
   return (
@@ -195,7 +197,7 @@ const SavedRoutesScreen: React.FC = () => {
 
       <FAB onPress={onPressBack} icon="close" />
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(SavedRoutesScreen)
+export default React.memo(SavedRoutesScreen);

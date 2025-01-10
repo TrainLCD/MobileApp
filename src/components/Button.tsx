@@ -1,26 +1,26 @@
-import React from 'react'
+import type React from 'react';
 import {
-  GestureResponderEvent,
-  StyleProp,
+  type GestureResponderEvent,
+  type StyleProp,
   StyleSheet,
   TouchableOpacity,
-  ViewStyle,
-} from 'react-native'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { ButtonTestId } from '../test/e2e'
-import isTablet from '../utils/isTablet'
-import { RFValue } from '../utils/rfValue'
-import Typography from './Typography'
+  type ViewStyle,
+} from 'react-native';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import type { ButtonTestId } from '../test/e2e';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 type Props = {
-  children: React.ReactNode
-  color?: string
-  onPress: (event: GestureResponderEvent) => void
-  style?: StyleProp<ViewStyle>
-  disabled?: boolean
-  testID?: ButtonTestId | string | undefined
-}
+  children: React.ReactNode;
+  color?: string;
+  onPress: (event: GestureResponderEvent) => void;
+  style?: StyleProp<ViewStyle>;
+  disabled?: boolean;
+  testID?: ButtonTestId | string | undefined;
+};
 
 const styles = StyleSheet.create({
   button: {
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     textAlign: 'center',
   },
-})
+});
 
 const Button: React.FC<Props> = ({
   children,
@@ -55,7 +55,7 @@ const Button: React.FC<Props> = ({
   disabled,
   testID,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   return (
     <TouchableOpacity
@@ -64,7 +64,7 @@ const Button: React.FC<Props> = ({
       style={[
         {
           ...(isLEDTheme ? styles.buttonLED : styles.button),
-          backgroundColor: isLEDTheme ? color : color ?? '#333',
+          backgroundColor: isLEDTheme ? color : (color ?? '#333'),
           borderWidth: isLEDTheme && !color ? 2 : 0,
           borderColor: isLEDTheme ? 'white' : undefined,
           opacity: disabled ? 0.5 : 1,
@@ -77,7 +77,7 @@ const Button: React.FC<Props> = ({
         {children}
       </Typography>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
-export default Button
+export default Button;

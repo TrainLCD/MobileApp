@@ -1,42 +1,42 @@
-import getCenter from 'geolib/es/getCenter'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRecoilValue } from 'recoil'
+import getCenter from 'geolib/es/getCenter';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
-} from '../constants'
-import lineState from '../store/atoms/line'
-import stationState from '../store/atoms/station'
-import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import { useLocationStore } from './useLocationStore'
-import { useLoopLine } from './useLoopLine'
-import useValueRef from './useValueRef'
+} from '../constants';
+import lineState from '../store/atoms/line';
+import stationState from '../store/atoms/station';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
+import { useLocationStore } from './useLocationStore';
+import { useLoopLine } from './useLoopLine';
+import useValueRef from './useValueRef';
 
 const useAutoMode = (enabled: boolean): void => {
   const {
     stations: rawStations,
     selectedDirection,
     station,
-  } = useRecoilValue(stationState)
-  const { selectedLine } = useRecoilValue(lineState)
+  } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
     [rawStations, selectedDirection]
-  )
+  );
 
   const [autoModeInboundIndex, setAutoModeInboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station?.groupId)
-  )
+  );
   const [autoModeOutboundIndex, setAutoModeOutboundIndex] = useState(
     stations.findIndex((s) => s.groupId === station?.groupId)
-  )
-  const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex)
-  const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex)
-  const autoModeApproachingTimerRef = useRef<NodeJS.Timer>()
-  const autoModeArriveTimerRef = useRef<NodeJS.Timer>()
+  );
+  const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
+  const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
+  const autoModeApproachingTimerRef = useRef<NodeJS.Timer>();
+  const autoModeArriveTimerRef = useRef<NodeJS.Timer>();
 
-  const { isLoopLine } = useLoopLine()
+  const { isLoopLine } = useLoopLine();
 
   const startApproachingTimer = useCallback(() => {
     if (
@@ -45,12 +45,12 @@ const useAutoMode = (enabled: boolean): void => {
       !selectedDirection ||
       !selectedLine
     ) {
-      return
+      return;
     }
 
     const intervalInternal = () => {
       if (selectedDirection === 'INBOUND') {
-        const index = autoModeInboundIndexRef.current
+        const index = autoModeInboundIndexRef.current;
 
         if (!index) {
           useLocationStore.setState({
@@ -64,12 +64,12 @@ const useAutoMode = (enabled: boolean): void => {
               latitude: stations[0].latitude,
               longitude: stations[0].longitude,
             },
-          })
-          return
+          });
+          return;
         }
 
-        const cur = stations[index]
-        const next = isLoopLine ? stations[index - 1] : stations[index + 1]
+        const cur = stations[index];
+        const next = isLoopLine ? stations[index - 1] : stations[index + 1];
 
         if (cur && next) {
           const center = getCenter([
@@ -81,7 +81,7 @@ const useAutoMode = (enabled: boolean): void => {
               latitude: next.latitude,
               longitude: next.longitude,
             },
-          ])
+          ]);
 
           if (center) {
             useLocationStore.setState({
@@ -94,11 +94,11 @@ const useAutoMode = (enabled: boolean): void => {
                 speed: 0,
                 heading: 0,
               },
-            })
+            });
           }
         }
       } else {
-        const index = autoModeOutboundIndexRef.current
+        const index = autoModeOutboundIndexRef.current;
 
         if (index === stations.length - 1) {
           useLocationStore.setState({
@@ -112,12 +112,12 @@ const useAutoMode = (enabled: boolean): void => {
               latitude: stations[stations.length - 1].latitude,
               longitude: stations[stations.length - 1].longitude,
             },
-          })
-          return
+          });
+          return;
         }
 
-        const cur = stations[index]
-        const next = isLoopLine ? stations[index + 1] : stations[index - 1]
+        const cur = stations[index];
+        const next = isLoopLine ? stations[index + 1] : stations[index - 1];
 
         if (cur && next) {
           const center = getCenter([
@@ -129,7 +129,7 @@ const useAutoMode = (enabled: boolean): void => {
               latitude: next.latitude,
               longitude: next.longitude,
             },
-          ])
+          ]);
 
           if (center) {
             useLocationStore.setState({
@@ -142,17 +142,17 @@ const useAutoMode = (enabled: boolean): void => {
                 speed: 0,
                 heading: 0,
               },
-            })
+            });
           }
         }
       }
-    }
+    };
 
-    intervalInternal()
+    intervalInternal();
 
-    const interval = setInterval(intervalInternal, AUTO_MODE_RUNNING_DURATION)
+    const interval = setInterval(intervalInternal, AUTO_MODE_RUNNING_DURATION);
 
-    autoModeApproachingTimerRef.current = interval
+    autoModeApproachingTimerRef.current = interval;
   }, [
     autoModeInboundIndexRef,
     autoModeOutboundIndexRef,
@@ -161,14 +161,14 @@ const useAutoMode = (enabled: boolean): void => {
     selectedDirection,
     selectedLine,
     stations,
-  ])
+  ]);
 
   useEffect(() => {
-    startApproachingTimer()
-  }, [startApproachingTimer])
+    startApproachingTimer();
+  }, [startApproachingTimer]);
 
   const startArriveTimer = useCallback(() => {
-    const direction = selectedDirection
+    const direction = selectedDirection;
 
     if (
       !enabled ||
@@ -176,23 +176,23 @@ const useAutoMode = (enabled: boolean): void => {
       !direction ||
       !selectedLine
     ) {
-      return
+      return;
     }
 
     const intervalInternal = () => {
       if (direction === 'INBOUND') {
-        const index = autoModeInboundIndexRef.current
+        const index = autoModeInboundIndexRef.current;
 
-        const next = stations[index]
+        const next = stations[index];
 
         if (!isLoopLine && index === stations.length - 1) {
-          setAutoModeInboundIndex(0)
+          setAutoModeInboundIndex(0);
         } else {
-          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1))
+          setAutoModeInboundIndex((prev) => (isLoopLine ? prev - 1 : prev + 1));
         }
 
         if (!index && isLoopLine) {
-          setAutoModeInboundIndex(stations.length - 1)
+          setAutoModeInboundIndex(stations.length - 1);
         }
 
         if (next) {
@@ -207,20 +207,22 @@ const useAutoMode = (enabled: boolean): void => {
               speed: 0,
               heading: 0,
             },
-          })
+          });
         }
       } else if (direction === 'OUTBOUND') {
-        const index = autoModeOutboundIndexRef.current
+        const index = autoModeOutboundIndexRef.current;
 
-        const next = stations[index]
+        const next = stations[index];
         if (!isLoopLine && !index) {
-          setAutoModeOutboundIndex(stations.length)
+          setAutoModeOutboundIndex(stations.length);
         } else {
-          setAutoModeOutboundIndex((prev) => (isLoopLine ? prev + 1 : prev - 1))
+          setAutoModeOutboundIndex((prev) =>
+            isLoopLine ? prev + 1 : prev - 1
+          );
         }
 
         if (index === stations.length - 1 && isLoopLine) {
-          setAutoModeOutboundIndex(0)
+          setAutoModeOutboundIndex(0);
         }
 
         if (next) {
@@ -235,15 +237,15 @@ const useAutoMode = (enabled: boolean): void => {
               speed: 0,
               heading: 0,
             },
-          })
+          });
         }
       }
-    }
+    };
 
-    intervalInternal()
+    intervalInternal();
 
-    const interval = setInterval(intervalInternal, AUTO_MODE_WHOLE_DURATION)
-    autoModeArriveTimerRef.current = interval
+    const interval = setInterval(intervalInternal, AUTO_MODE_WHOLE_DURATION);
+    autoModeArriveTimerRef.current = interval;
   }, [
     autoModeInboundIndexRef,
     autoModeOutboundIndexRef,
@@ -252,22 +254,22 @@ const useAutoMode = (enabled: boolean): void => {
     selectedDirection,
     selectedLine,
     stations,
-  ])
+  ]);
 
   useEffect(() => {
-    startArriveTimer()
-  }, [startArriveTimer])
+    startArriveTimer();
+  }, [startArriveTimer]);
 
   useEffect(() => {
     return () => {
       if (autoModeApproachingTimerRef.current) {
-        clearInterval(autoModeApproachingTimerRef.current)
+        clearInterval(autoModeApproachingTimerRef.current);
       }
       if (autoModeArriveTimerRef.current) {
-        clearInterval(autoModeArriveTimerRef.current)
+        clearInterval(autoModeArriveTimerRef.current);
       }
-    }
-  }, [])
-}
+    };
+  }, []);
+};
 
-export default useAutoMode
+export default useAutoMode;

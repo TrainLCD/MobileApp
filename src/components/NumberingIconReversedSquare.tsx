@@ -1,15 +1,19 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-  darkText?: boolean
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+  darkText?: boolean;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -70,7 +74,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-})
+});
 
 const NumberingIconReversedSquare: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -78,8 +82,8 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   size,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -93,7 +97,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -108,7 +112,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -127,7 +131,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
         {stationNumber}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconReversedSquare
+export default NumberingIconReversedSquare;

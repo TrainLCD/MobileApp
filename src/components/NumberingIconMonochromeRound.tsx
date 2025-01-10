@@ -1,7 +1,7 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
@@ -21,18 +21,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-})
+});
 
 type Props = {
-  stationNumber: string
-}
+  stationNumber: string;
+};
 
 const NumberingIconMonochromeRound: React.FC<Props> = ({ stationNumber }) => {
   return (
     <View style={styles.root}>
       <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconMonochromeRound
+export default NumberingIconMonochromeRound;

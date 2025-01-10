@@ -1,14 +1,18 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -88,15 +92,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
     alignSelf: 'center',
   },
-})
+});
 
 const NumberingIconRoundHorizontal: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('-')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('-');
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -111,7 +115,7 @@ const NumberingIconRoundHorizontal: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -127,7 +131,7 @@ const NumberingIconRoundHorizontal: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -141,7 +145,7 @@ const NumberingIconRoundHorizontal: React.FC<Props> = ({
         {stationNumber}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconRoundHorizontal
+export default NumberingIconRoundHorizontal;

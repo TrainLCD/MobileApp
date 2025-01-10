@@ -1,18 +1,18 @@
-import { Ionicons } from '@expo/vector-icons'
-import { StackActions, useNavigation } from '@react-navigation/native'
-import React from 'react'
+import { Ionicons } from '@expo/vector-icons';
+import { StackActions, useNavigation } from '@react-navigation/native';
+import React from 'react';
 import {
   ActivityIndicator,
   Linking,
   Pressable,
   StyleSheet,
   View,
-} from 'react-native'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { translate } from '../translation'
-import { RFValue } from '../utils/rfValue'
-import Typography from './Typography'
+} from 'react-native';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import { translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   loading: {
@@ -50,17 +50,17 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     marginRight: 4,
   },
-})
+});
 
 const Loading = ({
   message,
   linkType,
 }: {
-  message?: string
-  linkType?: 'serverStatus' | 'searchStation'
+  message?: string;
+  linkType?: 'serverStatus' | 'searchStation';
 }) => {
-  const navigation = useNavigation()
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const navigation = useNavigation();
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   return (
     <View
@@ -100,7 +100,7 @@ const Loading = ({
         </Pressable>
       ) : null}
     </View>
-  )
-}
+  );
+};
 
-export default Loading
+export default Loading;

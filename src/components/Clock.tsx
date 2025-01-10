@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react'
-import { StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
-import useClock from '../hooks/useClock'
-import { useInterval } from '../hooks/useInterval'
-import isTablet from '../utils/isTablet'
-import { RFValue } from '../utils/rfValue'
-import Typography from './Typography'
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, type TextStyle, View, type ViewStyle } from 'react-native';
+import useClock from '../hooks/useClock';
+import { useInterval } from '../hooks/useInterval';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   clockContainer: {
@@ -16,29 +16,29 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontSize: isTablet ? RFValue(21) : RFValue(16),
   },
-})
+});
 
 type Props = {
-  style: ViewStyle
-  white?: boolean
-  bold?: boolean
-}
+  style: ViewStyle;
+  white?: boolean;
+  bold?: boolean;
+};
 
 const Clock = ({ style, white, bold }: Props): React.ReactElement => {
-  const [hours, minutes] = useClock()
-  const [colonOpacity, setColonOpacity] = useState(0)
+  const [hours, minutes] = useClock();
+  const [colonOpacity, setColonOpacity] = useState(0);
 
   useInterval(
     useCallback(() => {
-      setColonOpacity((prev) => (prev === 0 ? 1 : 0))
+      setColonOpacity((prev) => (prev === 0 ? 1 : 0));
     }, []),
     500
-  )
+  );
 
   const textCustomStyle: TextStyle = {
     color: white ? 'white' : '#3a3a3a',
     fontWeight: bold ? 'bold' : 'normal',
-  }
+  };
 
   return (
     <View style={[style, styles.clockContainer]}>
@@ -54,7 +54,7 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
         {minutes}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(Clock)
+export default React.memo(Clock);

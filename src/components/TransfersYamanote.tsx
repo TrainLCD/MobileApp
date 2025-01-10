@@ -1,21 +1,21 @@
-import React, { useMemo } from 'react'
-import { Dimensions, ScrollView, StyleSheet, View } from 'react-native'
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Station } from '../../gen/proto/stationapi_pb'
-import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
-import useGetLineMark from '../hooks/useGetLineMark'
-import useTransferLines from '../hooks/useTransferLines'
-import { translate } from '../translation'
-import isTablet from '../utils/isTablet'
-import { RFValue } from '../utils/rfValue'
-import TransferLineDot from './TransferLineDot'
-import TransferLineMark from './TransferLineMark'
-import Typography from './Typography'
+import React, { useMemo } from 'react';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
+import useGetLineMark from '../hooks/useGetLineMark';
+import useTransferLines from '../hooks/useTransferLines';
+import { translate } from '../translation';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import TransferLineDot from './TransferLineDot';
+import TransferLineMark from './TransferLineMark';
+import Typography from './Typography';
 
 interface Props {
-  onPress: () => void
-  station: Station
+  onPress: () => void;
+  station: Station;
 }
 
 const styles = StyleSheet.create({
@@ -58,21 +58,21 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: 'bold',
   },
-})
+});
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
-  const getLineMarkFunc = useGetLineMark()
-  const lines = useTransferLines()
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const getLineMarkFunc = useGetLineMark();
+  const lines = useTransferLines();
 
-  const flexBasis = useMemo(() => Dimensions.get('window').width / 3, [])
+  const flexBasis = useMemo(() => Dimensions.get('window').width / 3, []);
 
   const renderTransferLines = (): (JSX.Element | null)[] =>
     lines.map((line) => {
       if (!station) {
-        return null
+        return null;
       }
-      const lineMark = getLineMarkFunc({ line })
+      const lineMark = getLineMarkFunc({ line });
 
       return (
         <View
@@ -107,8 +107,8 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
             </View>
           </View>
         </View>
-      )
-    })
+      );
+    });
 
   return (
     <ScrollView>
@@ -122,7 +122,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
         <View style={styles.transferList}>{renderTransferLines()}</View>
       </TouchableWithoutFeedback>
     </ScrollView>
-  )
-}
+  );
+};
 
-export default React.memo(TransfersYamanote)
+export default React.memo(TransfersYamanote);

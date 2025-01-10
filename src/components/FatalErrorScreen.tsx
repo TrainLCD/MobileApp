@@ -1,16 +1,16 @@
 // ErrorScreenのnavigationない版
-import * as Linking from 'expo-linking'
-import React, { useCallback } from 'react'
+import * as Linking from 'expo-linking';
+import React, { useCallback } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { STATUS_URL } from '../constants'
-import { translate } from '../translation'
-import { RFValue } from '../utils/rfValue'
+} from 'react-native';
+import { STATUS_URL } from '../constants';
+import { translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
@@ -47,14 +47,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-})
+});
 
 type Props = {
-  title: string
-  text: string
-  onRetryPress?: () => void
-  showStatus?: boolean
-}
+  title: string;
+  text: string;
+  onRetryPress?: () => void;
+  showStatus?: boolean;
+};
 
 const ErrorScreen: React.FC<Props> = ({
   title,
@@ -62,7 +62,7 @@ const ErrorScreen: React.FC<Props> = ({
   onRetryPress,
   showStatus,
 }: Props) => {
-  const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), [])
+  const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -82,7 +82,7 @@ const ErrorScreen: React.FC<Props> = ({
         ) : null}
       </View>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default React.memo(ErrorScreen)
+export default React.memo(ErrorScreen);

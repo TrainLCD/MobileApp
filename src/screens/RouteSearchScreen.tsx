@@ -1,43 +1,43 @@
-import { StackActions, useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { StackActions, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  NativeSyntheticEvent,
+  type NativeSyntheticEvent,
   Platform,
   StyleSheet,
   TextInput,
-  TextInputChangeEventData,
-  TextInputKeyPressEventData,
+  type TextInputChangeEventData,
+  type TextInputKeyPressEventData,
   View,
-} from 'react-native'
-import { RFValue } from '../utils/rfValue'
+} from 'react-native';
+import { RFValue } from '../utils/rfValue';
 
-import { useMutation, useQuery } from '@connectrpc/connect-query'
-import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv'
-import { useSetRecoilState } from 'recoil'
+import { useMutation, useQuery } from '@connectrpc/connect-query';
+import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
+import { useSetRecoilState } from 'recoil';
 import {
   getRoutes,
   getStationsByLineId,
   getStationsByName,
-} from '../../gen/proto/stationapi-StationAPI_connectquery'
-import { Route, Station } from '../../gen/proto/stationapi_pb'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import { RouteListModal } from '../components/RouteListModal'
-import { StationList } from '../components/StationList'
-import { FONTS } from '../constants'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { useTrainTypeStations } from '../hooks/useTrainTypeStations'
-import { LineDirection } from '../models/Bound'
-import { APP_THEME } from '../models/Theme'
-import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { translate } from '../translation'
-import { groupStations } from '../utils/groupStations'
+} from '../../gen/proto/stationapi-StationAPI_connectquery';
+import type { Route, Station } from '../../gen/proto/stationapi_pb';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { RouteListModal } from '../components/RouteListModal';
+import { StationList } from '../components/StationList';
+import { FONTS } from '../constants';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { useTrainTypeStations } from '../hooks/useTrainTypeStations';
+import type { LineDirection } from '../models/Bound';
+import { APP_THEME } from '../models/Theme';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { translate } from '../translation';
+import { groupStations } from '../utils/groupStations';
 
 const styles = StyleSheet.create({
   root: {
@@ -66,37 +66,37 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontWeight: 'bold',
   },
-})
+});
 
 const RouteSearchScreen = () => {
-  const [query, setQuery] = useState('')
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null)
+  const [query, setQuery] = useState('');
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
 
-  const navigation = useNavigation()
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const navigation = useNavigation();
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false)
-  const setStationState = useSetRecoilState(stationState)
-  const setLineState = useSetRecoilState(lineState)
-  const setNavigationState = useSetRecoilState(navigationState)
+  const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false);
+  const setStationState = useSetRecoilState(stationState);
+  const setLineState = useSetRecoilState(lineState);
+  const setNavigationState = useSetRecoilState(navigationState);
 
-  const currentStation = useCurrentStation()
+  const currentStation = useCurrentStation();
 
   const { mutateAsync: fetchStationsByLineId } =
-    useMutation(getStationsByLineId)
+    useMutation(getStationsByLineId);
 
   const {
     fetchStations: fetchTrainTypeFromTrainTypeId,
     isLoading: isTrainTypesLoading,
     error: fetchTrainTypesError,
-  } = useTrainTypeStations()
+  } = useTrainTypeStations();
 
   const {
     data: byNameData,
     status: byNameLoadingStatus,
     mutate: fetchByName,
     error: byNameError,
-  } = useMutation(getStationsByName)
+  } = useMutation(getStationsByName);
 
   const {
     data: routesData,
@@ -109,85 +109,85 @@ const RouteSearchScreen = () => {
       toStationGroupId: selectedStation?.groupId,
     },
     { enabled: !!currentStation && !!selectedStation }
-  )
+  );
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation])
+  }, [navigation]);
 
   const handleSubmit = useCallback(() => {
     if (!currentStation || !query.trim().length) {
-      return
+      return;
     }
     fetchByName({
       stationName: query.trim(),
       limit: Number(SEARCH_STATION_RESULT_LIMIT),
       fromStationGroupId: currentStation?.groupId,
-    })
-  }, [currentStation, fetchByName, query])
+    });
+  }, [currentStation, fetchByName, query]);
 
   useEffect(() => {
     if (byNameError) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'))
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
-  }, [byNameError])
+  }, [byNameError]);
 
   // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
     () =>
       groupStations(byNameData?.stations ?? []).filter(
-        (sta) => sta.groupId != currentStation?.groupId
+        (sta) => sta.groupId !== currentStation?.groupId
       ),
     [byNameData?.stations, currentStation?.groupId]
-  )
+  );
 
   const handleStationPress = useCallback(
     async (stationFromSearch: Station) => {
       setLineState((prev) => ({
         ...prev,
         selectedLine: stationFromSearch.line ?? null,
-      }))
-      setSelectedStation(stationFromSearch)
-      setIsRouteListModalVisible(true)
+      }));
+      setSelectedStation(stationFromSearch);
+      setIsRouteListModalVisible(true);
     },
     [setLineState]
-  )
+  );
 
   const onKeyPress = useCallback(
     (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (e.nativeEvent.key === 'Enter') {
-        handleSubmit()
+        handleSubmit();
       }
     },
     [handleSubmit]
-  )
+  );
 
   const onChange = useCallback(
     (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-      setQuery(e.nativeEvent.text)
+      setQuery(e.nativeEvent.text);
     },
     []
-  )
+  );
 
   const handleSelect = useCallback(
     async (route: Route | undefined) => {
       const stop = route?.stops.find(
         (s) => s.groupId === currentStation?.groupId
-      )
+      );
       if (!stop) {
-        return
+        return;
       }
 
-      const trainType = stop.trainType
+      const trainType = stop.trainType;
 
       if (!trainType?.id) {
         const { stations } = await fetchStationsByLineId({
           lineId: stop.line?.id,
-        })
+        });
         const stationInRoute =
-          stations.find((s) => s.groupId === currentStation?.groupId) ?? null
+          stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
         const direction: LineDirection =
           (route?.stops ?? []).findIndex(
@@ -197,9 +197,9 @@ const RouteSearchScreen = () => {
             (s) => s.groupId === selectedStation?.groupId
           )
             ? 'INBOUND'
-            : 'OUTBOUND'
+            : 'OUTBOUND';
 
-        setNavigationState((prev) => ({ ...prev, trainType: null }))
+        setNavigationState((prev) => ({ ...prev, trainType: null }));
 
         setStationState((prev) => ({
           ...prev,
@@ -208,33 +208,34 @@ const RouteSearchScreen = () => {
           selectedDirection: direction,
           selectedBound:
             direction === 'INBOUND'
-              ? route?.stops[route.stops.length - 1] ?? null
-              : route?.stops[0] ?? null,
-        }))
+              ? (route?.stops[route.stops.length - 1] ?? null)
+              : (route?.stops[0] ?? null),
+        }));
         navigation.dispatch(
           StackActions.replace('MainStack', { screen: 'Main' })
-        )
-        return
+        );
+        return;
       }
 
       const data = await fetchTrainTypeFromTrainTypeId({
         lineGroupId: trainType.groupId,
-      })
+      });
 
       const station =
-        data.stations.find((s) => s.groupId === currentStation?.groupId) ?? null
+        data.stations.find((s) => s.groupId === currentStation?.groupId) ??
+        null;
 
       const direction: LineDirection =
         data.stations.findIndex((s) => s.groupId === currentStation?.groupId) <
         data.stations.findIndex((s) => s.groupId === selectedStation?.groupId)
           ? 'INBOUND'
-          : 'OUTBOUND'
+          : 'OUTBOUND';
 
       setNavigationState((prev) => ({
         ...prev,
         trainType: station?.trainType ?? null,
         stationForHeader: station,
-      }))
+      }));
       setStationState((prev) => ({
         ...prev,
         station,
@@ -244,8 +245,10 @@ const RouteSearchScreen = () => {
           direction === 'INBOUND'
             ? data.stations[data.stations.length - 1]
             : data.stations[0],
-      }))
-      navigation.dispatch(StackActions.replace('MainStack', { screen: 'Main' }))
+      }));
+      navigation.dispatch(
+        StackActions.replace('MainStack', { screen: 'Main' })
+      );
     },
     [
       currentStation?.groupId,
@@ -256,7 +259,7 @@ const RouteSearchScreen = () => {
       setNavigationState,
       setStationState,
     ]
-  )
+  );
 
   return (
     <>
@@ -318,7 +321,7 @@ const RouteSearchScreen = () => {
         onSelect={handleSelect}
       />
     </>
-  )
-}
+  );
+};
 
-export default React.memo(RouteSearchScreen)
+export default React.memo(RouteSearchScreen);

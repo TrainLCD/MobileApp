@@ -1,31 +1,32 @@
-import { ConnectError } from '@connectrpc/connect'
-import React, { useMemo } from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useRecoilValue } from 'recoil'
-import { Station, TrainType } from '../../gen/proto/stationapi_pb'
-import { LED_THEME_BG_COLOR } from '../constants'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import lineState from '../store/atoms/line'
-import { isJapanese, translate } from '../translation'
-import dropEitherJunctionStation from '../utils/dropJunctionStation'
-import getIsPass from '../utils/isPass'
-import isTablet from '../utils/isTablet'
-import { RFValue } from '../utils/rfValue'
-import Button from './Button'
-import Heading from './Heading'
-import Typography from './Typography'
+import type { ConnectError } from '@connectrpc/connect';
+import type React from 'react';
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRecoilValue } from 'recoil';
+import type { Station, TrainType } from '../../gen/proto/stationapi_pb';
+import { LED_THEME_BG_COLOR } from '../constants';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import lineState from '../store/atoms/line';
+import { isJapanese, translate } from '../translation';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
+import getIsPass from '../utils/isPass';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import Button from './Button';
+import Heading from './Heading';
+import Typography from './Typography';
 
 type Props = {
-  trainType: TrainType | null
-  stations: Station[]
-  loading: boolean
-  disabled?: boolean
-  error: ConnectError | null
-  onClose: () => void
-  onConfirmed: (trainType: TrainType | undefined) => void
-}
+  trainType: TrainType | null;
+  stations: Station[];
+  loading: boolean;
+  disabled?: boolean;
+  error: ConnectError | null;
+  onClose: () => void;
+  onConfirmed: (trainType: TrainType | undefined) => void;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -48,9 +49,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 16,
   },
-})
+});
 
-const SAFE_AREA_FALLBACK = 32
+const SAFE_AREA_FALLBACK = 32;
 
 export const TrainTypeInfoPage: React.FC<Props> = ({
   trainType,
@@ -60,11 +61,11 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
   onClose,
   onConfirmed,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const { selectedLine } = useRecoilValue(lineState)
+  const { selectedLine } = useRecoilValue(lineState);
 
-  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets()
+  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
 
   const trainTypeLines = useMemo(
     () =>
@@ -78,12 +79,12 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             )
         : [selectedLine],
     [selectedLine, trainType?.lines]
-  )
+  );
 
   const stopStations = useMemo(
     () => dropEitherJunctionStation(stations).filter((s) => !getIsPass(s)),
     [stations]
-  )
+  );
 
   return (
     <View style={styles.root}>
@@ -207,8 +208,8 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                   }}
                 >
                   {isJapanese
-                    ? l?.trainType?.name ?? '普通/各駅停車'
-                    : l?.trainType?.nameRoman ?? 'Local'}
+                    ? (l?.trainType?.name ?? '普通/各駅停車')
+                    : (l?.trainType?.nameRoman ?? 'Local')}
                 </Typography>
               </View>
             ))}
@@ -229,5 +230,5 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
         </View>
       </View>
     </View>
-  )
-}
+  );
+};

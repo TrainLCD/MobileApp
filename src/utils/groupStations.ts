@@ -1,5 +1,5 @@
-import { Station } from '../../gen/proto/stationapi_pb'
-import { PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants'
+import { Station } from '../../gen/proto/stationapi_pb';
+import { PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants';
 
 export const groupStations = (stations: Station[]): Station[] => {
   return stations
@@ -19,7 +19,7 @@ export const groupStations = (stations: Station[]): Station[] => {
           nameRoman: `${sta.nameRoman}(${
             PREFECTURES_ROMAN[sta.prefectureId - 1]
           })`,
-        }
+        };
       }
       // 駅名が同じだが運営会社は違う場合は事業者名を付与する
       if (
@@ -32,10 +32,10 @@ export const groupStations = (stations: Station[]): Station[] => {
           ...sta,
           name: `${sta.name}(${sta.line?.company?.nameShort})`,
           nameRoman: `${sta.nameRoman}(${sta.line?.company?.nameEnglishShort})`,
-        }
+        };
       }
 
-      return sta
+      return sta;
     })
-    .map((s) => new Station(s))
-}
+    .map((s) => new Station(s));
+};

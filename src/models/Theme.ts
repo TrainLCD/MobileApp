@@ -7,6 +7,6 @@ export const APP_THEME = {
   TOEI: 'TOEI',
   LED: 'LED',
   JO: 'JO',
-} as const
+} as const;
 
-export type AppTheme = (typeof APP_THEME)[keyof typeof APP_THEME]
+export type AppTheme = (typeof APP_THEME)[keyof typeof APP_THEME];

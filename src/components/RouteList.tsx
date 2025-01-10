@@ -1,12 +1,12 @@
-import React, { useCallback, useMemo } from 'react'
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { Route } from '../../gen/proto/stationapi_pb'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { isJapanese } from '../translation'
-import { RFValue } from '../utils/rfValue'
-import Typography from './Typography'
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import type { Route } from '../../gen/proto/stationapi_pb';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import { isJapanese } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   cell: { padding: 12 },
@@ -18,52 +18,52 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
-})
+});
 
-const Separator = () => <View style={styles.separator} />
+const Separator = () => <View style={styles.separator} />;
 
 const ItemCell = ({
   item,
   loading,
   onSelect,
 }: {
-  item: Route
-  loading: boolean
-  onSelect: (item: Route) => void
+  item: Route;
+  loading: boolean;
+  onSelect: (item: Route) => void;
 }) => {
-  const currentStation = useCurrentStation()
+  const currentStation = useCurrentStation();
 
   const lineNameTitle = useMemo(() => {
     const trainType = item.stops.find(
       (stop) => stop.groupId === Number(currentStation?.groupId)
-    )?.trainType
+    )?.trainType;
 
     if (!isJapanese) {
       const lineName = item.stops.find(
         (s) => s.groupId === currentStation?.groupId
-      )?.line?.nameRoman
-      const typeName = trainType?.nameRoman ?? 'Local'
+      )?.line?.nameRoman;
+      const typeName = trainType?.nameRoman ?? 'Local';
 
-      return `${lineName} ${typeName}`
+      return `${lineName} ${typeName}`;
     }
     const lineName = item.stops.find(
       (s) => s.groupId === currentStation?.groupId
-    )?.line?.nameShort
-    const typeName = trainType?.name ?? '普通または各駅停車'
+    )?.line?.nameShort;
+    const typeName = trainType?.name ?? '普通または各駅停車';
 
-    return `${lineName} ${typeName}`
-  }, [currentStation?.groupId, item.stops])
+    return `${lineName} ${typeName}`;
+  }, [currentStation?.groupId, item.stops]);
 
   const bottomText = useMemo(() => {
     if (isJapanese) {
       return `${item.stops[0]?.name}から${
         item.stops[item.stops.length - 1]?.name
-      }まで`
+      }まで`;
     }
     return `${item.stops[0]?.nameRoman} - ${
       item.stops[item.stops.length - 1]?.nameRoman
-    }`
-  }, [item.stops])
+    }`;
+  }, [item.stops]);
 
   return (
     <TouchableOpacity
@@ -76,27 +76,27 @@ const ItemCell = ({
         {bottomText}
       </Typography>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 export const RouteList = ({
   routes,
   onSelect,
   loading,
 }: {
-  routes: Route[]
-  onSelect: (item: Route | undefined) => void
-  loading: boolean
+  routes: Route[];
+  onSelect: (item: Route | undefined) => void;
+  loading: boolean;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const renderItem = useCallback(
     ({ item }: { item: Route; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} loading={loading} />
+      return <ItemCell item={item} onSelect={onSelect} loading={loading} />;
     },
     [loading, onSelect]
-  )
-  const keyExtractor = useCallback((item: Route) => item.id.toString(), [])
+  );
+  const keyExtractor = useCallback((item: Route) => item.id.toString(), []);
 
   return (
     <FlatList
@@ -115,5 +115,5 @@ export const RouteList = ({
       ItemSeparatorComponent={Separator}
       ListFooterComponent={Separator}
     />
-  )
-}
+  );
+};

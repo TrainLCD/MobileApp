@@ -1,30 +1,30 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect } from 'react'
-import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useSetRecoilState } from 'recoil'
-import { Line } from '../../gen/proto/stationapi_pb'
-import Button from '../components/Button'
-import ErrorScreen from '../components/ErrorScreen'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import Loading from '../components/Loading'
-import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
-import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore'
-import useConnectivity from '../hooks/useConnectivity'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
-import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
-import useGetLineMark from '../hooks/useGetLineMark'
-import { useLocationStore } from '../hooks/useLocationStore'
-import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { TestIds } from '../test/e2e'
-import { isJapanese, translate } from '../translation'
-import { generateLineTestId } from '../utils/generateTestID'
-import { isDevApp } from '../utils/isDevApp'
-import isTablet from '../utils/isTablet'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useSetRecoilState } from 'recoil';
+import type { Line } from '../../gen/proto/stationapi_pb';
+import Button from '../components/Button';
+import ErrorScreen from '../components/ErrorScreen';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import Loading from '../components/Loading';
+import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants';
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
+import useConnectivity from '../hooks/useConnectivity';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce';
+import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation';
+import useGetLineMark from '../hooks/useGetLineMark';
+import { useLocationStore } from '../hooks/useLocationStore';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { TestIds } from '../test/e2e';
+import { isJapanese, translate } from '../translation';
+import { generateLineTestId } from '../utils/generateTestID';
+import { isDevApp } from '../utils/isDevApp';
+import isTablet from '../utils/isTablet';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -43,67 +43,67 @@ const styles = StyleSheet.create({
     rowGap: isTablet ? 12 : 8,
     columnGap: isTablet ? 24 : 12,
   },
-})
+});
 
 const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetRecoilState(stationState)
-  const setNavigationState = useSetRecoilState(navigationState)
-  const setLineState = useSetRecoilState(lineState)
+  const setStationState = useSetRecoilState(stationState);
+  const setNavigationState = useSetRecoilState(navigationState);
+  const setLineState = useSetRecoilState(lineState);
 
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled
-  )
+  );
   const toggleAutoModeEnabled = useApplicationFlagStore(
     (state) => state.toggleAutoModeEnabled
-  )
+  );
 
   const {
     fetchByCoords,
     isLoading: nearbyStationLoading,
     error: nearbyStationFetchError,
-  } = useFetchNearbyStation()
-  const isInternetAvailable = useConnectivity()
+  } = useFetchNearbyStation();
+  const isInternetAvailable = useConnectivity();
   const {
     fetchCurrentLocation,
     loading: locationLoading,
     error: fetchLocationError,
-  } = useFetchCurrentLocationOnce()
-  const station = useCurrentStation()
-  const locationState = useLocationStore()
+  } = useFetchCurrentLocationOnce();
+  const station = useCurrentStation();
+  const locationState = useLocationStore();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     const init = async () => {
-      if (station) return
-      const pos = await fetchCurrentLocation(true)
+      if (station) return;
+      const pos = await fetchCurrentLocation(true);
       if (!pos) {
-        return
+        return;
       }
-      useLocationStore.setState(pos)
+      useLocationStore.setState(pos);
       const data = await fetchByCoords({
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
         limit: 1,
-      })
-      const stationFromAPI = data.stations[0] ?? null
+      });
+      const stationFromAPI = data.stations[0] ?? null;
 
       setStationState((prev) => ({
         ...prev,
         station: stationFromAPI,
-      }))
+      }));
       setNavigationState((prev) => ({
         ...prev,
         stationForHeader: stationFromAPI,
-      }))
-    }
-    init()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+      }));
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      )
+      );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
           {
@@ -112,16 +112,16 @@ const SelectLineScreen: React.FC = () => {
               AsyncStorage.setItem(
                 ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
                 'true'
-              )
+              );
             },
           },
-        ])
+        ]);
       }
-    }
-    f()
-  }, [])
+    };
+    f();
+  }, []);
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
     (line: Line): void => {
@@ -129,45 +129,45 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         trainType: line.station?.trainType ?? null,
         leftStations: [],
-      }))
+      }));
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
-      }))
-      navigation.navigate('SelectBound')
+      }));
+      navigation.navigate('SelectBound');
     },
     [navigation, setLineState, setNavigationState]
-  )
+  );
 
-  const getLineMarkFunc = useGetLineMark()
+  const getLineMarkFunc = useGetLineMark();
 
   const getButtonText = useCallback(
     (line: Line) => {
-      const lineMark = station && getLineMarkFunc({ line })
-      const lineName = line.nameShort.replace(parenthesisRegexp, '')
-      const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? ''
+      const lineMark = station && getLineMarkFunc({ line });
+      const lineName = line.nameShort.replace(parenthesisRegexp, '');
+      const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? '';
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR
-        }`
+        }`;
       }
       if (lineMark?.subSign) {
         return `[${lineMark.sign}/${lineMark.subSign}] ${
           isJapanese ? lineName : lineNameR
-        }`
+        }`;
       }
       if (lineMark?.sign) {
-        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`
+        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
       }
-      return isJapanese ? lineName : lineNameR
+      return isJapanese ? lineName : lineNameR;
     },
     [getLineMarkFunc, station]
-  )
+  );
 
   const renderLineButton: React.FC<Line> = useCallback(
     (line: Line) => {
-      const buttonOnPress = (): void => handleLineSelected(line)
-      const buttonText = getButtonText(line)
+      const buttonOnPress = (): void => handleLineSelected(line);
+      const buttonText = getButtonText(line);
 
       return (
         <Button
@@ -179,51 +179,56 @@ const SelectLineScreen: React.FC = () => {
         >
           {buttonText}
         </Button>
-      )
+      );
     },
     [getButtonText, handleLineSelected, isInternetAvailable]
-  )
+  );
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await fetchCurrentLocation()
+    const pos = await fetchCurrentLocation();
     if (!pos) {
-      return
+      return;
     }
     const data = await fetchByCoords({
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude,
       limit: 1,
-    })
-    const stationFromAPI = data.stations[0] ?? null
+    });
+    const stationFromAPI = data.stations[0] ?? null;
     setStationState((prev) => ({
       ...prev,
       station:
         prev.station?.id !== stationFromAPI?.id ? stationFromAPI : prev.station,
-    }))
+    }));
     setNavigationState((prev) => ({
       ...prev,
       stationForHeader:
         prev.stationForHeader?.id !== stationFromAPI?.id
           ? stationFromAPI
           : prev.stationForHeader,
-    }))
-  }, [fetchByCoords, fetchCurrentLocation, setNavigationState, setStationState])
+    }));
+  }, [
+    fetchByCoords,
+    fetchCurrentLocation,
+    setNavigationState,
+    setStationState,
+  ]);
 
   const navigateToSettingsScreen = useCallback(() => {
-    navigation.navigate('AppSettings')
-  }, [navigation])
+    navigation.navigate('AppSettings');
+  }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    navigation.navigate('FakeStation')
-  }, [navigation])
+    navigation.navigate('FakeStation');
+  }, [navigation]);
 
   const navigateToSavedRoutesScreen = useCallback(() => {
-    navigation.navigate('SavedRoutes')
-  }, [navigation])
+    navigation.navigate('SavedRoutes');
+  }, [navigation]);
 
   const navigateToRouteSearchScreen = useCallback(() => {
-    navigation.navigate('RouteSearch')
-  }, [navigation])
+    navigation.navigate('RouteSearch');
+  }, [navigation]);
 
   if (nearbyStationFetchError) {
     return (
@@ -234,7 +239,7 @@ const SelectLineScreen: React.FC = () => {
         onRetryPress={handleUpdateStation}
         isFetching={nearbyStationLoading}
       />
-    )
+    );
   }
 
   if (fetchLocationError && !station) {
@@ -246,7 +251,7 @@ const SelectLineScreen: React.FC = () => {
         onRetryPress={handleUpdateStation}
         isFetching={locationLoading}
       />
-    )
+    );
   }
 
   // NOTE: 駅検索ができるボタンが表示されるので、!stationがないと一生loadingになる
@@ -256,11 +261,13 @@ const SelectLineScreen: React.FC = () => {
         message={translate('loadingLocation')}
         linkType="searchStation"
       />
-    )
+    );
   }
 
   if (!station) {
-    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+    return (
+      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+    );
   }
 
   return (
@@ -307,7 +314,7 @@ const SelectLineScreen: React.FC = () => {
         onPress={handleUpdateStation}
       />
     </>
-  )
-}
+  );
+};
 
-export default React.memo(SelectLineScreen)
+export default React.memo(SelectLineScreen);
