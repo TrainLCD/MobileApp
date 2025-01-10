@@ -4,6 +4,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "web": "expo start --web",
+    "lint": "biome check ./src",
+    "format": "biome format ./src --write",
     "test": "TZ=UTC jest",
     "watch:test": "TZ=UTC jest --watch",
     "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
