@@ -1,8 +1,8 @@
 import type React from "react";
 import { StyleSheet, View } from "react-native";
+import { FONTS } from "../constants";
 import isTablet from "../utils/isTablet";
 import Typography from "./Typography";
-import { FONTS } from "../constants";
 
 type Props = {
 	stationNumber: string;

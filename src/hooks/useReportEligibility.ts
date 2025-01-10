@@ -1,9 +1,7 @@
 import firestore from "@react-native-firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import type EligibilityDocData from "../models/FeedbackEligibility";
-import type {
-	EligibilityType,
-} from "../models/FeedbackEligibility";
+import type { EligibilityType } from "../models/FeedbackEligibility";
 import useCachedInitAnonymousUser from "./useCachedAnonymousUser";
 
 const useReportEligibility = (): EligibilityType | undefined => {

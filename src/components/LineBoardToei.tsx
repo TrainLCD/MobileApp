@@ -2,7 +2,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useMemo, useState } from "react";
 import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import { useRecoilValue } from "recoil";
-import type { Line, Station, StationNumber } from "../../gen/proto/stationapi_pb";
+import type {
+	Line,
+	Station,
+	StationNumber,
+} from "../../gen/proto/stationapi_pb";
 import { useCurrentLine } from "../hooks/useCurrentLine";
 import { useInterval } from "../hooks/useInterval";
 import useStationNumberIndexFunc from "../hooks/useStationNumberIndexFunc";

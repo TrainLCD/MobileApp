@@ -1,4 +1,8 @@
-import type { Line, Station, StationNumber } from "../../gen/proto/stationapi_pb";
+import type {
+	Line,
+	Station,
+	StationNumber,
+} from "../../gen/proto/stationapi_pb";
 
 export const getNumberingColor = (
 	arrived: boolean,

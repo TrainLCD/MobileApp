@@ -1,9 +1,13 @@
 import type React from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Ellipse } from "react-native-svg";
+import {
+	FONTS,
+	NUMBERING_ICON_SIZE,
+	type NumberingIconSize,
+} from "../constants";
 import isTablet from "../utils/isTablet";
 import Typography from "./Typography";
-import { FONTS, NUMBERING_ICON_SIZE, type NumberingIconSize } from "../constants";
 
 type Props = {
 	stationNumber: string;

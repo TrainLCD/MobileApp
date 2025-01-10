@@ -4,8 +4,8 @@ import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import remoteConfig from "@react-native-firebase/remote-config";
 import { NavigationContainer } from "@react-navigation/native";
 import {
-	createStackNavigator,
 	type StackNavigationOptions,
+	createStackNavigator,
 } from "@react-navigation/stack";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
-import { type StationNumber, TrainTypeKind } from "../../../gen/proto/stationapi_pb";
+import {
+	type StationNumber,
+	TrainTypeKind,
+} from "../../../gen/proto/stationapi_pb";
 import { JOBAN_LINE_IDS } from "../../constants";
 import stationState from "../../store/atoms/station";
 import getIsPass from "../../utils/isPass";
