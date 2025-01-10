@@ -1,14 +1,18 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  lineColor: string
-  stationNumber: string
-  size?: NumberingIconSize
-}
+  lineColor: string;
+  stationNumber: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -80,22 +84,22 @@ const styles = StyleSheet.create({
     width: isTablet ? 72 * 1.5 : 72,
     backgroundColor: 'black',
   },
-})
+});
 
 const NumberingIconIzuhakone: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   size,
   lineColor,
 }: Props) => {
-  const lineSymbol = stationNumberRaw.split('-')[0]
-  const stationNumber = stationNumberRaw.split('-')[1]
+  const lineSymbol = stationNumberRaw.split('-')[0];
+  const stationNumber = stationNumberRaw.split('-')[1];
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.rootTinySymbol}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -103,7 +107,7 @@ const NumberingIconIzuhakone: React.FC<Props> = ({
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
         <Typography style={styles.mediumLineSymbol}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -125,7 +129,7 @@ const NumberingIconIzuhakone: React.FC<Props> = ({
         <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconIzuhakone
+export default NumberingIconIzuhakone;

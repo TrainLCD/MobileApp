@@ -1,27 +1,27 @@
-import { useCallback, useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import { normalizeRomanText } from '../../src/utils/normalize'
-import { parenthesisRegexp } from '../constants'
-import { APP_THEME, AppTheme } from '../models/Theme'
-import stationState from '../store/atoms/station'
-import getIsPass from '../utils/isPass'
-import katakanaToHiragana from '../utils/kanaToHiragana'
-import { useAfterNextStation } from './useAfterNextStation'
-import useBounds from './useBounds'
-import useConnectedLines from './useConnectedLines'
-import { useCurrentLine } from './useCurrentLine'
-import { useCurrentStation } from './useCurrentStation'
-import useCurrentTrainType from './useCurrentTrainType'
-import useIsTerminus from './useIsTerminus'
-import { useLoopLine } from './useLoopLine'
-import useLoopLineBound from './useLoopLineBound'
-import { useNextStation } from './useNextStation'
-import { useNumbering } from './useNumbering'
-import { useSlicedStations } from './useSlicedStations'
-import { useStoppingState } from './useStoppingState'
-import { useThemeStore } from './useThemeStore'
-import useTransferLines from './useTransferLines'
+import { useCallback, useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import { Station } from '../../gen/proto/stationapi_pb';
+import { normalizeRomanText } from '../../src/utils/normalize';
+import { parenthesisRegexp } from '../constants';
+import { APP_THEME, type AppTheme } from '../models/Theme';
+import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
+import katakanaToHiragana from '../utils/kanaToHiragana';
+import { useAfterNextStation } from './useAfterNextStation';
+import useBounds from './useBounds';
+import useConnectedLines from './useConnectedLines';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import useCurrentTrainType from './useCurrentTrainType';
+import useIsTerminus from './useIsTerminus';
+import { useLoopLine } from './useLoopLine';
+import useLoopLineBound from './useLoopLineBound';
+import { useNextStation } from './useNextStation';
+import { useNumbering } from './useNumbering';
+import { useSlicedStations } from './useSlicedStations';
+import { useStoppingState } from './useStoppingState';
+import { useThemeStore } from './useThemeStore';
+import useTransferLines from './useTransferLines';
 
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
@@ -32,30 +32,30 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.TOEI]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
-}
+};
 
 const useTTSText = (
   firstSpeech = true,
   enabled = false
 ): [string, string] | undefined[] => {
-  const theme = useThemeStore()
+  const theme = useThemeStore();
 
-  const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState)
-  const station = useCurrentStation()
-  const currentLineOrigin = useCurrentLine()
+  const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState);
+  const station = useCurrentStation();
+  const currentLineOrigin = useCurrentLine();
 
-  const connectedLinesOrigin = useConnectedLines()
-  const transferLinesOriginal = useTransferLines()
-  const [nextStationNumber] = useNumbering(false)
-  const currentTrainTypeOrigin = useCurrentTrainType()
-  const loopLineBoundJa = useLoopLineBound(false)
-  const loopLineBoundEn = useLoopLineBound(false, 'EN')
-  const { directionalStops } = useBounds()
-  const nextStationOrigin = useNextStation()
-  const isNextStopTerminus = useIsTerminus(nextStationOrigin)
-  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
-  const slicedStationsOrigin = useSlicedStations()
-  const stoppingState = useStoppingState()
+  const connectedLinesOrigin = useConnectedLines();
+  const transferLinesOriginal = useTransferLines();
+  const [nextStationNumber] = useNumbering(false);
+  const currentTrainTypeOrigin = useCurrentTrainType();
+  const loopLineBoundJa = useLoopLineBound(false);
+  const loopLineBoundEn = useLoopLineBound(false, 'EN');
+  const { directionalStops } = useBounds();
+  const nextStationOrigin = useNextStation();
+  const isNextStopTerminus = useIsTerminus(nextStationOrigin);
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
+  const slicedStationsOrigin = useSlicedStations();
+  const stoppingState = useStoppingState();
 
   const replaceJapaneseText = useCallback(
     (name: string | undefined, nameKatakana: string | undefined) =>
@@ -63,7 +63,7 @@ const useTTSText = (
         ? undefined
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
-  )
+  );
 
   const transferLines = useMemo(
     () =>
@@ -72,7 +72,7 @@ const useTTSText = (
         nameRoman: normalizeRomanText(l.nameRoman),
       })),
     [transferLinesOriginal]
-  )
+  );
 
   const currentLine = useMemo(
     () =>
@@ -81,7 +81,7 @@ const useTTSText = (
         nameRoman: normalizeRomanText(currentLineOrigin?.nameRoman),
       },
     [currentLineOrigin]
-  )
+  );
 
   const selectedBound = useMemo(
     () =>
@@ -90,7 +90,7 @@ const useTTSText = (
         nameRoman: normalizeRomanText(selectedBoundOrigin?.nameRoman),
       },
     [selectedBoundOrigin]
-  )
+  );
 
   const currentTrainType = useMemo(
     () =>
@@ -101,7 +101,7 @@ const useTTSText = (
         ),
       },
     [currentTrainTypeOrigin]
-  )
+  );
 
   const boundForJa = useMemo(
     () =>
@@ -126,7 +126,7 @@ const useTTSText = (
       loopLineBoundJa?.boundForKatakana,
       replaceJapaneseText,
     ]
-  )
+  );
 
   const boundForEn = useMemo(
     () =>
@@ -135,45 +135,44 @@ const useTTSText = (
         : directionalStops?.map((s) => s?.nameRoman).join(' and '),
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
-  )
+  );
 
   const nextStationNumberText = useMemo(() => {
     if (!nextStationNumber) {
-      return ''
+      return '';
     }
 
-    const split = nextStationNumber.stationNumber?.split('-')
+    const split = nextStationNumber.stationNumber?.split('-');
 
     if (!split.length) {
-      return ''
+      return '';
     }
     if (split.length === 1) {
       return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${Number(
         nextStationNumber.stationNumber
-      )}`
+      )}`;
     }
 
-    const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`
+    const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`;
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
-      : Number(split[1]).toString()
+      : Number(split[1]).toString();
 
     return `${
       nextStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
         ? ''
         : 'Station Number '
-    }${symbol} ${num}.`
-  }, [nextStationNumber, theme])
+    }${symbol} ${num}.`;
+  }, [nextStationNumber, theme]);
 
   const connectedLines = useMemo(
     () =>
-      connectedLinesOrigin &&
-      connectedLinesOrigin.map((l) => ({
+      connectedLinesOrigin?.map((l) => ({
         ...l,
         nameRoman: normalizeRomanText(l.nameRoman),
       })),
     [connectedLinesOrigin]
-  )
+  );
 
   const nextStation = useMemo(
     () =>
@@ -182,16 +181,16 @@ const useTTSText = (
         nameRoman: normalizeRomanText(nextStationOrigin.nameRoman),
       },
     [nextStationOrigin]
-  )
+  );
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
   const slicedStations = Array.from(
     new Set(slicedStationsOrigin.map((s) => s.groupId))
   )
     .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as Station[]
+    .filter((s) => !!s) as Station[];
 
-  const afterNextStationOrigin = useAfterNextStation()
+  const afterNextStationOrigin = useAfterNextStation();
   const afterNextStation = useMemo<Station | undefined>(() => {
     return (
       afterNextStationOrigin &&
@@ -203,37 +202,37 @@ const useTTSText = (
           nameRoman: normalizeRomanText(l.nameRoman),
         })),
       })
-    )
-  }, [afterNextStationOrigin])
+    );
+  }, [afterNextStationOrigin]);
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
     [nextStation?.groupId, slicedStations]
-  )
+  );
   const afterNextStationIndex = useMemo(
     () =>
       slicedStations.findIndex((s) => s.groupId === afterNextStation?.groupId),
     [afterNextStation?.groupId, slicedStations]
-  )
+  );
 
   const betweenNextStation = useMemo(
     () => slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
     [afterNextStationIndex, nextStationIndex, slicedStations]
-  )
+  );
 
-  const isAfterNextStopTerminus = useIsTerminus(afterNextStation)
+  const isAfterNextStopTerminus = useIsTerminus(afterNextStation);
 
   const allStops = slicedStations.filter((s) => {
     if (s.id === station?.id) {
-      return false
+      return false;
     }
-    return !getIsPass(s)
-  })
+    return !getIsPass(s);
+  });
 
   const japaneseTemplate: Record<AppTheme, { [key: string]: string }> | null =
     useMemo(() => {
       if (!currentLine || !selectedBound) {
-        return EMPTY_TTS_TEXT
+        return EMPTY_TTS_TEXT;
       }
 
       const map = {
@@ -602,8 +601,8 @@ const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
-      }
-      return map
+      };
+      return map;
     }, [
       afterNextStation,
       allStops,
@@ -621,12 +620,12 @@ const useTTSText = (
       replaceJapaneseText,
       selectedBound,
       transferLines,
-    ])
+    ]);
 
   const englishTemplate: Record<AppTheme, { [key: string]: string }> | null =
     useMemo(() => {
       if (!currentLine || !selectedBound) {
-        return EMPTY_TTS_TEXT
+        return EMPTY_TTS_TEXT;
       }
 
       const map = {
@@ -891,8 +890,8 @@ const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
-      }
-      return map
+      };
+      return map;
     }, [
       afterNextStation,
       allStops,
@@ -910,57 +909,57 @@ const useTTSText = (
       nextStationNumberText,
       selectedBound,
       transferLines,
-    ])
+    ]);
 
   const jaText = useMemo(() => {
     if (theme === APP_THEME.LED) {
-      const tmpl = japaneseTemplate?.TOKYO_METRO?.[stoppingState]
+      const tmpl = japaneseTemplate?.TOKYO_METRO?.[stoppingState];
       if (!tmpl) {
-        return ''
+        return '';
       }
-      return tmpl
+      return tmpl;
     }
     if (theme === APP_THEME.JO) {
-      const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState]
+      const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
-        return ''
+        return '';
       }
-      return tmpl
+      return tmpl;
     }
 
-    const tmpl = japaneseTemplate?.[theme]?.[stoppingState]
+    const tmpl = japaneseTemplate?.[theme]?.[stoppingState];
     if (!tmpl) {
-      return ''
+      return '';
     }
-    return tmpl
-  }, [japaneseTemplate, stoppingState, theme])
+    return tmpl;
+  }, [japaneseTemplate, stoppingState, theme]);
 
   const enText = useMemo(() => {
     if (theme === APP_THEME.LED) {
-      const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState]
+      const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState];
       if (!tmpl) {
-        return ''
+        return '';
       }
-      return tmpl
+      return tmpl;
     }
     if (theme === APP_THEME.JO) {
-      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState]
+      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
-        return ''
+        return '';
       }
-      return tmpl
+      return tmpl;
     }
 
-    const tmpl = englishTemplate?.[theme]?.[stoppingState]
+    const tmpl = englishTemplate?.[theme]?.[stoppingState];
     if (!tmpl) {
-      return ''
+      return '';
     }
 
-    return tmpl
-  }, [englishTemplate, stoppingState, theme])
+    return tmpl;
+  }, [englishTemplate, stoppingState, theme]);
 
   if (!enabled) {
-    return []
+    return [];
   }
 
   return [
@@ -972,7 +971,7 @@ const useTTSText = (
       .replaceAll('`', ''),
     // NOTE: このほかの英語SSMLリプレース処理はFunctionsで行うので
     // ここに置換処理を入れてはいけない
-  ]
-}
+  ];
+};
 
-export default useTTSText
+export default useTTSText;

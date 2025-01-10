@@ -46,7 +46,7 @@ export const PREFECTURES_JA = [
   '宮崎県',
   '鹿児島県',
   '沖縄県',
-]
+];
 
 export const PREFECTURES_ROMAN = [
   'Hokkaido',
@@ -96,4 +96,4 @@ export const PREFECTURES_ROMAN = [
   'Miyazaki',
   'Kagoshima',
   'Okinawa',
-]
+];

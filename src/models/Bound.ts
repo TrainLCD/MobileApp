@@ -1,14 +1,14 @@
-import { Line } from '../../gen/proto/stationapi_pb'
-import { MEIJO_LINE_ID } from '../constants'
-import { translate } from '../translation'
-export type LineDirection = 'INBOUND' | 'OUTBOUND'
+import type { Line } from '../../gen/proto/stationapi_pb';
+import { MEIJO_LINE_ID } from '../constants';
+import { translate } from '../translation';
+export type LineDirection = 'INBOUND' | 'OUTBOUND';
 
 const getMeijoLineDirection = (direction: LineDirection) =>
   direction === 'INBOUND'
     ? translate('inboundMeijo')
-    : translate('outboundMeijo')
+    : translate('outboundMeijo');
 const getLoopLineDirection = (direction: LineDirection) =>
-  direction === 'INBOUND' ? translate('inbound') : translate('outbound')
+  direction === 'INBOUND' ? translate('inbound') : translate('outbound');
 
 export const directionToDirectionName = (
   line: Line | null | undefined,
@@ -16,4 +16,4 @@ export const directionToDirectionName = (
 ): string =>
   line && line.id === MEIJO_LINE_ID
     ? getMeijoLineDirection(direction)
-    : getLoopLineDirection(direction)
+    : getLoopLineDirection(direction);

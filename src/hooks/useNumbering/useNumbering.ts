@@ -1,39 +1,42 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useRecoilValue } from 'recoil'
-import { StationNumber, TrainTypeKind } from '../../../gen/proto/stationapi_pb'
-import { JOBAN_LINE_IDS } from '../../constants'
-import stationState from '../../store/atoms/station'
-import getIsPass from '../../utils/isPass'
-import { useCurrentLine } from '../useCurrentLine'
-import { useCurrentStation } from '../useCurrentStation'
-import useCurrentTrainType from '../useCurrentTrainType'
-import { useNextStation } from '../useNextStation'
-import useStationNumberIndexFunc from '../useStationNumberIndexFunc'
+import { useEffect, useMemo, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import {
+  type StationNumber,
+  TrainTypeKind,
+} from '../../../gen/proto/stationapi_pb';
+import { JOBAN_LINE_IDS } from '../../constants';
+import stationState from '../../store/atoms/station';
+import getIsPass from '../../utils/isPass';
+import { useCurrentLine } from '../useCurrentLine';
+import { useCurrentStation } from '../useCurrentStation';
+import useCurrentTrainType from '../useCurrentTrainType';
+import { useNextStation } from '../useNextStation';
+import useStationNumberIndexFunc from '../useStationNumberIndexFunc';
 
 export const useNumbering = (
   priorCurrent?: boolean
 ): [StationNumber | undefined, string | undefined] => {
-  const { arrived, selectedBound } = useRecoilValue(stationState)
-  const stoppedCurrentStation = useCurrentStation(true)
-  const trainType = useCurrentTrainType()
+  const { arrived, selectedBound } = useRecoilValue(stationState);
+  const stoppedCurrentStation = useCurrentStation(true);
+  const trainType = useCurrentTrainType();
 
-  const [stationNumber, setStationNumber] = useState<StationNumber>()
-  const [threeLetterCode, setThreeLetterCode] = useState<string>()
+  const [stationNumber, setStationNumber] = useState<StationNumber>();
+  const [threeLetterCode, setThreeLetterCode] = useState<string>();
 
-  const currentLine = useCurrentLine()
-  const currentStation = useCurrentStation()
-  const nextStation = useNextStation(true, currentLine?.station)
+  const currentLine = useCurrentLine();
+  const currentStation = useCurrentStation();
+  const nextStation = useNextStation(true, currentLine?.station);
 
-  const getStationNumberIndex = useStationNumberIndexFunc()
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const currentStationNumberIndex = useMemo(
-    () => getStationNumberIndex(stoppedCurrentStation ?? undefined),
+    () => getStationNumberIndex(stoppedCurrentStation ?? null),
     [getStationNumberIndex, stoppedCurrentStation]
-  )
+  );
   const nextStationNumberIndex = useMemo(
-    () => getStationNumberIndex(nextStation),
+    () => getStationNumberIndex(nextStation ?? null),
     [getStationNumberIndex, nextStation]
-  )
+  );
 
   const isJobanLineRapid = useMemo(
     () =>
@@ -41,36 +44,36 @@ export const useNumbering = (
       JOBAN_LINE_IDS.includes(currentLine?.id) &&
       trainType?.kind === TrainTypeKind.Rapid,
     [currentLine, trainType?.kind]
-  )
+  );
 
   useEffect(() => {
     if (!selectedBound) {
-      setStationNumber(undefined)
-      setThreeLetterCode(undefined)
+      setStationNumber(undefined);
+      setThreeLetterCode(undefined);
     }
-  }, [selectedBound])
+  }, [selectedBound]);
 
   useEffect(() => {
     if (!selectedBound || !stoppedCurrentStation) {
-      return
+      return;
     }
 
     if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
       if (isJobanLineRapid) {
         const jjNumber = stoppedCurrentStation.stationNumbers.find(
           (num) => num.lineSymbol === 'JJ'
-        )
+        );
         if (jjNumber) {
-          setStationNumber(jjNumber)
+          setStationNumber(jjNumber);
         }
       } else {
         setStationNumber(
           stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
-        )
+        );
       }
 
-      setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
-      return
+      setThreeLetterCode(stoppedCurrentStation?.threeLetterCode);
+      return;
     }
 
     // 到着していて、かつ停車駅でない場合は、次の駅の番号を表示する
@@ -83,45 +86,44 @@ export const useNumbering = (
       if (isJobanLineRapid) {
         const jjNumber = nextStation?.stationNumbers.find(
           (num) => num.lineSymbol === 'JJ'
-        )
+        );
 
         if (jjNumber) {
-          setStationNumber(jjNumber)
+          setStationNumber(jjNumber);
         }
       } else {
-        setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex])
+        setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex]);
       }
 
-      setThreeLetterCode(nextStation?.threeLetterCode)
-      return
+      setThreeLetterCode(nextStation?.threeLetterCode);
+      return;
     }
 
     if (isJobanLineRapid) {
       const jjNumber = stoppedCurrentStation?.stationNumbers.find(
         (num) => num.lineSymbol === 'JJ'
-      )
+      );
       if (jjNumber) {
-        setStationNumber(jjNumber)
+        setStationNumber(jjNumber);
       }
     } else {
       setStationNumber(
         stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
-      )
+      );
     }
-    setThreeLetterCode(stoppedCurrentStation?.threeLetterCode)
+    setThreeLetterCode(stoppedCurrentStation?.threeLetterCode);
   }, [
     arrived,
     currentStation,
     currentStationNumberIndex,
     isJobanLineRapid,
-    nextStation?.lines,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
     nextStationNumberIndex,
     priorCurrent,
     selectedBound,
     stoppedCurrentStation,
-  ])
+  ]);
 
-  return [stationNumber, threeLetterCode]
-}
+  return [stationNumber, threeLetterCode];
+};

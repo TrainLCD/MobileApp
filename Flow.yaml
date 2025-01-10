@@ -1,0 +1,13 @@
+appId: me.tinykitten.trainlcd.dev
+---
+- tapOn:
+    id: 'FakeStationSettings'
+- tapOn:
+    id: 'StationNameQuery'
+- inputText: 'shinjuku'
+- pressKey: 'Enter'
+- pressKey: 'Enter'
+- tapOn: '新宿'
+- tapOn: '[JY] 山手線'
+- tapOn: '内回り(渋谷・品川方面)'
+- takeScreenshot: 'MainScreen'

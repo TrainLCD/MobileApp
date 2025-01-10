@@ -1,59 +1,59 @@
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
   Platform,
-  StyleProp,
+  type StyleProp,
   StyleSheet,
-  TextStyle,
+  type TextStyle,
   View,
-} from 'react-native'
-import { useRecoilValue } from 'recoil'
-import { Station, StationNumber } from '../../gen/proto/stationapi_pb'
-import { FONTS } from '../constants'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import useGetLineMark from '../hooks/useGetLineMark'
-import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion'
-import useIsPassing from '../hooks/useIsPassing'
-import { useNextStation } from '../hooks/useNextStation'
-import usePreviousStation from '../hooks/usePreviousStation'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation'
-import { APP_THEME } from '../models/Theme'
-import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { isEnSelector } from '../store/selectors/isEn'
-import getStationNameR from '../utils/getStationNameR'
-import getIsPass from '../utils/isPass'
-import isTablet from '../utils/isTablet'
-import { RFValue } from '../utils/rfValue'
-import { heightScale } from '../utils/scale'
-import Chevron from './ChevronJRWest'
-import PadLineMarks from './PadLineMarks'
-import Typography from './Typography'
+} from 'react-native';
+import { useRecoilValue } from 'recoil';
+import type { Station, StationNumber } from '../../gen/proto/stationapi_pb';
+import { FONTS } from '../constants';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import useGetLineMark from '../hooks/useGetLineMark';
+import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion';
+import useIsPassing from '../hooks/useIsPassing';
+import { useNextStation } from '../hooks/useNextStation';
+import usePreviousStation from '../hooks/usePreviousStation';
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
+import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import { APP_THEME } from '../models/Theme';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isEnSelector } from '../store/selectors/isEn';
+import getStationNameR from '../utils/getStationNameR';
+import getIsPass from '../utils/isPass';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import { heightScale } from '../utils/scale';
+import Chevron from './ChevronJRWest';
+import PadLineMarks from './PadLineMarks';
+import Typography from './Typography';
 
 interface Props {
-  stations: Station[]
-  lineColors: (string | null | undefined)[]
+  stations: Station[];
+  lineColors: (string | null | undefined)[];
 }
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window')
-const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
 
 const barBottom = ((): number => {
   if (isTablet) {
-    return 32
+    return 32;
   }
-  return 48
-})()
+  return 48;
+})();
 
 const barTerminalBottom = ((): number => {
   if (isTablet) {
-    return 32
+    return 32;
   }
-  return 48
-})()
+  return 48;
+})();
 
 const styles = StyleSheet.create({
   root: {
@@ -126,9 +126,9 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     bottom: (() => {
       if (isTablet) {
-        return -70
+        return -70;
       }
-      return 50
+      return 50;
     })(),
     overflow: 'visible',
     borderRadius: 24,
@@ -178,33 +178,33 @@ const styles = StyleSheet.create({
     marginTop: -2,
     textAlign: 'center',
   },
-})
+});
 
 const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
       width: heightScale(300),
       marginBottom: 58,
-    }
+    };
   }
   if (isLast) {
     return {
       width: 200,
       marginBottom: 70,
-    }
+    };
   }
   return {
     width: 250,
     marginBottom: 84,
-  }
-}
+  };
+};
 interface StationNameProps {
-  stations: Station[]
-  station: Station
-  en?: boolean
-  horizontal?: boolean
-  passed?: boolean
-  index: number
+  stations: Station[];
+  station: Station;
+  en?: boolean;
+  horizontal?: boolean;
+  passed?: boolean;
+  index: number;
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -215,7 +215,7 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
   index,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station)
+  const stationNameR = getStationNameR(station);
 
   if (en) {
     return (
@@ -228,7 +228,7 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {stationNameR}
       </Typography>
-    )
+    );
   }
   if (horizontal) {
     return (
@@ -241,7 +241,7 @@ const StationName: React.FC<StationNameProps> = ({
       >
         {station.name}
       </Typography>
-    )
+    );
   }
   return (
     <View style={styles.verticalStationName}>
@@ -254,14 +254,14 @@ const StationName: React.FC<StationNameProps> = ({
         </Typography>
       ))}
     </View>
-  )
-}
+  );
+};
 
 interface StationNameCellProps {
-  arrived: boolean
-  stations: Station[]
-  station: Station
-  index: number
+  arrived: boolean;
+  stations: Station[];
+  station: Station;
+  index: number;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -270,18 +270,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station: stationInLoop,
   index,
 }: StationNameCellProps) => {
-  const { leftStations } = useRecoilValue(navigationState)
-  const { stations: allStations } = useRecoilValue(stationState)
-  const isEn = useRecoilValue(isEnSelector)
+  const { leftStations } = useRecoilValue(navigationState);
+  const { stations: allStations } = useRecoilValue(stationState);
+  const isEn = useRecoilValue(isEnSelector);
 
-  const station = useCurrentStation()
+  const station = useCurrentStation();
   const transferLines = useTransferLinesFromStation(stationInLoop, {
     omitJR: true,
     omitRepeatingLine: true,
-  })
+  });
 
-  const nextStation = useNextStation(true, stationInLoop)
-  const prevStation = usePreviousStation(false)
+  const nextStation = useNextStation(true, stationInLoop);
+  const prevStation = usePreviousStation(false);
 
   const currentStationIndex = useMemo(
     () =>
@@ -289,7 +289,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         (s) => s.groupId === (arrived ? station : prevStation)?.groupId
       ),
     [arrived, station, leftStations, prevStation]
-  )
+  );
 
   const passed = useMemo(
     () =>
@@ -299,56 +299,56 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           (!index && !arrived) ||
           getIsPass(stationInLoop),
     [arrived, index, stationInLoop, currentStationIndex]
-  )
+  );
 
-  const getStationNumberIndex = useStationNumberIndexFunc()
+  const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = useMemo(
     () => getStationNumberIndex(stationInLoop),
     [getStationNumberIndex, stationInLoop]
-  )
+  );
   const numberingObj = useMemo<StationNumber | undefined>(
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
     [stationInLoop.stationNumbers, stationNumberIndex]
-  )
+  );
 
   const stationNumberString = useMemo(
     () => numberingObj?.stationNumber?.split('-').join('') ?? '',
     [numberingObj?.stationNumber]
-  )
+  );
   const stationNumberBGColor = useMemo(
     () => (passed ? '#aaa' : numberingObj?.lineSymbolColor) ?? '#000',
     [passed, numberingObj?.lineSymbolColor]
-  )
+  );
   const stationNumberTextColor = useMemo(() => {
     if (passed) {
-      return '#fff'
+      return '#fff';
     }
     if (numberingObj?.lineSymbolShape.includes('DARK_TEXT')) {
-      return '#231f20'
+      return '#231f20';
     }
 
-    return '#fff'
-  }, [passed, numberingObj?.lineSymbolShape])
+    return '#fff';
+  }, [passed, numberingObj?.lineSymbolShape]);
 
-  const getLineMarks = useGetLineMark()
+  const getLineMarks = useGetLineMark();
 
   const lineMarks = useMemo(
     () => transferLines.map((line) => getLineMarks({ line })),
     [getLineMarks, transferLines]
-  )
+  );
 
   const hasPassStationInRegion = useHasPassStationInRegion(
     allStations,
     stationInLoop,
     nextStation ?? null
-  )
+  );
 
   const includesLongStationName = useMemo(
     () =>
       !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
         .length,
     [stations]
-  )
+  );
 
   return (
     <View
@@ -426,20 +426,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
     </View>
-  )
-}
+  );
+};
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { selectedLine } = useRecoilValue(lineState)
-  const { arrived, approaching } = useRecoilValue(stationState)
+  const { selectedLine } = useRecoilValue(lineState);
+  const { arrived, approaching } = useRecoilValue(stationState);
 
-  const isPassing = useIsPassing()
-  const currentLine = useCurrentLine()
+  const isPassing = useIsPassing();
+  const currentLine = useCurrentLine();
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
-  )
+  );
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => (
@@ -452,7 +452,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       />
     ),
     [approaching, arrived, isPassing, stations]
-  )
+  );
 
   const emptyArray = useMemo(
     () =>
@@ -460,10 +460,10 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         length: 8 - lineColors.length,
       }).fill(lineColors[lineColors.length - 1]) as string[],
     [lineColors]
-  )
+  );
 
   if (!line) {
-    return null
+    return null;
   }
 
   return (
@@ -474,7 +474,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           style={{
             ...styles.bar,
             left: barWidth * i,
-            backgroundColor: lc ? lc : line?.color ?? '#000',
+            backgroundColor: lc ? lc : (line?.color ?? '#000'),
           }}
         />
       ))}
@@ -491,7 +491,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         {stations.map(stationNameCellForMap)}
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(LineBoardWest)
+export default React.memo(LineBoardWest);

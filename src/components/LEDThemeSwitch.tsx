@@ -1,18 +1,18 @@
-import React, { useCallback } from 'react'
+import React, { useCallback } from 'react';
 import {
-  StyleProp,
+  type StyleProp,
   StyleSheet,
   TouchableOpacity,
   View,
-  ViewStyle,
-} from 'react-native'
-import Typography from './Typography'
+  type ViewStyle,
+} from 'react-native';
+import Typography from './Typography';
 
 type Props = {
-  style: StyleProp<ViewStyle>
-  value: boolean
-  onValueChange: (value: boolean) => void
-}
+  style: StyleProp<ViewStyle>;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -32,13 +32,13 @@ const styles = StyleSheet.create({
     color: '#212121',
     fontWeight: 'bold',
   },
-})
+});
 
 const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
   const handleContainerPress = useCallback(
     () => onValueChange(!value),
     [onValueChange, value]
-  )
+  );
   return (
     <TouchableOpacity
       activeOpacity={1}
@@ -60,7 +60,7 @@ const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
         <Typography style={styles.label}>{value ? 'ON' : 'OFF'}</Typography>
       </View>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
-export default React.memo(LEDThemeSwitch)
+export default React.memo(LEDThemeSwitch);

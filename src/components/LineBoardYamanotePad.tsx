@@ -1,55 +1,57 @@
-import React, { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import useGetLineMark from '../hooks/useGetLineMark'
-import { useNextStation } from '../hooks/useNextStation'
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc'
-import useTransferLines from '../hooks/useTransferLines'
-import lineState from '../store/atoms/line'
-import stationState from '../store/atoms/station'
-import { isEnSelector } from '../store/selectors/isEn'
-import getIsPass from '../utils/isPass'
-import PadArch from './PadArch'
+import React, { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import useGetLineMark from '../hooks/useGetLineMark';
+import { useNextStation } from '../hooks/useNextStation';
+import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
+import useTransferLines from '../hooks/useTransferLines';
+import lineState from '../store/atoms/line';
+import stationState from '../store/atoms/station';
+import { isEnSelector } from '../store/selectors/isEn';
+import getIsPass from '../utils/isPass';
+import PadArch from './PadArch';
 
 interface Props {
-  stations: Station[]
+  stations: Station[];
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
-  const { station, arrived } = useRecoilValue(stationState)
-  const { selectedLine } = useRecoilValue(lineState)
-  const isEn = useRecoilValue(isEnSelector)
+  const { station, arrived } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const isEn = useRecoilValue(isEnSelector);
 
-  const currentLine = useCurrentLine()
-  const getLineMarkFunc = useGetLineMark()
-  const nextStation = useNextStation()
-  const transferLines = useTransferLines()
+  const currentLine = useCurrentLine();
+  const getLineMarkFunc = useGetLineMark();
+  const nextStation = useNextStation();
+  const transferLines = useTransferLines();
   const switchedStation = useMemo(
     () =>
-      arrived && station && !getIsPass(station) ? station : nextStation ?? null,
+      arrived && station && !getIsPass(station)
+        ? station
+        : (nextStation ?? null),
     [arrived, nextStation, station]
-  )
-  const getStationNumberIndex = useStationNumberIndexFunc()
+  );
+  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
-  )
+  );
 
   const lineMarks = useMemo(
     () =>
       transferLines.map((tl) => {
         if (!switchedStation) {
-          return null
+          return null;
         }
 
         return getLineMarkFunc({
           line: tl,
-        })
+        });
       }),
     [getLineMarkFunc, switchedStation, transferLines]
-  )
+  );
 
   const slicedStations = useMemo(
     () =>
@@ -58,7 +60,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         .reverse()
         .slice(0, arrived ? stations.length : stations.length - 1),
     [arrived, stations]
-  )
+  );
 
   const archStations = useMemo(
     () =>
@@ -67,19 +69,19 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         .map((_, i) => slicedStations[slicedStations.length - i])
         .reverse(),
     [slicedStations]
-  )
+  );
 
   const numberingInfo = useMemo(
     () =>
       archStations.map((s) => {
         if (!s) {
-          return null
+          return null;
         }
-        const stationNumberIndex = getStationNumberIndex(s)
+        const stationNumberIndex = getStationNumberIndex(s);
 
         const lineMarkShape = getLineMarkFunc({
           line: s.line,
-        })
+        });
         return s.stationNumbers[stationNumberIndex] && lineMarkShape
           ? {
               stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
@@ -88,13 +90,13 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
                 s.line?.color,
               lineMarkShape,
             }
-          : null
+          : null;
       }),
     [archStations, getStationNumberIndex, getLineMarkFunc]
-  )
+  );
 
   if (!line) {
-    return null
+    return null;
   }
 
   return (
@@ -108,7 +110,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       lineMarks={lineMarks}
       isEn={isEn}
     />
-  )
-}
+  );
+};
 
-export default React.memo(LineBoardYamanotePad)
+export default React.memo(LineBoardYamanotePad);

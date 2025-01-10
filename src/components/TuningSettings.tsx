@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback } from 'react'
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback } from 'react';
 import {
   Alert,
   Dimensions,
@@ -9,18 +9,18 @@ import {
   StyleSheet,
   TextInput,
   View,
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useRecoilState } from 'recoil'
-import { FONTS } from '../constants'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import tuningState from '../store/atoms/tuning'
-import { translate } from '../translation'
-import { RFValue } from '../utils/rfValue'
-import FAB from './FAB'
-import Heading from './Heading'
-import Typography from './Typography'
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRecoilState } from 'recoil';
+import { FONTS } from '../constants';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import tuningState from '../store/atoms/tuning';
+import { translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import FAB from './FAB';
+import Heading from './Heading';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
@@ -50,45 +50,45 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     paddingHorizontal: 10,
   },
-})
+});
 
 const TuningSettings: React.FC = () => {
-  const [settings, setSettings] = useRecoilState(tuningState)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const [settings, setSettings] = useRecoilState(tuningState);
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const navigation = useNavigation()
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  const navigation = useNavigation();
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
     settings.headerTransitionDelay < 0 ||
-    settings.headerTransitionInterval < 0
+    settings.headerTransitionInterval < 0;
 
   const onPressBack = useCallback(async () => {
     if (hasInvalidNumber) {
-      Alert.alert(translate('errorTitle'), translate('nanErrorText'))
-      return
+      Alert.alert(translate('errorTitle'), translate('nanErrorText'));
+      return;
     }
     if (settings.headerTransitionDelay > settings.headerTransitionInterval) {
       Alert.alert(
         translate('errorTitle'),
         translate('headerDelayTooShortErrorText')
-      )
-      return
+      );
+      return;
     }
 
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
   }, [
     hasInvalidNumber,
     navigation,
     settings.headerTransitionDelay,
     settings.headerTransitionInterval,
-  ])
+  ]);
 
   const parseNumberFromText = (prev: number, text: string) =>
-    Number.isNaN(Number(text)) ? prev : Number(text)
+    Number.isNaN(Number(text)) ? prev : Number(text);
 
   const handleHeaderIntervalChange = (text: string) =>
     setSettings((prev) => ({
@@ -97,7 +97,7 @@ const TuningSettings: React.FC = () => {
         prev.headerTransitionInterval,
         text
       ),
-    }))
+    }));
   const handleHeaderDelayChange = (text: string) =>
     setSettings((prev) => ({
       ...prev,
@@ -105,7 +105,7 @@ const TuningSettings: React.FC = () => {
         prev.headerTransitionDelay,
         text
       ),
-    }))
+    }));
 
   const handleBottomDelayChange = (text: string) =>
     setSettings((prev) => ({
@@ -114,7 +114,7 @@ const TuningSettings: React.FC = () => {
         prev.bottomTransitionInterval,
         text
       ),
-    }))
+    }));
 
   return (
     <KeyboardAvoidingView
@@ -189,7 +189,7 @@ const TuningSettings: React.FC = () => {
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />
     </KeyboardAvoidingView>
-  )
-}
+  );
+};
 
-export default React.memo(TuningSettings)
+export default React.memo(TuningSettings);

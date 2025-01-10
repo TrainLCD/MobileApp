@@ -1,13 +1,13 @@
-import { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import lineState from '../store/atoms/line'
-import stationState from '../store/atoms/station'
-import { useCurrentStation } from './useCurrentStation'
+import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import lineState from '../store/atoms/line';
+import stationState from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 
 export const useCurrentLine = () => {
-  const { stations, selectedDirection } = useRecoilValue(stationState)
-  const { selectedLine } = useRecoilValue(lineState)
-  const currentStation = useCurrentStation()
+  const { stations, selectedDirection } = useRecoilValue(stationState);
+  const { selectedLine } = useRecoilValue(lineState);
+  const currentStation = useCurrentStation();
 
   const actualCurrentStation = useMemo(
     () =>
@@ -20,8 +20,8 @@ export const useCurrentLine = () => {
           rs.line?.id === selectedLine?.id
       ),
     [currentStation?.groupId, selectedDirection, selectedLine?.id, stations]
-  )
+  );
 
   // NOTE: selectedLineがnullishの時はcurrentLineもnullishであってほしい
-  return selectedLine && actualCurrentStation?.line
-}
+  return selectedLine && actualCurrentStation?.line;
+};

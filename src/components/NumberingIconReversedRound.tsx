@@ -1,14 +1,18 @@
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -100,22 +104,22 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 20 * 1.5 : 20,
     letterSpacing: -2,
   },
-})
+});
 
 const NumberingIconReversedRound: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('-')
-  const isIncludesSubNumber = stationNumber.includes('-')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('-');
+  const isIncludesSubNumber = stationNumber.includes('-');
   const stationNumberTextStyles = useMemo(() => {
     if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional]
+      return [styles.stationNumber, styles.longStationNumberAdditional];
     }
-    return styles.stationNumber
-  }, [isIncludesSubNumber])
+    return styles.stationNumber;
+  }, [isIncludesSubNumber]);
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -130,7 +134,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -138,7 +142,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolMedium}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -154,7 +158,7 @@ const NumberingIconReversedRound: React.FC<Props> = ({
         <Typography style={stationNumberTextStyles}>{stationNumber}</Typography>
       ) : null}
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(NumberingIconReversedRound)
+export default React.memo(NumberingIconReversedRound);

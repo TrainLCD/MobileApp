@@ -1,22 +1,22 @@
-import * as Notifications from 'expo-notifications'
-import isPointWithinRadius from 'geolib/es/isPointWithinRadius'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import navigationState from '../store/atoms/navigation'
-import notifyState from '../store/atoms/notify'
-import stationState from '../store/atoms/station'
-import { isJapanese } from '../translation'
-import getIsPass from '../utils/isPass'
-import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle'
-import useCanGoForward from './useCanGoForward'
-import { useLocationStore } from './useLocationStore'
-import { useNearestStation } from './useNearestStation'
-import { useNextStation } from './useNextStation'
-import useStationNumberIndexFunc from './useStationNumberIndexFunc'
-import { useThreshold } from './useThreshold'
+import * as Notifications from 'expo-notifications';
+import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import navigationState from '../store/atoms/navigation';
+import notifyState from '../store/atoms/notify';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
+import getIsPass from '../utils/isPass';
+import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
+import useCanGoForward from './useCanGoForward';
+import { useLocationStore } from './useLocationStore';
+import { useNearestStation } from './useNearestStation';
+import { useNextStation } from './useNextStation';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useThreshold } from './useThreshold';
 
-type NotifyType = 'ARRIVED' | 'APPROACHING'
+type NotifyType = 'ARRIVED' | 'APPROACHING';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -24,27 +24,27 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
-})
+});
 
 const useRefreshStation = (): void => {
-  const setStation = useSetRecoilState(stationState)
-  const setNavigation = useSetRecoilState(navigationState)
-  const latitude = useLocationStore((state) => state?.coords.latitude)
-  const longitude = useLocationStore((state) => state?.coords.longitude)
+  const setStation = useSetRecoilState(stationState);
+  const setNavigation = useSetRecoilState(navigationState);
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
 
-  const nextStation = useNextStation(true)
-  const approachingNotifiedIdRef = useRef<number>()
-  const arrivedNotifiedIdRef = useRef<number>()
-  const { targetStationIds } = useRecoilValue(notifyState)
+  const nextStation = useNextStation(true);
+  const approachingNotifiedIdRef = useRef<number>();
+  const arrivedNotifiedIdRef = useRef<number>();
+  const { targetStationIds } = useRecoilValue(notifyState);
 
-  const nearestStation = useNearestStation()
-  const canGoForward = useCanGoForward()
-  const getStationNumberIndex = useStationNumberIndexFunc()
-  const { arrivedThreshold, approachingThreshold } = useThreshold()
+  const nearestStation = useNearestStation();
+  const canGoForward = useCanGoForward();
+  const getStationNumberIndex = useStationNumberIndexFunc();
+  const { arrivedThreshold, approachingThreshold } = useThreshold();
 
   const isArrived = useMemo((): boolean => {
     if (!latitude || !longitude || !nearestStation) {
-      return true
+      return true;
     }
 
     return isPointWithinRadius(
@@ -54,12 +54,12 @@ const useRefreshStation = (): void => {
         longitude: nearestStation.longitude,
       },
       arrivedThreshold
-    )
-  }, [arrivedThreshold, latitude, longitude, nearestStation])
+    );
+  }, [arrivedThreshold, latitude, longitude, nearestStation]);
 
   const isApproaching = useMemo((): boolean => {
     if (!latitude || !longitude || !nextStation) {
-      return false
+      return false;
     }
 
     return isPointWithinRadius(
@@ -69,51 +69,51 @@ const useRefreshStation = (): void => {
         longitude: nextStation.longitude,
       },
       approachingThreshold
-    )
-  }, [approachingThreshold, latitude, longitude, nextStation])
+    );
+  }, [approachingThreshold, latitude, longitude, nextStation]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
-      const stationNumberIndex = getStationNumberIndex(s)
-      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber
+      const stationNumberIndex = getStationNumberIndex(s);
+      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber;
       const stationNumberMaybeEmpty = `${
         stationNumber ? `(${stationNumber})` : ''
-      }`
+      }`;
       const approachingText = isJapanese
         ? `まもなく、${s.name}${stationNumberMaybeEmpty}に到着します。`
-        : `Arriving at ${s.nameRoman}${stationNumberMaybeEmpty}.`
+        : `Arriving at ${s.nameRoman}${stationNumberMaybeEmpty}.`;
       const arrivedText = isJapanese
         ? `ただいま、${s.name}${stationNumberMaybeEmpty}に到着しました。`
-        : `Now stopping at ${s.nameRoman}${stationNumberMaybeEmpty}.`
+        : `Now stopping at ${s.nameRoman}${stationNumberMaybeEmpty}.`;
 
       await sendNotificationAsync({
         title: isJapanese ? 'お知らせ' : 'Announcement',
         body: notifyType === 'APPROACHING' ? approachingText : arrivedText,
-      })
+      });
     },
     [getStationNumberIndex]
-  )
+  );
 
   useEffect(() => {
     if (!nearestStation || !canGoForward) {
-      return
+      return;
     }
 
     const isNearestStationNotifyTarget = !!targetStationIds.find(
       (id) => id === nearestStation.id
-    )
+    );
 
     if (isNearestStationNotifyTarget) {
       if (
         isApproaching &&
         nearestStation.id !== approachingNotifiedIdRef.current
       ) {
-        sendApproachingNotification(nearestStation, 'APPROACHING')
-        approachingNotifiedIdRef.current = nearestStation.id
+        sendApproachingNotification(nearestStation, 'APPROACHING');
+        approachingNotifiedIdRef.current = nearestStation.id;
       }
       if (isArrived && nearestStation.id !== arrivedNotifiedIdRef.current) {
-        sendApproachingNotification(nearestStation, 'ARRIVED')
-        arrivedNotifiedIdRef.current = nearestStation.id
+        sendApproachingNotification(nearestStation, 'ARRIVED');
+        arrivedNotifiedIdRef.current = nearestStation.id;
       }
     }
   }, [
@@ -123,11 +123,11 @@ const useRefreshStation = (): void => {
     nearestStation,
     sendApproachingNotification,
     targetStationIds,
-  ])
+  ]);
 
   useEffect(() => {
     if (!nearestStation) {
-      return
+      return;
     }
 
     setStation((prev) => ({
@@ -138,7 +138,7 @@ const useRefreshStation = (): void => {
         isArrived && prev.station?.id !== nearestStation.id
           ? nearestStation
           : prev.station,
-    }))
+    }));
 
     if (isArrived && !getIsPass(nearestStation)) {
       setNavigation((prev) => ({
@@ -147,9 +147,9 @@ const useRefreshStation = (): void => {
           prev.stationForHeader?.id !== nearestStation.id
             ? nearestStation
             : prev.stationForHeader,
-      }))
+      }));
     }
-  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation])
-}
+  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
+};
 
-export default useRefreshStation
+export default useRefreshStation;

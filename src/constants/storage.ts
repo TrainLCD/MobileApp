@@ -1,1 +1,1 @@
-export const TTS_CACHE_DIR = 'ttsCache'
+export const TTS_CACHE_DIR = 'ttsCache';

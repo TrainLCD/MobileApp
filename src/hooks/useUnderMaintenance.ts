@@ -1,25 +1,25 @@
-import firestore from '@react-native-firebase/firestore'
-import { useEffect, useState } from 'react'
+import firestore from '@react-native-firebase/firestore';
+import { useEffect, useState } from 'react';
 
 type MaintenanceDoc = {
-  underMaintenance: boolean
-}
+  underMaintenance: boolean;
+};
 
 export const useUnderMaintenance = () => {
-  const [underMaintenance, setUnderMaintenance] = useState<boolean>()
+  const [underMaintenance, setUnderMaintenance] = useState<boolean>();
   useEffect(() => {
     const fetchUnderMaintenanceAsync = async () => {
       const snapshot = await firestore()
         .collection('appConfig')
         .doc('maintenance')
-        .get()
-      const data = snapshot.data()
+        .get();
+      const data = snapshot.data();
       if (data) {
-        setUnderMaintenance((data as MaintenanceDoc).underMaintenance)
+        setUnderMaintenance((data as MaintenanceDoc).underMaintenance);
       }
-    }
-    fetchUnderMaintenanceAsync()
-  }, [])
+    };
+    fetchUnderMaintenanceAsync();
+  }, []);
 
-  return underMaintenance
-}
+  return underMaintenance;
+};
