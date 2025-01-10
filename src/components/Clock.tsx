@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { StyleSheet, TextStyle, View, ViewStyle } from "react-native";
+import { StyleSheet, type TextStyle, View, type ViewStyle } from "react-native";
 import useClock from "../hooks/useClock";
 import { useInterval } from "../hooks/useInterval";
 import isTablet from "../utils/isTablet";

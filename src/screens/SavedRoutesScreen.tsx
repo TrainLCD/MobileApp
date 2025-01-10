@@ -12,7 +12,7 @@ import Typography from "../components/Typography";
 import { useLocationStore } from "../hooks/useLocationStore";
 import { useSavedRoutes } from "../hooks/useSavedRoutes";
 import { useThemeStore } from "../hooks/useThemeStore";
-import { SavedRoute } from "../models/SavedRoute";
+import type { SavedRoute } from "../models/SavedRoute";
 import { APP_THEME } from "../models/Theme";
 import lineState from "../store/atoms/line";
 import navigationState from "../store/atoms/navigation";

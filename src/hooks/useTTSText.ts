@@ -3,7 +3,7 @@ import { useRecoilValue } from "recoil";
 import { Station } from "../../gen/proto/stationapi_pb";
 import { normalizeRomanText } from "../../src/utils/normalize";
 import { parenthesisRegexp } from "../constants";
-import { APP_THEME, AppTheme } from "../models/Theme";
+import { APP_THEME, type AppTheme } from "../models/Theme";
 import stationState from "../store/atoms/station";
 import getIsPass from "../utils/isPass";
 import katakanaToHiragana from "../utils/kanaToHiragana";
@@ -167,8 +167,7 @@ const useTTSText = (
 
 	const connectedLines = useMemo(
 		() =>
-			connectedLinesOrigin &&
-			connectedLinesOrigin.map((l) => ({
+			connectedLinesOrigin?.map((l) => ({
 				...l,
 				nameRoman: normalizeRomanText(l.nameRoman),
 			})),

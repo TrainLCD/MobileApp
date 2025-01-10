@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Line, TrainType } from "../../gen/proto/stationapi_pb";
+import type { Line, TrainType } from "../../gen/proto/stationapi_pb";
 import { useCurrentLine } from "../hooks/useCurrentLine";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { APP_THEME } from "../models/Theme";

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useRecoilValue } from "recoil";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import { APP_THEME } from "../models/Theme";
 import stationState from "../store/atoms/station";
 import dropEitherJunctionStation from "../utils/dropJunctionStation";

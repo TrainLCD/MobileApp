@@ -1,12 +1,12 @@
 import { atom } from "recoil";
-import { Station, TrainType } from "../../../gen/proto/stationapi_pb";
+import type { Station, TrainType } from "../../../gen/proto/stationapi_pb";
 import {
 	ALL_AVAILABLE_LANGUAGES,
-	AvailableLanguage,
+	type AvailableLanguage,
 	RECOIL_STATES,
 } from "../../constants";
-import { BottomTransitionState } from "../../models/BottomTransitionState";
-import { HeaderTransitionState } from "../../models/HeaderTransitionState";
+import type { BottomTransitionState } from "../../models/BottomTransitionState";
+import type { HeaderTransitionState } from "../../models/HeaderTransitionState";
 import { isJapanese } from "../../translation";
 
 export interface NavigationState {

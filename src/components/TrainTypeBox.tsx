@@ -9,7 +9,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { useRecoilValue } from "recoil";
-import { TrainType } from "../../gen/proto/stationapi_pb";
+import type { TrainType } from "../../gen/proto/stationapi_pb";
 import { parenthesisRegexp } from "../constants";
 import { useCurrentLine } from "../hooks/useCurrentLine";
 import useLazyPrevious from "../hooks/useLazyPrevious";
@@ -17,7 +17,7 @@ import useNextLine from "../hooks/useNextLine";
 import useNextTrainType from "../hooks/useNextTrainType";
 import { usePrevious } from "../hooks/usePrevious";
 import { useThemeStore } from "../hooks/useThemeStore";
-import { HeaderLangState } from "../models/HeaderTransitionState";
+import type { HeaderLangState } from "../models/HeaderTransitionState";
 import { APP_THEME } from "../models/Theme";
 import navigationState from "../store/atoms/navigation";
 import tuningState from "../store/atoms/tuning";

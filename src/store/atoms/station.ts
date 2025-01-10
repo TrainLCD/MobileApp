@@ -1,7 +1,7 @@
 import { atom } from "recoil";
-import { Station } from "../../../gen/proto/stationapi_pb";
+import type { Station } from "../../../gen/proto/stationapi_pb";
 import { RECOIL_STATES } from "../../constants";
-import { LineDirection } from "../../models/Bound";
+import type { LineDirection } from "../../models/Bound";
 
 export interface StationState {
 	arrived: boolean;

@@ -11,7 +11,7 @@ import {
 import { useRecoilState } from "recoil";
 import {
 	Line,
-	Station,
+	type Station,
 	StopCondition,
 	TrainType,
 } from "../../gen/proto/stationapi_pb";
@@ -25,7 +25,7 @@ import { useApplicationFlagStore } from "../hooks/useApplicationFlagStore";
 import useBounds from "../hooks/useBounds";
 import { useLoopLine } from "../hooks/useLoopLine";
 import { useStationList } from "../hooks/useStationList";
-import { LineDirection, directionToDirectionName } from "../models/Bound";
+import { type LineDirection, directionToDirectionName } from "../models/Bound";
 import lineState from "../store/atoms/line";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";
@@ -171,7 +171,7 @@ const SelectBoundScreen: React.FC = () => {
 				? new TrainType({
 						...trainType,
 						lines: trainType?.lines
-							.filter((l, i) => l.id == stationLineIds[i])
+							.filter((l, i) => l.id === stationLineIds[i])
 							.map((l) => new Line(l)),
 					})
 				: null;

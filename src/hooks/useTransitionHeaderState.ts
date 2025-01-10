@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { HeaderTransitionState } from "../models/HeaderTransitionState";
+import type { HeaderTransitionState } from "../models/HeaderTransitionState";
 import { APP_THEME } from "../models/Theme";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";

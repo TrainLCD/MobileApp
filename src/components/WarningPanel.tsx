@@ -1,7 +1,7 @@
 import React from "react";
 import {
 	Dimensions,
-	GestureResponderEvent,
+	type GestureResponderEvent,
 	StyleSheet,
 	TouchableWithoutFeedback,
 	View,

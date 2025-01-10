@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Path, Svg } from "react-native-svg";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import FAB from "../components/FAB";
 import Heading from "../components/Heading";
 import Typography from "../components/Typography";

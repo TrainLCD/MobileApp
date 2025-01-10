@@ -1,4 +1,4 @@
-import { StationNumber } from "../../../../gen/proto/stationapi_pb";
+import type { StationNumber } from "../../../../gen/proto/stationapi_pb";
 
 export const useNumbering = jest.fn().mockReturnValue([undefined, undefined]);
 

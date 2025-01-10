@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Route } from "../../gen/proto/stationapi_pb";
+import type { Route } from "../../gen/proto/stationapi_pb";
 import { useCurrentStation } from "../hooks/useCurrentStation";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { APP_THEME } from "../models/Theme";

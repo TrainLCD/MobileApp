@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { RecoilValue, useRecoilValue } from "recoil";
+import { type RecoilValue, useRecoilValue } from "recoil";
 
 type Props<T> = {
 	node: RecoilValue<T>;

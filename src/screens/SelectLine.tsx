@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSetRecoilState } from "recoil";
-import { Line } from "../../gen/proto/stationapi_pb";
+import type { Line } from "../../gen/proto/stationapi_pb";
 import Button from "../components/Button";
 import ErrorScreen from "../components/ErrorScreen";
 import FAB from "../components/FAB";

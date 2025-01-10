@@ -1,4 +1,4 @@
-import { APP_THEME, AppTheme } from "../../models/Theme";
+import { APP_THEME, type AppTheme } from "../../models/Theme";
 import { translate } from "../../translation";
 
 interface SettingsTheme {

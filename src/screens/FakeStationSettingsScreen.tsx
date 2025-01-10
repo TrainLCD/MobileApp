@@ -4,12 +4,12 @@ import {
 	ActivityIndicator,
 	Alert,
 	KeyboardAvoidingView,
-	NativeSyntheticEvent,
+	type NativeSyntheticEvent,
 	Platform,
 	StyleSheet,
 	TextInput,
-	TextInputChangeEventData,
-	TextInputKeyPressEventData,
+	type TextInputChangeEventData,
+	type TextInputKeyPressEventData,
 	View,
 } from "react-native";
 import { useRecoilState, useSetRecoilState } from "recoil";
@@ -24,7 +24,7 @@ import {
 	getStationsByCoordinates,
 	getStationsByName,
 } from "../../gen/proto/stationapi-StationAPI_connectquery";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import FAB from "../components/FAB";
 import Heading from "../components/Heading";
 import { StationList } from "../components/StationList";

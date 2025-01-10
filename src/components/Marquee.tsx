@@ -1,5 +1,5 @@
 import React, { cloneElement, useCallback, useMemo, useRef } from "react";
-import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, type View } from "react-native";
 import Animated, {
 	Easing,
 	useAnimatedStyle,

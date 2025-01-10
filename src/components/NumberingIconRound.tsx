@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from "../constants";
+import { FONTS, NUMBERING_ICON_SIZE, type NumberingIconSize } from "../constants";
 import isTablet from "../utils/isTablet";
 import Typography from "./Typography";
 

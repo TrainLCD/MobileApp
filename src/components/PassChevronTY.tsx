@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Svg, { G, Polygon } from "react-native-svg";
 
 const PassChevronTY: React.FC = () => (

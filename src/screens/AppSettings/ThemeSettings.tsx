@@ -7,7 +7,7 @@ import FAB from "../../components/FAB";
 import Heading from "../../components/Heading";
 import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from "../../constants";
 import { useThemeStore } from "../../hooks/useThemeStore";
-import { APP_THEME, AppTheme } from "../../models/Theme";
+import { APP_THEME, type AppTheme } from "../../models/Theme";
 import { translate } from "../../translation";
 import { isDevApp } from "../../utils/isDevApp";
 import getSettingsThemes from "./themes";

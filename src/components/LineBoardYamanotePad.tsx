@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useRecoilValue } from "recoil";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import { useCurrentLine } from "../hooks/useCurrentLine";
 import useGetLineMark from "../hooks/useGetLineMark";
 import { useNextStation } from "../hooks/useNextStation";

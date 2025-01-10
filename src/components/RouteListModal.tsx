@@ -1,11 +1,12 @@
-import { ConnectError } from "@connectrpc/connect";
+import type { ConnectError } from "@connectrpc/connect";
 import { useMutation } from "@connectrpc/connect-query";
-import React, { useCallback, useMemo, useState } from "react";
+import type React from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Modal, SafeAreaView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSetRecoilState } from "recoil";
 import { getTrainTypesByStationId } from "../../gen/proto/stationapi-StationAPI_connectquery";
-import { Route, TrainType } from "../../gen/proto/stationapi_pb";
+import type { Route, TrainType } from "../../gen/proto/stationapi_pb";
 import { LED_THEME_BG_COLOR } from "../constants";
 import { useCurrentStation } from "../hooks/useCurrentStation";
 import { useThemeStore } from "../hooks/useThemeStore";
@@ -105,7 +106,7 @@ export const RouteListModal: React.FC<Props> = ({
 			);
 			fetchTrainTypes({
 				stationId: route?.stops.find(
-					(s) => s.groupId == currentStation?.groupId,
+					(s) => s.groupId === currentStation?.groupId,
 				)?.id,
 			});
 		},

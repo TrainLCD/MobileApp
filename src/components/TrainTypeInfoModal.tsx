@@ -1,7 +1,7 @@
-import { ConnectError } from "@connectrpc/connect";
-import React from "react";
+import type { ConnectError } from "@connectrpc/connect";
+import type React from "react";
 import { Modal } from "react-native";
-import { Station, TrainType } from "../../gen/proto/stationapi_pb";
+import type { Station, TrainType } from "../../gen/proto/stationapi_pb";
 import { TrainTypeInfoPage } from "./TrainTypeInfoPage";
 
 type Props = {

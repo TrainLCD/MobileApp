@@ -1,10 +1,10 @@
-import React from "react";
+import type React from "react";
 import Svg, {
 	Defs,
 	LinearGradient,
 	Path,
 	Stop,
-	SvgProps,
+	type SvgProps,
 } from "react-native-svg";
 
 type Props = {

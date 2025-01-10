@@ -3,13 +3,13 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
 	Dimensions,
 	Platform,
-	StyleProp,
+	type StyleProp,
 	StyleSheet,
-	TextStyle,
+	type TextStyle,
 	View,
 } from "react-native";
 import { useRecoilValue } from "recoil";
-import { Line, Station } from "../../gen/proto/stationapi_pb";
+import type { Line, Station } from "../../gen/proto/stationapi_pb";
 import { useCurrentLine } from "../hooks/useCurrentLine";
 import { useInterval } from "../hooks/useInterval";
 import useTransferLinesFromStation from "../hooks/useTransferLinesFromStation";

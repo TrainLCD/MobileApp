@@ -28,7 +28,7 @@ import { useResetMainState } from "../hooks/useResetMainState";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { useUpdateLiveActivities } from "../hooks/useUpdateLiveActivities";
 import { useWarningInfo } from "../hooks/useWarningInfo";
-import { AppTheme } from "../models/Theme";
+import type { AppTheme } from "../models/Theme";
 import navigationState from "../store/atoms/navigation";
 import speechState from "../store/atoms/speech";
 import stationState from "../store/atoms/station";

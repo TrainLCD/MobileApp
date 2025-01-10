@@ -1,4 +1,4 @@
-import { FlattenObject } from "../utils/type";
+import type { FlattenObject } from "../utils/type";
 
 export const TestIds = {
 	Button: {

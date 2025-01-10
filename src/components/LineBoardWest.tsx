@@ -2,13 +2,13 @@ import React, { useCallback, useMemo } from "react";
 import {
 	Dimensions,
 	Platform,
-	StyleProp,
+	type StyleProp,
 	StyleSheet,
-	TextStyle,
+	type TextStyle,
 	View,
 } from "react-native";
 import { useRecoilValue } from "recoil";
-import { Station, StationNumber } from "../../gen/proto/stationapi_pb";
+import type { Station, StationNumber } from "../../gen/proto/stationapi_pb";
 import { FONTS } from "../constants";
 import { useCurrentLine } from "../hooks/useCurrentLine";
 import { useCurrentStation } from "../hooks/useCurrentStation";

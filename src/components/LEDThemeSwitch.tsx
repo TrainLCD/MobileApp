@@ -1,10 +1,10 @@
 import React, { useCallback } from "react";
 import {
-	StyleProp,
+	type StyleProp,
 	StyleSheet,
 	TouchableOpacity,
 	View,
-	ViewStyle,
+	type ViewStyle,
 } from "react-native";
 import Typography from "./Typography";
 

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Line, Station } from "../../gen/proto/stationapi_pb";
+import type { Line, Station } from "../../gen/proto/stationapi_pb";
 
 const useStationNumberIndexFunc = () => {
 	const func = useCallback((station: Station | null, line?: Line) => {

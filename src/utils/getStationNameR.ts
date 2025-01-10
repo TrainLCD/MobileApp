@@ -1,4 +1,4 @@
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 
 const getStationNameR = (station: Station): string => {
 	if ((station.nameRoman?.length ?? 0) <= 10) {

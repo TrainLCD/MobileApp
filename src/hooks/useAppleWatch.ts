@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { sendMessage, useReachability } from "react-native-watch-connectivity";
 import { useRecoilValue } from "recoil";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import { parenthesisRegexp } from "../constants";
 import stationState from "../store/atoms/station";
 import getIsPass from "../utils/isPass";

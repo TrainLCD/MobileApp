@@ -6,7 +6,7 @@ import { useCurrentStation } from "../hooks/useCurrentStation";
 import useIsNextLastStop from "../hooks/useIsNextLastStop";
 import { useNextStation } from "../hooks/useNextStation";
 import { useNumbering } from "../hooks/useNumbering";
-import { HeaderLangState } from "../models/HeaderTransitionState";
+import type { HeaderLangState } from "../models/HeaderTransitionState";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";
 import { translate } from "../translation";

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { LinearGradient, Path, Stop, Svg } from "react-native-svg";
 
 const Chevron: React.FC = () => (

@@ -22,7 +22,7 @@ import useLazyPrevious from "../hooks/useLazyPrevious";
 import { useNextStation } from "../hooks/useNextStation";
 import { useNumbering } from "../hooks/useNumbering";
 import { usePrevious } from "../hooks/usePrevious";
-import { HeaderLangState } from "../models/HeaderTransitionState";
+import type { HeaderLangState } from "../models/HeaderTransitionState";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";
 import tuningState from "../store/atoms/tuning";

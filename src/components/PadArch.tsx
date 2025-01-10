@@ -2,7 +2,7 @@ import { darken } from "polished";
 import React, { useCallback } from "react";
 import { Animated, Dimensions, StyleSheet, View } from "react-native";
 import { Path, Svg } from "react-native-svg";
-import { Line, Station } from "../../gen/proto/stationapi_pb";
+import type { Line, Station } from "../../gen/proto/stationapi_pb";
 import {
 	MANY_LINES_THRESHOLD,
 	MARK_SHAPE,
@@ -12,7 +12,7 @@ import {
 	YAMANOTE_LINE_BOARD_FILL_DURATION,
 	parenthesisRegexp,
 } from "../constants";
-import { LineMark } from "../models/LineMark";
+import type { LineMark } from "../models/LineMark";
 import getIsPass from "../utils/isPass";
 import ChevronYamanote from "./ChevronYamanote";
 import NumberingIcon from "./NumberingIcon";

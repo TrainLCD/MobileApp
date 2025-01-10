@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useRecoilValue } from "recoil";
-import { Station } from "../../gen/proto/stationapi_pb";
-import { HeaderLangState } from "../models/HeaderTransitionState";
-import { PreferredLanguage } from "../models/PreferredLanguage";
+import type { Station } from "../../gen/proto/stationapi_pb";
+import type { HeaderLangState } from "../models/HeaderTransitionState";
+import type { PreferredLanguage } from "../models/PreferredLanguage";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";
 import { isJapanese } from "../translation";

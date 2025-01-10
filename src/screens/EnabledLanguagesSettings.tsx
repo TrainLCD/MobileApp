@@ -19,7 +19,7 @@ import {
 	ALL_AVAILABLE_LANGUAGES,
 	ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
 	ASYNC_STORAGE_KEYS,
-	AvailableLanguage,
+	type AvailableLanguage,
 } from "../constants";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { APP_THEME } from "../models/Theme";

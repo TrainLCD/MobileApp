@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { BackHandler, StyleSheet, View } from "react-native";
 import { useRecoilState } from "recoil";
 import { getStationsByLineGroupId } from "../../gen/proto/stationapi-StationAPI_connectquery";
-import { TrainType } from "../../gen/proto/stationapi_pb";
+import type { TrainType } from "../../gen/proto/stationapi_pb";
 import FAB from "../components/FAB";
 import Heading from "../components/Heading";
 import { TrainTypeInfoModal } from "../components/TrainTypeInfoModal";

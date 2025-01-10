@@ -9,7 +9,7 @@ import useGetLineMark from "../hooks/useGetLineMark";
 import { useNextStation } from "../hooks/useNextStation";
 import { useThemeStore } from "../hooks/useThemeStore";
 import useTransferLines from "../hooks/useTransferLines";
-import { APP_THEME, AppTheme } from "../models/Theme";
+import { APP_THEME, type AppTheme } from "../models/Theme";
 import stationState from "../store/atoms/station";
 import { translate } from "../translation";
 import isTablet from "../utils/isTablet";

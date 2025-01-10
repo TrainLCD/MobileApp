@@ -1,5 +1,5 @@
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
-import FeedbackDeviceInfo from "./FeedbackDeviceInfo";
+import type FeedbackDeviceInfo from "./FeedbackDeviceInfo";
 
 export type ReportType = "feedback" | "crash";
 

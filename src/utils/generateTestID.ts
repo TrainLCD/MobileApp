@@ -1,4 +1,4 @@
-import { Line, Route, Station, TrainType } from "../../gen/proto/stationapi_pb";
+import type { Line, Route, Station, TrainType } from "../../gen/proto/stationapi_pb";
 
 export const generateStationTestId = (station: Pick<Station, "id">) =>
 	`station_${station.id}`;

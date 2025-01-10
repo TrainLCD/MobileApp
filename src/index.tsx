@@ -5,13 +5,13 @@ import remoteConfig from "@react-native-firebase/remote-config";
 import { NavigationContainer } from "@react-navigation/native";
 import {
 	createStackNavigator,
-	StackNavigationOptions,
+	type StackNavigationOptions,
 } from "@react-navigation/stack";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import * as Location from "expo-location";
 import * as SplashScreen from "expo-splash-screen";
-import React, { ErrorInfo, useCallback, useEffect, useState } from "react";
+import React, { type ErrorInfo, useCallback, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ActivityIndicator, StatusBar, StyleSheet, Text } from "react-native";
 import { RecoilRoot } from "recoil";

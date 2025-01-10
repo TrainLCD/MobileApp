@@ -2,13 +2,13 @@ import { Image } from "expo-image";
 import { grayscale } from "polished";
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import { Line } from "../../gen/proto/stationapi_pb";
+import type { Line } from "../../gen/proto/stationapi_pb";
 import {
 	MARK_SHAPE,
 	NUMBERING_ICON_SIZE,
-	NumberingIconSize,
+	type NumberingIconSize,
 } from "../constants";
-import { LineMark } from "../models/LineMark";
+import type { LineMark } from "../models/LineMark";
 import isTablet from "../utils/isTablet";
 import NumberingIcon from "./NumberingIcon";
 

@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { Line, LineType } from "../../gen/proto/stationapi_pb";
+import { type Line, LineType } from "../../gen/proto/stationapi_pb";
 import { MARK_SHAPE } from "../constants";
 import { getLineSymbolImage } from "../lineSymbolImage";
-import { LineMark } from "../models/LineMark";
+import type { LineMark } from "../models/LineMark";
 import useStationNumberIndexFunc from "./useStationNumberIndexFunc";
 
 const useGetLineMark = () => {
@@ -26,7 +26,7 @@ const useGetLineMark = () => {
 
 			const firstLineSymbol = line.lineSymbols?.[0];
 			const isJRLinesOmitted =
-				firstLineSymbol?.shape == MARK_SHAPE.JR_UNION ||
+				firstLineSymbol?.shape === MARK_SHAPE.JR_UNION ||
 				firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION;
 			if (isJRLinesOmitted) {
 				return {

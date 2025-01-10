@@ -1,4 +1,4 @@
-import { Line } from "../gen/proto/stationapi_pb";
+import type { Line } from "../gen/proto/stationapi_pb";
 
 export type LineSymbolImage = {
 	signPath?: number;

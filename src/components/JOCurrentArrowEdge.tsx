@@ -6,7 +6,7 @@ import {
 	Polygon,
 	Rect,
 	Svg,
-	SvgProps,
+	type SvgProps,
 } from "react-native-svg";
 
 const JOCurrentArrowEdge = (props?: SvgProps) => (

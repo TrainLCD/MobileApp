@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from "../constants";
 import useGetLineMark from "../hooks/useGetLineMark";
 import useTransferLines from "../hooks/useTransferLines";

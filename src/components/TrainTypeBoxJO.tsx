@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { useRecoilValue } from "recoil";
-import { TrainType } from "../../gen/proto/stationapi_pb";
+import type { TrainType } from "../../gen/proto/stationapi_pb";
 import { japaneseRegexp, parenthesisRegexp } from "../constants";
-import { HeaderLangState } from "../models/HeaderTransitionState";
+import type { HeaderLangState } from "../models/HeaderTransitionState";
 import navigationState from "../store/atoms/navigation";
 import { translate } from "../translation";
 import isTablet from "../utils/isTablet";

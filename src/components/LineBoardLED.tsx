@@ -11,7 +11,7 @@ import { useLoopLine } from "../hooks/useLoopLine";
 import { useNextStation } from "../hooks/useNextStation";
 import { useNumbering } from "../hooks/useNumbering";
 import useTransferLines from "../hooks/useTransferLines";
-import { HeaderStoppingState } from "../models/HeaderTransitionState";
+import type { HeaderStoppingState } from "../models/HeaderTransitionState";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";
 import Marquee from "./Marquee";

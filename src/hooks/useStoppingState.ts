@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useRecoilValue } from "recoil";
-import { HeaderStoppingState } from "../models/HeaderTransitionState";
+import type { HeaderStoppingState } from "../models/HeaderTransitionState";
 import stationState from "../store/atoms/station";
 import getIsPass from "../utils/isPass";
 import { useCurrentStation } from "./useCurrentStation";

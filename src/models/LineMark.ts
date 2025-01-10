@@ -1,4 +1,4 @@
-import { LineSymbolImage } from "../lineSymbolImage";
+import type { LineSymbolImage } from "../lineSymbolImage";
 
 export type LineMark = LineSymbolImage & {
 	signShape?: string;

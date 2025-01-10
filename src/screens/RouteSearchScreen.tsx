@@ -4,12 +4,12 @@ import {
 	ActivityIndicator,
 	Alert,
 	KeyboardAvoidingView,
-	NativeSyntheticEvent,
+	type NativeSyntheticEvent,
 	Platform,
 	StyleSheet,
 	TextInput,
-	TextInputChangeEventData,
-	TextInputKeyPressEventData,
+	type TextInputChangeEventData,
+	type TextInputKeyPressEventData,
 	View,
 } from "react-native";
 import { RFValue } from "../utils/rfValue";
@@ -22,7 +22,7 @@ import {
 	getStationsByLineId,
 	getStationsByName,
 } from "../../gen/proto/stationapi-StationAPI_connectquery";
-import { Route, Station } from "../../gen/proto/stationapi_pb";
+import type { Route, Station } from "../../gen/proto/stationapi_pb";
 import FAB from "../components/FAB";
 import Heading from "../components/Heading";
 import { RouteListModal } from "../components/RouteListModal";
@@ -31,7 +31,7 @@ import { FONTS } from "../constants";
 import { useCurrentStation } from "../hooks/useCurrentStation";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { useTrainTypeStations } from "../hooks/useTrainTypeStations";
-import { LineDirection } from "../models/Bound";
+import type { LineDirection } from "../models/Bound";
 import { APP_THEME } from "../models/Theme";
 import lineState from "../store/atoms/line";
 import navigationState from "../store/atoms/navigation";
@@ -138,7 +138,7 @@ const RouteSearchScreen = () => {
 	const groupedStations = useMemo(
 		() =>
 			groupStations(byNameData?.stations ?? []).filter(
-				(sta) => sta.groupId != currentStation?.groupId,
+				(sta) => sta.groupId !== currentStation?.groupId,
 			),
 		[byNameData?.stations, currentStation?.groupId],
 	);

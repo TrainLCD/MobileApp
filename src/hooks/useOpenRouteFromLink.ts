@@ -8,9 +8,9 @@ import {
 import {
 	GetStationByLineIdRequest,
 	GetStationsByLineGroupIdRequest,
-	Station,
+	type Station,
 } from "../../gen/proto/stationapi_pb";
-import { LineDirection } from "../models/Bound";
+import type { LineDirection } from "../models/Bound";
 import lineState from "../store/atoms/line";
 import navigationState from "../store/atoms/navigation";
 import stationState from "../store/atoms/station";

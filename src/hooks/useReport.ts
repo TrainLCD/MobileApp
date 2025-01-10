@@ -7,7 +7,7 @@ import * as Device from "expo-device";
 import * as Localization from "expo-localization";
 import { useCallback, useEffect, useState } from "react";
 import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from "../constants";
-import { Report, ReportType } from "../models/Report";
+import type { Report, ReportType } from "../models/Report";
 import { isJapanese } from "../translation";
 
 const {

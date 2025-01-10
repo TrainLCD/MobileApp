@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { BackHandler, StyleSheet, View } from "react-native";
 import { useRecoilState } from "recoil";
-import { Station, StopCondition } from "../../gen/proto/stationapi_pb";
+import { type Station, StopCondition } from "../../gen/proto/stationapi_pb";
 import FAB from "../components/FAB";
 import Heading from "../components/Heading";
 import { StationList } from "../components/StationList";

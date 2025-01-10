@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useRecoilValue } from "recoil";
-import { Line, Station } from "../../gen/proto/stationapi_pb";
+import type { Line, Station } from "../../gen/proto/stationapi_pb";
 import { isEnSelector } from "../store/selectors/isEn";
 
 const useIsDifferentStationName = () => {

@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import type React from "react";
 import {
-	GestureResponderEvent,
+	type GestureResponderEvent,
 	StyleSheet,
 	TouchableOpacity,
 } from "react-native";
-import { GlyphNames } from "../@types/ionicons";
+import type { GlyphNames } from "../@types/ionicons";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { APP_THEME } from "../models/Theme";
 

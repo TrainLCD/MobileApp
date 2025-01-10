@@ -2,7 +2,7 @@ import * as Notifications from "expo-notifications";
 import isPointWithinRadius from "geolib/es/isPointWithinRadius";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import { Station } from "../../gen/proto/stationapi_pb";
+import type { Station } from "../../gen/proto/stationapi_pb";
 import navigationState from "../store/atoms/navigation";
 import notifyState from "../store/atoms/notify";
 import stationState from "../store/atoms/station";

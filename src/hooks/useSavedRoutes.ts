@@ -2,7 +2,7 @@ import { useMutation } from "@connectrpc/connect-query";
 import firestore from "@react-native-firebase/firestore";
 import { useQuery } from "@tanstack/react-query";
 import { getStationByIdList } from "../../gen/proto/stationapi-StationAPI_connectquery";
-import { SavedRoute } from "../models/SavedRoute";
+import type { SavedRoute } from "../models/SavedRoute";
 import useCachedInitAnonymousUser from "./useCachedAnonymousUser";
 
 export const useSavedRoutes = () => {

@@ -1,9 +1,10 @@
-import { ConnectError } from "@connectrpc/connect";
-import React, { useMemo } from "react";
+import type { ConnectError } from "@connectrpc/connect";
+import type React from "react";
+import { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRecoilValue } from "recoil";
-import { Station, TrainType } from "../../gen/proto/stationapi_pb";
+import type { Station, TrainType } from "../../gen/proto/stationapi_pb";
 import { LED_THEME_BG_COLOR } from "../constants";
 import { useThemeStore } from "../hooks/useThemeStore";
 import { APP_THEME } from "../models/Theme";

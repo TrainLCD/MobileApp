@@ -1,10 +1,10 @@
-import React, { LegacyRef, forwardRef, useMemo } from "react";
+import React, { type LegacyRef, forwardRef, useMemo } from "react";
 import {
-	StyleProp,
+	type StyleProp,
 	StyleSheet,
 	Text,
-	TextProps,
-	TextStyle,
+	type TextProps,
+	type TextStyle,
 } from "react-native";
 import { FONTS } from "../constants";
 import { useThemeStore } from "../hooks/useThemeStore";

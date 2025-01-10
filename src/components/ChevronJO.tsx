@@ -1,5 +1,5 @@
 import React from "react";
-import { Path, Polygon, Svg, SvgProps } from "react-native-svg";
+import { Path, Polygon, Svg, type SvgProps } from "react-native-svg";
 
 const ChevronJO = (props?: SvgProps) => (
 	<Svg viewBox="0 0 200 400" {...props}>
