@@ -1,38 +1,38 @@
-import { useMemo } from "react";
-import type { Station } from "../../gen/proto/stationapi_pb";
-import getIsPass from "../utils/isPass";
+import { useMemo } from 'react';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import getIsPass from '../utils/isPass';
 
 const useHasPassStationInRegion = (
-	stations: Station[],
-	prevStation: Station | null,
-	nextStation: Station | null,
+  stations: Station[],
+  prevStation: Station | null,
+  nextStation: Station | null
 ): boolean => {
-	const prevStationIndex = useMemo(
-		() => stations.findIndex((s) => s.groupId === prevStation?.groupId),
-		[prevStation?.groupId, stations],
-	);
-	const nextStationIndex = useMemo(
-		() => stations.findIndex((s) => s.groupId === nextStation?.groupId),
-		[nextStation?.groupId, stations],
-	);
+  const prevStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === prevStation?.groupId),
+    [prevStation?.groupId, stations]
+  );
+  const nextStationIndex = useMemo(
+    () => stations.findIndex((s) => s.groupId === nextStation?.groupId),
+    [nextStation?.groupId, stations]
+  );
 
-	if (prevStationIndex < nextStationIndex) {
-		const innerStations = stations.slice(
-			prevStationIndex + 1,
-			nextStationIndex,
-		);
-		return innerStations.some((s) => getIsPass(s));
-	}
+  if (prevStationIndex < nextStationIndex) {
+    const innerStations = stations.slice(
+      prevStationIndex + 1,
+      nextStationIndex
+    );
+    return innerStations.some((s) => getIsPass(s));
+  }
 
-	if (prevStationIndex > nextStationIndex) {
-		const innerStations = stations.slice(
-			nextStationIndex + 1,
-			prevStationIndex,
-		);
-		return innerStations.some((s) => getIsPass(s));
-	}
+  if (prevStationIndex > nextStationIndex) {
+    const innerStations = stations.slice(
+      nextStationIndex + 1,
+      prevStationIndex
+    );
+    return innerStations.some((s) => getIsPass(s));
+  }
 
-	return false;
+  return false;
 };
 
 export default useHasPassStationInRegion;

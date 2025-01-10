@@ -1,12 +1,12 @@
-import type { FlattenObject } from "../utils/type";
+import type { FlattenObject } from '../utils/type';
 
 export const TestIds = {
-	Button: {
-		FakeStationSettings: "FakeStationSettings",
-	},
-	Input: {
-		StationNameQuery: "StationNameQuery",
-	},
+  Button: {
+    FakeStationSettings: 'FakeStationSettings',
+  },
+  Input: {
+    StationNameQuery: 'StationNameQuery',
+  },
 } as const;
 
 export type TestId = FlattenObject<typeof TestIds>;

@@ -1,128 +1,128 @@
-import React, { useMemo } from "react";
-import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { Station } from "../../gen/proto/stationapi_pb";
-import { NUMBERING_ICON_SIZE, parenthesisRegexp } from "../constants";
-import useGetLineMark from "../hooks/useGetLineMark";
-import useTransferLines from "../hooks/useTransferLines";
-import { translate } from "../translation";
-import isTablet from "../utils/isTablet";
-import { RFValue } from "../utils/rfValue";
-import TransferLineDot from "./TransferLineDot";
-import TransferLineMark from "./TransferLineMark";
-import Typography from "./Typography";
+import React, { useMemo } from 'react';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
+import useGetLineMark from '../hooks/useGetLineMark';
+import useTransferLines from '../hooks/useTransferLines';
+import { translate } from '../translation';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import TransferLineDot from './TransferLineDot';
+import TransferLineMark from './TransferLineMark';
+import Typography from './Typography';
 
 interface Props {
-	onPress: () => void;
-	station: Station;
+  onPress: () => void;
+  station: Station;
 }
 
 const styles = StyleSheet.create({
-	transferLine: {
-		flex: isTablet ? 0 : 1,
-		marginBottom: isTablet ? 32 : 8,
-	},
-	header: {
-		backgroundColor: "#ccc",
-		alignItems: "center",
-		padding: 4,
-	},
-	headerText: {
-		fontSize: 24,
-		fontWeight: "bold",
-	},
-	transferList: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		justifyContent: "center",
-		alignItems: "center",
-		paddingTop: isTablet ? 32 : 24,
-		padding: 24,
-	},
-	transferLineInner: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	lineNameContainer: {
-		width: "100%",
-	},
-	lineName: {
-		fontSize: RFValue(18),
-		color: "#333",
-		fontWeight: "bold",
-		width: "85%",
-	},
-	lineNameEn: {
-		fontSize: RFValue(12),
-		color: "#333",
-		fontWeight: "bold",
-	},
+  transferLine: {
+    flex: isTablet ? 0 : 1,
+    marginBottom: isTablet ? 32 : 8,
+  },
+  header: {
+    backgroundColor: '#ccc',
+    alignItems: 'center',
+    padding: 4,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  transferList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: isTablet ? 32 : 24,
+    padding: 24,
+  },
+  transferLineInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  lineNameContainer: {
+    width: '100%',
+  },
+  lineName: {
+    fontSize: RFValue(18),
+    color: '#333',
+    fontWeight: 'bold',
+    width: '85%',
+  },
+  lineNameEn: {
+    fontSize: RFValue(12),
+    color: '#333',
+    fontWeight: 'bold',
+  },
 });
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
-	const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
-	const getLineMarkFunc = useGetLineMark();
-	const lines = useTransferLines();
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const getLineMarkFunc = useGetLineMark();
+  const lines = useTransferLines();
 
-	const flexBasis = useMemo(() => Dimensions.get("window").width / 3, []);
+  const flexBasis = useMemo(() => Dimensions.get('window').width / 3, []);
 
-	const renderTransferLines = (): (JSX.Element | null)[] =>
-		lines.map((line) => {
-			if (!station) {
-				return null;
-			}
-			const lineMark = getLineMarkFunc({ line });
+  const renderTransferLines = (): (JSX.Element | null)[] =>
+    lines.map((line) => {
+      if (!station) {
+        return null;
+      }
+      const lineMark = getLineMarkFunc({ line });
 
-			return (
-				<View
-					style={[
-						styles.transferLine,
-						{
-							marginLeft: safeAreaLeft,
-							marginRight: safeAreaRight,
-							flexBasis,
-						},
-					]}
-					key={line.id}
-				>
-					<View style={styles.transferLineInner}>
-						{lineMark ? (
-							<TransferLineMark
-								line={line}
-								mark={lineMark}
-								size={NUMBERING_ICON_SIZE.MEDIUM}
-							/>
-						) : (
-							<TransferLineDot line={line} />
-						)}
+      return (
+        <View
+          style={[
+            styles.transferLine,
+            {
+              marginLeft: safeAreaLeft,
+              marginRight: safeAreaRight,
+              flexBasis,
+            },
+          ]}
+          key={line.id}
+        >
+          <View style={styles.transferLineInner}>
+            {lineMark ? (
+              <TransferLineMark
+                line={line}
+                mark={lineMark}
+                size={NUMBERING_ICON_SIZE.MEDIUM}
+              />
+            ) : (
+              <TransferLineDot line={line} />
+            )}
 
-						<View style={styles.lineNameContainer}>
-							<Typography style={styles.lineName}>
-								{line.nameShort.replace(parenthesisRegexp, "")}
-							</Typography>
-							<Typography style={styles.lineNameEn}>
-								{line.nameRoman?.replace(parenthesisRegexp, "")}
-							</Typography>
-						</View>
-					</View>
-				</View>
-			);
-		});
+            <View style={styles.lineNameContainer}>
+              <Typography style={styles.lineName}>
+                {line.nameShort.replace(parenthesisRegexp, '')}
+              </Typography>
+              <Typography style={styles.lineNameEn}>
+                {line.nameRoman?.replace(parenthesisRegexp, '')}
+              </Typography>
+            </View>
+          </View>
+        </View>
+      );
+    });
 
-	return (
-		<ScrollView>
-			<TouchableWithoutFeedback onPress={onPress}>
-				<View style={styles.header}>
-					<Typography style={styles.headerText}>
-						{translate("transferYamanote")}
-					</Typography>
-				</View>
+  return (
+    <ScrollView>
+      <TouchableWithoutFeedback onPress={onPress}>
+        <View style={styles.header}>
+          <Typography style={styles.headerText}>
+            {translate('transferYamanote')}
+          </Typography>
+        </View>
 
-				<View style={styles.transferList}>{renderTransferLines()}</View>
-			</TouchableWithoutFeedback>
-		</ScrollView>
-	);
+        <View style={styles.transferList}>{renderTransferLines()}</View>
+      </TouchableWithoutFeedback>
+    </ScrollView>
+  );
 };
 
 export default React.memo(TransfersYamanote);
