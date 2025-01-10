@@ -1,1 +1,1 @@
-export const LOCATION_TASK_NAME = 'trainlcd-background-location-task'
+export const LOCATION_TASK_NAME = "trainlcd-background-location-task";

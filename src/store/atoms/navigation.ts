@@ -1,41 +1,41 @@
-import { atom } from 'recoil'
-import { Station, TrainType } from '../../../gen/proto/stationapi_pb'
+import { atom } from "recoil";
+import { Station, TrainType } from "../../../gen/proto/stationapi_pb";
 import {
-  ALL_AVAILABLE_LANGUAGES,
-  AvailableLanguage,
-  RECOIL_STATES,
-} from '../../constants'
-import { BottomTransitionState } from '../../models/BottomTransitionState'
-import { HeaderTransitionState } from '../../models/HeaderTransitionState'
-import { isJapanese } from '../../translation'
+	ALL_AVAILABLE_LANGUAGES,
+	AvailableLanguage,
+	RECOIL_STATES,
+} from "../../constants";
+import { BottomTransitionState } from "../../models/BottomTransitionState";
+import { HeaderTransitionState } from "../../models/HeaderTransitionState";
+import { isJapanese } from "../../translation";
 
 export interface NavigationState {
-  leftStations: Station[]
-  trainType: TrainType | null
-  headerState: HeaderTransitionState
-  bottomState: BottomTransitionState
-  // stationForHeader: 急行等で使用しているとき地理的な最寄り駅と次の停車駅が違う時があるので、
-  // 実際の次の停車駅を保持している
-  stationForHeader: Station | null
-  enabledLanguages: AvailableLanguage[]
-  fetchedTrainTypes: TrainType[]
-  fromBuilder: boolean
+	leftStations: Station[];
+	trainType: TrainType | null;
+	headerState: HeaderTransitionState;
+	bottomState: BottomTransitionState;
+	// stationForHeader: 急行等で使用しているとき地理的な最寄り駅と次の停車駅が違う時があるので、
+	// 実際の次の停車駅を保持している
+	stationForHeader: Station | null;
+	enabledLanguages: AvailableLanguage[];
+	fetchedTrainTypes: TrainType[];
+	fromBuilder: boolean;
 }
 
 export const initialNavigationState: NavigationState = {
-  headerState: (isJapanese ? 'CURRENT' : 'CURRENT_EN') as HeaderTransitionState,
-  trainType: null,
-  bottomState: 'LINE' as BottomTransitionState,
-  leftStations: [],
-  stationForHeader: null,
-  enabledLanguages: ALL_AVAILABLE_LANGUAGES,
-  fetchedTrainTypes: [],
-  fromBuilder: false,
-}
+	headerState: (isJapanese ? "CURRENT" : "CURRENT_EN") as HeaderTransitionState,
+	trainType: null,
+	bottomState: "LINE" as BottomTransitionState,
+	leftStations: [],
+	stationForHeader: null,
+	enabledLanguages: ALL_AVAILABLE_LANGUAGES,
+	fetchedTrainTypes: [],
+	fromBuilder: false,
+};
 
 const navigationState = atom<NavigationState>({
-  key: RECOIL_STATES.navigation,
-  default: initialNavigationState,
-})
+	key: RECOIL_STATES.navigation,
+	default: initialNavigationState,
+});
 
-export default navigationState
+export default navigationState;

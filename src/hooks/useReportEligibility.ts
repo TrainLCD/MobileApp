@@ -1,43 +1,43 @@
-import firestore from '@react-native-firebase/firestore'
-import { useCallback, useEffect, useState } from 'react'
+import firestore from "@react-native-firebase/firestore";
+import { useCallback, useEffect, useState } from "react";
 import EligibilityDocData, {
-  EligibilityType,
-} from '../models/FeedbackEligibility'
-import useCachedInitAnonymousUser from './useCachedAnonymousUser'
+	EligibilityType,
+} from "../models/FeedbackEligibility";
+import useCachedInitAnonymousUser from "./useCachedAnonymousUser";
 
 const useReportEligibility = (): EligibilityType | undefined => {
-  const [eligibility, setEligibility] = useState<EligibilityType>()
+	const [eligibility, setEligibility] = useState<EligibilityType>();
 
-  const user = useCachedInitAnonymousUser()
+	const user = useCachedInitAnonymousUser();
 
-  const getEligibility = useCallback(async (): Promise<EligibilityType> => {
-    if (!user) {
-      return 'eligible'
-    }
+	const getEligibility = useCallback(async (): Promise<EligibilityType> => {
+		if (!user) {
+			return "eligible";
+		}
 
-    const eligibilitiesDoc = await firestore()
-      .collection('eligibilities')
-      .doc(user.uid)
-      .get()
+		const eligibilitiesDoc = await firestore()
+			.collection("eligibilities")
+			.doc(user.uid)
+			.get();
 
-    if (!eligibilitiesDoc.exists) {
-      return 'eligible'
-    }
+		if (!eligibilitiesDoc.exists) {
+			return "eligible";
+		}
 
-    const eligibilityDocData = eligibilitiesDoc.data() as
-      | EligibilityDocData
-      | undefined
-    return eligibilityDocData?.eligibilityType ?? 'eligible'
-  }, [user])
+		const eligibilityDocData = eligibilitiesDoc.data() as
+			| EligibilityDocData
+			| undefined;
+		return eligibilityDocData?.eligibilityType ?? "eligible";
+	}, [user]);
 
-  useEffect(() => {
-    const updateStateAsync = async () => {
-      setEligibility(await getEligibility())
-    }
-    updateStateAsync()
-  }, [getEligibility])
+	useEffect(() => {
+		const updateStateAsync = async () => {
+			setEligibility(await getEligibility());
+		};
+		updateStateAsync();
+	}, [getEligibility]);
 
-  return eligibility
-}
+	return eligibility;
+};
 
-export default useReportEligibility
+export default useReportEligibility;

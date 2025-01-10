@@ -1,98 +1,98 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import Svg, { Ellipse } from 'react-native-svg'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import Svg, { Ellipse } from "react-native-svg";
+import isTablet from "../utils/isTablet";
+import Typography from "./Typography";
+import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from "../constants";
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+	stationNumber: string;
+	lineColor: string;
+	size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
-  root: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  texts: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lineSymbol: {
-    color: 'white',
-    fontSize: isTablet ? 18 * 1.5 : 18,
-    lineHeight: isTablet ? 18 * 1.5 : 18,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 8 : 4,
-  },
-  rootTiny: {
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderRadius: 16.8,
-    borderWidth: 1,
-    borderColor: 'white',
-  },
-  lineSymbolTiny: {
-    color: 'white',
-    fontSize: 10,
-    lineHeight: 10,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
-  },
-  stationNumber: {
-    color: 'white',
-    fontSize: isTablet ? 32 * 1.5 : 32,
-    lineHeight: isTablet ? 32 * 1.5 : 32,
-    marginTop: isTablet ? -4 * 1.2 : -4,
-    textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-  },
-})
+	root: {
+		position: "relative",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	texts: {
+		position: "absolute",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	lineSymbol: {
+		color: "white",
+		fontSize: isTablet ? 18 * 1.5 : 18,
+		lineHeight: isTablet ? 18 * 1.5 : 18,
+		textAlign: "center",
+		fontFamily: FONTS.FuturaLTPro,
+		marginTop: isTablet ? 8 : 4,
+	},
+	rootTiny: {
+		width: 20,
+		height: 20,
+		justifyContent: "center",
+		alignItems: "center",
+		flexDirection: "column",
+		borderRadius: 16.8,
+		borderWidth: 1,
+		borderColor: "white",
+	},
+	lineSymbolTiny: {
+		color: "white",
+		fontSize: 10,
+		lineHeight: 10,
+		textAlign: "center",
+		fontFamily: FONTS.FuturaLTPro,
+		marginTop: 2,
+	},
+	stationNumber: {
+		color: "white",
+		fontSize: isTablet ? 32 * 1.5 : 32,
+		lineHeight: isTablet ? 32 * 1.5 : 32,
+		marginTop: isTablet ? -4 * 1.2 : -4,
+		textAlign: "center",
+		fontFamily: FONTS.MyriadPro,
+	},
+});
 
 const NumberingIconNankai: React.FC<Props> = ({
-  stationNumber: stationNumberRaw,
-  lineColor,
-  size,
+	stationNumber: stationNumberRaw,
+	lineColor,
+	size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('-')
+	const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split("-");
+	const stationNumber = stationNumberRest.join("-");
 
-  if (size === NUMBERING_ICON_SIZE.SMALL) {
-    return (
-      <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
-      </View>
-    )
-  }
+	if (size === NUMBERING_ICON_SIZE.SMALL) {
+		return (
+			<View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
+				<Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
+			</View>
+		);
+	}
 
-  return (
-    <View style={styles.root}>
-      <Svg height={isTablet ? 72 * 1.5 : 72} width={isTablet ? 72 * 1.5 : 72}>
-        <Ellipse
-          cx={(isTablet ? 72 * 1.5 : 72) / 2}
-          cy={(isTablet ? 72 * 1.5 : 72) / 2}
-          rx={(isTablet ? 72 * 1.5 : 72) / 2}
-          ry={(isTablet ? 72 * 1.5 : 72) / 2.5}
-          stroke="white"
-          strokeWidth={1}
-          fill={lineColor}
-        />
-      </Svg>
-      <View style={styles.texts}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
-      </View>
-    </View>
-  )
-}
+	return (
+		<View style={styles.root}>
+			<Svg height={isTablet ? 72 * 1.5 : 72} width={isTablet ? 72 * 1.5 : 72}>
+				<Ellipse
+					cx={(isTablet ? 72 * 1.5 : 72) / 2}
+					cy={(isTablet ? 72 * 1.5 : 72) / 2}
+					rx={(isTablet ? 72 * 1.5 : 72) / 2}
+					ry={(isTablet ? 72 * 1.5 : 72) / 2.5}
+					stroke="white"
+					strokeWidth={1}
+					fill={lineColor}
+				/>
+			</Svg>
+			<View style={styles.texts}>
+				<Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+				<Typography style={styles.stationNumber}>{stationNumber}</Typography>
+			</View>
+		</View>
+	);
+};
 
-export default NumberingIconNankai
+export default NumberingIconNankai;

@@ -1,50 +1,50 @@
-import { grayscale } from 'polished'
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { Line } from '../../gen/proto/stationapi_pb'
+import { grayscale } from "polished";
+import React, { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
+import { Line } from "../../gen/proto/stationapi_pb";
 
 interface Props {
-  line: Line
-  small?: boolean
-  shouldGrayscale?: boolean
+	line: Line;
+	small?: boolean;
+	shouldGrayscale?: boolean;
 }
 
 const TransferLineDot: React.FC<Props> = ({
-  line,
-  small,
-  shouldGrayscale,
+	line,
+	small,
+	shouldGrayscale,
 }: Props) => {
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        lineDot: {
-          width: small ? 20 : 20 * 1.5,
-          height: small ? 20 : 20 * 1.5,
-          borderRadius: 1,
-          marginRight: 4,
-          opacity: shouldGrayscale ? 0.5 : 1,
-        },
-      }),
-    [shouldGrayscale, small]
-  )
+	const styles = useMemo(
+		() =>
+			StyleSheet.create({
+				lineDot: {
+					width: small ? 20 : 20 * 1.5,
+					height: small ? 20 : 20 * 1.5,
+					borderRadius: 1,
+					marginRight: 4,
+					opacity: shouldGrayscale ? 0.5 : 1,
+				},
+			}),
+		[shouldGrayscale, small],
+	);
 
-  const fadedLineColor = useMemo(
-    () => grayscale(line?.color ?? '#ccc'),
-    [line?.color]
-  )
+	const fadedLineColor = useMemo(
+		() => grayscale(line?.color ?? "#ccc"),
+		[line?.color],
+	);
 
-  return (
-    <View
-      style={[
-        styles.lineDot,
-        {
-          backgroundColor: !shouldGrayscale
-            ? line.color ?? '#000'
-            : fadedLineColor,
-        },
-      ]}
-    />
-  )
-}
+	return (
+		<View
+			style={[
+				styles.lineDot,
+				{
+					backgroundColor: !shouldGrayscale
+						? (line.color ?? "#000")
+						: fadedLineColor,
+				},
+			]}
+		/>
+	);
+};
 
-export default React.memo(TransferLineDot)
+export default React.memo(TransferLineDot);

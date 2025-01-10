@@ -1,1 +1,1 @@
-export type GlyphNames = ComponentProps<typeof Ionicons>['name']
+export type GlyphNames = ComponentProps<typeof Ionicons>["name"];

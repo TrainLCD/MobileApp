@@ -1,66 +1,66 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS } from '../constants'
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import isTablet from "../utils/isTablet";
+import Typography from "./Typography";
+import { FONTS } from "../constants";
 
 type Props = {
-  stationNumber: string
-  lineColor: string
+	stationNumber: string;
+	lineColor: string;
 
-  darkText?: boolean
-}
+	darkText?: boolean;
+};
 
 const styles = StyleSheet.create({
-  root: {
-    width: isTablet ? 64 * 1.5 : 64,
-    height: isTablet ? 64 * 1.5 : 64,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    borderColor: 'white',
-  },
-  lineSymbol: {
-    fontSize: isTablet ? 30 * 1.5 : 30,
-    lineHeight: isTablet ? 30 * 1.5 : 30,
-    textAlign: 'center',
-    fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: 4,
-  },
-  stationNumber: {
-    marginTop: -4,
-    fontSize: isTablet ? 30 * 1.5 : 30,
-    lineHeight: isTablet ? 30 * 1.5 : 30,
-    textAlign: 'center',
-    fontFamily: FONTS.FrutigerNeueLTProBold,
-  },
-})
+	root: {
+		width: isTablet ? 64 * 1.5 : 64,
+		height: isTablet ? 64 * 1.5 : 64,
+		justifyContent: "center",
+		alignItems: "center",
+		flexDirection: "column",
+		borderColor: "white",
+	},
+	lineSymbol: {
+		fontSize: isTablet ? 30 * 1.5 : 30,
+		lineHeight: isTablet ? 30 * 1.5 : 30,
+		textAlign: "center",
+		fontFamily: FONTS.FrutigerNeueLTProBold,
+		marginTop: 4,
+	},
+	stationNumber: {
+		marginTop: -4,
+		fontSize: isTablet ? 30 * 1.5 : 30,
+		lineHeight: isTablet ? 30 * 1.5 : 30,
+		textAlign: "center",
+		fontFamily: FONTS.FrutigerNeueLTProBold,
+	},
+});
 
 const NumberingIconReversedSquareWest: React.FC<Props> = ({
-  stationNumber: stationNumberRaw,
-  lineColor,
-  darkText,
+	stationNumber: stationNumberRaw,
+	lineColor,
+	darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+	const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split("-");
+	const stationNumber = stationNumberRest.join("");
 
-  return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Typography
-        style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
-      >
-        {lineSymbol}
-      </Typography>
-      <Typography
-        style={[
-          styles.stationNumber,
-          { color: darkText ? '#241f20' : 'white' },
-        ]}
-      >
-        {stationNumber}
-      </Typography>
-    </View>
-  )
-}
+	return (
+		<View style={[styles.root, { backgroundColor: lineColor }]}>
+			<Typography
+				style={[styles.lineSymbol, { color: darkText ? "#241f20" : "white" }]}
+			>
+				{lineSymbol}
+			</Typography>
+			<Typography
+				style={[
+					styles.stationNumber,
+					{ color: darkText ? "#241f20" : "white" },
+				]}
+			>
+				{stationNumber}
+			</Typography>
+		</View>
+	);
+};
 
-export default NumberingIconReversedSquareWest
+export default NumberingIconReversedSquareWest;

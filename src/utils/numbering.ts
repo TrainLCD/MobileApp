@@ -1,16 +1,16 @@
-import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb'
+import { Line, Station, StationNumber } from "../../gen/proto/stationapi_pb";
 
 export const getNumberingColor = (
-  arrived: boolean,
-  currentStationNumber: StationNumber | undefined,
-  nextStation: Station | undefined,
-  line: Line | null | undefined
+	arrived: boolean,
+	currentStationNumber: StationNumber | undefined,
+	nextStation: Station | undefined,
+	line: Line | null | undefined,
 ): string => {
-  if (currentStationNumber?.lineSymbolColor) {
-    return currentStationNumber?.lineSymbolColor
-  }
-  if (arrived && nextStation?.line) {
-    return nextStation.line?.color ?? '#000'
-  }
-  return line?.color ?? '#000'
-}
+	if (currentStationNumber?.lineSymbolColor) {
+		return currentStationNumber?.lineSymbolColor;
+	}
+	if (arrived && nextStation?.line) {
+		return nextStation.line?.color ?? "#000";
+	}
+	return line?.color ?? "#000";
+};
