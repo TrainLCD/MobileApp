@@ -1,6 +1,6 @@
 import { Dimensions } from 'react-native';
 
-const { width: myWidth, height: myHeight } = Dimensions.get('window');
+const { width: myWidth, height: myHeight } = Dimensions.get('screen');
 const standardWidth = 375.0;
 const standardHeight = 667.0;
 

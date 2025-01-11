@@ -35,10 +35,10 @@ interface Props {
   lineColors: (string | null | undefined)[];
 }
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 const barWidth = isTablet
-  ? (windowWidth - 120) / 8
-  : (windowWidth - 96) / 7.835;
+  ? (screenWidth - 120) / 8
+  : (screenWidth - 96) / 7.835;
 const barBottom = ((): number => {
   if (isTablet) {
     return 32;
@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
-    height: windowHeight,
-    bottom: isTablet ? windowHeight / 2.5 : undefined,
+    height: screenHeight,
+    bottom: isTablet ? screenHeight / 2.5 : undefined,
   },
   stoppingChevron: {
     position: 'absolute',
@@ -315,7 +315,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View
         style={{
           ...styles.padLineMarksContainer,
-          top: hasNumberedStation ? windowHeight - 7 : windowHeight - 45,
+          top: hasNumberedStation ? screenHeight - 7 : screenHeight - 45,
         }}
       >
         <PadLineMarks

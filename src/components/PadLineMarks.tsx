@@ -21,7 +21,7 @@ type Props = {
   theme?: AppTheme;
 };
 
-const windowWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get('window').width;
 
 const stylesNormal = StyleSheet.create({
   root: {
@@ -56,7 +56,7 @@ const stylesWest = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: windowWidth / 10,
+    width: screenWidth / 10,
     flexDirection: 'row',
   },
   lineNameWrapper: {

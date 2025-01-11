@@ -43,11 +43,11 @@ import getCurrentStationIndex from '../utils/currentStationIndex';
 import { getIsHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
 
-const { height: windowHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   touchable: {
-    height: windowHeight - 128,
+    height: screenHeight - 128,
   },
 });
 
