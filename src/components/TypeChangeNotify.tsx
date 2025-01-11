@@ -19,9 +19,9 @@ import BarTerminalEast from './BarTerminalEast';
 import BarTerminalSaikyo from './BarTerminalSaikyo';
 import Typography from './Typography';
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('screen');
 const edgeOffset = isTablet ? 100 : 70;
-const barWidth = windowWidth / 2 - edgeOffset;
+const barWidth = screenWidth / 2 - edgeOffset;
 
 const barTerminalSize = isTablet ? 64 : 40;
 
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   linesContainer: {
     position: 'relative',
     justifyContent: 'center',
-    width: windowWidth,
+    width: screenWidth,
   },
   bar: {
     position: 'absolute',

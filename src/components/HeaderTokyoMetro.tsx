@@ -37,7 +37,7 @@ import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   stateWrapper: {
-    width: windowWidth * 0.14,
+    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,

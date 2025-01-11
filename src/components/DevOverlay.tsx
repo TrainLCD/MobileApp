@@ -5,13 +5,13 @@ import { useLocationStore } from '../hooks/useLocationStore';
 import { useThreshold } from '../hooks/useThreshold';
 import Typography from './Typography';
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
     position: 'absolute',
     right: 0,
-    width: windowWidth / 4,
+    width: screenWidth / 4,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 9999,
     padding: 4,

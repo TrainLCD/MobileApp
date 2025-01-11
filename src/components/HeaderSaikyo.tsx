@@ -35,7 +35,7 @@ import Clock from './Clock';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   stateWrapper: {
-    width: windowWidth * 0.14,
+    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
