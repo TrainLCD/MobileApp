@@ -23,7 +23,7 @@ import Button from './Button';
 import Heading from './Heading';
 import Typography from './Typography';
 
-const { height: windowHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('screen');
 
 type Props = {
   visible: boolean;
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     marginVertical: 16,
     textAlignVertical: 'top',
-    minHeight: windowHeight * 0.25,
+    minHeight: screenHeight * 0.25,
   },
   caution: {
     fontSize: RFValue(14),
