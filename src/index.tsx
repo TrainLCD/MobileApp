@@ -13,7 +13,14 @@ import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { type ErrorInfo, useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { ActivityIndicator, StatusBar, StyleSheet, Text } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+} from 'react-native';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { RecoilRoot } from 'recoil';
 import ErrorFallback from './components/ErrorBoundary';
 import TuningSettings from './components/TuningSettings';
@@ -108,64 +115,70 @@ const App: React.FC = () => {
   }
 
   return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onError={handleBoundaryError}
-    >
-      <TransportProvider transport={transport}>
-        <QueryClientProvider client={queryClient}>
-          <ActionSheetProvider>
-            <RecoilRoot>
-              <NavigationContainer>
-                <DeepLinkProvider>
-                  <StatusBar hidden translucent backgroundColor="transparent" />
+    <>
+      {Platform.OS === 'ios' ? (
+        <StatusBar hidden translucent backgroundColor="transparent" />
+      ) : (
+        <SystemBars hidden style="auto" />
+      )}
 
-                  <Stack.Navigator screenOptions={screenOptions}>
-                    {!permStatus?.granted ? (
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onError={handleBoundaryError}
+      >
+        <TransportProvider transport={transport}>
+          <QueryClientProvider client={queryClient}>
+            <ActionSheetProvider>
+              <RecoilRoot>
+                <NavigationContainer>
+                  <DeepLinkProvider>
+                    <Stack.Navigator screenOptions={screenOptions}>
+                      {!permStatus?.granted ? (
+                        <Stack.Screen
+                          options={options}
+                          name="Privacy"
+                          component={PrivacyScreen}
+                        />
+                      ) : null}
+
                       <Stack.Screen
                         options={options}
-                        name="Privacy"
-                        component={PrivacyScreen}
+                        name="MainStack"
+                        component={MainStack}
                       />
-                    ) : null}
 
-                    <Stack.Screen
-                      options={options}
-                      name="MainStack"
-                      component={MainStack}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="FakeStation"
+                        component={FakeStationSettingsScreen}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="FakeStation"
-                      component={FakeStationSettingsScreen}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="TuningSettings"
+                        component={TuningSettings}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="TuningSettings"
-                      component={TuningSettings}
-                    />
+                      <Stack.Screen
+                        options={options}
+                        name="SavedRoutes"
+                        component={SavedRoutesScreen}
+                      />
 
-                    <Stack.Screen
-                      options={options}
-                      name="SavedRoutes"
-                      component={SavedRoutesScreen}
-                    />
-
-                    <Stack.Screen
-                      options={options}
-                      name="RouteSearch"
-                      component={RouteSearchScreen}
-                    />
-                  </Stack.Navigator>
-                </DeepLinkProvider>
-              </NavigationContainer>
-            </RecoilRoot>
-          </ActionSheetProvider>
-        </QueryClientProvider>
-      </TransportProvider>
-    </ErrorBoundary>
+                      <Stack.Screen
+                        options={options}
+                        name="RouteSearch"
+                        component={RouteSearchScreen}
+                      />
+                    </Stack.Navigator>
+                  </DeepLinkProvider>
+                </NavigationContainer>
+              </RecoilRoot>
+            </ActionSheetProvider>
+          </QueryClientProvider>
+        </TransportProvider>
+      </ErrorBoundary>
+    </>
   );
 };
 
