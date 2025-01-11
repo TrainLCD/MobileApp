@@ -1,7 +1,7 @@
 import { Dimensions, Platform, StatusBar } from 'react-native';
 
 export function RFValue(fontSize: number, standardScreenHeight = 680) {
-  const { height, width } = Dimensions.get('window');
+  const { height, width } = Dimensions.get('screen');
   const standardLength = width > height ? width : height;
   const offset =
     width > height

@@ -38,8 +38,8 @@ interface Props {
   lineColors: (string | null | undefined)[];
 }
 
-const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-const barWidth = isTablet ? (windowWidth - 72) / 8 : (windowWidth - 48) / 8;
+const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
+const barWidth = isTablet ? (screenWidth - 72) / 8 : (screenWidth - 48) / 8;
 
 const barBottom = ((): number => {
   if (isTablet) {
@@ -58,8 +58,8 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: windowHeight,
-    bottom: isTablet ? windowHeight / 2.5 : undefined,
+    height: screenHeight,
+    bottom: isTablet ? screenHeight / 2.5 : undefined,
   },
   bar: {
     position: 'absolute',
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 64 : 32,
   },
   barTerminal: {
-    left: isTablet ? windowWidth - 72 + 6 : windowWidth - 48 + 6,
+    left: isTablet ? screenWidth - 72 + 6 : screenWidth - 48 + 6,
     position: 'absolute',
     width: 0,
     height: 0,
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'relative',
-    width: windowWidth / 9,
+    width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
