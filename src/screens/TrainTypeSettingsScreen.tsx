@@ -1,35 +1,35 @@
-import { useQuery } from '@connectrpc/connect-query'
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState } from 'recoil'
-import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery'
-import { TrainType } from '../../gen/proto/stationapi_pb'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal'
-import { TrainTypeList } from '../components/TrainTypeList'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { translate } from '../translation'
+import { useQuery } from '@connectrpc/connect-query';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BackHandler, StyleSheet, View } from 'react-native';
+import { useRecoilState } from 'recoil';
+import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery';
+import type { TrainType } from '../../gen/proto/stationapi_pb';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal';
+import { TrainTypeList } from '../components/TrainTypeList';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
   listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
-})
+});
 
 const TrainTypeSettings: React.FC = () => {
-  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false)
+  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
   const [selectedTrainType, setSelectedTrainType] = useState<TrainType | null>(
     null
-  )
+  );
 
   const [{ fetchedTrainTypes }, setNavigationState] =
-    useRecoilState(navigationState)
+    useRecoilState(navigationState);
   const [{ stations: stationsFromState }, setStationState] =
-    useRecoilState(stationState)
+    useRecoilState(stationState);
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const {
     data: byLineGroupIdData,
@@ -41,7 +41,7 @@ const TrainTypeSettings: React.FC = () => {
       lineGroupId: selectedTrainType?.groupId,
     },
     { enabled: !!selectedTrainType }
-  )
+  );
 
   const stations = useMemo(
     () =>
@@ -49,28 +49,28 @@ const TrainTypeSettings: React.FC = () => {
         ? byLineGroupIdData.stations
         : stationsFromState,
     [byLineGroupIdData?.stations, stationsFromState]
-  )
+  );
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation])
+  }, [navigation]);
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      onPressBack()
-      return true
-    })
+      onPressBack();
+      return true;
+    });
     return (): void => {
-      handler.remove()
-    }
-  }, [onPressBack])
+      handler.remove();
+    };
+  }, [onPressBack]);
 
   const handleSelect = (tt: TrainType) => {
-    setSelectedTrainType(tt)
-    setIsTrainTypeModalVisible(true)
-  }
+    setSelectedTrainType(tt);
+    setIsTrainTypeModalVisible(true);
+  };
 
   const handleTrainTypeConfirmed = useCallback(
     async (trainType: TrainType | undefined) => {
@@ -78,43 +78,43 @@ const TrainTypeSettings: React.FC = () => {
         setNavigationState((prev) => ({
           ...prev,
           trainType: null,
-        }))
+        }));
         // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
         setStationState((prev) => ({
           ...prev,
           wantedDestination: null,
-        }))
-        setIsTrainTypeModalVisible(false)
+        }));
+        setIsTrainTypeModalVisible(false);
 
         if (navigation.canGoBack()) {
-          navigation.goBack()
+          navigation.goBack();
         }
-        return
+        return;
       }
 
       const selectedTrainType = fetchedTrainTypes?.find(
         (tt) => tt.id === trainType?.id
-      )
+      );
 
       if (!selectedTrainType) {
-        return
+        return;
       }
 
       setNavigationState((prev) => ({
         ...prev,
         trainType: selectedTrainType,
-      }))
+      }));
       // 種別が変わるとすでに選択していた行先が停車駅に存在しない場合があるのでリセットする
       setStationState((prev) => ({
         ...prev,
         wantedDestination: null,
         stations,
-      }))
+      }));
 
-      setIsTrainTypeModalVisible(false)
+      setIsTrainTypeModalVisible(false);
 
       if (navigation.canGoBack()) {
-        navigation.goBack()
+        navigation.goBack();
       }
     },
     [
@@ -124,7 +124,7 @@ const TrainTypeSettings: React.FC = () => {
       setStationState,
       stations,
     ]
-  )
+  );
 
   return (
     <View style={styles.root}>
@@ -148,7 +148,7 @@ const TrainTypeSettings: React.FC = () => {
         />
       ) : null}
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(TrainTypeSettings)
+export default React.memo(TrainTypeSettings);

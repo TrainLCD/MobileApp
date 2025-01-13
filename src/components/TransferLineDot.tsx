@@ -1,12 +1,12 @@
-import { grayscale } from 'polished'
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { Line } from '../../gen/proto/stationapi_pb'
+import { grayscale } from 'polished';
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { Line } from '../../gen/proto/stationapi_pb';
 
 interface Props {
-  line: Line
-  small?: boolean
-  shouldGrayscale?: boolean
+  line: Line;
+  small?: boolean;
+  shouldGrayscale?: boolean;
 }
 
 const TransferLineDot: React.FC<Props> = ({
@@ -26,12 +26,12 @@ const TransferLineDot: React.FC<Props> = ({
         },
       }),
     [shouldGrayscale, small]
-  )
+  );
 
   const fadedLineColor = useMemo(
     () => grayscale(line?.color ?? '#ccc'),
     [line?.color]
-  )
+  );
 
   return (
     <View
@@ -39,12 +39,12 @@ const TransferLineDot: React.FC<Props> = ({
         styles.lineDot,
         {
           backgroundColor: !shouldGrayscale
-            ? line.color ?? '#000'
+            ? (line.color ?? '#000')
             : fadedLineColor,
         },
       ]}
     />
-  )
-}
+  );
+};
 
-export default React.memo(TransferLineDot)
+export default React.memo(TransferLineDot);

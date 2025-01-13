@@ -1,15 +1,15 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS } from '../constants'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { FONTS } from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
+  stationNumber: string;
+  lineColor: string;
 
-  darkText?: boolean
-}
+  darkText?: boolean;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -34,15 +34,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
   },
-})
+});
 
 const NumberingIconReversedSquareWest: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   darkText,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
 
   return (
     <View style={[styles.root, { backgroundColor: lineColor }]}>
@@ -60,7 +60,7 @@ const NumberingIconReversedSquareWest: React.FC<Props> = ({
         {stationNumber}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconReversedSquareWest
+export default NumberingIconReversedSquareWest;

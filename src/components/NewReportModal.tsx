@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo } from 'react';
 import {
   Dimensions,
   Keyboard,
@@ -9,31 +9,31 @@ import {
   StyleSheet,
   TextInput,
   View,
-} from 'react-native'
-import { hasNotch } from 'react-native-device-info'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { FONTS, LED_THEME_BG_COLOR } from '../constants'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { translate } from '../translation'
-import isTablet from '../utils/isTablet'
-import { RFValue } from '../utils/rfValue'
-import { widthScale } from '../utils/scale'
-import Button from './Button'
-import Heading from './Heading'
-import Typography from './Typography'
+} from 'react-native';
+import { hasNotch } from 'react-native-device-info';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FONTS, LED_THEME_BG_COLOR } from '../constants';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import { translate } from '../translation';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import { widthScale } from '../utils/scale';
+import Button from './Button';
+import Heading from './Heading';
+import Typography from './Typography';
 
-const { height: windowHeight } = Dimensions.get('window')
+const { height: screenHeight } = Dimensions.get('screen');
 
 type Props = {
-  visible: boolean
-  sending: boolean
-  onClose: () => void
-  onSubmit: () => void
-  description: string
-  onDescriptionChange: (text: string) => void
-  descriptionLowerLimit: number
-}
+  visible: boolean;
+  sending: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  description: string;
+  onDescriptionChange: (text: string) => void;
+  descriptionLowerLimit: number;
+};
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     marginVertical: 16,
     textAlignVertical: 'top',
-    minHeight: windowHeight * 0.25,
+    minHeight: screenHeight * 0.25,
   },
   caution: {
     fontSize: RFValue(14),
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     color: '#555555',
   },
-})
+});
 
 const NewReportModal: React.FC<Props> = ({
   visible,
@@ -91,13 +91,13 @@ const NewReportModal: React.FC<Props> = ({
   onDescriptionChange,
   descriptionLowerLimit,
 }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const needsLeftCount = useMemo(
     () => description.trim().length - descriptionLowerLimit,
     [description, descriptionLowerLimit]
-  )
+  );
 
   return (
     <Modal
@@ -184,7 +184,7 @@ const NewReportModal: React.FC<Props> = ({
         </Pressable>
       </Pressable>
     </Modal>
-  )
-}
+  );
+};
 
-export default React.memo(NewReportModal)
+export default React.memo(NewReportModal);

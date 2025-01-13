@@ -15,7 +15,7 @@ export const ASYNC_STORAGE_KEYS = {
   QA_LOSSLESS_ENABLED: '@TrainLCD:qaLosslessEnabled',
   QA_TTS_NOTICE: '@TrainLCD:qaTtsNotice',
   QA_BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
-} as const
+} as const;
 
 export type AsyncStorageKeys =
-  (typeof ASYNC_STORAGE_KEYS)[keyof typeof ASYNC_STORAGE_KEYS]
+  (typeof ASYNC_STORAGE_KEYS)[keyof typeof ASYNC_STORAGE_KEYS];

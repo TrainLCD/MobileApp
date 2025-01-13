@@ -1,23 +1,23 @@
-import { createClient } from '@connectrpc/connect'
-import { createGrpcWebTransport } from '@connectrpc/connect-web'
-import { QueryClient } from '@tanstack/react-query'
-import { fetch } from 'expo/fetch'
-import DeviceInfo from 'react-native-device-info'
+import { createClient } from '@connectrpc/connect';
+import { createGrpcWebTransport } from '@connectrpc/connect-web';
+import { QueryClient } from '@tanstack/react-query';
+import { fetch } from 'expo/fetch';
+import DeviceInfo from 'react-native-device-info';
 import {
   DEV_API_URL,
   PRODUCTION_API_URL,
   STAGING_API_URL,
-} from 'react-native-dotenv'
-import { StationAPI } from '../../gen/proto/stationapi_connect'
-import { isDevApp } from '../utils/isDevApp'
+} from 'react-native-dotenv';
+import { StationAPI } from '../../gen/proto/stationapi_connect';
+import { isDevApp } from '../utils/isDevApp';
 
 const baseUrl = (() => {
   if (__DEV__ && DeviceInfo.isEmulatorSync()) {
-    return DEV_API_URL
+    return DEV_API_URL;
   }
 
-  return isDevApp ? STAGING_API_URL : PRODUCTION_API_URL
-})()
+  return isDevApp ? STAGING_API_URL : PRODUCTION_API_URL;
+})();
 
 export const transport = createGrpcWebTransport({
   baseUrl,
@@ -28,9 +28,9 @@ export const transport = createGrpcWebTransport({
       signal: init?.signal ?? undefined,
       credentials: 'omit',
     }),
-})
+});
 
-export const grpcClient = createClient(StationAPI, transport)
+export const grpcClient = createClient(StationAPI, transport);
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,4 +39,4 @@ export const queryClient = new QueryClient({
       refetchOnMount: false,
     },
   },
-})
+});

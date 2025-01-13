@@ -1,5 +1,5 @@
-import { useMutation } from '@connectrpc/connect-query'
-import { getStationsByCoordinates } from '../../gen/proto/stationapi-StationAPI_connectquery'
+import { useMutation } from '@connectrpc/connect-query';
+import { getStationsByCoordinates } from '../../gen/proto/stationapi-StationAPI_connectquery';
 
 export const useFetchNearbyStation = () => {
   const {
@@ -7,12 +7,12 @@ export const useFetchNearbyStation = () => {
     error: byCoordsError,
     status: byCoordsFetchStatus,
     mutateAsync: fetchByCoords,
-  } = useMutation(getStationsByCoordinates)
+  } = useMutation(getStationsByCoordinates);
 
   return {
     stations: data?.stations ?? [],
     fetchByCoords,
     isLoading: byCoordsFetchStatus === 'pending',
     error: byCoordsError,
-  }
-}
+  };
+};

@@ -1,14 +1,14 @@
-import { useCallback, useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import { Line } from '../../gen/proto/stationapi_pb'
-import { parenthesisRegexp } from '../constants'
-import stationState from '../store/atoms/station'
-import { useCurrentLine } from './useCurrentLine'
+import { useCallback, useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import { Line } from '../../gen/proto/stationapi_pb';
+import { parenthesisRegexp } from '../constants';
+import stationState from '../store/atoms/station';
+import { useCurrentLine } from './useCurrentLine';
 
 const useConnectedLines = (excludePassed = true): Line[] => {
   const { selectedBound, selectedDirection, stations } =
-    useRecoilValue(stationState)
-  const currentLine = useCurrentLine()
+    useRecoilValue(stationState);
+  const currentLine = useCurrentLine();
 
   const belongLines = useMemo(
     () =>
@@ -18,7 +18,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
         .filter((line, idx, arr) => arr[idx - 1]?.id !== line?.id)
         .map((l) => new Line(l)) ?? [],
     [stations]
-  )
+  );
 
   const excludeSameNameLines = useCallback(
     (lines: Line[]): Line[] =>
@@ -29,21 +29,21 @@ const useConnectedLines = (excludePassed = true): Line[] => {
           currentLine?.nameShort.replace(parenthesisRegexp, '')
       ),
     [currentLine?.nameShort]
-  )
+  );
 
   const joinedLineIds = useMemo(
     () => belongLines.map((l) => l.id),
     [belongLines]
-  )
+  );
 
   if (!selectedBound) {
-    return []
+    return [];
   }
 
   if (excludePassed) {
     const currentLineIndex = joinedLineIds.findIndex(
       (lid) => lid === currentLine?.id
-    )
+    );
 
     const notGroupedJoinedLines: Line[] =
       selectedDirection === 'INBOUND'
@@ -64,7 +64,7 @@ const useConnectedLines = (excludePassed = true): Line[] => {
               name: l.nameShort.replace(parenthesisRegexp, ''),
             }))
             .map((l) => new Line(l))
-            .reverse()
+            .reverse();
     const companyDuplicatedLines = notGroupedJoinedLines
       .filter((l, i, arr) => l.company?.id === arr[i - 1]?.company?.id)
       .map((l) => {
@@ -77,17 +77,17 @@ const useConnectedLines = (excludePassed = true): Line[] => {
             ...l,
             name: `${l.company?.nameShort}線`,
             nameR: `${l.company?.nameEnglishShort} Line`,
-          }
+          };
         }
-        return l
-      })
+        return l;
+      });
     const companyNotDuplicatedLines = notGroupedJoinedLines.filter((l) => {
       return (
         companyDuplicatedLines.findIndex(
           (jl) => jl.company?.id === l.company?.id
         ) === -1
-      )
-    })
+      );
+    });
 
     const joinedLines = [
       ...companyDuplicatedLines,
@@ -97,29 +97,29 @@ const useConnectedLines = (excludePassed = true): Line[] => {
       .reduce<Line[]>((acc, cur, idx, arr) => {
         // 直通先が1つしかなければ別に計算する必要はない
         if (arr.length === 1) {
-          return [new Line(cur)]
+          return [new Line(cur)];
         }
 
         // 処理中の路線がグループ化されていない配列の何番目にあるか調べる
         // このindexが実際の直通順に入るようにしたい
         const currentIndex = notGroupedJoinedLines.findIndex(
           (l) => l.id === cur.id
-        )
+        );
 
         // 処理中のindexがcurrentIndexより大きいまたは等しい場合、
         // 処理が終わった配列を展開しグループ化されていない
         // 現在路線~最終直通先の配列を返し、次のループへ
         if (currentIndex <= idx) {
-          return [...acc, ...notGroupedJoinedLines.slice(currentIndex)]
+          return acc.concat(notGroupedJoinedLines.slice(currentIndex));
         }
 
         // 処理中のindexがcurrentIndexより小さい場合、
         // 処理が終わった配列を展開しグループ化されていない
         // 配列の最初から現在のindexまでを返し、次のループへ
-        return [...acc, ...notGroupedJoinedLines.slice(0, currentIndex)]
+        return acc.concat(notGroupedJoinedLines.slice(0, currentIndex));
       }, [])
       // ループ設計上路線が重複する可能性があるのでここで重複をしばく
-      .filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i)
+      .filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i);
 
     return excludeSameNameLines(
       joinedLines.filter(
@@ -130,10 +130,10 @@ const useConnectedLines = (excludePassed = true): Line[] => {
               jl.nameShort.replace(parenthesisRegexp, '')
           ) === i
       )
-    )
+    );
   }
 
-  return excludeSameNameLines(belongLines)
-}
+  return excludeSameNameLines(belongLines);
+};
 
-export default useConnectedLines
+export default useConnectedLines;

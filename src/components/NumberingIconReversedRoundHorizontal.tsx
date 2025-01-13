@@ -1,14 +1,18 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -62,22 +66,22 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.MyriadPro,
     marginTop: isTablet ? 8 : 4,
   },
-})
+});
 
 const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('');
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
 
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
@@ -85,7 +89,7 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
         <Typography style={styles.stationNumberMedium}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -95,7 +99,7 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
         {stationNumber}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconReversedRoundHorizontal
+export default NumberingIconReversedRoundHorizontal;

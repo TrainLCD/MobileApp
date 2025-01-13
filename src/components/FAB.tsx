@@ -1,18 +1,18 @@
-import { Ionicons } from '@expo/vector-icons'
-import React from 'react'
+import { Ionicons } from '@expo/vector-icons';
+import type React from 'react';
 import {
-  GestureResponderEvent,
+  type GestureResponderEvent,
   StyleSheet,
   TouchableOpacity,
-} from 'react-native'
-import { GlyphNames } from '../@types/ionicons'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
+} from 'react-native';
+import type { GlyphNames } from '../@types/ionicons';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
 
 interface Props {
-  icon: GlyphNames
-  disabled?: boolean
-  onPress: (event: GestureResponderEvent) => void
+  icon: GlyphNames;
+  disabled?: boolean;
+  onPress: (event: GestureResponderEvent) => void;
 }
 
 const styles = StyleSheet.create({
@@ -36,10 +36,10 @@ const styles = StyleSheet.create({
   icon: {
     color: '#fff',
   },
-})
+});
 
 const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   return (
     <TouchableOpacity
@@ -57,7 +57,7 @@ const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
     >
       <Ionicons style={styles.icon} name={icon} size={32} />
     </TouchableOpacity>
-  )
-}
+  );
+};
 
-export default FAB
+export default FAB;

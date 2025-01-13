@@ -1,29 +1,29 @@
-import { Line, Station } from '../../gen/proto/stationapi_pb'
+import type { Line, Station } from '../../gen/proto/stationapi_pb';
 
 export const filterWithoutCurrentLine = (
   stations: Station[],
   currentLine: Line | null,
   stationIndex: number
 ): Line[] => {
-  const currentStation = stations[stationIndex]
+  const currentStation = stations[stationIndex];
   if (!currentLine || !currentStation) {
-    return []
+    return [];
   }
   return currentStation.lines.filter(
     (line: Line) =>
       line.id !== currentLine.id &&
       line.nameKatakana !== currentLine.nameKatakana
-  )
-}
+  );
+};
 
 export const getCurrentStationLinesWithoutCurrentLine = (
   stations: Station[],
   selectedLine: Line | null
-): Line[] => filterWithoutCurrentLine(stations, selectedLine, 0)
+): Line[] => filterWithoutCurrentLine(stations, selectedLine, 0);
 
 export const getNextStationLinesWithoutCurrentLine = (
   stations: Station[],
   selectedLine: Line | null,
   forceStationIndex?: number
 ): Line[] =>
-  filterWithoutCurrentLine(stations, selectedLine, forceStationIndex ?? 1)
+  filterWithoutCurrentLine(stations, selectedLine, forceStationIndex ?? 1);

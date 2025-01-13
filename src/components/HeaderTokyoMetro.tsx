@@ -1,6 +1,6 @@
-import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -8,36 +8,36 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from 'react-native-reanimated'
-import { useRecoilValue } from 'recoil'
+} from 'react-native-reanimated';
+import { useRecoilValue } from 'recoil';
 import {
   MARK_SHAPE,
   STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
-} from '../constants'
-import { useBoundText } from '../hooks/useBoundText'
-import useConnectedLines from '../hooks/useConnectedLines'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
-import useIsNextLastStop from '../hooks/useIsNextLastStop'
-import useLazyPrevious from '../hooks/useLazyPrevious'
-import { useNextStation } from '../hooks/useNextStation'
-import { useNumbering } from '../hooks/useNumbering'
-import { usePrevious } from '../hooks/usePrevious'
-import { HeaderLangState } from '../models/HeaderTransitionState'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import tuningState from '../store/atoms/tuning'
-import { translate } from '../translation'
-import isTablet from '../utils/isTablet'
-import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getNumberingColor } from '../utils/numbering'
-import { RFValue } from '../utils/rfValue'
-import NumberingIcon from './NumberingIcon'
-import TrainTypeBox from './TrainTypeBox'
+} from '../constants';
+import { useBoundText } from '../hooks/useBoundText';
+import useConnectedLines from '../hooks/useConnectedLines';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
+import useLazyPrevious from '../hooks/useLazyPrevious';
+import { useNextStation } from '../hooks/useNextStation';
+import { useNumbering } from '../hooks/useNumbering';
+import { usePrevious } from '../hooks/usePrevious';
+import type { HeaderLangState } from '../models/HeaderTransitionState';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import tuningState from '../store/atoms/tuning';
+import { translate } from '../translation';
+import isTablet from '../utils/isTablet';
+import katakanaToHiragana from '../utils/kanaToHiragana';
+import { getNumberingColor } from '../utils/numbering';
+import { RFValue } from '../utils/rfValue';
+import NumberingIcon from './NumberingIcon';
+import TrainTypeBox from './TrainTypeBox';
 
-const { width: windowWidth } = Dimensions.get('window')
+const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   stateWrapper: {
-    width: windowWidth * 0.14,
+    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -120,21 +120,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-})
+});
 
 const HeaderTokyoMetro: React.FC = () => {
-  const { selectedBound, arrived } = useRecoilValue(stationState)
-  const { headerState } = useRecoilValue(navigationState)
-  const { headerTransitionDelay } = useRecoilValue(tuningState)
+  const { selectedBound, arrived } = useRecoilValue(stationState);
+  const { headerState } = useRecoilValue(navigationState);
+  const { headerTransitionDelay } = useRecoilValue(tuningState);
 
-  const currentStation = useCurrentStation()
-  const currentLine = useCurrentLine()
+  const currentStation = useCurrentStation();
+  const currentLine = useCurrentLine();
 
-  const [fadeOutFinished, setFadeOutFinished] = useState(false)
-  const trainType = useCurrentTrainType()
-  const boundStationNameList = useBoundText()
+  const [fadeOutFinished, setFadeOutFinished] = useState(false);
+  const trainType = useCurrentTrainType();
+  const boundStationNameList = useBoundText();
 
-  const connectedLines = useConnectedLines()
+  const connectedLines = useConnectedLines();
 
   const connectionText = useMemo(
     () =>
@@ -143,7 +143,7 @@ const HeaderTokyoMetro: React.FC = () => {
         .slice(0, 2)
         .join('・'),
     [connectedLines]
-  )
+  );
 
   const headerLangState = useMemo(
     () =>
@@ -151,59 +151,59 @@ const HeaderTokyoMetro: React.FC = () => {
         ? headerState.split('_')[1]
         : ('JA' as HeaderLangState),
     [headerState]
-  )
+  );
   const boundText = useMemo(
     () => boundStationNameList[headerLangState],
     [boundStationNameList, headerLangState]
-  )
+  );
 
-  const isLast = useIsNextLastStop()
-  const nextStation = useNextStation()
+  const isLast = useIsNextLastStop();
+  const nextStation = useNextStation();
 
   const stationText = useMemo<string>(() => {
     if (!selectedBound) {
-      return currentStation?.name ?? ''
+      return currentStation?.name ?? '';
     }
     switch (headerState) {
       case 'ARRIVING':
-        return nextStation?.name ?? ''
+        return nextStation?.name ?? '';
       case 'ARRIVING_KANA':
-        return katakanaToHiragana(nextStation?.nameKatakana)
+        return katakanaToHiragana(nextStation?.nameKatakana);
       case 'ARRIVING_EN': {
-        return nextStation?.nameRoman ?? ''
+        return nextStation?.nameRoman ?? '';
       }
       case 'ARRIVING_ZH': {
-        return nextStation?.nameChinese ?? ''
+        return nextStation?.nameChinese ?? '';
       }
       case 'ARRIVING_KO': {
-        return nextStation?.nameKorean ?? ''
+        return nextStation?.nameKorean ?? '';
       }
       case 'CURRENT':
-        return currentStation?.name ?? ''
+        return currentStation?.name ?? '';
       case 'CURRENT_KANA':
-        return katakanaToHiragana(currentStation?.nameKatakana)
+        return katakanaToHiragana(currentStation?.nameKatakana);
       case 'CURRENT_EN': {
-        return currentStation?.nameRoman ?? ''
+        return currentStation?.nameRoman ?? '';
       }
       case 'CURRENT_ZH': {
-        return currentStation?.nameChinese ?? ''
+        return currentStation?.nameChinese ?? '';
       }
       case 'CURRENT_KO': {
-        return currentStation?.nameKorean ?? ''
+        return currentStation?.nameKorean ?? '';
       }
       case 'NEXT': {
-        return nextStation?.name ?? ''
+        return nextStation?.name ?? '';
       }
       case 'NEXT_KANA':
-        return katakanaToHiragana(nextStation?.nameKatakana)
+        return katakanaToHiragana(nextStation?.nameKatakana);
       case 'NEXT_EN':
-        return nextStation?.nameRoman ?? ''
+        return nextStation?.nameRoman ?? '';
       case 'NEXT_ZH':
-        return nextStation?.nameChinese ?? ''
+        return nextStation?.nameChinese ?? '';
       case 'NEXT_KO':
-        return nextStation?.nameKorean ?? ''
+        return nextStation?.nameKorean ?? '';
       default:
-        return ''
+        return '';
     }
   }, [
     currentStation?.name,
@@ -218,87 +218,87 @@ const HeaderTokyoMetro: React.FC = () => {
     nextStation?.nameKorean,
     nextStation?.nameRoman,
     selectedBound,
-  ])
+  ]);
 
   const stateText = useMemo<string>(() => {
     if (!selectedBound) {
-      return translate('nowStoppingAt')
+      return translate('nowStoppingAt');
     }
     switch (headerState) {
       case 'ARRIVING':
-        return translate(isLast ? 'soonLast' : 'soon')
+        return translate(isLast ? 'soonLast' : 'soon');
       case 'ARRIVING_KANA':
-        return translate(isLast ? 'soonKanaLast' : 'soon')
+        return translate(isLast ? 'soonKanaLast' : 'soon');
       case 'ARRIVING_EN':
-        return translate(isLast ? 'soonEnLast' : 'soonEn')
+        return translate(isLast ? 'soonEnLast' : 'soonEn');
       case 'ARRIVING_ZH':
-        return translate(isLast ? 'soonZhLast' : 'soonZh')
+        return translate(isLast ? 'soonZhLast' : 'soonZh');
       case 'ARRIVING_KO':
-        return translate(isLast ? 'soonKoLast' : 'soonKo')
+        return translate(isLast ? 'soonKoLast' : 'soonKo');
       case 'CURRENT':
-        return translate('nowStoppingAt')
+        return translate('nowStoppingAt');
       case 'CURRENT_KANA':
-        return translate('nowStoppingAt')
+        return translate('nowStoppingAt');
       case 'CURRENT_EN':
       case 'CURRENT_ZH':
       case 'CURRENT_KO':
-        return ''
+        return '';
       case 'NEXT':
-        return translate(isLast ? 'nextLast' : 'next')
+        return translate(isLast ? 'nextLast' : 'next');
       case 'NEXT_KANA':
-        return translate(isLast ? 'nextKanaLast' : 'nextKana')
+        return translate(isLast ? 'nextKanaLast' : 'nextKana');
       case 'NEXT_EN':
-        return translate(isLast ? 'nextEnLast' : 'nextEn')
+        return translate(isLast ? 'nextEnLast' : 'nextEn');
       case 'NEXT_ZH':
-        return translate(isLast ? 'nextZhLast' : 'nextZh')
+        return translate(isLast ? 'nextZhLast' : 'nextZh');
       case 'NEXT_KO':
-        return translate(isLast ? 'nextKoLast' : 'nextKo')
+        return translate(isLast ? 'nextKoLast' : 'nextKo');
       default:
-        return ''
+        return '';
     }
-  }, [headerState, isLast, selectedBound])
+  }, [headerState, isLast, selectedBound]);
 
-  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished)
+  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
 
-  const prevStationText = usePrevious(stationText)
-  const prevStateText = usePrevious(stateText)
-  const prevBoundText = usePrevious(boundText)
-  const prevConnectionText = usePrevious(connectionText)
+  const prevStationText = usePrevious(stationText);
+  const prevStateText = usePrevious(stateText);
+  const prevBoundText = usePrevious(boundText);
+  const prevConnectionText = usePrevious(connectionText);
 
-  const nameFadeAnim = useSharedValue<number>(1)
-  const topNameScaleYAnim = useSharedValue<number>(0)
-  const stateOpacityAnim = useSharedValue<number>(0)
-  const boundOpacityAnim = useSharedValue<number>(0)
-  const bottomNameScaleYAnim = useSharedValue<number>(1)
+  const nameFadeAnim = useSharedValue<number>(1);
+  const topNameScaleYAnim = useSharedValue<number>(0);
+  const stateOpacityAnim = useSharedValue<number>(0);
+  const boundOpacityAnim = useSharedValue<number>(0);
+  const bottomNameScaleYAnim = useSharedValue<number>(1);
 
   const prevBoundIsDifferent = useMemo(
     () => prevBoundText !== boundText,
     [boundText, prevBoundText]
-  )
+  );
 
   const fadeIn = useCallback((): void => {
     if (!selectedBound) {
       if (prevHeaderState === headerState) {
-        topNameScaleYAnim.value = 0
-        nameFadeAnim.value = 1
-        bottomNameScaleYAnim.value = 1
-        stateOpacityAnim.value = 0
-        setFadeOutFinished(true)
+        topNameScaleYAnim.value = 0;
+        nameFadeAnim.value = 1;
+        bottomNameScaleYAnim.value = 1;
+        stateOpacityAnim.value = 0;
+        setFadeOutFinished(true);
       }
-      return
+      return;
     }
 
     const handleFinish = (finished: boolean | undefined) => {
       if (finished) {
-        setFadeOutFinished(true)
+        setFadeOutFinished(true);
       }
-    }
+    };
 
     if (prevHeaderState !== headerState) {
       topNameScaleYAnim.value = withTiming(0, {
         duration: headerTransitionDelay,
         easing: Easing.linear,
-      })
+      });
       nameFadeAnim.value = withTiming(
         1,
         {
@@ -306,21 +306,21 @@ const HeaderTokyoMetro: React.FC = () => {
           easing: Easing.linear,
         },
         (finished) => runOnJS(handleFinish)(finished)
-      )
+      );
       bottomNameScaleYAnim.value = withTiming(1, {
         duration: headerTransitionDelay,
         easing: Easing.linear,
-      })
+      });
       stateOpacityAnim.value = withTiming(0, {
         duration: headerTransitionDelay,
         easing: Easing.linear,
-      })
+      });
     }
     if (prevBoundIsDifferent) {
       boundOpacityAnim.value = withTiming(0, {
         duration: headerTransitionDelay,
         easing: Easing.linear,
-      })
+      });
     }
   }, [
     bottomNameScaleYAnim,
@@ -333,18 +333,18 @@ const HeaderTokyoMetro: React.FC = () => {
     selectedBound,
     stateOpacityAnim,
     topNameScaleYAnim,
-  ])
+  ]);
 
   const fadeOut = useCallback((): void => {
     if (!selectedBound) {
-      return
+      return;
     }
 
-    nameFadeAnim.value = 0
-    topNameScaleYAnim.value = 1
-    stateOpacityAnim.value = 1
-    boundOpacityAnim.value = 1
-    bottomNameScaleYAnim.value = 0
+    nameFadeAnim.value = 0;
+    topNameScaleYAnim.value = 1;
+    stateOpacityAnim.value = 1;
+    boundOpacityAnim.value = 1;
+    bottomNameScaleYAnim.value = 0;
   }, [
     selectedBound,
     nameFadeAnim,
@@ -352,35 +352,35 @@ const HeaderTokyoMetro: React.FC = () => {
     stateOpacityAnim,
     boundOpacityAnim,
     bottomNameScaleYAnim,
-  ])
+  ]);
 
   const isJapaneseState = useMemo(
     () => headerLangState === 'JA' || headerLangState === 'KANA',
     [headerLangState]
-  )
+  );
 
-  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished)
+  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
 
   const fade = useCallback(() => {
-    fadeOut()
-    fadeIn()
-  }, [fadeIn, fadeOut])
+    fadeOut();
+    fadeIn();
+  }, [fadeIn, fadeOut]);
 
   useEffect(() => {
-    setFadeOutFinished(false)
+    setFadeOutFinished(false);
     if (!selectedBound) {
-      setFadeOutFinished(true)
+      setFadeOutFinished(true);
     }
-    fade()
-  }, [fade, selectedBound])
+    fade();
+  }, [fade, selectedBound]);
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
     opacity: 1 - stateOpacityAnim.get(),
-  }))
+  }));
 
   const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
     opacity: stateOpacityAnim.get(),
-  }))
+  }));
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
     const transform = {
@@ -389,10 +389,10 @@ const HeaderTokyoMetro: React.FC = () => {
           scaleY: interpolate(topNameScaleYAnim.get(), [0, 1], [1, 0]),
         },
       ],
-    }
+    };
 
-    return transform
-  })
+    return transform;
+  });
 
   const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
     const transform = {
@@ -401,32 +401,32 @@ const HeaderTokyoMetro: React.FC = () => {
           scaleY: topNameScaleYAnim.get(),
         },
       ],
-    }
+    };
 
-    return transform
-  })
+    return transform;
+  });
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
     return {
       opacity: nameFadeAnim.get(),
-    }
-  })
+    };
+  });
 
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
       opacity: interpolate(nameFadeAnim.get(), [0, 1], [1, 0]),
-    }
-  })
+    };
+  });
 
   const boundTopAnimatedStyles = useAnimatedStyle(() => ({
     opacity: 1 - boundOpacityAnim.get(),
-  }))
+  }));
 
   const boundBottomAnimatedStyles = {
     opacity: boundOpacityAnim,
-  }
+  };
 
-  const [currentStationNumber, threeLetterCode] = useNumbering()
+  const [currentStationNumber, threeLetterCode] = useNumbering();
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -436,7 +436,7 @@ const HeaderTokyoMetro: React.FC = () => {
         currentLine
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
-  )
+  );
 
   return (
     <View style={styles.root}>
@@ -551,7 +551,7 @@ const HeaderTokyoMetro: React.FC = () => {
         }}
       />
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(HeaderTokyoMetro)
+export default React.memo(HeaderTokyoMetro);

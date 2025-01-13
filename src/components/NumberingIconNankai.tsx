@@ -1,15 +1,19 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import Svg, { Ellipse } from 'react-native-svg'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import type React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Svg, { Ellipse } from 'react-native-svg';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -56,22 +60,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
   },
-})
+});
 
 const NumberingIconNankai: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('-')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('-');
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
       <View style={[styles.rootTiny, { backgroundColor: lineColor }]}>
         <Typography style={styles.lineSymbolTiny}>{lineSymbol}</Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -92,7 +96,7 @@ const NumberingIconNankai: React.FC<Props> = ({
         <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default NumberingIconNankai
+export default NumberingIconNankai;

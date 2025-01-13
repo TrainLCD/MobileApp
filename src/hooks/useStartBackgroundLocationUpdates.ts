@@ -1,25 +1,24 @@
-import * as Location from 'expo-location'
-import { useEffect } from 'react'
-import { LOCATION_TASK_NAME } from '../constants'
-import { translate } from '../translation'
-import { isDevApp } from '../utils/isDevApp'
-import { useApplicationFlagStore } from './useApplicationFlagStore'
-import { useLocationPermissionsGranted } from './useLocationPermissionsGranted'
-import { setLocation } from './useLocationStore'
+import * as Location from 'expo-location';
+import { useEffect } from 'react';
+import { LOCATION_TASK_NAME } from '../constants';
+import { translate } from '../translation';
+import { isDevApp } from '../utils/isDevApp';
+import { useApplicationFlagStore } from './useApplicationFlagStore';
+import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+import { setLocation } from './useLocationStore';
 
 export const useStartBackgroundLocationUpdates = () => {
-  const bgPermGranted = useLocationPermissionsGranted()
+  const bgPermGranted = useLocationPermissionsGranted();
 
   useEffect(() => {
-    const autoModeEnabled = useApplicationFlagStore.getState()?.autoModeEnabled
+    const autoModeEnabled = useApplicationFlagStore.getState()?.autoModeEnabled;
     if (autoModeEnabled) {
-      return
+      return;
     }
 
-    let watchPositionSub: Location.LocationSubscription | null = null
+    let watchPositionSub: Location.LocationSubscription | null = null;
 
-    // eslint-disable-next-line @typescript-eslint/no-extra-semi
-    ;(async () => {
+    (async () => {
       if (bgPermGranted) {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
@@ -33,8 +32,8 @@ export const useStartBackgroundLocationUpdates = () => {
             notificationBody: translate('bgAlertContent'),
             killServiceOnDestroy: true,
           },
-        })
-        return
+        });
+        return;
       }
       watchPositionSub = await Location.watchPositionAsync(
         {
@@ -42,14 +41,14 @@ export const useStartBackgroundLocationUpdates = () => {
           distanceInterval: isDevApp ? 10 : 100,
         },
         (pos) => {
-          setLocation(pos)
+          setLocation(pos);
         }
-      )
-    })()
+      );
+    })();
 
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-      watchPositionSub?.remove()
-    }
-  }, [bgPermGranted])
-}
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      watchPositionSub?.remove();
+    };
+  }, [bgPermGranted]);
+};

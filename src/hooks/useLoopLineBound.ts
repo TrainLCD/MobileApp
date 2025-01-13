@@ -1,55 +1,55 @@
-import { useCallback, useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import { HeaderLangState } from '../models/HeaderTransitionState'
-import { PreferredLanguage } from '../models/PreferredLanguage'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { isJapanese } from '../translation'
-import { useLoopLine } from './useLoopLine'
+import { useCallback, useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import type { HeaderLangState } from '../models/HeaderTransitionState';
+import type { PreferredLanguage } from '../models/PreferredLanguage';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
+import { useLoopLine } from './useLoopLine';
 
 const useLoopLineBound = (
   reflectHeaderLanguage = true,
   preferredLanguage?: PreferredLanguage
 ): {
-  boundFor: string
-  boundForKatakana: string
-  stations: Station[]
+  boundFor: string;
+  boundForKatakana: string;
+  stations: Station[];
 } | null => {
-  const { headerState } = useRecoilValue(navigationState)
-  const { selectedDirection } = useRecoilValue(stationState)
+  const { headerState } = useRecoilValue(navigationState);
+  const { selectedDirection } = useRecoilValue(stationState);
 
   const {
     isLoopLine,
     outboundStationsForLoopLine,
     inboundStationsForLoopLine,
-  } = useLoopLine()
+  } = useLoopLine();
 
-  const headerLangState = headerState.split('_')[1] as HeaderLangState
-  const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN'
+  const headerLangState = headerState.split('_')[1] as HeaderLangState;
+  const fixedHeaderLangState: PreferredLanguage = isJapanese ? 'JA' : 'EN';
 
   const getBoundFor = useCallback(
     (boundStations: Station[]) => {
       if (reflectHeaderLanguage) {
         switch (headerLangState) {
           case 'EN':
-            return `${boundStations.map((s) => s.nameRoman).join(' & ')}`
+            return `${boundStations.map((s) => s.nameRoman).join(' & ')}`;
           case 'ZH':
-            return `${boundStations.map((s) => s.nameChinese).join('・')}`
+            return `${boundStations.map((s) => s.nameChinese).join('・')}`;
           case 'KO':
-            return `${boundStations.map((s) => s.nameKorean).join('・')}`
+            return `${boundStations.map((s) => s.nameKorean).join('・')}`;
           default:
-            return `${boundStations.map((s) => s.name).join('・')}`
+            return `${boundStations.map((s) => s.name).join('・')}`;
         }
       }
 
-      const overrideLanguage = preferredLanguage ?? fixedHeaderLangState
+      const overrideLanguage = preferredLanguage ?? fixedHeaderLangState;
 
       switch (overrideLanguage) {
         case 'EN':
-          return `${boundStations.map((s) => s.nameRoman).join(' & ')}`
+          return `${boundStations.map((s) => s.nameRoman).join(' & ')}`;
         default:
-          return `${boundStations.map((s) => s.name).join('・')}方面`
+          return `${boundStations.map((s) => s.name).join('・')}方面`;
       }
     },
     [
@@ -58,10 +58,10 @@ const useLoopLineBound = (
       preferredLanguage,
       reflectHeaderLanguage,
     ]
-  )
+  );
   const getBoundForKatakana = useCallback((boundStations: Station[]) => {
-    return `${boundStations.map((s) => s.nameKatakana).join('・')}ホウメン`
-  }, [])
+    return `${boundStations.map((s) => s.nameKatakana).join('・')}ホウメン`;
+  }, []);
 
   const bounds = useMemo(() => {
     switch (selectedDirection) {
@@ -70,17 +70,17 @@ const useLoopLineBound = (
           stations: inboundStationsForLoopLine,
           boundForKatakana: getBoundForKatakana(inboundStationsForLoopLine),
           boundFor: getBoundFor(inboundStationsForLoopLine),
-        }
+        };
       }
       case 'OUTBOUND': {
         return {
           stations: outboundStationsForLoopLine,
           boundForKatakana: getBoundForKatakana(outboundStationsForLoopLine),
           boundFor: getBoundFor(outboundStationsForLoopLine),
-        }
+        };
       }
       default:
-        return null
+        return null;
     }
   }, [
     getBoundFor,
@@ -88,17 +88,17 @@ const useLoopLineBound = (
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
     selectedDirection,
-  ])
+  ]);
 
   if (!isLoopLine) {
     return {
       stations: [],
       boundForKatakana: '',
       boundFor: '',
-    }
+    };
   }
 
-  return bounds
-}
+  return bounds;
+};
 
-export default useLoopLineBound
+export default useLoopLineBound;
