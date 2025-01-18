@@ -36,10 +36,18 @@ class LiveActivityModule: NSObject {
     }
 
     let activityAttributes = RideSessionAttributes()
+
     guard let initialContentState = getStatus(dic) else {
       return
     }
     do {
+      let finalContentState = getStatus(dic)
+      Task {
+        for activity in Activity<RideSessionAttributes>.activities {
+          await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+        }
+      }
+      
       sessionActivity = try Activity.request(attributes: activityAttributes, contentState: initialContentState)
       print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
     } catch(let error) {
