@@ -34,24 +34,36 @@ class LiveActivityModule: NSObject {
     if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
-
+    
     let activityAttributes = RideSessionAttributes()
-
+    
     guard let initialContentState = getStatus(dic) else {
       return
     }
+    
     do {
       let finalContentState = getStatus(dic)
+      // 非同期処理をawaitで待機し、新規アクティビティの開始前に既存のアクティビティを確実に終了
       Task {
-        for activity in Activity<RideSessionAttributes>.activities {
-          await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+        // 既存のアクティビティを終了
+        try await withThrowingTaskGroup(of: Void.self) { group in
+          for activity in Activity<RideSessionAttributes>.activities {
+            group.addTask {
+              await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+            }
+          }
+          try await group.waitForAll()
+        }
+        
+        // 既存アクティビティの終了を確認後、新規アクティビティを開始
+        do {
+          sessionActivity = try Activity.request(
+            attributes: activityAttributes,
+            contentState: initialContentState
+          )
+          print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
         }
       }
-      
-      sessionActivity = try Activity.request(attributes: activityAttributes, contentState: initialContentState)
-      print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
-    } catch(let error) {
-      print("Error requesting ride session Live Activity \(error.localizedDescription).")
     }
   }
   
@@ -60,13 +72,13 @@ class LiveActivityModule: NSObject {
     if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
-
+    
     guard let nextContentState = getStatus(dic) else {
       return
     }
-   Task {
-     await sessionActivity?.update(using: nextContentState)
-   }
+    Task {
+      await sessionActivity?.update(using: nextContentState)
+    }
   }
   
   @objc(stopLiveActivity:)
@@ -74,7 +86,7 @@ class LiveActivityModule: NSObject {
     if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
-
+    
     let finalContentState = getStatus(dic)
     Task {
       for activity in Activity<RideSessionAttributes>.activities {
