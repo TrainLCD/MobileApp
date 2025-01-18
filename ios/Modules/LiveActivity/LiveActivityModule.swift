@@ -46,23 +46,25 @@ class LiveActivityModule: NSObject {
       // 非同期処理をawaitで待機し、新規アクティビティの開始前に既存のアクティビティを確実に終了
       Task {
         // 既存のアクティビティを終了
-        try await withThrowingTaskGroup(of: Void.self) { group in
-          for activity in Activity<RideSessionAttributes>.activities {
-            group.addTask {
-              await activity.end(using: finalContentState, dismissalPolicy: .immediate)
-            }
-          }
-          try await group.waitForAll()
-        }
-        
-        // 既存アクティビティの終了を確認後、新規アクティビティを開始
         do {
+          try await withThrowingTaskGroup(of: Void.self) { group in
+            for activity in Activity<RideSessionAttributes>.activities {
+              group.addTask {
+                await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+              }
+            }
+            try await group.waitForAll()
+          }
+          // 既存アクティビティの終了を確認後、新規アクティビティを開始
           sessionActivity = try Activity.request(
             attributes: activityAttributes,
             contentState: initialContentState
           )
           print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
+        } catch {
+          print("Error in Live Activity cleanup/start: \(error.localizedDescription)")
         }
+        
       }
     }
   }
