@@ -7,12 +7,19 @@ export const useGetStationsWithTermination = () => {
 
   const getStations = useCallback(
     (destination: Station | null, stationsFromArgs: Station[]) => {
+      if (!destination) {
+        return stationsFromArgs;
+      }
+
       const destinationIndex = stationsFromArgs.findIndex(
         (s) => s.groupId === destination?.groupId
       );
       const currentStationIndex = stationsFromArgs.findIndex(
         (s) => s.groupId === currentStation?.groupId
       );
+      if (destinationIndex === -1 || currentStationIndex === -1) {
+        return stationsFromArgs;
+      }
 
       if (currentStationIndex < destinationIndex) {
         return stationsFromArgs.slice(0, destinationIndex + 1);
