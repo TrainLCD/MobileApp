@@ -221,11 +221,11 @@ export const useUpdateLiveActivities = (): void => {
   }, [activityState, selectedBound, started]);
 
   useEffect(() => {
-    if (!selectedBound) {
+    return () => {
       stopLiveActivity();
       setStarted(false);
-    }
-  }, [selectedBound]);
+    };
+  }, []);
 
   useEffect(() => {
     if (started) {
