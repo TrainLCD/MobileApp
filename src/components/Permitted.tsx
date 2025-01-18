@@ -26,7 +26,6 @@ import useReport from '../hooks/useReport';
 import useReportEligibility from '../hooks/useReportEligibility';
 import { useResetMainState } from '../hooks/useResetMainState';
 import { useThemeStore } from '../hooks/useThemeStore';
-import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities';
 import { useWarningInfo } from '../hooks/useWarningInfo';
 import type { AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -62,7 +61,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useAppleWatch();
   useAndroidWearable();
-  useUpdateLiveActivities();
   useListenMessaging();
 
   const user = useCachedInitAnonymousUser();

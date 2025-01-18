@@ -166,5 +166,6 @@
   "alwaysPermissionNotGrantedAlertText": "位置情報の常時取得が許可されていないため、TrainLCDアプリを表示していない間は位置情報が更新されません。バックグラウンドでTrainLCDアプリを利用するには、位置情報の『常に許可』を設定してください。",
   "alwaysPermissionRequired": "この機能を利用するには、位置情報設定で『常に許可』を有効にする必要があります。スマートフォンの設定画面から、位置情報の常時取得を設定してください。",
   "failedToRequestPermission": "位置情報の常時取得をリクエスト中にエラーが発生しました。お手数ですが、スマートフォンの設定画面から位置情報の『常に許可』を手動で設定してください。",
-  "failedToOpenSettings": "設定画面の起動に失敗しました。"
+  "failedToOpenSettings": "設定画面の起動に失敗しました。",
+  "setTerminusText": "%{stationName}駅を終点に設定する"
 }

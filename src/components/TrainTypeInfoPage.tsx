@@ -1,7 +1,7 @@
 import type { ConnectError } from '@connectrpc/connect';
 import type React from 'react';
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import type { Station, TrainType } from '../../gen/proto/stationapi_pb';
@@ -16,16 +16,19 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Button from './Button';
 import Heading from './Heading';
+import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
+  finalStation?: Station;
   stations: Station[];
   loading: boolean;
   disabled?: boolean;
   error: ConnectError | null;
   onClose: () => void;
-  onConfirmed: (trainType: TrainType | undefined) => void;
+  onConfirmed: (trainType: TrainType | undefined, asTerminus?: boolean) => void;
+  fromRouteListModal?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -49,19 +52,33 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 16,
   },
+  enableTerminusSwitchContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 32,
+    marginVertical: 16,
+  },
+  enableTerminusText: {
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    fontSize: RFValue(11),
+  },
 });
 
 const SAFE_AREA_FALLBACK = 32;
 
 export const TrainTypeInfoPage: React.FC<Props> = ({
   trainType,
+  finalStation,
   stations,
   loading,
   disabled,
   onClose,
   onConfirmed,
+  fromRouteListModal,
 }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  const [asTerminus, setAsTerminus] = useState(false);
 
   const { selectedLine } = useRecoilValue(lineState);
 
@@ -214,12 +231,40 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
               </View>
             ))}
           </ScrollView>
+
+          {fromRouteListModal && (
+            <View style={styles.enableTerminusSwitchContainer}>
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={asTerminus}
+                  onValueChange={() => setAsTerminus((prev) => !prev)}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={asTerminus}
+                  onValueChange={() => setAsTerminus((prev) => !prev)}
+                  ios_backgroundColor={'#fff'}
+                />
+              )}
+
+              <Typography style={styles.enableTerminusText}>
+                {translate('setTerminusText', {
+                  stationName:
+                    (isJapanese
+                      ? finalStation?.name
+                      : finalStation?.nameRoman) ?? '',
+                })}
+              </Typography>
+            </View>
+          )}
         </View>
 
         <View style={styles.buttons}>
           <Button
             color={isLEDTheme ? undefined : '#008ffe'}
-            onPress={() => onConfirmed(trainType ?? undefined)}
+            onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
             disabled={loading || disabled}
           >
             {translate('submit')}
