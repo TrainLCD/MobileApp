@@ -165,5 +165,6 @@
   "alwaysPermissionNotGrantedAlertText": "Location access is not set to \"Always Allow\", so location updates will not occur while the TrainLCD app is not displayed. To use the TrainLCD app in the background, please set location access to “Always Allow.”",
   "alwaysPermissionRequired": "To use this feature, you need to enable \"Always Allow\" in the location settings. Please configure location access to \"Always Allow\" from your smartphone’s settings.",
   "failedToRequestPermission": "An error occurred while requesting \"Always Allow\" location access. Please manually set location access to \"Always Allow\" from your smartphone's settings.",
-  "failedToOpenSettings": "Failed to open system settings. Please open the app settings manually."
+  "failedToOpenSettings": "Failed to open system settings. Please open the app settings manually.",
+  "setTerminusText": "Set %{stationName} Station as the final destination"
 }

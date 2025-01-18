@@ -6,7 +6,7 @@ import { type Station, StopCondition } from '../../gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import { StationList } from '../components/StationList';
-import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useGetStationsWithTermination } from '../hooks/useGetStationsWithTermination';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
   const [{ stations }, setStationState] = useRecoilState(stationState);
-  const currentStation = useCurrentStation();
+  const getTerminatedStations = useGetStationsWithTermination();
 
   const stopStations = useMemo(
     () =>
@@ -38,35 +38,18 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const getSlicedStations = useCallback(
-    (destination: Station) => {
-      const destinationIndex = stations.findIndex(
-        (s) => s.groupId === destination.groupId
-      );
-      const currentStationIndex = stations.findIndex(
-        (s) => s.groupId === currentStation?.groupId
-      );
-
-      if (currentStationIndex < destinationIndex) {
-        return stations.slice(0, destinationIndex + 1);
-      }
-      return stations.slice(destinationIndex);
-    },
-    [currentStation?.groupId, stations]
-  );
-
   const handleDestinationPress = useCallback(
     (destination: Station) => {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: destination,
-        stations: getSlicedStations(destination),
+        stations: getTerminatedStations(destination, stations),
       }));
       if (navigation.canGoBack()) {
         navigation.goBack();
       }
     },
-    [getSlicedStations, navigation, setStationState]
+    [getTerminatedStations, navigation, setStationState, stations]
   );
 
   const handlePressFAB = useCallback(() => {
