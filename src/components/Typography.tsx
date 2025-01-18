@@ -17,7 +17,7 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
     if (isLEDTheme) {
       return FONTS.JFDotJiskan24h;
     }
-    return StyleSheet.flatten(props.style).fontWeight === 'bold'
+    return StyleSheet.flatten(props.style)?.fontWeight === 'bold'
       ? FONTS.RobotoBold
       : FONTS.RobotoRegular;
   }, [isLEDTheme, props.style]);
