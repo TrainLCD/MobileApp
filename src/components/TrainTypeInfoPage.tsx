@@ -1,10 +1,17 @@
 import type { ConnectError } from '@connectrpc/connect';
 import type React from 'react';
 import { useMemo, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import {
+  Dimensions,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import type { Station, TrainType } from '../../gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '../../gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
@@ -65,9 +72,61 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontSize: RFValue(11),
   },
+  trainTypeList: {
+    marginTop: 8,
+    maxHeight: '35%',
+  },
+  trainTypeListContent: {
+    flexWrap: 'wrap',
+    flexDirection: 'column',
+    rowGap: 4,
+    columnGap: 48,
+  },
 });
 
 const SAFE_AREA_FALLBACK = 32;
+
+const TrainTypeItem = ({ line }: { line: Line | null }) => (
+  <View
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+    }}
+    key={line?.id}
+  >
+    <View
+      style={{
+        backgroundColor: line?.color ?? '#000000',
+        width: 10,
+        height: 10,
+        borderRadius: 8,
+        marginRight: 2,
+      }}
+    />
+    <Typography
+      style={{
+        fontSize: RFValue(11),
+        lineHeight: RFValue(14),
+        flex: 1,
+      }}
+    >
+      {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
+    </Typography>
+    <Typography
+      style={{
+        color: line?.trainType?.color ?? '#000000',
+        textAlign: 'right',
+        fontSize: RFValue(11),
+        fontWeight: 'bold',
+        lineHeight: RFValue(14),
+      }}
+    >
+      {isJapanese
+        ? (line?.trainType?.name ?? '普通/各駅停車')
+        : (line?.trainType?.nameRoman ?? 'Local')}
+    </Typography>
+  </View>
+);
 
 export const TrainTypeInfoPage: React.FC<Props> = ({
   trainType,
@@ -180,63 +239,18 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 {translate('eachTrainTypes')}:
               </Typography>
             </View>
-            <ScrollView
+            <FlatList
               horizontal
-              style={{
-                marginTop: 8,
-                maxHeight: '35%',
-              }}
+              style={styles.trainTypeList}
               contentContainerStyle={{
-                flexWrap: 'wrap',
-                flexDirection: 'column',
-                rowGap: 4,
-                columnGap: 48,
+                ...styles.trainTypeListContent,
                 paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
                 paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
-            >
-              {trainTypeLines.map((l) => (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
-                  key={l?.id}
-                >
-                  <View
-                    style={{
-                      backgroundColor: l?.color ?? '#000000',
-                      width: 10,
-                      height: 10,
-                      borderRadius: 8,
-                      marginRight: 2,
-                    }}
-                  />
-                  <Typography
-                    style={{
-                      fontSize: RFValue(11),
-                      lineHeight: RFValue(14),
-                      flex: 1,
-                    }}
-                  >
-                    {(isJapanese ? l?.nameShort : l?.nameRoman) ?? ''}:{' '}
-                  </Typography>
-                  <Typography
-                    style={{
-                      color: l?.trainType?.color ?? '#000000',
-                      textAlign: 'right',
-                      fontSize: RFValue(11),
-                      fontWeight: 'bold',
-                      lineHeight: RFValue(14),
-                    }}
-                  >
-                    {isJapanese
-                      ? (l?.trainType?.name ?? '普通/各駅停車')
-                      : (l?.trainType?.nameRoman ?? 'Local')}
-                  </Typography>
-                </View>
-              ))}
-            </ScrollView>
+              data={trainTypeLines}
+              keyExtractor={(item) => item?.id.toString() ?? ''}
+              renderItem={({ item }) => <TrainTypeItem line={item} />}
+            />
 
             {fromRouteListModal && (
               <View
