@@ -1,6 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
-import type React from 'react';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -82,43 +81,46 @@ const styles = StyleSheet.create({
     rowGap: 4,
     columnGap: 48,
   },
+  trainTypeItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  colorIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 8,
+    marginRight: 2,
+  },
+  trainTypeLineName: {
+    fontSize: RFValue(11),
+    lineHeight: RFValue(14),
+    flex: 1,
+  },
+  lineTrainTypeName: {
+    textAlign: 'right',
+    fontSize: RFValue(11),
+    fontWeight: 'bold',
+    lineHeight: RFValue(14),
+  },
 });
 
 const SAFE_AREA_FALLBACK = 32;
 
-const TrainTypeItem = ({ line }: { line: Line | null }) => (
-  <View
-    style={{
-      flexDirection: 'row',
-      alignItems: 'center',
-    }}
-    key={line?.id}
-  >
+const TrainTypeItem = React.memo(({ line }: { line: Line | null }) => (
+  <View style={styles.trainTypeItemContainer} key={line?.id}>
     <View
       style={{
-        backgroundColor: line?.color ?? '#000000',
-        width: 10,
-        height: 10,
-        borderRadius: 8,
-        marginRight: 2,
+        ...styles.colorIndicator,
+        backgroundColor: line?.trainType?.color ?? '#000000',
       }}
     />
-    <Typography
-      style={{
-        fontSize: RFValue(11),
-        lineHeight: RFValue(14),
-        flex: 1,
-      }}
-    >
+    <Typography style={styles.trainTypeLineName}>
       {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
     </Typography>
     <Typography
       style={{
+        ...styles.lineTrainTypeName,
         color: line?.trainType?.color ?? '#000000',
-        textAlign: 'right',
-        fontSize: RFValue(11),
-        fontWeight: 'bold',
-        lineHeight: RFValue(14),
       }}
     >
       {isJapanese
@@ -126,7 +128,7 @@ const TrainTypeItem = ({ line }: { line: Line | null }) => (
         : (line?.trainType?.nameRoman ?? 'Local')}
     </Typography>
   </View>
-);
+));
 
 export const TrainTypeInfoPage: React.FC<Props> = ({
   trainType,
