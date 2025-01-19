@@ -5,13 +5,8 @@ on:
     branches:
       - dev
     paths:
-      - 'android/**'
-      - 'src/**'
-      - 'proto/**'
-      - 'assets/**'
-      - 'package.json'
-      - 'package-lock.json'
-
+      - 'android/app/build.gradle'
+      - 'android/wearable/build.gradle.kts'
 env:
   TZ: 'Asia/Tokyo'
 
