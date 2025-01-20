@@ -111,7 +111,7 @@ const TrainTypeItem = React.memo(({ line }: { line: Line | null }) => (
     <View
       style={{
         ...styles.colorIndicator,
-        backgroundColor: line?.trainType?.color ?? '#000000',
+        backgroundColor: line?.color ?? '#000000',
       }}
     />
     <Typography style={styles.trainTypeLineName}>
