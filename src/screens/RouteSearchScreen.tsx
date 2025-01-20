@@ -214,7 +214,9 @@ const RouteSearchScreen = () => {
           stations: asTerminus ? terminatedStations : stations,
           selectedDirection: direction,
           selectedBound: asTerminus
-            ? selectedStation
+            ? direction === 'INBOUND'
+              ? terminatedStations[terminatedStations.length - 1]
+              : terminatedStations[0]
             : direction === 'INBOUND'
               ? (stations[stations.length - 1] ?? null)
               : (stations[0] ?? null),
@@ -254,7 +256,9 @@ const RouteSearchScreen = () => {
         stations: asTerminus ? terminatedStations : stations,
         selectedDirection: direction,
         selectedBound: asTerminus
-          ? selectedStation
+          ? direction === 'INBOUND'
+            ? terminatedStations[terminatedStations.length - 1]
+            : terminatedStations[0]
           : direction === 'INBOUND'
             ? stations[stations.length - 1]
             : stations[0],
