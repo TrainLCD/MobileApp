@@ -50,6 +50,7 @@ const useRefreshStation = (): void => {
     }
 
     if (speed) {
+      const speedKMH = (speed * 3600) / 1000;
       return (
         isPointWithinRadius(
           { latitude, longitude },
@@ -58,7 +59,7 @@ const useRefreshStation = (): void => {
             longitude: nearestStation.longitude,
           },
           arrivedThreshold
-        ) && speed < ARRIVED_MAXIMUM_SPEED
+        ) && speedKMH < ARRIVED_MAXIMUM_SPEED
       );
     }
 
