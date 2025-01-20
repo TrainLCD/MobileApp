@@ -1,10 +1,16 @@
 import type { ConnectError } from '@connectrpc/connect';
-import type React from 'react';
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import type { Station, TrainType } from '../../gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '../../gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
@@ -16,30 +22,37 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Button from './Button';
 import Heading from './Heading';
+import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
+  finalStation?: Station;
   stations: Station[];
   loading: boolean;
   disabled?: boolean;
   error: ConnectError | null;
   onClose: () => void;
-  onConfirmed: (trainType: TrainType | undefined) => void;
+  onConfirmed: (trainType: TrainType | undefined, asTerminus?: boolean) => void;
+  fromRouteListModal?: boolean;
 };
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
+    position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
     width: '100%',
     height: '100%',
   },
-  container: {
+  scrollView: {
     paddingVertical: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: isTablet ? 'auto' : '100%',
   },
   buttons: {
     flexDirection: 'row',
@@ -49,19 +62,87 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 16,
   },
+  enableTerminusSwitchContainer: {
+    flexDirection: 'row',
+    marginVertical: 12,
+  },
+  enableTerminusText: {
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    fontSize: RFValue(11),
+  },
+  trainTypeList: {
+    marginTop: 8,
+    maxHeight: '35%',
+  },
+  trainTypeListContent: {
+    flexWrap: 'wrap',
+    flexDirection: 'column',
+    rowGap: 4,
+    columnGap: 48,
+  },
+  trainTypeItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  colorIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 8,
+    marginRight: 2,
+  },
+  trainTypeLineName: {
+    fontSize: RFValue(11),
+    lineHeight: RFValue(14),
+    flex: 1,
+  },
+  lineTrainTypeName: {
+    textAlign: 'right',
+    fontSize: RFValue(11),
+    fontWeight: 'bold',
+    lineHeight: RFValue(14),
+  },
 });
 
 const SAFE_AREA_FALLBACK = 32;
 
+const TrainTypeItem = React.memo(({ line }: { line: Line | null }) => (
+  <View style={styles.trainTypeItemContainer} key={line?.id}>
+    <View
+      style={{
+        ...styles.colorIndicator,
+        backgroundColor: line?.color ?? '#000000',
+      }}
+    />
+    <Typography style={styles.trainTypeLineName}>
+      {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
+    </Typography>
+    <Typography
+      style={{
+        ...styles.lineTrainTypeName,
+        color: line?.trainType?.color ?? '#000000',
+      }}
+    >
+      {isJapanese
+        ? (line?.trainType?.name ?? '普通/各駅停車')
+        : (line?.trainType?.nameRoman ?? 'Local')}
+    </Typography>
+  </View>
+));
+
 export const TrainTypeInfoPage: React.FC<Props> = ({
   trainType,
+  finalStation,
   stations,
   loading,
   disabled,
   onClose,
   onConfirmed,
+  fromRouteListModal,
 }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  const [asTerminus, setAsTerminus] = useState(false);
 
   const { selectedLine } = useRecoilValue(lineState);
 
@@ -90,7 +171,6 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     <View style={styles.root}>
       <View
         style={[
-          styles.container,
           {
             backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           },
@@ -103,131 +183,125 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 borderRadius: 16,
               }
             : {
-                width: '100%',
-                height: '100%',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: screenWidth,
+                height: screenHeight,
               },
         ]}
       >
-        <Heading>
-          {isJapanese
-            ? `${selectedLine?.nameShort} ${trainType?.name ?? ''}`
-            : `${selectedLine?.nameRoman} ${trainType?.nameRoman ?? ''}`}
-        </Heading>
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          <Heading>
+            {isJapanese
+              ? `${selectedLine?.nameShort} ${trainType?.name ?? ''}`
+              : `${selectedLine?.nameRoman} ${trainType?.nameRoman ?? ''}`}
+          </Heading>
 
-        <View
-          style={{
-            width: '100%',
-          }}
-        >
           <View
             style={{
-              paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-              paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
+              width: '100%',
             }}
           >
-            <Typography
+            <View
               style={{
-                fontSize: RFValue(14),
-                fontWeight: 'bold',
-                marginTop: 8,
+                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
             >
-              {translate('allStops')}:
-            </Typography>
-            <Typography
-              style={{
-                fontSize: RFValue(11),
-                marginTop: 8,
-                lineHeight: RFValue(14),
+              <Typography
+                style={{
+                  fontSize: RFValue(14),
+                  fontWeight: 'bold',
+                  marginTop: 8,
+                }}
+              >
+                {translate('allStops')}:
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: RFValue(11),
+                  marginTop: 8,
+                  lineHeight: RFValue(14),
+                }}
+              >
+                {!loading && stopStations.length
+                  ? stopStations
+                      .map((s) => (isJapanese ? s.name : s.nameRoman))
+                      .join('、')
+                  : `${translate('loadingAPI')}...`}
+              </Typography>
+              <Typography
+                style={{
+                  fontSize: RFValue(14),
+                  fontWeight: 'bold',
+                  marginTop: 16,
+                }}
+              >
+                {translate('eachTrainTypes')}:
+              </Typography>
+            </View>
+            <FlatList
+              horizontal
+              style={styles.trainTypeList}
+              contentContainerStyle={{
+                ...styles.trainTypeListContent,
+                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
-            >
-              {!loading && stopStations.length
-                ? stopStations
-                    .map((s) => (isJapanese ? s.name : s.nameRoman))
-                    .join('、')
-                : `${translate('loadingAPI')}...`}
-            </Typography>
-            <Typography
-              style={{
-                fontSize: RFValue(14),
-                fontWeight: 'bold',
-                marginTop: 16,
-              }}
-            >
-              {translate('eachTrainTypes')}:
-            </Typography>
-          </View>
-          <ScrollView
-            horizontal
-            style={{
-              marginTop: 8,
-              maxHeight: '35%',
-            }}
-            contentContainerStyle={{
-              flexWrap: 'wrap',
-              flexDirection: 'column',
-              rowGap: 4,
-              columnGap: 48,
-              paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-              paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-            }}
-          >
-            {trainTypeLines.map((l) => (
+              data={trainTypeLines}
+              keyExtractor={(item) => item?.id.toString() ?? ''}
+              renderItem={({ item }) => <TrainTypeItem line={item} />}
+            />
+
+            {fromRouteListModal && (
               <View
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
+                  ...styles.enableTerminusSwitchContainer,
+                  paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                  paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
                 }}
-                key={l?.id}
               >
-                <View
-                  style={{
-                    backgroundColor: l?.color ?? '#000000',
-                    width: 10,
-                    height: 10,
-                    borderRadius: 8,
-                    marginRight: 2,
-                  }}
-                />
-                <Typography
-                  style={{
-                    fontSize: RFValue(11),
-                    lineHeight: RFValue(14),
-                    flex: 1,
-                  }}
-                >
-                  {(isJapanese ? l?.nameShort : l?.nameRoman) ?? ''}:{' '}
-                </Typography>
-                <Typography
-                  style={{
-                    color: l?.trainType?.color ?? '#000000',
-                    textAlign: 'right',
-                    fontSize: RFValue(11),
-                    fontWeight: 'bold',
-                    lineHeight: RFValue(14),
-                  }}
-                >
-                  {isJapanese
-                    ? (l?.trainType?.name ?? '普通/各駅停車')
-                    : (l?.trainType?.nameRoman ?? 'Local')}
+                {isLEDTheme ? (
+                  <LEDThemeSwitch
+                    style={{ marginRight: 8 }}
+                    value={asTerminus}
+                    onValueChange={() => setAsTerminus((prev) => !prev)}
+                  />
+                ) : (
+                  <Switch
+                    style={{ marginRight: 8 }}
+                    value={asTerminus}
+                    onValueChange={() => setAsTerminus((prev) => !prev)}
+                    ios_backgroundColor={'#fff'}
+                  />
+                )}
+
+                <Typography style={styles.enableTerminusText}>
+                  {translate('setTerminusText', {
+                    stationName:
+                      (isJapanese
+                        ? finalStation?.name
+                        : finalStation?.nameRoman) ?? '',
+                  })}
                 </Typography>
               </View>
-            ))}
-          </ScrollView>
-        </View>
+            )}
+          </View>
 
-        <View style={styles.buttons}>
-          <Button
-            color={isLEDTheme ? undefined : '#008ffe'}
-            onPress={() => onConfirmed(trainType ?? undefined)}
-            disabled={loading || disabled}
-          >
-            {translate('submit')}
-          </Button>
-          <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-            {translate('cancel')}
-          </Button>
-        </View>
+          <View style={styles.buttons}>
+            <Button
+              color={isLEDTheme ? undefined : '#008ffe'}
+              onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
+              disabled={loading || disabled}
+            >
+              {translate('submit')}
+            </Button>
+            <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
+              {translate('cancel')}
+            </Button>
+          </View>
+        </ScrollView>
       </View>
     </View>
   );

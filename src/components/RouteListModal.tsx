@@ -6,7 +6,7 @@ import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSetRecoilState } from 'recoil';
 import { getTrainTypesByStationId } from '../../gen/proto/stationapi-StationAPI_connectquery';
-import type { Route, TrainType } from '../../gen/proto/stationapi_pb';
+import type { Route, Station, TrainType } from '../../gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useThemeStore } from '../hooks/useThemeStore';
@@ -21,13 +21,14 @@ import { RouteList } from './RouteList';
 import { TrainTypeInfoPage } from './TrainTypeInfoPage';
 
 type Props = {
+  finalStation: Station;
   routes: Route[];
   visible: boolean;
   isRoutesLoading: boolean;
   isTrainTypesLoading: boolean;
   error: ConnectError | null;
   onClose: () => void;
-  onSelect: (route: Route | undefined) => void;
+  onSelect: (route: Route | undefined, asTerminus: boolean) => void;
 };
 
 const styles = StyleSheet.create({
@@ -57,6 +58,7 @@ const styles = StyleSheet.create({
 const SAFE_AREA_FALLBACK = 32;
 
 export const RouteListModal: React.FC<Props> = ({
+  finalStation,
   routes,
   visible,
   isRoutesLoading,
@@ -120,9 +122,13 @@ export const RouteListModal: React.FC<Props> = ({
         error={fetchTrainTypesError}
         loading={fetchTrainTypesStatus === 'pending'}
         disabled={isTrainTypesLoading}
+        finalStation={finalStation}
         stations={selectedRoute?.stops ?? []}
         onClose={() => setTrainTypeInfoPageVisible(false)}
-        onConfirmed={() => onSelect(selectedRoute)}
+        onConfirmed={(_, asTerminus) =>
+          onSelect(selectedRoute, asTerminus ?? false)
+        }
+        fromRouteListModal
       />
     );
   }

@@ -116,10 +116,21 @@ const useConnectedLines = (excludePassed = true): Line[] => {
         // 処理中のindexがcurrentIndexより小さい場合、
         // 処理が終わった配列を展開しグループ化されていない
         // 配列の最初から現在のindexまでを返し、次のループへ
-        return acc.concat(notGroupedJoinedLines.slice(0, currentIndex));
+        return acc.concat(notGroupedJoinedLines.slice(0, currentIndex + 1));
       }, [])
       // ループ設計上路線が重複する可能性があるのでここで重複をしばく
-      .filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i);
+      .filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i)
+      // NOTE: 終点駅が直通先の次の駅に接続していない場合、実質接続していない路線は省く
+      // 例: 池袋→元町・中華街の際横浜を終点と指定した際にみなとみらい線が入り込む
+      .filter((l) => {
+        if (
+          stations.filter((s) => s.line?.id === selectedBound?.line?.id)
+            .length === 1
+        ) {
+          return l.id !== selectedBound.line?.id;
+        }
+        return true;
+      });
 
     return excludeSameNameLines(
       joinedLines.filter(

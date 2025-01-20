@@ -29,6 +29,7 @@ import { RouteListModal } from '../components/RouteListModal';
 import { StationList } from '../components/StationList';
 import { FONTS } from '../constants';
 import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useGetStationsWithTermination } from '../hooks/useGetStationsWithTermination';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { useTrainTypeStations } from '../hooks/useTrainTypeStations';
 import type { LineDirection } from '../models/Bound';
@@ -81,6 +82,7 @@ const RouteSearchScreen = () => {
   const setNavigationState = useSetRecoilState(navigationState);
 
   const currentStation = useCurrentStation();
+  const getTerminatedStations = useGetStationsWithTermination();
 
   const { mutateAsync: fetchStationsByLineId } =
     useMutation(getStationsByLineId);
@@ -172,7 +174,7 @@ const RouteSearchScreen = () => {
   );
 
   const handleSelect = useCallback(
-    async (route: Route | undefined) => {
+    async (route: Route | undefined, asTerminus: boolean) => {
       const stop = route?.stops.find(
         (s) => s.groupId === currentStation?.groupId
       );
@@ -190,10 +192,10 @@ const RouteSearchScreen = () => {
           stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
         const direction: LineDirection =
-          (route?.stops ?? []).findIndex(
+          (stations ?? []).findIndex(
             (s) => s.groupId === currentStation?.groupId
           ) <
-          (route?.stops ?? []).findIndex(
+          (stations ?? []).findIndex(
             (s) => s.groupId === selectedStation?.groupId
           )
             ? 'INBOUND'
@@ -201,15 +203,23 @@ const RouteSearchScreen = () => {
 
         setNavigationState((prev) => ({ ...prev, trainType: null }));
 
+        const terminatedStations = getTerminatedStations(
+          selectedStation,
+          stations ?? []
+        );
+
         setStationState((prev) => ({
           ...prev,
           station: stationInRoute,
-          stations,
+          stations: asTerminus ? terminatedStations : stations,
           selectedDirection: direction,
-          selectedBound:
-            direction === 'INBOUND'
-              ? (route?.stops[route.stops.length - 1] ?? null)
-              : (route?.stops[0] ?? null),
+          selectedBound: asTerminus
+            ? direction === 'INBOUND'
+              ? terminatedStations[terminatedStations.length - 1]
+              : terminatedStations[0]
+            : direction === 'INBOUND'
+              ? (stations[stations.length - 1] ?? null)
+              : (stations[0] ?? null),
         }));
         navigation.dispatch(
           StackActions.replace('MainStack', { screen: 'Main' })
@@ -217,19 +227,23 @@ const RouteSearchScreen = () => {
         return;
       }
 
-      const data = await fetchTrainTypeFromTrainTypeId({
+      const { stations } = await fetchTrainTypeFromTrainTypeId({
         lineGroupId: trainType.groupId,
       });
 
       const station =
-        data.stations.find((s) => s.groupId === currentStation?.groupId) ??
-        null;
+        stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
       const direction: LineDirection =
-        data.stations.findIndex((s) => s.groupId === currentStation?.groupId) <
-        data.stations.findIndex((s) => s.groupId === selectedStation?.groupId)
+        stations.findIndex((s) => s.groupId === currentStation?.groupId) <
+        stations.findIndex((s) => s.groupId === selectedStation?.groupId)
           ? 'INBOUND'
           : 'OUTBOUND';
+
+      const terminatedStations = getTerminatedStations(
+        selectedStation,
+        stations ?? []
+      );
 
       setNavigationState((prev) => ({
         ...prev,
@@ -239,12 +253,15 @@ const RouteSearchScreen = () => {
       setStationState((prev) => ({
         ...prev,
         station,
-        stations: data.stations,
+        stations: asTerminus ? terminatedStations : stations,
         selectedDirection: direction,
-        selectedBound:
-          direction === 'INBOUND'
-            ? data.stations[data.stations.length - 1]
-            : data.stations[0],
+        selectedBound: asTerminus
+          ? direction === 'INBOUND'
+            ? terminatedStations[terminatedStations.length - 1]
+            : terminatedStations[0]
+          : direction === 'INBOUND'
+            ? stations[stations.length - 1]
+            : stations[0],
       }));
       navigation.dispatch(
         StackActions.replace('MainStack', { screen: 'Main' })
@@ -258,6 +275,8 @@ const RouteSearchScreen = () => {
       selectedStation?.groupId,
       setNavigationState,
       setStationState,
+      selectedStation,
+      getTerminatedStations,
     ]
   );
 
@@ -311,15 +330,18 @@ const RouteSearchScreen = () => {
         </KeyboardAvoidingView>
       </View>
       <FAB onPress={onPressBack} icon="close" disabled={isTrainTypesLoading} />
-      <RouteListModal
-        routes={routesData?.routes ?? []}
-        visible={isRouteListModalVisible}
-        isRoutesLoading={isRoutesLoading}
-        isTrainTypesLoading={isTrainTypesLoading}
-        error={fetchRoutesError || fetchTrainTypesError}
-        onClose={() => setIsRouteListModalVisible(false)}
-        onSelect={handleSelect}
-      />
+      {selectedStation && (
+        <RouteListModal
+          finalStation={selectedStation}
+          routes={routesData?.routes ?? []}
+          visible={isRouteListModalVisible}
+          isRoutesLoading={isRoutesLoading}
+          isTrainTypesLoading={isTrainTypesLoading}
+          error={fetchRoutesError || fetchTrainTypesError}
+          onClose={() => setIsRouteListModalVisible(false)}
+          onSelect={handleSelect}
+        />
+      )}
     </>
   );
 };

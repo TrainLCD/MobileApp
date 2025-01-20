@@ -35,6 +35,7 @@ import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
 import { useTypeWillChange } from '../hooks/useTypeWillChange';
 import { useUpdateBottomState } from '../hooks/useUpdateBottomState';
+import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -105,6 +106,7 @@ const MainScreen: React.FC = () => {
   useStartBackgroundLocationUpdates();
   const resetMainState = useResetMainState();
   useTTS();
+  useUpdateLiveActivities();
 
   const { pause: pauseBottomTimer } = useUpdateBottomState();
 
