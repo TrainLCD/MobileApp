@@ -7,6 +7,7 @@ export const LONG_PRESS_DURATION = 500;
 // 閾値
 export const APPROACHING_MAX_THRESHOLD = 1000;
 export const ARRIVED_MAX_THRESHOLD = 500;
+export const ARRIVED_MAXIMUM_SPEED = 30; // km/h
 export const MANY_LINES_THRESHOLD = 7;
 export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;

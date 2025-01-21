@@ -3,6 +3,7 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
+import { ARRIVED_MAXIMUM_SPEED } from '../constants/threshold';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -31,6 +32,7 @@ const useRefreshStation = (): void => {
   const setNavigation = useSetRecoilState(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
+  const speed = useLocationStore((state) => state?.coords.speed);
 
   const nextStation = useNextStation(true);
   const approachingNotifiedIdRef = useRef<number>();
@@ -47,6 +49,20 @@ const useRefreshStation = (): void => {
       return true;
     }
 
+    if (speed) {
+      const speedKMH = (speed * 3600) / 1000;
+      return (
+        isPointWithinRadius(
+          { latitude, longitude },
+          {
+            latitude: nearestStation.latitude,
+            longitude: nearestStation.longitude,
+          },
+          arrivedThreshold
+        ) && speedKMH < ARRIVED_MAXIMUM_SPEED
+      );
+    }
+
     return isPointWithinRadius(
       { latitude, longitude },
       {
@@ -55,7 +71,7 @@ const useRefreshStation = (): void => {
       },
       arrivedThreshold
     );
-  }, [arrivedThreshold, latitude, longitude, nearestStation]);
+  }, [arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
     if (!latitude || !longitude || !nextStation) {
