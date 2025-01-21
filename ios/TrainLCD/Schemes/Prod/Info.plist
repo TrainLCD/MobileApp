@@ -40,7 +40,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1473</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CURRENT_SCHEME_NAME</key>
 	<string>ProdTrainLCD</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
