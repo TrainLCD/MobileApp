@@ -49,7 +49,7 @@ const useRefreshStation = (): void => {
       return true;
     }
 
-    if (speed) {
+    if (speed && !getIsPass(nearestStation)) {
       const speedKMH = (speed * 3600) / 1000;
       return (
         isPointWithinRadius(
