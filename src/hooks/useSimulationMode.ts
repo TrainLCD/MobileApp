@@ -7,14 +7,14 @@ import { LineType } from '../../gen/proto/stationapi_pb';
 import {
   LINE_TYPE_MAX_ACCELERATION_IN_KM_H_S,
   LINE_TYPE_MAX_SPEEDS_IN_KM_H,
-} from '../constants/autoMode';
+} from '../constants/simulationMode';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
+import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useInterval } from './useInterval';
 import { useLocationStore } from './useLocationStore';
-import { useLoopLine } from './useLoopLine';
 
 export const useSimulationMode = (enabled: boolean): void => {
   const {
@@ -38,13 +38,13 @@ export const useSimulationMode = (enabled: boolean): void => {
   useEffect(() => {
     if (enabled) {
       useLocationStore.setState({
-        timestamp: 0,
+        timestamp: new Date().getTime(),
         coords: {
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: -1,
-          speed: 0,
-          heading: 0,
+          accuracy: null,
+          altitude: null,
+          altitudeAccuracy: null,
+          speed: null,
+          heading: null,
           latitude: stations[index].latitude,
           longitude: stations[index].longitude,
         },
@@ -66,8 +66,6 @@ export const useSimulationMode = (enabled: boolean): void => {
     [currentLineType]
   );
 
-  const { isLoopLine } = useLoopLine();
-
   const [isDeceleration, setIsDeceleration] = useState(false);
 
   const step = useCallback(() => {
@@ -76,18 +74,18 @@ export const useSimulationMode = (enabled: boolean): void => {
     }
 
     const shouldReset =
-      selectedDirection === 'INBOUND' ? !index : index === stations.length - 1;
+      selectedDirection === 'INBOUND' ? index === stations.length - 1 : !index;
 
     if (shouldReset) {
       setIndex(0);
       useLocationStore.setState({
-        timestamp: 0,
+        timestamp: new Date().getTime(),
         coords: {
-          accuracy: 0,
-          altitude: 0,
-          altitudeAccuracy: -1,
-          speed: 0,
-          heading: 0,
+          accuracy: null,
+          altitude: null,
+          altitudeAccuracy: null,
+          speed: null,
+          heading: null,
           latitude: stations[0].latitude,
           longitude: stations[0].longitude,
         },
@@ -97,14 +95,10 @@ export const useSimulationMode = (enabled: boolean): void => {
     const cur = stations[index];
     const next =
       selectedDirection === 'INBOUND'
-        ? isLoopLine
-          ? stations[index - 1]
-          : stations[index + 1]
-        : isLoopLine
-          ? stations[index + 1]
-          : stations[index - 1];
+        ? stations[index + 1]
+        : stations[index - 1];
 
-    if (cur && next) {
+    if (cur) {
       useLocationStore.setState((prev) => {
         const currentDistanceForNextStation = getDistance(
           {
@@ -131,10 +125,12 @@ export const useSimulationMode = (enabled: boolean): void => {
             }
           }
 
-          if (isDeceleration) {
+          if (isDeceleration && !getIsPass(next)) {
             const nextSpeed = prevSpeed - maxAccelerationInMS2;
             if (nextSpeed < 0) {
-              setIndex((prev) => prev + 1);
+              setIndex((prev) =>
+                selectedDirection === 'INBOUND' ? prev + 1 : prev - 1
+              );
               setIsDeceleration(false);
 
               return 0;
@@ -170,14 +166,14 @@ export const useSimulationMode = (enabled: boolean): void => {
         );
 
         return {
-          timestamp: 0,
+          timestamp: new Date().getTime(),
           coords: {
             ...nextPoint,
-            accuracy: 0,
-            altitude: 0,
-            altitudeAccuracy: -1,
+            accuracy: null,
+            altitude: null,
+            altitudeAccuracy: null,
             speed: speedInMh,
-            heading: 0,
+            heading: null,
           },
         };
       });
@@ -185,7 +181,6 @@ export const useSimulationMode = (enabled: boolean): void => {
   }, [
     index,
     enabled,
-    isLoopLine,
     selectedDirection,
     selectedLine,
     stations,
