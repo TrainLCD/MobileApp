@@ -2,7 +2,6 @@ import * as Location from 'expo-location';
 import { useEffect } from 'react';
 import { LOCATION_TASK_NAME } from '../constants';
 import { translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { setLocation } from './useLocationStore';
@@ -26,7 +25,7 @@ export const useStartBackgroundLocationUpdates = () => {
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
-          distanceInterval: isDevApp ? 1 : 100,
+          distanceInterval: 10,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -38,7 +37,7 @@ export const useStartBackgroundLocationUpdates = () => {
       watchPositionSub = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: isDevApp ? 10 : 100,
+          distanceInterval: 10,
         },
         (pos) => {
           setLocation(pos);
