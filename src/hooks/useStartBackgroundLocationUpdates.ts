@@ -2,7 +2,6 @@ import * as Location from 'expo-location';
 import { useEffect } from 'react';
 import { LOCATION_TASK_NAME } from '../constants';
 import { translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { setLocation } from './useLocationStore';
@@ -38,7 +37,7 @@ export const useStartBackgroundLocationUpdates = () => {
       watchPositionSub = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: isDevApp ? 10 : 100,
+          distanceInterval: 10,
         },
         (pos) => {
           setLocation(pos);
