@@ -1,9 +1,9 @@
-import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import type FeedbackDeviceInfo from './FeedbackDeviceInfo';
 
 export type ReportType = 'feedback' | 'crash';
 
 export type Report = {
+  id: string;
   reportType: ReportType;
   stacktrace?: string;
   description: string;
@@ -12,10 +12,8 @@ export type Report = {
   language: 'en-US' | 'ja-JP';
   appVersion: string;
   deviceInfo: FeedbackDeviceInfo | null;
-  createdAt:
-    | FirebaseFirestoreTypes.FieldValue
-    | FirebaseFirestoreTypes.Timestamp;
-  updatedAt:
-    | FirebaseFirestoreTypes.FieldValue
-    | FirebaseFirestoreTypes.Timestamp;
+  imageUrl: string | null;
+  appEdition: 'canary' | 'production';
+  createdAt: number;
+  updatedAt: number;
 };

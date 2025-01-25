@@ -33,7 +33,7 @@ export {
   japaneseRegexp,
   parenthesisRegexp,
 } from './regexp';
-export { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from './remoteConfig';
+export { REMOTE_CONFIG_KEYS } from './remoteConfig';
 export { STATION_NAME_FONT_SIZE } from './size';
 export { STATUS_URL } from './social';
 export { RECOIL_STATES } from './state';

@@ -25,7 +25,7 @@ import { RecoilRoot } from 'recoil';
 import ErrorFallback from './components/ErrorBoundary';
 import TuningSettings from './components/TuningSettings';
 import useAnonymousUser from './hooks/useAnonymousUser';
-import useReport from './hooks/useReport';
+import { useFeedback } from './hooks/useFeedback';
 import { queryClient, transport } from './lib/grpc';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen';
@@ -79,7 +79,7 @@ const App: React.FC = () => {
   }, []);
 
   const user = useAnonymousUser();
-  const { sendReport } = useReport(user ?? null);
+  const { sendReport } = useFeedback(user ?? null);
   const [permStatus] = Location.useForegroundPermissions();
 
   const handleBoundaryError = useCallback(

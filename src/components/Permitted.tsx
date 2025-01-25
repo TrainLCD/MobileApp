@@ -21,9 +21,8 @@ import useAppleWatch from '../hooks/useAppleWatch';
 import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useFeedback } from '../hooks/useFeedback';
 import useListenMessaging from '../hooks/useListenMessaging';
-import useReport from '../hooks/useReport';
-import useReportEligibility from '../hooks/useReportEligibility';
 import { useResetMainState } from '../hooks/useResetMainState';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { useWarningInfo } from '../hooks/useWarningInfo';
@@ -67,8 +66,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const currentLine = useCurrentLine();
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
-  const { sendReport, descriptionLowerLimit } = useReport(user);
-  const reportEligibility = useReportEligibility();
+  const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const resetMainState = useResetMainState();
   const { warningInfo, clearWarningInfo } = useWarningInfo();
 
@@ -80,20 +78,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
 
     try {
-      switch (reportEligibility) {
-        case 'banned':
-          Alert.alert(translate('errorTitle'), translate('feedbackBanned'));
-          return;
-        case 'limitExceeded':
-          Alert.alert(
-            translate('annoucementTitle'),
-            translate('feedbackSendLimitExceeded')
-          );
-          return;
-        default:
-          break;
-      }
-
       const uri = await viewShotRef.current.capture();
       setScreenShotBase64(
         await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
@@ -104,7 +88,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       console.error(err);
       Alert.alert(translate('errorTitle'), translate('reportError'));
     }
-  }, [reportEligibility]);
+  }, []);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {

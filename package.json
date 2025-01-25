@@ -77,7 +77,8 @@
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "~0.19.13",
     "recoil": "^0.7.7",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "expo-crypto": "~14.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",

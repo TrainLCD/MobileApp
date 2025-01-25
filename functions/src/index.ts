@@ -4,10 +4,6 @@ import { XMLParser } from 'fast-xml-parser';
 import * as admin from 'firebase-admin';
 import { initializeApp } from 'firebase-admin/app';
 import { Timestamp } from 'firebase-admin/firestore';
-import {
-  onDocumentCreated,
-  onDocumentUpdated,
-} from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -28,228 +24,6 @@ const storage = admin.storage();
 const pubsub = new PubSub();
 
 const xmlParser = new XMLParser();
-
-exports.notifyReportCreatedToDiscord = onDocumentCreated(
-  'reports/{docId}',
-  async (change) => {
-    const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
-    const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
-    const {
-      createdAt,
-      description,
-      deviceInfo,
-      language,
-      appVersion,
-      reporterUid,
-      stacktrace,
-      reportType,
-    } = change.data?.data() as Report;
-    const embeds: DiscordEmbed[] = deviceInfo
-      ? [
-          {
-            fields: [
-              {
-                name: 'チケットID',
-                value: change.data?.id ?? '',
-              },
-              {
-                name: '発行日時',
-                value: dayjs(createdAt.toDate()).format('YYYY/MM/DD HH:mm:ss'),
-              },
-              {
-                name: '端末モデル名',
-                value: `${deviceInfo.brand} ${deviceInfo.modelName}(${deviceInfo.modelId})`,
-              },
-              {
-                name: '端末のOS',
-                value: `${deviceInfo.osName} ${deviceInfo.osVersion}`,
-              },
-              {
-                name: '端末設定言語',
-                value: deviceInfo.locale,
-              },
-              {
-                name: 'アプリの設定言語',
-                value: language,
-              },
-              {
-                name: 'アプリのバージョン',
-                value: appVersion,
-              },
-              {
-                name: 'レポーターUID',
-                value: reporterUid,
-              },
-            ],
-          },
-        ]
-      : [
-          {
-            fields: [
-              {
-                name: 'チケットID',
-                value: change.data?.id ?? '',
-              },
-              {
-                name: '発行日時',
-                value: dayjs(createdAt.toDate()).format('YYYY/MM/DD HH:mm:ss'),
-              },
-              {
-                name: 'アプリの設定言語',
-                value: language,
-              },
-              {
-                name: 'アプリのバージョン',
-                value: appVersion,
-              },
-              {
-                name: 'レポーターUID',
-                value: reporterUid,
-              },
-            ],
-          },
-        ];
-
-    const stacktraceTooLong = (stacktrace?.split('\n').length ?? 0) > 10;
-
-    const content =
-      reportType === 'feedback'
-        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${description}\`\`\``
-        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${description}**\n\`\`\`${stacktrace
-            ?.split('\n')
-            .slice(0, 10)
-            .join('\n')}\n${stacktraceTooLong ? '...' : ''}\`\`\``;
-
-    switch (reportType) {
-      case 'feedback': {
-        if (!csWHUrl) {
-          throw new Error('process.env.DISCORD_CS_WEBHOOK_URL is not set!');
-        }
-
-        const pngFile = storage.bucket().file(`reports/${change.data?.id}.png`);
-        const urlResp = await pngFile.getSignedUrl({
-          action: 'read',
-          expires: '03-09-2491',
-        });
-
-        if (!urlResp.length) {
-          throw new Error('Could not fetch screenshot!');
-        }
-
-        await fetch(csWHUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content,
-            embeds: embeds.map((emb, idx) => ({
-              ...emb,
-              image: { url: urlResp[idx] },
-            })),
-          }),
-        });
-        break;
-      }
-      case 'crash': {
-        if (!crashWHUrl) {
-          throw new Error('process.env.DISCORD_CRASH_WEBHOOK_URL is not set!');
-        }
-        await fetch(crashWHUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content,
-            embeds,
-          }),
-        });
-        break;
-      }
-      default:
-        break;
-    }
-  }
-);
-
-exports.notifyReportResolvedToDiscord = onDocumentUpdated(
-  'reports/{docId}',
-  async (change) => {
-    if (!change.data?.after) {
-      return;
-    }
-
-    const whUrl = process.env.DISCORD_CS_WEBHOOK_URL;
-    if (!whUrl) {
-      throw new Error('process.env.DISCORD_CS_WEBHOOK_URL is not set!');
-    }
-
-    const report = change.data.after.data() as Report;
-    if (!report.resolved || !report.resolvedReason) {
-      return;
-    }
-
-    const resolverModerator = await firestore
-      .collection('moderators')
-      .doc(report.resolverUid)
-      .get();
-
-    const pngFile = storage
-      .bucket()
-      .file(`reports/${change.data.after.id}.png`);
-    const urlResp = await pngFile.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
-    });
-
-    await fetch(whUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: `**🎉フィードバックが解決済みにマークされまさした‼🎉**\n\`\`\`${report.description}\`\`\``,
-        embeds: [
-          {
-            image: {
-              url: urlResp[0],
-            },
-            fields: [
-              {
-                name: 'チケットID',
-                value: change.data.after.id,
-              },
-              {
-                name: '発行日時',
-                value: dayjs(report.createdAt.toDate()).format(
-                  'YYYY/MM/DD HH:mm:ss'
-                ),
-              },
-              {
-                name: '解決日時',
-                value: dayjs(new Date()).format('YYYY/MM/DD HH:mm:ss'),
-              },
-              {
-                name: '解決理由',
-                value: report.resolvedReason,
-              },
-              {
-                name: '解決までの日数',
-                value: `${dayjs(new Date()).diff(
-                  report.createdAt.toDate(),
-                  'days'
-                )}日`,
-              },
-              {
-                name: 'モデレータ',
-                value: resolverModerator.data()?.name,
-              },
-              {
-                name: 'レポーターUID',
-                value: report?.reporterUid,
-              },
-            ],
-          },
-        ] as DiscordEmbed[],
-      }),
-    });
-  }
-);
 
 exports.detectHourlyAppStoreNewReview = onSchedule(
   'every 1 hours',
@@ -351,6 +125,7 @@ exports.detectHourlyAppStoreNewReview = onSchedule(
     });
   }
 );
+
 exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (!req.auth) {
     throw new HttpsError(
@@ -560,4 +335,215 @@ exports.ttsCachePubSub = onMessagePublished('tts-cache', async (event) => {
       voiceEn,
       createdAt: Timestamp.now(),
     });
+});
+
+exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError(
+      'failed-precondition',
+      'The function must be called while authenticated.'
+    );
+  }
+
+  const report = req.data.report as Report;
+
+  const {
+    id,
+    createdAt,
+    description,
+    deviceInfo,
+    language,
+    appVersion,
+    reporterUid,
+    stacktrace,
+    reportType,
+    imageUrl,
+  } = report;
+
+  if (!process.env.OCTOKIT_PAT) {
+    console.error('process.env.OCTOKIT_PAT is not found!');
+    return;
+  }
+
+  const createdAtText = dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss');
+  const osNameLabel = (() => {
+    if (deviceInfo?.osName === 'iOS') {
+      return '🍎 iOS';
+    }
+    if (deviceInfo?.osName === 'Android') {
+      return '🤖 Android';
+    }
+    return '❓ Other OS';
+  })();
+
+  try {
+    const res = await fetch(
+      'https://api.github.com/repos/TrainLCD/Issues/issues',
+      {
+        method: 'post',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${process.env.OCTOKIT_PAT ?? ''}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        body: JSON.stringify({
+          title: createdAtText,
+          body: `
+![Image](${imageUrl})
+
+${description}
+
+## 発行日時
+${createdAtText}
+
+## 端末モデル名
+${deviceInfo?.brand} ${deviceInfo?.modelName}(${deviceInfo?.modelId})
+
+## 端末のOS
+${deviceInfo?.osName} ${deviceInfo?.osVersion}
+
+## 端末設定言語
+${deviceInfo?.locale}
+
+## アプリの設定言語
+${language}
+
+## アプリのバージョン
+${appVersion}
+
+## レポーターUID
+${reporterUid}
+        `.trim(),
+          assignees: ['TinyKitten'],
+          milestone: null,
+          labels: ['🙏 Feedback', osNameLabel],
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        }),
+      }
+    );
+
+    if (res.status !== 201) {
+      console.error(await res.json());
+      return;
+    }
+
+    const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
+    const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
+    const embeds: DiscordEmbed[] = deviceInfo
+      ? [
+          {
+            fields: [
+              {
+                name: 'チケットID',
+                value: id,
+              },
+              {
+                name: '発行日時',
+                value: dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss'),
+              },
+              {
+                name: '端末モデル名',
+                value: `${deviceInfo.brand} ${deviceInfo.modelName}(${deviceInfo.modelId})`,
+              },
+              {
+                name: '端末のOS',
+                value: `${deviceInfo.osName} ${deviceInfo.osVersion}`,
+              },
+              {
+                name: '端末設定言語',
+                value: deviceInfo.locale,
+              },
+              {
+                name: 'アプリの設定言語',
+                value: language,
+              },
+              {
+                name: 'アプリのバージョン',
+                value: appVersion,
+              },
+              {
+                name: 'レポーターUID',
+                value: reporterUid,
+              },
+            ],
+          },
+        ]
+      : [
+          {
+            fields: [
+              {
+                name: 'チケットID',
+                value: id,
+              },
+              {
+                name: '発行日時',
+                value: dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss'),
+              },
+              {
+                name: 'アプリの設定言語',
+                value: language,
+              },
+              {
+                name: 'アプリのバージョン',
+                value: appVersion,
+              },
+              {
+                name: 'レポーターUID',
+                value: reporterUid,
+              },
+            ],
+          },
+        ];
+
+    const stacktraceTooLong = (stacktrace?.split('\n').length ?? 0) > 10;
+
+    const content =
+      reportType === 'feedback'
+        ? `**🙏アプリから新しいフィードバックが届きまさした‼🙏**\n\`\`\`${description}\`\`\``
+        : `**😭アプリからクラッシュレポートが届きまさした‼😭**\n**${description}**\n\`\`\`${stacktrace
+            ?.split('\n')
+            .slice(0, 10)
+            .join('\n')}\n${stacktraceTooLong ? '...' : ''}\`\`\``;
+
+    switch (reportType) {
+      case 'feedback': {
+        if (!csWHUrl) {
+          throw new Error('process.env.DISCORD_CS_WEBHOOK_URL is not set!');
+        }
+
+        await fetch(csWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds: embeds.map((emb) => ({
+              ...emb,
+              image: { url: imageUrl },
+            })),
+          }),
+        });
+        break;
+      }
+      case 'crash': {
+        if (!crashWHUrl) {
+          throw new Error('process.env.DISCORD_CRASH_WEBHOOK_URL is not set!');
+        }
+        await fetch(crashWHUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            embeds,
+          }),
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  } catch (err) {
+    console.error(err);
+  }
 });
