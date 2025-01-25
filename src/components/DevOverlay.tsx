@@ -69,8 +69,6 @@ const DevOverlay: React.FC = () => {
       <Typography style={styles.text}>
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
-
-      <Typography style={styles.text}>Processing Mode: Device</Typography>
     </View>
   );
 };
