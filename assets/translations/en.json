@@ -131,8 +131,6 @@
   "update": "Update",
   "agree": "Agree",
   "disagree": "Disagree",
-  "feedbackSendLimitExceeded": "You have reached the daily limit of feedbacks that can be sent, and we appreciate your understanding and cooperation in reducing the development load on the TrainLCD app.",
-  "feedbackBanned": "The feedback function is temporarily unavailable due to suspicious activity detected.",
   "feedbackCharactersCountNotReached": "Feedback must be at least %{lowerLimit} characters.",
   "tuning": "Tuning",
   "tuningItemTiming": "Timing",
