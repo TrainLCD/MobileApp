@@ -1166,6 +1166,8 @@ PODS:
     - ExpoModulesCore
   - ExpoAsset (11.0.1):
     - ExpoModulesCore
+  - ExpoCrypto (14.0.2):
+    - ExpoModulesCore
   - ExpoDevice (7.0.1):
     - ExpoModulesCore
   - ExpoFileSystem (18.0.4):
@@ -1242,6 +1244,9 @@ PODS:
   - Firebase/RemoteConfig (11.5.0):
     - Firebase/CoreOnly
     - FirebaseRemoteConfig (~> 11.5.0)
+  - Firebase/Storage (11.5.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 11.5.0)
   - FirebaseABTesting (11.5.0):
     - FirebaseCore (= 11.5)
   - FirebaseAnalytics (11.5.0):
@@ -1325,6 +1330,13 @@ PODS:
     - "GoogleUtilities/NSData+zlib (~> 8.0)"
   - FirebaseRemoteConfigInterop (11.5.0)
   - FirebaseSharedSwift (11.5.0)
+  - FirebaseStorage (11.5.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (= 11.5)
+    - FirebaseCoreExtension (= 11.5)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
   - fmt (9.1.0)
   - glog (0.3.5)
   - GoogleAppMeasurement (11.5.0):
@@ -3145,6 +3157,10 @@ PODS:
     - Firebase/RemoteConfig (= 11.5.0)
     - React-Core
     - RNFBApp
+  - RNFBStorage (21.6.0):
+    - Firebase/Storage (= 11.5.0)
+    - React-Core
+    - RNFBApp
   - RNGestureHandler (2.20.2):
     - DoubleConversion
     - glog
@@ -3406,6 +3422,7 @@ DEPENDENCIES:
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - Expo (from `../node_modules/expo`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
@@ -3496,6 +3513,7 @@ DEPENDENCIES:
   - "RNFBFirestore (from `../node_modules/@react-native-firebase/firestore`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - "RNFBRemoteConfig (from `../node_modules/@react-native-firebase/remote-config`)"
+  - "RNFBStorage (from `../node_modules/@react-native-firebase/storage`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNLocalize (from `../node_modules/react-native-localize`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -3526,6 +3544,7 @@ SPEC REPOS:
     - FirebaseRemoteConfig
     - FirebaseRemoteConfigInterop
     - FirebaseSharedSwift
+    - FirebaseStorage
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
@@ -3560,6 +3579,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
+  ExpoCrypto:
+    :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
     :path: "../node_modules/expo-device/ios"
   ExpoFileSystem:
@@ -3737,6 +3758,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/messaging"
   RNFBRemoteConfig:
     :path: "../node_modules/@react-native-firebase/remote-config"
+  RNFBStorage:
+    :path: "../node_modules/@react-native-firebase/storage"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNLocalize:
@@ -3767,6 +3790,7 @@ SPEC CHECKSUMS:
   EXNotifications: 12d6eba22b7f70f2218f4ea352cf5e3a0ce61313
   Expo: 8948e8e417f699ed125a80389e150aabbae404bf
   ExpoAsset: 6f7a8887cbb9fb39fdb0808e7f6f74ba0e1ae9b6
+  ExpoCrypto: e97e864c8d7b9ce4a000bca45dddb93544a1b2b4
   ExpoDevice: 449822f2c45660c1ce83283dd51c67fe5404996c
   ExpoFileSystem: 83da9dbce2371cc72c3a3ef49e0df54a117310f1
   ExpoFont: 12b0217e42ac97029d0f317f0486039a8508cf52
@@ -3799,6 +3823,7 @@ SPEC CHECKSUMS:
   FirebaseRemoteConfig: 9c06ced90c1561c18ccfc258e2548371eb3a7137
   FirebaseRemoteConfigInterop: 7a7aebb9342d53913a5c890efa88e289d9e5c1bc
   FirebaseSharedSwift: 302ac5967857ad7e7388b15382d705b8c8d892aa
+  FirebaseStorage: 4e521b5c833f0f3d488dcbde0c72044d02c59146
   fmt: 5ac5e6dcabe2bd1a81f50fe511125872ed2041aa
   glog: df405be20c5f69c02662f3b90832a02fe17ff8fe
   GoogleAppMeasurement: ee5c2d2242816773fbf79e5b0563f5355ef1c315
@@ -3883,6 +3908,7 @@ SPEC CHECKSUMS:
   RNFBFirestore: 3a15fa7f7eba393baaee32c3c0c2d67abc607e06
   RNFBMessaging: 81813c3208ec282314d21429528965d6e2628910
   RNFBRemoteConfig: 03c559627f94913bde3c0e25911e115417047020
+  RNFBStorage: 8711250b4dced8f1e5e7f8d7bb7603c61aee0409
   RNGestureHandler: 1e33ee267aaf61bbab6089d32df3b38c3024e3dd
   RNLocalize: a2ba805ec142d9e21660c2e0ff157220718f9dea
   RNReanimated: 9ebacf9fbe1b8aeb2fc19de93d4a6779b89d0b89

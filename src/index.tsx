@@ -79,7 +79,7 @@ const App: React.FC = () => {
   }, []);
 
   const user = useAnonymousUser();
-  const { sendReport } = useFeedback(user?.uid);
+  const { sendReport } = useFeedback(user ?? null);
   const [permStatus] = Location.useForegroundPermissions();
 
   const handleBoundaryError = useCallback(

@@ -1,5 +1,3 @@
-import type { firestore } from 'firebase-admin';
-
 type FeedbackDeviceInfo = {
   brand: string | null;
   manufacturer: string | null;
@@ -20,6 +18,7 @@ type FeedbackDeviceInfo = {
 };
 
 export type Report = {
+  id: string;
   reportType: 'feedback' | 'crash';
   description: string;
   stacktrace: string | undefined;
@@ -27,9 +26,11 @@ export type Report = {
   resolvedReason: string;
   language: 'ja-JP' | 'en-US';
   appVersion: string;
-  deviceInfo: FeedbackDeviceInfo;
+  deviceInfo: FeedbackDeviceInfo | null;
   resolverUid: string;
-  createdAt: firestore.Timestamp;
-  updatedAt: firestore.Timestamp;
+  createdAt: number;
+  updatedAt: number;
   reporterUid: string;
+  imageUrl: string | null;
+  appEdition: 'canary' | 'production';
 };

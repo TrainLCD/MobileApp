@@ -66,7 +66,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const currentLine = useCurrentLine();
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
-  const { sendReport, descriptionLowerLimit } = useFeedback(user?.uid);
+  const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const resetMainState = useResetMainState();
   const { warningInfo, clearWarningInfo } = useWarningInfo();
 
