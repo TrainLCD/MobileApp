@@ -391,7 +391,10 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
           body: `
 ![Image](${imageUrl})
 
+
+```
 ${description}
+```
 
 ## 発行日時
 ${createdAtText}
