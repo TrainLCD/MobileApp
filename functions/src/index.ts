@@ -432,6 +432,8 @@ ${reporterUid}
       return;
     }
 
+    const issuesRes = (await res.json()) as { html_url: string };
+
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const embeds: DiscordEmbed[] = deviceInfo
@@ -470,6 +472,10 @@ ${reporterUid}
                 name: 'レポーターUID',
                 value: reporterUid,
               },
+              {
+                name: 'GitHub Issue',
+                value: issuesRes.html_url,
+              },
             ],
           },
         ]
@@ -495,6 +501,10 @@ ${reporterUid}
               {
                 name: 'レポーターUID',
                 value: reporterUid,
+              },
+              {
+                name: 'GitHub Issue',
+                value: issuesRes.html_url,
               },
             ],
           },
