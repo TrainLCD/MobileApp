@@ -10,6 +10,9 @@ import { setLocation } from './src/hooks/useLocationStore';
 
 Sentry.init({
   dsn: SENTRY_DSN,
+  enableAutoSessionTracking: true,
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
 });
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
