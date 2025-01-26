@@ -1,10 +1,19 @@
 require('fast-text-encoding');
 
+import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
+import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME } from './src/constants';
 import { setLocation } from './src/hooks/useLocationStore';
+
+Sentry.init({
+  dsn: SENTRY_DSN,
+  enableAutoSessionTracking: true,
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+});
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
   TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
