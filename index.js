@@ -13,6 +13,18 @@ Sentry.init({
   enableAutoSessionTracking: true,
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.mobileReplayIntegration({
+      maskAllText: true,
+      blockAllMedia: true,
+      privacyOptions: {
+        maskAllInputs: true,
+        blockClass: ['sensitive-screen', 'payment-view'],
+      },
+    }),
+  ],
 });
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
