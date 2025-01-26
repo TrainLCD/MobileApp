@@ -2,12 +2,28 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "version": "1.0.0",
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
-    "newArchEnabled": true
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "newArchEnabled": true,
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "trainlcd",
+          "organization": "tinykitten"
+        }
+      ]
+    ]
   }
 }
