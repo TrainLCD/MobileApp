@@ -9,5 +9,6 @@ declare module 'react-native-dotenv' {
   export const PRODUCTION_FEEDBACK_API_URL: string;
   export const DEV_FEEDBACK_API_URL: string;
   export const LOCAL_FEEDBACK_API_URL: string;
-  export const SENTRY_DSN: string;
+  export const NEW_RELIC_IOS_APP_TOKEN: string;
+  export const NEW_RELIC_ANDROID_APP_TOKEN: string;
 }

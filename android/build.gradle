@@ -22,7 +22,10 @@ buildscript {
   }
 }
 
-apply plugin: "com.facebook.react.rootproject"
+plugins {
+  id "com.facebook.react.rootproject"
+  id "com.newrelic.agent.android" version "7.6.2" apply false
+}
 
 allprojects {
   repositories {

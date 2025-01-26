@@ -1,7 +1,10 @@
-apply plugin: "com.android.application"
-apply plugin: "org.jetbrains.kotlin.android"
-apply plugin: "com.facebook.react"
-apply plugin: 'com.google.gms.google-services'
+plugins {
+  id "com.android.application"
+  id "org.jetbrains.kotlin.android"
+  id "com.facebook.react"
+  id "com.google.gms.google-services"
+  id "com.newrelic.agent.android"
+}
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -81,7 +84,6 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-apply from: new File(["node", "--print", "require.resolve('@sentry/react-native/package.json')"].execute().text.trim(), "../sentry.gradle")
 android {
   ndkVersion rootProject.ext.ndkVersion
 

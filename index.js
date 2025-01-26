@@ -1,31 +1,38 @@
 require('fast-text-encoding');
 
-import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
-import { SENTRY_DSN } from 'react-native-dotenv';
+import {
+  NEW_RELIC_ANDROID_APP_TOKEN,
+  NEW_RELIC_IOS_APP_TOKEN,
+} from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME } from './src/constants';
 import { setLocation } from './src/hooks/useLocationStore';
 
-Sentry.init({
-  dsn: SENTRY_DSN,
-  enableAutoSessionTracking: true,
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  integrations: [
-    Sentry.mobileReplayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-      privacyOptions: {
-        maskAllInputs: true,
-        blockClass: ['sensitive-screen', 'payment-view'],
-      },
-    }),
-  ],
+import NewRelic from 'newrelic-react-native-agent';
+import { Platform } from 'react-native';
+import * as appVersion from './package.json';
+
+const appToken = Platform.select({
+  ios: NEW_RELIC_IOS_APP_TOKEN,
+  android: NEW_RELIC_ANDROID_APP_TOKEN,
 });
+
+const agentConfiguration = {
+  analyticsEventEnabled: true,
+  crashReportingEnabled: true,
+  interactionTracingEnabled: true,
+  networkRequestEnabled: true,
+  networkErrorRequestEnabled: true,
+  httpResponseBodyCaptureEnabled: true,
+  loggingEnabled: true,
+  logLevel: NewRelic.LogLevel.INFO,
+  webViewInstrumentation: true,
+};
+
+NewRelic.startAgent(appToken, agentConfiguration);
+NewRelic.setJSAppVersion(appVersion.version);
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
   TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
