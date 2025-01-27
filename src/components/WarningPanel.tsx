@@ -36,7 +36,7 @@ const WarningPanel: React.FC<Props> = ({
 
   const styles = StyleSheet.create({
     root: {
-      width: Dimensions.get('window').width / 2,
+      width: Dimensions.get('screen').width / 2,
       backgroundColor: '#333',
       borderColor,
       borderLeftWidth: 16,

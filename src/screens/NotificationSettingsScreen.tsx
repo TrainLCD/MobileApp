@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   itemRoot: {
-    width: Dimensions.get('window').width / 5,
+    width: Dimensions.get('screen').width / 5,
     marginBottom: 12,
   },
   item: {

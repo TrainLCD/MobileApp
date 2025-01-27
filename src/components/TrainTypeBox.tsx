@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
-    width: Dimensions.get('window').width,
+    width: Dimensions.get('screen').width,
   },
 });
 

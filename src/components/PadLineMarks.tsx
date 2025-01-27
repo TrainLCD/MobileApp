@@ -21,7 +21,7 @@ type Props = {
   theme?: AppTheme;
 };
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get('screen').width;
 
 const stylesNormal = StyleSheet.create({
   root: {
