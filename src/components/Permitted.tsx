@@ -342,15 +342,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           <NullableWarningPanel />
         </View>
       </LongPressGestureHandler>
-      <NewReportModal
-        visible={reportModalShow}
-        sending={sendingReport}
-        onClose={handleNewReportModalClose}
-        description={reportDescription}
-        onDescriptionChange={setReportDescription}
-        onSubmit={handleReportSend}
-        descriptionLowerLimit={descriptionLowerLimit}
-      />
+      {/* NOTE: このViewを外すとフィードバックモーダルのレイアウトが崩御する */}
+      <View>
+        <NewReportModal
+          visible={reportModalShow}
+          sending={sendingReport}
+          onClose={handleNewReportModalClose}
+          description={reportDescription}
+          onDescriptionChange={setReportDescription}
+          onSubmit={handleReportSend}
+          descriptionLowerLimit={descriptionLowerLimit}
+        />
+      </View>
     </ViewShot>
   );
 };
