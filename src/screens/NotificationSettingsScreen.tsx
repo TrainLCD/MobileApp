@@ -5,7 +5,6 @@ import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
-  Dimensions,
   FlatList,
   StyleSheet,
   TouchableWithoutFeedback,
@@ -30,7 +29,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   itemRoot: {
-    width: Dimensions.get('screen').width / 5,
+    flex: 1,
+    marginHorizontal: 8,
     marginBottom: 12,
   },
   item: {
