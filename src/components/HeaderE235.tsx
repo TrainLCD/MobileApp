@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   clockOverride: {
     position: 'absolute',
     top: 8,
-    right: Dimensions.get('window').width * 0.25,
+    right: Dimensions.get('screen').width * 0.25,
   },
   stationNameContainer: {
     flexDirection: 'row',

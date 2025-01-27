@@ -135,9 +135,9 @@ const HeaderLED = () => {
 
   const rootHeight = useMemo(() => {
     if (!selectedBound) {
-      return Dimensions.get('window').height / 3;
+      return Dimensions.get('screen').height / 3;
     }
-    return Dimensions.get('window').height / 1.5;
+    return Dimensions.get('screen').height / 1.5;
   }, [selectedBound]);
 
   const headerLangState = useMemo(
