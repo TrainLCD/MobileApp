@@ -62,23 +62,31 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 8,
   },
   buttonContainer: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     padding: 8,
-    marginTop: 16,
+    marginTop: 8,
   },
   button: {
+    marginTop: 8,
     marginHorizontal: 8,
     width: widthScale(64),
   },
   charCount: {
+    position: 'absolute',
+    right: 0,
     fontWeight: 'bold',
     textAlign: 'right',
     color: '#555555',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
@@ -132,7 +140,17 @@ const NewReportModal: React.FC<Props> = ({
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
-            <Heading>{translate('report')}</Heading>
+            <View style={styles.header}>
+              <Heading>{translate('report')}</Heading>
+
+              {needsLeftCount < 0 ? (
+                <Typography style={styles.charCount}>
+                  あと{Math.abs(needsLeftCount)}文字必要です
+                </Typography>
+              ) : (
+                <Typography style={styles.charCount}>送信可能です</Typography>
+              )}
+            </View>
 
             <TextInput
               autoFocus
@@ -148,14 +166,6 @@ const NewReportModal: React.FC<Props> = ({
                 lowerLimit: descriptionLowerLimit,
               })}
             />
-
-            {needsLeftCount < 0 ? (
-              <Typography style={styles.charCount}>
-                あと{Math.abs(needsLeftCount)}文字必要です
-              </Typography>
-            ) : (
-              <Typography style={styles.charCount}>送信可能です</Typography>
-            )}
           </KeyboardAvoidingView>
           <Typography
             style={{
