@@ -129,7 +129,9 @@ const NewReportModal: React.FC<Props> = ({
                 },
           ]}
         >
-          <KeyboardAvoidingView behavior="position">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
             <Heading>{translate('report')}</Heading>
 
             <TextInput
