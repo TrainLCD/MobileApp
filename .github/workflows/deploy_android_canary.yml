@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: echo "$SENTRY_PROPERTIES" | tr -d '\r' > ./android/sentry.properties
         env:
-          SENTRY_PROPERTIES: ${{ secrets.SENTRY_PROPERTIES }}  
+          SENTRY_PROPERTIES: ${{ secrets.SENTRY_PROPERTIES }}
       - name: Deploy with fastlane
         working-directory: ./android
         shell: bash
