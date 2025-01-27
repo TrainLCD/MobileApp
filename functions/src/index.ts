@@ -358,6 +358,7 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     stacktrace,
     reportType,
     imageUrl,
+    appEdition,
   } = report;
 
   if (!process.env.OCTOKIT_PAT) {
@@ -419,7 +420,11 @@ ${reporterUid}
         `.trim(),
           assignees: ['TinyKitten'],
           milestone: null,
-          labels: ['🙏 Feedback', osNameLabel],
+          labels: [
+            '🙏 Feedback',
+            osNameLabel,
+            appEdition === 'production' ? '🌏 Production' : '🐥 Canary',
+          ],
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
