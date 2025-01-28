@@ -81,6 +81,7 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+apply from: new File(["node", "--print", "require.resolve('@sentry/react-native/package.json')"].execute().text.trim(), "../sentry.gradle")
 android {
   ndkVersion rootProject.ext.ndkVersion
 
@@ -123,8 +124,8 @@ android {
       applicationIdSuffix ".dev"
       versionNameSuffix "-dev"
       // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-      versionCode 80304030
-      versionName "8.3.4"
+      versionCode 80400030
+      versionName "8.4.0"
     }
     prod {
       dimension "environment"

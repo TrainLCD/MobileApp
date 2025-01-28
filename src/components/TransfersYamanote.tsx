@@ -65,7 +65,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   const getLineMarkFunc = useGetLineMark();
   const lines = useTransferLines();
 
-  const flexBasis = useMemo(() => Dimensions.get('window').width / 3, []);
+  const flexBasis = useMemo(() => Dimensions.get('screen').width / 3, []);
 
   const renderTransferLines = (): (JSX.Element | null)[] =>
     lines.map((line) => {

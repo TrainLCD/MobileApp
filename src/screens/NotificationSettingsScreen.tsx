@@ -28,9 +28,10 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: '100%',
+    paddingHorizontal: 24,
   },
   itemRoot: {
-    width: Dimensions.get('window').width / 5,
+    width: Dimensions.get('screen').width / 4,
     marginBottom: 12,
   },
   item: {
@@ -51,7 +52,10 @@ const styles = StyleSheet.create({
     borderColor: '#555',
     marginRight: 12,
   },
-  listContainerStyle: { alignSelf: 'center', paddingBottom: 24 },
+  listContainerStyle: {
+    alignSelf: 'center',
+    width: '100%',
+  },
   headingStyle: {
     marginTop: 24,
     marginBottom: 24,

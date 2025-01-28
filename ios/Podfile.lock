@@ -1166,6 +1166,8 @@ PODS:
     - ExpoModulesCore
   - ExpoAsset (11.0.1):
     - ExpoModulesCore
+  - ExpoCrypto (14.0.2):
+    - ExpoModulesCore
   - ExpoDevice (7.0.1):
     - ExpoModulesCore
   - ExpoFileSystem (18.0.4):
@@ -3333,6 +3335,29 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNSentry (6.5.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Sentry/HybridSDK (= 8.43.0)
+    - Yoga
   - RNShare (11.1.0):
     - DoubleConversion
     - glog
@@ -3407,6 +3432,7 @@ PODS:
     - SDWebImage (~> 5.10)
   - SDWebImageSVGCoder (1.7.0):
     - SDWebImage/Core (~> 5.6)
+  - Sentry/HybridSDK (8.43.0)
   - SocketRocket (0.7.1)
   - UMAppLoader (5.0.0)
   - Yoga (0.0.0)
@@ -3420,6 +3446,7 @@ DEPENDENCIES:
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
   - Expo (from `../node_modules/expo`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
@@ -3515,6 +3542,7 @@ DEPENDENCIES:
   - RNLocalize (from `../node_modules/react-native-localize`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - "RNSentry (from `../node_modules/@sentry/react-native`)"
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWatch (from `../node_modules/react-native-watch-connectivity`)
@@ -3557,6 +3585,7 @@ SPEC REPOS:
     - SDWebImage
     - SDWebImageAVIFCoder
     - SDWebImageSVGCoder
+    - Sentry
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -3576,6 +3605,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
+  ExpoCrypto:
+    :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
     :path: "../node_modules/expo-device/ios"
   ExpoFileSystem:
@@ -3763,6 +3794,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSentry:
+    :path: "../node_modules/@sentry/react-native"
   RNShare:
     :path: "../node_modules/react-native-share"
   RNSVG:
@@ -3785,6 +3818,7 @@ SPEC CHECKSUMS:
   EXNotifications: 12d6eba22b7f70f2218f4ea352cf5e3a0ce61313
   Expo: 8948e8e417f699ed125a80389e150aabbae404bf
   ExpoAsset: 6f7a8887cbb9fb39fdb0808e7f6f74ba0e1ae9b6
+  ExpoCrypto: e97e864c8d7b9ce4a000bca45dddb93544a1b2b4
   ExpoDevice: 449822f2c45660c1ce83283dd51c67fe5404996c
   ExpoFileSystem: 83da9dbce2371cc72c3a3ef49e0df54a117310f1
   ExpoFont: 12b0217e42ac97029d0f317f0486039a8508cf52
@@ -3907,12 +3941,14 @@ SPEC CHECKSUMS:
   RNLocalize: a2ba805ec142d9e21660c2e0ff157220718f9dea
   RNReanimated: 9ebacf9fbe1b8aeb2fc19de93d4a6779b89d0b89
   RNScreens: 369b1219578f2d43ff7d69783dbe4a703404ecb3
+  RNSentry: bd9d15d37733a485519d08eebba55a223823e059
   RNShare: dfb766b0ba56e82ab4b01abba842d7992623a918
   RNSVG: b5087ac7a1b96b793cddb461b0e166e809a114b8
   RNWatch: 28fe1f5e0c6410d45fd20925f4796fce05522e3f
   SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
   SDWebImageAVIFCoder: 00310d246aab3232ce77f1d8f0076f8c4b021d90
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
+  Sentry: 532b281a53b1b45a523fd592f608956fb36e577c
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   UMAppLoader: bda51f73f8599e336a778b23e0956130d1e244d5
   Yoga: 748f06daed00132bf0a051dbb2f4347660ac1a98

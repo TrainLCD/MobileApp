@@ -25,6 +25,7 @@ export const useStartBackgroundLocationUpdates = () => {
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
+          timeInterval: 5000,
           distanceInterval: 10,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
@@ -37,11 +38,10 @@ export const useStartBackgroundLocationUpdates = () => {
       watchPositionSub = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 5000,
           distanceInterval: 10,
         },
-        (pos) => {
-          setLocation(pos);
-        }
+        setLocation
       );
     })();
 
