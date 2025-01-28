@@ -19,6 +19,7 @@ import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
+import useAutoMode from '../hooks/useAutoMode';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useLoopLine } from '../hooks/useLoopLine';
@@ -27,7 +28,6 @@ import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
 import useRefreshStation from '../hooks/useRefreshStation';
 import { useResetMainState } from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
-import { useSimulationMode } from '../hooks/useSimulationMode';
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates';
 import { useTTS } from '../hooks/useTTS';
 import { useThemeStore } from '../hooks/useThemeStore';
@@ -67,7 +67,10 @@ const MainScreen: React.FC = () => {
   );
 
   const nextStation = useNextStation();
-  useSimulationMode(autoModeEnabled);
+
+  useAutoMode(autoModeEnabled);
+  // useSimulationMode(autoModeEnabled);
+
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
   const currentStationRef = useRef(currentStation);
