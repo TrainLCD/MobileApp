@@ -31,7 +31,10 @@ export const useSimulationMode = (enabled: boolean): void => {
   );
 
   const [index, setIndex] = useState(
-    stations.findIndex((s) => s.groupId === station?.groupId)
+    Math.max(
+      stations.findIndex((s) => s.groupId === station?.groupId),
+      0
+    )
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
