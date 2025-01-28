@@ -1,7 +1,5 @@
 import { LineType } from '../../gen/proto/stationapi_pb';
 
-// 停車秒数
-export const STOPPING_DURATION_IN_SEC = 10 * 1000;
 // 路線種別による最高速度
 export const LINE_TYPE_MAX_SPEEDS_IN_KM_H: Record<LineType, number> = {
   [LineType.BulletTrain]: 300,
