@@ -76,10 +76,13 @@ export const useSimulationMode = (enabled: boolean): void => {
       return;
     }
 
-    const shouldReset =
-      selectedDirection === 'INBOUND' ? index === stations.length - 1 : !index;
+    const cur = stations[index];
+    const next =
+      selectedDirection === 'INBOUND'
+        ? stations[index + 1]
+        : stations[index - 1];
 
-    if (shouldReset) {
+    if (!next) {
       setIndex(0);
       useLocationStore.setState({
         timestamp: new Date().getTime(),
@@ -93,13 +96,8 @@ export const useSimulationMode = (enabled: boolean): void => {
           longitude: stations[0].longitude,
         },
       });
+      return;
     }
-
-    const cur = stations[index];
-    const next =
-      selectedDirection === 'INBOUND'
-        ? stations[index + 1]
-        : stations[index - 1];
 
     if (cur) {
       useLocationStore.setState((prev) => {
