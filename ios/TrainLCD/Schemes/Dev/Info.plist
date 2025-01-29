@@ -44,7 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1654</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CURRENT_SCHEME_NAME</key>
 	<string>CanaryTrainLCD</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

@@ -1,14 +1,19 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import remoteConfig from '@react-native-firebase/remote-config';
 import storage from '@react-native-firebase/storage';
 import * as Application from 'expo-application';
+import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
-import { useCallback, useEffect, useState } from 'react';
-import { REMOTE_CONFIG_KEYS, REMOTE_CONFIG_PLACEHOLDERS } from '../constants';
+import { useCallback, useMemo } from 'react';
+import {
+  DEV_FEEDBACK_API_URL,
+  PRODUCTION_FEEDBACK_API_URL,
+} from 'react-native-dotenv';
+import { REMOTE_CONFIG_KEYS } from '../constants';
 import type { Report, ReportType } from '../models/Report';
 import { isJapanese } from '../translation';
+import { isDevApp } from '../utils/isDevApp';
 
 const {
   brand,
@@ -28,7 +33,7 @@ const {
   platformApiLevel,
 } = Device;
 
-const useReport = (
+export const useFeedback = (
   user: FirebaseAuthTypes.User | null
 ): {
   sendReport: ({
@@ -44,15 +49,11 @@ const useReport = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
-  const [descriptionLowerLimit, setDescriptionLowerLimit] = useState(
-    REMOTE_CONFIG_PLACEHOLDERS.REPORT_LETTERS_LOWER_LIMIT
+  const descriptionLowerLimit = useMemo(
+    () =>
+      remoteConfig().getNumber(REMOTE_CONFIG_KEYS.REPORT_LETTERS_LOWER_LIMIT),
+    []
   );
-
-  useEffect(() => {
-    setDescriptionLowerLimit(
-      remoteConfig().getNumber(REMOTE_CONFIG_KEYS.REPORT_LETTERS_LOWER_LIMIT)
-    );
-  }, []);
 
   const sendReport = useCallback(
     async ({
@@ -66,14 +67,33 @@ const useReport = (
       screenShotBase64?: string;
       stacktrace?: string;
     }) => {
-      if (!description.trim().length || !user) {
+      if (description.trim().length < descriptionLowerLimit || !user) {
         return;
       }
 
-      const reportsCollection = firestore().collection('reports');
+      const API_URL = isDevApp
+        ? DEV_FEEDBACK_API_URL
+        : PRODUCTION_FEEDBACK_API_URL;
+
       const [locale] = Localization.getLocales();
 
+      const feedbackId = Crypto.randomUUID();
+
+      const idToken = await user?.getIdToken();
+
+      let imageUrl: string | null = null;
+      if (screenShotBase64) {
+        const storageRef = storage().ref(
+          `public/report-images/${feedbackId}.png`
+        );
+        await storageRef.putString(screenShotBase64, 'base64', {
+          contentType: 'image/png',
+        });
+        imageUrl = await storageRef.getDownloadURL();
+      }
+
       const report: Report = {
+        id: feedbackId,
         reportType,
         description: description.trim(),
         stacktrace: stacktrace ?? '',
@@ -101,20 +121,22 @@ const useReport = (
               locale: locale.languageTag,
             }
           : null,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-        updatedAt: firestore.FieldValue.serverTimestamp(),
+        imageUrl,
+        appEdition: isDevApp ? 'canary' : 'production',
+        createdAt: new Date().getTime(),
+        updatedAt: new Date().getTime(),
       };
 
-      const reportRef = await reportsCollection.add(report);
-
-      if (screenShotBase64) {
-        const storageRef = storage().ref(`reports/${reportRef.id}.png`);
-        await storageRef.putString(screenShotBase64, 'base64', {
-          contentType: 'image/png',
-        });
-      }
+      fetch(API_URL, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ data: { report } }),
+        method: 'POST',
+      });
     },
-    [user]
+    [user, descriptionLowerLimit]
   );
 
   return {
@@ -122,5 +144,3 @@ const useReport = (
     descriptionLowerLimit,
   };
 };
-
-export default useReport;

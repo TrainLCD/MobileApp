@@ -22,7 +22,7 @@ const Marquee = ({ children }: Props) => {
 
   const startScroll = useCallback(
     (width: number) => {
-      offsetX.value = Dimensions.get('window').width;
+      offsetX.value = Dimensions.get('screen').width;
       offsetX.value = withRepeat(
         withTiming(-width, {
           duration: width * 3,
