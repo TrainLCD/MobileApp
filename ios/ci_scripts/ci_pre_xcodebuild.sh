@@ -26,3 +26,5 @@ if [ $? -ne 0 ]; then
   echo "Error: Failed to write plist file"
   exit 1
 fi
+
+echo "$SENTRY_PROPERTIES" | tr -d '\r' > /Volumes/workspace/repository/ios/sentry.properties
