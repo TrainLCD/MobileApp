@@ -27,7 +27,7 @@ const useCheckStoreVersion = (): void => {
         return;
       }
       const res = await VersionCheck.needUpdate();
-      if (res.isNeeded) {
+      if (res?.isNeeded) {
         showUpdateRequestDialog(res.storeUrl);
       }
     };
