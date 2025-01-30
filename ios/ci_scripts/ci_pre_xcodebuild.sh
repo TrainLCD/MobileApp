@@ -26,23 +26,3 @@ if [ $? -ne 0 ]; then
   echo "Error: Failed to write plist file"
   exit 1
 fi
-
-# Sentryの設定確認
-if [ -z "$SENTRY_PROPERTIES" ]; then
-  echo "Error: SENTRY_PROPERTIES is not set"
-  exit 1
-fi
-
-# Sentryの設定ファイル出力先の確認
-SENTRY_OUTPUT_DIR="/Volumes/workspace/repository/ios"
-if [ ! -d "$SENTRY_OUTPUT_DIR" ]; then
-  echo "Error: Sentry output directory does not exist"
-  exit 1
-fi
-
-# Sentryプロパティの書き込み
-echo "$SENTRY_PROPERTIES" | tr -d '\r' > /Volumes/workspace/repository/ios/sentry.properties
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to write sentry.properties file"
-  exit 1
-fi
