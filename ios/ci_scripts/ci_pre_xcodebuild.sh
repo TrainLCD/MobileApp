@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 mkdir -p /Volumes/workspace/repository/ios/Schemes/Dev
 
 # 環境変数の存在確認
@@ -24,5 +24,11 @@ fi
 echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > "$OUTPUT_PATH"
 if [ $? -ne 0 ]; then
   echo "Error: Failed to write plist file"
+  exit 1
+fi
+
+echo "$SENTRY_PROPERTIES_BASE64" | base64 --decode > /Volumes/workspace/repository/ios/sentry.properties
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to write sentry.properties file"
   exit 1
 fi
