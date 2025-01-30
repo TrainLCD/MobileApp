@@ -56,11 +56,6 @@ jobs:
         run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > ./android/app/release.keystore
         env:
           RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
-      - name: Restore sentry.properties
-        shell: bash
-        run: echo "$SENTRY_PROPERTIES" | tr -d '\r' > ./android/sentry.properties
-        env:
-          SENTRY_PROPERTIES: ${{ secrets.SENTRY_PROPERTIES }}
       - name: Deploy with fastlane
         working-directory: ./android
         shell: bash
@@ -73,4 +68,3 @@ jobs:
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           PACKAGE_NAME: me.tinykitten.trainlcd.dev
           NODE_ENV: production
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
