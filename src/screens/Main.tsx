@@ -67,7 +67,10 @@ const MainScreen: React.FC = () => {
   );
 
   const nextStation = useNextStation();
+
   useAutoMode(autoModeEnabled);
+  // useSimulationMode(autoModeEnabled);
+
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
   const currentStationRef = useRef(currentStation);
