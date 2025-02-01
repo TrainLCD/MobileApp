@@ -234,7 +234,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         enabled: speechEnabledStr === 'true',
       }));
       const bgTTSEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
+        ASYNC_STORAGE_KEYS.BG_TTS_ENABLED
       );
       setSpeech((prev) => ({
         ...prev,

@@ -8,10 +8,8 @@ export const ASYNC_STORAGE_KEYS = {
   LONG_PRESS_NOTICE_DISMISSED: '@TrainLCD:longPressNoticeDismissed',
   ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED:
     '@TrainLCD:alwaysPermissionNotGrantedWarningDismissed',
-  // QA
-  QA_SPEECH_ENABLED: '@TrainLCD:qaSpeechEnabled',
-  QA_TTS_NOTICE: '@TrainLCD:qaTtsNotice',
-  QA_BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
+  BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
+  BG_TTS_NOTICE: '@TrainLCD:bgTtsNotice',
 } as const;
 
 export type AsyncStorageKeys =
