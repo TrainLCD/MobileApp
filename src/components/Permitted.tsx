@@ -233,13 +233,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         enabled: speechEnabledStr === 'true',
       }));
-      const losslessEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
-      );
-      setSpeech((prev) => ({
-        ...prev,
-        losslessEnabled: losslessEnabledStr === 'true',
-      }));
       const bgTTSEnabledStr = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
       );

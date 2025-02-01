@@ -101,7 +101,6 @@
   "bgAlertContent": "TrainLCD is updating the nearest station in the background.",
   "warning": "WARNING",
   "autoAnnounceItemTitle": "Enable voice announcement",
-  "autoAnnounceLosslessTitle": "Enable premium voice announcement",
   "selectLanguagesTitle": "Enabled languages",
   "autoModeSettings": "Auto mode",
   "autoModeInProgress": "Auto mode is enabled. In-app location will not affected by actual location changes.",

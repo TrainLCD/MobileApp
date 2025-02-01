@@ -104,14 +104,14 @@ exports.detectHourlyAppStoreNewReview = onSchedule(
       return { content, embeds };
     });
 
-    reviewsBodyArray.forEach(async (r) => {
+    for (const r of reviewsBodyArray) {
       const body = JSON.stringify(r);
       await fetch(whUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body,
       });
-    });
+    }
 
     await appStoreReviewsDocRef.update({
       notifiedEntryFeeds: [
@@ -201,9 +201,8 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const isPremium = req.data.premium;
-  const jaVoiceName = isPremium ? 'ja-JP-Neural2-B' : 'ja-JP-Standard-B';
-  const enVoiceName = isPremium ? 'en-US-Neural2-G' : 'en-US-Standard-G';
+  const jaVoiceName = 'ja-JP-Standard-B';
+  const enVoiceName = 'en-US-Standard-G';
 
   const voicesCollection = firestore
     .collection('caches')
@@ -286,7 +285,6 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   cacheTopic.publishMessage({
     json: {
       id,
-      isPremium,
       jaAudioContent,
       enAudioContent,
       ssmlJa,
@@ -302,7 +300,6 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
 exports.ttsCachePubSub = onMessagePublished('tts-cache', async (event) => {
   const {
     id,
-    // isPremium,
     jaAudioContent,
     enAudioContent,
     ssmlJa,

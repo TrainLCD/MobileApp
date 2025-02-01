@@ -12,7 +12,7 @@ import { useTTSCache } from './useTTSCache';
 import useTTSText from './useTTSText';
 
 export const useTTS = (): void => {
-  const { enabled, losslessEnabled, backgroundEnabled, monetizedPlanEnabled } =
+  const { enabled, backgroundEnabled, monetizedPlanEnabled } =
     useRecoilValue(speechState);
 
   const firstSpeechRef = useRef(true);
@@ -92,7 +92,6 @@ export const useTTS = (): void => {
       data: {
         ssmlJa: `<speak>${textJa.trim()}</speak>`,
         ssmlEn: `<speak>${textEn.trim()}</speak>`,
-        premium: monetizedPlanEnabled && losslessEnabled,
       },
     };
 
@@ -133,7 +132,7 @@ export const useTTS = (): void => {
     }
 
     return { id: ttsJson.result.id, pathJa, pathEn };
-  }, [losslessEnabled, monetizedPlanEnabled, textEn, textJa, ttsApiUrl, user]);
+  }, [textEn, textJa, ttsApiUrl, user]);
 
   const speech = useCallback(async () => {
     if (!textJa || !textEn) {

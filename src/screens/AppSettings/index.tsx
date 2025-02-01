@@ -46,10 +46,8 @@ const styles = StyleSheet.create({
 });
 
 const AppSettingsScreen: React.FC = () => {
-  const [
-    { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
-    setSpeechState,
-  ] = useRecoilState(speechState);
+  const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
+    useRecoilState(speechState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const navigation = useNavigation();
@@ -95,19 +93,6 @@ const AppSettingsScreen: React.FC = () => {
     [setSpeechState]
   );
 
-  const onLosslessAudioEnabledValueChange = useCallback(
-    async (flag: boolean) => {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
-        flag ? 'true' : 'false'
-      );
-      setSpeechState((prev) => ({
-        ...prev,
-        losslessEnabled: flag,
-      }));
-    },
-    [setSpeechState]
-  );
   const onBackgroundAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
       await AsyncStorage.setItem(
@@ -122,11 +107,11 @@ const AppSettingsScreen: React.FC = () => {
     [setSpeechState]
   );
 
-  const toThemeSettings = () => navigation.navigate('ThemeSettings');
+  const toThemeSettings = () => navigation.navigate('ThemeSettings' as never);
   const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings');
+    navigation.navigate('EnabledLanguagesSettings' as never);
 
-  const toTuning = () => navigation.navigate('TuningSettings');
+  const toTuning = () => navigation.navigate('TuningSettings' as never);
 
   return (
     <>
@@ -162,61 +147,32 @@ const AppSettingsScreen: React.FC = () => {
             </Typography>
           </View>
           {isDevApp && speechEnabled ? (
-            <>
-              <View
-                style={[
-                  styles.settingItem,
-                  {
-                    flexDirection: 'row',
-                    marginTop: 8,
-                  },
-                ]}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={losslessEnabled}
-                    onValueChange={onLosslessAudioEnabledValueChange}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={losslessEnabled}
-                    onValueChange={onLosslessAudioEnabledValueChange}
-                  />
-                )}
-                <Typography style={styles.settingsItemHeading}>
-                  {translate('autoAnnounceLosslessTitle')}
-                </Typography>
-              </View>
-
-              <View
-                style={[
-                  styles.settingItem,
-                  {
-                    flexDirection: 'row',
-                    marginTop: 8,
-                  },
-                ]}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={backgroundEnabled}
-                    onValueChange={onBackgroundAudioEnabledValueChange}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={backgroundEnabled}
-                    onValueChange={onBackgroundAudioEnabledValueChange}
-                  />
-                )}
-                <Typography style={styles.settingsItemHeading}>
-                  {translate('autoAnnounceBackgroundTitle')}
-                </Typography>
-              </View>
-            </>
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                  marginTop: 8,
+                },
+              ]}
+            >
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              )}
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceBackgroundTitle')}
+              </Typography>
+            </View>
           ) : null}
         </View>
 
