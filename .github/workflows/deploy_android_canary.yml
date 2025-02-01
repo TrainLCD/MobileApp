@@ -56,6 +56,11 @@ jobs:
         run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > ./android/app/release.keystore
         env:
           RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+      - name: Restore sentry.properties
+        shell: bash
+        run: echo "${{ secrets.SENTRY_PROPERTIES_BASE64 }}" | base64 --decode > ./android/sentry.properties
+        env:
+          SENTRY_PROPERTIES_BASE64: ${{ secrets.SENTRY_PROPERTIES_BASE64 }}
       - name: Deploy with fastlane
         working-directory: ./android
         shell: bash
