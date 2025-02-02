@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { Station } from '../../gen/proto/stationapi_pb';
-import { normalizeRomanText } from '../../src/utils/normalize';
+import {} from '../../src/utils/normalize';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
@@ -69,7 +69,7 @@ const useTTSText = (
     () =>
       transferLinesOriginal.map((l) => ({
         ...l,
-        nameRoman: normalizeRomanText(l.nameRoman),
+        nameRoman: l.nameRoman,
       })),
     [transferLinesOriginal]
   );
@@ -78,7 +78,7 @@ const useTTSText = (
     () =>
       currentLineOrigin && {
         ...currentLineOrigin,
-        nameRoman: normalizeRomanText(currentLineOrigin?.nameRoman),
+        nameRoman: currentLineOrigin?.nameRoman,
       },
     [currentLineOrigin]
   );
@@ -87,7 +87,7 @@ const useTTSText = (
     () =>
       selectedBoundOrigin && {
         ...selectedBoundOrigin,
-        nameRoman: normalizeRomanText(selectedBoundOrigin?.nameRoman),
+        nameRoman: selectedBoundOrigin?.nameRoman,
       },
     [selectedBoundOrigin]
   );
@@ -96,8 +96,9 @@ const useTTSText = (
     () =>
       currentTrainTypeOrigin && {
         ...currentTrainTypeOrigin,
-        nameRoman: normalizeRomanText(
-          currentTrainTypeOrigin.nameRoman?.replace(parenthesisRegexp, '')
+        nameRoman: currentTrainTypeOrigin.nameRoman?.replace(
+          parenthesisRegexp,
+          ''
         ),
       },
     [currentTrainTypeOrigin]
@@ -169,7 +170,7 @@ const useTTSText = (
     () =>
       connectedLinesOrigin?.map((l) => ({
         ...l,
-        nameRoman: normalizeRomanText(l.nameRoman),
+        nameRoman: l.nameRoman,
       })),
     [connectedLinesOrigin]
   );
@@ -178,7 +179,7 @@ const useTTSText = (
     () =>
       nextStationOrigin && {
         ...nextStationOrigin,
-        nameRoman: normalizeRomanText(nextStationOrigin.nameRoman),
+        nameRoman: nextStationOrigin.nameRoman,
       },
     [nextStationOrigin]
   );
@@ -196,10 +197,10 @@ const useTTSText = (
       afterNextStationOrigin &&
       new Station({
         ...afterNextStationOrigin,
-        nameRoman: normalizeRomanText(afterNextStationOrigin?.nameRoman),
+        nameRoman: afterNextStationOrigin?.nameRoman,
         lines: afterNextStationOrigin.lines.map((l) => ({
           ...l,
-          nameRoman: normalizeRomanText(l.nameRoman),
+          nameRoman: l.nameRoman,
         })),
       })
     );
@@ -648,7 +649,7 @@ const useTTSText = (
                   currentTrainType ? currentTrainType.nameRoman : 'Local'
                 } Service on the ${
                   currentLine.nameRoman
-                } bound for ${boundForEn}.${
+                } bound for ${boundForEn}. ${
                   currentTrainType && afterNextStation
                     ? `The next stop after ${nextStation?.nameRoman}${`, is ${
                         afterNextStation?.nameRoman
@@ -682,9 +683,7 @@ const useTTSText = (
             firstSpeech
               ? `Thank you for using the ${
                   currentLine.nameRoman
-                }. This is the ${normalizeRomanText(
-                  currentTrainType?.nameRoman ?? 'Local'
-                )} train ${
+                }. This is the ${currentTrainType?.nameRoman ?? 'Local'} train ${
                   connectedLines[0]?.nameRoman
                     ? `on the ${connectedLines[0]?.nameRoman}`
                     : ''
@@ -780,20 +779,14 @@ const useTTSText = (
         [APP_THEME.JR_WEST]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using ${normalizeRomanText(
-                  currentLine?.company?.nameEnglishShort
-                )}. This is the ${normalizeRomanText(
-                  currentTrainType?.nameRoman ?? 'Local'
-                )} Service bound for ${boundForEn} ${
-                  allStops[2]
-                    ? `via ${normalizeRomanText(allStops[2]?.nameRoman)}`
-                    : ''
+              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${currentTrainType?.nameRoman ?? 'Local'} Service bound for ${boundForEn} ${
+                  allStops[2] ? `via ${allStops[2]?.nameRoman}` : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
-                      ? `${normalizeRomanText(s.nameRoman)} terminal`
-                      : normalizeRomanText(s.nameRoman)
+                      ? `${s.nameRoman} terminal`
+                      : s.nameRoman
                   )
                   .join(', ')}. ${
                   allStops
@@ -801,12 +794,12 @@ const useTTSText = (
                     .filter((s) => s)
                     .reverse()[0]?.id === selectedBound?.id
                     ? ''
-                    : `Stops after ${normalizeRomanText(
+                    : `Stops after ${
                         allStops
                           .slice(0, 5)
                           .filter((s) => s)
                           .reverse()[0]?.nameRoman
-                      )} will be announced later. `
+                      } will be announced later. `
                 }`
               : ''
           }The next stop is ${nextStation?.nameRoman}${
@@ -851,9 +844,7 @@ const useTTSText = (
             firstSpeech
               ? `Thank you for using the ${currentLine.nameRoman}. `
               : ''
-          }This is the ${normalizeRomanText(
-            currentTrainType?.nameRoman ?? 'Local'
-          )} train bound for ${boundForEn}. The next station is ${
+          }This is the ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}. The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText} ${
             transferLines.length

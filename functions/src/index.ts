@@ -14,6 +14,7 @@ import type {
 } from './models/appStoreFeed';
 import type { DiscordEmbed } from './models/common';
 import type { Report } from './models/feedback';
+import { normalizeRomanText } from './utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -142,7 +143,7 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const ssmlEn: string | undefined = req.data.ssmlEn
+  const ssmlEn: string | undefined = normalizeRomanText(req.data.ssmlEn)
     // Airport Terminal 1･2等
     .replaceAll('･', ' ')
     // Otsuka・Teikyo-Daigakuなど
@@ -151,48 +152,49 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replaceAll(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // Meiji-jingumae `Harajuku`
     .replaceAll('`', '')
-    // 日本語はjoを「ホ」と読まない
-    .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʑo">jo</phoneme>')
-    // 一丁目で終わる駅は全体の駅名を入れないと不自然な発音になる
+    // 一丁目で終わる駅
     .replaceAll(
-      'Aoyama-itchome',
-      `<phoneme alphabet="ipa" ph="aojama-ɪtʃoome">Aoyama-itchome</phoneme>`
-    )
-    .replaceAll(
-      'Ginza-itchome',
-      `<phoneme alphabet="ipa" ph="ɡʲiNdza-ɪtʃoome">Ginza-itchome</phoneme>`
-    )
-    .replaceAll(
-      'Roppongi-itchome',
-      `<phoneme alphabet="ipa" ph="ɾopoNɡʲi-ɪtʃoome">Roppongi-itchome</phoneme>`
+      '-itchome',
+      `<phoneme alphabet="ipa" ph="itt͡ɕoːme">いっちょうめ</phoneme>`
     )
     // 新宿三丁目など
     .replaceAll(
       '-sanchome',
-      ' <phoneme alphabet="ipa" ph="santʃome">sanchome</phoneme>'
+      ' <phoneme alphabet="ipa" ph="sant͡ɕoːme">さんちょうめ</phoneme>'
     )
     // 宇部
-    .replaceAll(/ube/gi, '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+    .replaceAll('Ube', '<phoneme alphabet="ipa" ph="ɯbe">うべ</phoneme>')
     // 伊勢崎
     .replaceAll(
-      /isesaki/gi,
-      '<phoneme alphabet="ipa" ph="isesaki">Isesaki</phoneme>'
+      'Isesaki',
+      '<phoneme alphabet="ipa" ph="isesakʲi">いせさき</phoneme>'
+    )
+    // 目白
+    .replaceAll(
+      'Mejiro',
+      '<phoneme alphabet="ipa" ph="meʤiɾo">めじろ</phoneme>'
     )
     // カイセイ対策
     .replaceAll(
-      /keisei/gi,
-      '<phoneme alphabet="ipa" ph="keisei">Keisei</phoneme>'
+      'Keisei',
+      '<phoneme alphabet="ipa" ph="keisei">けいせい</phoneme>'
     )
     // 押上
     .replaceAll(
-      /oshiage/gi,
-      `<phoneme alphabet="ipa" ph="'oɕiaɡe">Oshiage</phoneme>`
+      'Oshiage',
+      `<phoneme alphabet="ipa" ph="'oɕiaɡe">おしあげ</phoneme>`
     )
     // 名鉄
     .replaceAll(
-      /meitetsu/gi,
-      '<phoneme alphabet="ipa" ph="me.itetsɯ">Meitetsu</phoneme>'
-    );
+      'Meitetsu',
+      '<phoneme alphabet="ipa" ph="meitetsɯ">めいてつ</phoneme>'
+    )
+    // 西武
+    .replaceAll('Seibu', '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>')
+    // 日本語はjoを「ホ」と読まない
+    .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>');
+
+  console.log(req.data.ssmlEn, '->', ssmlEn);
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(

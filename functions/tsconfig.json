@@ -6,9 +6,13 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "es2017",
-    "typeRoots": ["node_modules/@types"]
+    "target": "ES2021",
+    "typeRoots": [
+      "node_modules/@types"
+    ]
   },
   "compileOnSave": true,
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }
