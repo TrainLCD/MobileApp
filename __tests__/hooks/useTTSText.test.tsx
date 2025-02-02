@@ -97,8 +97,8 @@ describe('Without trainType & With numbering', () => {
         }
       )
       const [jaSSML, enSSML] = result.current
-      expect(jaSSML.indexOf('undefined')).toBe(-1)
-      expect(enSSML.indexOf('undefined')).toBe(-1)
+      expect(jaSSML?.indexOf('undefined')).toBe(-1)
+      expect(enSSML?.indexOf('undefined')).toBe(-1)
     }
   )
 
