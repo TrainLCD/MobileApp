@@ -194,8 +194,6 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     // 日本語はjoを「ホ」と読まない
     .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>');
 
-  console.log(req.data.ssmlEn, '->', ssmlEn);
-
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
       'invalid-argument',
