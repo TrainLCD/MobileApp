@@ -171,35 +171,36 @@ const AppSettingsScreen: React.FC = () => {
               {translate('autoAnnounceItemTitle')}
             </Typography>
           </View>
+          {speechEnabled ? (
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                  marginTop: 8,
+                },
+              ]}
+            >
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              )}
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceBackgroundTitle')}
+              </Typography>
+            </View>
+          ) : null}
 
-          <View
-            style={[
-              styles.settingItem,
-              {
-                flexDirection: 'row',
-                marginTop: 8,
-              },
-            ]}
-          >
-            {isLEDTheme ? (
-              <LEDThemeSwitch
-                style={{ marginRight: 8 }}
-                value={backgroundEnabled}
-                onValueChange={onBackgroundAudioEnabledValueChange}
-              />
-            ) : (
-              <Switch
-                style={{ marginRight: 8 }}
-                value={backgroundEnabled}
-                onValueChange={onBackgroundAudioEnabledValueChange}
-              />
-            )}
-            <Typography style={styles.settingsItemHeading}>
-              {translate('autoAnnounceBackgroundTitle')}
-            </Typography>
-          </View>
-
-          {backgroundEnabled && (
+          {speechEnabled && backgroundEnabled && (
             <Typography style={styles.bgTTSNotice}>
               {translate('bgTtsAlertText')}
             </Typography>
