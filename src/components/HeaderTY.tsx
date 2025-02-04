@@ -367,9 +367,10 @@ const HeaderTY: React.FC = () => {
   }, [fadeIn, fadeOut]);
 
   useEffect(() => {
-    setFadeOutFinished(false);
     if (!selectedBound) {
       setFadeOutFinished(true);
+    } else {
+      setFadeOutFinished(false);
     }
     fade();
   }, [fade, selectedBound]);
