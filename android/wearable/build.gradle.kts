@@ -24,6 +24,7 @@ android {
         getDefaultProguardFile("proguard-android-optimize.txt"),
         "proguard-rules.pro"
       )
+      signingConfig = signingConfigs.getByName("debug")
     }
   }
 
@@ -34,7 +35,7 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 80500031
+      versionCode = 80500061
       versionName = "8.5.0"
     }
     create("prod") {

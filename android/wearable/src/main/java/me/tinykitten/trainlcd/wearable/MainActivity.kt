@@ -9,6 +9,7 @@ package me.tinykitten.trainlcd.wearable
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,8 +34,6 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import me.tinykitten.trainlcd.wearable.Constants.CAPABILITY_PHONE_APP
-import me.tinykitten.trainlcd.wearable.Constants.PLAY_STORE_URI
 
 class MainActivity :
   ComponentActivity(),
@@ -45,48 +44,24 @@ class MainActivity :
 
   private var payload by mutableStateOf<WearablePayload?>(null)
 
-  private var foundNode: Node? = null
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
     capabilityClient = Wearable.getCapabilityClient(this)
     remoteActivityHelper = RemoteActivityHelper(this)
+
+    checkForPhoneApp()
   }
 
-  override fun onResume() {
-    super.onResume()
-
-    Wearable.getCapabilityClient(this).addListener(this, CAPABILITY_PHONE_APP)
-    Wearable.getDataClient(applicationContext).addListener(this)
-    lifecycleScope.launch {
-      checkIfPhoneHasApp()
-    }
+  override fun onStart() {
+    super.onStart()
+    capabilityClient.addListener(this, CAPABILITY_PHONE_APP)
   }
 
-  override fun onPause() {
-    super.onPause()
-
-    Wearable.getCapabilityClient(this).removeListener(this, CAPABILITY_PHONE_APP)
-    Wearable.getDataClient(applicationContext).removeListener(this)
-  }
-
-  private suspend fun checkIfPhoneHasApp() {
-    try {
-      val capabilityInfo = capabilityClient
-        .getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_ALL)
-        .await()
-
-      withContext(Dispatchers.Main) {
-        foundNode = capabilityInfo.nodes.firstOrNull()
-        checkCapability()
-      }
-    } catch (cancellationException: CancellationException) {
-      throw cancellationException
-    } catch (throwable: Throwable) {
-      // どうにかしろ
-    }
+  override fun onStop() {
+    super.onStop()
+    capabilityClient.removeListener(this, CAPABILITY_PHONE_APP)
   }
 
   override fun onDataChanged(dataEvents: DataEventBuffer) {
@@ -122,8 +97,25 @@ class MainActivity :
   }
 
   override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
-    foundNode = capabilityInfo.nodes.firstOrNull()
-    checkCapability()
+    val nodes = capabilityInfo.nodes
+    if (nodes.isNotEmpty()) {
+      Log.d(TAG, "スマホアプリが接続されました: ${nodes.first().displayName}")
+      setContent {
+        WearApp(
+          payload = payload
+        )
+      }
+    } else {
+      Log.d(TAG, "スマホアプリが見つかりません")
+      val isAndroid = PhoneTypeHelper.getPhoneDeviceType(applicationContext) ==
+        PhoneTypeHelper.DEVICE_TYPE_ANDROID
+      setContent {
+        CompanionNotInstalled(
+          onDownloadAppPress = { handleDownloadAppPress() },
+          isAndroid = isAndroid
+        )
+      }
+    }
   }
 
   private fun handleDownloadAppPress() {
@@ -146,26 +138,38 @@ class MainActivity :
     }
   }
 
-  private fun checkCapability() {
-    if (foundNode != null) {
-      setContent {
-        WearApp(
-          payload = payload
-        )
+  private fun checkForPhoneApp() {
+    capabilityClient.getCapability("capability_phone_app", CapabilityClient.FILTER_REACHABLE)
+      .addOnSuccessListener { capabilityInfo ->
+        val nodes = capabilityInfo.nodes
+        if (nodes.isNotEmpty()) {
+          Log.d(TAG, "スマホアプリが見つかりました: ${nodes.first().displayName}")
+          setContent {
+            WearApp(
+              payload = payload
+            )
+          }
+        } else {
+          Log.d(TAG, "スマホアプリが見つかりません")
+          val isAndroid = PhoneTypeHelper.getPhoneDeviceType(applicationContext) ==
+            PhoneTypeHelper.DEVICE_TYPE_ANDROID
+          setContent {
+            CompanionNotInstalled(
+              onDownloadAppPress = { handleDownloadAppPress() },
+              isAndroid = isAndroid
+            )
+          }
+        }
       }
-    } else {
-      val isAndroid = PhoneTypeHelper.getPhoneDeviceType(applicationContext) ==
-        PhoneTypeHelper.DEVICE_TYPE_ANDROID
-      setContent {
-        CompanionNotInstalled(
-          onDownloadAppPress = { handleDownloadAppPress() },
-          isAndroid = isAndroid
-        )
+      .addOnFailureListener { e ->
+        Log.e(TAG, "Capability の取得に失敗", e)
       }
-    }
   }
 
   companion object {
+    private const val TAG = "Wearable"
+    private const val PLAY_STORE_URI = "market://details?id=me.tinykitten.trainlcd"
+    private const val CAPABILITY_PHONE_APP = "capability_phone_app"
     private const val STATION_PATH = "/station"
     private const val CURRENT_STATE_KEY = "currentStateKey"
     private const val STATION_NAME_KEY = "stationName"
