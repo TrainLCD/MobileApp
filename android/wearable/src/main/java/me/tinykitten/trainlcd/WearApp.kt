@@ -123,7 +123,7 @@ fun WearApp(
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
-                                text = "(${payload.stationNumber})",
+                                text = "${payload.stationNumber}",
                                 fontSize = 16.sp
                             )
                         }
