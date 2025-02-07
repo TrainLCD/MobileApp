@@ -135,6 +135,7 @@ class MainActivity :
             } catch (cancellationException: CancellationException) {
                 throw cancellationException
             } catch (throwable: Throwable) {
+                Log.e(TAG, "Failed to start remote activity", throwable)
                 ConfirmationOverlay()
                     .setType(ConfirmationOverlay.FAILURE_ANIMATION)
                     .showOn(this@MainActivity)
