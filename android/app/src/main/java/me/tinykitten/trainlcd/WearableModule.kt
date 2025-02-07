@@ -12,9 +12,9 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import java.util.concurrent.ExecutionException
 
-class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class WearableModule(reactContext: ReactApplicationContext) :
+  ReactContextBaseJavaModule(reactContext) {
   private val context = reactApplicationContext.applicationContext
-  private val dataClient = Wearable.getDataClient(context)
   private var isWearableApiAvailable = true
 
   override fun getName() = "WearableModule"
@@ -24,29 +24,37 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     readableMap: ReadableMap,
     promise: Promise
   ) {
-    if (!isWearableApiAvailable){
-      return promise.resolve(null)
-    }
-    
-    try {
-      Tasks.await(GoogleApiAvailability.getInstance().checkApiAvailability(dataClient))
-    } catch (e: Exception) {
-      isWearableApiAvailable = false
-      Log.e(TAG, "Exception: $e")
+    if (!isWearableApiAvailable) {
       return promise.resolve(null)
     }
 
     try {
-      val req = PutDataMapRequest.create(STATION_PATH).run {
+      Tasks.await(GoogleApiAvailability.getInstance().checkApiAvailability(Wearable.getDataClient(context)))
+    } catch (e: Exception) {
+      isWearableApiAvailable = false
+      Log.e(TAG, "Exception: $e")
+      return promise.reject(e)
+    }
+
+    try {
+      val req = PutDataMapRequest.create(STATION_PATH).apply {
         dataMap.putString(STATION_NAME_KEY, readableMap.getString(STATION_NAME_KEY).orEmpty())
-        dataMap.putString(STATION_NAME_ROMAN_KEY, readableMap.getString(STATION_NAME_ROMAN_KEY).orEmpty())
+        dataMap.putString(
+          STATION_NAME_ROMAN_KEY,
+          readableMap.getString(STATION_NAME_ROMAN_KEY).orEmpty()
+        )
         dataMap.putString(CURRENT_STATE_KEY, readableMap.getString(CURRENT_STATE_KEY).orEmpty())
         dataMap.putString(STATION_NUMBER_KEY, readableMap.getString(STATION_NUMBER_KEY).orEmpty())
         dataMap.putBoolean(BAD_ACCURACY_KEY, readableMap.getBoolean(BAD_ACCURACY_KEY).or(false))
-        dataMap.putBoolean(IS_NEXT_LAST_STOP_KEY, readableMap.getBoolean(IS_NEXT_LAST_STOP_KEY).or(false))
-        asPutDataRequest()
-      }.setUrgent()
-      Tasks.await(dataClient.putDataItem(req))
+        dataMap.putBoolean(
+          IS_NEXT_LAST_STOP_KEY,
+          readableMap.getBoolean(IS_NEXT_LAST_STOP_KEY).or(false)
+        )
+      }
+        .asPutDataRequest()
+        .setUrgent()
+      Tasks.await(Wearable.getDataClient(context).putDataItem(req)
+      )
       promise.resolve(null)
     } catch (e: ExecutionException) {
       Log.e(TAG, "ExecutionException: $e")
@@ -59,7 +67,7 @@ class WearableModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
 
   companion object {
     private const val TAG = "WearableModule"
-    
+
     private const val E_TASK_FAILED = "E_TASK_FAILED"
 
     private const val STATION_PATH = "/station"
