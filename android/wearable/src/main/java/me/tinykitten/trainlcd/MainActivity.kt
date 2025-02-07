@@ -79,21 +79,28 @@ class MainActivity :
                         when (item.uri.path) {
                             STATION_PATH -> {
                                 DataMapItem.fromDataItem(item).dataMap.apply {
-                                    val stateKey = getString(CURRENT_STATE_KEY).orEmpty()
-                                    val stationName = getString(STATION_NAME_KEY).orEmpty()
-                                    val stationNameRoman =
-                                        getString(STATION_NAME_ROMAN_KEY).orEmpty()
-                                    val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
-                                    val badAccuracy = getBoolean(BAD_ACCURACY_KEY).or(false)
-                                    val isNextLastStop = getBoolean(IS_NEXT_LAST_STOP_KEY).or(false)
-                                    payload = WearablePayload(
-                                        stateKey,
-                                        stationName,
-                                        stationNameRoman,
-                                        stationNumber,
-                                        badAccuracy,
-                                        isNextLastStop
-                                    )
+                                    try {
+                                        val stateKey = getString(CURRENT_STATE_KEY).orEmpty()
+                                        val stationName = getString(STATION_NAME_KEY).orEmpty()
+                                        val stationNameRoman =
+                                            getString(STATION_NAME_ROMAN_KEY).orEmpty()
+                                        val stationNumber = getString(STATION_NUMBER_KEY).orEmpty()
+                                        val badAccuracy = getBoolean(BAD_ACCURACY_KEY).or(false)
+                                        val isNextLastStop =
+                                            getBoolean(IS_NEXT_LAST_STOP_KEY).or(false)
+                                        
+                                        payload = WearablePayload(
+                                            stateKey,
+                                            stationName,
+                                            stationNameRoman,
+                                            stationNumber,
+                                            badAccuracy,
+                                            isNextLastStop
+                                        )
+
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "データの解析中にエラーが発生しました", e)
+                                    }
                                 }
                             }
                         }
