@@ -22,7 +22,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useFeedback } from '../hooks/useFeedback';
-import useListenMessaging from '../hooks/useListenMessaging';
 import { useResetMainState } from '../hooks/useResetMainState';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { useWarningInfo } from '../hooks/useWarningInfo';
@@ -60,7 +59,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useAppleWatch();
   useAndroidWearable();
-  useListenMessaging();
 
   const user = useCachedInitAnonymousUser();
   const currentLine = useCurrentLine();
