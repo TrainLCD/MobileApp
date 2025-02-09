@@ -79,6 +79,11 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     )
     // 西武
     .replace(/Seibu/gi, '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>')
+    // 取手駅
+    .replace(
+      /Toride/gi,
+      '<phoneme alphabet="ipa" ph="toɾʲide">とりで</phoneme>'
+    )
     // 日本語はjoを「ホ」と読まない
     .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     .replace(/JR/g, 'J-R');
