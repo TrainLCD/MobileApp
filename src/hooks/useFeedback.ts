@@ -1,16 +1,15 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import remoteConfig from '@react-native-firebase/remote-config';
 import storage from '@react-native-firebase/storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import {
   DEV_FEEDBACK_API_URL,
   PRODUCTION_FEEDBACK_API_URL,
 } from 'react-native-dotenv';
-import { REMOTE_CONFIG_KEYS } from '../constants';
+import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
 import type { Report, ReportType } from '../models/Report';
 import { isJapanese } from '../translation';
 import { isDevApp } from '../utils/isDevApp';
@@ -49,12 +48,6 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
-  const descriptionLowerLimit = useMemo(
-    () =>
-      remoteConfig().getNumber(REMOTE_CONFIG_KEYS.REPORT_LETTERS_LOWER_LIMIT),
-    []
-  );
-
   const sendReport = useCallback(
     async ({
       reportType,
@@ -67,7 +60,10 @@ export const useFeedback = (
       screenShotBase64?: string;
       stacktrace?: string;
     }) => {
-      if (description.trim().length < descriptionLowerLimit || !user) {
+      if (
+        description.trim().length < FEEDBACK_DESCRIPTION_LOWER_LIMIT ||
+        !user
+      ) {
         return;
       }
 
@@ -127,7 +123,7 @@ export const useFeedback = (
         updatedAt: new Date().getTime(),
       };
 
-      fetch(API_URL, {
+      const res = await fetch(API_URL, {
         headers: {
           'content-type': 'application/json; charset=UTF-8',
           Authorization: `Bearer ${idToken}`,
@@ -135,12 +131,16 @@ export const useFeedback = (
         body: JSON.stringify({ data: { report } }),
         method: 'POST',
       });
+
+      if (!res.ok) {
+        throw new Error(`フィードバックの送信に失敗しました: ${res.status}`);
+      }
     },
-    [user, descriptionLowerLimit]
+    [user]
   );
 
   return {
     sendReport,
-    descriptionLowerLimit,
+    descriptionLowerLimit: FEEDBACK_DESCRIPTION_LOWER_LIMIT,
   };
 };
