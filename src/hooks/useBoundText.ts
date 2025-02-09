@@ -32,14 +32,14 @@ export const useBoundText = (
           JA: `${directionalStops[0]?.name}経由${directionalStops[1]?.name}`,
           EN: `${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
           ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}`,
-          KO: `${directionalStops[0]?.nameKorean}경유 ${directionalStops[1]?.nameKorean}`,
+          KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean}`,
         };
       }
       return {
         JA: `${directionalStops[0]?.name}経由 ${directionalStops[1]?.name}行`,
         EN: `for ${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
         ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}`,
-        KO: `${directionalStops[0]?.nameKorean}경유 ${directionalStops[1]?.nameKorean} 행`,
+        KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean} 행`,
       };
     }
 
@@ -53,14 +53,14 @@ export const useBoundText = (
           JA: `${directionalStops[0]?.name}経由${directionalStops[1]?.name}`,
           EN: `${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
           ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}`,
-          KO: `${directionalStops[0]?.nameKorean}경유 ${directionalStops[1]?.nameKorean}`,
+          KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean}`,
         };
       }
       return {
         JA: `${directionalStops[0]?.name}経由 ${directionalStops[1]?.name}行`,
         EN: `for ${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
         ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}前`,
-        KO: `${directionalStops[0]?.nameKorean}경유 ${directionalStops[1]?.nameKorean} 행`,
+        KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean} 행`,
       };
     }
 
