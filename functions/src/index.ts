@@ -1,17 +1,11 @@
 import { PubSub } from '@google-cloud/pubsub';
 import * as dayjs from 'dayjs';
-import { XMLParser } from 'fast-xml-parser';
 import * as admin from 'firebase-admin';
 import { initializeApp } from 'firebase-admin/app';
 import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onMessagePublished } from 'firebase-functions/v2/pubsub';
-import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { createHash } from 'node:crypto';
-import type {
-  AppStoreReviewFeed,
-  AppStoreReviewsDoc,
-} from './models/appStoreFeed';
 import type { DiscordEmbed } from './models/common';
 import type { Report } from './models/feedback';
 import { normalizeRomanText } from './utils/normalize';
@@ -23,109 +17,6 @@ initializeApp();
 const firestore = admin.firestore();
 const storage = admin.storage();
 const pubsub = new PubSub();
-
-const xmlParser = new XMLParser();
-
-exports.detectHourlyAppStoreNewReview = onSchedule(
-  'every 1 hours',
-  async () => {
-    const APP_STORE_ID = '1486355943';
-    const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
-    const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
-    if (!whUrl) {
-      throw new Error('process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!');
-    }
-
-    const appStoreReviewsDocRef = firestore
-      .collection('storeReviews')
-      .doc('appStore');
-
-    const appStoreReviewsDocData = (await appStoreReviewsDocRef.get()).data() as
-      | AppStoreReviewsDoc
-      | undefined;
-
-    if (!appStoreReviewsDocData?.notifiedEntryFeeds) {
-      await appStoreReviewsDocRef.set({
-        notifiedEntryFeeds: [],
-      });
-    }
-
-    const notifiedFeeds = appStoreReviewsDocData?.notifiedEntryFeeds ?? [];
-
-    const res = await fetch(RSS_URL);
-    const text = await res.text();
-    const obj = xmlParser.parse(text) as AppStoreReviewFeed;
-    const rssEntries = obj.feed.entry;
-    const filteredEntries = rssEntries.filter(
-      (ent) =>
-        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
-        notifiedFeeds.findIndex(
-          (f) => !dayjs(f.updatedAt.toDate()).isSame(dayjs(ent.updated))
-        )
-    );
-
-    const reviewsBodyArray = filteredEntries.map((ent) => {
-      const oldEntry = rssEntries.find(
-        (e) => e.id === ent.id && e.updated !== ent.updated
-      );
-      const heading = oldEntry
-        ? '**🙏App Storeに投稿されたレヴューが更新されまさした‼🙏**'
-        : '**🙏App Storeに新しいレヴューが届きまさした‼🙏**';
-      const content = `${heading}\n\n**${ent.title}**\n\`\`\`${ent.content[0]}\`\`\``;
-      const embeds: DiscordEmbed[] = [
-        {
-          fields: [
-            {
-              name: '評価',
-              value: new Array(5)
-                .fill('')
-                .map((_, i) => (i < ent['im:rating'] ? '★' : '☆'))
-                .join(''),
-            },
-            {
-              name: 'バージョン',
-              value: ent['im:version'],
-            },
-            {
-              name: '投稿者',
-              value: ent.author.name,
-            },
-            {
-              name: '最終更新',
-              value: dayjs(ent.updated).format('YYYY/MM/DD'),
-            },
-            {
-              name: 'レビューID',
-              value: ent.id.toString(),
-            },
-          ],
-        },
-      ];
-
-      return { content, embeds };
-    });
-
-    for (const r of reviewsBodyArray) {
-      const body = JSON.stringify(r);
-      await fetch(whUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-    }
-
-    await appStoreReviewsDocRef.update({
-      notifiedEntryFeeds: [
-        ...notifiedFeeds,
-        ...rssEntries.map((feed) => ({
-          id: feed.id,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        })),
-      ],
-    });
-  }
-);
 
 exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (!req.auth) {
