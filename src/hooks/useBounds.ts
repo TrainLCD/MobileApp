@@ -6,6 +6,7 @@ import { TOEI_OEDO_LINE_ID } from '../constants';
 import { TOEI_OEDO_LINE_MAJOR_STATIONS_ID } from '../constants/station';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -53,7 +54,7 @@ const useBounds = (): {
       return [oedoLineInboundStops, oedoLineOutboundStops];
     }
 
-    if (isLoopLine && !trainType) {
+    if (isLoopLine && (!trainType || getIsLocal(trainType))) {
       return [inboundStationsForLoopLine, outboundStationsForLoopLine];
     }
 

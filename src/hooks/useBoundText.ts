@@ -26,6 +26,23 @@ export const useBoundText = (
       };
     }
 
+    if (directionalStops[1]?.id === 9930138) {
+      if (excludePrefixAndSuffix) {
+        return {
+          JA: `${directionalStops[0]?.name}経由${directionalStops[1]?.name}`,
+          EN: `${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
+          ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}`,
+          KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean}`,
+        };
+      }
+      return {
+        JA: `${directionalStops[0]?.name}経由 ${directionalStops[1]?.name}行`,
+        EN: `for ${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
+        ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}`,
+        KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean} 행`,
+      };
+    }
+
     if (
       selectedLine?.id === TOEI_OEDO_LINE_ID &&
       directionalStops.length > 1 &&
@@ -33,17 +50,17 @@ export const useBoundText = (
     ) {
       if (excludePrefixAndSuffix) {
         return {
-          JA: `${directionalStops[0]?.name}経由都庁前`,
-          EN: `Tochomae via ${directionalStops[0]?.nameRoman}`,
-          ZH: `经由${directionalStops[0]?.nameChinese} 前往都厅前`,
-          KO: `${directionalStops[0]?.nameKorean}경유 도초마에`,
+          JA: `${directionalStops[0]?.name}経由${directionalStops[1]?.name}`,
+          EN: `${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
+          ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}`,
+          KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean}`,
         };
       }
       return {
-        JA: `${directionalStops[0]?.name}経由 都庁前行`,
-        EN: `for Tochomae via ${directionalStops[0]?.nameRoman}`,
-        ZH: `经由${directionalStops[0]?.nameChinese} 前往都厅前`,
-        KO: `${directionalStops[0]?.nameKorean}경유 도초마에 행`,
+        JA: `${directionalStops[0]?.name}経由 ${directionalStops[1]?.name}行`,
+        EN: `for ${directionalStops[1]?.nameRoman} via ${directionalStops[0]?.nameRoman}`,
+        ZH: `经由${directionalStops[0]?.nameChinese} 前往${directionalStops[1]?.nameChinese}前`,
+        KO: `${directionalStops[0]?.nameKorean} 경유 ${directionalStops[1]?.nameKorean} 행`,
       };
     }
 
