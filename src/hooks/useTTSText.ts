@@ -153,7 +153,7 @@ const useTTSText = (
       )}`;
     }
 
-    const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`;
+    const symbol = split[0]?.split('').join('-');
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
       : Number(split[1]).toString();
