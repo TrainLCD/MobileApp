@@ -106,10 +106,8 @@ const useTTSText = (
   const boundForJa = useMemo(
     () =>
       isLoopLine
-        ? replaceJapaneseText(
-            loopLineBoundJa?.boundFor,
-            loopLineBoundJa?.boundForKatakana
-          )
+        ? // NOTE: メジャーな駅だからreplaceJapaneseTextは要らない...はず
+          loopLineBoundJa?.boundFor?.replace(/・/g, '<break time="250ms"/>')
         : replaceJapaneseText(
             `${directionalStops?.map((s) => s?.name).join('・')}${
               isPartiallyLoopLine ? '方面' : ''
@@ -123,7 +121,6 @@ const useTTSText = (
       isLoopLine,
       isPartiallyLoopLine,
       loopLineBoundJa?.boundFor,
-      loopLineBoundJa?.boundForKatakana,
       replaceJapaneseText,
     ]
   );
@@ -142,7 +139,10 @@ const useTTSText = (
       return '';
     }
 
-    const split = nextStationNumber.stationNumber?.split('-');
+    if (!nextStationNumber?.stationNumber) {
+      return '';
+    }
+    const split = nextStationNumber.stationNumber.split('-');
 
     if (!split.length) {
       return '';
@@ -153,7 +153,7 @@ const useTTSText = (
       )}`;
     }
 
-    const symbol = `<say-as interpret-as="characters">${split[0]}</say-as>`;
+    const symbol = split[0]?.split('').join('-');
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
       : Number(split[1]).toString();
@@ -686,7 +686,7 @@ const useTTSText = (
                   connectedLines[0]?.nameRoman
                     ? `on the ${connectedLines[0]?.nameRoman}`
                     : ''
-                } to ${selectedBound?.nameRoman}. `
+                } to ${boundForEn}. `
               : ''
           }The next station is ${
             nextStation?.nameRoman
@@ -952,16 +952,7 @@ const useTTSText = (
     return [];
   }
 
-  return [
-    jaText,
-    enText
-      // 環状運転のときに入る可能性
-      .replaceAll('&', 'and')
-      // 明治神宮前駅等で入る
-      .replaceAll('`', ''),
-    // NOTE: このほかの英語SSMLリプレース処理はFunctionsで行うので
-    // ここに置換処理を入れてはいけない
-  ];
+  return [jaText, enText];
 };
 
 export default useTTSText;
