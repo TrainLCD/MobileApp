@@ -22,7 +22,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useFeedback } from '../hooks/useFeedback';
-import useListenMessaging from '../hooks/useListenMessaging';
 import { useResetMainState } from '../hooks/useResetMainState';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { useWarningInfo } from '../hooks/useWarningInfo';
@@ -60,7 +59,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useAppleWatch();
   useAndroidWearable();
-  useListenMessaging();
 
   const user = useCachedInitAnonymousUser();
   const currentLine = useCurrentLine();
@@ -233,15 +231,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         enabled: speechEnabledStr === 'true',
       }));
-      const losslessEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
-      );
-      setSpeech((prev) => ({
-        ...prev,
-        losslessEnabled: losslessEnabledStr === 'true',
-      }));
       const bgTTSEnabledStr = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED // プレミアム音声はまだリリースしないのでQA_のままで問題ない
+        ASYNC_STORAGE_KEYS.BG_TTS_ENABLED
       );
       setSpeech((prev) => ({
         ...prev,

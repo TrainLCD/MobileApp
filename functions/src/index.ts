@@ -1,19 +1,14 @@
 import { PubSub } from '@google-cloud/pubsub';
 import * as dayjs from 'dayjs';
-import { XMLParser } from 'fast-xml-parser';
 import * as admin from 'firebase-admin';
 import { initializeApp } from 'firebase-admin/app';
 import { Timestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { onMessagePublished } from 'firebase-functions/v2/pubsub';
-import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { createHash } from 'node:crypto';
-import type {
-  AppStoreReviewFeed,
-  AppStoreReviewsDoc,
-} from './models/appStoreFeed';
 import type { DiscordEmbed } from './models/common';
 import type { Report } from './models/feedback';
+import { normalizeRomanText } from './utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -22,109 +17,6 @@ initializeApp();
 const firestore = admin.firestore();
 const storage = admin.storage();
 const pubsub = new PubSub();
-
-const xmlParser = new XMLParser();
-
-exports.detectHourlyAppStoreNewReview = onSchedule(
-  'every 1 hours',
-  async () => {
-    const APP_STORE_ID = '1486355943';
-    const RSS_URL = `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=${APP_STORE_ID}/sortBy=mostRecent/xml`;
-    const whUrl = process.env.DISCORD_APP_REVIEW_WEBHOOK_URL;
-    if (!whUrl) {
-      throw new Error('process.env.DISCORD_APP_REVIEW_WEBHOOK_URL is not set!');
-    }
-
-    const appStoreReviewsDocRef = firestore
-      .collection('storeReviews')
-      .doc('appStore');
-
-    const appStoreReviewsDocData = (await appStoreReviewsDocRef.get()).data() as
-      | AppStoreReviewsDoc
-      | undefined;
-
-    if (!appStoreReviewsDocData?.notifiedEntryFeeds) {
-      await appStoreReviewsDocRef.set({
-        notifiedEntryFeeds: [],
-      });
-    }
-
-    const notifiedFeeds = appStoreReviewsDocData?.notifiedEntryFeeds ?? [];
-
-    const res = await fetch(RSS_URL);
-    const text = await res.text();
-    const obj = xmlParser.parse(text) as AppStoreReviewFeed;
-    const rssEntries = obj.feed.entry;
-    const filteredEntries = rssEntries.filter(
-      (ent) =>
-        notifiedFeeds.findIndex((f) => f.id === ent.id) === -1 &&
-        notifiedFeeds.findIndex(
-          (f) => !dayjs(f.updatedAt.toDate()).isSame(dayjs(ent.updated))
-        )
-    );
-
-    const reviewsBodyArray = filteredEntries.map((ent) => {
-      const oldEntry = rssEntries.find(
-        (e) => e.id === ent.id && e.updated !== ent.updated
-      );
-      const heading = oldEntry
-        ? '**🙏App Storeに投稿されたレヴューが更新されまさした‼🙏**'
-        : '**🙏App Storeに新しいレヴューが届きまさした‼🙏**';
-      const content = `${heading}\n\n**${ent.title}**\n\`\`\`${ent.content[0]}\`\`\``;
-      const embeds: DiscordEmbed[] = [
-        {
-          fields: [
-            {
-              name: '評価',
-              value: new Array(5)
-                .fill('')
-                .map((_, i) => (i < ent['im:rating'] ? '★' : '☆'))
-                .join(''),
-            },
-            {
-              name: 'バージョン',
-              value: ent['im:version'],
-            },
-            {
-              name: '投稿者',
-              value: ent.author.name,
-            },
-            {
-              name: '最終更新',
-              value: dayjs(ent.updated).format('YYYY/MM/DD'),
-            },
-            {
-              name: 'レビューID',
-              value: ent.id.toString(),
-            },
-          ],
-        },
-      ];
-
-      return { content, embeds };
-    });
-
-    reviewsBodyArray.forEach(async (r) => {
-      const body = JSON.stringify(r);
-      await fetch(whUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-    });
-
-    await appStoreReviewsDocRef.update({
-      notifiedEntryFeeds: [
-        ...notifiedFeeds,
-        ...rssEntries.map((feed) => ({
-          id: feed.id,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        })),
-      ],
-    });
-  }
-);
 
 exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (!req.auth) {
@@ -142,57 +34,61 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const ssmlEn: string | undefined = req.data.ssmlEn
+  const ssmlEn: string | undefined = normalizeRomanText(req.data.ssmlEn)
     // Airport Terminal 1･2等
-    .replaceAll('･', ' ')
+    .replace(/･/g, ' ')
     // Otsuka・Teikyo-Daigakuなど
-    .replaceAll('・', ' ')
+    .replace(/・/g, ' ')
+    // 環状運転の場合に & が含まれる可能性があるため置換
+    .replace(/&/g, 'and')
     // 全角記号
-    .replaceAll(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
-    // Meiji-jingumae `Harajuku`
-    .replaceAll('`', '')
-    // 日本語はjoを「ホ」と読まない
-    .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʑo">jo</phoneme>')
-    // 一丁目で終わる駅は全体の駅名を入れないと不自然な発音になる
-    .replaceAll(
-      'Aoyama-itchome',
-      `<phoneme alphabet="ipa" ph="aojama-ɪtʃoome">Aoyama-itchome</phoneme>`
-    )
-    .replaceAll(
-      'Ginza-itchome',
-      `<phoneme alphabet="ipa" ph="ɡʲiNdza-ɪtʃoome">Ginza-itchome</phoneme>`
-    )
-    .replaceAll(
-      'Roppongi-itchome',
-      `<phoneme alphabet="ipa" ph="ɾopoNɡʲi-ɪtʃoome">Roppongi-itchome</phoneme>`
+    .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
+    // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
+    .replace(/`/g, '')
+    // 一丁目で終わる駅
+    .replace(
+      /\-itchome/gi,
+      `<phoneme alphabet="ipa" ph="itt͡ɕoːme">いっちょうめ</phoneme>`
     )
     // 新宿三丁目など
-    .replaceAll(
-      '-sanchome',
-      ' <phoneme alphabet="ipa" ph="santʃome">sanchome</phoneme>'
+    .replace(
+      /\-sanchome/gi,
+      ' <phoneme alphabet="ipa" ph="sant͡ɕoːme">さんちょうめ</phoneme>'
     )
     // 宇部
-    .replaceAll(/ube/gi, '<phoneme alphabet="ipa" ph="ube">Ube</phoneme>')
+    .replace(/Ube/gi, '<phoneme alphabet="ipa" ph="ɯbe">うべ</phoneme>')
     // 伊勢崎
-    .replaceAll(
-      /isesaki/gi,
-      '<phoneme alphabet="ipa" ph="isesaki">Isesaki</phoneme>'
+    .replace(
+      /Isesaki/gi,
+      '<phoneme alphabet="ipa" ph="isesakʲi">いせさき</phoneme>'
     )
+    // 目白
+    .replace(/Mejiro/gi, '<phoneme alphabet="ipa" ph="meʤiɾo">めじろ</phoneme>')
     // カイセイ対策
-    .replaceAll(
-      /keisei/gi,
-      '<phoneme alphabet="ipa" ph="keisei">Keisei</phoneme>'
+    .replace(
+      /Keisei/gi,
+      '<phoneme alphabet="ipa" ph="keisei">けいせい</phoneme>'
     )
     // 押上
-    .replaceAll(
-      /oshiage/gi,
-      `<phoneme alphabet="ipa" ph="'oɕiaɡe">Oshiage</phoneme>`
+    .replace(
+      /Oshiage/gi,
+      `<phoneme alphabet="ipa" ph="'oɕiaɡe">おしあげ</phoneme>`
     )
     // 名鉄
-    .replaceAll(
-      /meitetsu/gi,
-      '<phoneme alphabet="ipa" ph="me.itetsɯ">Meitetsu</phoneme>'
-    );
+    .replace(
+      /Meitetsu/gi,
+      '<phoneme alphabet="ipa" ph="meitetsɯ">めいてつ</phoneme>'
+    )
+    // 西武
+    .replace(/Seibu/gi, '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>')
+    // 取手駅
+    .replace(
+      /Toride/gi,
+      '<phoneme alphabet="ipa" ph="toɾʲide">とりで</phoneme>'
+    )
+    // 日本語はjoを「ホ」と読まない
+    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
+    .replace(/JR/g, 'J-R');
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
@@ -201,9 +97,8 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const isPremium = req.data.premium;
-  const jaVoiceName = isPremium ? 'ja-JP-Neural2-B' : 'ja-JP-Standard-B';
-  const enVoiceName = isPremium ? 'en-US-Neural2-G' : 'en-US-Standard-G';
+  const jaVoiceName = 'ja-JP-Standard-B';
+  const enVoiceName = 'en-US-Standard-G';
 
   const voicesCollection = firestore
     .collection('caches')
@@ -286,7 +181,6 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   cacheTopic.publishMessage({
     json: {
       id,
-      isPremium,
       jaAudioContent,
       enAudioContent,
       ssmlJa,
@@ -302,7 +196,6 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
 exports.ttsCachePubSub = onMessagePublished('tts-cache', async (event) => {
   const {
     id,
-    // isPremium,
     jaAudioContent,
     enAudioContent,
     ssmlJa,

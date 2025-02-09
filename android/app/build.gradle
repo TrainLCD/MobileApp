@@ -124,13 +124,13 @@ android {
       applicationIdSuffix ".dev"
       versionNameSuffix "-dev"
       // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-      versionCode 80400070
-      versionName "8.4.0"
+      versionCode 80500160
+      versionName "8.5.0"
     }
     prod {
       dimension "environment"
-      versionCode 80400000
-      versionName "8.4.0"
+      versionCode 80500020
+      versionName "8.5.0"
     }
   }
 }
@@ -157,11 +157,11 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation("com.google.android.gms:play-services-wearable:18.0.0")
-    implementation("androidx.activity:activity-ktx:1.6.0")
-    implementation("androidx.compose.runtime:runtime:1.3.3")
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
+    implementation("androidx.activity:activity-ktx:1.10.0")
+    implementation("androidx.compose.runtime:runtime:1.7.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

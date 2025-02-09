@@ -23,7 +23,7 @@ struct RootView: View {
         .multilineTextAlignment(.center)
         .font(.title2)
       if let stationNumber = station.stationNumber {
-        Text("(\(stationNumber))")
+        Text(stationNumber)
           .multilineTextAlignment(.center)
           .font(.caption)
       } else {

@@ -5,6 +5,7 @@ export {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from './duration';
+export { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from './feedback';
 export { FONTS } from './fonts';
 export { DEV_APP_BUNDLE_IDENTIFIER } from './ident';
 export {
@@ -33,7 +34,6 @@ export {
   japaneseRegexp,
   parenthesisRegexp,
 } from './regexp';
-export { REMOTE_CONFIG_KEYS } from './remoteConfig';
 export { STATION_NAME_FONT_SIZE } from './size';
 export { STATUS_URL } from './social';
 export { RECOIL_STATES } from './state';

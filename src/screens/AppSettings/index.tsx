@@ -43,13 +43,17 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
+  bgTTSNotice: {
+    marginTop: 12,
+    fontWeight: 'bold',
+    fontSize: RFValue(12),
+    lineHeight: RFValue(18),
+  },
 });
 
 const AppSettingsScreen: React.FC = () => {
-  const [
-    { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
-    setSpeechState,
-  ] = useRecoilState(speechState);
+  const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
+    useRecoilState(speechState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const navigation = useNavigation();
@@ -62,19 +66,16 @@ const AppSettingsScreen: React.FC = () => {
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
-      const ttsNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_TTS_NOTICE
+      const noticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.TTS_NOTICE
       );
-      if (flag && ttsNoticeConfirmed === null) {
+      if (flag && noticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
           {
             text: translate('doNotShowAgain'),
             style: 'cancel',
             onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.QA_TTS_NOTICE,
-                'true'
-              );
+              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true');
             },
           },
           {
@@ -95,23 +96,32 @@ const AppSettingsScreen: React.FC = () => {
     [setSpeechState]
   );
 
-  const onLosslessAudioEnabledValueChange = useCallback(
-    async (flag: boolean) => {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
-        flag ? 'true' : 'false'
-      );
-      setSpeechState((prev) => ({
-        ...prev,
-        losslessEnabled: flag,
-      }));
-    },
-    [setSpeechState]
-  );
   const onBackgroundAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
+      const noticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
+      );
+
+      if (flag && noticeConfirmed === null) {
+        Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
+                'true'
+              );
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ]);
+      }
+
       await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED,
+        ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
         flag ? 'true' : 'false'
       );
       setSpeechState((prev) => ({
@@ -122,11 +132,11 @@ const AppSettingsScreen: React.FC = () => {
     [setSpeechState]
   );
 
-  const toThemeSettings = () => navigation.navigate('ThemeSettings');
+  const toThemeSettings = () => navigation.navigate('ThemeSettings' as never);
   const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings');
+    navigation.navigate('EnabledLanguagesSettings' as never);
 
-  const toTuning = () => navigation.navigate('TuningSettings');
+  const toTuning = () => navigation.navigate('TuningSettings' as never);
 
   return (
     <>
@@ -161,63 +171,40 @@ const AppSettingsScreen: React.FC = () => {
               {translate('autoAnnounceItemTitle')}
             </Typography>
           </View>
-          {isDevApp && speechEnabled ? (
-            <>
-              <View
-                style={[
-                  styles.settingItem,
-                  {
-                    flexDirection: 'row',
-                    marginTop: 8,
-                  },
-                ]}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={losslessEnabled}
-                    onValueChange={onLosslessAudioEnabledValueChange}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={losslessEnabled}
-                    onValueChange={onLosslessAudioEnabledValueChange}
-                  />
-                )}
-                <Typography style={styles.settingsItemHeading}>
-                  {translate('autoAnnounceLosslessTitle')}
-                </Typography>
-              </View>
-
-              <View
-                style={[
-                  styles.settingItem,
-                  {
-                    flexDirection: 'row',
-                    marginTop: 8,
-                  },
-                ]}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={backgroundEnabled}
-                    onValueChange={onBackgroundAudioEnabledValueChange}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={backgroundEnabled}
-                    onValueChange={onBackgroundAudioEnabledValueChange}
-                  />
-                )}
-                <Typography style={styles.settingsItemHeading}>
-                  {translate('autoAnnounceBackgroundTitle')}
-                </Typography>
-              </View>
-            </>
+          {speechEnabled ? (
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                  marginTop: 8,
+                },
+              ]}
+            >
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              )}
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceBackgroundTitle')}
+              </Typography>
+            </View>
           ) : null}
+
+          {speechEnabled && backgroundEnabled && (
+            <Typography style={styles.bgTTSNotice}>
+              {translate('bgTtsAlertText')}
+            </Typography>
+          )}
         </View>
 
         <View style={styles.settingItemList}>

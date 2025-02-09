@@ -12,6 +12,7 @@ import {
 } from '../constants';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import useCurrentTrainType from './useCurrentTrainType';
@@ -56,7 +57,6 @@ export const useLoopLine = () => {
     if (isYamanoteLine) {
       return YAMANOTE_LINE_MAJOR_STATIONS_ID;
     }
-
     if (isOsakaLoopLine) {
       return OSAKA_LOOP_LINE_MAJOR_STATIONS_ID;
     }
@@ -69,7 +69,11 @@ export const useLoopLine = () => {
   }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, line]);
 
   const isLoopLine = useMemo((): boolean => {
-    if (!line || trainType || (fromBuilder && !isOnlyLoopLine)) {
+    if (
+      !line ||
+      (trainType && !getIsLocal(trainType)) ||
+      (fromBuilder && !isOnlyLoopLine)
+    ) {
       return false;
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
@@ -93,17 +97,21 @@ export const useLoopLine = () => {
       return [];
     }
 
-    const currentStationIndexInBounds = [station.groupId, ...majorStationIds]
-      .sort((a, b) => b - a)
-      .findIndex((id) => id === station.groupId);
+    const reversedStations = stations.slice().reverse();
+
+    const currentStationIndex = reversedStations.findIndex(
+      (s) => s.id === station.id
+    );
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const majorStations = [...stations, ...stations]
-      .slice()
-      .reverse()
+    const majorStations = [
+      ...reversedStations.slice(currentStationIndex),
+      ...reversedStations.slice(0, currentStationIndex),
+    ]
       .filter((s) => majorStationIds.includes(s.id))
-      .slice(currentStationIndexInBounds)
-      .filter((s) => s.groupId !== station.groupId);
+      .filter((s) => s.id !== station.id)
+      .filter((s, i, a) => a.findIndex((e) => e.id === s.id) === i);
+
     return majorStations.slice(0, 2);
   }, [isLoopLine, line, majorStationIds, station, stations]);
 
@@ -112,15 +120,17 @@ export const useLoopLine = () => {
       return [];
     }
 
-    const currentStationIndexInBounds = [station.groupId, ...majorStationIds]
-      .sort((a, b) => a - b)
-      .findIndex((id) => id === station.groupId);
+    const currentStationIndex = stations.findIndex((s) => s.id === station.id);
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const majorStations = [...stations, ...stations]
+    const majorStations = [
+      ...stations.slice(currentStationIndex),
+      ...stations.slice(0, currentStationIndex),
+    ]
       .filter((s) => majorStationIds.includes(s.id))
-      .slice(currentStationIndexInBounds)
-      .filter((s) => s.groupId !== station.groupId);
+      .filter((s) => s.id !== station.id)
+      .filter((s, i, a) => a.findIndex((e) => e.id === s.id) === i);
+
     return majorStations.slice(0, 2);
   }, [isLoopLine, line, majorStationIds, station, stations]);
 

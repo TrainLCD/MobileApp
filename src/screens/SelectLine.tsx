@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSetRecoilState } from 'recoil';
@@ -9,7 +10,11 @@ import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import Loading from '../components/Loading';
-import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants';
+import {
+  ASYNC_STORAGE_KEYS,
+  LOCATION_TASK_NAME,
+  parenthesisRegexp,
+} from '../constants';
 import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
 import useConnectivity from '../hooks/useConnectivity';
 import { useCurrentStation } from '../hooks/useCurrentStation';
@@ -70,6 +75,17 @@ const SelectLineScreen: React.FC = () => {
   } = useFetchCurrentLocationOnce();
   const station = useCurrentStation();
   const locationState = useLocationStore();
+
+  useEffect(() => {
+    const stopLocationUpdatesAsync = async () => {
+      const hasStartedLocationUpdates =
+        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStartedLocationUpdates) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    };
+    stopLocationUpdatesAsync();
+  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
