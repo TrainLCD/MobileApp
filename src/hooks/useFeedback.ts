@@ -123,7 +123,7 @@ export const useFeedback = (
         updatedAt: new Date().getTime(),
       };
 
-      fetch(API_URL, {
+      const res = await fetch(API_URL, {
         headers: {
           'content-type': 'application/json; charset=UTF-8',
           Authorization: `Bearer ${idToken}`,
@@ -131,6 +131,10 @@ export const useFeedback = (
         body: JSON.stringify({ data: { report } }),
         method: 'POST',
       });
+
+      if (!res.ok) {
+        throw new Error(`フィードバックの送信に失敗しました: ${res.status}`);
+      }
     },
     [user]
   );
