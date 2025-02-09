@@ -36,54 +36,52 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
 
   const ssmlEn: string | undefined = normalizeRomanText(req.data.ssmlEn)
     // Airport Terminal 1･2等
-    .replaceAll('･', ' ')
+    .replace(/･/g, ' ')
     // Otsuka・Teikyo-Daigakuなど
-    .replaceAll('・', ' ')
+    .replace(/・/g, ' ')
     // 全角記号
-    .replaceAll(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
+    .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // Meiji-jingumae `Harajuku`
-    .replaceAll('`', '')
+    .replace(/`/g, '')
     // 一丁目で終わる駅
-    .replaceAll(
-      '-itchome',
+    .replace(
+      /\-itchome/gi,
       `<phoneme alphabet="ipa" ph="itt͡ɕoːme">いっちょうめ</phoneme>`
     )
     // 新宿三丁目など
-    .replaceAll(
-      '-sanchome',
+    .replace(
+      /\-sanchome/gi,
       ' <phoneme alphabet="ipa" ph="sant͡ɕoːme">さんちょうめ</phoneme>'
     )
     // 宇部
-    .replaceAll('Ube', '<phoneme alphabet="ipa" ph="ɯbe">うべ</phoneme>')
+    .replace(/Ube/gi, '<phoneme alphabet="ipa" ph="ɯbe">うべ</phoneme>')
     // 伊勢崎
-    .replaceAll(
-      'Isesaki',
+    .replace(
+      /Isesaki/gi,
       '<phoneme alphabet="ipa" ph="isesakʲi">いせさき</phoneme>'
     )
     // 目白
-    .replaceAll(
-      'Mejiro',
-      '<phoneme alphabet="ipa" ph="meʤiɾo">めじろ</phoneme>'
-    )
+    .replace(/Mejiro/gi, '<phoneme alphabet="ipa" ph="meʤiɾo">めじろ</phoneme>')
     // カイセイ対策
-    .replaceAll(
-      'Keisei',
+    .replace(
+      /Keisei/gi,
       '<phoneme alphabet="ipa" ph="keisei">けいせい</phoneme>'
     )
     // 押上
-    .replaceAll(
-      'Oshiage',
+    .replace(
+      /Oshiage/gi,
       `<phoneme alphabet="ipa" ph="'oɕiaɡe">おしあげ</phoneme>`
     )
     // 名鉄
-    .replaceAll(
-      'Meitetsu',
+    .replace(
+      /Meitetsu/gi,
       '<phoneme alphabet="ipa" ph="meitetsɯ">めいてつ</phoneme>'
     )
     // 西武
-    .replaceAll('Seibu', '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>')
+    .replace(/Seibu/gi, '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>')
     // 日本語はjoを「ホ」と読まない
-    .replaceAll(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>');
+    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
+    .replace(/JR/g, 'J-R');
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
