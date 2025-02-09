@@ -106,10 +106,8 @@ const useTTSText = (
   const boundForJa = useMemo(
     () =>
       isLoopLine
-        ? replaceJapaneseText(
-            loopLineBoundJa?.boundFor,
-            loopLineBoundJa?.boundForKatakana
-          )
+        ? // NOTE: メジャーな駅だからreplaceJapaneseTextは要らない...はず
+          loopLineBoundJa?.boundFor?.replace(/・/g, '<break time="250ms"/>')
         : replaceJapaneseText(
             `${directionalStops?.map((s) => s?.name).join('・')}${
               isPartiallyLoopLine ? '方面' : ''
@@ -123,7 +121,6 @@ const useTTSText = (
       isLoopLine,
       isPartiallyLoopLine,
       loopLineBoundJa?.boundFor,
-      loopLineBoundJa?.boundForKatakana,
       replaceJapaneseText,
     ]
   );
@@ -689,7 +686,7 @@ const useTTSText = (
                   connectedLines[0]?.nameRoman
                     ? `on the ${connectedLines[0]?.nameRoman}`
                     : ''
-                } to ${selectedBound?.nameRoman}. `
+                } to ${boundForEn}. `
               : ''
           }The next station is ${
             nextStation?.nameRoman
