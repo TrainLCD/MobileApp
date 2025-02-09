@@ -5,6 +5,7 @@ export {
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
 } from './duration';
+export { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from './feedback';
 export { FONTS } from './fonts';
 export { DEV_APP_BUNDLE_IDENTIFIER } from './ident';
 export {

@@ -1,7 +1,6 @@
 import { TransportProvider } from '@connectrpc/connect-query';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
-import remoteConfig from '@react-native-firebase/remote-config';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   type StackNavigationOptions,
@@ -55,7 +54,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      await remoteConfig().fetchAndActivate();
       setI18nConfig();
 
       const locationServicesEnabled = await Location.hasServicesEnabledAsync();
