@@ -39,9 +39,11 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/･/g, ' ')
     // Otsuka・Teikyo-Daigakuなど
     .replace(/・/g, ' ')
+    // 環状運転の場合に & が含まれる可能性があるため置換
+    .replace(/&/g, 'and')
     // 全角記号
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
-    // Meiji-jingumae `Harajuku`
+    // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
     .replace(/`/g, '')
     // 一丁目で終わる駅
     .replace(
