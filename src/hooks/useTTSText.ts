@@ -142,7 +142,10 @@ const useTTSText = (
       return '';
     }
 
-    const split = nextStationNumber.stationNumber?.split('-');
+    if (!nextStationNumber?.stationNumber) {
+      return '';
+    }
+    const split = nextStationNumber.stationNumber.split('-');
 
     if (!split.length) {
       return '';
