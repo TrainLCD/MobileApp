@@ -46,7 +46,7 @@ const HeaderJRWest: React.FC = () => {
   const headerLangState = useMemo(
     () =>
       headerState.split('_')[1]?.length
-        ? headerState.split('_')[1]
+        ? (headerState.split('_')[1] as HeaderLangState)
         : ('JA' as HeaderLangState),
     [headerState]
   );

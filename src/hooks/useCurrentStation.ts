@@ -17,13 +17,8 @@ export const useCurrentStation = (
 
   // NOTE: 選択した路線と現在の駅の路線を一致させる
   const station = useMemo(
-    () =>
-      stations.find(
-        (s) =>
-          s.groupId === stationFromState?.groupId ??
-          s.line?.id === selectedLine?.id
-      ),
-    [selectedLine?.id, stationFromState?.groupId, stations]
+    () => stations.find((s) => s.groupId === stationFromState?.groupId),
+    [stationFromState?.groupId, stations]
   );
 
   const withTrainTypeStation = useMemo(() => {
