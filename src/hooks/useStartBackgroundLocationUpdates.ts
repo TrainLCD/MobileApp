@@ -1,30 +1,53 @@
-import * as Location from 'expo-location'
-import { useEffect } from 'react'
-import { useRecoilValue } from 'recoil'
-import { autoModeEnabledSelector } from '../store/selectors/autoMode'
-import { translate } from '../translation'
-import { locationTaskName } from '../utils/locationTaskName'
+import * as Location from 'expo-location';
+import { useEffect } from 'react';
+import { LOCATION_TASK_NAME } from '../constants';
+import { translate } from '../translation';
+import { useApplicationFlagStore } from './useApplicationFlagStore';
+import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+import { setLocation } from './useLocationStore';
 
 export const useStartBackgroundLocationUpdates = () => {
-  const autoModeEnabled = useRecoilValue(autoModeEnabledSelector)
+  const bgPermGranted = useLocationPermissionsGranted();
 
   useEffect(() => {
+    const autoModeEnabled = useApplicationFlagStore.getState()?.autoModeEnabled;
     if (autoModeEnabled) {
-      return
+      return;
     }
-    Location.startLocationUpdatesAsync(locationTaskName, {
-      accuracy: Location.Accuracy.High,
-      activityType: Location.ActivityType.OtherNavigation,
-      foregroundService: {
-        notificationTitle: translate('bgAlertTitle'),
-        notificationBody: translate('bgAlertContent'),
-        killServiceOnDestroy: true,
-      },
-    })
+
+    let watchPositionSub: Location.LocationSubscription | null = null;
+
+    (async () => {
+      if (bgPermGranted) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
+          accuracy: Location.Accuracy.BestForNavigation,
+          // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+          // OtherNavigationは必須
+          activityType: Location.ActivityType.OtherNavigation,
+          timeInterval: 5000,
+          distanceInterval: 10,
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
+        });
+        return;
+      }
+      watchPositionSub = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 5000,
+          distanceInterval: 10,
+        },
+        setLocation
+      );
+    })();
 
     return () => {
-      Location.stopLocationUpdatesAsync(locationTaskName)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-}
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      watchPositionSub?.remove();
+    };
+  }, [bgPermGranted]);
+};

@@ -1,19 +1,19 @@
-import React from 'react'
+import React from 'react';
 import {
   Dimensions,
-  GestureResponderEvent,
+  type GestureResponderEvent,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
-} from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { translate } from '../translation'
-import Typography from './Typography'
+} from 'react-native';
+import { translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 interface Props {
-  onPress: (event: GestureResponderEvent) => void
-  text: string
-  warningLevel: 'URGENT' | 'WARNING' | 'INFO'
+  onPress: (event: GestureResponderEvent) => void;
+  text: string;
+  warningLevel: 'URGENT' | 'WARNING' | 'INFO';
 }
 
 const WarningPanel: React.FC<Props> = ({
@@ -24,19 +24,19 @@ const WarningPanel: React.FC<Props> = ({
   const borderColor = (() => {
     switch (warningLevel) {
       case 'URGENT':
-        return '#f62e36'
+        return '#f62e36';
       case 'WARNING':
-        return '#ff9500'
+        return '#ff9500';
       case 'INFO':
-        return '#00bb85'
+        return '#00bb85';
       default:
-        return '#00bb85'
+        return '#00bb85';
     }
-  })()
+  })();
 
   const styles = StyleSheet.create({
     root: {
-      width: Dimensions.get('window').width / 2,
+      width: Dimensions.get('screen').width / 2,
       backgroundColor: '#333',
       borderColor,
       borderLeftWidth: 16,
@@ -58,7 +58,7 @@ const WarningPanel: React.FC<Props> = ({
       fontSize: RFValue(12),
       color: '#fff',
     },
-  })
+  });
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
@@ -73,7 +73,7 @@ const WarningPanel: React.FC<Props> = ({
         </Typography>
       </View>
     </TouchableWithoutFeedback>
-  )
-}
+  );
+};
 
-export default React.memo(WarningPanel)
+export default React.memo(WarningPanel);

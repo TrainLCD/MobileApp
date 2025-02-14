@@ -15,7 +15,7 @@ const sendStationInfoToWatch = (payload: StationInfoPayload): Promise<void> => {
   if (Platform.OS !== 'android') {
     return Promise.resolve();
   }
-  return WearableModule.sendStationInfoToWatch(payload);
+  return WearableModule?.sendStationInfoToWatch(payload);
 };
 
 export default sendStationInfoToWatch;

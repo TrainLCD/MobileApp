@@ -1,20 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback } from 'react'
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilState } from 'recoil'
-import Button from '../../components/Button'
-import FAB from '../../components/FAB'
-import Heading from '../../components/Heading'
-import LEDThemeSwitch from '../../components/LEDThemeSwitch'
-import Typography from '../../components/Typography'
-import { ASYNC_STORAGE_KEYS } from '../../constants'
-import { useThemeStore } from '../../hooks/useThemeStore'
-import { APP_THEME } from '../../models/Theme'
-import speechState from '../../store/atoms/speech'
-import { translate } from '../../translation'
-import { isDevApp } from '../../utils/isDevApp'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { useRecoilState } from 'recoil';
+import Button from '../../components/Button';
+import FAB from '../../components/FAB';
+import Heading from '../../components/Heading';
+import LEDThemeSwitch from '../../components/LEDThemeSwitch';
+import Typography from '../../components/Typography';
+import { ASYNC_STORAGE_KEYS } from '../../constants';
+import { useThemeStore } from '../../hooks/useThemeStore';
+import { APP_THEME } from '../../models/Theme';
+import speechState from '../../store/atoms/speech';
+import { translate } from '../../translation';
+import { isDevApp } from '../../utils/isDevApp';
+import { RFValue } from '../../utils/rfValue';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -40,92 +40,103 @@ const styles = StyleSheet.create({
     width: '50%',
     alignSelf: 'center',
     alignItems: 'flex-start',
+    marginTop: 12,
     marginBottom: 8,
   },
-})
+  bgTTSNotice: {
+    marginTop: 12,
+    fontWeight: 'bold',
+    fontSize: RFValue(12),
+    lineHeight: RFValue(18),
+  },
+});
 
 const AppSettingsScreen: React.FC = () => {
-  const [
-    { enabled: speechEnabled, losslessEnabled, backgroundEnabled },
-    setSpeechState,
-  ] = useRecoilState(speechState)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
+    useRecoilState(speechState);
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation])
+  }, [navigation]);
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
-      const ttsNoticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.QA_TTS_NOTICE
-      )
-      if (flag && ttsNoticeConfirmed === null) {
+      const noticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.TTS_NOTICE
+      );
+      if (flag && noticeConfirmed === null) {
         Alert.alert(translate('notice'), translate('ttsAlertText'), [
           {
-            text: translate('dontShowAgain'),
+            text: translate('doNotShowAgain'),
             style: 'cancel',
             onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.QA_TTS_NOTICE,
-                'true'
-              )
+              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true');
             },
           },
           {
             text: 'OK',
           },
-        ])
+        ]);
       }
 
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
         flag ? 'true' : 'false'
-      )
+      );
       setSpeechState((prev) => ({
         ...prev,
         enabled: flag,
-      }))
+      }));
     },
     [setSpeechState]
-  )
+  );
 
-  const onLosslessAudioEnabledValueChange = useCallback(
-    async (flag: boolean) => {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_LOSSLESS_ENABLED,
-        flag ? 'true' : 'false'
-      )
-      setSpeechState((prev) => ({
-        ...prev,
-        losslessEnabled: flag,
-      }))
-    },
-    [setSpeechState]
-  )
   const onBackgroundAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
+      const noticeConfirmed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
+      );
+
+      if (flag && noticeConfirmed === null) {
+        Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
+                'true'
+              );
+            },
+          },
+          {
+            text: 'OK',
+          },
+        ]);
+      }
+
       await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.QA_BG_TTS_ENABLED,
+        ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
         flag ? 'true' : 'false'
-      )
+      );
       setSpeechState((prev) => ({
         ...prev,
         backgroundEnabled: flag,
-      }))
+      }));
     },
     [setSpeechState]
-  )
+  );
 
-  const toThemeSettings = () => navigation.navigate('ThemeSettings')
+  const toThemeSettings = () => navigation.navigate('ThemeSettings' as never);
   const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings')
+    navigation.navigate('EnabledLanguagesSettings' as never);
 
-  const toTuning = () => navigation.navigate('TuningSettings')
+  const toTuning = () => navigation.navigate('TuningSettings' as never);
 
   return (
     <>
@@ -160,63 +171,40 @@ const AppSettingsScreen: React.FC = () => {
               {translate('autoAnnounceItemTitle')}
             </Typography>
           </View>
-          {isDevApp && speechEnabled ? (
-            <>
-              <View
-                style={[
-                  styles.settingItem,
-                  {
-                    flexDirection: 'row',
-                    marginTop: 8,
-                  },
-                ]}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={losslessEnabled}
-                    onValueChange={onLosslessAudioEnabledValueChange}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={losslessEnabled}
-                    onValueChange={onLosslessAudioEnabledValueChange}
-                  />
-                )}
-                <Typography style={styles.settingsItemHeading}>
-                  {translate('autoAnnounceLosslessTitle')}
-                </Typography>
-              </View>
-
-              <View
-                style={[
-                  styles.settingItem,
-                  {
-                    flexDirection: 'row',
-                    marginTop: 8,
-                  },
-                ]}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={backgroundEnabled}
-                    onValueChange={onBackgroundAudioEnabledValueChange}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={backgroundEnabled}
-                    onValueChange={onBackgroundAudioEnabledValueChange}
-                  />
-                )}
-                <Typography style={styles.settingsItemHeading}>
-                  {translate('autoAnnounceBackgroundTitle')}
-                </Typography>
-              </View>
-            </>
+          {speechEnabled ? (
+            <View
+              style={[
+                styles.settingItem,
+                {
+                  flexDirection: 'row',
+                  marginTop: 8,
+                },
+              ]}
+            >
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={backgroundEnabled}
+                  onValueChange={onBackgroundAudioEnabledValueChange}
+                />
+              )}
+              <Typography style={styles.settingsItemHeading}>
+                {translate('autoAnnounceBackgroundTitle')}
+              </Typography>
+            </View>
           ) : null}
+
+          {speechEnabled && backgroundEnabled && (
+            <Typography style={styles.bgTTSNotice}>
+              {translate('bgTtsAlertText')}
+            </Typography>
+          )}
         </View>
 
         <View style={styles.settingItemList}>
@@ -240,7 +228,7 @@ const AppSettingsScreen: React.FC = () => {
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />
     </>
-  )
-}
+  );
+};
 
-export default React.memo(AppSettingsScreen)
+export default React.memo(AppSettingsScreen);

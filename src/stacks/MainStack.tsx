@@ -1,47 +1,48 @@
-import { createStackNavigator } from '@react-navigation/stack'
-import React, { useMemo } from 'react'
-import { useRecoilValue } from 'recoil'
-import ErrorScreen from '../components/ErrorScreen'
-import Permitted from '../components/Permitted'
-import useConnectivity from '../hooks/useConnectivity'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { useUnderMaintenance } from '../hooks/useUnderMaintenance'
-import { APP_THEME } from '../models/Theme'
-import AppSettings from '../screens/AppSettings'
-import ThemeSettings from '../screens/AppSettings/ThemeSettings'
-import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings'
-import Main from '../screens/Main'
-import NotificationSettings from '../screens/NotificationSettingsScreen'
-import SelectBound from '../screens/SelectBound'
-import SelectLine from '../screens/SelectLine'
-import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen'
-import TrainTypeSettings from '../screens/TrainTypeSettingsScreen'
-import stationState from '../store/atoms/station'
-import { translate } from '../translation'
+import { createStackNavigator } from '@react-navigation/stack';
+import React, { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import ErrorScreen from '../components/ErrorScreen';
+import Permitted from '../components/Permitted';
+import useConnectivity from '../hooks/useConnectivity';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { useUnderMaintenance } from '../hooks/useUnderMaintenance';
+import { APP_THEME } from '../models/Theme';
+import AppSettings from '../screens/AppSettings';
+import ThemeSettings from '../screens/AppSettings/ThemeSettings';
+import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
+import Main from '../screens/Main';
+import NotificationSettings from '../screens/NotificationSettingsScreen';
+import SelectBound from '../screens/SelectBound';
+import SelectLine from '../screens/SelectLine';
+import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen';
+import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
+import stationState from '../store/atoms/station';
+import { translate } from '../translation';
 
-const Stack = createStackNavigator()
+const Stack = createStackNavigator();
 
 const screenOptions = {
+  animation: 'none',
   headerShown: false,
-}
+};
 
 const MainStack: React.FC = () => {
-  const { station } = useRecoilValue(stationState)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const { station, selectedBound } = useRecoilValue(stationState);
 
-  const isUnderMaintenance = useUnderMaintenance()
-  const isInternetAvailable = useConnectivity()
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  const isUnderMaintenance = useUnderMaintenance();
+  const isInternetAvailable = useConnectivity();
 
   const optionsWithCustomStyle = useMemo(
     () => ({
-      animationEnabled: false,
       cardStyle: {
         opacity: 1,
         backgroundColor: isLEDTheme ? '#212121' : '#fff',
       },
     }),
     [isLEDTheme]
-  )
+  );
 
   if (isUnderMaintenance) {
     return (
@@ -50,7 +51,7 @@ const MainStack: React.FC = () => {
         title={translate('maintenanceTitle')}
         text={translate('maintenanceText')}
       />
-    )
+    );
   }
 
   if (!isInternetAvailable && !station) {
@@ -59,12 +60,15 @@ const MainStack: React.FC = () => {
         title={translate('errorTitle')}
         text={translate('offlineText')}
       />
-    )
+    );
   }
 
   return (
     <Permitted>
-      <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Navigator
+        screenOptions={screenOptions}
+        initialRouteName={selectedBound ? 'Main' : 'SelectLine'}
+      >
         <Stack.Screen
           options={optionsWithCustomStyle}
           name="SelectLine"
@@ -112,7 +116,7 @@ const MainStack: React.FC = () => {
         />
       </Stack.Navigator>
     </Permitted>
-  )
-}
+  );
+};
 
-export default React.memo(MainStack)
+export default React.memo(MainStack);

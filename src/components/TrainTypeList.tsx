@@ -1,13 +1,13 @@
-import React, { useCallback, useMemo } from 'react'
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Line, TrainType } from '../../gen/proto/stationapi_pb'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import { isJapanese } from '../translation'
-import Typography from './Typography'
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Line, TrainType } from '../../gen/proto/stationapi_pb';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import { isJapanese } from '../translation';
+import { RFValue } from '../utils/rfValue';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   cell: { padding: 12 },
@@ -19,71 +19,68 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
-})
+});
 
-const Separator = () => <View style={styles.separator} />
+const Separator = () => <View style={styles.separator} />;
 
 const ItemCell = ({
   item,
   onSelect,
 }: {
-  item: TrainType
-  onSelect: (item: TrainType) => void
+  item: TrainType;
+  onSelect: (item: TrainType) => void;
 }) => {
-  const currentLine = useCurrentLine()
+  const currentLine = useCurrentLine();
 
   const lines = useMemo(
     () =>
-      item.lines.reduce<Line[]>((acc, cur) => {
-        if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
-          return [...acc, cur]
-        }
+      item.lines
+        .reduce<Line[]>((acc, cur) => {
+          if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
+            return acc.concat(cur);
+          }
 
-        return acc
-      }, []),
-    [item.lines]
-  )
+          return acc;
+        }, [])
+        .filter((l) => l.id !== currentLine?.id),
+    [currentLine?.id, item.lines]
+  );
 
   const isAllSameType = useMemo(
     () =>
-      Array.from(new Set(lines.map((l) => l.trainType?.typeId))).length === 1,
-    [lines]
-  )
+      Array.from(new Set(item.lines.map((l) => l.trainType?.typeId))).length ===
+      1,
+    [item.lines]
+  );
 
-  if (lines.length === 1 || item.typeId === 0) {
+  if (!lines.length) {
     return (
       <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
         <Typography style={styles.stationNameText}>
-          {isJapanese
-            ? item.name
-            : `${currentLine?.nameRoman} ${item.nameRoman}`}
+          {isJapanese ? item.name : item.nameRoman}
         </Typography>
         <Typography style={styles.descriptionText}>
-          {isJapanese ? '直通運転なし' : ''}
+          {isJapanese ? '直通運転なし' : 'Not connected to other line'}
         </Typography>
       </TouchableOpacity>
-    )
+    );
   }
 
   if (isAllSameType) {
     return (
       <TouchableOpacity style={styles.cell} onPress={() => onSelect(item)}>
         <Typography style={styles.stationNameText}>
-          {isJapanese
-            ? item.name
-            : `${currentLine?.nameRoman} ${item.nameRoman}`}
+          {isJapanese ? item.name : item.nameRoman}
         </Typography>
         <Typography style={styles.descriptionText}>
+          {isJapanese ? '種別変更なし' : ''}{' '}
           {isJapanese
-            ? lines
-                .filter((l) => l.id !== currentLine?.id)
-                .map((l) => l.nameShort)
-                .join('・')
-            : lines.map((l) => l.nameRoman).join(', ')}
+            ? lines.map((l) => l?.nameShort).join('、')
+            : lines.map((l) => l.nameRoman ?? '').join(', ')}
           {isJapanese ? '直通' : ''}
         </Typography>
       </TouchableOpacity>
-    )
+    );
   }
 
   return (
@@ -94,9 +91,8 @@ const ItemCell = ({
       <Typography style={styles.descriptionText}>
         {isJapanese
           ? lines
-              .filter((l) => l.id !== currentLine?.id)
-              .map((l) => `${l.nameShort}${l.trainType?.name ?? ''}`)
-              .join('・')
+              .map((l) => `${l.nameShort}内${l.trainType?.name ?? ''}`)
+              .join('、')
           : lines
               .map(
                 (l) =>
@@ -107,36 +103,38 @@ const ItemCell = ({
               .join(', ')}
       </Typography>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 export const TrainTypeList = ({
   data,
   onSelect,
 }: {
-  data: TrainType[]
-  onSelect: (item: TrainType) => void
+  data: TrainType[];
+  onSelect: (item: TrainType) => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} />
+      return <ItemCell item={item} onSelect={onSelect} />;
     },
     [onSelect]
-  )
-  const keyExtractor = useCallback((item: TrainType) => item.id.toString(), [])
-  const { bottom: safeAreaBottom } = useSafeAreaInsets()
+  );
+  const keyExtractor = useCallback((item: TrainType) => item.id.toString(), []);
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   return (
     <FlatList
       initialNumToRender={data.length}
       style={{
+        width: '100%',
+        alignSelf: 'center',
         borderColor: isLEDTheme ? '#fff' : '#aaa',
         borderWidth: 1,
         flex: 1,
-        marginVertical: 24,
-        paddingBottom: safeAreaBottom + 24,
+        marginVertical: 12,
+        marginBottom: safeAreaBottom,
       }}
       data={data}
       renderItem={renderItem}
@@ -144,5 +142,5 @@ export const TrainTypeList = ({
       ItemSeparatorComponent={Separator}
       ListFooterComponent={Separator}
     />
-  )
-}
+  );
+};

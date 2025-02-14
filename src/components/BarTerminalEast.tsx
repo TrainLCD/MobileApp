@@ -1,22 +1,21 @@
-import React from 'react'
+import type React from 'react';
 import Svg, {
   Defs,
   LinearGradient,
   Path,
   Stop,
-  SvgProps,
-} from 'react-native-svg'
+  type SvgProps,
+} from 'react-native-svg';
 
 type Props = {
-  lineColor: string
-  hasTerminus: boolean
-} & SvgProps
+  lineColor: string;
+  hasTerminus: boolean;
+} & SvgProps;
 
 const BarTerminalEast: React.FC<Props> = (props: Props) => {
-  const { lineColor, hasTerminus } = props
+  const { lineColor, hasTerminus } = props;
   if (hasTerminus) {
     return (
-      // eslint-disable-next-line react/jsx-props-no-spreading
       <Svg viewBox="0 0 41.57 48" {...props}>
         <Defs>
           <LinearGradient
@@ -53,11 +52,10 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
           fill="url(#b)"
         />
       </Svg>
-    )
+    );
   }
 
   return (
-    // eslint-disable-next-line react/jsx-props-no-spreading
     <Svg viewBox="0 0 41.57 48" {...props}>
       <Defs>
         <LinearGradient
@@ -94,7 +92,7 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
         d="M0 24V0l20.79 12 20.78 12-20.78 12L0 48V24z"
       />
     </Svg>
-  )
-}
+  );
+};
 
-export default BarTerminalEast
+export default BarTerminalEast;

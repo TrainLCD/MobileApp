@@ -1,27 +1,26 @@
-import React, { useCallback, useMemo } from 'react'
-import { StyleSheet } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../../gen/proto/stationapi_pb'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import navigationState from '../store/atoms/navigation'
-import { isJapanese, translate } from '../translation'
-import isFullSizedTablet from '../utils/isFullSizedTablet'
-import isTablet from '../utils/isTablet'
-import LineBoardEast from './LineBoardEast'
-import LineBoardJO from './LineBoardJO'
-import LineBoardLED from './LineBoardLED'
-import LineBoardSaikyo from './LineBoardSaikyo'
-import LineBoardToei from './LineBoardToei'
-import LineBoardWest from './LineBoardWest'
-import LineBoardYamanotePad from './LineBoardYamanotePad'
-import Typography from './Typography'
+import React, { useCallback, useMemo } from 'react';
+import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRecoilValue } from 'recoil';
+import { StopCondition } from '../../gen/proto/stationapi_pb';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import navigationState from '../store/atoms/navigation';
+import { isJapanese, translate } from '../translation';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import LineBoardEast from './LineBoardEast';
+import LineBoardJO from './LineBoardJO';
+import LineBoardLED from './LineBoardLED';
+import LineBoardSaikyo from './LineBoardSaikyo';
+import LineBoardToei from './LineBoardToei';
+import LineBoardWest from './LineBoardWest';
+import LineBoardYamanotePad from './LineBoardYamanotePad';
+import Typography from './Typography';
 
 export interface Props {
-  hasTerminus?: boolean
+  hasTerminus?: boolean;
 }
 
 const styles = StyleSheet.create({
@@ -31,30 +30,30 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: RFValue(12),
   },
-})
+});
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
-  const theme = useThemeStore((state) => state)
-  const { leftStations } = useRecoilValue(navigationState)
-  const station = useCurrentStation()
-  const isLEDTheme = theme === APP_THEME.LED
+  const theme = useThemeStore((state) => state);
+  const { leftStations } = useRecoilValue(navigationState);
+  const station = useCurrentStation();
+  const isLEDTheme = theme === APP_THEME.LED;
 
   const slicedLeftStations = useMemo(
     () => leftStations.slice(0, 8),
     [leftStations]
-  )
+  );
 
   const currentStationIndex = useMemo(
     () =>
       slicedLeftStations.findIndex((s) => {
-        return s.groupId === station?.groupId
+        return s.groupId === station?.groupId;
       }),
     [slicedLeftStations, station?.groupId]
-  )
+  );
   const slicedLeftStationsForYamanote = useMemo(
     () => slicedLeftStations.slice(currentStationIndex, 8),
     [currentStationIndex, slicedLeftStations]
-  )
+  );
 
   const passStations = useMemo(
     () =>
@@ -64,12 +63,12 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           s.stopCondition === StopCondition.PartialStop
       ),
     [slicedLeftStations]
-  )
+  );
 
   const lineColors = useMemo(
     () => slicedLeftStations.map((s) => s.line?.color),
     [slicedLeftStations]
-  )
+  );
 
   // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る
   const Inner = useCallback(() => {
@@ -82,7 +81,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             hasTerminus={hasTerminus}
             lineColors={lineColors}
           />
-        )
+        );
       case APP_THEME.TOEI:
         return (
           <LineBoardToei
@@ -90,14 +89,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             hasTerminus={hasTerminus}
             lineColors={lineColors}
           />
-        )
+        );
       case APP_THEME.JR_WEST:
         return (
           <LineBoardWest
             lineColors={lineColors}
             stations={slicedLeftStations}
           />
-        )
+        );
       case APP_THEME.SAIKYO:
         return (
           <LineBoardSaikyo
@@ -105,24 +104,24 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             hasTerminus={hasTerminus}
             lineColors={lineColors}
           />
-        )
+        );
       case APP_THEME.YAMANOTE:
-        if (isFullSizedTablet) {
+        if (isTablet) {
           return (
             <LineBoardYamanotePad stations={slicedLeftStationsForYamanote} />
-          )
+          );
         }
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
-        )
+        );
       case APP_THEME.LED:
-        return <LineBoardLED />
+        return <LineBoardLED />;
       case APP_THEME.JO:
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
-        )
+        );
       default:
-        return null
+        return null;
     }
   }, [
     hasTerminus,
@@ -130,9 +129,9 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     slicedLeftStations,
     slicedLeftStationsForYamanote,
     theme,
-  ])
+  ]);
 
-  const { left: safeAreaLeft } = useSafeAreaInsets()
+  const { left: safeAreaLeft } = useSafeAreaInsets();
 
   return (
     <>
@@ -155,7 +154,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         </Typography>
       ) : null}
     </>
-  )
-}
+  );
+};
 
-export default React.memo(LineBoard)
+export default React.memo(LineBoard);

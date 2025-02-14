@@ -1,172 +1,235 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useRecoilValue } from 'recoil'
-import {
-  IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM,
-  parenthesisRegexp,
-} from '../constants'
-import { directionToDirectionName } from '../models/Bound'
-import stationState from '../store/atoms/station'
-import { isJapanese } from '../translation'
-import getIsPass from '../utils/isPass'
+import { useEffect, useMemo, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '../constants';
+import { directionToDirectionName } from '../models/Bound';
+import stationState from '../store/atoms/station';
+import { isJapanese } from '../translation';
+import getIsPass from '../utils/isPass';
 import {
   startLiveActivity,
   stopLiveActivity,
   updateLiveActivity,
-} from '../utils/native/ios/liveActivityModule'
-import useBounds from './useBounds'
-import { useCurrentStation } from './useCurrentStation'
-import useCurrentTrainType from './useCurrentTrainType'
-import useIsNextLastStop from './useIsNextLastStop'
-import useIsPassing from './useIsPassing'
-import { useLoopLine } from './useLoopLine'
-import { useNextStation } from './useNextStation'
-import usePreviousStation from './usePreviousStation'
-import useStationNumberIndexFunc from './useStationNumberIndexFunc'
+} from '../utils/native/ios/liveActivityModule';
+import useBounds from './useBounds';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import useCurrentTrainType from './useCurrentTrainType';
+import useIsNextLastStop from './useIsNextLastStop';
+import useIsPassing from './useIsPassing';
+import { useLoopLine } from './useLoopLine';
+import { useNextStation } from './useNextStation';
+import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 
 export const useUpdateLiveActivities = (): void => {
-  const [started, setStarted] = useState(false)
-  const { arrived, selectedBound, selectedDirection, approaching } =
-    useRecoilValue(stationState)
+  const [started, setStarted] = useState(false);
+  const {
+    arrived: arrivedFromState,
+    approaching: approachingFromState,
+    selectedBound,
+    selectedDirection,
+  } = useRecoilValue(stationState);
 
-  const previousStation = usePreviousStation()
-  const currentStation = useCurrentStation()
-  const stoppedCurrentStation = useCurrentStation(true)
-  const nextStation = useNextStation()
-  const { directionalStops } = useBounds()
-  const isNextLastStop = useIsNextLastStop()
-  const getStationNumberIndex = useStationNumberIndexFunc()
-  const trainType = useCurrentTrainType()
-  const { isLoopLine, isPartiallyLoopLine, isYamanoteLine, isOsakaLoopLine } =
-    useLoopLine()
-  const isPassing = useIsPassing()
+  const currentLine = useCurrentLine();
+  const previousStation = useCurrentStation(true);
+  const currentStation = useCurrentStation(false, true);
+  const nextStation = useNextStation();
+  const { directionalStops } = useBounds();
+  const isNextLastStop = useIsNextLastStop();
+  const getStationNumberIndex = useStationNumberIndexFunc();
+  const trainType = useCurrentTrainType();
+  const {
+    isLoopLine: isFullLoopLine,
+    isPartiallyLoopLine,
+    isYamanoteLine,
+    isOsakaLoopLine,
+  } = useLoopLine();
+  const isPassing = useIsPassing();
 
   const trainTypeName = useMemo(() => {
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
     // 英語だとInbound/Outboundとなり本質と違うので空の文字列を渡して表示しないようにしている
     // 名古屋市営地下鉄名城線は主要行き先を登録していないので、Clockwise/Counterclockwiseのままにしている
     if ((isYamanoteLine || isOsakaLoopLine) && !isJapanese) {
-      return ''
+      return '';
     }
-    if (selectedDirection && isLoopLine) {
-      return directionToDirectionName(currentStation?.line, selectedDirection)
+    if (selectedDirection && isFullLoopLine) {
+      return directionToDirectionName(currentStation?.line, selectedDirection);
     }
     if (isJapanese) {
       return (trainType?.name ?? '各駅停車')
         .replace(parenthesisRegexp, '')
-        .replace(/\n/, '')
+        .replace(/\n/, '');
     }
     return (trainType?.nameRoman ?? 'Local')
       .replace(parenthesisRegexp, '')
-      .replace(/\n/, '')
+      .replace(/\n/, '');
   }, [
     currentStation?.line,
-    isLoopLine,
+    isFullLoopLine,
     isOsakaLoopLine,
     isYamanoteLine,
     selectedDirection,
     trainType?.name,
     trainType?.nameRoman,
-  ])
+  ]);
 
   const boundStationName = useMemo(() => {
-    const jaSuffix = isLoopLine || isPartiallyLoopLine ? '方面' : ''
+    const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : '';
 
     return `${directionalStops
       .map((s) => (isJapanese ? s.name : s.nameRoman))
-      .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`
-  }, [directionalStops, isLoopLine, isPartiallyLoopLine])
+      .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
+  }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
 
   const boundStationNumber = useMemo(() => {
     return directionalStops
       .map((s) => {
-        const stationIndex = getStationNumberIndex(s)
-        return s?.stationNumbers?.[stationIndex]?.stationNumber
+        const stationIndex = getStationNumberIndex(s);
+        return s?.stationNumbers?.[stationIndex]?.stationNumber;
       })
-      .join('/')
-  }, [directionalStops, getStationNumberIndex])
+      .join('/');
+  }, [directionalStops, getStationNumberIndex]);
 
-  const activityState = useMemo(() => {
-    const stoppedStation = stoppedCurrentStation ?? previousStation
-    const passingStationName =
-      (isJapanese ? currentStation?.name : currentStation?.nameRoman) ?? ''
+  const stoppedStation = useMemo(
+    () =>
+      arrivedFromState && !approachingFromState && !getIsPass(currentStation)
+        ? currentStation
+        : previousStation,
+    [approachingFromState, arrivedFromState, currentStation, previousStation]
+  );
+  const stationName = useMemo(
+    () => (isJapanese ? stoppedStation?.name : stoppedStation?.nameRoman) ?? '',
+    [stoppedStation?.name, stoppedStation?.nameRoman]
+  );
 
-    const stoppedStationNumberingIndex = getStationNumberIndex(stoppedStation)
-    const currentStationNumberingIndex = getStationNumberIndex(
-      currentStation ?? undefined
-    )
-    const nextStationNumberingIndex = getStationNumberIndex(nextStation)
+  const nextStationName = useMemo(
+    () => (isJapanese ? nextStation?.name : nextStation?.nameRoman) ?? '',
+    [nextStation?.name, nextStation?.nameRoman]
+  );
 
-    return {
-      stationName: isJapanese
-        ? stoppedStation?.name ?? ''
-        : stoppedStation?.nameRoman ?? '',
-      nextStationName: isJapanese
-        ? nextStation?.name ?? ''
-        : nextStation?.nameRoman ?? '',
-      stationNumber:
-        stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
-          ?.stationNumber ?? '',
-      nextStationNumber:
-        nextStation?.stationNumbers?.[nextStationNumberingIndex]
-          ?.stationNumber ?? '',
-      approaching: !!(
-        approaching &&
-        !arrived &&
-        !getIsPass(nextStation ?? null)
-      ),
-      stopping: !!(arrived && currentStation && !getIsPass(currentStation)),
+  const stoppedStationNumberingIndex = useMemo(
+    () => getStationNumberIndex(stoppedStation ?? null),
+    [getStationNumberIndex, stoppedStation]
+  );
+  const stationNumber = useMemo(
+    () =>
+      stoppedStation?.stationNumbers?.[stoppedStationNumberingIndex]
+        ?.stationNumber ?? '',
+    [stoppedStation?.stationNumbers, stoppedStationNumberingIndex]
+  );
+
+  const nextStationNumberingIndex = useMemo(
+    () => getStationNumberIndex(nextStation ?? null),
+    [getStationNumberIndex, nextStation]
+  );
+  const nextStationNumber = useMemo(() => {
+    return (
+      nextStation?.stationNumbers?.[nextStationNumberingIndex]?.stationNumber ??
+      ''
+    );
+  }, [nextStation?.stationNumbers, nextStationNumberingIndex]);
+
+  const stopped = useMemo(
+    () => arrivedFromState && !isPassing,
+    [arrivedFromState, isPassing]
+  );
+
+  const lineColor = useMemo(
+    () => currentLine?.color ?? '#000000',
+    [currentLine?.color]
+  );
+  const lineName = useMemo(
+    () => (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ?? '',
+    [currentLine?.nameRoman, currentLine?.nameShort]
+  );
+
+  const passingStationName = useMemo(
+    () =>
+      !isPassing
+        ? ''
+        : ((isJapanese ? currentStation?.name : currentStation?.nameRoman) ??
+          ''),
+    [currentStation?.name, currentStation?.nameRoman, isPassing]
+  );
+
+  const currentStationNumberingIndex = useMemo(
+    () => getStationNumberIndex(currentStation ?? null),
+    [currentStation, getStationNumberIndex]
+  );
+
+  const passingStationNumber = useMemo(
+    () =>
+      !isPassing
+        ? ''
+        : (currentStation?.stationNumbers?.[currentStationNumberingIndex]
+            ?.stationNumber ?? ''),
+    [currentStation?.stationNumbers, currentStationNumberingIndex, isPassing]
+  );
+
+  const isLoopLine = useMemo(
+    () => isFullLoopLine || isPartiallyLoopLine,
+    [isFullLoopLine, isPartiallyLoopLine]
+  );
+
+  const approaching = useMemo(
+    () => approachingFromState,
+    [approachingFromState]
+  );
+
+  const activityState = useMemo(
+    () => ({
+      stationName,
+      nextStationName,
+      stationNumber,
+      nextStationNumber,
+      approaching,
+      stopped,
       boundStationName,
       boundStationNumber,
       trainTypeName,
-      passingStationName: isPassing ? passingStationName : '',
-      passingStationNumber: isPassing
-        ? currentStation?.stationNumbers[currentStationNumberingIndex]
-            ?.stationNumber ?? ''
-        : '',
-      isLoopLine: isLoopLine || isPartiallyLoopLine,
+      isLoopLine,
       isNextLastStop,
-    }
-  }, [
-    approaching,
-    arrived,
-    boundStationName,
-    boundStationNumber,
-    currentStation,
-    getStationNumberIndex,
-    isLoopLine,
-    isNextLastStop,
-    isPartiallyLoopLine,
-    isPassing,
-    nextStation,
-    previousStation,
-    stoppedCurrentStation,
-    trainTypeName,
-  ])
+      lineColor,
+      lineName,
+      passingStationName,
+      passingStationNumber,
+    }),
+    [
+      approaching,
+      boundStationName,
+      boundStationNumber,
+      isLoopLine,
+      isNextLastStop,
+      lineColor,
+      lineName,
+      nextStationName,
+      nextStationNumber,
+      passingStationName,
+      passingStationNumber,
+      stationName,
+      stationNumber,
+      stopped,
+      trainTypeName,
+    ]
+  );
 
   useEffect(() => {
-    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
-      return
+    if (selectedBound && !started) {
+      startLiveActivity(activityState);
+      setStarted(true);
     }
-    if (selectedBound && !started && activityState) {
-      startLiveActivity(activityState)
-      setStarted(true)
-    }
-  }, [activityState, selectedBound, started])
+  }, [activityState, selectedBound, started]);
 
   useEffect(() => {
-    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
-      return
-    }
-    if (!selectedBound) {
-      stopLiveActivity()
-      setStarted(false)
-    }
-  }, [selectedBound])
+    return () => {
+      stopLiveActivity();
+      setStarted(false);
+    };
+  }, []);
 
   useEffect(() => {
-    if (!IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
-      return
+    if (started) {
+      updateLiveActivity(activityState);
     }
-    updateLiveActivity(activityState)
-  }, [activityState])
-}
+  }, [activityState, started]);
+};

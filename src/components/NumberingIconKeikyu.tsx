@@ -1,13 +1,13 @@
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS } from '../constants'
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { FONTS } from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-}
+  stationNumber: string;
+  lineColor: string;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -38,28 +38,28 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 20 * 1.5 : 20,
     letterSpacing: -2,
   },
-})
+});
 
 const NumberingIconKeikyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('-')
-  const isIncludesSubNumber = stationNumber.includes('-')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('-');
+  const isIncludesSubNumber = stationNumber.includes('-');
   const stationNumberTextStyles = useMemo(() => {
     if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional]
+      return [styles.stationNumber, styles.longStationNumberAdditional];
     }
-    return styles.stationNumber
-  }, [isIncludesSubNumber])
+    return styles.stationNumber;
+  }, [isIncludesSubNumber]);
 
   return (
     <View style={[styles.root, { borderColor: lineColor }]}>
       <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
       <Typography style={stationNumberTextStyles}>{stationNumber}</Typography>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(NumberingIconKeikyu)
+export default React.memo(NumberingIconKeikyu);

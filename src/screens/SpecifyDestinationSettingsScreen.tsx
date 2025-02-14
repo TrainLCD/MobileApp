@@ -1,155 +1,82 @@
-import { Picker } from '@react-native-picker/picker'
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo } from 'react'
-import { BackHandler, StyleSheet, View } from 'react-native'
-import { useRecoilState } from 'recoil'
-import { Station, StopCondition } from '../../gen/proto/stationapi_pb'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import { LED_THEME_BG_COLOR } from '../constants'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import stationState from '../store/atoms/station'
-import { isJapanese, translate } from '../translation'
-import dropEitherJunctionStation from '../utils/dropJunctionStation'
+import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { BackHandler, StyleSheet, View } from 'react-native';
+import { useRecoilState } from 'recoil';
+import { type Station, StopCondition } from '../../gen/proto/stationapi_pb';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import { StationList } from '../components/StationList';
+import { useGetStationsWithTermination } from '../hooks/useGetStationsWithTermination';
+import stationState from '../store/atoms/station';
+import { translate } from '../translation';
+import dropEitherJunctionStation from '../utils/dropJunctionStation';
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 48,
     flex: 1,
-    paddingTop: 24,
+    paddingVertical: 12,
   },
-})
+  listContainer: {
+    flex: 1,
+    width: '65%',
+    alignSelf: 'center',
+  },
+});
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ wantedDestination, allStations }, setStationState] =
-    useRecoilState(stationState)
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
-  const station = useCurrentStation()
+  const [{ stations }, setStationState] = useRecoilState(stationState);
+  const getTerminatedStations = useGetStationsWithTermination();
 
   const stopStations = useMemo(
     () =>
-      dropEitherJunctionStation(allStations).filter(
+      dropEitherJunctionStation(stations).filter(
         (s) => s.stopCondition !== StopCondition.Not
       ),
-    [allStations]
-  )
+    [stations]
+  );
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
-  const items = useMemo(
-    () => [
-      {
-        label: translate('notSpecified'),
-        value: 0,
-      },
-      ...stopStations
-        .filter((s) => s.groupId !== station?.groupId)
-        .map((s) => ({
-          label: isJapanese ? s.name : s.nameRoman ?? '',
-          value: s.id,
-        })),
-    ],
-    [station?.groupId, stopStations]
-  )
-
-  const slicedStations = useMemo<Station[]>(() => {
-    if (!wantedDestination) {
-      return allStations
-    }
-
-    const destinationIndex = allStations.findIndex(
-      (s) => s.groupId === wantedDestination.groupId
-    )
-    const currentStationIndex = allStations.findIndex(
-      (s) => s.groupId === station?.groupId
-    )
-
-    if (currentStationIndex < destinationIndex) {
-      return allStations.slice(0, destinationIndex + 1)
-    }
-    return allStations.slice(destinationIndex)
-  }, [allStations, station?.groupId, wantedDestination])
-
-  const handlePressFAB = useCallback(() => {
-    if (!wantedDestination) {
+  const handleDestinationPress = useCallback(
+    (destination: Station) => {
       setStationState((prev) => ({
         ...prev,
-        wantedDestination: null,
-        stations: prev.allStations,
-      }))
+        wantedDestination: destination,
+        stations: getTerminatedStations(destination, stations),
+      }));
       if (navigation.canGoBack()) {
-        navigation.goBack()
+        navigation.goBack();
       }
-      return
-    }
+    },
+    [getTerminatedStations, navigation, setStationState, stations]
+  );
 
-    setStationState((prev) => ({
-      ...prev,
-      wantedDestination,
-      stations: slicedStations,
-    }))
-
+  const handlePressFAB = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation, setStationState, slicedStations, wantedDestination])
+  }, [navigation]);
 
   useEffect(() => {
     const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handlePressFAB()
-      return true
-    })
+      handlePressFAB();
+      return true;
+    });
     return (): void => {
-      handler.remove()
-    }
-  }, [handlePressFAB])
-
-  const handleDestinationChange = useCallback(
-    (trainTypeId: number) => {
-      if (trainTypeId === 0) {
-        setStationState((prev) => ({
-          ...prev,
-          wantedDestination: null,
-        }))
-        return
-      }
-
-      const wantedDestination = allStations.find((s) => s.id === trainTypeId)
-      if (wantedDestination) {
-        setStationState((prev) => ({
-          ...prev,
-          wantedDestination,
-        }))
-      }
-    },
-    [allStations, setStationState]
-  )
+      handler.remove();
+    };
+  }, [handlePressFAB]);
 
   return (
     <View style={styles.root}>
       <Heading>{translate('selectBoundSettings')}</Heading>
-      <Picker
-        selectedValue={wantedDestination?.id ?? 0}
-        onValueChange={(id) => handleDestinationChange(Number(id))}
-        dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
-      >
-        {items.map((it) => (
-          <Picker.Item
-            color={isLEDTheme ? '#fff' : '#000'}
-            style={{
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
-            }}
-            key={it.value}
-            label={it.label}
-            value={it.value}
-          />
-        ))}
-      </Picker>
-      <FAB onPress={handlePressFAB} icon="checkmark" />
+      <View style={styles.listContainer}>
+        <StationList data={stopStations} onSelect={handleDestinationPress} />
+      </View>
+      <FAB onPress={handlePressFAB} icon="close" />
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(SpecifyDestinationSettingsScreen)
+export default React.memo(SpecifyDestinationSettingsScreen);

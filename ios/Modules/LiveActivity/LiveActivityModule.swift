@@ -16,14 +16,16 @@ class LiveActivityModule: NSObject {
       stationNumber: state["stationNumber"] as? String ?? "",
       nextStationNumber: state["nextStationNumber"] as? String ?? "",
       approaching: state["approaching"] as? Bool ?? false,
-      stopping: state["stopping"] as? Bool ?? true,
+      stopped: state["stopped"] as? Bool ?? false,
       boundStationName: state["boundStationName"] as? String ?? "",
       boundStationNumber: state["boundStationNumber"] as? String ?? "",
-      trainTypeName: state["trainTypeName"] as? String ?? "",
       passingStationName: state["passingStationName"] as? String ?? "",
       passingStationNumber: state["passingStationNumber"] as? String ?? "",
+      trainTypeName: state["trainTypeName"] as? String ?? "",
       isLoopLine: state["isLoopLine"] as? Bool ?? false,
-      isNextLastStop: state["isNextLastStop"] as? Bool ?? false
+      isNextLastStop: state["isNextLastStop"] as? Bool ?? false,
+      lineColor: state["lineColor"] as? String ?? "#000000",
+      lineName: state["lineName"] as? String ?? ""
     )
   }
   
@@ -32,16 +34,38 @@ class LiveActivityModule: NSObject {
     if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
-
+    
     let activityAttributes = RideSessionAttributes()
+    
     guard let initialContentState = getStatus(dic) else {
       return
     }
+    
     do {
-      sessionActivity = try Activity.request(attributes: activityAttributes, contentState: initialContentState)
-      print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
-    } catch(let error) {
-      print("Error requesting ride session Live Activity \(error.localizedDescription).")
+      let finalContentState = getStatus(dic)
+      // 非同期処理をawaitで待機し、新規アクティビティの開始前に既存のアクティビティを確実に終了
+      Task {
+        // 既存のアクティビティを終了
+        do {
+          try await withThrowingTaskGroup(of: Void.self) { group in
+            for activity in Activity<RideSessionAttributes>.activities {
+              group.addTask {
+                await activity.end(using: finalContentState, dismissalPolicy: .immediate)
+              }
+            }
+            try await group.waitForAll()
+          }
+          // 既存アクティビティの終了を確認後、新規アクティビティを開始
+          sessionActivity = try Activity.request(
+            attributes: activityAttributes,
+            contentState: initialContentState
+          )
+          print("Requested a ride session Live Activity \(String(describing: sessionActivity?.id)).")
+        } catch {
+          print("Error in Live Activity cleanup/start: \(error.localizedDescription)")
+        }
+        
+      }
     }
   }
   
@@ -50,13 +74,13 @@ class LiveActivityModule: NSObject {
     if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
-
+    
     guard let nextContentState = getStatus(dic) else {
       return
     }
-   Task {
-     await sessionActivity?.update(using: nextContentState)
-   }
+    Task {
+      await sessionActivity?.update(using: nextContentState)
+    }
   }
   
   @objc(stopLiveActivity:)
@@ -64,7 +88,7 @@ class LiveActivityModule: NSObject {
     if ProcessInfo.processInfo.isiOSAppOnMac {
       return
     }
-
+    
     let finalContentState = getStatus(dic)
     Task {
       for activity in Activity<RideSessionAttributes>.activities {

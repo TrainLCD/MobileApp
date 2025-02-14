@@ -1,27 +1,28 @@
-import { LinearGradient } from 'expo-linear-gradient'
-import React, { useEffect, useMemo, useState } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilValue } from 'recoil'
-import { useBoundText } from '../hooks/useBoundText'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
-import useIsNextLastStop from '../hooks/useIsNextLastStop'
-import { useLoopLine } from '../hooks/useLoopLine'
-import { useNextStation } from '../hooks/useNextStation'
-import { useNumbering } from '../hooks/useNumbering'
-import { HeaderLangState } from '../models/HeaderTransitionState'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { translate } from '../translation'
-import isTablet from '../utils/isTablet'
-import katakanaToHiragana from '../utils/kanaToHiragana'
-import { getNumberingColor } from '../utils/numbering'
-import Clock from './Clock'
-import NumberingIcon from './NumberingIcon'
-import TrainTypeBoxJO from './TrainTypeBoxJO'
-import Typography from './Typography'
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { useRecoilValue } from 'recoil';
+import { STATION_NAME_FONT_SIZE } from '../constants';
+import { useBoundText } from '../hooks/useBoundText';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useIsNextLastStop from '../hooks/useIsNextLastStop';
+import { useLoopLine } from '../hooks/useLoopLine';
+import { useNextStation } from '../hooks/useNextStation';
+import { useNumbering } from '../hooks/useNumbering';
+import type { HeaderLangState } from '../models/HeaderTransitionState';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { translate } from '../translation';
+import isTablet from '../utils/isTablet';
+import katakanaToHiragana from '../utils/kanaToHiragana';
+import { getNumberingColor } from '../utils/numbering';
+import { RFValue } from '../utils/rfValue';
+import Clock from './Clock';
+import NumberingIcon from './NumberingIcon';
+import TrainTypeBoxJO from './TrainTypeBoxJO';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flex: 1,
     textAlign: 'center',
-    fontSize: RFValue(55),
+    fontSize: STATION_NAME_FONT_SIZE,
   },
   left: {
     flex: 0.3,
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
   clockOverride: {
     position: 'absolute',
     top: 8,
-    right: Dimensions.get('window').width * 0.25,
+    right: Dimensions.get('screen').width * 0.25,
   },
   stationNameContainer: {
     flexDirection: 'row',
@@ -95,37 +96,37 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 8,
   },
-})
+});
 
 type Props = {
-  isJO?: boolean
-}
+  isJO?: boolean;
+};
 
 const HeaderE235: React.FC<Props> = ({ isJO }) => {
-  const station = useCurrentStation()
-  const currentLine = useCurrentLine()
-  const nextStation = useNextStation()
+  const station = useCurrentStation();
+  const currentLine = useCurrentLine();
+  const nextStation = useNextStation();
 
-  const [stateText, setStateText] = useState(translate('nowStoppingAt'))
-  const [stationText, setStationText] = useState(station?.name || '')
-  const { headerState } = useRecoilValue(navigationState)
-  const { selectedBound, arrived } = useRecoilValue(stationState)
-  const isLast = useIsNextLastStop()
-  const trainType = useCurrentTrainType()
-  const boundStationNameList = useBoundText(true)
+  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
+  const [stationText, setStationText] = useState(station?.name || '');
+  const { headerState } = useRecoilValue(navigationState);
+  const { selectedBound, arrived } = useRecoilValue(stationState);
+  const isLast = useIsNextLastStop();
+  const trainType = useCurrentTrainType();
+  const boundStationNameList = useBoundText(true);
 
-  const { isLoopLine, isPartiallyLoopLine } = useLoopLine()
+  const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
 
   const headerLangState = useMemo(
     () =>
       headerState.split('_')[1]?.length
-        ? headerState.split('_')[1]
+        ? (headerState.split('_')[1] as HeaderLangState)
         : ('JA' as HeaderLangState),
     [headerState]
-  )
-  const boundText = boundStationNameList[headerLangState]
+  );
+  const boundText = boundStationNameList[headerLangState];
 
-  const [currentStationNumber, threeLetterCode] = useNumbering()
+  const [currentStationNumber, threeLetterCode] = useNumbering();
 
   const numberingColor = useMemo(
     () =>
@@ -136,11 +137,11 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
         currentLine
       ),
     [arrived, currentStationNumber, currentLine, nextStation]
-  )
+  );
 
   useEffect(() => {
     if (!station) {
-      return
+      return;
     }
 
     switch (headerState) {
@@ -148,84 +149,84 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
         if (nextStation) {
           setStateText(
             translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.name)
+          );
+          setStationText(nextStation.name);
         }
-        break
+        break;
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(
             translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
-          )
-          setStationText(katakanaToHiragana(nextStation.nameKatakana))
+          );
+          setStationText(katakanaToHiragana(nextStation.nameKatakana));
         }
-        break
+        break;
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(
             translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.nameRoman ?? '')
+          );
+          setStationText(nextStation.nameRoman ?? '');
         }
-        break
+        break;
       case 'ARRIVING_ZH':
         if (nextStation?.nameChinese) {
           setStateText(
             translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.nameChinese)
+          );
+          setStationText(nextStation.nameChinese);
         }
-        break
+        break;
       case 'ARRIVING_KO':
         if (nextStation?.nameKorean) {
           setStateText(
             translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.nameKorean)
+          );
+          setStationText(nextStation.nameKorean);
         }
-        break
+        break;
       case 'CURRENT':
-        setStateText(translate('nowStoppingAt'))
-        setStationText(station.name)
-        break
+        setStateText(translate('nowStoppingAt'));
+        setStationText(station.name);
+        break;
       case 'CURRENT_KANA':
-        setStateText(translate('nowStoppingAt'))
-        setStationText(katakanaToHiragana(station.nameKatakana))
-        break
+        setStateText(translate('nowStoppingAt'));
+        setStationText(katakanaToHiragana(station.nameKatakana));
+        break;
       case 'CURRENT_EN':
-        setStateText(translate('nowStoppingAtEn'))
-        setStationText(station.nameRoman ?? '')
-        break
+        setStateText(translate('nowStoppingAtEn'));
+        setStationText(station.nameRoman ?? '');
+        break;
       case 'CURRENT_ZH':
         if (!station.nameChinese) {
-          break
+          break;
         }
-        setStateText(translate('nowStoppingAtZh'))
-        setStationText(station.nameChinese)
-        break
+        setStateText(translate('nowStoppingAtZh'));
+        setStationText(station.nameChinese);
+        break;
       case 'CURRENT_KO':
         if (!station.nameKorean) {
-          break
+          break;
         }
-        setStateText(translate('nowStoppingAtKo'))
-        setStationText(station.nameKorean)
-        break
+        setStateText(translate('nowStoppingAtKo'));
+        setStationText(station.nameKorean);
+        break;
       case 'NEXT':
         if (nextStation) {
           setStateText(
             translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.name)
+          );
+          setStationText(nextStation.name);
         }
-        break
+        break;
       case 'NEXT_KANA':
         if (nextStation) {
           setStateText(
             translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
-          )
-          setStationText(katakanaToHiragana(nextStation.nameKatakana))
+          );
+          setStationText(katakanaToHiragana(nextStation.nameKatakana));
         }
-        break
+        break;
       case 'NEXT_EN':
         if (nextStation) {
           if (isLast) {
@@ -236,75 +237,75 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
               .map((letters, index) =>
                 !index ? letters : letters.toLowerCase()
               )
-              .join(' ')
-            setStateText(smallCapitalizedLast)
+              .join(' ');
+            setStateText(smallCapitalizedLast);
           } else {
-            setStateText(translate('nextEn').replace(/\n/, ' '))
+            setStateText(translate('nextEn').replace(/\n/, ' '));
           }
 
-          setStationText(nextStation.nameRoman ?? '')
+          setStationText(nextStation.nameRoman ?? '');
         }
-        break
+        break;
       case 'NEXT_ZH':
         if (nextStation?.nameChinese) {
           setStateText(
             translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.nameChinese)
+          );
+          setStationText(nextStation.nameChinese);
         }
-        break
+        break;
       case 'NEXT_KO':
         if (nextStation?.nameKorean) {
           setStateText(
             translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
-          )
-          setStationText(nextStation.nameKorean)
+          );
+          setStationText(nextStation.nameKorean);
         }
-        break
+        break;
       default:
-        break
+        break;
     }
-  }, [headerState, isLast, nextStation, station])
+  }, [headerState, isLast, nextStation, station]);
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return isLoopLine ? 'Bound for' : 'for'
+        return isLoopLine ? 'Bound for' : 'for';
       case 'ZH':
-        return '开往'
+        return '开往';
       default:
-        return ''
+        return '';
     }
-  }, [headerLangState, isLoopLine])
+  }, [headerLangState, isLoopLine]);
   const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return ''
+        return '';
       case 'ZH':
-        return ''
+        return '';
       case 'KO':
-        return isLoopLine || isPartiallyLoopLine ? '방면' : '행'
+        return isLoopLine || isPartiallyLoopLine ? '방면' : '행';
       default:
-        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき'
+        return isLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき';
     }
-  }, [headerLangState, isLoopLine, isPartiallyLoopLine])
+  }, [headerLangState, isLoopLine, isPartiallyLoopLine]);
 
   const boundContainerMarginTop = useMemo(() => {
     if (!isJO) {
-      return 0
+      return 0;
     }
     if (isTablet) {
-      return 85
+      return 85;
     }
-    return 55
-  }, [isJO])
+    return 55;
+  }, [isJO]);
 
   const boundFontSize = useMemo(() => {
     if (isJO) {
-      return RFValue(20)
+      return RFValue(20);
     }
-    return RFValue(25)
-  }, [isJO])
+    return RFValue(25);
+  }, [isJO]);
 
   return (
     <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
@@ -357,7 +358,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       <View
         style={{
           ...styles.colorBar,
-          backgroundColor: currentLine ? currentLine.color ?? '#000' : '#aaa',
+          backgroundColor: currentLine ? (currentLine.color ?? '#000') : '#aaa',
         }}
       />
       <View style={styles.right}>
@@ -383,7 +384,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
       </View>
       <Clock white style={styles.clockOverride} />
     </LinearGradient>
-  )
-}
+  );
+};
 
-export default React.memo(HeaderE235)
+export default React.memo(HeaderE235);

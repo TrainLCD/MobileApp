@@ -1,30 +1,29 @@
-import { LinearGradient } from 'expo-linear-gradient'
-import React, { useCallback, useMemo } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRecoilValue } from 'recoil'
-import { StopCondition } from '../../gen/proto/stationapi_pb'
-import { parenthesisRegexp } from '../constants'
-import { useCurrentLine } from '../hooks/useCurrentLine'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import useCurrentTrainType from '../hooks/useCurrentTrainType'
-import useNextLine from '../hooks/useNextLine'
-import useNextTrainType from '../hooks/useNextTrainType'
-import { useThemeStore } from '../hooks/useThemeStore'
-import stationState from '../store/atoms/station'
-import isTablet from '../utils/isTablet'
-import { getIsLocal } from '../utils/trainTypeString'
-import truncateTrainType from '../utils/truncateTrainType'
-import BarTerminalEast from './BarTerminalEast'
-import BarTerminalSaikyo from './BarTerminalSaikyo'
-import Typography from './Typography'
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { useRecoilValue } from 'recoil';
+import { StopCondition } from '../../gen/proto/stationapi_pb';
+import { parenthesisRegexp } from '../constants';
+import { useCurrentLine } from '../hooks/useCurrentLine';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
+import useNextLine from '../hooks/useNextLine';
+import useNextTrainType from '../hooks/useNextTrainType';
+import { useThemeStore } from '../hooks/useThemeStore';
+import stationState from '../store/atoms/station';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import { getIsLocal } from '../utils/trainTypeString';
+import truncateTrainType from '../utils/truncateTrainType';
+import BarTerminalEast from './BarTerminalEast';
+import BarTerminalSaikyo from './BarTerminalSaikyo';
+import Typography from './Typography';
 
-const { width: windowWidth } = Dimensions.get('window')
-const edgeOffset = isTablet ? 100 : 70
-const barWidth = windowWidth / 2 - edgeOffset
+const { width: screenWidth } = Dimensions.get('screen');
+const edgeOffset = isTablet ? 100 : 70;
+const barWidth = screenWidth / 2 - edgeOffset;
 
-const barTerminalSize = isTablet ? 64 : 40
+const barTerminalSize = isTablet ? 64 : 40;
 
 const styles = StyleSheet.create({
   container: {
@@ -57,7 +56,7 @@ const styles = StyleSheet.create({
   linesContainer: {
     position: 'relative',
     justifyContent: 'center',
-    width: windowWidth,
+    width: screenWidth,
   },
   bar: {
     position: 'absolute',
@@ -145,13 +144,13 @@ const styles = StyleSheet.create({
     top: isTablet ? 70 : 55,
     fontSize: RFValue(12),
   },
-})
+});
 
 const MetroBars: React.FC = () => {
-  const trainType = useCurrentTrainType()
-  const nextTrainType = useNextTrainType()
-  const currentLine = useCurrentLine()
-  const nextLine = useNextLine()
+  const trainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType();
+  const currentLine = useCurrentLine();
+  const nextLine = useNextLine();
 
   const leftNumberOfLines = useMemo(
     () =>
@@ -160,7 +159,7 @@ const MetroBars: React.FC = () => {
         ? 1
         : 2,
     [trainType?.name]
-  )
+  );
   const rightNumberOfLines = useMemo(
     () =>
       ((nextTrainType ?? trainType)?.name
@@ -169,10 +168,10 @@ const MetroBars: React.FC = () => {
         ? 1
         : 2,
     [nextTrainType, trainType]
-  )
+  );
 
   if (!trainType || !nextTrainType) {
-    return null
+    return null;
   }
 
   return (
@@ -349,14 +348,14 @@ const MetroBars: React.FC = () => {
         )}
       </View>
     </View>
-  )
-}
+  );
+};
 
 const SaikyoBars: React.FC = () => {
-  const currentLine = useCurrentLine()
-  const nextLine = useNextLine()
-  const trainType = useCurrentTrainType()
-  const nextTrainType = useNextTrainType()
+  const currentLine = useCurrentLine();
+  const nextLine = useNextLine();
+  const trainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType();
 
   const leftNumberOfLines = useMemo(
     () =>
@@ -365,7 +364,7 @@ const SaikyoBars: React.FC = () => {
         ? 1
         : 2,
     [trainType?.name]
-  )
+  );
   const rightNumberOfLines = useMemo(
     () =>
       ((nextTrainType ?? trainType)?.name
@@ -374,10 +373,10 @@ const SaikyoBars: React.FC = () => {
         ? 1
         : 2,
     [nextTrainType, trainType]
-  )
+  );
 
   if (!trainType || !nextTrainType) {
-    return null
+    return null;
   }
 
   return (
@@ -555,14 +554,14 @@ const SaikyoBars: React.FC = () => {
         )}
       </View>
     </View>
-  )
-}
+  );
+};
 
 const JOBars: React.FC = () => {
-  const currentLine = useCurrentLine()
-  const nextLine = useNextLine()
-  const trainType = useCurrentTrainType()
-  const nextTrainType = useNextTrainType()
+  const currentLine = useCurrentLine();
+  const nextLine = useNextLine();
+  const trainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType();
 
   const leftNumberOfLines = useMemo(
     () =>
@@ -571,7 +570,7 @@ const JOBars: React.FC = () => {
         ? 1
         : 2,
     [trainType?.name]
-  )
+  );
   const rightNumberOfLines = useMemo(
     () =>
       ((nextTrainType ?? trainType)?.name
@@ -580,10 +579,10 @@ const JOBars: React.FC = () => {
         ? 1
         : 2,
     [nextTrainType, trainType]
-  )
+  );
 
   if (!trainType || !nextTrainType) {
-    return null
+    return null;
   }
 
   return (
@@ -722,33 +721,33 @@ const JOBars: React.FC = () => {
         )}
       </View>
     </View>
-  )
-}
+  );
+};
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
-    useRecoilValue(stationState)
-  const theme = useThemeStore()
-  const station = useCurrentStation()
-  const currentLine = useCurrentLine()
-  const nextLine = useNextLine()
-  const trainType = useCurrentTrainType()
-  const nextTrainType = useNextTrainType()
+    useRecoilValue(stationState);
+  const theme = useThemeStore();
+  const station = useCurrentStation();
+  const currentLine = useCurrentLine();
+  const nextLine = useNextLine();
+  const trainType = useCurrentTrainType();
+  const nextTrainType = useNextTrainType();
 
   const currentTypeStations = stations.filter(
     (s) =>
       s.trainType?.typeId === trainType?.typeId &&
       s.line?.id === currentLine?.id
-  )
+  );
 
-  const reversedStations = stations.slice().reverse()
+  const reversedStations = stations.slice().reverse();
   const reversedFinalPassedStationIndex = reversedStations.findIndex(
     (s) => s.stopCondition === StopCondition.Not
-  )
+  );
   const reversedCurrentStationIndex = reversedStations.findIndex(
     (s) => s.groupId === station?.groupId
-  )
+  );
   const afterAllStopLastStation =
-    reversedStations[reversedFinalPassedStationIndex - 2]
+    reversedStations[reversedFinalPassedStationIndex - 2];
   // 「~から先は各駅に止まります」を表示するフラグ
   const isNextTypeIsLocal =
     nextTrainType &&
@@ -759,7 +758,7 @@ const TypeChangeNotify: React.FC = () => {
     // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
     afterAllStopLastStation?.line?.id === (nextLine ?? currentLine)?.id &&
     // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
-    reversedCurrentStationIndex > reversedFinalPassedStationIndex
+    reversedCurrentStationIndex > reversedFinalPassedStationIndex;
   const currentTypeLastStation = useMemo(() => {
     if (
       isNextTypeIsLocal &&
@@ -767,13 +766,13 @@ const TypeChangeNotify: React.FC = () => {
       currentLine?.id !==
         reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
     ) {
-      return afterAllStopLastStation
+      return afterAllStopLastStation;
     }
 
     if (selectedDirection === 'INBOUND') {
-      return currentTypeStations[currentTypeStations.length - 1]
+      return currentTypeStations[currentTypeStations.length - 1];
     }
-    return currentTypeStations[0]
+    return currentTypeStations[0];
   }, [
     afterAllStopLastStation,
     currentLine?.id,
@@ -782,33 +781,33 @@ const TypeChangeNotify: React.FC = () => {
     reversedFinalPassedStationIndex,
     reversedStations,
     selectedDirection,
-  ])
+  ]);
 
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {
-      return ''
+      return '';
     }
-    const first = (nextTrainType ?? trainType)?.nameRoman?.[0].toLowerCase()
+    const first = (nextTrainType ?? trainType)?.nameRoman?.[0].toLowerCase();
     switch (first) {
       case 'a':
       case 'e':
       case 'i':
       case 'o':
       case 'u':
-        return 'an'
+        return 'an';
       default:
-        return 'a'
+        return 'a';
     }
-  }, [nextTrainType, trainType])
+  }, [nextTrainType, trainType]);
 
   const headingTexts = useMemo((): {
-    jaPrefix: string
-    enPrefix: string
-    jaSuffix?: string
-    enSuffix?: string
+    jaPrefix: string;
+    enPrefix: string;
+    jaSuffix?: string;
+    enSuffix?: string;
   } | null => {
     if (!currentTypeLastStation) {
-      return null
+      return null;
     }
 
     if (
@@ -820,11 +819,11 @@ const TypeChangeNotify: React.FC = () => {
       return {
         jaPrefix: `${afterAllStopLastStation?.name}から先は各駅にとまります`,
         enPrefix: `The train stops at all stations after ${afterAllStopLastStation?.nameRoman}.`,
-      }
+      };
     }
 
     if (!selectedBound) {
-      return null
+      return null;
     }
 
     return {
@@ -832,7 +831,7 @@ const TypeChangeNotify: React.FC = () => {
       enPrefix: `From ${currentTypeLastStation.nameRoman} station, this train become ${aOrAn}`,
       jaSuffix: `${selectedBound.name}ゆき となります`,
       enSuffix: `train bound for ${selectedBound.nameRoman}.`,
-    }
+    };
   }, [
     aOrAn,
     afterAllStopLastStation?.name,
@@ -843,11 +842,11 @@ const TypeChangeNotify: React.FC = () => {
     reversedFinalPassedStationIndex,
     reversedStations,
     selectedBound,
-  ])
+  ]);
 
   const HeadingJa = () => {
     if (!headingTexts) {
-      return null
+      return null;
     }
 
     if (headingTexts.jaSuffix) {
@@ -866,15 +865,15 @@ const TypeChangeNotify: React.FC = () => {
           </Typography>
           {` ${headingTexts.jaSuffix}`}
         </Typography>
-      )
+      );
     }
     return (
       <Typography style={styles.headingJa}>{headingTexts.jaPrefix}</Typography>
-    )
-  }
+    );
+  };
   const HeadingEn = () => {
     if (!headingTexts) {
-      return null
+      return null;
     }
 
     if (headingTexts.enSuffix) {
@@ -894,28 +893,28 @@ const TypeChangeNotify: React.FC = () => {
           </Typography>
           {` ${headingTexts.enSuffix}`}
         </Typography>
-      )
+      );
     }
 
     return (
       <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
-    )
-  }
+    );
+  };
 
   const BarsComponent = useCallback(() => {
     switch (theme) {
       case 'SAIKYO':
-        return <SaikyoBars />
+        return <SaikyoBars />;
       case 'YAMANOTE':
       case 'JO':
-        return <JOBars />
+        return <JOBars />;
       default:
-        return <MetroBars />
+        return <MetroBars />;
     }
-  }, [theme])
+  }, [theme]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.top}>
         <HeadingJa />
         <HeadingEn />
@@ -929,8 +928,8 @@ const TypeChangeNotify: React.FC = () => {
         </Typography>
         <BarsComponent />
       </View>
-    </SafeAreaView>
-  )
-}
+    </View>
+  );
+};
 
-export default React.memo(TypeChangeNotify)
+export default React.memo(TypeChangeNotify);

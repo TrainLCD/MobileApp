@@ -1,7 +1,8 @@
-import { useNavigation } from '@react-navigation/native'
-import * as Linking from 'expo-linking'
-import * as Notifications from 'expo-notifications'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
   Dimensions,
@@ -9,28 +10,28 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   View,
-} from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Path, Svg } from 'react-native-svg'
-import { useRecoilState, useRecoilValue } from 'recoil'
-import { Station } from '../../gen/proto/stationapi_pb'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import Typography from '../components/Typography'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import notifyState from '../store/atoms/notify'
-import stationState from '../store/atoms/station'
-import { isJapanese, translate } from '../translation'
+} from 'react-native';
+import { Path, Svg } from 'react-native-svg';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import type { Station } from '../../gen/proto/stationapi_pb';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import Typography from '../components/Typography';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
+import notifyState from '../store/atoms/notify';
+import stationState from '../store/atoms/station';
+import { isJapanese, translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: '100%',
+    paddingHorizontal: 24,
   },
   itemRoot: {
-    width: Dimensions.get('window').width / 4,
+    width: Dimensions.get('screen').width / 4,
     marginBottom: 12,
   },
   item: {
@@ -52,19 +53,21 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   listContainerStyle: {
-    paddingBottom: 24,
+    alignSelf: 'center',
+    width: '100%',
   },
   headingStyle: {
-    marginVertical: 24,
+    marginTop: 24,
+    marginBottom: 24,
   },
-})
+});
 
 type ListItemProps = {
-  item: Station
-  active: boolean
-  isLEDTheme: boolean
-  onPress: () => void
-}
+  item: Station;
+  active: boolean;
+  isLEDTheme: boolean;
+  onPress: () => void;
+};
 
 const ListItem: React.FC<ListItemProps> = ({
   active,
@@ -73,15 +76,15 @@ const ListItem: React.FC<ListItemProps> = ({
   onPress,
 }: ListItemProps) => {
   const checkboxBorderColor = useMemo(() => {
-    return isLEDTheme ? '#fff' : '#333'
-  }, [isLEDTheme])
+    return isLEDTheme ? '#fff' : '#333';
+  }, [isLEDTheme]);
   const checkmarkFill = useMemo(() => {
     if (isLEDTheme) {
-      return '#fff'
+      return '#fff';
     }
 
-    return '#333'
-  }, [isLEDTheme])
+    return '#333';
+  }, [isLEDTheme]);
 
   return (
     <View style={styles.itemRoot}>
@@ -109,21 +112,21 @@ const ListItem: React.FC<ListItemProps> = ({
         </View>
       </TouchableWithoutFeedback>
     </View>
-  )
-}
+  );
+};
 
 const NotificationSettings: React.FC = () => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const { stations } = useRecoilValue(stationState)
-  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState)
-  const navigation = useNavigation()
+  const { stations } = useRecoilValue(stationState);
+  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
+  const navigation = useNavigation();
 
   const handlePressBack = useCallback(() => {
     if (navigation.canGoBack()) {
-      navigation.goBack()
+      navigation.goBack();
     }
-  }, [navigation])
+  }, [navigation]);
 
   const openFailedToOpenSettingsAlert = useCallback(
     () =>
@@ -133,45 +136,74 @@ const NotificationSettings: React.FC = () => {
         },
       ]),
     []
-  )
+  );
 
   const showNotificationNotGrantedAlert = useCallback(() => {
     Alert.alert(translate('errorTitle'), translate('notificationNotGranted'), [
       {
-        text: translate('back'),
+        text: 'OK',
         onPress: handlePressBack,
         style: 'cancel',
       },
       {
         text: translate('settings'),
-        onPress: async (): Promise<void> => {
-          Linking.openSettings().catch(() => {
-            openFailedToOpenSettingsAlert()
-          })
+        onPress: async () => {
+          try {
+            await Linking.openSettings();
+          } catch (err) {
+            openFailedToOpenSettingsAlert();
+          }
+          handlePressBack();
         },
       },
-    ])
-  }, [handlePressBack, openFailedToOpenSettingsAlert])
+    ]);
+  }, [handlePressBack, openFailedToOpenSettingsAlert]);
+
+  const showAlwaysPermissionNotGrantedAlert = useCallback(() => {
+    Alert.alert(
+      translate('errorTitle'),
+      translate('alwaysPermissionRequired'),
+      [
+        {
+          text: 'OK',
+          onPress: handlePressBack,
+          style: 'cancel',
+        },
+        {
+          text: translate('settings'),
+          onPress: async () => {
+            try {
+              await Location.requestBackgroundPermissionsAsync();
+            } catch (err) {
+              openFailedToOpenSettingsAlert();
+            }
+          },
+        },
+      ]
+    );
+  }, [handlePressBack, openFailedToOpenSettingsAlert]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const { status } = await Notifications.requestPermissionsAsync()
-      if (status !== 'granted') {
-        showNotificationNotGrantedAlert()
+      const { granted: notifyPermGranted } =
+        await Notifications.requestPermissionsAsync();
+      if (!notifyPermGranted) {
+        showNotificationNotGrantedAlert();
+        return;
       }
-    }
-    f()
-  }, [showNotificationNotGrantedAlert])
 
-  const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack()
-    }
-  }, [navigation])
+      const { granted: bgPermGranted } =
+        await Location.getBackgroundPermissionsAsync();
+      if (!bgPermGranted) {
+        showAlwaysPermissionNotGrantedAlert();
+      }
+    };
+    f();
+  }, [showAlwaysPermissionNotGrantedAlert, showNotificationNotGrantedAlert]);
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
-      const isActive = !!targetStationIds.find((id) => id === item.id)
+      const isActive = !!targetStationIds.find((id) => id === item.id);
       const handleListItemPress = (): void => {
         if (isActive) {
           setNotify((prev) => ({
@@ -179,14 +211,14 @@ const NotificationSettings: React.FC = () => {
             targetStationIds: prev.targetStationIds.filter(
               (id) => id !== item.id
             ),
-          }))
+          }));
         } else {
           setNotify((prev) => ({
             ...prev,
             targetStationIds: [...targetStationIds, item.id],
-          }))
+          }));
         }
-      }
+      };
       return (
         <ListItem
           isLEDTheme={isLEDTheme}
@@ -194,10 +226,10 @@ const NotificationSettings: React.FC = () => {
           onPress={handleListItemPress}
           item={item}
         />
-      )
+      );
     },
     [isLEDTheme, setNotify, targetStationIds]
-  )
+  );
 
   const listHeaderComponent = useCallback(
     () => (
@@ -206,27 +238,23 @@ const NotificationSettings: React.FC = () => {
       </Heading>
     ),
     []
-  )
-
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets()
+  );
 
   return (
-    <View style={styles.root}>
-      <FlatList
-        ListHeaderComponent={listHeaderComponent}
-        contentContainerStyle={{
-          ...styles.listContainerStyle,
-          marginLeft: safeAreaLeft || 24,
-          marginRight: safeAreaRight || 24,
-        }}
-        numColumns={4}
-        data={stations}
-        renderItem={renderItem}
-        keyExtractor={(item: Station): string => item.id.toString()}
-      />
-      <FAB onPress={onPressBack} icon="checkmark" />
-    </View>
-  )
-}
+    <>
+      <View style={styles.root}>
+        <FlatList
+          ListHeaderComponent={listHeaderComponent}
+          contentContainerStyle={styles.listContainerStyle}
+          numColumns={4}
+          data={stations}
+          renderItem={renderItem}
+          keyExtractor={(item: Station): string => item.id.toString()}
+        />
+      </View>
+      <FAB onPress={handlePressBack} icon="checkmark" />
+    </>
+  );
+};
 
-export default React.memo(NotificationSettings)
+export default React.memo(NotificationSettings);

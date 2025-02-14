@@ -1,9 +1,9 @@
-import { atom } from 'recoil'
-import { Line } from '../../../gen/proto/stationapi_pb'
-import { RECOIL_STATES } from '../../constants'
+import { atom } from 'recoil';
+import type { Line } from '../../../gen/proto/stationapi_pb';
+import { RECOIL_STATES } from '../../constants';
 
 export interface LineState {
-  selectedLine: Line | null
+  selectedLine: Line | null;
 }
 
 const lineState = atom<LineState>({
@@ -11,6 +11,6 @@ const lineState = atom<LineState>({
   default: {
     selectedLine: null,
   },
-})
+});
 
-export default lineState
+export default lineState;

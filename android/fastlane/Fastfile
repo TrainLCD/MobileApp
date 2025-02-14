@@ -17,11 +17,11 @@ default_platform(:android)
 
 platform :android do
   def increment_version_code(gradle_build: 'app/build.gradle')
-    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
+    sh %Q{cd ../ && echo "$(awk 'NR==1,/versionCode [[:digit:]]+$/{sub(/versionCode [[:digit:]]+$/,"versionCode "$2+10)}1' ./app/build.gradle)" > #{gradle_build} && cd -}
   end
 
   def increment_wearable_version_code(gradle_build: 'wearable/build.gradle.kts')
-    sh %Q{cd ../ && echo "$(awk '{sub(/versionCode \\= [[:digit:]]+$/,"versionCode \\=\s"$3+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
+    sh %Q{cd ../ && echo "$(awk 'NR==1,/versionCode \\= [[:digit:]]+$/{sub(/versionCode \\= [[:digit:]]+$/,"versionCode \\=\s"$3+10)}1' #{gradle_build})" > #{gradle_build} && cd -}
   end
 
   desc "Bump version number"
@@ -32,7 +32,7 @@ platform :android do
 
   lane :deploy do
     gradle(
-      task: "clean bundle",
+      task: "bundle",
       build_type: "prodRelease",
       print_command: false,
       properties: {
@@ -68,7 +68,7 @@ platform :android do
 
   lane :deploy_canary do
     gradle(
-      task: "clean bundle",
+      task: "bundle",
       build_type: "devRelease",
       print_command: false,
       properties: {
@@ -94,7 +94,6 @@ platform :android do
       aab_paths: [
         "wearable/build/outputs/bundle/devRelease/wearable-dev-release.aab"
       ],
-      root_url: "https://androidpublisher.googleapis.com/",
       skip_upload_apk: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,

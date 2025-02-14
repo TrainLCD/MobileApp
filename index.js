@@ -1,34 +1,49 @@
-import 'fast-text-encoding'
+require('fast-text-encoding');
 
-import { registerRootComponent } from 'expo'
-import * as TaskManager from 'expo-task-manager'
-import App from './src'
-import { useLocationStore } from './src/hooks/useLocationStore'
-import { locationTaskName } from './src/utils/locationTaskName'
+import * as Sentry from '@sentry/react-native';
+import { registerRootComponent } from 'expo';
+import * as TaskManager from 'expo-task-manager';
+import { SENTRY_DSN } from 'react-native-dotenv';
+import App from './src';
+import { LOCATION_TASK_NAME } from './src/constants';
+import { setLocation } from './src/hooks/useLocationStore';
 
-TaskManager.defineTask(locationTaskName, ({ data, error }) => {
-  if (error) {
-    console.error(error)
-    return
-  }
+if (!__DEV__) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    enableAutoSessionTracking: true,
+    tracesSampleRate: 1.0,
+    profilesSampleRate: 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    integrations: [
+      Sentry.mobileReplayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+        privacyOptions: {
+          maskAllInputs: true,
+          blockClass: ['sensitive-screen', 'payment-view'],
+        },
+      }),
+    ],
+  });
+}
 
-  const stateLat = useLocationStore.getState().location?.coords.latitude
-  const stateLon = useLocationStore.getState().location?.coords.longitude
+if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
+  TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  if (
-    stateLat === data.locations[0]?.coords.latitude &&
-    stateLon === data.locations[0]?.coords.longitude
-  ) {
-    return
-  }
-
-  useLocationStore.setState(data.locations[0])
-})
-;(async () => {
-  await TaskManager.unregisterAllTasksAsync()
-})()
+    const latestLocation = data.locations[data.locations.length - 1];
+    if (latestLocation) {
+      setLocation(latestLocation);
+    }
+  });
+}
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in the Expo client or in a native build,
 // the environment is set up appropriately
-registerRootComponent(App)
+registerRootComponent(App);

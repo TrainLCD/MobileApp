@@ -1,27 +1,35 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect } from 'react'
-import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useSetRecoilState } from 'recoil'
-import { Line } from '../../gen/proto/stationapi_pb'
-import Button from '../components/Button'
-import ErrorScreen from '../components/ErrorScreen'
-import FAB from '../components/FAB'
-import Heading from '../components/Heading'
-import Loading from '../components/Loading'
-import { ASYNC_STORAGE_KEYS, parenthesisRegexp } from '../constants'
-import useConnectivity from '../hooks/useConnectivity'
-import { useCurrentStation } from '../hooks/useCurrentStation'
-import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
-import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation'
-import useGetLineMark from '../hooks/useGetLineMark'
-import { useLocationStore } from '../hooks/useLocationStore'
-import lineState from '../store/atoms/line'
-import navigationState from '../store/atoms/navigation'
-import stationState from '../store/atoms/station'
-import { isJapanese, translate } from '../translation'
-import { isDevApp } from '../utils/isDevApp'
-import isTablet from '../utils/isTablet'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import React, { useCallback, useEffect } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useSetRecoilState } from 'recoil';
+import type { Line } from '../../gen/proto/stationapi_pb';
+import Button from '../components/Button';
+import ErrorScreen from '../components/ErrorScreen';
+import FAB from '../components/FAB';
+import Heading from '../components/Heading';
+import Loading from '../components/Loading';
+import {
+  ASYNC_STORAGE_KEYS,
+  LOCATION_TASK_NAME,
+  parenthesisRegexp,
+} from '../constants';
+import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
+import useConnectivity from '../hooks/useConnectivity';
+import { useCurrentStation } from '../hooks/useCurrentStation';
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce';
+import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation';
+import useGetLineMark from '../hooks/useGetLineMark';
+import { useLocationStore } from '../hooks/useLocationStore';
+import lineState from '../store/atoms/line';
+import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import { TestIds } from '../test/e2e';
+import { isJapanese, translate } from '../translation';
+import { generateLineTestId } from '../utils/generateTestID';
+import { isDevApp } from '../utils/isDevApp';
+import isTablet from '../utils/isTablet';
 
 const styles = StyleSheet.create({
   rootPadding: {
@@ -32,69 +40,86 @@ const styles = StyleSheet.create({
   },
   buttons: {
     marginTop: 12,
-    flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
     alignItems: 'center',
-    width: '90%',
     alignSelf: 'center',
+    rowGap: isTablet ? 12 : 8,
+    columnGap: isTablet ? 24 : 12,
   },
-  button: {
-    marginHorizontal: isTablet ? 12 : 8,
-    marginBottom: isTablet ? 24 : 12,
-  },
-})
+});
 
 const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetRecoilState(stationState)
-  const setNavigationState = useSetRecoilState(navigationState)
-  const setLineState = useSetRecoilState(lineState)
+  const setStationState = useSetRecoilState(stationState);
+  const setNavigationState = useSetRecoilState(navigationState);
+  const setLineState = useSetRecoilState(lineState);
+
+  const autoModeEnabled = useApplicationFlagStore(
+    (state) => state.autoModeEnabled
+  );
+  const toggleAutoModeEnabled = useApplicationFlagStore(
+    (state) => state.toggleAutoModeEnabled
+  );
+
   const {
-    trigger: fetchStationFunc,
+    fetchByCoords,
     isLoading: nearbyStationLoading,
     error: nearbyStationFetchError,
-  } = useFetchNearbyStation()
-  const isInternetAvailable = useConnectivity()
+  } = useFetchNearbyStation();
+  const isInternetAvailable = useConnectivity();
   const {
     fetchCurrentLocation,
     loading: locationLoading,
     error: fetchLocationError,
-  } = useFetchCurrentLocationOnce()
-  const station = useCurrentStation()
-  const locationState = useLocationStore()
+  } = useFetchCurrentLocationOnce();
+  const station = useCurrentStation();
+  const locationState = useLocationStore();
 
   useEffect(() => {
-    const init = async () => {
-      if (station) return
-      const pos = await fetchCurrentLocation(true)
-      if (!pos) {
-        return
+    const stopLocationUpdatesAsync = async () => {
+      const hasStartedLocationUpdates =
+        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStartedLocationUpdates) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
-      useLocationStore.setState(pos)
-      const stationFromAPI =
-        (await fetchStationFunc({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        })) ?? null
+    };
+    stopLocationUpdatesAsync();
+  }, []);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    const init = async () => {
+      if (station) return;
+      const pos = await fetchCurrentLocation(true);
+      if (!pos) {
+        return;
+      }
+      useLocationStore.setState(pos);
+      const data = await fetchByCoords({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        limit: 1,
+      });
+      const stationFromAPI = data.stations[0] ?? null;
+
       setStationState((prev) => ({
         ...prev,
         station: stationFromAPI,
-      }))
+      }));
       setNavigationState((prev) => ({
         ...prev,
         stationForHeader: stationFromAPI,
-      }))
-    }
-    init()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+      }));
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
       const firstLaunchPassed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      )
+      );
       if (firstLaunchPassed === null) {
         Alert.alert(translate('notice'), translate('firstAlertText'), [
           {
@@ -103,16 +128,16 @@ const SelectLineScreen: React.FC = () => {
               AsyncStorage.setItem(
                 ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
                 'true'
-              )
+              );
             },
           },
-        ])
+        ]);
       }
-    }
-    f()
-  }, [])
+    };
+    f();
+  }, []);
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const handleLineSelected = useCallback(
     (line: Line): void => {
@@ -120,109 +145,106 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         trainType: line.station?.trainType ?? null,
         leftStations: [],
-        stationForHeader: null,
-      }))
+      }));
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
-      }))
-      navigation.navigate('SelectBound')
+      }));
+      navigation.navigate('SelectBound');
     },
     [navigation, setLineState, setNavigationState]
-  )
+  );
 
-  const getLineMarkFunc = useGetLineMark()
+  const getLineMarkFunc = useGetLineMark();
 
   const getButtonText = useCallback(
     (line: Line) => {
-      const lineMark = station && getLineMarkFunc({ line })
-      const lineName = line.nameShort.replace(parenthesisRegexp, '')
-      const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? ''
+      const lineMark = station && getLineMarkFunc({ line });
+      const lineName = line.nameShort.replace(parenthesisRegexp, '');
+      const lineNameR = line.nameRoman?.replace(parenthesisRegexp, '') ?? '';
       if (lineMark?.extraSign) {
         return `[${lineMark.sign}/${lineMark.subSign}/${lineMark.extraSign}] ${
           isJapanese ? lineName : lineNameR
-        }`
+        }`;
       }
       if (lineMark?.subSign) {
         return `[${lineMark.sign}/${lineMark.subSign}] ${
           isJapanese ? lineName : lineNameR
-        }`
+        }`;
       }
       if (lineMark?.sign) {
-        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`
+        return `[${lineMark.sign}] ${isJapanese ? lineName : lineNameR}`;
       }
-      return isJapanese ? lineName : lineNameR
+      return isJapanese ? lineName : lineNameR;
     },
     [getLineMarkFunc, station]
-  )
+  );
 
   const renderLineButton: React.FC<Line> = useCallback(
     (line: Line) => {
-      const buttonOnPress = (): void => handleLineSelected(line)
-      const buttonText = getButtonText(line)
+      const buttonOnPress = (): void => handleLineSelected(line);
+      const buttonText = getButtonText(line);
 
       return (
         <Button
           color={line.color ?? '#000'}
           key={line.id}
           disabled={!isInternetAvailable}
-          style={styles.button}
           onPress={buttonOnPress}
+          testID={generateLineTestId(line)}
         >
           {buttonText}
         </Button>
-      )
+      );
     },
     [getButtonText, handleLineSelected, isInternetAvailable]
-  )
+  );
 
   const handleUpdateStation = useCallback(async () => {
-    const pos = await fetchCurrentLocation()
+    const pos = await fetchCurrentLocation();
     if (!pos) {
-      return
+      return;
     }
-    useLocationStore.setState(pos)
-    setNavigationState((prev) => ({
-      ...prev,
-      stationForHeader: null,
-      stationFromCoordinates: null,
-    }))
-
-    const station =
-      (await fetchStationFunc({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      })) ?? null
-
+    const data = await fetchByCoords({
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+      limit: 1,
+    });
+    const stationFromAPI = data.stations[0] ?? null;
     setStationState((prev) => ({
       ...prev,
-      station: prev.station?.id !== station?.id ? station : prev.station,
-    }))
+      station:
+        prev.station?.id !== stationFromAPI?.id ? stationFromAPI : prev.station,
+    }));
     setNavigationState((prev) => ({
       ...prev,
       stationForHeader:
-        prev.stationForHeader?.id !== station?.id
-          ? station
+        prev.stationForHeader?.id !== stationFromAPI?.id
+          ? stationFromAPI
           : prev.stationForHeader,
-    }))
+    }));
   }, [
+    fetchByCoords,
     fetchCurrentLocation,
-    fetchStationFunc,
     setNavigationState,
     setStationState,
-  ])
+  ]);
 
   const navigateToSettingsScreen = useCallback(() => {
-    navigation.navigate('AppSettings')
-  }, [navigation])
+    navigation.navigate('AppSettings');
+  }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    navigation.navigate('FakeStation')
-  }, [navigation])
+    navigation.navigate('FakeStation');
+  }, [navigation]);
 
   const navigateToSavedRoutesScreen = useCallback(() => {
-    navigation.navigate('SavedRoutes')
-  }, [navigation])
+    navigation.navigate('SavedRoutes');
+  }, [navigation]);
+
+  const navigateToRouteSearchScreen = useCallback(() => {
+    navigation.navigate('RouteSearch');
+  }, [navigation]);
 
   if (nearbyStationFetchError) {
     return (
@@ -230,10 +252,10 @@ const SelectLineScreen: React.FC = () => {
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={fetchStationFunc}
+        onRetryPress={handleUpdateStation}
         isFetching={nearbyStationLoading}
       />
-    )
+    );
   }
 
   if (fetchLocationError && !station) {
@@ -245,7 +267,7 @@ const SelectLineScreen: React.FC = () => {
         onRetryPress={handleUpdateStation}
         isFetching={locationLoading}
       />
-    )
+    );
   }
 
   // NOTE: 駅検索ができるボタンが表示されるので、!stationがないと一生loadingになる
@@ -255,11 +277,13 @@ const SelectLineScreen: React.FC = () => {
         message={translate('loadingLocation')}
         linkType="searchStation"
       />
-    )
+    );
   }
 
   if (!station) {
-    return <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+    return (
+      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
+    );
   }
 
   return (
@@ -274,19 +298,28 @@ const SelectLineScreen: React.FC = () => {
         <Heading style={styles.marginTop}>{translate('settings')}</Heading>
         <View style={styles.buttons}>
           {isInternetAvailable ? (
-            <Button
-              style={styles.button}
-              onPress={navigateToFakeStationSettingsScreen}
-            >
-              {translate('searchFirstStationTitle')}
-            </Button>
+            <>
+              <Button
+                onPress={navigateToFakeStationSettingsScreen}
+                testID={TestIds.Button.FakeStationSettings}
+              >
+                {translate('searchFirstStationTitle')}
+              </Button>
+              {isInternetAvailable && isDevApp && (
+                <Button onPress={navigateToSavedRoutesScreen}>
+                  {translate('savedRoutes')}
+                </Button>
+              )}
+              <Button onPress={navigateToRouteSearchScreen}>
+                {translate('routeSearchTitle')}
+              </Button>
+            </>
           ) : null}
-          {isInternetAvailable && isDevApp && (
-            <Button style={styles.button} onPress={navigateToSavedRoutesScreen}>
-              {translate('savedRoutes')}
-            </Button>
-          )}
-          <Button style={styles.button} onPress={navigateToSettingsScreen}>
+          <Button onPress={toggleAutoModeEnabled}>
+            {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
+          </Button>
+
+          <Button onPress={navigateToSettingsScreen}>
             {translate('settings')}
           </Button>
         </View>
@@ -297,7 +330,7 @@ const SelectLineScreen: React.FC = () => {
         onPress={handleUpdateStation}
       />
     </>
-  )
-}
+  );
+};
 
-export default React.memo(SelectLineScreen)
+export default React.memo(SelectLineScreen);

@@ -1,28 +1,27 @@
 /* eslint-disable react-native/no-unused-styles */
-import React, { useMemo } from 'react'
-import { Dimensions, StyleSheet, View } from 'react-native'
-import { RFValue } from 'react-native-responsive-fontsize'
-import { useRecoilValue } from 'recoil'
-import { Line, Station } from '../../gen/proto/stationapi_pb'
-import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants'
-import useGetLineMark from '../hooks/useGetLineMark'
-import useIsDifferentStationName from '../hooks/useIsDifferentStationName'
-import { APP_THEME, AppTheme } from '../models/Theme'
-import { isEnSelector } from '../store/selectors/isEn'
-import isSmallTablet from '../utils/isSmallTablet'
-import isTablet from '../utils/isTablet'
-import TransferLineDot from './TransferLineDot'
-import TransferLineMark from './TransferLineMark'
-import Typography from './Typography'
+import React, { useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { useRecoilValue } from 'recoil';
+import type { Line, Station } from '../../gen/proto/stationapi_pb';
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
+import useGetLineMark from '../hooks/useGetLineMark';
+import useIsDifferentStationName from '../hooks/useIsDifferentStationName';
+import { APP_THEME, type AppTheme } from '../models/Theme';
+import { isEnSelector } from '../store/selectors/isEn';
+import isTablet from '../utils/isTablet';
+import { RFValue } from '../utils/rfValue';
+import TransferLineDot from './TransferLineDot';
+import TransferLineMark from './TransferLineMark';
+import Typography from './Typography';
 
 type Props = {
-  shouldGrayscale: boolean
-  transferLines: Line[]
-  station: Station
-  theme?: AppTheme
-}
+  shouldGrayscale: boolean;
+  transferLines: Line[];
+  station: Station;
+  theme?: AppTheme;
+};
 
-const windowWidth = Dimensions.get('window').width
+const screenWidth = Dimensions.get('screen').width;
 
 const stylesNormal = StyleSheet.create({
   root: {
@@ -42,7 +41,7 @@ const stylesNormal = StyleSheet.create({
   },
   // JR西日本テーマのときだけ必要なので他のテーマでは空のスタイルにする
   topBar: {},
-})
+});
 
 const stylesWest = StyleSheet.create({
   root: {
@@ -57,7 +56,7 @@ const stylesWest = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: windowWidth / 10,
+    width: screenWidth / 10,
     flexDirection: 'row',
   },
   lineNameWrapper: {
@@ -68,7 +67,7 @@ const stylesWest = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: RFValue(7),
   },
-})
+});
 
 const PadLineMarks: React.FC<Props> = ({
   shouldGrayscale,
@@ -76,24 +75,24 @@ const PadLineMarks: React.FC<Props> = ({
   station,
   theme,
 }) => {
-  const isEn = useRecoilValue(isEnSelector)
+  const isEn = useRecoilValue(isEnSelector);
 
   const styles = useMemo(
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),
     [theme]
-  )
-  const getLineMarkFunc = useGetLineMark()
+  );
+  const getLineMarkFunc = useGetLineMark();
 
   const lineMarks = useMemo(
     () =>
       transferLines.map((line) => getLineMarkFunc({ line, shouldGrayscale })),
     [getLineMarkFunc, shouldGrayscale, transferLines]
-  )
+  );
 
-  const isDifferentStationName = useIsDifferentStationName()
+  const isDifferentStationName = useIsDifferentStationName();
 
-  if (!isTablet || isSmallTablet) {
-    return <></>
+  if (!isTablet) {
+    return <></>;
   }
 
   return (
@@ -163,7 +162,7 @@ const PadLineMarks: React.FC<Props> = ({
         )
       )}
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(PadLineMarks)
+export default React.memo(PadLineMarks);

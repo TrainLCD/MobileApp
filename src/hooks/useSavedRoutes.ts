@@ -1,43 +1,42 @@
-import firestore from '@react-native-firebase/firestore'
-import { useCallback, useEffect, useState } from 'react'
-import { GetStationByIdListRequest } from '../../gen/proto/stationapi_pb'
-import { grpcClient } from '../lib/grpc'
-import { SavedRoute } from '../models/SavedRoute'
-import useCachedInitAnonymousUser from './useCachedAnonymousUser'
+import { useMutation } from '@connectrpc/connect-query';
+import firestore from '@react-native-firebase/firestore';
+import { useQuery } from '@tanstack/react-query';
+import { getStationByIdList } from '../../gen/proto/stationapi-StationAPI_connectquery';
+import type { SavedRoute } from '../models/SavedRoute';
+import useCachedInitAnonymousUser from './useCachedAnonymousUser';
 
 export const useSavedRoutes = () => {
-  useCachedInitAnonymousUser()
-  const [routes, setRoutes] = useState<SavedRoute[]>([])
-  const [loading, setLoading] = useState(false)
+  useCachedInitAnonymousUser();
 
-  useEffect(() => {
-    const fetchRoutesAsync = async () => {
-      setLoading(true)
+  const {
+    data: routes,
+    isLoading: isRoutesLoading,
+    error: fetchRoutesError,
+  } = useQuery<SavedRoute[]>({
+    queryKey: ['/firestore/uploadedCommunityRoutes'],
+    queryFn: async () => {
       const routesSnapshot = await firestore()
         .collection('uploadedCommunityRoutes')
         .orderBy('createdAt', 'desc')
-        .get()
-      const routes = routesSnapshot.docs.map((doc) => ({
+        .get();
+
+      return routesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }))
-      setRoutes(routes as SavedRoute[])
-      setLoading(false)
-    }
-    fetchRoutesAsync()
-  }, [])
+      })) as SavedRoute[];
+    },
+  });
 
-  const fetchStationsByRoute = useCallback(async (route: SavedRoute) => {
-    const req = new GetStationByIdListRequest()
-    req.ids = route.stations.map((sta) => sta.id)
-    const res = await grpcClient.getStationByIdList(req, {})
-    const stations = res?.stations ?? []
-    return stations.map((sta, idx) => ({
-      ...sta,
-      stopCondition: route.stations[idx].stopCondition,
-      trainType: route.trainType,
-    }))
-  }, [])
+  const {
+    status: isStationsLoading,
+    error: fetchStationsError,
+    mutateAsync: fetchStationsByRoute,
+  } = useMutation(getStationByIdList);
 
-  return { routes, loading, fetchStationsByRoute }
-}
+  return {
+    routes,
+    loading: isRoutesLoading || isStationsLoading === 'pending',
+    error: fetchRoutesError || fetchStationsError,
+    fetchStationsByRoute,
+  };
+};

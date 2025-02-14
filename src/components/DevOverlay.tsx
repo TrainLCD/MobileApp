@@ -1,17 +1,19 @@
-import * as Application from 'expo-application'
-import React, { useMemo } from 'react'
-import { Dimensions, Platform, StyleSheet, View } from 'react-native'
-import { useLocationStore } from '../hooks/useLocationStore'
-import { useThreshold } from '../hooks/useThreshold'
-import Typography from './Typography'
+import * as Application from 'expo-application';
+import getDistance from 'geolib/es/getDistance';
+import React, { useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import { useLocationStore } from '../hooks/useLocationStore';
+import { useNextStation } from '../hooks/useNextStation';
+import { useThreshold } from '../hooks/useThreshold';
+import Typography from './Typography';
 
-const { width: windowWidth } = Dimensions.get('window')
+const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
     position: 'absolute',
     right: 0,
-    width: windowWidth / 4,
+    width: screenWidth / 4,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 9999,
     padding: 4,
@@ -19,29 +21,42 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
   textHeading: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 11,
-    lineHeight: Platform.OS === 'android' ? 16 : undefined,
   },
-})
+});
 
 const DevOverlay: React.FC = () => {
-  const latitude = useLocationStore((state) => state?.coords.latitude)
-  const longitude = useLocationStore((state) => state?.coords.longitude)
-  const speed = useLocationStore((state) => state?.coords.speed)
-  const accuracy = useLocationStore((state) => state?.coords.accuracy)
-  const { approachingThreshold, arrivedThreshold } = useThreshold()
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const speed = useLocationStore((state) => state?.coords.speed);
+  const accuracy = useLocationStore((state) => state?.coords.accuracy);
+  const { approachingThreshold, arrivedThreshold } = useThreshold();
+  const nextStation = useNextStation();
 
-  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0
+  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
   const speedKMH = useMemo(
     () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
     [coordsSpeed, speed]
-  )
+  );
+
+  const distanceToNext = useMemo(
+    () =>
+      latitude && longitude && nextStation
+        ? getDistance(
+            { latitude, longitude },
+            {
+              latitude: nextStation.latitude,
+              longitude: nextStation.longitude,
+            }
+          )
+        : undefined,
+    [latitude, longitude, nextStation]
+  );
 
   return (
     <View style={styles.root}>
@@ -60,6 +75,14 @@ const DevOverlay: React.FC = () => {
         accuracy ?? ''
       }m`}</Typography>
 
+      {distanceToNext ? (
+        <Typography style={styles.text}>
+          Next: {distanceToNext / 1000}km
+        </Typography>
+      ) : (
+        <Typography style={styles.text}>Next:</Typography>
+      )}
+
       <Typography style={styles.text}>
         Speed: {speedKMH}
         km/h
@@ -72,9 +95,9 @@ const DevOverlay: React.FC = () => {
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
 
-      <Typography style={styles.text}>BLE: MONITORING</Typography>
+      <Typography style={styles.text}>BLE: Enabled</Typography>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(DevOverlay)
+export default React.memo(DevOverlay);

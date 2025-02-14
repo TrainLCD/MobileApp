@@ -1,14 +1,18 @@
-import React, { useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
-import isTablet from '../utils/isTablet'
-import Typography from './Typography'
-import { FONTS, NUMBERING_ICON_SIZE, NumberingIconSize } from '../constants'
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  FONTS,
+  NUMBERING_ICON_SIZE,
+  type NumberingIconSize,
+} from '../constants';
+import isTablet from '../utils/isTablet';
+import Typography from './Typography';
 
 type Props = {
-  stationNumber: string
-  lineColor: string
-  size?: NumberingIconSize
-}
+  stationNumber: string;
+  lineColor: string;
+  size?: NumberingIconSize;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -56,22 +60,22 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 20 * 1.5 : 20,
     letterSpacing: -2,
   },
-})
+});
 
 const NumberingIconKeisei: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
 }: Props) => {
-  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-')
-  const stationNumber = stationNumberRest.join('-')
-  const isIncludesSubNumber = stationNumber.includes('-')
+  const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
+  const stationNumber = stationNumberRest.join('-');
+  const isIncludesSubNumber = stationNumber.includes('-');
   const stationNumberTextStyles = useMemo(() => {
     if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional]
+      return [styles.stationNumber, styles.longStationNumberAdditional];
     }
-    return styles.stationNumber
-  }, [isIncludesSubNumber])
+    return styles.stationNumber;
+  }, [isIncludesSubNumber]);
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -80,7 +84,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
           {lineSymbol}
         </Typography>
       </View>
-    )
+    );
   }
 
   return (
@@ -92,7 +96,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
         {stationNumber}
       </Typography>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(NumberingIconKeisei)
+export default React.memo(NumberingIconKeisei);

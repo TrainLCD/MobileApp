@@ -1,16 +1,16 @@
-import { useEffect } from 'react'
-import { useRecoilSnapshot } from 'recoil'
+import { useEffect } from 'react';
+import { useRecoilSnapshot } from 'recoil';
 
 const RecoilDebugObserver = () => {
-  const snapshot = useRecoilSnapshot()
+  const snapshot = useRecoilSnapshot();
   useEffect(() => {
-    console.debug('The following atoms were modified:')
+    console.debug('The following atoms were modified:');
     for (const node of snapshot.getNodes_UNSTABLE({ isModified: true })) {
-      console.debug(node.key, snapshot.getLoadable(node))
+      console.debug(node.key, snapshot.getLoadable(node));
     }
-  }, [snapshot])
+  }, [snapshot]);
 
-  return null
-}
+  return null;
+};
 
-export default RecoilDebugObserver
+export default RecoilDebugObserver;

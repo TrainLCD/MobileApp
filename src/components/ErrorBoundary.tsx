@@ -1,6 +1,6 @@
-import React from 'react'
-import { translate } from '../translation'
-import FatalErrorScreen from './FatalErrorScreen'
+import type React from 'react';
+import { translate } from '../translation';
+import FatalErrorScreen from './FatalErrorScreen';
 
 const ErrorFallback: React.FC = () => (
   <FatalErrorScreen
@@ -8,6 +8,6 @@ const ErrorFallback: React.FC = () => (
     title={translate('errorTitle')}
     text={translate('appCrashedText')}
   />
-)
+);
 
-export default ErrorFallback
+export default ErrorFallback;

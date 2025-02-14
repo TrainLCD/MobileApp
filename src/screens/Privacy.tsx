@@ -1,23 +1,22 @@
-import messaging from '@react-native-firebase/messaging'
-import { CommonActions, useNavigation } from '@react-navigation/native'
-import * as Location from 'expo-location'
-import * as Notifications from 'expo-notifications'
-import * as WebBrowser from 'expo-web-browser'
-import React, { useCallback } from 'react'
+import { StackActions, useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useCallback } from 'react';
 import {
   Alert,
   PermissionsAndroid,
   Platform,
   StyleSheet,
   View,
-} from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
-import { RFValue } from 'react-native-responsive-fontsize'
-import Button from '../components/Button'
-import Typography from '../components/Typography'
-import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce'
-import { useLocationStore } from '../hooks/useLocationStore'
-import { isJapanese, translate } from '../translation'
+} from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import Button from '../components/Button';
+import Typography from '../components/Typography';
+import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce';
+import { useLocationStore } from '../hooks/useLocationStore';
+import { isJapanese, translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
@@ -62,34 +61,26 @@ const styles = StyleSheet.create({
     borderBottomColor: '#03a9f4',
     borderBottomWidth: 1,
   },
-})
+});
 
 const PrivacyScreen: React.FC = () => {
-  const navigation = useNavigation()
-  const { fetchCurrentLocation } = useFetchCurrentLocationOnce()
+  const navigation = useNavigation();
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
 
   const handleLocationGranted = useCallback(async () => {
     navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'MainStack' }],
-      })
-    )
+      StackActions.replace('MainStack', { screen: 'SelectLine' })
+    );
 
-    const location = (await fetchCurrentLocation()) ?? null
+    const location = (await fetchCurrentLocation()) ?? null;
     if (location) {
-      useLocationStore.setState(location)
+      useLocationStore.setState(location);
     }
-  }, [fetchCurrentLocation, navigation])
+  }, [fetchCurrentLocation, navigation]);
 
   const handleStartWithoutPermissionPress = useCallback(() => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'FakeStation' }],
-      })
-    )
-  }, [navigation])
+    navigation.dispatch(StackActions.replace('FakeStation'));
+  }, [navigation]);
 
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {
@@ -104,54 +95,53 @@ const PrivacyScreen: React.FC = () => {
             onPress: handleStartWithoutPermissionPress,
           },
         ]
-      )
+      );
     },
     [handleStartWithoutPermissionPress]
-  )
+  );
 
   const handleApprovePress = useCallback(async () => {
     try {
       const { locationServicesEnabled } =
-        await Location.getProviderStatusAsync()
+        await Location.getProviderStatusAsync();
       if (!locationServicesEnabled) {
-        handleLocationDenied(true)
-        return
+        handleLocationDenied(true);
+        return;
       }
 
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      await Notifications.requestPermissionsAsync()
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      await Notifications.requestPermissionsAsync();
       if (Platform.OS === 'android') {
         await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
-        )
+        );
       }
-      await messaging().requestPermission()
 
       switch (status) {
         case Location.PermissionStatus.GRANTED:
-          handleLocationGranted()
-          break
+          handleLocationGranted();
+          break;
         case Location.PermissionStatus.DENIED:
-          handleLocationDenied()
-          break
+          handleLocationDenied();
+          break;
         case Location.PermissionStatus.UNDETERMINED:
-          await Notifications.requestPermissionsAsync()
-          break
+          await Notifications.requestPermissionsAsync();
+          break;
       }
     } catch (err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
-      ])
+      ]);
     }
-  }, [handleLocationDenied, handleLocationGranted])
+  }, [handleLocationDenied, handleLocationGranted]);
 
   const openPrivacyPolicyIAB = (): void => {
     if (isJapanese) {
-      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy')
+      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy');
     } else {
-      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy-en')
+      WebBrowser.openBrowserAsync('https://trainlcd.app/privacy-policy-en');
     }
-  }
+  };
 
   return (
     <View style={styles.root}>
@@ -173,7 +163,7 @@ const PrivacyScreen: React.FC = () => {
         </Button>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default React.memo(PrivacyScreen)
+export default React.memo(PrivacyScreen);

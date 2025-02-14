@@ -1,10 +1,7 @@
 import { NativeModules } from 'react-native';
 import { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from '../../../constants';
 
-
 const { LiveActivityModule } = NativeModules;
-
-
 
 type LiveActivityWidgetState = {
   stationName: string;
@@ -12,34 +9,27 @@ type LiveActivityWidgetState = {
   stationNumber: string;
   nextStationNumber: string;
   approaching: boolean;
-  stopping: boolean;
+  stopped: boolean;
+  lineName: string;
+  lineColor: string;
   passingStationName: string;
   passingStationNumber: string;
 };
 
-export const startLiveActivity = (
-  state?: LiveActivityWidgetState
-): (() => void) | null => {
+export const startLiveActivity = (state?: LiveActivityWidgetState) => {
   if (IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
-    return LiveActivityModule?.startLiveActivity?.(state);
+    LiveActivityModule?.startLiveActivity?.(state);
   }
-  return null;
 };
 
-export const updateLiveActivity = (
-  state: LiveActivityWidgetState
-): (() => void) | null => {
+export const updateLiveActivity = (state: LiveActivityWidgetState) => {
   if (IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
-    return LiveActivityModule?.updateLiveActivity?.(state);
+    LiveActivityModule?.updateLiveActivity?.(state);
   }
-  return null;
 };
 
-export const stopLiveActivity = (
-  state?: LiveActivityWidgetState
-): (() => void) | null => {
+export const stopLiveActivity = (state?: LiveActivityWidgetState) => {
   if (IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM) {
-    return LiveActivityModule?.stopLiveActivity?.(state);
+    LiveActivityModule?.stopLiveActivity?.(state);
   }
-  return null;
 };

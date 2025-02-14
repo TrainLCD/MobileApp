@@ -1,54 +1,41 @@
-import isArray from 'lodash/isArray'
-import React, { LegacyRef, forwardRef, useMemo } from 'react'
-import { Platform, StyleProp, Text, TextProps, TextStyle } from 'react-native'
-import { FONTS } from '../constants'
-import { useThemeStore } from '../hooks/useThemeStore'
-import { APP_THEME } from '../models/Theme'
-import isTablet from '../utils/isTablet'
+import React, { type LegacyRef, forwardRef, useMemo } from 'react';
+import {
+  type StyleProp,
+  StyleSheet,
+  Text,
+  type TextProps,
+  type TextStyle,
+} from 'react-native';
+import { FONTS } from '../constants';
+import { useThemeStore } from '../hooks/useThemeStore';
+import { APP_THEME } from '../models/Theme';
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED)
-
-  const { style: overrideStyle } = props
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {
-      return FONTS.JFDotJiskan24h
+      return FONTS.JFDotJiskan24h;
     }
-    return (overrideStyle as { fontWeight: string })?.fontWeight === 'bold'
+    return StyleSheet.flatten(props.style)?.fontWeight === 'bold'
       ? FONTS.RobotoBold
-      : FONTS.RobotoRegular
-  }, [isLEDTheme, overrideStyle])
-
-  const overrideFontFamily = isArray(overrideStyle)
-    ? overrideStyle
-        .flat()
-        .find((s) => (s?.valueOf() as TextStyle | undefined)?.fontFamily)
-    : (overrideStyle as TextStyle | undefined)?.fontFamily
+      : FONTS.RobotoRegular;
+  }, [isLEDTheme, props.style]);
 
   const style = useMemo<StyleProp<TextStyle>>(
     () => [
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
-        marginTop: Platform.select({
-          ios: 0,
-          android:
-            isLEDTheme ||
-            !isTablet ||
-            overrideFontFamily === FONTS.MyriadPro ||
-            overrideFontFamily === FONTS.FrutigerNeueLTProBold
-              ? 0
-              : -6,
-        }),
+        textAlignVertical: 'top',
       },
-      overrideStyle,
+      props.style,
     ],
-    [fontFamily, isLEDTheme, overrideFontFamily, overrideStyle]
-  )
-  return <Text {...props} ref={ref} allowFontScaling={false} style={style} />
-})
+    [fontFamily, isLEDTheme, props.style]
+  );
+  return <Text {...props} ref={ref} allowFontScaling={false} style={style} />;
+});
 
-Typography.displayName = 'Typography'
+Typography.displayName = 'Typography';
 
-export default React.memo(Typography)
+export default React.memo(Typography);
