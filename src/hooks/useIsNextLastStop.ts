@@ -14,8 +14,8 @@ const useIsNextLastStop = (): boolean => {
       return false;
     }
 
-    return nextStation?.groupId === selectedBound?.groupId;
-  }, [isLoopLine, nextStation?.groupId, selectedBound?.groupId]);
+    return nextStation?.id === selectedBound?.id;
+  }, [isLoopLine, nextStation?.id, selectedBound?.id]);
 
   return isNextLastStop;
 };
