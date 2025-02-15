@@ -26,6 +26,10 @@ export const useBLEDiagnostic = (): void => {
   const getStationNumberIndex = useStationNumberIndexFunc();
 
   const stateText = useMemo(() => {
+    if (isPassing) {
+      return 'Next';
+    }
+
     if (approaching) {
       return 'Soon';
     }
@@ -34,7 +38,7 @@ export const useBLEDiagnostic = (): void => {
     }
 
     return 'Next';
-  }, [approaching, arrived]);
+  }, [approaching, arrived, isPassing]);
 
   const scanAndConnect = useCallback(() => {
     manager.startDeviceScan(
