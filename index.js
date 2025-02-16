@@ -37,8 +37,14 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
 
     const latestLocation = data.locations[data.locations.length - 1];
-    if (latestLocation) {
-      setLocation(latestLocation);
+    const bestAccuracyLocation = data.locations.reduce((best, cur) => {
+      if (best.coords.accuracy > cur.coords.accuracy) {
+        return cur;
+      }
+      return best;
+    }, latestLocation);
+    if (bestAccuracyLocation) {
+      setLocation(bestAccuracyLocation);
     }
   });
 }
