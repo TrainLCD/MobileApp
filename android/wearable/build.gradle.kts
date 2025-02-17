@@ -38,13 +38,13 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 80500171
-      versionName = "8.5.0"
+      versionCode = 80501001
+      versionName = "8.5.1"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 80500001
-      versionName = "8.5.0"
+      versionCode = 80501001
+      versionName = "8.5.1"
     }
   }
 
