@@ -84,7 +84,7 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const { loading, error, refetchStations } = useStationList();
-  const { isLoopLine, isMeijoLine } = useLoopLine();
+  const { isLoopLine } = useLoopLine();
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds();
@@ -336,12 +336,12 @@ const SelectBoundScreen: React.FC = () => {
 
         <View style={styles.horizontalButtons}>
           {renderButton({
-            boundStations: isMeijoLine ? outboundStations : inboundStations,
-            direction: isMeijoLine ? 'OUTBOUND' : 'INBOUND',
+            boundStations: inboundStations,
+            direction: 'INBOUND',
           })}
           {renderButton({
-            boundStations: isMeijoLine ? inboundStations : outboundStations,
-            direction: isMeijoLine ? 'INBOUND' : 'OUTBOUND',
+            boundStations: outboundStations,
+            direction: 'OUTBOUND',
           })}
         </View>
 
