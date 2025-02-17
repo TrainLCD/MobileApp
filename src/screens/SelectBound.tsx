@@ -84,7 +84,7 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const { loading, error, refetchStations } = useStationList();
-  const { isLoopLine, isOsakaLoopLine } = useLoopLine();
+  const { isLoopLine } = useLoopLine();
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds();
