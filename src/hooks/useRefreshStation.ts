@@ -74,7 +74,7 @@ const useRefreshStation = (): void => {
   }, [arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
-    if (!latitude || !longitude || !nextStation) {
+    if (!latitude || !longitude || !nextStation || getIsPass(nextStation)) {
       return false;
     }
 

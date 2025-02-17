@@ -3,7 +3,12 @@ import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
 import { TOEI_OEDO_LINE_ID } from '../constants';
-import { TOEI_OEDO_LINE_MAJOR_STATIONS_ID } from '../constants/station';
+import {
+  TOEI_OEDO_LINE_MAJOR_STATIONS_ID,
+  TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER,
+  TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER,
+  TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID,
+} from '../constants/station';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
@@ -23,6 +28,7 @@ const useBounds = (): {
 
   const {
     isLoopLine,
+    isMeijoLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
   } = useLoopLine();
@@ -36,26 +42,39 @@ const useBounds = (): {
         (s) => s.groupId === currentStation?.groupId
       );
       const oedoLineInboundStops = stations
-        .slice(stationIndex - 1, stations.length)
+        .slice(stationIndex, stations.length)
         .filter(
           (s) =>
             s.groupId !== currentStation?.groupId &&
             TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
         );
       const oedoLineOutboundStops = stations
-        .slice(0, stationIndex - 1)
+        .slice(0, stationIndex)
         .reverse()
         .filter(
           (s) =>
-            s.groupId !== currentStation?.groupId &&
-            TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
+            (s.groupId !== currentStation?.groupId &&
+              TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)) ||
+            s.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER
+        )
+        // NOTE: 光が丘~築地市場駅間では「都庁前」案内をしない
+        .filter((s) =>
+          currentStation &&
+          currentStation.id >= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID
+            ? s.id !== TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER
+            : true
         );
 
       return [oedoLineInboundStops, oedoLineOutboundStops];
     }
 
-    if (isLoopLine && (!trainType || getIsLocal(trainType))) {
-      return [inboundStationsForLoopLine, outboundStationsForLoopLine];
+    if (!trainType || getIsLocal(trainType)) {
+      if (isMeijoLine) {
+        return [outboundStationsForLoopLine, inboundStationsForLoopLine];
+      }
+      if (isLoopLine) {
+        return [inboundStationsForLoopLine, outboundStationsForLoopLine];
+      }
     }
 
     if (
@@ -68,9 +87,10 @@ const useBounds = (): {
     return [[], []];
   }, [
     currentLine?.id,
-    currentStation?.groupId,
+    currentStation,
     inboundStationsForLoopLine,
     isLoopLine,
+    isMeijoLine,
     outboundStationsForLoopLine,
     stations,
     trainType,

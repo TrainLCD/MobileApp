@@ -20,7 +20,6 @@ import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
-import { TOEI_OEDO_LINE_TOCHOMAE_STATION_ID } from '../constants/station';
 import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
 import useBounds from '../hooks/useBounds';
 import { useLoopLine } from '../hooks/useLoopLine';
@@ -85,7 +84,7 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const { loading, error, refetchStations } = useStationList();
-  const { isLoopLine, isMeijoLine } = useLoopLine();
+  const { isLoopLine } = useLoopLine();
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds();
@@ -116,7 +115,7 @@ const SelectBoundScreen: React.FC = () => {
       leftStations: [],
       fetchedTrainTypes: [],
     }));
-    navigation.navigate('SelectLine');
+    navigation.navigate('SelectLine' as never);
   }, [navigation, setLineState, setNavigationState, setStationState]);
 
   const handleBoundSelected = useCallback(
@@ -136,13 +135,12 @@ const SelectBoundScreen: React.FC = () => {
     },
     [navigation, selectedLine, setStationState, stations]
   );
-
   const handleNotificationButtonPress = (): void => {
-    navigation.navigate('Notification');
+    navigation.navigate('Notification' as never);
   };
 
   const handleTrainTypeButtonPress = (): void => {
-    navigation.navigate('TrainType');
+    navigation.navigate('TrainType' as never);
   };
 
   const handleAllStopsButtonPress = useCallback(() => {
@@ -158,7 +156,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [stations]);
 
   const handleSpecifyDestinationButtonPress = useCallback(() => {
-    navigation.navigate('SpecifyDestinationSettings');
+    navigation.navigate('SpecifyDestinationSettings' as never);
   }, [navigation]);
 
   const handleWantedDestinationPress = useCallback(
@@ -186,31 +184,18 @@ const SelectBoundScreen: React.FC = () => {
     [navigation, setNavigationState, setStationState, stations, trainType]
   );
 
-  const normalLineDirectionText = useCallback(
-    (boundStations: Station[]) => {
-      if (
-        selectedLine?.id === TOEI_OEDO_LINE_ID &&
-        boundStations[1]?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID
-      ) {
-        if (isJapanese) {
-          return `${boundStations[0]?.name}経由 都庁前行`;
-        }
-        return `for Tochomae via ${boundStations[0]?.nameRoman}`;
-      }
-
-      if (isJapanese) {
-        return `${boundStations
-          .map((s) => s.name)
-          .slice(0, 2)
-          .join('・')}方面`;
-      }
-      return `for ${boundStations
+  const normalLineDirectionText = useCallback((boundStations: Station[]) => {
+    if (isJapanese) {
+      return `${boundStations
+        .map((s) => s.name)
         .slice(0, 2)
-        .map((s) => s.nameRoman)
-        .join(' and ')}`;
-    },
-    [selectedLine?.id]
-  );
+        .join('・')}方面`;
+    }
+    return `for ${boundStations
+      .slice(0, 2)
+      .map((s) => s.nameRoman)
+      .join(' and ')}`;
+  }, []);
 
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {
@@ -351,12 +336,12 @@ const SelectBoundScreen: React.FC = () => {
 
         <View style={styles.horizontalButtons}>
           {renderButton({
-            boundStations: isMeijoLine ? outboundStations : inboundStations,
-            direction: isMeijoLine ? 'OUTBOUND' : 'INBOUND',
+            boundStations: inboundStations,
+            direction: 'INBOUND',
           })}
           {renderButton({
-            boundStations: isMeijoLine ? inboundStations : outboundStations,
-            direction: isMeijoLine ? 'INBOUND' : 'OUTBOUND',
+            boundStations: outboundStations,
+            direction: 'OUTBOUND',
           })}
         </View>
 
