@@ -28,6 +28,7 @@ const useBounds = (): {
 
   const {
     isLoopLine,
+    isMeijoLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
   } = useLoopLine();
@@ -67,8 +68,13 @@ const useBounds = (): {
       return [oedoLineInboundStops, oedoLineOutboundStops];
     }
 
-    if (isLoopLine && (!trainType || getIsLocal(trainType))) {
-      return [inboundStationsForLoopLine, outboundStationsForLoopLine];
+    if (!trainType || getIsLocal(trainType)) {
+      if (isMeijoLine) {
+        return [outboundStationsForLoopLine, inboundStationsForLoopLine];
+      }
+      if (isLoopLine) {
+        return [inboundStationsForLoopLine, outboundStationsForLoopLine];
+      }
     }
 
     if (
@@ -84,6 +90,7 @@ const useBounds = (): {
     currentStation,
     inboundStationsForLoopLine,
     isLoopLine,
+    isMeijoLine,
     outboundStationsForLoopLine,
     stations,
     trainType,
