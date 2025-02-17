@@ -88,7 +88,11 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     )
     // 日本語はjoを「ホ」と読まない
     .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
-    .replace(/JR/g, 'J-R');
+    .replace(/JR/gi, 'J-R')
+    .replace(
+      /Ryogoku/gi,
+      '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
+    );
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
