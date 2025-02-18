@@ -3,10 +3,16 @@ require('fast-text-encoding');
 import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
-import { SENTRY_DSN } from 'react-native-dotenv';
+import throttle from 'lodash/throttle';
+import {
+  EXPERIMENTAL_TELEMETRY_API_URL,
+  EXPERIMENTAL_TELEMETRY_INTERVAL,
+  SENTRY_DSN,
+} from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME } from './src/constants';
 import { setLocation } from './src/hooks/useLocationStore';
+import { isDevApp } from './src/utils/isDevApp';
 
 if (!__DEV__) {
   Sentry.init({
@@ -29,12 +35,29 @@ if (!__DEV__) {
   });
 }
 
+const sendToExperimentalTelemetry = throttle(async (data) => {
+  if (__DEV__ || !isDevApp) {
+    return;
+  }
+  const res = await fetch(EXPERIMENTAL_TELEMETRY_API_URL, {
+    method: 'post',
+    body: JSON.stringify(data),
+  });
+
+  console.log(await res.json());
+}, Number(EXPERIMENTAL_TELEMETRY_INTERVAL));
+
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
   TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
     if (error) {
       console.error(error);
       return;
     }
+
+    sendToExperimentalTelemetry({
+      locations: data.locations,
+      timestamp: Date.now(),
+    });
 
     const latestLocation = data.locations[data.locations.length - 1];
     const bestAccuracyLocation = data.locations.reduce((best, cur) => {

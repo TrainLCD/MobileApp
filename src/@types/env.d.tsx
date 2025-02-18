@@ -10,4 +10,6 @@ declare module 'react-native-dotenv' {
   export const DEV_FEEDBACK_API_URL: string;
   export const LOCAL_FEEDBACK_API_URL: string;
   export const SENTRY_DSN: string;
+  export const EXPERIMENTAL_TELEMETRY_API_URL: string;
+  export const EXPERIMENTAL_TELEMETRY_INTERVAL: string;
 }
