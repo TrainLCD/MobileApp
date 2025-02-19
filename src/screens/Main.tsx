@@ -11,6 +11,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { LineType, StopCondition } from '../../gen/proto/stationapi_pb';
 import LineBoard from '../components/LineBoard';
@@ -244,7 +245,7 @@ const MainScreen: React.FC = () => {
       }
 
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
-      if (warningDismissed !== 'true' && !bgPermStatus?.granted) {
+      if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
         Alert.alert(
           translate('annoucementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),

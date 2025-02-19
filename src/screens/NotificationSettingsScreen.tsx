@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
@@ -160,6 +161,10 @@ const NotificationSettings: React.FC = () => {
   }, [handlePressBack, openFailedToOpenSettingsAlert]);
 
   const showAlwaysPermissionNotGrantedAlert = useCallback(() => {
+    if (isClip()) {
+      return;
+    }
+
     Alert.alert(
       translate('errorTitle'),
       translate('alwaysPermissionRequired'),

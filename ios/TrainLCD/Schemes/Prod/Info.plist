@@ -2,6 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>trainlcd</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>trainlcd</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ja_JP</string>
 	<key>CFBundleDisplayName</key>
@@ -30,15 +43,6 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>trainlcd</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CURRENT_SCHEME_NAME</key>
@@ -68,11 +72,11 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Fonts/FrutigerNeueLTPro-Bold.ttf</string>
-		<string>Fonts/FuturaLTPro-Bold.ttf</string>
-		<string>Fonts/myriadpro-bold.ttf</string>
-		<string>Fonts/verdana-bold.ttf</string>
-		<string>Fonts/JF-Dot-jiskan24h.ttf</string>
+		<string>FrutigerNeueLTPro-Bold.ttf</string>
+		<string>myriadpro-bold.ttf</string>
+		<string>FuturaLTPro-Bold.ttf</string>
+		<string>verdana-bold.ttf</string>
+		<string>JF-Dot-jiskan24h.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
