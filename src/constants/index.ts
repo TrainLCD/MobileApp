@@ -7,7 +7,7 @@ export {
 } from './duration';
 export { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from './feedback';
 export { FONTS } from './fonts';
-export { DEV_APP_BUNDLE_IDENTIFIER } from './ident';
+export { DEV_APP_BUNDLE_IDENTIFIER, DEV_CLIP_BUNDLE_IDENTIFIER } from './ident';
 export {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
