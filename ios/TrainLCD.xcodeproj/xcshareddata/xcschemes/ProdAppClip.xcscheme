@@ -53,7 +53,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "_XCAppClipURL"
-            value = "https://trainlcd.app/clip"
+            value = "https://trainlcd.app/"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
