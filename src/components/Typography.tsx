@@ -30,6 +30,7 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
         textAlignVertical: 'top',
       },
       props.style,
+      isLEDTheme && { fontWeight: 'normal' },
     ],
     [fontFamily, isLEDTheme, props.style]
   );
