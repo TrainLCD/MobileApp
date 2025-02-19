@@ -30,6 +30,7 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
         textAlignVertical: 'top',
       },
       props.style,
+      // NOTE: LEDテーマ用フォントはファイルサイズが大きいのでボールドの方を廃止した
       isLEDTheme && { fontWeight: 'normal' },
     ],
     [fontFamily, isLEDTheme, props.style]
