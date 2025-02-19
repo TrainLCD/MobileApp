@@ -67,8 +67,14 @@ abstract_target 'TrainLCD' do
   end
 
   target 'ProdTrainLCD' do
+    target 'ProdAppClip' do
+      inherit! :complete
+    end
   end
 
   target 'CanaryTrainLCD' do
+    target 'CanaryAppClip' do
+      inherit! :complete
+    end
   end
 end

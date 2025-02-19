@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useForegroundPermissions } from 'expo-location';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isClip } from 'react-native-app-clip';
 import { useRecoilValue } from 'recoil';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 import stationState from '../store/atoms/station';
@@ -75,7 +76,8 @@ export const useWarningInfo = () => {
       if (
         !bgPermGranted &&
         !isAlwaysPermissionNotGrantedDismissed &&
-        !!selectedBound
+        !!selectedBound &&
+        !isClip()
       ) {
         return {
           level: WARNING_PANEL_LEVEL.WARNING,
