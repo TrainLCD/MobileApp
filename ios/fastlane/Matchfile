@@ -9,10 +9,12 @@ app_identifier([
     "me.tinykitten.trainlcd.watchkitapp",
     "me.tinykitten.trainlcd.watchkitapp.watchkitextension",
     "me.tinykitten.trainlcd.ridesessionactivity",
+    "me.tinykitten.trainlcd.Clip",
     "me.tinykitten.trainlcd.dev",
     "me.tinykitten.trainlcd.dev.watchkitapp",
     "me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension",
-    "me.tinykitten.trainlcd.dev.ridesessionactivity"
+    "me.tinykitten.trainlcd.dev.ridesessionactivity",
+    "me.tinykitten.trainlcd.dev.Clip"
     ])
 # username("user@fastlane.tools") # Your Apple Developer Portal username
 
