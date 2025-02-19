@@ -71,8 +71,8 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>FrutigerNeueLTPro-Bold.ttf</string>
-		<string>myriadpro-bold.ttf</string>
 		<string>FuturaLTPro-Bold.ttf</string>
+		<string>myriadpro-bold.ttf</string>
 		<string>verdana-bold.ttf</string>
 		<string>JF-Dot-jiskan24h.ttf</string>
 	</array>
