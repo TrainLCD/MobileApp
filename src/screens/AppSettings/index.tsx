@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import { useRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
@@ -48,6 +49,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: RFValue(12),
     lineHeight: RFValue(18),
+  },
+  halfOpacity: {
+    opacity: 0.5,
   },
 });
 
@@ -98,6 +102,10 @@ const AppSettingsScreen: React.FC = () => {
 
   const onBackgroundAudioEnabledValueChange = useCallback(
     async (flag: boolean) => {
+      if (isClip()) {
+        return;
+      }
+
       const noticeConfirmed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
       );
@@ -175,6 +183,7 @@ const AppSettingsScreen: React.FC = () => {
             <View
               style={[
                 styles.settingItem,
+                isClip() && styles.halfOpacity,
                 {
                   flexDirection: 'row',
                   marginTop: 8,
@@ -200,9 +209,14 @@ const AppSettingsScreen: React.FC = () => {
             </View>
           ) : null}
 
-          {speechEnabled && backgroundEnabled && (
+          {speechEnabled && backgroundEnabled && !isClip() && (
             <Typography style={styles.bgTTSNotice}>
               {translate('bgTtsAlertText')}
+            </Typography>
+          )}
+          {speechEnabled && isClip() && (
+            <Typography style={styles.bgTTSNotice}>
+              {translate('bgTtsAppClipAlertText')}
             </Typography>
           )}
         </View>
