@@ -14,6 +14,7 @@ export type Report = {
   deviceInfo: FeedbackDeviceInfo | null;
   imageUrl: string | null;
   appEdition: 'canary' | 'production';
+  appClip: boolean;
   createdAt: number;
   updatedAt: number;
 };
