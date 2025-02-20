@@ -256,6 +256,7 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     reportType,
     imageUrl,
     appEdition,
+    appClip,
   } = report;
 
   if (!process.env.OCTOKIT_PAT) {
@@ -321,7 +322,8 @@ ${reporterUid}
             '🙏 Feedback',
             osNameLabel,
             appEdition === 'production' ? '🌏 Production' : '🐥 Canary',
-          ],
+            appClip && '📎 App Clip',
+          ].filter(Boolean),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },

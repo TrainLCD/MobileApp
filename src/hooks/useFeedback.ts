@@ -5,6 +5,7 @@ import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
 import { useCallback } from 'react';
+import { isClip } from 'react-native-app-clip';
 import {
   DEV_FEEDBACK_API_URL,
   PRODUCTION_FEEDBACK_API_URL,
@@ -119,6 +120,7 @@ export const useFeedback = (
           : null,
         imageUrl,
         appEdition: isDevApp ? 'canary' : 'production',
+        appClip: isClip(),
         createdAt: new Date().getTime(),
         updatedAt: new Date().getTime(),
       };
