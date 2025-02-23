@@ -14,7 +14,6 @@ android {
     vectorDrawables {
       useSupportLibrary = true
     }
-    resourceConfigurations.addAll(listOf("en", "ja"))
   }
 
   buildTypes {
@@ -23,8 +22,7 @@ android {
     }
     release {
       signingConfig = signingConfigs.getByName("debug")
-      isMinifyEnabled = true
-      isShrinkResources = true
+      isMinifyEnabled = false
       proguardFiles(
         getDefaultProguardFile("proguard-android-optimize.txt"),
         "proguard-rules.pro"
