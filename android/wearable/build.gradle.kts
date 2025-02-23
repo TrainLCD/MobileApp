@@ -14,7 +14,6 @@ android {
     vectorDrawables {
       useSupportLibrary = true
     }
-    resourceConfigurations.addAll(listOf("en", "ja"))
   }
 
   buildTypes {
@@ -23,8 +22,7 @@ android {
     }
     release {
       signingConfig = signingConfigs.getByName("debug")
-      isMinifyEnabled = true
-      isShrinkResources = true
+      isMinifyEnabled = false
       proguardFiles(
         getDefaultProguardFile("proguard-android-optimize.txt"),
         "proguard-rules.pro"
@@ -40,7 +38,7 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 80601011
+      versionCode = 80601021
       versionName = "8.6.1"
     }
     create("prod") {
