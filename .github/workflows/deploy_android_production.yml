@@ -1,4 +1,4 @@
-name: Deploy Android Canary App
+name: Deploy Android Production App
 
 on:
   push:
