@@ -45,7 +45,7 @@ jobs:
           DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
       - name: Restore google-services.json
         shell: bash
-        run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./android/app/src/dev/google-services.json
+        run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./android/app/src/prod/google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON_PRODUCTION }}
       - name: Restore play-store-credentials.json
