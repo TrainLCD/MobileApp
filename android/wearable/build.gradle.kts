@@ -43,7 +43,7 @@ android {
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 80601001
+      versionCode = 80601011
       versionName = "8.6.1"
     }
   }
