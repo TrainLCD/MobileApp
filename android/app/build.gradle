@@ -93,7 +93,6 @@ android {
     applicationId 'me.tinykitten.trainlcd'
     minSdkVersion rootProject.ext.minSdkVersion
     targetSdkVersion rootProject.ext.targetSdkVersion
-    resConfigs "en", "ja"
   }
   signingConfigs {
     debug {
@@ -111,8 +110,8 @@ android {
       // Caution! In production, you need to generate your own keystore file.
       // see https://reactnative.dev/docs/signed-apk-android.
       signingConfig signingConfigs.debug
-      shrinkResources true
-      minifyEnabled true
+      shrinkResources(findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
+      minifyEnabled enableProguardInReleaseBuilds
       proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
       crunchPngs(findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
     }
@@ -125,13 +124,13 @@ android {
       applicationIdSuffix ".dev"
       versionNameSuffix "-dev"
       // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-      versionCode 80600000
-      versionName "8.6.0"
+      versionCode 80601020
+      versionName "8.6.1"
     }
     prod {
       dimension "environment"
-      versionCode 80600000
-      versionName "8.6.0"
+      versionCode 80601000
+      versionName "8.6.1"
     }
   }
 }
