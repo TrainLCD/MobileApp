@@ -40,9 +40,9 @@ jobs:
         run: bundle install
       - name: Restore .env.local
         shell: bash
-        run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
+        run: echo "$DOTENV_LOCAL_PRODUCTION" | tr -d '\r' > ./.env.local
         env:
-          DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
+          DOTENV_LOCAL_PRODUCTION: ${{ secrets.DOTENV_LOCAL_PRODUCTION }}
       - name: Restore google-services.json
         shell: bash
         run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./android/app/src/prod/google-services.json
