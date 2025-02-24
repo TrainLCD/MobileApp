@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - hotfix/prod-release-android
     paths:
       - 'android/app/build.gradle'
       - 'android/wearable/build.gradle.kts'
