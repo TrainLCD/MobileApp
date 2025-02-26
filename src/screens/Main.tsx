@@ -320,7 +320,7 @@ const MainScreen: React.FC = () => {
         averageDistance: null,
         stations: [],
       }));
-      navigation.navigate('SelectBound' as never);
+      navigation.dispatch(StackActions.replace('SelectBound'));
     },
     [navigation, setLineState, setNavigationState, setStationState]
   );
