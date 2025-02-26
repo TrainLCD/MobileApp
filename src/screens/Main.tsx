@@ -12,8 +12,12 @@ import {
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { LineType, StopCondition } from '../../gen/proto/stationapi_pb';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import {
+  LineType,
+  type Station,
+  StopCondition,
+} from '../../gen/proto/stationapi_pb';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
@@ -40,10 +44,11 @@ import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { getIsHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
+import lineState from '../store/atoms/line';
 
 const { height: screenHeight } = Dimensions.get('screen');
 
@@ -57,9 +62,12 @@ const MainScreen: React.FC = () => {
   const theme = useThemeStore();
   const isLEDTheme = theme === APP_THEME.LED;
 
-  const { stations, selectedDirection, arrived } = useRecoilValue(stationState);
-  const [{ leftStations, bottomState }, setNavigation] =
+  const [{ stations, selectedDirection, arrived }, setStationState] =
+    useRecoilState(stationState);
+  const [{ leftStations, bottomState }, setNavigationState] =
     useRecoilState(navigationState);
+  const setLineState = useSetRecoilState(lineState);
+
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
 
@@ -179,20 +187,20 @@ const MainScreen: React.FC = () => {
   const toTransferState = useCallback((): void => {
     if (transferLines.length) {
       pauseBottomTimer();
-      setNavigation((prev) => ({
+      setNavigationState((prev) => ({
         ...prev,
         bottomState: 'TRANSFER',
       }));
     }
-  }, [pauseBottomTimer, setNavigation, transferLines.length]);
+  }, [pauseBottomTimer, setNavigationState, transferLines.length]);
 
   const toLineState = useCallback((): void => {
     pauseBottomTimer();
-    setNavigation((prev) => ({
+    setNavigationState((prev) => ({
       ...prev,
       bottomState: 'LINE',
     }));
-  }, [pauseBottomTimer, setNavigation]);
+  }, [pauseBottomTimer, setNavigationState]);
 
   const isTypeWillChange = useTypeWillChange();
   const shouldHideTypeChange = useShouldHideTypeChange();
@@ -200,17 +208,22 @@ const MainScreen: React.FC = () => {
   const toTypeChangeState = useCallback(() => {
     if (!isTypeWillChange || shouldHideTypeChange) {
       pauseBottomTimer();
-      setNavigation((prev) => ({
+      setNavigationState((prev) => ({
         ...prev,
         bottomState: 'LINE',
       }));
       return;
     }
-    setNavigation((prev) => ({
+    setNavigationState((prev) => ({
       ...prev,
       bottomState: 'TYPE_CHANGE',
     }));
-  }, [isTypeWillChange, pauseBottomTimer, setNavigation, shouldHideTypeChange]);
+  }, [
+    isTypeWillChange,
+    pauseBottomTimer,
+    setNavigationState,
+    shouldHideTypeChange,
+  ]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -281,6 +294,76 @@ const MainScreen: React.FC = () => {
     f();
   }, []);
 
+  const changeOperatingLine = useCallback(
+    async (selectedStation: Station) => {
+      const selectedLine = selectedStation.line;
+      if (!selectedLine) {
+        return;
+      }
+
+      setLineState((prev) => ({ ...prev, selectedLine }));
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: selectedStation.trainType ?? null,
+        stationForHeader: selectedStation,
+        headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+        bottomState: 'LINE',
+        leftStations: [],
+      }));
+      setStationState((prev) => ({
+        ...prev,
+        station: selectedStation,
+        selectedDirection: null,
+        selectedBound: null,
+        arrived: true,
+        approaching: false,
+        averageDistance: null,
+        stations: [],
+      }));
+      navigation.navigate('SelectBound' as never);
+    },
+    [navigation, setLineState, setNavigationState, setStationState]
+  );
+
+  const handleTransferPress = useCallback(
+    (selectedStation: Station | undefined) => {
+      if (!selectedStation) {
+        return;
+      }
+
+      Alert.alert(
+        translate('confirmChangeLineTitle', {
+          lineName:
+            (isJapanese
+              ? selectedStation.line?.nameShort
+              : selectedStation.line?.nameRoman) ?? '',
+        }),
+        translate('confirmChangeLineText', {
+          currentLineName:
+            (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ??
+            '',
+          lineName:
+            (isJapanese
+              ? selectedStation.line?.nameShort
+              : selectedStation.line?.nameRoman) ?? '',
+        }),
+        [
+          {
+            text: translate('cancel'),
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: () => {
+              changeOperatingLine(selectedStation);
+            },
+          },
+        ]
+      );
+    },
+    [currentLine, changeOperatingLine]
+  );
+
   if (isLEDTheme) {
     return <LineBoard />;
   }
@@ -317,10 +400,7 @@ const MainScreen: React.FC = () => {
 
       return (
         <View style={[styles.touchable, marginForMetroThemeStyle]}>
-          <Transfers
-            theme={theme}
-            onPress={isTypeWillChange ? toTypeChangeState : toLineState}
-          />
+          <Transfers theme={theme} onPress={handleTransferPress} />
         </View>
       );
     case 'TYPE_CHANGE':
