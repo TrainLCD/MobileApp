@@ -326,8 +326,9 @@ const MainScreen: React.FC = () => {
   );
 
   const handleTransferPress = useCallback(
-    (selectedStation: Station | undefined) => {
+    (selectedStation?: Station) => {
       if (!selectedStation) {
+        isTypeWillChange ? toTypeChangeState() : toLineState();
         return;
       }
 
@@ -361,7 +362,13 @@ const MainScreen: React.FC = () => {
         ]
       );
     },
-    [currentLine, changeOperatingLine]
+    [
+      currentLine,
+      isTypeWillChange,
+      changeOperatingLine,
+      toTypeChangeState,
+      toLineState,
+    ]
   );
 
   if (isLEDTheme) {
@@ -392,7 +399,7 @@ const MainScreen: React.FC = () => {
       if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
         return (
           <TransfersYamanote
-            onPress={isTypeWillChange ? toTypeChangeState : toLineState}
+            onPress={handleTransferPress}
             station={transferStation}
           />
         );

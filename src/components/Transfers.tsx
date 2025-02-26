@@ -21,7 +21,7 @@ import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 interface Props {
-  onPress: (station: Station | undefined) => void;
+  onPress: (station?: Station) => void;
   theme: AppTheme;
 }
 
@@ -272,7 +272,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   }
 
   return (
-    <>
+    <TouchableOpacity activeOpacity={1} onPress={() => onPress()}>
       <CustomHeading />
       <FlatList
         contentContainerStyle={styles.transferView}
@@ -280,7 +280,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         keyExtractor={(l) => l.id.toString()}
         renderItem={renderTransferLine}
       />
-    </>
+    </TouchableOpacity>
   );
 };
 
