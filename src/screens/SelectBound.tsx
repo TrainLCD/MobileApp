@@ -104,6 +104,7 @@ const SelectBoundScreen: React.FC = () => {
     }));
     setStationState((prev) => ({
       ...prev,
+      station: null,
       stations: [],
       wantedDestination: null,
     }));
