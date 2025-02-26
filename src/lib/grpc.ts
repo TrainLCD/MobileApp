@@ -27,7 +27,7 @@ export const transport = createGrpcWebTransport({
       body: init?.body ?? undefined,
       signal: init?.signal ?? undefined,
       credentials: 'omit',
-    }),
+    }) as unknown as Promise<Response>,
 });
 
 export const grpcClient = createClient(StationAPI, transport);

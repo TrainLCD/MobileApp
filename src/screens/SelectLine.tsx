@@ -150,7 +150,7 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         selectedLine: line,
       }));
-      navigation.navigate('SelectBound');
+      navigation.navigate('SelectBound' as never);
     },
     [navigation, setLineState, setNavigationState]
   );
@@ -231,19 +231,19 @@ const SelectLineScreen: React.FC = () => {
   ]);
 
   const navigateToSettingsScreen = useCallback(() => {
-    navigation.navigate('AppSettings');
+    navigation.navigate('AppSettings' as never);
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    navigation.navigate('FakeStation');
+    navigation.navigate('FakeStation' as never);
   }, [navigation]);
 
   const navigateToSavedRoutesScreen = useCallback(() => {
-    navigation.navigate('SavedRoutes');
+    navigation.navigate('SavedRoutes' as never);
   }, [navigation]);
 
   const navigateToRouteSearchScreen = useCallback(() => {
-    navigation.navigate('RouteSearch');
+    navigation.navigate('RouteSearch' as never);
   }, [navigation]);
 
   if (nearbyStationFetchError) {
