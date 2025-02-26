@@ -42,13 +42,13 @@ import { useTypeWillChange } from '../hooks/useTypeWillChange';
 import { useUpdateBottomState } from '../hooks/useUpdateBottomState';
 import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities';
 import { APP_THEME } from '../models/Theme';
+import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { getIsHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
-import lineState from '../store/atoms/line';
 
 const { height: screenHeight } = Dimensions.get('screen');
 
