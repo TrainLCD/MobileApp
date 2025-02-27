@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -71,51 +71,60 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
 
   const flexBasis = useMemo(() => Dimensions.get('screen').width / 3, []);
 
-  const renderTransferLine = ({
-    item: line,
-  }: { item: Line; index: number }) => {
-    if (!station) {
-      return null;
-    }
-    const lineMark = getLineMarkFunc({ line });
+  const renderTransferLine = useCallback(
+    ({ item: line }: { item: Line; index: number }) => {
+      if (!station) {
+        return null;
+      }
+      const lineMark = getLineMarkFunc({ line });
 
-    return (
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={() => onPress(new Station({ ...line.station, line }))}
-        style={[
-          styles.transferLine,
-          {
-            marginLeft: safeAreaLeft,
-            marginRight: safeAreaRight,
-            flexBasis,
-          },
-        ]}
-        key={line.id}
-      >
-        <View style={styles.transferLineInner}>
-          {lineMark ? (
-            <TransferLineMark
-              line={line}
-              mark={lineMark}
-              size={NUMBERING_ICON_SIZE.MEDIUM}
-            />
-          ) : (
-            <TransferLineDot line={line} />
-          )}
+      return (
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => onPress(new Station({ ...line.station, line, lines }))}
+          style={[
+            styles.transferLine,
+            {
+              marginLeft: safeAreaLeft,
+              marginRight: safeAreaRight,
+              flexBasis,
+            },
+          ]}
+          key={line.id}
+        >
+          <View style={styles.transferLineInner}>
+            {lineMark ? (
+              <TransferLineMark
+                line={line}
+                mark={lineMark}
+                size={NUMBERING_ICON_SIZE.MEDIUM}
+              />
+            ) : (
+              <TransferLineDot line={line} />
+            )}
 
-          <View style={styles.lineNameContainer}>
-            <Typography style={styles.lineName}>
-              {line.nameShort.replace(parenthesisRegexp, '')}
-            </Typography>
-            <Typography style={styles.lineNameEn}>
-              {line.nameRoman?.replace(parenthesisRegexp, '')}
-            </Typography>
+            <View style={styles.lineNameContainer}>
+              <Typography style={styles.lineName}>
+                {line.nameShort.replace(parenthesisRegexp, '')}
+              </Typography>
+              <Typography style={styles.lineNameEn}>
+                {line.nameRoman?.replace(parenthesisRegexp, '')}
+              </Typography>
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        </TouchableOpacity>
+      );
+    },
+    [
+      flexBasis,
+      onPress,
+      station,
+      getLineMarkFunc,
+      lines,
+      safeAreaLeft,
+      safeAreaRight,
+    ]
+  );
 
   return (
     <TouchableOpacity
