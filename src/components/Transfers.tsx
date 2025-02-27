@@ -161,7 +161,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
           activeOpacity={1}
           style={styles.transferLine}
           key={line.id}
-          onPress={() => onPress(new Station({ ...line.station, line }))}
+          onPress={() => onPress(new Station({ ...line.station, line, lines }))}
         >
           <View style={styles.transferLineInnerLeft}>
             {lineMark ? (
@@ -231,7 +231,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         </TouchableOpacity>
       );
     },
-    [getLineMarkFunc, onPress, station, stationNumbers]
+    [getLineMarkFunc, onPress, station, stationNumbers, lines]
   );
 
   const CustomHeading = () => {
