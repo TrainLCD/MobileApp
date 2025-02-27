@@ -26,7 +26,7 @@ interface Props {
 }
 
 const styles = StyleSheet.create({
-  scrollViewContainer: {
+  container: {
     flex: 1,
   },
   transferLine: {
@@ -272,7 +272,11 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   }
 
   return (
-    <TouchableOpacity activeOpacity={1} onPress={() => onPress()}>
+    <TouchableOpacity
+      style={styles.container}
+      activeOpacity={1}
+      onPress={() => onPress()}
+    >
       <CustomHeading />
       <FlatList
         contentContainerStyle={styles.transferView}
