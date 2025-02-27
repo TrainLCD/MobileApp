@@ -115,7 +115,7 @@ const SelectBoundScreen: React.FC = () => {
       leftStations: [],
       fetchedTrainTypes: [],
     }));
-    navigation.navigate('SelectLine' as never);
+    navigation.dispatch(StackActions.replace('SelectLine'));
   }, [navigation, setLineState, setNavigationState, setStationState]);
 
   const handleBoundSelected = useCallback(
