@@ -1,4 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
+import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import {
   Dimensions,
@@ -24,7 +25,6 @@ import Button from './Button';
 import Heading from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
-import uniqBy from 'lodash/uniqBy';
 
 type Props = {
   trainType: TrainType | null;
