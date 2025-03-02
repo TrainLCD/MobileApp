@@ -127,7 +127,7 @@ const RouteSearchScreen = () => {
     { enabled: !!currentStation && !!selectedStation && isDevApp }
   );
 
-  const rotuesWithConnected = useMemo(
+  const routesWithConnected = useMemo(
     () => [
       ...(connectedRoutesData?.routes ?? []),
       ...(routesData?.routes ?? []),
@@ -355,7 +355,7 @@ const RouteSearchScreen = () => {
       {selectedStation && (
         <RouteListModal
           finalStation={selectedStation}
-          routes={rotuesWithConnected}
+          routes={routesWithConnected}
           visible={isRouteListModalVisible}
           isRoutesLoading={isRoutesLoading || isConnectedRoutesLoading}
           isTrainTypesLoading={isTrainTypesLoading}
