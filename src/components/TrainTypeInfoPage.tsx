@@ -24,6 +24,7 @@ import Button from './Button';
 import Heading from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
+import uniqBy from 'lodash/uniqBy';
 
 type Props = {
   trainType: TrainType | null;
@@ -158,8 +159,11 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 ? 0
                 : a.trainType?.id - b.trainType?.id
             )
-        : [selectedLine],
-    [selectedLine, trainType?.lines]
+        : uniqBy(
+            stations.map((s) => s.line ?? null),
+            'id'
+          ).filter((l) => l !== null),
+    [stations, trainType?.lines]
   );
 
   const stopStations = useMemo(
@@ -250,7 +254,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
               data={trainTypeLines}
-              keyExtractor={(item) => item?.id.toString() ?? ''}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => <TrainTypeItem line={item} />}
             />
 
