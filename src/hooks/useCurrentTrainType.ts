@@ -27,7 +27,11 @@ const useCurrentTrainType = (): TrainType | null => {
       !fromBuilder &&
       !getIsPass(currentStation)
     ) {
-      setCachedTrainType(currentStation?.trainType ?? null);
+      setCachedTrainType((prev) =>
+        prev?.id === currentStation?.trainType?.id
+          ? prev
+          : (currentStation?.trainType ?? null)
+      );
     }
   }, [currentStation, fromBuilder, trainType]);
 
