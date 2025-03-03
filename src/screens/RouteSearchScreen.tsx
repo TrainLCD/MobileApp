@@ -89,7 +89,7 @@ const RouteSearchScreen = () => {
   const { mutateAsync: fetchStationByIdList } = useMutation(getStationByIdList);
 
   const {
-    fetchStations: fetchTrainTypeFromTrainTypeId,
+    fetchStations: fetchStationsByLineGroupId,
     isLoading: isTrainTypesLoading,
     error: fetchTrainTypesError,
   } = useTrainTypeStations();
@@ -249,7 +249,7 @@ const RouteSearchScreen = () => {
         return;
       }
 
-      const { stations } = await fetchTrainTypeFromTrainTypeId({
+      const { stations } = await fetchStationsByLineGroupId({
         lineGroupId: trainType.groupId,
       });
 
@@ -269,7 +269,7 @@ const RouteSearchScreen = () => {
 
       setNavigationState((prev) => ({
         ...prev,
-        trainType: station?.trainType ?? null,
+        trainType,
         stationForHeader: station,
       }));
       setStationState((prev) => ({
@@ -292,7 +292,7 @@ const RouteSearchScreen = () => {
     [
       currentStation?.groupId,
       fetchStationByIdList,
-      fetchTrainTypeFromTrainTypeId,
+      fetchStationsByLineGroupId,
       navigation,
       selectedStation?.groupId,
       setNavigationState,
