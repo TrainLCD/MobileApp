@@ -734,9 +734,7 @@ const TypeChangeNotify: React.FC = () => {
   const nextTrainType = useNextTrainType();
 
   const currentTypeStations = stations.filter(
-    (s) =>
-      s.trainType?.typeId === trainType?.typeId &&
-      s.line?.id === currentLine?.id
+    (s) => s.trainType?.typeId === trainType?.typeId
   );
 
   const reversedStations = stations.slice().reverse();
