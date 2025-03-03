@@ -410,8 +410,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${(nextLine ? currentLine : trainType)?.color || '#000000'}ff`,
-          `${(nextLine ? currentLine : trainType)?.color || '#000000'}bb`,
+          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
+          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -723,6 +723,93 @@ const JOBars: React.FC = () => {
     </View>
   );
 };
+
+const HeadingJa = React.memo(
+  ({
+    headingTexts,
+  }: {
+    headingTexts: {
+      jaPrefix: string;
+      enPrefix: string;
+      jaSuffix?: string;
+      enSuffix?: string;
+    } | null;
+  }) => {
+    const trainType = useCurrentTrainType();
+    const nextTrainType = useNextTrainType();
+
+    if (!headingTexts) {
+      return null;
+    }
+
+    if (headingTexts.jaSuffix) {
+      return (
+        <Typography numberOfLines={2} style={styles.headingJa}>
+          {`${headingTexts.jaPrefix} `}
+          <Typography
+            style={[
+              { color: (nextTrainType ?? trainType)?.color ?? '#212121' },
+              styles.trainTypeText,
+            ]}
+          >
+            {(nextTrainType ?? trainType)?.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
+          </Typography>
+          {` ${headingTexts.jaSuffix}`}
+        </Typography>
+      );
+    }
+    return (
+      <Typography style={styles.headingJa}>{headingTexts.jaPrefix}</Typography>
+    );
+  }
+);
+
+const HeadingEn = React.memo(
+  ({
+    headingTexts,
+  }: {
+    headingTexts: {
+      jaPrefix: string;
+      enPrefix: string;
+      jaSuffix?: string;
+      enSuffix?: string;
+    } | null;
+  }) => {
+    const trainType = useCurrentTrainType();
+    const nextTrainType = useNextTrainType();
+
+    if (!headingTexts) {
+      return null;
+    }
+
+    if (headingTexts.enSuffix) {
+      return (
+        <Typography style={styles.headingEn}>
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {headingTexts.enPrefix}{' '}
+          <Typography
+            style={[
+              { color: (nextTrainType ?? trainType)?.color ?? '#212121' },
+              styles.trainTypeText,
+            ]}
+          >
+            {(nextTrainType ?? trainType)?.nameRoman
+              ?.replace('\n', '')
+              .replace(parenthesisRegexp, '')}
+          </Typography>
+          {` ${headingTexts.enSuffix}`}
+        </Typography>
+      );
+    }
+
+    return (
+      <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
+    );
+  }
+);
+
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
     useRecoilValue(stationState);
@@ -733,30 +820,50 @@ const TypeChangeNotify: React.FC = () => {
   const trainType = useCurrentTrainType();
   const nextTrainType = useNextTrainType();
 
-  const currentTypeStations = stations.filter(
-    (s) => s.trainType?.typeId === trainType?.typeId
+  const currentTypeStations = useMemo(
+    () => stations.filter((s) => s.trainType?.typeId === trainType?.typeId),
+    [stations, trainType]
   );
 
-  const reversedStations = stations.slice().reverse();
-  const reversedFinalPassedStationIndex = reversedStations.findIndex(
-    (s) => s.stopCondition === StopCondition.Not
+  const reversedStations = useMemo(
+    () => stations.slice().reverse(),
+    [stations]
   );
-  const reversedCurrentStationIndex = reversedStations.findIndex(
-    (s) => s.groupId === station?.groupId
+  const reversedFinalPassedStationIndex = useMemo(
+    () =>
+      reversedStations.findIndex((s) => s.stopCondition === StopCondition.Not),
+    [reversedStations]
   );
-  const afterAllStopLastStation =
-    reversedStations[reversedFinalPassedStationIndex - 2];
+  const reversedCurrentStationIndex = useMemo(
+    () => reversedStations.findIndex((s) => s.groupId === station?.groupId),
+    [reversedStations, station]
+  );
+  const afterAllStopLastStation = useMemo(
+    () => reversedStations[reversedFinalPassedStationIndex - 2],
+    [reversedStations, reversedFinalPassedStationIndex]
+  );
   // 「~から先は各駅に止まります」を表示するフラグ
-  const isNextTypeIsLocal =
-    nextTrainType &&
-    // 次の路線の種別が各停・普通
-    getIsLocal(nextTrainType) &&
-    // 現在の種別が各停・普通の場合は表示しない
-    !getIsLocal(trainType) &&
-    // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
-    afterAllStopLastStation?.line?.id === (nextLine ?? currentLine)?.id &&
-    // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
-    reversedCurrentStationIndex > reversedFinalPassedStationIndex;
+  const isNextTypeIsLocal = useMemo(
+    () =>
+      nextTrainType &&
+      // 次の路線の種別が各停・普通
+      getIsLocal(nextTrainType) &&
+      // 現在の種別が各停・普通の場合は表示しない
+      !getIsLocal(trainType) &&
+      // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
+      afterAllStopLastStation?.line?.id === (nextLine ?? currentLine)?.id &&
+      // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
+      reversedCurrentStationIndex > reversedFinalPassedStationIndex,
+    [
+      afterAllStopLastStation,
+      currentLine,
+      nextLine,
+      nextTrainType,
+      trainType,
+      reversedCurrentStationIndex,
+      reversedFinalPassedStationIndex,
+    ]
+  );
   const currentTypeLastStation = useMemo(() => {
     if (
       isNextTypeIsLocal &&
@@ -842,63 +949,6 @@ const TypeChangeNotify: React.FC = () => {
     selectedBound,
   ]);
 
-  const HeadingJa = () => {
-    if (!headingTexts) {
-      return null;
-    }
-
-    if (headingTexts.jaSuffix) {
-      return (
-        <Typography numberOfLines={2} style={styles.headingJa}>
-          {`${headingTexts.jaPrefix} `}
-          <Typography
-            style={[
-              { color: (nextTrainType ?? trainType)?.color || '#212121' },
-              styles.trainTypeText,
-            ]}
-          >
-            {(nextTrainType ?? trainType)?.name
-              .replace('\n', '')
-              .replace(parenthesisRegexp, '')}
-          </Typography>
-          {` ${headingTexts.jaSuffix}`}
-        </Typography>
-      );
-    }
-    return (
-      <Typography style={styles.headingJa}>{headingTexts.jaPrefix}</Typography>
-    );
-  };
-  const HeadingEn = () => {
-    if (!headingTexts) {
-      return null;
-    }
-
-    if (headingTexts.enSuffix) {
-      return (
-        <Typography style={styles.headingEn}>
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {headingTexts.enPrefix}{' '}
-          <Typography
-            style={[
-              { color: (nextTrainType ?? trainType)?.color || '#212121' },
-              styles.trainTypeText,
-            ]}
-          >
-            {(nextTrainType ?? trainType)?.nameRoman
-              ?.replace('\n', '')
-              .replace(parenthesisRegexp, '')}
-          </Typography>
-          {` ${headingTexts.enSuffix}`}
-        </Typography>
-      );
-    }
-
-    return (
-      <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
-    );
-  };
-
   const BarsComponent = useCallback(() => {
     switch (theme) {
       case 'SAIKYO':
@@ -914,8 +964,8 @@ const TypeChangeNotify: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.top}>
-        <HeadingJa />
-        <HeadingEn />
+        <HeadingJa headingTexts={headingTexts} />
+        <HeadingEn headingTexts={headingTexts} />
       </View>
       <View style={styles.bottom}>
         <Typography style={styles.headingJa}>
