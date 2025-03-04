@@ -13,11 +13,20 @@ import {
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 
 export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState);
   const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
+
+  const station = useCurrentStation();
+
+  // NOTE: メイン画面で他路線に直通後はselectedLineと実際の路線が違う可能性があるため最新の路線情報を使う
+  const currentLine = useMemo(
+    () => station?.line ?? selectedLine,
+    [station, selectedLine]
+  );
 
   const {
     data: byLineIdData,
@@ -26,9 +35,9 @@ export const useStationList = () => {
     refetch: refetchStations,
   } = useQuery(
     getStationsByLineId,
-    { lineId: selectedLine?.id, stationId: selectedLine?.station?.id },
+    { lineId: currentLine?.id, stationId: currentLine?.station?.id },
     {
-      enabled: !!(!fromBuilder && !!selectedLine),
+      enabled: !fromBuilder && !!currentLine,
     }
   );
 
@@ -40,16 +49,16 @@ export const useStationList = () => {
   } = useQuery(
     getTrainTypesByStationId,
     {
-      stationId: selectedLine?.station?.id,
+      stationId: currentLine?.station?.id,
     },
-    { enabled: !!selectedLine?.station?.id }
+    { enabled: !!currentLine }
   );
 
   const designatedTrainType = useMemo(
     () =>
-      byLineIdData?.stations.find((s) => s.id === selectedLine?.station?.id)
+      byLineIdData?.stations.find((s) => s.id === currentLine?.station?.id)
         ?.trainType ?? null,
-    [byLineIdData?.stations, selectedLine?.station?.id]
+    [byLineIdData?.stations, currentLine?.station?.id]
   );
 
   useEffect(() => {
@@ -59,7 +68,7 @@ export const useStationList = () => {
         ? prev.stations
         : (byLineIdData?.stations ?? []),
     }));
-    if (!fromBuilder) {
+    if (!fromBuilder && designatedTrainType) {
       setNavigationState((prev) => ({
         ...prev,
         trainType: designatedTrainType,
