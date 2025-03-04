@@ -35,9 +35,10 @@ export const useStationList = () => {
     refetch: refetchStations,
   } = useQuery(
     getStationsByLineId,
-    { lineId: currentLine?.id, stationId: currentLine?.station?.id },
+    // NOTE: ここでselectedLineを使わないとどの路線選んでも同じ行先が表示される
+    { lineId: selectedLine?.id, stationId: selectedLine?.station?.id },
     {
-      enabled: !fromBuilder && !!currentLine,
+      enabled: !fromBuilder && !!selectedLine,
     }
   );
 
