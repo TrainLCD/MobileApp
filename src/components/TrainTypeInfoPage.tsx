@@ -1,4 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
+import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import {
   Dimensions,
@@ -158,8 +159,11 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 ? 0
                 : a.trainType?.id - b.trainType?.id
             )
-        : [selectedLine],
-    [selectedLine, trainType?.lines]
+        : uniqBy(
+            stations.map((s) => s.line ?? null),
+            'id'
+          ).filter((l) => l !== null),
+    [stations, trainType?.lines]
   );
 
   const stopStations = useMemo(
@@ -250,7 +254,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
               data={trainTypeLines}
-              keyExtractor={(item) => item?.id.toString() ?? ''}
+              keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => <TrainTypeItem line={item} />}
             />
 
