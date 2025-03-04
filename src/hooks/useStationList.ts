@@ -71,7 +71,7 @@ export const useStationList = () => {
     if (!fromBuilder && designatedTrainType) {
       setNavigationState((prev) => ({
         ...prev,
-        trainType: designatedTrainType,
+        trainType: prev.trainType ? prev.trainType : designatedTrainType,
       }));
     }
   }, [
