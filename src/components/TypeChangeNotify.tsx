@@ -2,12 +2,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import { StopCondition } from '../../gen/proto/stationapi_pb';
+import {
+  type Line,
+  StopCondition,
+  type TrainType,
+} from '../../gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useNextLine from '../hooks/useNextLine';
 import useNextTrainType from '../hooks/useNextTrainType';
 import { useThemeStore } from '../hooks/useThemeStore';
 import stationState from '../store/atoms/station';
@@ -146,12 +149,17 @@ const styles = StyleSheet.create({
   },
 });
 
-const MetroBars: React.FC = () => {
-  const trainType = useCurrentTrainType();
-  const nextTrainType = useNextTrainType();
-  const currentLine = useCurrentLine();
-  const nextLine = useNextLine();
-
+const MetroBars = ({
+  currentLine,
+  nextLine,
+  trainType,
+  nextTrainType,
+}: {
+  currentLine: Line;
+  nextLine: Line;
+  trainType: TrainType;
+  nextTrainType: TrainType;
+}) => {
   const leftNumberOfLines = useMemo(
     () =>
       (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
@@ -351,12 +359,17 @@ const MetroBars: React.FC = () => {
   );
 };
 
-const SaikyoBars: React.FC = () => {
-  const currentLine = useCurrentLine();
-  const nextLine = useNextLine();
-  const trainType = useCurrentTrainType();
-  const nextTrainType = useNextTrainType();
-
+const SaikyoBars = ({
+  currentLine,
+  nextLine,
+  trainType,
+  nextTrainType,
+}: {
+  currentLine: Line;
+  nextLine: Line;
+  trainType: TrainType;
+  nextTrainType: TrainType;
+}) => {
   const leftNumberOfLines = useMemo(
     () =>
       (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
@@ -374,10 +387,6 @@ const SaikyoBars: React.FC = () => {
         : 2,
     [nextTrainType, trainType]
   );
-
-  if (!trainType || !nextTrainType) {
-    return null;
-  }
 
   return (
     <View style={styles.linesContainer}>
@@ -410,8 +419,8 @@ const SaikyoBars: React.FC = () => {
       />
       <LinearGradient
         colors={[
-          `${(nextLine ? currentLine : trainType)?.color || '#000000'}ff`,
-          `${(nextLine ? currentLine : trainType)?.color || '#000000'}bb`,
+          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
+          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
         ]}
         style={{
           ...styles.bar,
@@ -491,20 +500,19 @@ const SaikyoBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        {nextLine && (
-          <Typography
-            style={[
-              {
-                ...styles.lineText,
-                color: currentLine?.color ?? '#000000',
-              },
-            ]}
-          >
-            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-            {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
-          </Typography>
-        )}
+
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              color: currentLine?.color ?? '#000000',
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+        </Typography>
       </View>
       <View style={styles.trainTypeRight}>
         <LinearGradient
@@ -538,31 +546,35 @@ const SaikyoBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        {nextLine && (
-          <Typography
-            style={[
-              {
-                ...styles.lineText,
-                color: nextLine.color ?? '#000000',
-              },
-            ]}
-          >
-            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
-            {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
-          </Typography>
-        )}
+
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              color: nextLine.color ?? '#000000',
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+        </Typography>
       </View>
     </View>
   );
 };
 
-const JOBars: React.FC = () => {
-  const currentLine = useCurrentLine();
-  const nextLine = useNextLine();
-  const trainType = useCurrentTrainType();
-  const nextTrainType = useNextTrainType();
-
+const JOBars = ({
+  currentLine,
+  nextLine,
+  trainType,
+  nextTrainType,
+}: {
+  currentLine: Line;
+  nextLine: Line;
+  trainType: TrainType;
+  nextTrainType: TrainType;
+}) => {
   const leftNumberOfLines = useMemo(
     () =>
       (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
@@ -580,10 +592,6 @@ const JOBars: React.FC = () => {
         : 2,
     [nextTrainType, trainType]
   );
-
-  if (!trainType || !nextTrainType) {
-    return null;
-  }
 
   return (
     <View style={styles.linesContainer}>
@@ -656,21 +664,20 @@ const JOBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        {nextLine && (
-          <Typography
-            style={[
-              {
-                ...styles.lineText,
-                color: currentLine?.color ?? '#000000',
-                top: isTablet ? 90 : 55,
-              },
-            ]}
-          >
-            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-            {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
-          </Typography>
-        )}
+
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              color: currentLine?.color ?? '#000000',
+              top: isTablet ? 90 : 55,
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+        </Typography>
       </View>
 
       <View
@@ -704,62 +711,162 @@ const JOBars: React.FC = () => {
             )}
           </Typography>
         </View>
-        {nextLine && (
-          <Typography
-            style={[
-              {
-                ...styles.lineText,
-                color: nextLine?.color ?? '#000000',
-                top: isTablet ? 90 : 55,
-              },
-            ]}
-          >
-            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
-            {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
-          </Typography>
-        )}
+
+        <Typography
+          style={[
+            {
+              ...styles.lineText,
+              color: nextLine?.color ?? '#000000',
+              top: isTablet ? 90 : 55,
+            },
+          ]}
+        >
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+        </Typography>
       </View>
     </View>
   );
 };
+
+const HeadingJa = React.memo(
+  ({
+    headingTexts,
+  }: {
+    headingTexts: {
+      jaPrefix: string;
+      enPrefix: string;
+      jaSuffix?: string;
+      enSuffix?: string;
+    } | null;
+  }) => {
+    const trainType = useCurrentTrainType();
+    const nextTrainType = useNextTrainType();
+
+    if (!headingTexts) {
+      return null;
+    }
+
+    if (headingTexts.jaSuffix) {
+      return (
+        <Typography numberOfLines={2} style={styles.headingJa}>
+          {`${headingTexts.jaPrefix} `}
+          <Typography
+            style={[
+              { color: (nextTrainType ?? trainType)?.color ?? '#212121' },
+              styles.trainTypeText,
+            ]}
+          >
+            {(nextTrainType ?? trainType)?.name
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
+          </Typography>
+          {` ${headingTexts.jaSuffix}`}
+        </Typography>
+      );
+    }
+    return (
+      <Typography style={styles.headingJa}>{headingTexts.jaPrefix}</Typography>
+    );
+  }
+);
+
+const HeadingEn = React.memo(
+  ({
+    headingTexts,
+  }: {
+    headingTexts: {
+      jaPrefix: string;
+      enPrefix: string;
+      jaSuffix?: string;
+      enSuffix?: string;
+    } | null;
+  }) => {
+    const trainType = useCurrentTrainType();
+    const nextTrainType = useNextTrainType();
+
+    if (!headingTexts) {
+      return null;
+    }
+
+    if (headingTexts.enSuffix) {
+      return (
+        <Typography style={styles.headingEn}>
+          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+          {headingTexts.enPrefix}{' '}
+          <Typography
+            style={[
+              { color: (nextTrainType ?? trainType)?.color ?? '#212121' },
+              styles.trainTypeText,
+            ]}
+          >
+            {(nextTrainType ?? trainType)?.nameRoman
+              ?.replace('\n', '')
+              .replace(parenthesisRegexp, '')}
+          </Typography>
+          {` ${headingTexts.enSuffix}`}
+        </Typography>
+      );
+    }
+
+    return (
+      <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
+    );
+  }
+);
+
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
     useRecoilValue(stationState);
   const theme = useThemeStore();
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
-  const nextLine = useNextLine();
   const trainType = useCurrentTrainType();
   const nextTrainType = useNextTrainType();
 
-  const currentTypeStations = stations.filter(
-    (s) =>
-      s.trainType?.typeId === trainType?.typeId &&
-      s.line?.id === currentLine?.id
-  );
+  const nextLine = useMemo(() => nextTrainType?.line, [nextTrainType]);
 
-  const reversedStations = stations.slice().reverse();
-  const reversedFinalPassedStationIndex = reversedStations.findIndex(
-    (s) => s.stopCondition === StopCondition.Not
+  const reversedStations = useMemo(
+    () => stations.slice().reverse(),
+    [stations]
   );
-  const reversedCurrentStationIndex = reversedStations.findIndex(
-    (s) => s.groupId === station?.groupId
+  const reversedFinalPassedStationIndex = useMemo(
+    () =>
+      reversedStations.findIndex((s) => s.stopCondition === StopCondition.Not),
+    [reversedStations]
   );
-  const afterAllStopLastStation =
-    reversedStations[reversedFinalPassedStationIndex - 2];
+  const reversedCurrentStationIndex = useMemo(
+    () => reversedStations.findIndex((s) => s.groupId === station?.groupId),
+    [reversedStations, station]
+  );
+  const afterAllStopLastStation = useMemo(
+    () => reversedStations[reversedFinalPassedStationIndex - 2],
+    [reversedStations, reversedFinalPassedStationIndex]
+  );
   // 「~から先は各駅に止まります」を表示するフラグ
-  const isNextTypeIsLocal =
-    nextTrainType &&
-    // 次の路線の種別が各停・普通
-    getIsLocal(nextTrainType) &&
-    // 現在の種別が各停・普通の場合は表示しない
-    !getIsLocal(trainType) &&
-    // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
-    afterAllStopLastStation?.line?.id === (nextLine ?? currentLine)?.id &&
-    // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
-    reversedCurrentStationIndex > reversedFinalPassedStationIndex;
-  const currentTypeLastStation = useMemo(() => {
+  const isNextTypeIsLocal = useMemo(
+    () =>
+      nextTrainType &&
+      // 次の路線の種別が各停・普通
+      getIsLocal(nextTrainType) &&
+      // 現在の種別が各停・普通の場合は表示しない
+      !getIsLocal(trainType) &&
+      // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
+      afterAllStopLastStation?.line?.id ===
+        (nextTrainType.line ?? currentLine)?.id &&
+      // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
+      reversedCurrentStationIndex > reversedFinalPassedStationIndex,
+    [
+      afterAllStopLastStation,
+      currentLine,
+      nextTrainType,
+      trainType,
+      reversedCurrentStationIndex,
+      reversedFinalPassedStationIndex,
+    ]
+  );
+  const currentTypeFinalStation = useMemo(() => {
     if (
       isNextTypeIsLocal &&
       // 現在の路線内から各駅に停まる時は表示しない
@@ -770,17 +877,27 @@ const TypeChangeNotify: React.FC = () => {
     }
 
     if (selectedDirection === 'INBOUND') {
+      const currentTypeStations = stations.filter(
+        (s) => s.trainType?.typeId === trainType?.typeId
+      );
       return currentTypeStations[currentTypeStations.length - 1];
     }
-    return currentTypeStations[0];
+
+    // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうのでOUTBOUNDではnextTrainTypeを使用している
+    const nextTypeStations = stations.filter(
+      (s) => s.trainType?.typeId === nextTrainType?.typeId
+    );
+    return nextTypeStations[nextTypeStations.length - 1];
   }, [
+    trainType,
+    nextTrainType,
+    selectedDirection,
     afterAllStopLastStation,
-    currentLine?.id,
-    currentTypeStations,
+    currentLine,
     isNextTypeIsLocal,
     reversedFinalPassedStationIndex,
     reversedStations,
-    selectedDirection,
+    stations,
   ]);
 
   const aOrAn = useMemo(() => {
@@ -806,7 +923,7 @@ const TypeChangeNotify: React.FC = () => {
     jaSuffix?: string;
     enSuffix?: string;
   } | null => {
-    if (!currentTypeLastStation) {
+    if (!currentTypeFinalStation) {
       return null;
     }
 
@@ -827,8 +944,8 @@ const TypeChangeNotify: React.FC = () => {
     }
 
     return {
-      jaPrefix: `${currentTypeLastStation.name}から`,
-      enPrefix: `From ${currentTypeLastStation.nameRoman} station, this train become ${aOrAn}`,
+      jaPrefix: `${currentTypeFinalStation.name}から`,
+      enPrefix: `From ${currentTypeFinalStation.nameRoman} station, this train become ${aOrAn}`,
       jaSuffix: `${selectedBound.name}ゆき となります`,
       enSuffix: `train bound for ${selectedBound.nameRoman}.`,
     };
@@ -837,94 +954,62 @@ const TypeChangeNotify: React.FC = () => {
     afterAllStopLastStation?.name,
     afterAllStopLastStation?.nameRoman,
     currentLine?.id,
-    currentTypeLastStation,
+    currentTypeFinalStation,
     isNextTypeIsLocal,
     reversedFinalPassedStationIndex,
     reversedStations,
     selectedBound,
   ]);
 
-  const HeadingJa = () => {
-    if (!headingTexts) {
-      return null;
-    }
-
-    if (headingTexts.jaSuffix) {
-      return (
-        <Typography numberOfLines={2} style={styles.headingJa}>
-          {`${headingTexts.jaPrefix} `}
-          <Typography
-            style={[
-              { color: (nextTrainType ?? trainType)?.color || '#212121' },
-              styles.trainTypeText,
-            ]}
-          >
-            {(nextTrainType ?? trainType)?.name
-              .replace('\n', '')
-              .replace(parenthesisRegexp, '')}
-          </Typography>
-          {` ${headingTexts.jaSuffix}`}
-        </Typography>
-      );
-    }
-    return (
-      <Typography style={styles.headingJa}>{headingTexts.jaPrefix}</Typography>
-    );
-  };
-  const HeadingEn = () => {
-    if (!headingTexts) {
-      return null;
-    }
-
-    if (headingTexts.enSuffix) {
-      return (
-        <Typography style={styles.headingEn}>
-          {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {headingTexts.enPrefix}{' '}
-          <Typography
-            style={[
-              { color: (nextTrainType ?? trainType)?.color || '#212121' },
-              styles.trainTypeText,
-            ]}
-          >
-            {(nextTrainType ?? trainType)?.nameRoman
-              ?.replace('\n', '')
-              .replace(parenthesisRegexp, '')}
-          </Typography>
-          {` ${headingTexts.enSuffix}`}
-        </Typography>
-      );
-    }
-
-    return (
-      <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
-    );
-  };
-
   const BarsComponent = useCallback(() => {
+    if (!currentLine || !nextLine || !trainType || !nextTrainType) {
+      return null;
+    }
+
     switch (theme) {
       case 'SAIKYO':
-        return <SaikyoBars />;
+        return (
+          <SaikyoBars
+            currentLine={currentLine}
+            nextLine={nextLine}
+            trainType={trainType}
+            nextTrainType={nextTrainType}
+          />
+        );
       case 'YAMANOTE':
       case 'JO':
-        return <JOBars />;
+        return (
+          <JOBars
+            currentLine={currentLine}
+            nextLine={nextLine}
+            trainType={trainType}
+            nextTrainType={nextTrainType}
+          />
+        );
       default:
-        return <MetroBars />;
+        return (
+          <MetroBars
+            currentLine={currentLine}
+            nextLine={nextLine}
+            trainType={trainType}
+            nextTrainType={nextTrainType}
+          />
+        );
     }
-  }, [theme]);
+  }, [currentLine, nextLine, trainType, nextTrainType, theme]);
 
   return (
     <View style={styles.container}>
       <View style={styles.top}>
-        <HeadingJa />
-        <HeadingEn />
+        <HeadingJa headingTexts={headingTexts} />
+        <HeadingEn headingTexts={headingTexts} />
       </View>
       <View style={styles.bottom}>
         <Typography style={styles.headingJa}>
-          {currentTypeLastStation?.name}
+          {currentTypeFinalStation?.name}
         </Typography>
         <Typography style={styles.headingEn}>
-          {currentTypeLastStation?.nameRoman}
+          {currentTypeFinalStation?.nameRoman}
         </Typography>
         <BarsComponent />
       </View>

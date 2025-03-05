@@ -18,8 +18,9 @@ import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import { useSetRecoilState } from 'recoil';
 import {
+  getConnectedRoutes,
   getRoutes,
-  getStationsByLineId,
+  getStationByIdList,
   getStationsByName,
 } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { Route, Station } from '../../gen/proto/stationapi_pb';
@@ -39,6 +40,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { groupStations } from '../utils/groupStations';
+import { isDevApp } from '../utils/isDevApp';
 
 const styles = StyleSheet.create({
   root: {
@@ -84,11 +86,10 @@ const RouteSearchScreen = () => {
   const currentStation = useCurrentStation();
   const getTerminatedStations = useGetStationsWithTermination();
 
-  const { mutateAsync: fetchStationsByLineId } =
-    useMutation(getStationsByLineId);
+  const { mutateAsync: fetchStationByIdList } = useMutation(getStationByIdList);
 
   const {
-    fetchStations: fetchTrainTypeFromTrainTypeId,
+    fetchStations: fetchStationsByLineGroupId,
     isLoading: isTrainTypesLoading,
     error: fetchTrainTypesError,
   } = useTrainTypeStations();
@@ -113,6 +114,27 @@ const RouteSearchScreen = () => {
     { enabled: !!currentStation && !!selectedStation }
   );
 
+  const {
+    data: connectedRoutesData,
+    isLoading: isConnectedRoutesLoading,
+    error: fetchConnectedRoutesError,
+  } = useQuery(
+    getConnectedRoutes,
+    {
+      fromStationGroupId: currentStation?.groupId,
+      toStationGroupId: selectedStation?.groupId,
+    },
+    { enabled: !!currentStation && !!selectedStation && isDevApp }
+  );
+
+  const routesWithConnected = useMemo(
+    () => [
+      ...(connectedRoutesData?.routes ?? []),
+      ...(routesData?.routes ?? []),
+    ],
+    [routesData, connectedRoutesData]
+  );
+
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -126,7 +148,7 @@ const RouteSearchScreen = () => {
     fetchByName({
       stationName: query.trim(),
       limit: Number(SEARCH_STATION_RESULT_LIMIT),
-      fromStationGroupId: currentStation?.groupId,
+      fromStationGroupId: !isDevApp ? currentStation?.groupId : undefined,
     });
   }, [currentStation, fetchByName, query]);
 
@@ -185,8 +207,8 @@ const RouteSearchScreen = () => {
       const trainType = stop.trainType;
 
       if (!trainType?.id) {
-        const { stations } = await fetchStationsByLineId({
-          lineId: stop.line?.id,
+        const { stations } = await fetchStationByIdList({
+          ids: route?.stops.map((r) => r.groupId),
         });
         const stationInRoute =
           stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
@@ -227,7 +249,7 @@ const RouteSearchScreen = () => {
         return;
       }
 
-      const { stations } = await fetchTrainTypeFromTrainTypeId({
+      const { stations } = await fetchStationsByLineGroupId({
         lineGroupId: trainType.groupId,
       });
 
@@ -247,7 +269,7 @@ const RouteSearchScreen = () => {
 
       setNavigationState((prev) => ({
         ...prev,
-        trainType: station?.trainType ?? null,
+        trainType,
         stationForHeader: station,
       }));
       setStationState((prev) => ({
@@ -269,8 +291,8 @@ const RouteSearchScreen = () => {
     },
     [
       currentStation?.groupId,
-      fetchStationsByLineId,
-      fetchTrainTypeFromTrainTypeId,
+      fetchStationByIdList,
+      fetchStationsByLineGroupId,
       navigation,
       selectedStation?.groupId,
       setNavigationState,
@@ -333,11 +355,15 @@ const RouteSearchScreen = () => {
       {selectedStation && (
         <RouteListModal
           finalStation={selectedStation}
-          routes={routesData?.routes ?? []}
+          routes={routesWithConnected}
           visible={isRouteListModalVisible}
-          isRoutesLoading={isRoutesLoading}
+          isRoutesLoading={isRoutesLoading || isConnectedRoutesLoading}
           isTrainTypesLoading={isTrainTypesLoading}
-          error={fetchRoutesError || fetchTrainTypesError}
+          error={
+            fetchRoutesError ||
+            fetchConnectedRoutesError ||
+            fetchTrainTypesError
+          }
           onClose={() => setIsRouteListModalVisible(false)}
           onSelect={handleSelect}
         />

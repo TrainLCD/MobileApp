@@ -7,6 +7,7 @@ import stationState from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import useCurrentTrainType from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
@@ -72,16 +73,8 @@ const useRefreshLeftStations = (): void => {
               currentStationIndex + 1
             )
             .reverse();
-          // 山手線と大阪環状線はちょっと処理が違う
-          if (currentStationIndex < 7 && isOsakaLoopLine) {
-            const nextStations = stations
-              .slice()
-              .reverse()
-              .slice(currentStationIndex - 1, 7);
-            return [...inboundPendingStations, ...nextStations];
-          }
 
-          if ((currentStationIndex < 7 && isYamanoteLine) || isMeijoLine) {
+          if (currentStationIndex < 7 || isMeijoLine) {
             const nextStations = stations
               .slice()
               .reverse()
@@ -113,14 +106,7 @@ const useRefreshLeftStations = (): void => {
           return [];
       }
     },
-    [
-      currentLine,
-      isMeijoLine,
-      isOsakaLoopLine,
-      isYamanoteLine,
-      selectedDirection,
-      stations,
-    ]
+    [currentLine, isMeijoLine, selectedDirection, stations]
   );
 
   const getStations = useCallback(
@@ -163,7 +149,7 @@ const useRefreshLeftStations = (): void => {
       return false;
     }
 
-    if (isOsakaLoopLine && trainType) {
+    if (isOsakaLoopLine && !getIsLocal(trainType)) {
       return false;
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
@@ -175,7 +161,7 @@ const useRefreshLeftStations = (): void => {
     }
     const currentIndex = getCurrentStationIndex(stations, station);
     const leftStations =
-      loopLine && !trainType
+      loopLine && getIsLocal(trainType)
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
     setNavigation((prev) => {

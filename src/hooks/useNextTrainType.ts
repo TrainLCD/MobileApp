@@ -1,52 +1,57 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { TrainType } from '../../gen/proto/stationapi_pb';
+import { TrainType } from '../../gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import useCurrentTrainType from './useCurrentTrainType';
-import useNextLine from './useNextLine';
 
 const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState);
-  const nextLine = useNextLine();
-  const currentStation = useCurrentStation();
+  const currentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
 
-  // 同じ路線でも種別が変わる場合を想定(小田急線等)
-  const sameLineNextType = useMemo(() => {
+  const nextTrainType = useMemo(() => {
     if (selectedDirection === 'INBOUND') {
       const currentIndex = stations.findIndex(
         (sta) => sta.id === currentStation?.id
       );
-      return stations
-        .slice(currentIndex, stations.length)
-        .map((sta) => sta.trainType)
-        .filter((tt) => tt)
-        .find((tt) => tt?.typeId !== trainType?.typeId);
+
+      const slicedStations = stations.slice(currentIndex, stations.length);
+
+      const nextTypeStation = slicedStations
+        .filter((s) => s.trainType)
+        .find((s) => s.trainType?.typeId !== trainType?.typeId);
+
+      if (!nextTypeStation) {
+        return null;
+      }
+
+      return new TrainType({
+        ...nextTypeStation.trainType,
+        line: nextTypeStation.line,
+      });
     }
 
-    const currentIndex = stations
-      .slice()
-      .reverse()
-      .findIndex((sta) => sta.id === currentStation?.id);
-    return stations
-      .slice()
-      .reverse()
+    const reversedStations = stations.slice().reverse();
+
+    const currentIndex = reversedStations.findIndex(
+      (sta) => sta.id === currentStation?.id
+    );
+
+    const nextTypeStation = reversedStations
       .slice(currentIndex, stations.length)
-      .map((sta) => sta.trainType)
-      .filter((tt) => tt)
-      .find((tt) => tt?.typeId !== trainType?.typeId);
-  }, [currentStation?.id, selectedDirection, stations, trainType?.typeId]);
+      .filter((s) => s.trainType)
+      .find((s) => s.trainType?.typeId !== trainType?.typeId);
 
-  const nextLineTrainType = useMemo(
-    () =>
-      trainType?.lines?.find((l) => l.id === nextLine?.id)?.trainType ?? null,
-    [nextLine?.id, trainType?.lines]
-  );
+    if (!nextTypeStation) {
+      return null;
+    }
 
-  const nextTrainType = useMemo(() => {
-    return sameLineNextType ?? nextLineTrainType;
-  }, [nextLineTrainType, sameLineNextType]);
+    return new TrainType({
+      ...nextTypeStation.trainType,
+      line: nextTypeStation.line,
+    });
+  }, [currentStation, selectedDirection, stations, trainType]);
 
   return nextTrainType;
 };

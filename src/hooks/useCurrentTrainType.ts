@@ -1,24 +1,36 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { type TrainType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
+import type { TrainType } from '../../gen/proto/stationapi_pb';
 import navigationState from '../store/atoms/navigation';
-import { useCurrentLine } from './useCurrentLine';
+import getIsPass from '../utils/isPass';
+import { useCurrentStation } from './useCurrentStation';
 
 const useCurrentTrainType = (): TrainType | null => {
-  const { trainType, fromBuilder } = useRecoilValue(navigationState);
-  const currentLine = useCurrentLine();
+  const { trainType } = useRecoilValue(navigationState);
 
-  const currentTrainType = useMemo(
-    () =>
-      ((trainType?.lines?.length ?? 1) > 1 ||
-        trainType?.kind === TrainTypeKind.Branch) &&
-      !fromBuilder
-        ? trainType?.lines?.find((l) => l.id === currentLine?.id)?.trainType
-        : (trainType ?? null),
-    [currentLine?.id, fromBuilder, trainType]
+  const currentStation = useCurrentStation(true);
+
+  const [cachedTrainType, setCachedTrainType] = useState(
+    currentStation?.trainType ?? trainType
   );
 
-  return currentTrainType ?? null;
+  useEffect(() => {
+    if (!trainType) {
+      setCachedTrainType(null);
+    }
+  }, [trainType]);
+
+  useEffect(() => {
+    if (!getIsPass(currentStation)) {
+      setCachedTrainType((prev) =>
+        prev?.typeId === currentStation?.trainType?.typeId
+          ? prev
+          : (currentStation?.trainType ?? null)
+      );
+    }
+  }, [currentStation]);
+
+  return cachedTrainType;
 };
 
 export default useCurrentTrainType;
