@@ -7,11 +7,11 @@ import stationState from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import useCurrentTrainType from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
 import { useThemeStore } from './useThemeStore';
-import { getIsLocal } from '../utils/trainTypeString';
 
 const useRefreshLeftStations = (): void => {
   const {
