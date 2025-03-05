@@ -97,9 +97,7 @@ export const useLoopLine = () => {
       return [];
     }
 
-    const reversedStations = isOsakaLoopLine
-      ? stations
-      : stations.slice().reverse();
+    const reversedStations = stations.slice().reverse();
 
     const currentStationIndex = reversedStations.findIndex(
       (s) => s.id === station.id
@@ -115,32 +113,26 @@ export const useLoopLine = () => {
       .filter((s, i, a) => a.findIndex((e) => e.id === s.id) === i);
 
     return majorStations.slice(0, 2);
-  }, [isOsakaLoopLine, isLoopLine, line, majorStationIds, station, stations]);
+  }, [isLoopLine, line, majorStationIds, station, stations]);
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
     if (!line || !station || !isLoopLine) {
       return [];
     }
 
-    const reversedStations = isOsakaLoopLine
-      ? stations.slice().reverse()
-      : stations;
-
-    const currentStationIndex = reversedStations.findIndex(
-      (s) => s.id === station.id
-    );
+    const currentStationIndex = stations.findIndex((s) => s.id === station.id);
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
     const majorStations = [
-      ...reversedStations.slice(currentStationIndex),
-      ...reversedStations.slice(0, currentStationIndex),
+      ...stations.slice(currentStationIndex),
+      ...stations.slice(0, currentStationIndex),
     ]
       .filter((s) => majorStationIds.includes(s.id))
       .filter((s) => s.id !== station.id)
       .filter((s, i, a) => a.findIndex((e) => e.id === s.id) === i);
 
     return majorStations.slice(0, 2);
-  }, [isOsakaLoopLine, isLoopLine, line, majorStationIds, station, stations]);
+  }, [isLoopLine, line, majorStationIds, station, stations]);
 
   return {
     isYamanoteLine,
