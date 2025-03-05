@@ -8,7 +8,7 @@ import { useCurrentStation } from './useCurrentStation';
 const useCurrentTrainType = (): TrainType | null => {
   const { trainType } = useRecoilValue(navigationState);
 
-  const currentStation = useCurrentStation();
+  const currentStation = useCurrentStation(true);
 
   const [cachedTrainType, setCachedTrainType] = useState(
     currentStation?.trainType ?? trainType
