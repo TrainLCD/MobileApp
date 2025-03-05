@@ -7,7 +7,7 @@ import useCurrentTrainType from './useCurrentTrainType';
 
 const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState);
-  const currentStation = useCurrentStation();
+  const currentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
 
   const nextTrainType = useMemo(() => {
