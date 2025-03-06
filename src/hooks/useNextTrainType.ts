@@ -16,7 +16,7 @@ const useNextTrainType = (): TrainType | null => {
         (sta) => sta.id === currentStation?.id
       );
 
-      const slicedStations = stations.slice(currentIndex, stations.length);
+      const slicedStations = stations.slice(currentIndex + 1, stations.length);
 
       const nextTypeStation = slicedStations
         .filter((s) => s.trainType)
@@ -39,7 +39,7 @@ const useNextTrainType = (): TrainType | null => {
     );
 
     const nextTypeStation = reversedStations
-      .slice(currentIndex, stations.length)
+      .slice(currentIndex + 1, stations.length)
       .filter((s) => s.trainType)
       .find((s) => s.trainType?.typeId !== trainType?.typeId);
 

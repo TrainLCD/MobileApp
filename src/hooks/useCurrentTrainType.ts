@@ -26,10 +26,10 @@ const useCurrentTrainType = (): TrainType | null => {
 
   useEffect(() => {
     // NOTE: 選択した路線と選択した種別に紐づいている路線が違う時に選んだ方面の種別と合わせる処理
-    // 例として渋谷駅で東横線選んで特急種別を選んだ後、同一種別の存在しないメトロ線方面を選んだ等
+    // 例として渋谷駅で東横線選んで特急種別を選んだ後、同一種別の存在しないメトロ線方面を選んだ等;
     if (currentStation?.line?.id !== currentLine?.id) {
       const actualTrainType = stations.find(
-        (s) => s.line?.id === currentLine?.id
+        (s) => s?.id === currentLine?.station?.id
       )?.trainType;
       setCachedTrainType((prev) =>
         prev?.typeId === actualTrainType?.typeId
