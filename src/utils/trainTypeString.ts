@@ -18,4 +18,4 @@ export const findRapidType = (
 ): TrainType | null => trainTypes?.find((tt) => getIsRapid(tt)) ?? null;
 export const findLtdExpType = (
   trainTypes: TrainType[] | null
-): TrainType | null => trainTypes?.find((tt) => getIsRapid(tt)) ?? null;
+): TrainType | null => trainTypes?.find((tt) => getIsLtdExp(tt)) ?? null;
