@@ -27,6 +27,7 @@ import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
 import useAutoMode from '../hooks/useAutoMode';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import { useLoopLine } from '../hooks/useLoopLine';
 import { useNextStation } from '../hooks/useNextStation';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
@@ -50,7 +51,6 @@ import getCurrentStationIndex from '../utils/currentStationIndex';
 import { getIsHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
 
 const { height: screenHeight } = Dimensions.get('screen');
 
