@@ -2,7 +2,7 @@ import { type TrainType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
 
 // 301 = 私鉄各駅停車
 export const getIsLocal = (tt: TrainType | null): boolean =>
-  tt?.kind === TrainTypeKind.Default || true;
+  (tt?.kind ?? TrainTypeKind.Default) === TrainTypeKind.Default;
 export const getIsRapid = (tt: TrainType | null): boolean =>
   tt?.kind === TrainTypeKind.Rapid;
 export const getIsLtdExp = (tt: TrainType | null): boolean =>
