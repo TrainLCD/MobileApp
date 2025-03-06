@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
 import navigationState from '../store/atoms/navigation';
-import getIsPass from '../utils/isPass';
-import { useCurrentStation } from './useCurrentStation';
-import { useCurrentLine } from './useCurrentLine';
 import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
 
 const useCurrentTrainType = (): TrainType | null => {
   const { stations } = useRecoilValue(stationState);
