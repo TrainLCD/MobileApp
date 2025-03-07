@@ -51,10 +51,6 @@ const styles = StyleSheet.create({
     borderColor: '#555',
     marginRight: 12,
   },
-  listContainerStyle: {
-    alignSelf: 'center',
-    width: '100%',
-  },
   headingStyle: {
     marginTop: 24,
     marginBottom: 24,
@@ -248,7 +244,6 @@ const NotificationSettings: React.FC = () => {
       <SafeAreaView style={styles.root}>
         <FlatList
           ListHeaderComponent={listHeaderComponent}
-          contentContainerStyle={styles.listContainerStyle}
           numColumns={4}
           data={stations}
           renderItem={renderItem}
