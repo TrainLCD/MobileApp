@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
