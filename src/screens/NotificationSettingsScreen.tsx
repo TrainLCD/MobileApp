@@ -5,13 +5,13 @@ import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
-  Dimensions,
   FlatList,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
@@ -27,12 +27,10 @@ import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
-    width: '100%',
-    height: '100%',
-    paddingHorizontal: 24,
+    flex: 1,
   },
   itemRoot: {
-    width: Dimensions.get('screen').width / 4,
+    flex: 1,
     marginBottom: 12,
   },
   item: {
@@ -245,9 +243,17 @@ const NotificationSettings: React.FC = () => {
     []
   );
 
+  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+
   return (
     <>
-      <View style={styles.root}>
+      <View
+        style={{
+          ...styles.root,
+          paddingLeft: safeAreaLeft,
+          paddingRight: safeAreaRight,
+        }}
+      >
         <FlatList
           ListHeaderComponent={listHeaderComponent}
           contentContainerStyle={styles.listContainerStyle}
