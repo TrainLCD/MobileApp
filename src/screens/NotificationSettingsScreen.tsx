@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
   FlatList,
+  SafeAreaView,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
@@ -243,17 +244,9 @@ const NotificationSettings: React.FC = () => {
     []
   );
 
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
-
   return (
     <>
-      <View
-        style={{
-          ...styles.root,
-          paddingLeft: safeAreaLeft,
-          paddingRight: safeAreaRight,
-        }}
-      >
+      <SafeAreaView style={styles.root}>
         <FlatList
           ListHeaderComponent={listHeaderComponent}
           contentContainerStyle={styles.listContainerStyle}
@@ -262,7 +255,7 @@ const NotificationSettings: React.FC = () => {
           renderItem={renderItem}
           keyExtractor={(item: Station): string => item.id.toString()}
         />
-      </View>
+      </SafeAreaView>
       <FAB onPress={handlePressBack} icon="checkmark" />
     </>
   );
