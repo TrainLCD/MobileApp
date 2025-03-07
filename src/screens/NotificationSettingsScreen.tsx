@@ -6,12 +6,12 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
   FlatList,
+  SafeAreaView,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
@@ -50,10 +50,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     borderColor: '#555',
     marginRight: 12,
-  },
-  listContainerStyle: {
-    alignSelf: 'center',
-    width: '100%',
   },
   headingStyle: {
     marginTop: 24,
@@ -243,26 +239,17 @@ const NotificationSettings: React.FC = () => {
     []
   );
 
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
-
   return (
     <>
-      <View
-        style={{
-          ...styles.root,
-          paddingLeft: safeAreaLeft,
-          paddingRight: safeAreaRight,
-        }}
-      >
+      <SafeAreaView style={styles.root}>
         <FlatList
           ListHeaderComponent={listHeaderComponent}
-          contentContainerStyle={styles.listContainerStyle}
           numColumns={4}
           data={stations}
           renderItem={renderItem}
           keyExtractor={(item: Station): string => item.id.toString()}
         />
-      </View>
+      </SafeAreaView>
       <FAB onPress={handlePressBack} icon="checkmark" />
     </>
   );
