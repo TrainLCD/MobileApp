@@ -319,10 +319,12 @@ ${reporterUid}
           assignees: ['TinyKitten'],
           milestone: null,
           labels: [
-            '🙏 Feedback',
-            osNameLabel,
-            appEdition === 'production' ? '🌏 Production' : '🐥 Canary',
+            reportType === 'feedback' && '🙏 Feedback',
+            reportType === 'crash' && '💣 Crash',
+            appEdition === 'production' && '🌏 Production',
+            appEdition === 'canary' && '🐥 Canary',
             appClip && '📎 App Clip',
+            osNameLabel,
           ].filter(Boolean),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
