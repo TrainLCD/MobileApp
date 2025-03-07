@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import {
   type Line,
@@ -999,7 +999,7 @@ const TypeChangeNotify: React.FC = () => {
   }, [currentLine, nextLine, trainType, nextTrainType, theme]);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.top}>
         <HeadingJa headingTexts={headingTexts} />
         <HeadingEn headingTexts={headingTexts} />
@@ -1013,7 +1013,7 @@ const TypeChangeNotify: React.FC = () => {
         </Typography>
         <BarsComponent />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
