@@ -3,7 +3,6 @@ import { useMutation } from '@connectrpc/connect-query';
 import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSetRecoilState } from 'recoil';
 import { getTrainTypesByStationId } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { Route, Station, TrainType } from '../../gen/proto/stationapi_pb';
@@ -33,17 +32,11 @@ type Props = {
 
 const styles = StyleSheet.create({
   modalContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    width: '100%',
-    height: '100%',
+    flex: 1,
   },
-  modalView: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
+  heading: { marginVertical: 24 },
+  modalView: { flex: 1, paddingHorizontal: 16 },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -54,8 +47,6 @@ const styles = StyleSheet.create({
   },
   loading: { marginTop: 12 },
 });
-
-const SAFE_AREA_FALLBACK = 32;
 
 export const RouteListModal: React.FC<Props> = ({
   finalStation,
@@ -74,7 +65,6 @@ export const RouteListModal: React.FC<Props> = ({
   const setLineState = useSetRecoilState(lineState);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
   const currentStation = useCurrentStation();
 
   const {
@@ -139,71 +129,44 @@ export const RouteListModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
+      supportedOrientations={['landscape', 'portrait']}
     >
-      <View style={styles.modalContainer}>
-        <SafeAreaView
-          style={[
-            styles.modalView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-            },
-            isTablet
-              ? {
-                  width: '80%',
-                  maxHeight: '90%',
-                  shadowOpacity: 0.25,
-                  shadowColor: '#000',
-                  borderRadius: 16,
-                }
-              : {
-                  width: '100%',
-                  height: '100%',
-                  paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                  paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-                },
-          ]}
-        >
-          <View
-            style={{
-              width: '100%',
-              height: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <View
-              style={{
-                marginVertical: 16,
-              }}
-            >
-              <Heading>{translate('trainTypeSettings')}</Heading>
+      <SafeAreaView
+        style={[
+          styles.modalContainer,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+          isTablet
+            ? {
+                width: '80%',
+                maxHeight: '90%',
+                shadowOpacity: 0.25,
+                shadowColor: '#000',
+                borderRadius: 16,
+              }
+            : { flex: 1 },
+        ]}
+      >
+        <View style={styles.modalView}>
+          <Heading style={styles.heading}>
+            {translate('trainTypeSettings')}
+          </Heading>
+
+          {isRoutesLoading ? (
+            <Loading message={translate('loadingAPI')} />
+          ) : (
+            <View style={{ flex: 1, opacity: isTrainTypesLoading ? 0.5 : 1 }}>
+              <RouteList
+                routes={routes}
+                onSelect={handleSelect}
+                loading={isTrainTypesLoading}
+              />
             </View>
-            <View
-              style={{
-                flex: 1,
-                width: '100%',
-                height: '100%',
-              }}
-            >
-              {isRoutesLoading ? (
-                <Loading message={translate('loadingAPI')} />
-              ) : (
-                <View
-                  style={{ flex: 1, opacity: isTrainTypesLoading ? 0.5 : 1 }}
-                >
-                  <RouteList
-                    routes={routes}
-                    onSelect={handleSelect}
-                    loading={isTrainTypesLoading}
-                  />
-                </View>
-              )}
-            </View>
-          </View>
-        </SafeAreaView>
-        <FAB onPress={onClose} icon="close" />
-      </View>
+          )}
+        </View>
+      </SafeAreaView>
+      <FAB onPress={onClose} icon="close" />
     </Modal>
   );
 };

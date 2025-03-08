@@ -2,14 +2,17 @@ import type { ConnectError } from '@connectrpc/connect';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import {
-  Dimensions,
   FlatList,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  useSafeAreaFrame,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
 import type { Line, Station, TrainType } from '../../gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '../constants';
@@ -38,22 +41,11 @@ type Props = {
   fromRouteListModal?: boolean;
 };
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
-  root: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    width: '100%',
-    height: '100%',
-  },
   scrollView: {
     paddingVertical: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: isTablet ? 'auto' : '100%',
   },
   buttons: {
     flexDirection: 'row',
@@ -172,27 +164,20 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
   );
 
   return (
-    <View style={styles.root}>
-      <View
+    <View style={StyleSheet.absoluteFill}>
+      <SafeAreaView
         style={[
           {
+            flex: 1,
             backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           },
-          isTablet
-            ? {
-                width: '80%',
-                maxHeight: '90%',
-                shadowOpacity: 0.25,
-                shadowColor: '#000',
-                borderRadius: 16,
-              }
-            : {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: screenWidth,
-                height: screenHeight,
-              },
+          isTablet && {
+            width: '80%',
+            maxHeight: '90%',
+            shadowOpacity: 0.25,
+            shadowColor: '#000',
+            borderRadius: 16,
+          },
         ]}
       >
         <ScrollView contentContainerStyle={styles.scrollView}>
@@ -306,7 +291,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             </Button>
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </View>
   );
 };

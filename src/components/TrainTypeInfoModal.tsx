@@ -24,7 +24,7 @@ export const TrainTypeInfoModal: React.FC<Props> = (props: Props) => {
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
+      supportedOrientations={['landscape', 'portrait']}
     >
       <TrainTypeInfoPage {...props} />
     </Modal>

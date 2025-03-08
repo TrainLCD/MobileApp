@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   type NativeSyntheticEvent,
   Platform,
+  SafeAreaView,
   StyleSheet,
   TextInput,
   type TextInputChangeEventData,
@@ -44,18 +45,15 @@ import { isDevApp } from '../utils/isDevApp';
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 48,
-    paddingVertical: 12,
     flex: 1,
-    alignItems: 'center',
   },
   settingItem: {
-    width: '65%',
-    height: '100%',
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
   heading: {
-    marginBottom: 24,
+    marginVertical: 24,
   },
   stationNameInput: {
     borderWidth: 1,
@@ -304,7 +302,7 @@ const RouteSearchScreen = () => {
 
   return (
     <>
-      <View
+      <SafeAreaView
         style={{
           ...styles.root,
           backgroundColor: isLEDTheme ? '#212121' : '#fff',
@@ -350,7 +348,7 @@ const RouteSearchScreen = () => {
             />
           )}
         </KeyboardAvoidingView>
-      </View>
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="close" disabled={isTrainTypesLoading} />
       {selectedStation && (
         <RouteListModal

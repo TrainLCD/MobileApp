@@ -113,7 +113,7 @@ const NewReportModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
+      supportedOrientations={['landscape', 'portrait']}
     >
       <Pressable onPress={onClose} style={styles.modalContainer}>
         <Pressable

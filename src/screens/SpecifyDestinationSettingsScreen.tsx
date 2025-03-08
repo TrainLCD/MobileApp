@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { BackHandler, StyleSheet, View } from 'react-native';
+import { BackHandler, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
 import { type Station, StopCondition } from '../../gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
@@ -13,14 +13,11 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation';
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 48,
     flex: 1,
-    paddingVertical: 12,
   },
+  heading: { marginTop: 12 },
   listContainer: {
     flex: 1,
-    width: '65%',
-    alignSelf: 'center',
   },
 });
 
@@ -69,13 +66,15 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
   }, [handlePressFAB]);
 
   return (
-    <View style={styles.root}>
-      <Heading>{translate('selectBoundSettings')}</Heading>
+    <SafeAreaView style={styles.root}>
+      <Heading style={styles.heading}>
+        {translate('selectBoundSettings')}
+      </Heading>
       <View style={styles.listContainer}>
         <StationList data={stopStations} onSelect={handleDestinationPress} />
       </View>
       <FAB onPress={handlePressFAB} icon="close" />
-    </View>
+    </SafeAreaView>
   );
 };
 

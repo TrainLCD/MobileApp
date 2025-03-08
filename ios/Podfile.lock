@@ -1217,6 +1217,28 @@ PODS:
     - Yoga
   - ExpoScreenCapture (7.0.0):
     - ExpoModulesCore
+  - ExpoScreenOrientation (8.0.4):
+    - DoubleConversion
+    - ExpoModulesCore
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - ExpoSplashScreen (0.29.13):
     - ExpoModulesCore
   - ExpoWebBrowser (14.0.1):
@@ -3423,6 +3445,7 @@ DEPENDENCIES:
   - ExpoLocation (from `../node_modules/expo-location/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoScreenCapture (from `../node_modules/expo-screen-capture/ios`)
+  - ExpoScreenOrientation (from `../node_modules/expo-screen-orientation/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
@@ -3589,6 +3612,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoScreenCapture:
     :path: "../node_modules/expo-screen-capture/ios"
+  ExpoScreenOrientation:
+    :path: "../node_modules/expo-screen-orientation/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   ExpoWebBrowser:
@@ -3787,6 +3812,7 @@ SPEC CHECKSUMS:
   ExpoLocation: 1f193245a788fb827302fb7f7e0a3aad128d4a2b
   ExpoModulesCore: 5cc9ddb17bc297cda7fb5a07456fe3dbf8f8391a
   ExpoScreenCapture: 4695c6c999a497327f9935133fd0e61547d7c21c
+  ExpoScreenOrientation: cef58b646fb961ceb163212d523b14fdb850d888
   ExpoSplashScreen: 8fe6e54b8b734a997da3c21d84b3ef61faa1bbf6
   ExpoWebBrowser: b658ba8a9161f1b54afb279591cfce2cb73330fa
   EXTaskManager: 5a684cca9e6c84ab339aa221d4fef5d2e6bbc159

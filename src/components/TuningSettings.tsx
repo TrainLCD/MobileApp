@@ -2,9 +2,9 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import {
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -24,9 +24,9 @@ import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
-    height: Dimensions.get('screen').height,
-    paddingVertical: 24,
+    flex: 1,
   },
+  avoidingView: { paddingVertical: 24 },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   },
   settingItemUnit: { fontSize: RFValue(12), fontWeight: 'bold', marginLeft: 8 },
   textInput: {
-    width: '50%',
+    flex: 1,
     height: 32,
     marginTop: 12,
     borderWidth: 1,
@@ -117,78 +117,82 @@ const TuningSettings: React.FC = () => {
     }));
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={{
-          ...styles.root,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          paddingLeft: safeAreaLeft || 32,
-          paddingRight: safeAreaRight || 32,
-        }}
-      >
-        <Heading>{translate('tuning')}</Heading>
-        <Typography style={styles.settingItemGroupTitle}>
-          {translate('tuningItemTiming')}
-        </Typography>
-
-        <Typography style={styles.settingItemTitle}>
-          {translate('tuningItemHeaderDelay')}
-        </Typography>
-        <View style={styles.settingItem}>
-          <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+    <>
+      <SafeAreaView style={styles.root}>
+        <KeyboardAvoidingView
+          style={styles.avoidingView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView
+            contentContainerStyle={{
+              backgroundColor: isLEDTheme ? '#212121' : '#fff',
+              paddingLeft: safeAreaLeft || 32,
+              paddingRight: safeAreaRight || 32,
             }}
-            onChangeText={handleHeaderIntervalChange}
-            value={settings.headerTransitionInterval.toString()}
-            placeholder={settings.headerTransitionInterval.toString()}
-            keyboardType="number-pad"
-          />
-          <Typography style={styles.settingItemUnit}>ms</Typography>
-        </View>
+          >
+            <Heading>{translate('tuning')}</Heading>
+            <Typography style={styles.settingItemGroupTitle}>
+              {translate('tuningItemTiming')}
+            </Typography>
 
-        <Typography style={styles.settingItemTitle}>
-          {translate('tuningItemHeaderDuration')}
-        </Typography>
-        <View style={styles.settingItem}>
-          <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
-            onChangeText={handleHeaderDelayChange}
-            value={settings.headerTransitionDelay.toString()}
-            placeholder={settings.headerTransitionDelay.toString()}
-            keyboardType="number-pad"
-          />
-          <Typography style={styles.settingItemUnit}>ms</Typography>
-        </View>
+            <Typography style={styles.settingItemTitle}>
+              {translate('tuningItemHeaderDelay')}
+            </Typography>
+            <View style={styles.settingItem}>
+              <TextInput
+                style={{
+                  ...styles.textInput,
+                  color: isLEDTheme ? '#fff' : 'black',
+                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                }}
+                onChangeText={handleHeaderIntervalChange}
+                value={settings.headerTransitionInterval.toString()}
+                placeholder={settings.headerTransitionInterval.toString()}
+                keyboardType="number-pad"
+              />
+              <Typography style={styles.settingItemUnit}>ms</Typography>
+            </View>
 
-        <Typography style={styles.settingItemTitle}>
-          {translate('tuningItemBottomTransitionDelay')}
-        </Typography>
-        <View style={styles.settingItem}>
-          <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
-            onChangeText={handleBottomDelayChange}
-            value={settings.bottomTransitionInterval.toString()}
-            placeholder={settings.bottomTransitionInterval.toString()}
-            keyboardType="number-pad"
-          />
-          <Typography style={styles.settingItemUnit}>ms</Typography>
-        </View>
-      </ScrollView>
+            <Typography style={styles.settingItemTitle}>
+              {translate('tuningItemHeaderDuration')}
+            </Typography>
+            <View style={styles.settingItem}>
+              <TextInput
+                style={{
+                  ...styles.textInput,
+                  color: isLEDTheme ? '#fff' : 'black',
+                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                }}
+                onChangeText={handleHeaderDelayChange}
+                value={settings.headerTransitionDelay.toString()}
+                placeholder={settings.headerTransitionDelay.toString()}
+                keyboardType="number-pad"
+              />
+              <Typography style={styles.settingItemUnit}>ms</Typography>
+            </View>
+
+            <Typography style={styles.settingItemTitle}>
+              {translate('tuningItemBottomTransitionDelay')}
+            </Typography>
+            <View style={styles.settingItem}>
+              <TextInput
+                style={{
+                  ...styles.textInput,
+                  color: isLEDTheme ? '#fff' : 'black',
+                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                }}
+                onChangeText={handleBottomDelayChange}
+                value={settings.bottomTransitionInterval.toString()}
+                placeholder={settings.bottomTransitionInterval.toString()}
+                keyboardType="number-pad"
+              />
+              <Typography style={styles.settingItemUnit}>ms</Typography>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="close" />
-    </KeyboardAvoidingView>
+    </>
   );
 };
 

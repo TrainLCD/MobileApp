@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   type NativeSyntheticEvent,
   Platform,
+  SafeAreaView,
   StyleSheet,
   TextInput,
   type TextInputChangeEventData,
@@ -40,19 +41,14 @@ import { translate } from '../translation';
 import { groupStations } from '../utils/groupStations';
 
 const styles = StyleSheet.create({
-  root: {
-    paddingHorizontal: 48,
-    paddingVertical: 12,
+  root: { flex: 1 },
+  settingItem: {
     flex: 1,
     alignItems: 'center',
-  },
-  settingItem: {
-    width: '65%',
-    height: '100%',
-    alignItems: 'center',
+    paddingHorizontal: 16,
   },
   heading: {
-    marginBottom: 24,
+    marginVertical: 24,
   },
   stationNameInput: {
     borderWidth: 1,
@@ -106,7 +102,7 @@ const FakeStationSettingsScreen: React.FC = () => {
       navigation.goBack();
       return;
     }
-    navigation.navigate('MainStack');
+    navigation.navigate('MainStack' as never);
   }, [navigation]);
 
   const handleSubmit = useCallback(() => {
@@ -176,7 +172,7 @@ const FakeStationSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View
+      <SafeAreaView
         style={{
           ...styles.root,
           backgroundColor: isLEDTheme ? '#212121' : '#fff',
@@ -222,7 +218,7 @@ const FakeStationSettingsScreen: React.FC = () => {
             />
           )}
         </KeyboardAvoidingView>
-      </View>
+      </SafeAreaView>
       {((latitude && longitude) || stationFromState) && (
         <FAB onPress={onPressBack} icon="close" />
       )}

@@ -27,7 +27,7 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   }
 
   const ssmlJa: string | undefined = req.data.ssmlJa;
-  if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
+  if (typeof ssmlJa !== 'string' || ssmlJa.length === 0) {
     throw new HttpsError(
       'invalid-argument',
       `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`

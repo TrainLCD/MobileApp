@@ -1,7 +1,7 @@
 import { useQuery } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, StyleSheet, View } from 'react-native';
+import { BackHandler, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
 import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
@@ -14,8 +14,8 @@ import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
-  listContainer: { flex: 1, width: '65%', alignSelf: 'center' },
+  root: { flex: 1 },
+  listContainer: { flex: 1 },
 });
 
 const TrainTypeSettings: React.FC = () => {
@@ -127,7 +127,7 @@ const TrainTypeSettings: React.FC = () => {
   );
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
 
       <View style={styles.listContainer}>
@@ -147,7 +147,7 @@ const TrainTypeSettings: React.FC = () => {
           onClose={() => setIsTrainTypeModalVisible(false)}
         />
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 };
 

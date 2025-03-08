@@ -1,12 +1,11 @@
-import { createStackNavigator } from '@react-navigation/stack';
-import React, { useMemo } from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import React from 'react';
 import { useRecoilValue } from 'recoil';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
 import useConnectivity from '../hooks/useConnectivity';
-import { useThemeStore } from '../hooks/useThemeStore';
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance';
-import { APP_THEME } from '../models/Theme';
 import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
@@ -19,30 +18,21 @@ import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
-const screenOptions = {
+const screenOptions: NativeStackNavigationOptions = {
   animation: 'none',
   headerShown: false,
+  contentStyle: { backgroundColor: '#fff' },
 };
+
+const optionsWithCustomStyle: NativeStackNavigationOptions = {};
 
 const MainStack: React.FC = () => {
   const { station, selectedBound } = useRecoilValue(stationState);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
-
-  const optionsWithCustomStyle = useMemo(
-    () => ({
-      cardStyle: {
-        opacity: 1,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      },
-    }),
-    [isLEDTheme]
-  );
 
   if (isUnderMaintenance) {
     return (

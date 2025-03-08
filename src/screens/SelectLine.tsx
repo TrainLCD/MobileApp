@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSetRecoilState } from 'recoil';

@@ -1,8 +1,13 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import findNearest from 'geolib/es/findNearest';
 import React, { useCallback } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSetRecoilState } from 'recoil';
 import { Station } from '../../gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
@@ -22,10 +27,12 @@ import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 48,
-    paddingVertical: 12,
+    flex: 1,
+  },
+  content: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
   emptyText: {
     textAlign: 'center',
@@ -34,12 +41,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   heading: {
-    marginBottom: 24,
+    marginVertical: 24,
   },
-  listContainer: {
-    width: '65%',
-    height: '100%',
-    alignSelf: 'center',
+  list: {
+    borderWidth: 1,
   },
   routeNameText: {
     fontSize: RFValue(14),
@@ -50,7 +55,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#aaa',
   },
   item: {
-    flex: 1,
     padding: 12,
   },
 });
@@ -163,7 +167,6 @@ const SavedRoutesScreen: React.FC = () => {
   );
 
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, []);
-  const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   if (loading) {
     return (
@@ -172,31 +175,31 @@ const SavedRoutesScreen: React.FC = () => {
   }
 
   return (
-    <View
-      style={{
-        ...styles.root,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
-    >
-      <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
-
-      <FlatList
+    <>
+      <SafeAreaView
         style={{
-          width: '65%',
-          alignSelf: 'center',
-          borderColor: isLEDTheme ? '#fff' : '#aaa',
-          borderWidth: 1,
-          flex: 1,
-          marginBottom: safeAreaBottom,
+          ...styles.root,
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
         }}
-        data={routes}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        ListEmptyComponent={ListEmptyComponent}
-      />
+      >
+        <View style={styles.content}>
+          <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
+
+          <FlatList
+            style={{
+              ...styles.list,
+              borderColor: isLEDTheme ? '#fff' : '#aaa',
+            }}
+            data={routes}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            ListEmptyComponent={ListEmptyComponent}
+          />
+        </View>
+      </SafeAreaView>
 
       <FAB onPress={onPressBack} icon="close" />
-    </View>
+    </>
   );
 };
 
