@@ -27,6 +27,7 @@ import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
 import useAutoMode from '../hooks/useAutoMode';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
+import useCurrentTrainType from '../hooks/useCurrentTrainType';
 import { useLoopLine } from '../hooks/useLoopLine';
 import { useNextStation } from '../hooks/useNextStation';
 import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
@@ -49,6 +50,7 @@ import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { getIsHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
+import { getIsLocal } from '../utils/trainTypeString';
 
 const { height: screenHeight } = Dimensions.get('screen');
 
@@ -70,6 +72,7 @@ const MainScreen: React.FC = () => {
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
+  const trainType = useCurrentTrainType();
 
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled
@@ -86,7 +89,10 @@ const MainScreen: React.FC = () => {
   const stationsRef = useRef(stations);
 
   const hasTerminus = useMemo((): boolean => {
-    if (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) {
+    if (
+      (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) &&
+      getIsLocal(trainType)
+    ) {
       return false;
     }
     if (selectedDirection === 'INBOUND') {
@@ -108,6 +114,7 @@ const MainScreen: React.FC = () => {
     selectedDirection,
     leftStations,
     stations,
+    trainType,
   ]);
 
   const navigation = useNavigation();

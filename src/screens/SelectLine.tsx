@@ -78,10 +78,14 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const stopLocationUpdatesAsync = async () => {
-      const hasStartedLocationUpdates =
-        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      if (hasStartedLocationUpdates) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      try {
+        const hasStartedLocationUpdates =
+          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStartedLocationUpdates) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      } catch (err) {
+        console.error(err);
       }
     };
     stopLocationUpdatesAsync();

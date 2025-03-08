@@ -18,31 +18,41 @@ export const useStartBackgroundLocationUpdates = () => {
     let watchPositionSub: Location.LocationSubscription | null = null;
 
     (async () => {
-      if (bgPermGranted) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
-          accuracy: Location.Accuracy.BestForNavigation,
-          // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
-          // OtherNavigationは必須
-          activityType: Location.ActivityType.OtherNavigation,
-          timeInterval: 5000,
-          distanceInterval: 10,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        });
-        return;
+      try {
+        if (bgPermGranted) {
+          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+            // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
+            accuracy: Location.Accuracy.BestForNavigation,
+            // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+            // OtherNavigationは必須
+            activityType: Location.ActivityType.OtherNavigation,
+            timeInterval: 5000,
+            distanceInterval: 10,
+            foregroundService: {
+              notificationTitle: translate('bgAlertTitle'),
+              notificationBody: translate('bgAlertContent'),
+              killServiceOnDestroy: true,
+            },
+          });
+        }
+      } catch (err) {
+        console.error(err);
       }
-      watchPositionSub = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 5000,
-          distanceInterval: 10,
-        },
-        setLocation
-      );
+
+      try {
+        if (!bgPermGranted) {
+          watchPositionSub = await Location.watchPositionAsync(
+            {
+              accuracy: Location.Accuracy.BestForNavigation,
+              timeInterval: 5000,
+              distanceInterval: 10,
+            },
+            setLocation
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
     })();
 
     return () => {
