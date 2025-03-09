@@ -1,17 +1,19 @@
 import { useQuery } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import uniqBy from 'lodash/uniqBy';
+import React, { act, useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
 import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
+import { FilterModal, type SearchQuery } from '../components/FilterModal';
 import Heading from '../components/Heading';
 import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal';
 import { TrainTypeList } from '../components/TrainTypeList';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
@@ -23,11 +25,42 @@ const TrainTypeSettings: React.FC = () => {
   const [selectedTrainType, setSelectedTrainType] = useState<TrainType | null>(
     null
   );
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
 
   const [{ fetchedTrainTypes }, setNavigationState] =
     useRecoilState(navigationState);
   const [{ stations: stationsFromState }, setStationState] =
     useRecoilState(stationState);
+
+  const defaultQueries: SearchQuery[] = useMemo(() => {
+    const allLines = uniqBy(
+      fetchedTrainTypes.flatMap((tt) => tt.lines.map((l) => l)),
+      'id'
+    );
+    const allTrainTypes = fetchedTrainTypes.flatMap((tt) =>
+      tt.lines
+        .map((l) => ({ ...l.trainType, line: l }))
+        .filter((tt) => tt !== undefined)
+    );
+    return allLines.map((l) => ({
+      id: l.id,
+      name: l.nameShort,
+      options: uniqBy(
+        allTrainTypes
+          .filter((tt) => tt.line?.id === l.id)
+          .map((tt) => ({
+            id: tt.typeId as number,
+            name: tt.name as string,
+            parentId: l.id,
+            color: tt.color as string,
+            active: true,
+          })),
+        'id'
+      ),
+    }));
+  }, [fetchedTrainTypes]);
+
+  const [queries, setQueries] = useState<SearchQuery[]>(defaultQueries);
 
   const navigation = useNavigation();
 
@@ -126,27 +159,72 @@ const TrainTypeSettings: React.FC = () => {
     ]
   );
 
+  const handleOpenQueryModal = useCallback(
+    () => setIsFilterModalOpen(true),
+    []
+  );
+
+  const hiddenIdPairs = useMemo(
+    () =>
+      queries
+        .flatMap((q) => q.options)
+        .filter((o) => !o.active)
+        .map((o) => [o.parentId, o.id]),
+    [queries]
+  );
+
+  const filteredTrainTypes = useMemo(
+    () =>
+      fetchedTrainTypes.filter(
+        (tt) =>
+          !hiddenIdPairs.some(([l, t]) =>
+            tt.lines.some(
+              (line) => line.id === l && line.trainType?.typeId === t
+            )
+          )
+      ),
+    [fetchedTrainTypes, hiddenIdPairs]
+  );
+
   return (
     <View style={styles.root}>
       <Heading>{translate('trainTypeSettings')}</Heading>
 
       <View style={styles.listContainer}>
-        <TrainTypeList data={fetchedTrainTypes} onSelect={handleSelect} />
+        <TrainTypeList data={filteredTrainTypes} onSelect={handleSelect} />
       </View>
 
+      <FAB secondary onPress={handleOpenQueryModal} icon="options-outline" />
       <FAB onPress={onPressBack} icon="close" />
 
-      {selectedTrainType ? (
-        <TrainTypeInfoModal
-          visible={isTrainTypeModalVisible}
-          trainType={selectedTrainType}
-          stations={stations}
-          loading={isLineGroupByIdLoading}
-          error={byLineGroupIdFetchError}
-          onConfirmed={handleTrainTypeConfirmed}
-          onClose={() => setIsTrainTypeModalVisible(false)}
-        />
-      ) : null}
+      <TrainTypeInfoModal
+        visible={isTrainTypeModalVisible}
+        trainType={selectedTrainType}
+        stations={stations}
+        loading={isLineGroupByIdLoading}
+        error={byLineGroupIdFetchError}
+        onConfirmed={handleTrainTypeConfirmed}
+        onClose={() => setIsTrainTypeModalVisible(false)}
+      />
+      <FilterModal
+        visible={isFilterModalOpen}
+        queries={queries}
+        onClose={() => setIsFilterModalOpen(false)}
+        onQueryChange={(qid, opt) => {
+          setQueries((prev) =>
+            prev.map((q) =>
+              q.id === qid
+                ? {
+                    ...q,
+                    options: q.options.map((o) =>
+                      o.id === opt.id ? { ...o, active: opt.active } : o
+                    ),
+                  }
+                : q
+            )
+          );
+        }}
+      />
     </View>
   );
 };
