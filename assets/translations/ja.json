@@ -168,5 +168,7 @@
   "failedToOpenSettings": "設定画面の起動に失敗しました。",
   "setTerminusText": "%{stationName}駅を終点に設定する",
   "confirmChangeLineTitle": "%{lineName}に切り替えますか？",
-  "confirmChangeLineText": "現在の路線は%{currentLineName}です。%{lineName}に切り替えますか？"
+  "confirmChangeLineText": "現在の路線は%{currentLineName}です。%{lineName}に切り替えますか？",
+  "trainTypesFilter": "種別の絞り込み",
+  "trainTypeListEmpty": "該当する種別が見つかりませんでした。"
 }

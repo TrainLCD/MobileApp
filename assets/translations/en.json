@@ -167,5 +167,7 @@
   "failedToOpenSettings": "Failed to open system settings. Please open the app settings manually.",
   "setTerminusText": "Set %{stationName} Station as the final destination",
   "confirmChangeLineTitle": "Should we transfer to the %{lineName}?",
-  "confirmChangeLineText": "The current line is the %{currentLineName}. Should we switch to the %{lineName}?"
+  "confirmChangeLineText": "The current line is the %{currentLineName}. Should we switch to the %{lineName}?",
+  "trainTypesFilter": "Train type filtering",
+  "trainTypeListEmpty": "No matching train types were found."
 }
