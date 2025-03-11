@@ -43,7 +43,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  container: {},
   scrollView: {
     minHeight: isTablet ? 'auto' : '100%',
   },
@@ -120,7 +119,6 @@ export const FilterModal: React.FC<Props> = ({
       <View style={styles.root}>
         <View
           style={[
-            styles.container,
             {
               backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
             },
