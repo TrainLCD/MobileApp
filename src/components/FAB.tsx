@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
       height: 1,
     },
     shadowRadius: 2,
+    elevation: 2,
   },
 });
 
@@ -79,7 +80,7 @@ const FAB: React.FC<Props> = ({
         {
           shadowColor,
           backgroundColor: bgColor,
-          borderWidth: isLEDTheme ? 2 : 0,
+          borderWidth: isLEDTheme ? 2 : 1,
           borderColor: fgColor,
           opacity: disabled ? 0.5 : 1,
         },

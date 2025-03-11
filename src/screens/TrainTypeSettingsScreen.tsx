@@ -1,7 +1,7 @@
 import { useQuery } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
 import uniqBy from 'lodash/uniqBy';
-import React, { act, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
 import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery';
@@ -13,7 +13,7 @@ import { TrainTypeInfoModal } from '../components/TrainTypeInfoModal';
 import { TrainTypeList } from '../components/TrainTypeList';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
+import { translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
