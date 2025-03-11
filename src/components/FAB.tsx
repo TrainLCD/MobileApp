@@ -73,11 +73,11 @@ const FAB: React.FC<Props> = ({
   }, [isLEDTheme]);
   const borderColor = useMemo(() => {
     if (secondary) {
-      return '#008ffe';
+      return fgColor;
     }
 
     return bgColor;
-  }, [bgColor, secondary]);
+  }, [bgColor, fgColor, secondary]);
 
   return (
     <TouchableOpacity
