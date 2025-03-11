@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
       height: 1,
     },
     shadowRadius: 2,
+    elevation: 4,
   },
 });
 
@@ -70,6 +71,13 @@ const FAB: React.FC<Props> = ({
 
     return '#000';
   }, [isLEDTheme]);
+  const borderColor = useMemo(() => {
+    if (secondary) {
+      return fgColor;
+    }
+
+    return bgColor;
+  }, [bgColor, fgColor, secondary]);
 
   return (
     <TouchableOpacity
@@ -78,9 +86,9 @@ const FAB: React.FC<Props> = ({
         styles.fab,
         {
           shadowColor,
+          borderColor,
           backgroundColor: bgColor,
-          borderWidth: isLEDTheme ? 2 : 0,
-          borderColor: fgColor,
+          borderWidth: isLEDTheme ? 2 : 1,
           opacity: disabled ? 0.5 : 1,
         },
         secondary && { right: 32, bottom: 112 },

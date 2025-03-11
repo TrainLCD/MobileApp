@@ -1,10 +1,7 @@
 import type React from 'react';
 import { useCallback } from 'react';
 import { FlatList, Modal, StyleSheet, View } from 'react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
@@ -47,7 +44,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   scrollView: {
-    paddingVertical: 24,
     minHeight: isTablet ? 'auto' : '100%',
   },
   formGroup: {
@@ -79,8 +75,8 @@ export const FilterModal: React.FC<Props> = ({
         <View
           style={{
             ...styles.formItem,
-            paddingLeft: safeAreaLeft,
-            paddingRight: safeAreaRight,
+            paddingLeft: safeAreaLeft || 24,
+            paddingRight: safeAreaRight || 24,
           }}
         >
           <Typography style={styles.subHeading}>{item.name}</Typography>
