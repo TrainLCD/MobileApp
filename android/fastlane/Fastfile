@@ -44,6 +44,7 @@ platform :android do
     )
     upload_to_play_store(
       track: "internal",
+      package_name: "me.tinykitten.trainlcd",
       aab_paths: [
         "app/build/outputs/bundle/prodRelease/app-prod-release.aab",
       ],
@@ -55,6 +56,7 @@ platform :android do
     )
     upload_to_play_store(
       track: "wear:internal",
+      package_name: "me.tinykitten.trainlcd",
       aab_paths: [
         "wearable/build/outputs/bundle/prodRelease/wearable-prod-release.aab"
       ],
@@ -80,6 +82,7 @@ platform :android do
     )
     upload_to_play_store(
       track: "internal",
+      package_name: "me.tinykitten.trainlcd.dev",
       aab_paths: [
         "app/build/outputs/bundle/devRelease/app-dev-release.aab",
       ],
@@ -91,6 +94,7 @@ platform :android do
     )
     upload_to_play_store(
       track: "wear:internal",
+      package_name: "me.tinykitten.trainlcd.dev",
       aab_paths: [
         "wearable/build/outputs/bundle/devRelease/wearable-dev-release.aab"
       ],
