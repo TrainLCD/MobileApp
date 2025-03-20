@@ -2,6 +2,10 @@ import { TransportProvider } from '@connectrpc/connect-query';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { NavigationContainer } from '@react-navigation/native';
+import {
+  type NativeStackNavigationOptions,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
@@ -16,6 +20,7 @@ import {
   Text,
 } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RecoilRoot } from 'recoil';
 import ErrorFallback from './components/ErrorBoundary';
 import TuningSettings from './components/TuningSettings';
@@ -29,11 +34,6 @@ import RouteSearchScreen from './screens/RouteSearchScreen';
 import SavedRoutesScreen from './screens/SavedRoutesScreen';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationOptions,
-} from '@react-navigation/native-stack';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
 

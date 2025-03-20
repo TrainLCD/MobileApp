@@ -1,3 +1,7 @@
+import {
+  type NativeStackNavigationOptions,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import ErrorScreen from '../components/ErrorScreen';
@@ -17,10 +21,6 @@ import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSetti
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationOptions,
-} from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
 

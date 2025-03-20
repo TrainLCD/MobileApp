@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
+import { LineType } from '../../gen/proto/stationapi_pb';
 import { APPROACHING_MAX_THRESHOLD, ARRIVED_MAX_THRESHOLD } from '../constants';
 import { useCurrentLine } from './useCurrentLine';
-import { LineType } from '../../gen/proto/stationapi_pb';
 
 export const useThreshold = () => {
   const currentLine = useCurrentLine();
