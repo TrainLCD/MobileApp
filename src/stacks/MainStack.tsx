@@ -1,4 +1,3 @@
-import { createStackNavigator } from '@react-navigation/stack';
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import ErrorScreen from '../components/ErrorScreen';
@@ -18,10 +17,14 @@ import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSetti
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
-const screenOptions = {
+const screenOptions: NativeStackNavigationOptions = {
   animation: 'none',
   headerShown: false,
 };
@@ -34,9 +37,9 @@ const MainStack: React.FC = () => {
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
 
-  const optionsWithCustomStyle = useMemo(
+  const optionsWithCustomStyle = useMemo<NativeStackNavigationOptions>(
     () => ({
-      cardStyle: {
+      contentStyle: {
         opacity: 1,
         backgroundColor: isLEDTheme ? '#212121' : '#fff',
       },
