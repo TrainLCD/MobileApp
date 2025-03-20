@@ -8,6 +8,7 @@ import HeaderLED from './HeaderLED';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTY from './HeaderTY';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
+import HeaderJL from './HeaderJL';
 
 const Header = () => {
   const theme = useThemeStore((state) => state);
@@ -32,6 +33,8 @@ const Header = () => {
       return <HeaderSaikyo />;
     case APP_THEME.LED:
       return <HeaderLED />;
+    case APP_THEME.JL:
+      return <HeaderJL />;
     default:
       return null;
   }

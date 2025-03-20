@@ -18,6 +18,7 @@ import LineBoardToei from './LineBoardToei';
 import LineBoardWest from './LineBoardWest';
 import LineBoardYamanotePad from './LineBoardYamanotePad';
 import Typography from './Typography';
+import LineBoardJL from './LineBoardJL';
 
 export interface Props {
   hasTerminus?: boolean;
@@ -119,6 +120,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
       case APP_THEME.JO:
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
+        );
+      case APP_THEME.JL:
+        return (
+          <LineBoardJL stations={slicedLeftStations} lineColors={lineColors} />
         );
       default:
         return null;

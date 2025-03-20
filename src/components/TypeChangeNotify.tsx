@@ -978,6 +978,7 @@ const TypeChangeNotify: React.FC = () => {
         );
       case 'YAMANOTE':
       case 'JO':
+      case 'JL':
         return (
           <JOBars
             currentLine={currentLine}
