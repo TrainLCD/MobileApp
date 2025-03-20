@@ -23,11 +23,12 @@ export const useThreshold = () => {
       return ARRIVED_MAX_THRESHOLD;
     }
 
-    const isNarrow =
+    const isNarrowBetweenStation =
       currentLine.lineType === LineType.Tram ||
       currentLine.lineType === LineType.MonorailOrAGT;
 
-    const threshold = currentLine.averageDistance / (isNarrow ? 6 : 4);
+    const threshold =
+      currentLine.averageDistance / (isNarrowBetweenStation ? 6 : 4);
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD;
     }
