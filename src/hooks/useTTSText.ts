@@ -763,7 +763,7 @@ const useTTSText = (
               : ''
           }${
             isNextStopTerminus
-              ? ' Thank you for traveling with us, and look forward serving you again.'
+              ? ' Thank you for traveling with us, and look forward to serving you again.'
               : ''
           }`,
         },
@@ -803,7 +803,7 @@ const useTTSText = (
               : ''
           }${
             isNextStopTerminus
-              ? ' Thank you for traveling with us, and look forward serving you again.'
+              ? ' Thank you for traveling with us, and look forward to serving you again.'
               : ''
           }`,
         },
