@@ -394,7 +394,23 @@ const useTTSText = (
                   .join('、')}はお乗り換えです。`
               : ''
           }`,
-          ARRIVING: '',
+          ARRIVING: `まもなく、${isNextStopTerminus ? '終点、' : ''}${
+            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
+            ''
+          }、${
+            replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
+            ''
+          }。${
+            transferLines.length
+              ? `${transferLines
+                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
+                  .join('、')}は、お乗り換えです。${
+                  isNextStopTerminus
+                    ? `${currentLine.company?.nameShort}をご利用くださいまして、ありがとうございました。`
+                    : ''
+                }`
+              : ''
+          }`,
         },
         [APP_THEME.JO]: {
           NEXT: '',
@@ -733,7 +749,23 @@ const useTTSText = (
                   .join(' ')}`
               : ''
           }`,
-          ARRIVING: '',
+          ARRIVING: `The next station is ${nextStation?.nameRoman}${
+            isNextStopTerminus ? ', terminal' : ''
+          } ${nextStationNumberText}${
+            transferLines.length
+              ? ` Please change here for ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                  )
+                  .join(' ')}`
+              : ''
+          }${
+            isNextStopTerminus
+              ? ' Thank you for traveling with us, and look forward serving you again.'
+              : ''
+          }`,
         },
         [APP_THEME.JO]: {
           NEXT: '',
