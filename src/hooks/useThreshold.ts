@@ -5,7 +5,7 @@ import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
 export const useThreshold = () => {
-  const currentStation = useCurrentStation();
+  const currentStation = useCurrentStation(true);
   const nextStation = useNextStation();
 
   const betweenDistance = useMemo(() => {
