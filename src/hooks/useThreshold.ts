@@ -28,15 +28,10 @@ export const useThreshold = () => {
       return ARRIVED_MAX_THRESHOLD;
     }
 
-    const isNarrowBetweenStation =
-      currentLine.lineType === LineType.Tram ||
-      currentLine.lineType === LineType.MonorailOrAGT;
-
-    const threshold =
-      currentLine.averageDistance / (isNarrowBetweenStation ? 6 : 5);
+    const threshold = currentLine.averageDistance / 5;
 
     if (threshold > distanceToNextStation) {
-      return distanceToNextStation / (isNarrowBetweenStation ? 6 : 5);
+      return distanceToNextStation / 5;
     }
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD;
