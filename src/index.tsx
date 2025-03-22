@@ -3,9 +3,9 @@ import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { NavigationContainer } from '@react-navigation/native';
 import {
-  type StackNavigationOptions,
-  createStackNavigator,
-} from '@react-navigation/stack';
+  type NativeStackNavigationOptions,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
@@ -20,6 +20,7 @@ import {
   Text,
 } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RecoilRoot } from 'recoil';
 import ErrorFallback from './components/ErrorBoundary';
 import TuningSettings from './components/TuningSettings';
@@ -36,14 +37,14 @@ import { setI18nConfig } from './translation';
 
 SplashScreen.preventAutoHideAsync();
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
-const screenOptions: StackNavigationOptions = {
+const screenOptions: NativeStackNavigationOptions = {
   headerShown: false,
 };
-const options: StackNavigationOptions = {
+const options: NativeStackNavigationOptions = {
   animation: 'none' as const,
-  cardStyle: {
+  contentStyle: {
     backgroundColor: '#fff',
     opacity: 1,
   },
@@ -124,57 +125,59 @@ const App: React.FC = () => {
         FallbackComponent={ErrorFallback}
         onError={handleBoundaryError}
       >
-        <TransportProvider transport={transport}>
-          <QueryClientProvider client={queryClient}>
-            <ActionSheetProvider>
-              <RecoilRoot>
-                <NavigationContainer>
-                  <DeepLinkProvider>
-                    <Stack.Navigator screenOptions={screenOptions}>
-                      {!permStatus?.granted ? (
+        <GestureHandlerRootView>
+          <TransportProvider transport={transport}>
+            <QueryClientProvider client={queryClient}>
+              <ActionSheetProvider>
+                <RecoilRoot>
+                  <NavigationContainer>
+                    <DeepLinkProvider>
+                      <Stack.Navigator screenOptions={screenOptions}>
+                        {!permStatus?.granted ? (
+                          <Stack.Screen
+                            options={options}
+                            name="Privacy"
+                            component={PrivacyScreen}
+                          />
+                        ) : null}
+
                         <Stack.Screen
                           options={options}
-                          name="Privacy"
-                          component={PrivacyScreen}
+                          name="MainStack"
+                          component={MainStack}
                         />
-                      ) : null}
 
-                      <Stack.Screen
-                        options={options}
-                        name="MainStack"
-                        component={MainStack}
-                      />
+                        <Stack.Screen
+                          options={options}
+                          name="FakeStation"
+                          component={FakeStationSettingsScreen}
+                        />
 
-                      <Stack.Screen
-                        options={options}
-                        name="FakeStation"
-                        component={FakeStationSettingsScreen}
-                      />
+                        <Stack.Screen
+                          options={options}
+                          name="TuningSettings"
+                          component={TuningSettings}
+                        />
 
-                      <Stack.Screen
-                        options={options}
-                        name="TuningSettings"
-                        component={TuningSettings}
-                      />
+                        <Stack.Screen
+                          options={options}
+                          name="SavedRoutes"
+                          component={SavedRoutesScreen}
+                        />
 
-                      <Stack.Screen
-                        options={options}
-                        name="SavedRoutes"
-                        component={SavedRoutesScreen}
-                      />
-
-                      <Stack.Screen
-                        options={options}
-                        name="RouteSearch"
-                        component={RouteSearchScreen}
-                      />
-                    </Stack.Navigator>
-                  </DeepLinkProvider>
-                </NavigationContainer>
-              </RecoilRoot>
-            </ActionSheetProvider>
-          </QueryClientProvider>
-        </TransportProvider>
+                        <Stack.Screen
+                          options={options}
+                          name="RouteSearch"
+                          component={RouteSearchScreen}
+                        />
+                      </Stack.Navigator>
+                    </DeepLinkProvider>
+                  </NavigationContainer>
+                </RecoilRoot>
+              </ActionSheetProvider>
+            </QueryClientProvider>
+          </TransportProvider>
+        </GestureHandlerRootView>
       </ErrorBoundary>
     </>
   );
