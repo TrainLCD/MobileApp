@@ -1,6 +1,6 @@
+import getDistance from 'geolib/es/getDistance';
 import { useMemo } from 'react';
 import { useLocationStore } from './useLocationStore';
-import getDistance from 'geolib/es/getDistance';
 import { useNextStation } from './useNextStation';
 
 export const useDistanceToNextStation = () => {
