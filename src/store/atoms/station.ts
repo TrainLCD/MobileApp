@@ -6,7 +6,6 @@ import type { LineDirection } from '../../models/Bound';
 export interface StationState {
   arrived: boolean;
   approaching: boolean;
-  averageDistance: number | null;
   station: Station | null;
   stations: Station[];
   selectedDirection: LineDirection | null;
@@ -17,7 +16,6 @@ export interface StationState {
 export const initialStationState: StationState = {
   arrived: true,
   approaching: false,
-  averageDistance: null,
   station: null,
   stations: [],
   selectedDirection: null,
