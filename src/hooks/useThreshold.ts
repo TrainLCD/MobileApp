@@ -1,7 +1,7 @@
+import getDistance from 'geolib/es/getPreciseDistance';
 import { useMemo } from 'react';
 import { APPROACHING_MAX_THRESHOLD, ARRIVED_MAX_THRESHOLD } from '../constants';
 import { useCurrentStation } from './useCurrentStation';
-import getDistance from 'geolib/es/getPreciseDistance';
 import { useNextStation } from './useNextStation';
 
 export const useThreshold = () => {
