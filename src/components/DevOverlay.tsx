@@ -62,7 +62,7 @@ const DevOverlay: React.FC = () => {
 
       {distanceToNextStation ? (
         <Typography style={styles.text}>
-          Next: {distanceToNextStation / 1000}km
+          Next: {distanceToNextStation}m
         </Typography>
       ) : (
         <Typography style={styles.text}>Next:</Typography>
