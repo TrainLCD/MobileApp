@@ -12,7 +12,7 @@
   "couldNotGetLocation": "Could not get location information. Please move and try again.",
   "badAccuracy": "There is an error in the location information, so it may not operate normally.",
   "soon": "まもなく",
-  "soonLast": "まもなく終点",
+  "soonLast": "まもなく\n終点",
   "soonKanaLast": "まもなく\nしゅうてん",
   "soonEn": "Soon",
   "soonEnLast": "Soon\nLast Stop",
