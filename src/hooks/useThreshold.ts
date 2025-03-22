@@ -2,9 +2,11 @@ import { useMemo } from 'react';
 import { LineType } from '../../gen/proto/stationapi_pb';
 import { APPROACHING_MAX_THRESHOLD, ARRIVED_MAX_THRESHOLD } from '../constants';
 import { useCurrentLine } from './useCurrentLine';
+import { useDistanceToNextStation } from './useDistanceToNextStation';
 
 export const useThreshold = () => {
   const currentLine = useCurrentLine();
+  const distanceToNextStation = useDistanceToNextStation();
 
   const approachingThreshold = useMemo(() => {
     if (!currentLine) {
@@ -15,8 +17,11 @@ export const useThreshold = () => {
     if (threshold > APPROACHING_MAX_THRESHOLD) {
       return APPROACHING_MAX_THRESHOLD;
     }
+    if (threshold > distanceToNextStation) {
+      return distanceToNextStation / 2;
+    }
     return threshold;
-  }, [currentLine]);
+  }, [currentLine, distanceToNextStation]);
 
   const arrivedThreshold = useMemo(() => {
     if (!currentLine) {
@@ -29,11 +34,15 @@ export const useThreshold = () => {
 
     const threshold =
       currentLine.averageDistance / (isNarrowBetweenStation ? 6 : 5);
+
+    if (threshold > distanceToNextStation) {
+      return distanceToNextStation / (isNarrowBetweenStation ? 6 : 5);
+    }
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD;
     }
     return threshold;
-  }, [currentLine]);
+  }, [currentLine, distanceToNextStation]);
 
   return { approachingThreshold, arrivedThreshold };
 };
