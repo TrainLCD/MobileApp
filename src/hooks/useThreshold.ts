@@ -28,7 +28,7 @@ export const useThreshold = () => {
       currentLine.lineType === LineType.MonorailOrAGT;
 
     const threshold =
-      currentLine.averageDistance / (isNarrowBetweenStation ? 6 : 4);
+      currentLine.averageDistance / (isNarrowBetweenStation ? 6 : 5);
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD;
     }
