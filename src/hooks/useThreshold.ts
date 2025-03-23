@@ -39,7 +39,7 @@ export const useThreshold = () => {
       return ARRIVED_MAX_THRESHOLD;
     }
 
-    const threshold = betweenDistance / 5;
+    const threshold = betweenDistance / 4;
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD;
     }
