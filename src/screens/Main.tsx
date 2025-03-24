@@ -324,7 +324,6 @@ const MainScreen: React.FC = () => {
         selectedBound: null,
         arrived: true,
         approaching: false,
-        averageDistance: null,
         stations: [],
       }));
       navigation.dispatch(StackActions.replace('SelectBound'));

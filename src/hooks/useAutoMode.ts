@@ -5,6 +5,7 @@ import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
 } from '../constants';
+import { AUTO_MODE_RUNNING_SPEED } from '../constants/threshold';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -91,7 +92,7 @@ const useAutoMode = (enabled: boolean): void => {
                 accuracy: 0,
                 altitude: 0,
                 altitudeAccuracy: -1,
-                speed: 0,
+                speed: AUTO_MODE_RUNNING_SPEED,
                 heading: 0,
               },
             });
@@ -139,7 +140,7 @@ const useAutoMode = (enabled: boolean): void => {
                 accuracy: 0,
                 altitude: 0,
                 altitudeAccuracy: -1,
-                speed: 0,
+                speed: AUTO_MODE_RUNNING_SPEED,
                 heading: 0,
               },
             });

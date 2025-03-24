@@ -176,7 +176,7 @@ describe('Without trainType & With numbering', () => {
           wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
         }
       )
-      expect(result.current).toEqual(['', ''])
+      expect(result.current).toEqual(['まもなく、<sub alias=\"しんじゅくさんちょうめ\">新宿三丁目</sub>、<sub alias=\"しんじゅくさんちょうめ\">新宿三丁目</sub>。<sub alias=\"とうきょうめとろまるのうちせん\">東京メトロ丸ノ内線</sub>、<sub alias=\"とうきょうめとろふくとしんせん\">東京メトロ副都心線</sub>は、お乗り換えです。', 'The next station is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.'])
     })
   })
 
