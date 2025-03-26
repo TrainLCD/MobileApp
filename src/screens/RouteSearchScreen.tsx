@@ -18,7 +18,6 @@ import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import { useSetRecoilState } from 'recoil';
 import {
-  getConnectedRoutes,
   getRoutes,
   getStationByIdList,
   getStationsByName,
@@ -40,7 +39,6 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { groupStations } from '../utils/groupStations';
-import { isDevApp } from '../utils/isDevApp';
 
 const styles = StyleSheet.create({
   root: {
@@ -114,27 +112,6 @@ const RouteSearchScreen = () => {
     { enabled: !!currentStation && !!selectedStation }
   );
 
-  const {
-    data: connectedRoutesData,
-    isLoading: isConnectedRoutesLoading,
-    error: fetchConnectedRoutesError,
-  } = useQuery(
-    getConnectedRoutes,
-    {
-      fromStationGroupId: currentStation?.groupId,
-      toStationGroupId: selectedStation?.groupId,
-    },
-    { enabled: !!currentStation && !!selectedStation && isDevApp }
-  );
-
-  const routesWithConnected = useMemo(
-    () => [
-      ...(connectedRoutesData?.routes ?? []),
-      ...(routesData?.routes ?? []),
-    ],
-    [routesData, connectedRoutesData]
-  );
-
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -148,7 +125,7 @@ const RouteSearchScreen = () => {
     fetchByName({
       stationName: query.trim(),
       limit: Number(SEARCH_STATION_RESULT_LIMIT),
-      fromStationGroupId: !isDevApp ? currentStation?.groupId : undefined,
+      fromStationGroupId: currentStation?.groupId,
     });
   }, [currentStation, fetchByName, query]);
 
@@ -355,15 +332,11 @@ const RouteSearchScreen = () => {
       {selectedStation && (
         <RouteListModal
           finalStation={selectedStation}
-          routes={routesWithConnected}
+          routes={routesData?.routes ?? []}
           visible={isRouteListModalVisible}
-          isRoutesLoading={isRoutesLoading || isConnectedRoutesLoading}
+          isRoutesLoading={isRoutesLoading}
           isTrainTypesLoading={isTrainTypesLoading}
-          error={
-            fetchRoutesError ||
-            fetchConnectedRoutesError ||
-            fetchTrainTypesError
-          }
+          error={fetchRoutesError || fetchTrainTypesError}
           onClose={() => setIsRouteListModalVisible(false)}
           onSelect={handleSelect}
         />
