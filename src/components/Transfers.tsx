@@ -157,12 +157,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         (sn) => !!sn?.stationNumber
       );
       return (
-        <TouchableOpacity
-          activeOpacity={1}
-          style={styles.transferLine}
-          key={line.id}
-          onPress={() => onPress(new Station({ ...line.station, line, lines }))}
-        >
+        <View style={styles.transferLine} key={line.id}>
           <View style={styles.transferLineInnerLeft}>
             {lineMark ? (
               <TransferLineMark
@@ -171,41 +166,66 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 size={NUMBERING_ICON_SIZE.MEDIUM}
               />
             ) : (
-              <TransferLineDot line={line} />
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() =>
+                  onPress(new Station({ ...line.station, line, lines }))
+                }
+              >
+                <TransferLineDot line={line} />
+              </TouchableOpacity>
             )}
             <View style={styles.lineNameContainer}>
-              <Typography style={styles.lineName}>
-                {line.nameShort.replace(parenthesisRegexp, '')}
-              </Typography>
-              <Typography style={styles.lineNameEn}>
-                {line.nameRoman?.replace(parenthesisRegexp, '')}
-              </Typography>
-              {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
-                <Typography style={styles.lineNameEn}>
-                  {`${line.nameChinese.replace(
-                    parenthesisRegexp,
-                    ''
-                  )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() =>
+                  onPress(new Station({ ...line.station, line, lines }))
+                }
+              >
+                <Typography style={styles.lineName}>
+                  {line.nameShort.replace(parenthesisRegexp, '')}
                 </Typography>
-              ) : null}
+                <Typography style={styles.lineNameEn}>
+                  {line.nameRoman?.replace(parenthesisRegexp, '')}
+                </Typography>
+                {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
+                  <Typography style={styles.lineNameEn}>
+                    {`${line.nameChinese.replace(
+                      parenthesisRegexp,
+                      ''
+                    )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
+                  </Typography>
+                ) : null}
+              </TouchableOpacity>
             </View>
           </View>
           {includesNumberedStation ? (
             <View style={styles.transferLineInnerRight}>
               {stationNumbers[index] ? (
-                <View style={styles.numberingIconContainer}>
+                <TouchableOpacity
+                  onPress={() =>
+                    onPress(new Station({ ...line.station, line, lines }))
+                  }
+                  activeOpacity={1}
+                  style={styles.numberingIconContainer}
+                >
                   <NumberingIcon
                     shape={stationNumbers[index].lineSymbolShape}
                     lineColor={stationNumbers[index]?.lineSymbolColor}
                     stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                     allowScaling={false}
                   />
-                </View>
+                </TouchableOpacity>
               ) : (
                 <View style={styles.numberingIconContainer} />
               )}
               {line.station && (
-                <View>
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() =>
+                    onPress(new Station({ ...line.station, line, lines }))
+                  }
+                >
                   <Typography style={styles.lineName}>
                     {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
                   </Typography>
@@ -224,11 +244,11 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                       ''
                     )}역`}
                   </Typography>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
           ) : null}
-        </TouchableOpacity>
+        </View>
       );
     },
     [getLineMarkFunc, onPress, station, stationNumbers, lines]
