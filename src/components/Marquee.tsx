@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import isTablet from '../utils/isTablet';
 
 type Props = {
   children: React.ReactElement;
@@ -24,7 +25,7 @@ const Marquee = ({ children }: Props) => {
     (width: number) => {
       offsetX.value = withRepeat(
         withTiming(-width, {
-          duration: width * 3,
+          duration: 8500,
           easing: Easing.linear,
         }),
         -1
