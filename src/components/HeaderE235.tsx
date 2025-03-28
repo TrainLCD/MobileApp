@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   boundContainer: {
     width: '100%',
     height: isTablet ? 100 : 50,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   bound: {
     color: '#fff',
@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 32,
     flexWrap: 'wrap',
     flex: 1,
     textAlign: 'center',
@@ -77,8 +76,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: RFValue(21),
-    position: 'absolute',
-    top: 12,
   },
   colorBar: {
     width: isTablet ? 48 : 38,
