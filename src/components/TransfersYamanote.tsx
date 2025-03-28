@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     color: '#333',
     fontWeight: 'bold',
-    width: '85%',
   },
   lineNameEn: {
     fontSize: RFValue(12),
@@ -79,9 +78,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
       const lineMark = getLineMarkFunc({ line });
 
       return (
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => onPress(new Station({ ...line.station, line, lines }))}
+        <View
           style={[
             styles.transferLine,
             {
@@ -93,26 +90,40 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
           key={line.id}
         >
           <View style={styles.transferLineInner}>
-            {lineMark ? (
-              <TransferLineMark
-                line={line}
-                mark={lineMark}
-                size={NUMBERING_ICON_SIZE.MEDIUM}
-              />
-            ) : (
-              <TransferLineDot line={line} />
-            )}
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() =>
+                onPress(new Station({ ...line.station, line, lines }))
+              }
+            >
+              {lineMark ? (
+                <TransferLineMark
+                  line={line}
+                  mark={lineMark}
+                  size={NUMBERING_ICON_SIZE.MEDIUM}
+                />
+              ) : (
+                <TransferLineDot line={line} />
+              )}
+            </TouchableOpacity>
 
             <View style={styles.lineNameContainer}>
-              <Typography style={styles.lineName}>
-                {line.nameShort.replace(parenthesisRegexp, '')}
-              </Typography>
-              <Typography style={styles.lineNameEn}>
-                {line.nameRoman?.replace(parenthesisRegexp, '')}
-              </Typography>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() =>
+                  onPress(new Station({ ...line.station, line, lines }))
+                }
+              >
+                <Typography style={styles.lineName}>
+                  {line.nameShort.replace(parenthesisRegexp, '')}
+                </Typography>
+                <Typography style={styles.lineNameEn}>
+                  {line.nameRoman?.replace(parenthesisRegexp, '')}
+                </Typography>
+              </TouchableOpacity>
             </View>
           </View>
-        </TouchableOpacity>
+        </View>
       );
     },
     [
