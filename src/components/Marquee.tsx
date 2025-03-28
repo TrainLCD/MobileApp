@@ -7,7 +7,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import isTablet from '../utils/isTablet';
 
 type Props = {
   children: React.ReactElement;
