@@ -18,11 +18,10 @@ const styles = StyleSheet.create({
 
 const Marquee = ({ children }: Props) => {
   const wrapperViewRef = useRef<View>(null);
-  const offsetX = useSharedValue(0);
+  const offsetX = useSharedValue(Dimensions.get('screen').width);
 
   const startScroll = useCallback(
     (width: number) => {
-      offsetX.value = Dimensions.get('screen').width;
       offsetX.value = withRepeat(
         withTiming(-width, {
           duration: width * 3,
