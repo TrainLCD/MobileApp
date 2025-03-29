@@ -24,7 +24,7 @@ const Marquee = ({ children }: Props) => {
     (width: number) => {
       offsetX.value = withRepeat(
         withTiming(-width, {
-          duration: 8500,
+          duration: width * 3,
           easing: Easing.linear,
         }),
         -1
