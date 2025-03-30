@@ -24,7 +24,7 @@ func getRunningStateText(
   if stopped {
     return String(localized: "stop")
   }
-
+  
   if approaching {
     if isNextLastStop {
       return String(localized: "soonLast")
