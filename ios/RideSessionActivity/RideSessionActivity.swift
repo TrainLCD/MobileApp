@@ -20,7 +20,7 @@ func getRunningStateText(
     }
     return String(localized: "next")
   }
-  
+
   if stopped {
     return String(localized: "stop")
   }
@@ -118,8 +118,10 @@ struct RideSessionWidget: Widget {
               .bold()
               .font(.caption)
               .multilineTextAlignment(.center)
-              Image(systemName: "arrow.right")
-                .foregroundColor(.white)
+              if !context.state.passingStationName.isEmpty {
+                Image(systemName: "arrow.right")
+                  .foregroundColor(.white)
+              }
             }
           }
         }
@@ -299,8 +301,10 @@ struct LockScreenLiveActivityContentView: View {
                 }
               }
               .frame(minWidth: 0, maxWidth: .infinity)
-              Image(systemName: "arrow.right")
-                .foregroundColor(.accentColor)
+              if !context.state.nextStationName.isEmpty {
+                Image(systemName: "arrow.right")
+                  .foregroundColor(.accentColor)
+              }
               VStack {
                 Text(context.state.nextStationName)
                   .bold()
@@ -393,6 +397,11 @@ struct EarlierLockScreenLiveActivityContentView: View {
 struct SmartStackLiveActivityContentView: View {
   let context: ActivityViewContext<RideSessionAttributes>
 
+  private func updatedTime() -> String {
+    DateFormatter.localizedString(
+      from: Date(), dateStyle: .none, timeStyle: .short)
+  }
+
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
@@ -408,57 +417,50 @@ struct SmartStackLiveActivityContentView: View {
             .multilineTextAlignment(.leading)
             .opacity(0.75)
         }
-
-        if context.state.passingStationName.isEmpty {
-          Text(
-            getRunningStateText(
-              approaching: context.state.approaching,
-              stopped: context.state.stopped,
-              isNextLastStop: context.state.isNextLastStop
-            )
-          )
-          .font(.callout)
-          .bold()
-          .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.stopped
-              ? context.state.stationName : context.state.nextStationName
-          )
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-          Text(
-            context.state.stopped
-              ? context.state.stationNumber : context.state.nextStationNumber
-          )
-          .font(.caption)
-          .bold()
-          .opacity(0.75)
-          .multilineTextAlignment(.leading)
-        } else {
-          Text("pass")
-            .font(.callout)
-            .bold()
-            .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.passingStationName
-          )
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.passingStationNumber
-          )
-          .font(.caption)
-          .bold()
-          .opacity(0.75)
-          .multilineTextAlignment(.leading)
+        HStack {
+          VStack {
+            Text(context.state.stationName)
+              .font(.headline)
+              .bold()
+              .multilineTextAlignment(.leading)
+            if !context.state.stationNumber.isEmpty
+              || !context.state.nextStationNumber.isEmpty
+            {
+              Text(context.state.stationNumber)
+                .font(.caption)
+                .bold()
+                .opacity(0.75)
+                .multilineTextAlignment(.leading)
+            }
+          }
+          if !context.state.nextStationName.isEmpty {
+            Image(systemName: "arrow.right")
+              .foregroundColor(.white)
+          }
+          VStack {
+            Text(context.state.nextStationName)
+              .font(.headline)
+              .bold()
+              .multilineTextAlignment(.leading)
+            if !context.state.stationNumber.isEmpty
+              || !context.state.nextStationNumber.isEmpty
+            {
+              Text(context.state.nextStationNumber)
+                .font(.caption)
+                .bold()
+                .opacity(0.75)
+                .multilineTextAlignment(.leading)
+            }
+          }
         }
-      }
-      .frame(
+        Text(
+          "最終更新: \(updatedTime())"
+        )
+        .font(.caption)
+        .bold()
+        .opacity(0.75)
+        .multilineTextAlignment(.leading)
+      }.frame(
         minWidth: 0,
         maxWidth: .infinity,
         minHeight: 0,
