@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -16,6 +16,8 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		19191A3C9474DCA5A601E448 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */; };
 		20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
+		6B9C57A64329E15109B30C3B /* libPods-CanaryWatchApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C12F371620A3D24B1645F92 /* libPods-CanaryWatchApp.a */; };
+		7334FF290D22D0AAB9B474A1 /* libPods-CanaryWatchApp Extension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72BC41E2681286D6D2ED49E9 /* libPods-CanaryWatchApp Extension.a */; };
 		7F3DCB005699FC9762FD31BB /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */; };
 		94000A5A2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
 		94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
@@ -147,7 +149,9 @@
 		94F428682ADCE78A002E1175 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.mm */; };
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
+		9D43450F972F6164B85A1F22 /* libPods-ProdWatchApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8561FF34A0D3A9226AED933A /* libPods-ProdWatchApp.a */; };
 		9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */; };
+		DB10ADFC3E3E6E119494971E /* libPods-ProdWatchApp Extension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15BD86CDA34E1B3F25253B94 /* libPods-ProdWatchApp Extension.a */; };
 		F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
 
@@ -307,20 +311,28 @@
 		03B02865504AE3E586CF35F8 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig"; sourceTree = "<group>"; };
 		07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		0731D3B524204D62009CAE85 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Expo.plist; path = TrainLCD/Supporting/Expo.plist; sourceTree = "<group>"; };
+		0EB370B7EFA6A8D7A4DB0C96 /* Pods-ProdWatchApp Extension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ProdWatchApp Extension.release.xcconfig"; path = "Target Support Files/Pods-ProdWatchApp Extension/Pods-ProdWatchApp Extension.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TrainLCD/Images.xcassets; sourceTree = "<group>"; };
+		15BD86CDA34E1B3F25253B94 /* libPods-ProdWatchApp Extension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ProdWatchApp Extension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		2D16E6891FA4F8E400B85C8A /* libReact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libReact.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		394B37DF453899307BB9D0FF /* Pods-CanaryWatchApp Extension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CanaryWatchApp Extension.release.xcconfig"; path = "Target Support Files/Pods-CanaryWatchApp Extension/Pods-CanaryWatchApp Extension.release.xcconfig"; sourceTree = "<group>"; };
 		39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
+		4C12F371620A3D24B1645F92 /* libPods-CanaryWatchApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CanaryWatchApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		54DE97078DB0AFF2ACDDFE89 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TrainLCD/Schemes/Dev/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
+		621CCE38CE7BB6E67A7F0F6B /* Pods-ProdWatchApp Extension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ProdWatchApp Extension.debug.xcconfig"; path = "Target Support Files/Pods-ProdWatchApp Extension/Pods-ProdWatchApp Extension.debug.xcconfig"; sourceTree = "<group>"; };
 		700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		72BC41E2681286D6D2ED49E9 /* libPods-CanaryWatchApp Extension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CanaryWatchApp Extension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81EF14755E47F766FABFD091 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig"; sourceTree = "<group>"; };
+		8561FF34A0D3A9226AED933A /* libPods-ProdWatchApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ProdWatchApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		891AAD19439896B47BCB32C9 /* Pods-CanaryWatchApp Extension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CanaryWatchApp Extension.debug.xcconfig"; path = "Target Support Files/Pods-CanaryWatchApp Extension/Pods-CanaryWatchApp Extension.debug.xcconfig"; sourceTree = "<group>"; };
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		94000A592AD73E8900B5A11C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
@@ -397,10 +409,14 @@
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		96369DE076931689B3F08C8D /* Pods-CanaryWatchApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CanaryWatchApp.release.xcconfig"; path = "Target Support Files/Pods-CanaryWatchApp/Pods-CanaryWatchApp.release.xcconfig"; sourceTree = "<group>"; };
 		9A63F38B4B68171CB2858B6F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TrainLCD/Schemes/Dev/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		9C28AD6691F68DCD2138E8D1 /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A592DD65717110A2ECA76FC5 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; sourceTree = "<group>"; };
+		A6FC2C5D68673557AAAA380A /* Pods-ProdWatchApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ProdWatchApp.release.xcconfig"; path = "Target Support Files/Pods-ProdWatchApp/Pods-ProdWatchApp.release.xcconfig"; sourceTree = "<group>"; };
 		AC8268CB94209948A044BC55 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD0D675A4EB05350089E18EA /* Pods-CanaryWatchApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CanaryWatchApp.debug.xcconfig"; path = "Target Support Files/Pods-CanaryWatchApp/Pods-CanaryWatchApp.debug.xcconfig"; sourceTree = "<group>"; };
+		DD8DFDD622D9C79C1A8BF203 /* Pods-ProdWatchApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ProdWatchApp.debug.xcconfig"; path = "Target Support Files/Pods-ProdWatchApp/Pods-ProdWatchApp.debug.xcconfig"; sourceTree = "<group>"; };
 		E18EA221FD0844633D33EA3E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -408,14 +424,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */ = {
+		94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 94E2C8292D64E1A90090392E /* ProdAppClip */;
 		};
-		94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */ = {
+		94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -425,30 +441,8 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = ProdAppClip;
-			sourceTree = "<group>";
-		};
-		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = CanaryAppClip;
-			sourceTree = "<group>";
-		};
+		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ProdAppClip; sourceTree = "<group>"; };
+		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CanaryAppClip; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -472,6 +466,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B9C57A64329E15109B30C3B /* libPods-CanaryWatchApp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -479,6 +474,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7334FF290D22D0AAB9B474A1 /* libPods-CanaryWatchApp Extension.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -504,6 +500,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DB10ADFC3E3E6E119494971E /* libPods-ProdWatchApp Extension.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -527,6 +524,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9D43450F972F6164B85A1F22 /* libPods-ProdWatchApp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -593,6 +591,10 @@
 				962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */,
 				9C28AD6691F68DCD2138E8D1 /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */,
 				AC8268CB94209948A044BC55 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */,
+				4C12F371620A3D24B1645F92 /* libPods-CanaryWatchApp.a */,
+				72BC41E2681286D6D2ED49E9 /* libPods-CanaryWatchApp Extension.a */,
+				8561FF34A0D3A9226AED933A /* libPods-ProdWatchApp.a */,
+				15BD86CDA34E1B3F25253B94 /* libPods-ProdWatchApp Extension.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -623,6 +625,14 @@
 				A592DD65717110A2ECA76FC5 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */,
 				03754E269DF2E23F9059FCEF /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */,
 				81EF14755E47F766FABFD091 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */,
+				BD0D675A4EB05350089E18EA /* Pods-CanaryWatchApp.debug.xcconfig */,
+				96369DE076931689B3F08C8D /* Pods-CanaryWatchApp.release.xcconfig */,
+				891AAD19439896B47BCB32C9 /* Pods-CanaryWatchApp Extension.debug.xcconfig */,
+				394B37DF453899307BB9D0FF /* Pods-CanaryWatchApp Extension.release.xcconfig */,
+				DD8DFDD622D9C79C1A8BF203 /* Pods-ProdWatchApp.debug.xcconfig */,
+				A6FC2C5D68673557AAAA380A /* Pods-ProdWatchApp.release.xcconfig */,
+				621CCE38CE7BB6E67A7F0F6B /* Pods-ProdWatchApp Extension.debug.xcconfig */,
+				0EB370B7EFA6A8D7A4DB0C96 /* Pods-ProdWatchApp Extension.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -2533,6 +2543,7 @@
 		};
 		942CB5E52A32AA9E008339D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BD0D675A4EB05350089E18EA /* Pods-CanaryWatchApp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -2573,6 +2584,7 @@
 		};
 		942CB5E62A32AA9E008339D2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 96369DE076931689B3F08C8D /* Pods-CanaryWatchApp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -2613,6 +2625,7 @@
 		};
 		942CB6002A32AAA6008339D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 891AAD19439896B47BCB32C9 /* Pods-CanaryWatchApp Extension.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2658,6 +2671,7 @@
 		};
 		942CB6012A32AAA6008339D2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 394B37DF453899307BB9D0FF /* Pods-CanaryWatchApp Extension.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2899,6 +2913,7 @@
 		};
 		94CB9D642588F16D0030FBE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 621CCE38CE7BB6E67A7F0F6B /* Pods-ProdWatchApp Extension.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2944,6 +2959,7 @@
 		};
 		94CB9D652588F16D0030FBE2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0EB370B7EFA6A8D7A4DB0C96 /* Pods-ProdWatchApp Extension.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -2989,6 +3005,7 @@
 		};
 		94CB9D682588F16D0030FBE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = DD8DFDD622D9C79C1A8BF203 /* Pods-ProdWatchApp.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3030,6 +3047,7 @@
 		};
 		94CB9D692588F16D0030FBE2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A6FC2C5D68673557AAAA380A /* Pods-ProdWatchApp.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
