@@ -31,7 +31,7 @@ func getRunningStateText(
     }
     return String(localized: "soon")
   }
-
+  
   if isNextLastStop {
     return String(localized: "nextLast")
   }
@@ -63,7 +63,7 @@ struct RideSessionWidget: Widget {
             }
           }
         }
-
+        
         DynamicIslandExpandedRegion(.trailing) {
           if context.state.stopped {
             EmptyView()
@@ -82,7 +82,7 @@ struct RideSessionWidget: Widget {
             }
           }
         }
-
+        
         DynamicIslandExpandedRegion(.center) {
           if context.state.stopped {
             VStack(alignment: .center) {
@@ -118,12 +118,14 @@ struct RideSessionWidget: Widget {
               .bold()
               .font(.caption)
               .multilineTextAlignment(.center)
-              Image(systemName: "arrow.right")
-                .foregroundColor(.white)
+              if  (!context.state.passingStationName.isEmpty) {
+                Image(systemName: "arrow.right")
+                  .foregroundColor(.white)
+              }
             }
           }
         }
-
+        
         DynamicIslandExpandedRegion(.bottom) {
           EmptyView()
         }
@@ -134,7 +136,7 @@ struct RideSessionWidget: Widget {
           } else if context.state.stopped {
             Image(systemName: "stop.circle")
           }
-
+          
           if context.state.passingStationName.isEmpty {
             Text(
               getRunningStateText(
@@ -149,9 +151,9 @@ struct RideSessionWidget: Widget {
           } else {
             Text("pass")
           }
-
+          
           if !context.state.passingStationName.isEmpty
-            || (context.state.stopped && !context.state.approaching)
+              || (context.state.stopped && !context.state.approaching)
           {
             EmptyView()
           } else if context.state.isNextLastStop {
@@ -174,7 +176,7 @@ struct RideSessionWidget: Widget {
                 .bold()
                 .multilineTextAlignment(.center)
                 .opacity(0.75)
-
+                
                 if !context.state.passingStationNumber.isEmpty {
                   Text(context.state.passingStationNumber)
                     .font(.footnote)
@@ -183,7 +185,7 @@ struct RideSessionWidget: Widget {
                     .opacity(0.75)
                 }
               }
-
+              
               Image(systemName: "chevron.forward.dotted.chevron.forward")
             }
           } else if context.state.stopped {
@@ -194,7 +196,7 @@ struct RideSessionWidget: Widget {
               .font(.caption)
               .bold()
               .multilineTextAlignment(.center)
-
+              
               if !context.state.stationNumber.isEmpty {
                 Text(
                   context.state.stationNumber
@@ -212,7 +214,7 @@ struct RideSessionWidget: Widget {
               .font(.caption)
               .bold()
               .multilineTextAlignment(.center)
-
+              
               if !context.state.nextStationNumber.isEmpty {
                 Text(
                   context.state.nextStationNumber
@@ -238,7 +240,7 @@ struct LockScreenLiveActivityContentView: View {
   @Environment(\.colorScheme) var colorScheme
   let context: ActivityViewContext<RideSessionAttributes>
   let schemeName = Bundle.main.infoDictionary!["CURRENT_SCHEME_NAME"] as? String
-
+  
   var body: some View {
     VStack {
       Group {
@@ -299,8 +301,10 @@ struct LockScreenLiveActivityContentView: View {
                 }
               }
               .frame(minWidth: 0, maxWidth: .infinity)
-              Image(systemName: "arrow.right")
-                .foregroundColor(.accentColor)
+              if (!context.state.nextStationName.isEmpty) {
+                Image(systemName: "arrow.right")
+                  .foregroundColor(.accentColor)
+              }
               VStack {
                 Text(context.state.nextStationName)
                   .bold()
@@ -317,14 +321,14 @@ struct LockScreenLiveActivityContentView: View {
               .frame(minWidth: 0, maxWidth: .infinity)
             }
           }
-
+          
           .padding(8)
         }
       }
       .background(
         Rectangle().fill(
           colorScheme == .dark ? .black.opacity(0.75) : .white.opacity(0.75)))
-
+      
       if context.state.passingStationName.isEmpty {
         HStack {
           if !context.state.trainTypeName.isEmpty {
@@ -340,10 +344,10 @@ struct LockScreenLiveActivityContentView: View {
                 format: String(
                   localized:
                     context.state.isLoopLine
-                    ? "boundStationLoopline" : "boundStation"),
+                  ? "boundStationLoopline" : "boundStation"),
                 context.state.boundStationNumber.isEmpty
-                  ? "\(context.state.boundStationName)"
-                  : "\(context.state.boundStationName)(\(context.state.boundStationNumber))"
+                ? "\(context.state.boundStationName)"
+                : "\(context.state.boundStationName)(\(context.state.boundStationNumber))"
               )
             )
             .multilineTextAlignment(.center)
@@ -359,8 +363,8 @@ struct LockScreenLiveActivityContentView: View {
             String(
               format: String(localized: "passingStation"),
               context.state.passingStationNumber.isEmpty
-                ? "\(context.state.passingStationName)"
-                : "\(context.state.passingStationName)(\(context.state.passingStationNumber))"
+              ? "\(context.state.passingStationName)"
+              : "\(context.state.passingStationName)(\(context.state.passingStationNumber))"
             )
           )
           .multilineTextAlignment(.center)
@@ -378,13 +382,13 @@ struct LockScreenLiveActivityContentView: View {
     .widgetURL(
       URL(
         string: schemeName == "CanaryTrainLCD"
-          ? "trainlcd-canary://" : "trainlcd://"))
+        ? "trainlcd-canary://" : "trainlcd://"))
   }
 }
 
 struct EarlierLockScreenLiveActivityContentView: View {
   let context: ActivityViewContext<RideSessionAttributes>
-
+  
   var body: some View {
     LockScreenLiveActivityContentView(context: context)
   }
@@ -392,7 +396,11 @@ struct EarlierLockScreenLiveActivityContentView: View {
 
 struct SmartStackLiveActivityContentView: View {
   let context: ActivityViewContext<RideSessionAttributes>
-
+  
+  private func updatedTime() -> String {
+    DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .short)
+  }
+  
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
@@ -408,57 +416,46 @@ struct SmartStackLiveActivityContentView: View {
             .multilineTextAlignment(.leading)
             .opacity(0.75)
         }
-
-        if context.state.passingStationName.isEmpty {
-          Text(
-            getRunningStateText(
-              approaching: context.state.approaching,
-              stopped: context.state.stopped,
-              isNextLastStop: context.state.isNextLastStop
-            )
-          )
-          .font(.callout)
-          .bold()
-          .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.stopped
-              ? context.state.stationName : context.state.nextStationName
-          )
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-          Text(
-            context.state.stopped
-              ? context.state.stationNumber : context.state.nextStationNumber
-          )
-          .font(.caption)
-          .bold()
-          .opacity(0.75)
-          .multilineTextAlignment(.leading)
-        } else {
-          Text("pass")
-            .font(.callout)
-            .bold()
-            .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.passingStationName
-          )
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.passingStationNumber
-          )
-          .font(.caption)
-          .bold()
-          .opacity(0.75)
-          .multilineTextAlignment(.leading)
+        HStack {
+          VStack {
+            Text(context.state.stationName)
+              .font(.headline)
+              .bold()
+              .multilineTextAlignment(.leading)
+            if (!context.state.stationNumber.isEmpty || !context.state.nextStationNumber.isEmpty) {
+              Text(context.state.stationNumber)
+                .font(.caption)
+                .bold()
+                .opacity(0.75)
+                .multilineTextAlignment(.leading)
+            }
+          }
+          if (!context.state.nextStationName.isEmpty) {
+            Image(systemName: "arrow.right")
+              .foregroundColor(.white) 
+          }
+          VStack {
+            Text(context.state.nextStationName)
+              .font(.headline)
+              .bold()
+              .multilineTextAlignment(.leading)
+            if (!context.state.stationNumber.isEmpty || !context.state.nextStationNumber.isEmpty) {
+              Text(context.state.nextStationNumber)
+                .font(.caption)
+                .bold()
+                .opacity(0.75)
+                .multilineTextAlignment(.leading)
+            }
+          }
         }
-      }
-      .frame(
+        Text(
+          "最終更新: \(updatedTime())"
+        )
+        .font(.caption)
+        .bold()
+        .opacity(0.75)
+        .multilineTextAlignment(.leading)
+      }.frame(
         minWidth: 0,
         maxWidth: .infinity,
         minHeight: 0,
@@ -487,7 +484,7 @@ struct SmartStackLiveActivityContentView: View {
 struct NewerLockScreenLiveActivityContentView: View {
   @Environment(\.activityFamily) var activityFamily
   let context: ActivityViewContext<RideSessionAttributes>
-
+  
   var body: some View {
     switch activityFamily {
     case .small:
