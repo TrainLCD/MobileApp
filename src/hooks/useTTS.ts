@@ -12,8 +12,7 @@ import { useTTSCache } from './useTTSCache';
 import useTTSText from './useTTSText';
 
 export const useTTS = (): void => {
-  const { enabled, backgroundEnabled, monetizedPlanEnabled } =
-    useRecoilValue(speechState);
+  const { enabled, backgroundEnabled } = useRecoilValue(speechState);
 
   const firstSpeechRef = useRef(true);
   const playingRef = useRef(false);

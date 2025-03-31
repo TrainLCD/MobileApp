@@ -3,14 +3,7 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Alert,
-  BackHandler,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
@@ -232,19 +225,12 @@ const MainScreen: React.FC = () => {
     shouldHideTypeChange,
   ]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
   useEffect(() => {
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        resetMainState();
-        navigation.dispatch(
-          StackActions.replace('MainStack', { screen: 'SelectBound' })
-        );
-        return true;
-      }
-    );
-    return subscription.remove;
-  }, [navigation, resetMainState]);
+    return () => {
+      resetMainState();
+    };
+  }, []);
 
   const marginForMetroThemeStyle = useMemo(
     () => ({
