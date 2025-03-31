@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { BackHandler, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
 import { type Station, StopCondition } from '../../gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
@@ -57,16 +57,6 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
       navigation.goBack();
     }
   }, [navigation]);
-
-  useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handlePressFAB();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
-  }, [handlePressFAB]);
 
   return (
     <View style={styles.root}>

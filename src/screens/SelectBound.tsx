@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  BackHandler,
   ScrollView,
   StyleSheet,
   View,
@@ -131,7 +130,7 @@ const SelectBoundScreen: React.FC = () => {
             : selectedStation,
         selectedDirection: direction,
       }));
-      navigation.dispatch(StackActions.replace('Main'));
+      navigation.navigate('Main' as never);
     },
     [navigation, selectedLine, setStationState, stations]
   );
@@ -179,7 +178,7 @@ const SelectBoundScreen: React.FC = () => {
         selectedDirection: direction,
       }));
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }));
-      navigation.dispatch(StackActions.replace('Main'));
+      navigation.navigate('Main' as never);
     },
     [navigation, setNavigationState, setStationState, stations, trainType]
   );
@@ -286,16 +285,12 @@ const SelectBoundScreen: React.FC = () => {
     ]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
   useEffect(() => {
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        handleSelectBoundBackButtonPress();
-        return true;
-      }
-    );
-    return subscription.remove;
-  }, [handleSelectBoundBackButtonPress]);
+    return () => {
+      handleSelectBoundBackButtonPress();
+    };
+  }, []);
 
   if (error) {
     return (

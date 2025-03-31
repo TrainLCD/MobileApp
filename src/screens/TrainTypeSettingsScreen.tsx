@@ -1,8 +1,8 @@
 import { useQuery } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
 import uniqBy from 'lodash/uniqBy';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRecoilState } from 'recoil';
 import { getStationsByLineGroupId } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
@@ -89,16 +89,6 @@ const TrainTypeSettings: React.FC = () => {
       navigation.goBack();
     }
   }, [navigation]);
-
-  useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      onPressBack();
-      return true;
-    });
-    return (): void => {
-      handler.remove();
-    };
-  }, [onPressBack]);
 
   const handleSelect = (tt: TrainType) => {
     setSelectedTrainType(tt);
