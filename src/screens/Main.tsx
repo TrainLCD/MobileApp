@@ -311,6 +311,7 @@ const MainScreen: React.FC = () => {
         arrived: true,
         approaching: false,
         stations: [],
+        wantedDestination: null,
       }));
       navigation.dispatch(StackActions.replace('SelectBound'));
     },
