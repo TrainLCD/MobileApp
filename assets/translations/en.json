@@ -169,5 +169,6 @@
   "confirmChangeLineTitle": "Should we transfer to the %{lineName}?",
   "confirmChangeLineText": "The current line is the %{currentLineName}. Should we switch to the %{lineName}?",
   "trainTypesFilter": "Train type filtering",
-  "trainTypeListEmpty": "No matching train types were found."
+  "trainTypeListEmpty": "No matching train types were found.",
+  "routeListTitle": "Directions to %{stationName} Station"
 }

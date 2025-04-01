@@ -23,7 +23,8 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: RFValue(11),
-    marginTop: 8,
+    marginTop: 2,
+    lineHeight: RFValue(16),
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
   emptyText: {
@@ -86,7 +87,6 @@ const ItemCell = ({
           {isJapanese ? item.name : item.nameRoman}
         </Typography>
         <Typography style={styles.descriptionText}>
-          {isJapanese ? '種別変更なし' : ''}{' '}
           {isJapanese
             ? lines.map((l) => l?.nameShort).join('、')
             : lines.map((l) => l.nameRoman ?? '').join(', ')}

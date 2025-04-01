@@ -1,6 +1,7 @@
+import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import type { Route } from '../../gen/proto/stationapi_pb';
+import type { Route, Station } from '../../gen/proto/stationapi_pb';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
@@ -15,7 +16,8 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: RFValue(11),
-    marginTop: 8,
+    marginTop: 2,
+    lineHeight: RFValue(16),
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
 });
@@ -25,45 +27,86 @@ const Separator = () => <View style={styles.separator} />;
 const ItemCell = ({
   item,
   loading,
+  destination,
   onSelect,
 }: {
   item: Route;
   loading: boolean;
+  destination: Station;
   onSelect: (item: Route) => void;
 }) => {
   const currentStation = useCurrentStation();
 
-  const lineNameTitle = useMemo(() => {
-    const trainType = item.stops.find(
-      (stop) => stop.groupId === Number(currentStation?.groupId)
-    )?.trainType;
+  const stops = useMemo(() => {
+    const curIndex = item.stops.findIndex(
+      (s) => s.groupId === Number(currentStation?.groupId)
+    );
+    if (curIndex === -1) {
+      return [];
+    }
 
+    const destIndex = item.stops.findIndex(
+      (s) => s.groupId === destination.groupId
+    );
+
+    if (destIndex < curIndex) {
+      return item.stops.slice(0, curIndex).reverse();
+    }
+
+    return item.stops.slice(curIndex + 1);
+  }, [currentStation?.groupId, destination.groupId, item.stops]);
+
+  const trainType = useMemo(() => stops[0]?.trainType, [stops]);
+
+  const lineNameTitle = useMemo(() => {
     if (!isJapanese) {
-      const lineName = item.stops.find(
-        (s) => s.groupId === currentStation?.groupId
-      )?.line?.nameRoman;
+      const lineName = stops[0]?.line?.nameRoman;
       const typeName = trainType?.nameRoman ?? 'Local';
 
       return `${lineName} ${typeName}`;
     }
-    const lineName = item.stops.find(
-      (s) => s.groupId === currentStation?.groupId
-    )?.line?.nameShort;
+    const lineName = stops[0]?.line?.nameShort;
     const typeName = trainType?.name ?? '普通または各駅停車';
 
     return `${lineName} ${typeName}`;
-  }, [currentStation?.groupId, item.stops]);
+  }, [stops, trainType]);
 
-  const bottomText = useMemo(() => {
-    if (isJapanese) {
-      return `${item.stops[0]?.name}から${
-        item.stops[item.stops.length - 1]?.name
-      }まで`;
+  const lines = useMemo(
+    () =>
+      uniqBy(
+        stops.flatMap((s) => s.line).filter((l) => l !== undefined),
+        'id'
+      ).slice(1),
+    [stops]
+  );
+
+  const otherTypeStops = useMemo(
+    () =>
+      uniqBy(
+        stops
+          .filter((s) => s !== undefined)
+          .filter((s) => s.trainType?.typeId !== trainType?.typeId)
+          .filter((s) => s.line !== undefined && s.trainType !== undefined),
+        'trainType.id'
+      ),
+    [stops, trainType?.typeId]
+  );
+
+  const connectedTypesText = useMemo(() => {
+    if (!lines.length) {
+      return isJapanese ? '直通運転なし' : 'Not connected to other line';
     }
-    return `${item.stops[0]?.nameRoman} - ${
-      item.stops[item.stops.length - 1]?.nameRoman
-    }`;
-  }, [item.stops]);
+
+    if (!otherTypeStops.length) {
+      return isJapanese
+        ? `${lines.map((l) => l.nameShort).join('、')}直通`
+        : `${lines.map((l) => l.nameRoman).join(', ')}`;
+    }
+
+    return isJapanese
+      ? `${otherTypeStops.map((s) => `${s.line?.nameShort}から${s.trainType?.name}`).join('、')}に接続`
+      : `${otherTypeStops.map((s) => `Connected to ${s.line?.nameRoman} ${s.trainType?.nameRoman}`).join(', ')}`;
+  }, [otherTypeStops, lines]);
 
   return (
     <TouchableOpacity
@@ -73,7 +116,7 @@ const ItemCell = ({
     >
       <Typography style={styles.stationNameText}>{lineNameTitle}</Typography>
       <Typography style={styles.descriptionText} numberOfLines={1}>
-        {bottomText}
+        {connectedTypesText}
       </Typography>
     </TouchableOpacity>
   );
@@ -81,10 +124,12 @@ const ItemCell = ({
 
 export const RouteList = ({
   routes,
+  destination,
   onSelect,
   loading,
 }: {
   routes: Route[];
+  destination: Station;
   onSelect: (item: Route | undefined) => void;
   loading: boolean;
 }) => {
@@ -92,9 +137,16 @@ export const RouteList = ({
 
   const renderItem = useCallback(
     ({ item }: { item: Route; index: number }) => {
-      return <ItemCell item={item} onSelect={onSelect} loading={loading} />;
+      return (
+        <ItemCell
+          item={item}
+          destination={destination}
+          onSelect={onSelect}
+          loading={loading}
+        />
+      );
     },
-    [loading, onSelect]
+    [destination, loading, onSelect]
   );
   const keyExtractor = useCallback((item: Route) => item.id.toString(), []);
 
