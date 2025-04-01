@@ -180,10 +180,10 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     );
 
     if (curIndex > finalIndex) {
-      const revsersedStops = stops.slice().reverse();
+      const reversedStops = stops.slice().reverse();
       return uniqBy(
-        revsersedStops.slice(
-          revsersedStops.findIndex((s) => s.groupId === currentStation?.groupId)
+        reversedStops.slice(
+          reversedStops.findIndex((s) => s.groupId === currentStation?.groupId)
         ),
         'id'
       );
