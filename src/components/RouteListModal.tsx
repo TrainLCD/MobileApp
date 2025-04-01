@@ -12,7 +12,7 @@ import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import FAB from './FAB';
 import Heading from './Heading';
@@ -177,7 +177,13 @@ export const RouteListModal: React.FC<Props> = ({
                 marginVertical: 16,
               }}
             >
-              <Heading>{translate('trainTypeSettings')}</Heading>
+              <Heading>
+                {translate('routeListTitle', {
+                  stationName: isJapanese
+                    ? finalStation.name
+                    : (finalStation.nameRoman ?? ''),
+                })}
+              </Heading>
             </View>
             <View
               style={{
@@ -194,6 +200,7 @@ export const RouteListModal: React.FC<Props> = ({
                 >
                   <RouteList
                     routes={routes}
+                    destination={finalStation}
                     onSelect={handleSelect}
                     loading={isTrainTypesLoading}
                   />
