@@ -3,7 +3,15 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Alert, Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
@@ -282,6 +290,44 @@ const MainScreen: React.FC = () => {
             },
           ]
         );
+      }
+
+      if (Platform.OS === 'android' && bgPermStatus.granted) {
+        const dozeAlertDismissed = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
+        );
+        if (dozeAlertDismissed !== 'true') {
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('dozeAlertText'),
+            [
+              {
+                text: translate('doNotShowAgain'),
+                style: 'cancel',
+                onPress: async (): Promise<void> => {
+                  await AsyncStorage.setItem(
+                    ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
+                    'true'
+                  );
+                },
+              },
+              {
+                text: 'OK',
+                onPress: async () => {
+                  try {
+                    await Linking.openSettings();
+                  } catch (error) {
+                    Alert.alert(
+                      translate('annoucementTitle'),
+                      translate('failedToOpenSettings'),
+                      [{ text: 'OK' }]
+                    );
+                  }
+                },
+              },
+            ]
+          );
+        }
       }
     };
     f();
