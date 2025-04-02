@@ -172,11 +172,15 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       .filter((s) => !getIsPass(s))
       .filter((s) => s !== undefined);
 
+    if (!finalStation) {
+      return stops;
+    }
+
     const curIndex = stops.findIndex(
       (s) => s.groupId === currentStation?.groupId
     );
     const finalIndex = stops.findIndex(
-      (s) => s.groupId === finalStation?.groupId
+      (s) => s.groupId === finalStation.groupId
     );
 
     if (curIndex > finalIndex) {
@@ -190,7 +194,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     }
 
     return uniqBy(stops.slice(curIndex), 'id');
-  }, [stations, currentStation?.groupId, finalStation?.groupId]);
+  }, [stations, currentStation?.groupId, finalStation]);
 
   const afterFinalLines = useMemo(
     () =>
