@@ -116,7 +116,10 @@ const TrainTypeItem = React.memo(
   ({
     line,
     outOfLineRange,
-  }: { line: Line | null; outOfLineRange: boolean }) => (
+  }: {
+    line: Line | null;
+    outOfLineRange: boolean;
+  }) => (
     <View
       style={[
         styles.trainTypeItemContainer,
@@ -172,6 +175,10 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       .filter((s) => !getIsPass(s))
       .filter((s) => s !== undefined);
 
+    if (!fromRouteListModal) {
+      return stops;
+    }
+
     const curIndex = stops.findIndex(
       (s) => s.groupId === currentStation?.groupId
     );
@@ -190,7 +197,12 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     }
 
     return uniqBy(stops.slice(curIndex), 'id');
-  }, [stations, currentStation?.groupId, finalStation?.groupId]);
+  }, [
+    stations,
+    currentStation?.groupId,
+    finalStation?.groupId,
+    fromRouteListModal,
+  ]);
 
   const afterFinalLines = useMemo(
     () =>
