@@ -1,20 +1,9 @@
-import NetInfo from '@react-native-community/netinfo';
-import { useEffect, useState } from 'react';
+import { useNetworkState } from 'expo-network';
 
 const useConnectivity = (): boolean => {
-  const [isConnected, setIsConnected] = useState(true);
+  const networkState = useNetworkState();
 
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(({ isInternetReachable }) => {
-      if (isInternetReachable === null) {
-        return;
-      }
-      setIsConnected(isInternetReachable);
-    });
-    return unsubscribe;
-  }, []);
-
-  return isConnected;
+  return networkState.isConnected ?? false;
 };
 
 export default useConnectivity;
