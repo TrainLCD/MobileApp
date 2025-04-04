@@ -23,7 +23,7 @@ export const useStartBackgroundLocationUpdates = () => {
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
           timeInterval: 15 * 1000,
-          distanceInterval: 10,
+          distanceInterval: 50,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -53,7 +53,7 @@ export const useStartBackgroundLocationUpdates = () => {
           {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 15 * 1000,
-            distanceInterval: 10,
+            distanceInterval: 50,
           },
           setLocation
         );
