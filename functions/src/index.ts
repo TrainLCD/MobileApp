@@ -435,7 +435,9 @@ ${reporterUid}
         const whUrl = isSpamUser ? spamCSWHUrl : csWHUrl;
 
         if (!whUrl) {
-          throw new Error('process.env.DISCORD_CS_WEBHOOK_URL is not set!');
+          throw new Error(
+            `${isSpamUser ? 'process.env.DISCORD_SPAM_CS_WEBHOOK_URL' : 'process.env.DISCORD_CS_WEBHOOK_URL'} is not set!`
+          );
         }
 
         await fetch(whUrl, {
