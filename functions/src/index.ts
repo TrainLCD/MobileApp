@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import type { DiscordEmbed } from './models/common';
 import type { Report } from './models/feedback';
 import { normalizeRomanText } from './utils/normalize';
+import { SPAM_USER_IDS } from './constants/spam';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -258,6 +259,7 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     appEdition,
     appClip,
   } = report;
+  const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
 
   if (!process.env.OCTOKIT_PAT) {
     console.error('process.env.OCTOKIT_PAT is not found!');
@@ -324,6 +326,7 @@ ${reporterUid}
             appEdition === 'production' && '🌏 Production',
             appEdition === 'canary' && '🐥 Canary',
             appClip && '📎 App Clip',
+            isSpamUser && '💩 Spam',
             osNameLabel,
           ].filter(Boolean),
           headers: {
@@ -341,6 +344,7 @@ ${reporterUid}
     const issuesRes = (await res.json()) as { html_url: string };
 
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
+    const spamCSWHUrl = process.env.DISCORD_SPAM_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const embeds: DiscordEmbed[] = deviceInfo
       ? [
@@ -428,11 +432,15 @@ ${reporterUid}
 
     switch (reportType) {
       case 'feedback': {
-        if (!csWHUrl) {
-          throw new Error('process.env.DISCORD_CS_WEBHOOK_URL is not set!');
+        const whUrl = isSpamUser ? spamCSWHUrl : csWHUrl;
+
+        if (!whUrl) {
+          throw new Error(
+            `${isSpamUser ? 'process.env.DISCORD_SPAM_CS_WEBHOOK_URL' : 'process.env.DISCORD_CS_WEBHOOK_URL'} is not set!`
+          );
         }
 
-        await fetch(csWHUrl, {
+        await fetch(whUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
