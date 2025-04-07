@@ -21,7 +21,13 @@ export {
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
 } from './line';
-export { LOCATION_TASK_NAME } from './location';
+export {
+  LOCATION_TASK_NAME,
+  LOCATION_ACCURACY,
+  LOCATION_DISTANCE_INTERVAL,
+  LOCATION_TASK_OPTIONS,
+  LOCATION_TIME_INTERVAL,
+} from './location';
 export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native';
 export {
   MARK_SHAPE,

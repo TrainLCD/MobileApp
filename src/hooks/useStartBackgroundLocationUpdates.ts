@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { useEffect } from 'react';
-import { LOCATION_TASK_NAME } from '../constants';
+import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
@@ -17,13 +17,10 @@ export const useStartBackgroundLocationUpdates = () => {
       }
       try {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
-          accuracy: Location.Accuracy.BestForNavigation,
+          ...LOCATION_TASK_OPTIONS,
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
-          timeInterval: 15 * 1000,
-          distanceInterval: 100,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -50,11 +47,7 @@ export const useStartBackgroundLocationUpdates = () => {
 
       try {
         watchPositionSub = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.BestForNavigation,
-            timeInterval: 15 * 1000,
-            distanceInterval: 100,
-          },
+          LOCATION_TASK_OPTIONS,
           setLocation
         );
       } catch (err) {
