@@ -11,4 +11,4 @@ export const LOCATION_TASK_OPTIONS: Location.LocationOptions = {
   accuracy: LOCATION_ACCURACY,
   timeInterval: LOCATION_TIME_INTERVAL,
   distanceInterval: LOCATION_DISTANCE_INTERVAL,
-};
+} as const;
