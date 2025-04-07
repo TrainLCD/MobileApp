@@ -43,7 +43,7 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
       }
       return best;
     }, latestLocation);
-    if (bestAccuracyLocation) {
+    if (bestAccuracyLocation && bestAccuracyLocation.coords.accuracy < 1000) {
       setLocation(bestAccuracyLocation);
     }
   });

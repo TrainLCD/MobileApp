@@ -17,13 +17,12 @@ export const useStartBackgroundLocationUpdates = () => {
       }
       try {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          // NOTE: BestForNavigationにしたら暴走時のCPU使用率が50%ほど低下した
-          accuracy: Location.Accuracy.BestForNavigation,
+          accuracy: Location.Accuracy.High,
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
-          timeInterval: 15 * 1000,
-          distanceInterval: 100,
+          timeInterval: 5000,
+          distanceInterval: 50,
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
@@ -51,9 +50,9 @@ export const useStartBackgroundLocationUpdates = () => {
       try {
         watchPositionSub = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.BestForNavigation,
-            timeInterval: 15 * 1000,
-            distanceInterval: 100,
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000,
+            distanceInterval: 50,
           },
           setLocation
         );
