@@ -3765,9 +3765,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   abseil: d121da9ef7e2ff4cab7666e76c5a3e0915ae08c3
-  boost: 1dca942403ed9342f98334bf4c3621f011aa7946
+  boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   BoringSSL-GRPC: ca6a8e5d04812fce8ffd6437810c2d46f925eaeb
-  DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
+  DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   EXApplication: 88ebf1a95f85faa5d2df160016d61f2d060e9438
   EXAV: fc9706da25733f79db3305035ee3bc6174a6590c
   EXConstants: 277129d9a42ba2cf1fad375e7eaa9939005c60be
@@ -3805,20 +3805,20 @@ SPEC CHECKSUMS:
   FirebaseInstallations: d8063d302a426d114ac531cd82b1e335a0565745
   FirebaseSharedSwift: 672954eac7b141d6954fab9a32d45d6b1d922df8
   FirebaseStorage: 4e521b5c833f0f3d488dcbde0c72044d02c59146
-  fmt: fad7775865bb4340e98e10997c965fd61b3c749e
-  glog: 94308668c25e8ccac76f853cda1931c7aa3f5fae
+  fmt: 10c6e61f4be25dc963c36bd73fc7b1705fe975be
+  glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
   GoogleAppMeasurement: ee5c2d2242816773fbf79e5b0563f5355ef1c315
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
   "gRPC-C++": 2fa52b3141e7789a28a737f251e0c45b4cb20a87
   gRPC-Core: a27c294d6149e1c39a7d173527119cfbc3375ce4
   GTMSessionFetcher: 257ead9ba8e15a2d389d79496e02b9cc5dd0c62c
-  hermes-engine: 77f19b2923ed39b21649b7551471674e3ace7a0a
+  hermes-engine: 0555a84ea495e8e3b4bde71b597cd87fbb382888
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  RCT-Folly: aac5a2e8a7b6b8108945e58a66d08f78b800a1ea
+  RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: 2c5e1000b04ab70b53956aa498bf7442c3c6e497
   RCTRequired: 5f785a001cf68a551c5f5040fb4c415672dbb481
   RCTTypeSafety: 6b98db8965005d32449605c0d005ecb4fee8a0f7
