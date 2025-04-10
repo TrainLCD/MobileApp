@@ -5,7 +5,7 @@ import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
 import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
-import { LOCATION_TASK_NAME } from './src/constants';
+import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
 import { setLocation } from './src/hooks/useLocationStore';
 
 if (!__DEV__) {
@@ -44,6 +44,9 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
       return best;
     }, latestLocation);
     if (bestAccuracyLocation) {
+      if (bestAccuracyLocation.coords.accuracy > MAX_PERMIT_ACCURACY) {
+        return;
+      }
       setLocation(bestAccuracyLocation);
     }
   });
