@@ -67,8 +67,10 @@ const useBounds = (): {
       return [oedoLineInboundStops, oedoLineOutboundStops];
     }
 
-    if (isLoopLine && (!trainType || getIsLocal(trainType))) {
-      return [inboundStationsForLoopLine, outboundStationsForLoopLine];
+    if (!trainType || getIsLocal(trainType)) {
+      if (isLoopLine) {
+        return [inboundStationsForLoopLine, outboundStationsForLoopLine];
+      }
     }
 
     if (

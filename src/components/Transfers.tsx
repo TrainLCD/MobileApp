@@ -1,8 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import { Line, StationNumber } from '../../gen/proto/stationapi_pb';
+import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import useGetLineMark from '../hooks/useGetLineMark';
@@ -21,12 +21,12 @@ import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 interface Props {
-  onPress: () => void;
+  onPress: (station?: Station) => void;
   theme: AppTheme;
 }
 
 const styles = StyleSheet.create({
-  scrollViewContainer: {
+  container: {
     flex: 1,
   },
   transferLine: {
@@ -34,10 +34,6 @@ const styles = StyleSheet.create({
     marginBottom: isTablet ? 16 : 8,
   },
   transferView: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    alignItems: 'center',
     padding: isTablet ? 32 : 24,
     paddingBottom: isTablet ? 128 : 84,
   },
@@ -149,31 +145,43 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
     [lines]
   );
 
-  const renderTransferLines = useCallback(
-    (): (JSX.Element | null)[] =>
-      lines.map((line, index) => {
-        if (!station) {
-          return null;
-        }
-        const lineMark = getLineMarkFunc({
-          line,
-        });
-        const includesNumberedStation = stationNumbers.some(
-          (sn) => !!sn?.stationNumber
-        );
-        return (
-          <View style={styles.transferLine} key={line.id}>
-            <View style={styles.transferLineInnerLeft}>
-              {lineMark ? (
-                <TransferLineMark
-                  line={line}
-                  mark={lineMark}
-                  size={NUMBERING_ICON_SIZE.MEDIUM}
-                />
-              ) : (
+  const renderTransferLine = useCallback(
+    ({ item: line, index }: { item: Line; index: number }) => {
+      if (!station) {
+        return null;
+      }
+      const lineMark = getLineMarkFunc({
+        line,
+      });
+      const includesNumberedStation = stationNumbers.some(
+        (sn) => !!sn?.stationNumber
+      );
+      return (
+        <View style={styles.transferLine} key={line.id}>
+          <View style={styles.transferLineInnerLeft}>
+            {lineMark ? (
+              <TransferLineMark
+                line={line}
+                mark={lineMark}
+                size={NUMBERING_ICON_SIZE.MEDIUM}
+              />
+            ) : (
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() =>
+                  onPress(new Station({ ...line.station, line, lines }))
+                }
+              >
                 <TransferLineDot line={line} />
-              )}
-              <View style={styles.lineNameContainer}>
+              </TouchableOpacity>
+            )}
+            <View style={styles.lineNameContainer}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() =>
+                  onPress(new Station({ ...line.station, line, lines }))
+                }
+              >
                 <Typography style={styles.lineName}>
                   {line.nameShort.replace(parenthesisRegexp, '')}
                 </Typography>
@@ -188,50 +196,62 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                     )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
                   </Typography>
                 ) : null}
-              </View>
+              </TouchableOpacity>
             </View>
-            {includesNumberedStation ? (
-              <View style={styles.transferLineInnerRight}>
-                {stationNumbers[index] ? (
-                  <View style={styles.numberingIconContainer}>
-                    <NumberingIcon
-                      shape={stationNumbers[index].lineSymbolShape}
-                      lineColor={stationNumbers[index]?.lineSymbolColor}
-                      stationNumber={stationNumbers[index]?.stationNumber ?? ''}
-                      allowScaling={false}
-                    />
-                  </View>
-                ) : (
-                  <View style={styles.numberingIconContainer} />
-                )}
-                {line.station && (
-                  <View>
-                    <Typography style={styles.lineName}>
-                      {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
-                    </Typography>
-                    <Typography style={styles.lineNameEn}>
-                      {`${(line.station?.nameRoman ?? '').replace(
-                        parenthesisRegexp,
-                        ''
-                      )} Sta.`}
-                    </Typography>
-                    <Typography style={styles.lineNameEn}>
-                      {`${(line.station?.nameChinese ?? '').replace(
-                        parenthesisRegexp,
-                        ''
-                      )}站 / ${(line.station?.nameKorean ?? '').replace(
-                        parenthesisRegexp,
-                        ''
-                      )}역`}
-                    </Typography>
-                  </View>
-                )}
-              </View>
-            ) : null}
           </View>
-        );
-      }),
-    [getLineMarkFunc, lines, station, stationNumbers]
+          {includesNumberedStation ? (
+            <View style={styles.transferLineInnerRight}>
+              {stationNumbers[index] ? (
+                <TouchableOpacity
+                  onPress={() =>
+                    onPress(new Station({ ...line.station, line, lines }))
+                  }
+                  activeOpacity={1}
+                  style={styles.numberingIconContainer}
+                >
+                  <NumberingIcon
+                    shape={stationNumbers[index].lineSymbolShape}
+                    lineColor={stationNumbers[index]?.lineSymbolColor}
+                    stationNumber={stationNumbers[index]?.stationNumber ?? ''}
+                    allowScaling={false}
+                  />
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.numberingIconContainer} />
+              )}
+              {line.station && (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() =>
+                    onPress(new Station({ ...line.station, line, lines }))
+                  }
+                >
+                  <Typography style={styles.lineName}>
+                    {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
+                  </Typography>
+                  <Typography style={styles.lineNameEn}>
+                    {`${(line.station?.nameRoman ?? '').replace(
+                      parenthesisRegexp,
+                      ''
+                    )} Sta.`}
+                  </Typography>
+                  <Typography style={styles.lineNameEn}>
+                    {`${(line.station?.nameChinese ?? '').replace(
+                      parenthesisRegexp,
+                      ''
+                    )}站 / ${(line.station?.nameKorean ?? '').replace(
+                      parenthesisRegexp,
+                      ''
+                    )}역`}
+                  </Typography>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : null}
+        </View>
+      );
+    },
+    [getLineMarkFunc, onPress, station, stationNumbers, lines]
   );
 
   const CustomHeading = () => {
@@ -272,14 +292,19 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   }
 
   return (
-    <>
+    <TouchableOpacity
+      style={styles.container}
+      activeOpacity={1}
+      onPress={() => onPress()}
+    >
       <CustomHeading />
-      <ScrollView style={styles.scrollViewContainer}>
-        <Pressable onPress={onPress}>
-          <View style={styles.transferView}>{renderTransferLines()}</View>
-        </Pressable>
-      </ScrollView>
-    </>
+      <FlatList
+        contentContainerStyle={styles.transferView}
+        data={lines}
+        keyExtractor={(l) => l.id.toString()}
+        renderItem={renderTransferLine}
+      />
+    </TouchableOpacity>
   );
 };
 

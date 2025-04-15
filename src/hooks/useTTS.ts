@@ -12,8 +12,7 @@ import { useTTSCache } from './useTTSCache';
 import useTTSText from './useTTSText';
 
 export const useTTS = (): void => {
-  const { enabled, backgroundEnabled, monetizedPlanEnabled } =
-    useRecoilValue(speechState);
+  const { enabled, backgroundEnabled } = useRecoilValue(speechState);
 
   const firstSpeechRef = useRef(true);
   const playingRef = useRef(false);
@@ -49,13 +48,17 @@ export const useTTS = (): void => {
     firstSpeechRef.current = false;
 
     if (!soundJaRef.current) {
-      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa });
+      const { sound: soundJa } = await Audio.Sound.createAsync({
+        uri: pathJa,
+      });
       soundJaRef.current = soundJa;
     } else {
       await soundJaRef.current?.loadAsync({ uri: pathJa });
     }
     if (!soundEnRef.current) {
-      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn });
+      const { sound: soundEn } = await Audio.Sound.createAsync({
+        uri: pathEn,
+      });
       soundEnRef.current = soundEn;
     } else {
       await soundEnRef.current?.loadAsync({ uri: pathEn });
@@ -171,7 +174,13 @@ export const useTTS = (): void => {
       return;
     }
 
-    speech();
+    (async () => {
+      try {
+        await speech();
+      } catch (err) {
+        console.error(err);
+      }
+    })();
   }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa]);
 
   useEffect(() => {

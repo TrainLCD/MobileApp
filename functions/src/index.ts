@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import type { DiscordEmbed } from './models/common';
 import type { Report } from './models/feedback';
 import { normalizeRomanText } from './utils/normalize';
+import { SPAM_USER_IDS } from './constants/spam';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -88,7 +89,11 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     )
     // 日本語はjoを「ホ」と読まない
     .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
-    .replace(/JR/g, 'J-R');
+    .replace(/JR/gi, 'J-R')
+    .replace(
+      /Ryogoku/gi,
+      '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
+    );
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
@@ -252,7 +257,9 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     reportType,
     imageUrl,
     appEdition,
+    appClip,
   } = report;
+  const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
 
   if (!process.env.OCTOKIT_PAT) {
     console.error('process.env.OCTOKIT_PAT is not found!');
@@ -314,10 +321,14 @@ ${reporterUid}
           assignees: ['TinyKitten'],
           milestone: null,
           labels: [
-            '🙏 Feedback',
+            reportType === 'feedback' && '🙏 Feedback',
+            reportType === 'crash' && '💣 Crash',
+            appEdition === 'production' && '🌏 Production',
+            appEdition === 'canary' && '🐥 Canary',
+            appClip && '📎 App Clip',
+            isSpamUser && '💩 Spam',
             osNameLabel,
-            appEdition === 'production' ? '🌏 Production' : '🐥 Canary',
-          ],
+          ].filter(Boolean),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
           },
@@ -333,6 +344,7 @@ ${reporterUid}
     const issuesRes = (await res.json()) as { html_url: string };
 
     const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
+    const spamCSWHUrl = process.env.DISCORD_SPAM_CS_WEBHOOK_URL;
     const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
     const embeds: DiscordEmbed[] = deviceInfo
       ? [
@@ -420,11 +432,15 @@ ${reporterUid}
 
     switch (reportType) {
       case 'feedback': {
-        if (!csWHUrl) {
-          throw new Error('process.env.DISCORD_CS_WEBHOOK_URL is not set!');
+        const whUrl = isSpamUser ? spamCSWHUrl : csWHUrl;
+
+        if (!whUrl) {
+          throw new Error(
+            `${isSpamUser ? 'process.env.DISCORD_SPAM_CS_WEBHOOK_URL' : 'process.env.DISCORD_CS_WEBHOOK_URL'} is not set!`
+          );
         }
 
-        await fetch(csWHUrl, {
+        await fetch(whUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

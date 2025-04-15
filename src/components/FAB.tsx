@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type React from 'react';
+import { useMemo } from 'react';
 import {
   type GestureResponderEvent,
   StyleSheet,
@@ -12,6 +13,7 @@ import { APP_THEME } from '../models/Theme';
 interface Props {
   icon: GlyphNames;
   disabled?: boolean;
+  secondary?: boolean;
   onPress: (event: GestureResponderEvent) => void;
 }
 
@@ -25,21 +27,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 50,
-    shadowColor: '#008ffe',
     shadowOpacity: 0.25,
     shadowOffset: {
-      width: 0,
-      height: 3,
+      width: 1,
+      height: 1,
     },
     shadowRadius: 2,
-  },
-  icon: {
-    color: '#fff',
+    elevation: 4,
   },
 });
 
-const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
+const FAB: React.FC<Props> = ({
+  onPress,
+  disabled,
+  icon,
+  secondary,
+}: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const bgColor = useMemo(() => {
+    if (isLEDTheme) {
+      return '#212121';
+    }
+    if (secondary) {
+      return '#fff';
+    }
+
+    return '#008ffe';
+  }, [isLEDTheme, secondary]);
+  const fgColor = useMemo(() => {
+    if (isLEDTheme) {
+      return '#fff';
+    }
+    if (secondary) {
+      return '#008ffe';
+    }
+
+    return '#fff';
+  }, [isLEDTheme, secondary]);
+  const shadowColor = useMemo(() => {
+    if (isLEDTheme) {
+      return 'transparent';
+    }
+
+    return '#000';
+  }, [isLEDTheme]);
+  const borderColor = useMemo(() => {
+    if (secondary) {
+      return fgColor;
+    }
+
+    return bgColor;
+  }, [bgColor, fgColor, secondary]);
 
   return (
     <TouchableOpacity
@@ -47,15 +85,17 @@ const FAB: React.FC<Props> = ({ onPress, disabled, icon }: Props) => {
       style={[
         styles.fab,
         {
-          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
-          borderWidth: isLEDTheme ? 2 : 0,
-          borderColor: '#fff',
+          shadowColor,
+          borderColor,
+          backgroundColor: bgColor,
+          borderWidth: isLEDTheme ? 2 : 1,
           opacity: disabled ? 0.5 : 1,
         },
+        secondary && { right: 32, bottom: 112 },
       ]}
       disabled={disabled}
     >
-      <Ionicons style={styles.icon} name={icon} size={32} />
+      <Ionicons style={{ color: fgColor }} name={icon} size={32} />
     </TouchableOpacity>
   );
 };

@@ -19,7 +19,7 @@ import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import { useSetRecoilState } from 'recoil';
 import {
   getRoutes,
-  getStationsByLineId,
+  getStationByIdList,
   getStationsByName,
 } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { Route, Station } from '../../gen/proto/stationapi_pb';
@@ -84,11 +84,10 @@ const RouteSearchScreen = () => {
   const currentStation = useCurrentStation();
   const getTerminatedStations = useGetStationsWithTermination();
 
-  const { mutateAsync: fetchStationsByLineId } =
-    useMutation(getStationsByLineId);
+  const { mutateAsync: fetchStationByIdList } = useMutation(getStationByIdList);
 
   const {
-    fetchStations: fetchTrainTypeFromTrainTypeId,
+    fetchStations: fetchStationsByLineGroupId,
     isLoading: isTrainTypesLoading,
     error: fetchTrainTypesError,
   } = useTrainTypeStations();
@@ -185,8 +184,8 @@ const RouteSearchScreen = () => {
       const trainType = stop.trainType;
 
       if (!trainType?.id) {
-        const { stations } = await fetchStationsByLineId({
-          lineId: stop.line?.id,
+        const { stations } = await fetchStationByIdList({
+          ids: route?.stops.map((r) => r.groupId),
         });
         const stationInRoute =
           stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
@@ -227,7 +226,7 @@ const RouteSearchScreen = () => {
         return;
       }
 
-      const { stations } = await fetchTrainTypeFromTrainTypeId({
+      const { stations } = await fetchStationsByLineGroupId({
         lineGroupId: trainType.groupId,
       });
 
@@ -247,7 +246,7 @@ const RouteSearchScreen = () => {
 
       setNavigationState((prev) => ({
         ...prev,
-        trainType: station?.trainType ?? null,
+        trainType,
         stationForHeader: station,
       }));
       setStationState((prev) => ({
@@ -269,8 +268,8 @@ const RouteSearchScreen = () => {
     },
     [
       currentStation?.groupId,
-      fetchStationsByLineId,
-      fetchTrainTypeFromTrainTypeId,
+      fetchStationByIdList,
+      fetchStationsByLineGroupId,
       navigation,
       selectedStation?.groupId,
       setNavigationState,

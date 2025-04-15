@@ -5,10 +5,10 @@ on:
     branches:
       - dev
     paths:
-      - 'android/app/build.gradle'
-      - 'android/wearable/build.gradle.kts'
+      - "android/app/build.gradle"
+      - "android/wearable/build.gradle.kts"
 env:
-  TZ: 'Asia/Tokyo'
+  TZ: "Asia/Tokyo"
 
 jobs:
   deploy:
@@ -21,14 +21,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: "temurin"
+          java-version: "21"
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: "3.2"
           bundler-cache: true
       - name: Install dependencies
         run: npm ci
@@ -71,5 +71,4 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          PACKAGE_NAME: me.tinykitten.trainlcd.dev
           NODE_ENV: production

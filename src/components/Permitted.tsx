@@ -23,7 +23,6 @@ import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
 import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useFeedback } from '../hooks/useFeedback';
-import { useResetMainState } from '../hooks/useResetMainState';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { useWarningInfo } from '../hooks/useWarningInfo';
 import type { AppTheme } from '../models/Theme';
@@ -66,7 +65,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
-  const resetMainState = useResetMainState();
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const viewShotRef = useRef<ViewShot>(null);
   // 実験用
@@ -162,7 +160,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             // iOS: back, Android: share
             case 0:
               if (Platform.OS === 'ios') {
-                resetMainState();
                 navigation.dispatch(
                   StackActions.replace('MainStack', { screen: 'SelectBound' })
                 );
@@ -201,7 +198,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       handleReport,
       handleShare,
       navigation,
-      resetMainState,
       selectedBound,
       showActionSheetWithOptions,
     ]

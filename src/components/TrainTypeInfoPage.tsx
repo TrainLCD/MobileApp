@@ -1,4 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
+import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import {
   Dimensions,
@@ -10,8 +11,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import type { Line, Station, TrainType } from '../../gen/proto/stationapi_pb';
+import {
+  Line,
+  type Station,
+  type TrainType,
+} from '../../gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '../constants';
+import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
@@ -106,29 +112,43 @@ const styles = StyleSheet.create({
 
 const SAFE_AREA_FALLBACK = 32;
 
-const TrainTypeItem = React.memo(({ line }: { line: Line | null }) => (
-  <View style={styles.trainTypeItemContainer} key={line?.id}>
+const TrainTypeItem = React.memo(
+  ({
+    line,
+    outOfLineRange,
+  }: {
+    line: Line | null;
+    outOfLineRange: boolean;
+  }) => (
     <View
-      style={{
-        ...styles.colorIndicator,
-        backgroundColor: line?.color ?? '#000000',
-      }}
-    />
-    <Typography style={styles.trainTypeLineName}>
-      {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
-    </Typography>
-    <Typography
-      style={{
-        ...styles.lineTrainTypeName,
-        color: line?.trainType?.color ?? '#000000',
-      }}
+      style={[
+        styles.trainTypeItemContainer,
+        outOfLineRange && { opacity: 0.5 },
+      ]}
+      key={line?.id}
     >
-      {isJapanese
-        ? (line?.trainType?.name ?? '普通/各駅停車')
-        : (line?.trainType?.nameRoman ?? 'Local')}
-    </Typography>
-  </View>
-));
+      <View
+        style={{
+          ...styles.colorIndicator,
+          backgroundColor: line?.color ?? '#000000',
+        }}
+      />
+      <Typography style={styles.trainTypeLineName}>
+        {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
+      </Typography>
+      <Typography
+        style={{
+          ...styles.lineTrainTypeName,
+          color: line?.trainType?.color ?? '#000000',
+        }}
+      >
+        {isJapanese
+          ? (line?.trainType?.name ?? '普通/各駅停車')
+          : (line?.trainType?.nameRoman ?? 'Local')}
+      </Typography>
+    </View>
+  )
+);
 
 export const TrainTypeInfoPage: React.FC<Props> = ({
   trainType,
@@ -140,6 +160,8 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
   onConfirmed,
   fromRouteListModal,
 }: Props) => {
+  const currentStation = useCurrentStation();
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [asTerminus, setAsTerminus] = useState(false);
@@ -148,23 +170,93 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
 
+  const stopStations = useMemo(() => {
+    const stops = dropEitherJunctionStation(stations)
+      .filter((s) => !getIsPass(s))
+      .filter((s) => s !== undefined);
+
+    if (!fromRouteListModal) {
+      return stops;
+    }
+
+    const curIndex = stops.findIndex(
+      (s) => s.groupId === currentStation?.groupId
+    );
+    const finalIndex = stops.findIndex(
+      (s) => s.groupId === finalStation?.groupId
+    );
+
+    if (curIndex > finalIndex) {
+      const reversedStops = stops.slice().reverse();
+      return uniqBy(
+        reversedStops.slice(
+          reversedStops.findIndex((s) => s.groupId === currentStation?.groupId)
+        ),
+        'id'
+      );
+    }
+
+    return uniqBy(stops.slice(curIndex), 'id');
+  }, [
+    stations,
+    currentStation?.groupId,
+    finalStation?.groupId,
+    fromRouteListModal,
+  ]);
+
+  const afterFinalLines = useMemo(
+    () =>
+      uniqBy(stopStations, 'line.id')
+        .reduce<Line[]>((acc, sta, idx, arr) => {
+          if (!finalStation) {
+            return [];
+          }
+
+          const finalIndex = arr.findIndex(
+            (s) => s.line?.id === finalStation.line?.id
+          );
+
+          if (!sta.line || idx < finalIndex) {
+            return acc;
+          }
+
+          return acc.concat(sta.line);
+        }, [])
+        .slice(1),
+    [stopStations, finalStation]
+  );
+
+  const afterFinalStations = useMemo(() => {
+    if (!finalStation) {
+      return [];
+    }
+
+    const finalIndex = stopStations.findIndex(
+      (s) => s.groupId === finalStation.groupId
+    );
+
+    return stopStations.slice(finalIndex + 1, stopStations.length);
+  }, [stopStations, finalStation]);
+
   const trainTypeLines = useMemo(
     () =>
       trainType?.lines.length
-        ? trainType.lines
-            .slice()
-            .sort((a, b) =>
-              !a.trainType || !b.trainType
-                ? 0
-                : a.trainType?.id - b.trainType?.id
-            )
-        : [selectedLine],
-    [selectedLine, trainType?.lines]
-  );
-
-  const stopStations = useMemo(
-    () => dropEitherJunctionStation(stations).filter((s) => !getIsPass(s)),
-    [stations]
+        ? uniqBy(
+            stopStations.map(
+              (s) =>
+                new Line({
+                  ...s.line,
+                  trainType: trainType.lines.find((l) => l.id === s.line?.id)
+                    ?.trainType,
+                })
+            ),
+            'id'
+          )
+        : uniqBy(
+            stations.map((s) => s.line ?? null),
+            'id'
+          ).filter((l) => l !== null),
+    [stations, stopStations, trainType?.lines]
   );
 
   return (
@@ -226,9 +318,43 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 }}
               >
                 {!loading && stopStations.length
-                  ? stopStations
-                      .map((s) => (isJapanese ? s.name : s.nameRoman))
-                      .join('、')
+                  ? stopStations.map((s, i, a) =>
+                      isJapanese ? (
+                        <React.Fragment key={s.id}>
+                          <Typography
+                            style={[
+                              afterFinalStations
+                                .map((s) => s.groupId)
+                                .includes(s.groupId)
+                                ? {
+                                    opacity: 0.5,
+                                  }
+                                : { fontWeight: 'bold' },
+                            ]}
+                          >
+                            {s.name}
+                          </Typography>
+                          {a.length - 1 !== i ? ' ' : ''}
+                        </React.Fragment>
+                      ) : (
+                        <React.Fragment key={s.id}>
+                          <Typography
+                            style={[
+                              afterFinalStations
+                                .map((s) => s.groupId)
+                                .includes(s.groupId)
+                                ? {
+                                    opacity: 0.5,
+                                  }
+                                : { fontWeight: 'bold' },
+                            ]}
+                          >
+                            {s.nameRoman}
+                          </Typography>
+                          {a.length - 1 !== i ? '  ' : ''}
+                        </React.Fragment>
+                      )
+                    )
                   : `${translate('loadingAPI')}...`}
               </Typography>
               <Typography
@@ -250,8 +376,15 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
               }}
               data={trainTypeLines}
-              keyExtractor={(item) => item?.id.toString() ?? ''}
-              renderItem={({ item }) => <TrainTypeItem line={item} />}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TrainTypeItem
+                  outOfLineRange={afterFinalLines
+                    .map((l) => l.id)
+                    .includes(item.id)}
+                  line={item}
+                />
+              )}
             />
 
             {fromRouteListModal && (

@@ -5,20 +5,34 @@ import type { Line, TrainType } from '../../gen/proto/stationapi_pb';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
-import { isJapanese } from '../translation';
+import { isJapanese, translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
+  root: {
+    width: '100%',
+    alignSelf: 'center',
+    borderWidth: 1,
+    flex: 1,
+    marginVertical: 12,
+  },
   cell: { padding: 12 },
   stationNameText: {
     fontSize: RFValue(14),
   },
   descriptionText: {
     fontSize: RFValue(11),
-    marginTop: 8,
+    marginTop: 2,
+    lineHeight: RFValue(16),
   },
   separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 12,
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+  },
 });
 
 const Separator = () => <View style={styles.separator} />;
@@ -73,7 +87,6 @@ const ItemCell = ({
           {isJapanese ? item.name : item.nameRoman}
         </Typography>
         <Typography style={styles.descriptionText}>
-          {isJapanese ? '種別変更なし' : ''}{' '}
           {isJapanese
             ? lines.map((l) => l?.nameShort).join('、')
             : lines.map((l) => l.nameRoman ?? '').join(', ')}
@@ -128,19 +141,20 @@ export const TrainTypeList = ({
     <FlatList
       initialNumToRender={data.length}
       style={{
-        width: '100%',
-        alignSelf: 'center',
+        ...styles.root,
         borderColor: isLEDTheme ? '#fff' : '#aaa',
-        borderWidth: 1,
-        flex: 1,
-        marginVertical: 12,
         marginBottom: safeAreaBottom,
       }}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
-      ListFooterComponent={Separator}
+      ListFooterComponent={data.length ? Separator : undefined}
+      ListEmptyComponent={() => (
+        <Typography style={styles.emptyText}>
+          {translate('trainTypeListEmpty')}
+        </Typography>
+      )}
     />
   );
 };

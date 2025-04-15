@@ -5,12 +5,13 @@ import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
-  Dimensions,
   FlatList,
+  SafeAreaView,
   StyleSheet,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
@@ -26,12 +27,10 @@ import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
-    width: '100%',
-    height: '100%',
-    paddingHorizontal: 24,
+    flex: 1,
   },
   itemRoot: {
-    width: Dimensions.get('screen').width / 4,
+    flex: 1,
     marginBottom: 12,
   },
   item: {
@@ -51,10 +50,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     borderColor: '#555',
     marginRight: 12,
-  },
-  listContainerStyle: {
-    alignSelf: 'center',
-    width: '100%',
   },
   headingStyle: {
     marginTop: 24,
@@ -160,6 +155,10 @@ const NotificationSettings: React.FC = () => {
   }, [handlePressBack, openFailedToOpenSettingsAlert]);
 
   const showAlwaysPermissionNotGrantedAlert = useCallback(() => {
+    if (isClip()) {
+      return;
+    }
+
     Alert.alert(
       translate('errorTitle'),
       translate('alwaysPermissionRequired'),
@@ -242,16 +241,15 @@ const NotificationSettings: React.FC = () => {
 
   return (
     <>
-      <View style={styles.root}>
+      <SafeAreaView style={styles.root}>
         <FlatList
           ListHeaderComponent={listHeaderComponent}
-          contentContainerStyle={styles.listContainerStyle}
           numColumns={4}
           data={stations}
           renderItem={renderItem}
           keyExtractor={(item: Station): string => item.id.toString()}
         />
-      </View>
+      </SafeAreaView>
       <FAB onPress={handlePressBack} icon="checkmark" />
     </>
   );

@@ -3,12 +3,11 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  BackHandler,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   Line,
   type Station,
@@ -75,7 +74,7 @@ const SelectBoundScreen: React.FC = () => {
     useRecoilState(stationState);
   const [{ trainType, fetchedTrainTypes, fromBuilder }, setNavigationState] =
     useRecoilState(navigationState);
-  const [{ selectedLine }, setLineState] = useRecoilState(lineState);
+  const { selectedLine } = useRecoilValue(lineState);
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled
   );
@@ -84,7 +83,7 @@ const SelectBoundScreen: React.FC = () => {
   );
 
   const { loading, error, refetchStations } = useStationList();
-  const { isLoopLine, isMeijoLine } = useLoopLine();
+  const { isLoopLine } = useLoopLine();
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds();
@@ -98,10 +97,6 @@ const SelectBoundScreen: React.FC = () => {
   const currentIndex = getCurrentStationIndex(stations, station);
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
-    setLineState((prev) => ({
-      ...prev,
-      selectedLine: null,
-    }));
     setStationState((prev) => ({
       ...prev,
       stations: [],
@@ -115,8 +110,8 @@ const SelectBoundScreen: React.FC = () => {
       leftStations: [],
       fetchedTrainTypes: [],
     }));
-    navigation.navigate('SelectLine' as never);
-  }, [navigation, setLineState, setNavigationState, setStationState]);
+    navigation.dispatch(StackActions.replace('SelectLine'));
+  }, [navigation, setNavigationState, setStationState]);
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station, direction: LineDirection): void => {
@@ -131,7 +126,7 @@ const SelectBoundScreen: React.FC = () => {
             : selectedStation,
         selectedDirection: direction,
       }));
-      navigation.dispatch(StackActions.replace('Main'));
+      navigation.navigate('Main' as never);
     },
     [navigation, selectedLine, setStationState, stations]
   );
@@ -179,7 +174,7 @@ const SelectBoundScreen: React.FC = () => {
         selectedDirection: direction,
       }));
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }));
-      navigation.dispatch(StackActions.replace('Main'));
+      navigation.navigate('Main' as never);
     },
     [navigation, setNavigationState, setStationState, stations, trainType]
   );
@@ -286,16 +281,12 @@ const SelectBoundScreen: React.FC = () => {
     ]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
   useEffect(() => {
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        handleSelectBoundBackButtonPress();
-        return true;
-      }
-    );
-    return subscription.remove;
-  }, [handleSelectBoundBackButtonPress]);
+    return () => {
+      handleSelectBoundBackButtonPress();
+    };
+  }, []);
 
   if (error) {
     return (
@@ -336,12 +327,12 @@ const SelectBoundScreen: React.FC = () => {
 
         <View style={styles.horizontalButtons}>
           {renderButton({
-            boundStations: isMeijoLine ? outboundStations : inboundStations,
-            direction: isMeijoLine ? 'OUTBOUND' : 'INBOUND',
+            boundStations: inboundStations,
+            direction: 'INBOUND',
           })}
           {renderButton({
-            boundStations: isMeijoLine ? inboundStations : outboundStations,
-            direction: isMeijoLine ? 'INBOUND' : 'OUTBOUND',
+            boundStations: outboundStations,
+            direction: 'OUTBOUND',
           })}
         </View>
 

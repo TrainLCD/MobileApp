@@ -33,4 +33,5 @@ export type Report = {
   reporterUid: string;
   imageUrl: string | null;
   appEdition: 'canary' | 'production';
+  appClip: boolean;
 };

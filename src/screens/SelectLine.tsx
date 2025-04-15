@@ -78,10 +78,14 @@ const SelectLineScreen: React.FC = () => {
 
   useEffect(() => {
     const stopLocationUpdatesAsync = async () => {
-      const hasStartedLocationUpdates =
-        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      if (hasStartedLocationUpdates) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      try {
+        const hasStartedLocationUpdates =
+          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStartedLocationUpdates) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      } catch (err) {
+        console.error(err);
       }
     };
     stopLocationUpdatesAsync();
@@ -150,7 +154,7 @@ const SelectLineScreen: React.FC = () => {
         ...prev,
         selectedLine: line,
       }));
-      navigation.navigate('SelectBound');
+      navigation.navigate('SelectBound' as never);
     },
     [navigation, setLineState, setNavigationState]
   );
@@ -231,19 +235,19 @@ const SelectLineScreen: React.FC = () => {
   ]);
 
   const navigateToSettingsScreen = useCallback(() => {
-    navigation.navigate('AppSettings');
+    navigation.navigate('AppSettings' as never);
   }, [navigation]);
 
   const navigateToFakeStationSettingsScreen = useCallback(() => {
-    navigation.navigate('FakeStation');
+    navigation.navigate('FakeStation' as never);
   }, [navigation]);
 
   const navigateToSavedRoutesScreen = useCallback(() => {
-    navigation.navigate('SavedRoutes');
+    navigation.navigate('SavedRoutes' as never);
   }, [navigation]);
 
   const navigateToRouteSearchScreen = useCallback(() => {
-    navigation.navigate('RouteSearch');
+    navigation.navigate('RouteSearch' as never);
   }, [navigation]);
 
   if (nearbyStationFetchError) {

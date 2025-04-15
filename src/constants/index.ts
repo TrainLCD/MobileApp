@@ -7,7 +7,7 @@ export {
 } from './duration';
 export { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from './feedback';
 export { FONTS } from './fonts';
-export { DEV_APP_BUNDLE_IDENTIFIER } from './ident';
+export { DEV_APP_BUNDLE_IDENTIFIER, DEV_CLIP_BUNDLE_IDENTIFIER } from './ident';
 export {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
@@ -21,7 +21,14 @@ export {
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
 } from './line';
-export { LOCATION_TASK_NAME } from './location';
+export {
+  LOCATION_TASK_NAME,
+  LOCATION_ACCURACY,
+  LOCATION_DISTANCE_INTERVAL,
+  LOCATION_TASK_OPTIONS,
+  LOCATION_TIME_INTERVAL,
+  MAX_PERMIT_ACCURACY,
+} from './location';
 export { IS_LIVE_ACTIVITIES_ELIGIBLE_PLATFORM } from './native';
 export {
   MARK_SHAPE,

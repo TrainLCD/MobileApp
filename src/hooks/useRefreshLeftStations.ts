@@ -7,6 +7,7 @@ import stationState from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import useCurrentTrainType from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
@@ -35,22 +36,27 @@ const useRefreshLeftStations = (): void => {
     [normalStations, selectedDirection, theme]
   );
   const station = useMemo(() => {
-    if (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) {
-      // JRWもしくはLEDテーマでは通過駅を表示しないので、
-      // 通過駅を通過する際に駅情報のアプデを行わない
-      if (getIsPass(normalStation)) {
-        return;
-      }
-      const normalStationIndex = normalStations.findIndex(
+    // JRWもしくはLEDテーマでは通過駅を表示しないので、
+    // 通過駅を通過する際に駅情報のアプデを行わない
+    if (
+      (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) &&
+      getIsPass(normalStation)
+    ) {
+      const stations =
+        selectedDirection === 'INBOUND'
+          ? normalStations.slice().reverse()
+          : normalStations;
+
+      const normalStationIndex = stations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       );
-      const lastStoppedStation = normalStations.find(
-        (s, i) => normalStationIndex <= i && !getIsPass(s)
+      const lastStoppedStation = stations.find(
+        (s, i) => !getIsPass(s) && normalStationIndex <= i
       );
       return lastStoppedStation;
     }
     return normalStation;
-  }, [normalStation, normalStations, theme]);
+  }, [normalStation, normalStations, theme, selectedDirection]);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
@@ -72,16 +78,8 @@ const useRefreshLeftStations = (): void => {
               currentStationIndex + 1
             )
             .reverse();
-          // 山手線と大阪環状線はちょっと処理が違う
-          if (currentStationIndex < 7 && isOsakaLoopLine) {
-            const nextStations = stations
-              .slice()
-              .reverse()
-              .slice(currentStationIndex - 1, 7);
-            return [...inboundPendingStations, ...nextStations];
-          }
 
-          if ((currentStationIndex < 7 && isYamanoteLine) || isMeijoLine) {
+          if (currentStationIndex < 7 || isMeijoLine) {
             const nextStations = stations
               .slice()
               .reverse()
@@ -113,14 +111,7 @@ const useRefreshLeftStations = (): void => {
           return [];
       }
     },
-    [
-      currentLine,
-      isMeijoLine,
-      isOsakaLoopLine,
-      isYamanoteLine,
-      selectedDirection,
-      stations,
-    ]
+    [currentLine, isMeijoLine, selectedDirection, stations]
   );
 
   const getStations = useCallback(
@@ -163,7 +154,7 @@ const useRefreshLeftStations = (): void => {
       return false;
     }
 
-    if (isOsakaLoopLine && trainType) {
+    if (isOsakaLoopLine && !getIsLocal(trainType)) {
       return false;
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
@@ -175,7 +166,7 @@ const useRefreshLeftStations = (): void => {
     }
     const currentIndex = getCurrentStationIndex(stations, station);
     const leftStations =
-      loopLine && !trainType
+      loopLine && getIsLocal(trainType)
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
     setNavigation((prev) => {
