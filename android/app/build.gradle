@@ -124,7 +124,7 @@ android {
       applicationIdSuffix ".dev"
       versionNameSuffix "-dev"
       // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-      versionCode 81001010
+      versionCode 81001020
       versionName "8.10.2"
     }
     prod {
