@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
   numberingContainer: {
     position: 'absolute',
     bottom: isTablet ? 0 : barBottom + 44,
-    marginLeft: isTablet ? -48 * 0.125 : -24 * 0.25,
-    width: isTablet ? 48 * 1.25 : 24 * 1.75,
+    marginLeft: isTablet ? -48 * 0.125 : -28 * 0.25,
+    width: isTablet ? 50 * 1.25 : 28 * 1.75,
     height: isTablet ? 48 / 2 : 24 / 1.5,
     justifyContent: 'center',
     alignItems: 'center',
