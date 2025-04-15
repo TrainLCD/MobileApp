@@ -222,12 +222,27 @@ const useTTSText = (
 
   const isAfterNextStopTerminus = useIsTerminus(afterNextStation);
 
-  const allStops = slicedStations.filter((s) => {
-    if (s.id === station?.id) {
-      return false;
+  const allStops = useMemo(
+    () =>
+      slicedStations.filter((s) => {
+        if (s.id === station?.id) {
+          return false;
+        }
+        return !getIsPass(s);
+      }),
+    [slicedStations, station]
+  );
+
+  const viaStation = useMemo(() => {
+    const sortedStops = allStops
+      .slice()
+      .sort((a, b) => (a.lines.length < b.lines.length ? 1 : -1));
+
+    if (allStops[allStops.length - 1]?.id === sortedStops[0]?.id) {
+      return; // 終着駅と同じ駅の場合undefinedを返す
     }
-    return !getIsPass(s);
-  });
+    return sortedStops[0];
+  }, [allStops]);
 
   const japaneseTemplate: Record<AppTheme, { [key: string]: string }> | null =
     useMemo(() => {
@@ -461,10 +476,10 @@ const useTTSText = (
                   currentTrainType?.name,
                   currentTrainType?.nameKatakana
                 )}、${
-                  allStops[2]
+                  viaStation
                     ? `${replaceJapaneseText(
-                        allStops[2]?.name,
-                        allStops[2]?.nameKatakana
+                        viaStation.name,
+                        viaStation.nameKatakana
                       )}方面、`
                     : ''
                 }${boundForJa}ゆきです。${allStops
@@ -636,6 +651,7 @@ const useTTSText = (
       replaceJapaneseText,
       selectedBound,
       transferLines,
+      viaStation,
     ]);
 
   const englishTemplate: Record<AppTheme, { [key: string]: string }> | null =
@@ -811,7 +827,7 @@ const useTTSText = (
           NEXT: `${
             firstSpeech
               ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${currentTrainType?.nameRoman ?? 'Local'} Service bound for ${boundForEn} ${
-                  allStops[2] ? `via ${allStops[2]?.nameRoman}` : ''
+                  viaStation ? `via ${viaStation.nameRoman}` : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
@@ -931,6 +947,7 @@ const useTTSText = (
       nextStationNumberText,
       selectedBound,
       transferLines,
+      viaStation,
     ]);
 
   const jaText = useMemo(() => {

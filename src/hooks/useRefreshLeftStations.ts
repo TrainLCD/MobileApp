@@ -42,16 +42,21 @@ const useRefreshLeftStations = (): void => {
       (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) &&
       getIsPass(normalStation)
     ) {
-      const normalStationIndex = normalStations.findIndex(
+      const stations =
+        selectedDirection === 'INBOUND'
+          ? normalStations.slice().reverse()
+          : normalStations;
+
+      const normalStationIndex = stations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       );
-      const lastStoppedStation = normalStations.find(
-        (s, i) => normalStationIndex <= i && !getIsPass(s)
+      const lastStoppedStation = stations.find(
+        (s, i) => !getIsPass(s) && normalStationIndex <= i
       );
       return lastStoppedStation;
     }
     return normalStation;
-  }, [normalStation, normalStations, theme]);
+  }, [normalStation, normalStations, theme, selectedDirection]);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
