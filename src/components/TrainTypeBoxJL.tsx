@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Svg, { Text } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
+import { useCurrentLine } from '../hooks/useCurrentLine';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import { translate } from '../translation';
@@ -10,8 +12,6 @@ import isTablet from '../utils/isTablet';
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
 import Typography from './Typography';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import Svg, { Text } from 'react-native-svg';
 
 type Props = {
   trainType: TrainType | null;

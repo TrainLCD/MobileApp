@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useBoundText } from '../hooks/useBoundText';
@@ -21,9 +22,8 @@ import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
 import NumberingIcon from './NumberingIcon';
-import Typography from './Typography';
-import Svg, { Path } from 'react-native-svg';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   gradientRoot: {

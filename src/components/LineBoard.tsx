@@ -11,6 +11,7 @@ import { isJapanese, translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import LineBoardEast from './LineBoardEast';
+import LineBoardJL from './LineBoardJL';
 import LineBoardJO from './LineBoardJO';
 import LineBoardLED from './LineBoardLED';
 import LineBoardSaikyo from './LineBoardSaikyo';
@@ -18,7 +19,6 @@ import LineBoardToei from './LineBoardToei';
 import LineBoardWest from './LineBoardWest';
 import LineBoardYamanotePad from './LineBoardYamanotePad';
 import Typography from './Typography';
-import LineBoardJL from './LineBoardJL';
 
 export interface Props {
   hasTerminus?: boolean;
