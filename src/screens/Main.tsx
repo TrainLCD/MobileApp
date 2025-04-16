@@ -5,8 +5,9 @@ import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Alert,
-  BackHandler,
   Dimensions,
+  Linking,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -232,19 +233,12 @@ const MainScreen: React.FC = () => {
     shouldHideTypeChange,
   ]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
   useEffect(() => {
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        resetMainState();
-        navigation.dispatch(
-          StackActions.replace('MainStack', { screen: 'SelectBound' })
-        );
-        return true;
-      }
-    );
-    return subscription.remove;
-  }, [navigation, resetMainState]);
+    return () => {
+      resetMainState();
+    };
+  }, []);
 
   const marginForMetroThemeStyle = useMemo(
     () => ({
@@ -297,6 +291,44 @@ const MainScreen: React.FC = () => {
           ]
         );
       }
+
+      if (Platform.OS === 'android' && bgPermStatus.granted) {
+        const dozeAlertDismissed = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
+        );
+        if (dozeAlertDismissed !== 'true') {
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('dozeAlertText'),
+            [
+              {
+                text: translate('doNotShowAgain'),
+                style: 'cancel',
+                onPress: async (): Promise<void> => {
+                  await AsyncStorage.setItem(
+                    ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
+                    'true'
+                  );
+                },
+              },
+              {
+                text: 'OK',
+                onPress: async () => {
+                  try {
+                    await Linking.openSettings();
+                  } catch (error) {
+                    Alert.alert(
+                      translate('annoucementTitle'),
+                      translate('failedToOpenSettings'),
+                      [{ text: 'OK' }]
+                    );
+                  }
+                },
+              },
+            ]
+          );
+        }
+      }
     };
     f();
   }, []);
@@ -324,8 +356,8 @@ const MainScreen: React.FC = () => {
         selectedBound: null,
         arrived: true,
         approaching: false,
-        averageDistance: null,
         stations: [],
+        wantedDestination: null,
       }));
       navigation.dispatch(StackActions.replace('SelectBound'));
     },

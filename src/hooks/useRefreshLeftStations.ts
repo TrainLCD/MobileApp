@@ -36,22 +36,27 @@ const useRefreshLeftStations = (): void => {
     [normalStations, selectedDirection, theme]
   );
   const station = useMemo(() => {
-    if (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) {
-      // JRWもしくはLEDテーマでは通過駅を表示しないので、
-      // 通過駅を通過する際に駅情報のアプデを行わない
-      if (getIsPass(normalStation)) {
-        return;
-      }
-      const normalStationIndex = normalStations.findIndex(
+    // JRWもしくはLEDテーマでは通過駅を表示しないので、
+    // 通過駅を通過する際に駅情報のアプデを行わない
+    if (
+      (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) &&
+      getIsPass(normalStation)
+    ) {
+      const stations =
+        selectedDirection === 'INBOUND'
+          ? normalStations.slice().reverse()
+          : normalStations;
+
+      const normalStationIndex = stations.findIndex(
         (s) => s.groupId === normalStation?.groupId
       );
-      const lastStoppedStation = normalStations.find(
-        (s, i) => normalStationIndex <= i && !getIsPass(s)
+      const lastStoppedStation = stations.find(
+        (s, i) => !getIsPass(s) && normalStationIndex <= i
       );
       return lastStoppedStation;
     }
     return normalStation;
-  }, [normalStation, normalStations, theme]);
+  }, [normalStation, normalStations, theme, selectedDirection]);
 
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {

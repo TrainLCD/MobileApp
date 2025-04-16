@@ -21,7 +21,6 @@ export const useResetMainState = () => {
       selectedBound: null,
       arrived: true,
       approaching: false,
-      averageDistance: null,
     }));
   }, [setNavigationState, setStationState]);
 

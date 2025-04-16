@@ -1215,6 +1215,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - ExpoNetwork (7.0.5):
+    - ExpoModulesCore
   - ExpoScreenCapture (7.0.0):
     - ExpoModulesCore
   - ExpoSplashScreen (0.29.13):
@@ -2701,8 +2703,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-netinfo (11.4.1):
-    - React-Core
   - react-native-safe-area-context (4.12.0):
     - DoubleConversion
     - glog
@@ -3422,6 +3422,7 @@ DEPENDENCIES:
   - ExpoLocalization (from `../node_modules/expo-localization/ios`)
   - ExpoLocation (from `../node_modules/expo-location/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
+  - ExpoNetwork (from `../node_modules/expo-network/ios`)
   - ExpoScreenCapture (from `../node_modules/expo-screen-capture/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
@@ -3461,7 +3462,6 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
-  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-version-check (from `../node_modules/react-native-version-check`)
   - react-native-view-shot (from `../node_modules/react-native-view-shot`)
@@ -3587,6 +3587,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-location/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
+  ExpoNetwork:
+    :path: "../node_modules/expo-network/ios"
   ExpoScreenCapture:
     :path: "../node_modules/expo-screen-capture/ios"
   ExpoSplashScreen:
@@ -3662,8 +3664,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
-  react-native-netinfo:
-    :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-version-check:
@@ -3786,6 +3786,7 @@ SPEC CHECKSUMS:
   ExpoLocalization: d81f70d53db94b31e4a0b1e11007424ea1011a1c
   ExpoLocation: 1f193245a788fb827302fb7f7e0a3aad128d4a2b
   ExpoModulesCore: 5cc9ddb17bc297cda7fb5a07456fe3dbf8f8391a
+  ExpoNetwork: 16083eb5ed34ce1c8e916fb6292fdb6e9daac0ca
   ExpoScreenCapture: 4695c6c999a497327f9935133fd0e61547d7c21c
   ExpoSplashScreen: 8fe6e54b8b734a997da3c21d84b3ef61faa1bbf6
   ExpoWebBrowser: b658ba8a9161f1b54afb279591cfce2cb73330fa
@@ -3846,7 +3847,6 @@ SPEC CHECKSUMS:
   React-logger: 2736a90a3fdaed3dab1e2e9c5a5e9b3be00c287d
   React-Mapbuffer: 12bbf447b326f0de8a472998eceafbdc4f43ca4e
   React-microtasksnativemodule: 6483158af194b5bca6cc3c842451019c45100d80
-  react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: db6ad47f9354809886d34e349a0809b0580712ea
   react-native-version-check: c7b4269cd18781b51009fa4b5a8ad9ab5131ce6f
   react-native-view-shot: 3a909bbc0917c2f667e1d3b850895d141d3d32a4

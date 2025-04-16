@@ -20,7 +20,7 @@ func getRunningStateText(
     }
     return String(localized: "next")
   }
-  
+
   if stopped {
     return String(localized: "stop")
   }
@@ -46,7 +46,7 @@ struct RideSessionWidget: Widget {
     } dynamicIsland: { context in
       DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
-          if context.state.stopped {
+          if context.state.stopped || context.state.nextStationName.isEmpty {
             EmptyView()
           } else {
             VStack(alignment: .center) {
@@ -65,7 +65,7 @@ struct RideSessionWidget: Widget {
         }
 
         DynamicIslandExpandedRegion(.trailing) {
-          if context.state.stopped {
+          if context.state.stopped || context.state.nextStationName.isEmpty {
             EmptyView()
           } else {
             VStack(alignment: .center) {
@@ -84,7 +84,7 @@ struct RideSessionWidget: Widget {
         }
 
         DynamicIslandExpandedRegion(.center) {
-          if context.state.stopped {
+          if context.state.stopped || context.state.nextStationName.isEmpty {
             VStack(alignment: .center) {
               Text(
                 getRunningStateText(
@@ -118,8 +118,10 @@ struct RideSessionWidget: Widget {
               .bold()
               .font(.caption)
               .multilineTextAlignment(.center)
-              Image(systemName: "arrow.right")
-                .foregroundColor(.white)
+              if !context.state.passingStationName.isEmpty {
+                Image(systemName: "arrow.right")
+                  .foregroundColor(.white)
+              }
             }
           }
         }
@@ -131,7 +133,9 @@ struct RideSessionWidget: Widget {
         HStack {
           if context.state.approaching {
             EmptyView()
-          } else if context.state.stopped {
+          } else if context.state.stopped
+            || context.state.nextStationName.isEmpty
+          {
             Image(systemName: "stop.circle")
           }
 
@@ -186,7 +190,9 @@ struct RideSessionWidget: Widget {
 
               Image(systemName: "chevron.forward.dotted.chevron.forward")
             }
-          } else if context.state.stopped {
+          } else if context.state.stopped
+            || context.state.nextStationName.isEmpty
+          {
             VStack(spacing: 0) {
               Text(
                 context.state.stationName
@@ -242,7 +248,7 @@ struct LockScreenLiveActivityContentView: View {
   var body: some View {
     VStack {
       Group {
-        if context.state.stopped {
+        if context.state.stopped || context.state.nextStationName.isEmpty {
           VStack {
             Text(
               getRunningStateText(
@@ -299,6 +305,7 @@ struct LockScreenLiveActivityContentView: View {
                 }
               }
               .frame(minWidth: 0, maxWidth: .infinity)
+
               Image(systemName: "arrow.right")
                 .foregroundColor(.accentColor)
               VStack {
@@ -393,6 +400,11 @@ struct EarlierLockScreenLiveActivityContentView: View {
 struct SmartStackLiveActivityContentView: View {
   let context: ActivityViewContext<RideSessionAttributes>
 
+  private func updatedTime() -> String {
+    DateFormatter.localizedString(
+      from: Date(), dateStyle: .none, timeStyle: .short)
+  }
+
   var body: some View {
     ZStack {
       VStack(alignment: .leading) {
@@ -408,57 +420,46 @@ struct SmartStackLiveActivityContentView: View {
             .multilineTextAlignment(.leading)
             .opacity(0.75)
         }
-
-        if context.state.passingStationName.isEmpty {
-          Text(
-            getRunningStateText(
-              approaching: context.state.approaching,
-              stopped: context.state.stopped,
-              isNextLastStop: context.state.isNextLastStop
-            )
-          )
-          .font(.callout)
-          .bold()
-          .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.stopped
-              ? context.state.stationName : context.state.nextStationName
-          )
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-          Text(
-            context.state.stopped
-              ? context.state.stationNumber : context.state.nextStationNumber
-          )
-          .font(.caption)
-          .bold()
-          .opacity(0.75)
-          .multilineTextAlignment(.leading)
-        } else {
-          Text("pass")
-            .font(.callout)
-            .bold()
-            .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.passingStationName
-          )
-          .font(.headline)
-          .bold()
-          .multilineTextAlignment(.leading)
-
-          Text(
-            context.state.passingStationNumber
-          )
-          .font(.caption)
-          .bold()
-          .opacity(0.75)
-          .multilineTextAlignment(.leading)
+        HStack {
+          VStack {
+            Text(context.state.stationName)
+              .font(.headline)
+              .bold()
+              .multilineTextAlignment(.leading)
+            if !context.state.stationNumber.isEmpty {
+              Text(context.state.stationNumber)
+                .font(.caption)
+                .bold()
+                .opacity(0.75)
+                .multilineTextAlignment(.leading)
+            }
+          }
+          if !context.state.nextStationName.isEmpty {
+            Image(systemName: "arrow.right")
+              .foregroundColor(.white)
+          }
+          VStack {
+            Text(context.state.nextStationName)
+              .font(.headline)
+              .bold()
+              .multilineTextAlignment(.leading)
+            if !context.state.stationNumber.isEmpty {
+              Text(context.state.nextStationNumber)
+                .font(.caption)
+                .bold()
+                .opacity(0.75)
+                .multilineTextAlignment(.leading)
+            }
+          }
         }
-      }
-      .frame(
+        Text(
+          "最終更新: \(updatedTime())"
+        )
+        .font(.caption)
+        .bold()
+        .opacity(0.75)
+        .multilineTextAlignment(.leading)
+      }.frame(
         minWidth: 0,
         maxWidth: .infinity,
         minHeight: 0,

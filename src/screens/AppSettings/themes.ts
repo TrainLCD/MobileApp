@@ -1,6 +1,6 @@
-import { isClip } from "react-native-app-clip";
-import { APP_THEME, type AppTheme } from "../../models/Theme";
-import { translate } from "../../translation";
+import { isClip } from 'react-native-app-clip';
+import { APP_THEME, type AppTheme } from '../../models/Theme';
+import { translate } from '../../translation';
 
 interface SettingsTheme {
   label: string;
@@ -11,47 +11,47 @@ interface SettingsTheme {
 const getSettingsThemes = (): SettingsTheme[] =>
   [
     {
-      label: translate("tokyoMetroLike"),
+      label: translate('tokyoMetroLike'),
       value: APP_THEME.TOKYO_METRO,
       devOnly: false,
     },
     {
-      label: translate("tyLike"),
+      label: translate('tyLike'),
       value: APP_THEME.TY,
       devOnly: false,
     },
     {
-      label: translate("saikyoLineLike"),
+      label: translate('saikyoLineLike'),
       value: APP_THEME.SAIKYO,
       devOnly: false,
     },
     {
-      label: translate("toeiLike"),
+      label: translate('toeiLike'),
       value: APP_THEME.TOEI,
       devOnly: false,
     },
     {
-      label: translate("yamanoteLineLike"),
+      label: translate('yamanoteLineLike'),
       value: APP_THEME.YAMANOTE,
       devOnly: false,
     },
     {
-      label: translate("jrWestLike"),
+      label: translate('jrWestLike'),
       value: APP_THEME.JR_WEST,
       devOnly: false,
     },
     {
-      label: translate("ledLike"),
+      label: translate('ledLike'),
       value: APP_THEME.LED,
       devOnly: false,
     },
     {
-      label: translate("joLike"),
+      label: translate('joLike'),
       value: APP_THEME.JO,
       devOnly: false,
     },
     {
-      label: translate("jlLike"),
+      label: translate('jlLike'),
       value: APP_THEME.JL,
       devOnly: true,
     },

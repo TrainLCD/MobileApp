@@ -1,9 +1,8 @@
 import * as Application from 'expo-application';
-import getDistance from 'geolib/es/getDistance';
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
+import { useDistanceToNextStation } from '../hooks/useDistanceToNextStation';
 import { useLocationStore } from '../hooks/useLocationStore';
-import { useNextStation } from '../hooks/useNextStation';
 import { useThreshold } from '../hooks/useThreshold';
 import Typography from './Typography';
 
@@ -35,27 +34,13 @@ const DevOverlay: React.FC = () => {
   const speed = useLocationStore((state) => state?.coords.speed);
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
   const { approachingThreshold, arrivedThreshold } = useThreshold();
-  const nextStation = useNextStation();
+  const distanceToNextStation = useDistanceToNextStation();
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
   const speedKMH = useMemo(
     () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
     [coordsSpeed, speed]
-  );
-
-  const distanceToNext = useMemo(
-    () =>
-      latitude && longitude && nextStation
-        ? getDistance(
-            { latitude, longitude },
-            {
-              latitude: nextStation.latitude,
-              longitude: nextStation.longitude,
-            }
-          )
-        : undefined,
-    [latitude, longitude, nextStation]
   );
 
   return (
@@ -75,9 +60,9 @@ const DevOverlay: React.FC = () => {
         accuracy ?? ''
       }m`}</Typography>
 
-      {distanceToNext ? (
+      {distanceToNextStation ? (
         <Typography style={styles.text}>
-          Next: {distanceToNext / 1000}km
+          Next: {distanceToNextStation}m
         </Typography>
       ) : (
         <Typography style={styles.text}>Next:</Typography>
