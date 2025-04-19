@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   leftTriangle: {
-    marginLeft: '-31%',
+    marginLeft: '-30.25%',
   },
   right: {
     flex: 0.8,
