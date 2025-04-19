@@ -170,5 +170,6 @@
   "confirmChangeLineText": "The current line is the %{currentLineName}. Should we switch to the %{lineName}?",
   "trainTypesFilter": "Train type filtering",
   "trainTypeListEmpty": "No matching train types were found.",
+  "jlLike": "Joban Line",
   "routeListTitle": "Directions to %{stationName} Station"
 }

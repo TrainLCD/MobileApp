@@ -31,6 +31,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.TOEI]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
 };
 
 const useTTSText = (
@@ -59,7 +60,7 @@ const useTTSText = (
   const replaceJapaneseText = useCallback(
     (name: string | undefined, nameKatakana: string | undefined) =>
       !name || !nameKatakana
-        ? undefined
+        ? `<sub alias="かくえきていしゃ">各駅停車</sub>`
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
   );
@@ -431,6 +432,7 @@ const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
+        [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
         [APP_THEME.SAIKYO]: {
           NEXT: `${
             firstSpeech
@@ -787,6 +789,7 @@ const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
+        [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
         [APP_THEME.SAIKYO]: {
           NEXT: `${
             firstSpeech
@@ -958,7 +961,7 @@ const useTTSText = (
       }
       return tmpl;
     }
-    if (theme === APP_THEME.JO) {
+    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
       const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
         return '';
@@ -981,7 +984,7 @@ const useTTSText = (
       }
       return tmpl;
     }
-    if (theme === APP_THEME.JO) {
+    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
       const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
         return '';

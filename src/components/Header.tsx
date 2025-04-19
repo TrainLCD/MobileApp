@@ -3,6 +3,7 @@ import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
 import HeaderE235 from './HeaderE235';
+import HeaderJL from './HeaderJL';
 import HeaderJRWest from './HeaderJRWest';
 import HeaderLED from './HeaderLED';
 import HeaderSaikyo from './HeaderSaikyo';
@@ -32,6 +33,8 @@ const Header = () => {
       return <HeaderSaikyo />;
     case APP_THEME.LED:
       return <HeaderLED />;
+    case APP_THEME.JL:
+      return <HeaderJL />;
     default:
       return null;
   }
