@@ -24,6 +24,7 @@ import Clock from './Clock';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 import Typography from './Typography';
+import { widthScale } from '../utils/scale';
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -62,10 +63,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 200 : 128,
     position: 'relative',
     flexDirection: 'row',
-    paddingHorizontal: 16,
-  },
-  leftTriangle: {
-    marginLeft: isTablet ? '-31%' : '-30.25%',
+    paddingHorizontal: 32,
   },
   right: {
     flex: 0.8,
@@ -363,7 +361,12 @@ const HeaderJL = () => {
             )}
           </View>
         </View>
-        <Svg style={styles.leftTriangle} viewBox="0 0 25 100" fill="none">
+        <Svg
+          width={isTablet ? 114 : 95}
+          height="100%"
+          viewBox="0 0 25 100"
+          fill="none"
+        >
           <Path
             d="M25 50L0 0L0 100L25 50Z"
             fill={currentLine?.color ?? 'transparent'}
