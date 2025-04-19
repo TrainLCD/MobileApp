@@ -46,12 +46,10 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeBoxJL: React.FC<Props> = ({
-  trainType: untypedTrainType,
+  trainType,
   trainTypeColor = '#000',
 }: Props) => {
   const { headerState } = useRecoilValue(navigationState);
-
-  const trainType = untypedTrainType as TrainType;
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
