@@ -7,12 +7,12 @@ import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
-import { getIsLocal, getIsRapid } from '../utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
 import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
+  trainTypeColor?: string;
 };
 
 const styles = StyleSheet.create({
@@ -22,22 +22,33 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     width: '100%',
     height: isTablet ? 55 : 35,
+    backgroundColor: 'white',
+    zIndex: 9999,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 1,
+    shadowOffset: { height: 1, width: 0 },
+  },
+  innerBox: {
+    flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    zIndex: 9999,
+    transform: [{ skewX: '-5deg' }],
   },
   text: {
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
-    transform: [{ skewX: '-5deg' }],
     fontSize: isTablet ? 36 : 24,
+    lineHeight: isTablet ? 55 : 35,
   },
 });
 
-const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
+const TrainTypeBoxJL: React.FC<Props> = ({
+  trainType,
+  trainTypeColor = '#000',
+}: Props) => {
   const { headerState } = useRecoilValue(navigationState);
 
   const headerLangState = useMemo((): HeaderLangState => {
@@ -90,44 +101,36 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
     trainTypeNameZh,
   ]);
 
-  const trainTypeColor = useMemo(() => {
-    if (getIsLocal(trainType)) {
-      return '#222';
-    }
-    if (getIsRapid(trainType)) {
-      return '#0067C0';
-    }
-    return trainType?.color ?? '#222';
-  }, [trainType]);
-
   return (
     <View style={styles.box}>
-      {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
-        trainTypeName.split('').map((char, idx) => (
+      <View style={styles.innerBox}>
+        {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
+          trainTypeName.split('').map((char, idx) => (
+            <Typography
+              style={{
+                ...styles.text,
+                color: trainTypeColor,
+                fontFamily: undefined,
+                fontWeight: '800',
+              }}
+              key={`${char}${idx.toString()}`}
+            >
+              {char}
+            </Typography>
+          ))
+        ) : (
           <Typography
             style={{
               ...styles.text,
               color: trainTypeColor,
-              fontFamily: undefined,
-              fontWeight: '800',
             }}
-            key={`${char}${idx.toString()}`}
           >
-            {char}
+            {trainTypeName}
           </Typography>
-        ))
-      ) : (
-        <Typography
-          style={{
-            ...styles.text,
-            color: trainTypeColor,
-          }}
-        >
-          {trainTypeName}
-        </Typography>
-      )}
+        )}
+      </View>
     </View>
   );
 };
 
-export default React.memo(TrainTypeBoxJO);
+export default React.memo(TrainTypeBoxJL);

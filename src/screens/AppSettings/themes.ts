@@ -50,6 +50,11 @@ const getSettingsThemes = (): SettingsTheme[] =>
       value: APP_THEME.JO,
       devOnly: false,
     },
+    {
+      label: translate('jlLike'),
+      value: APP_THEME.JL,
+      devOnly: true,
+    },
   ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示
 
 export default getSettingsThemes;
