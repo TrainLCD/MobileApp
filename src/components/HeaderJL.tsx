@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   boundContainer: {
     width: '100%',
     height: '70%',
-    marginTop: '32%',
+    marginTop: isTablet ? '40%' : '32%',
   },
   bound: {
     color: '#fff',
@@ -65,11 +65,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   leftTriangle: {
-    marginLeft: '-30.25%',
+    marginLeft: isTablet ? '-31%' : '-30.25%',
   },
   right: {
     flex: 0.8,
-    paddingLeft: 8,
+    paddingLeft: isTablet ? 64 : 8,
     justifyContent: 'center',
     height: isTablet ? 200 : 128,
   },
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(21),
     position: 'absolute',
     top: 12,
-    marginLeft: 32,
+    paddingLeft: isTablet ? 64 : 32,
   },
   clockContainer: {
     position: 'absolute',
