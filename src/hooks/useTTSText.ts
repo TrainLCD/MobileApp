@@ -60,7 +60,7 @@ const useTTSText = (
   const replaceJapaneseText = useCallback(
     (name: string | undefined, nameKatakana: string | undefined) =>
       !name || !nameKatakana
-        ? ''
+        ? `<sub alias="かくえきていしゃ">各駅停車</sub>`
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
   );
