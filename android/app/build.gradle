@@ -124,13 +124,13 @@ android {
       applicationIdSuffix ".dev"
       versionNameSuffix "-dev"
       // 10203010 <- 10203(v1.2.3 version name)+01(build number)+0(Android app)
-      versionCode 81002000
-      versionName "8.10.2"
+      versionCode 81003000
+      versionName "8.10.3"
     }
     prod {
       dimension "environment"
-      versionCode 81002000
-      versionName "8.10.2"
+      versionCode 81003000
+      versionName "8.10.3"
     }
   }
 }
