@@ -297,6 +297,19 @@ const HeaderJL = () => {
     return RFValue(20);
   }, []);
 
+  const clockLabel = useMemo(() => {
+    switch (headerLangState) {
+      case 'EN':
+        return 'Time';
+      case 'ZH':
+        return '时间';
+      case 'KO':
+        return '시간';
+      default:
+        return '現在時刻';
+    }
+  }, [headerLangState]);
+
   return (
     <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
       <View
@@ -379,7 +392,7 @@ const HeaderJL = () => {
         </View>
       </View>
       <View style={styles.clockContainer}>
-        <Typography style={styles.clockLabel}>現在時刻</Typography>
+        <Typography style={styles.clockLabel}>{clockLabel}</Typography>
         <Clock style={styles.clockOverride} />
       </View>
     </LinearGradient>
