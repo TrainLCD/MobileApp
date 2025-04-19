@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   boundContainer: {
     width: '100%',
     height: '70%',
-    marginTop: isTablet ? '35%' : '32%',
+    marginTop: isTablet ? '38%' : '32%',
   },
   bound: {
     color: '#fff',
