@@ -24,7 +24,6 @@ import Clock from './Clock';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 import Typography from './Typography';
-import { widthScale } from '../utils/scale';
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -35,7 +34,7 @@ const styles = StyleSheet.create({
   boundContainer: {
     width: '100%',
     height: '70%',
-    marginTop: isTablet ? '40%' : '32%',
+    marginTop: isTablet ? '35%' : '32%',
   },
   bound: {
     color: '#fff',
