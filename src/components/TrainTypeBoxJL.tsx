@@ -1,20 +1,18 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Text } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
-import { useCurrentLine } from '../hooks/useCurrentLine';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
-import { getIsLocal, getIsRapid } from '../utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
 import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
+  trainTypeColor?: string;
 };
 
 const styles = StyleSheet.create({
@@ -24,25 +22,36 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     width: '100%',
     height: isTablet ? 55 : 35,
+    backgroundColor: 'white',
+    zIndex: 9999,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 1,
+    shadowOffset: { height: 1, width: 0 },
+  },
+  innerBox: {
+    flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    zIndex: 9999,
+    transform: [{ skewX: '-5deg' }],
   },
-  // text: {
-  //   color: '#fff',
-  //   textAlign: 'center',
-  //   fontWeight: 'bold',
-  //   transform: [{ skewX: '-5deg' }],
-  //   fontSize: isTablet ? 48 : 24,
-  // },
+  text: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: isTablet ? 36 : 24,
+    lineHeight: isTablet ? 55 : 35,
+  },
 });
 
-const TrainTypeBoxJL: React.FC<Props> = ({ trainType }: Props) => {
+const TrainTypeBoxJL: React.FC<Props> = ({
+  trainType: untypedTrainType,
+  trainTypeColor = '#000',
+}: Props) => {
   const { headerState } = useRecoilValue(navigationState);
 
-  const line = useCurrentLine();
+  const trainType = untypedTrainType as TrainType;
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
@@ -94,57 +103,34 @@ const TrainTypeBoxJL: React.FC<Props> = ({ trainType }: Props) => {
     trainTypeNameZh,
   ]);
 
-  const trainTypeColor = useMemo(() => {
-    if (getIsLocal(trainType)) {
-      return line?.color ?? '#222';
-    }
-
-    return trainType?.color ?? '#222';
-  }, [trainType, line]);
-
   return (
     <View style={styles.box}>
-      <Svg
-        style={{ flex: 1, width: '100%', backgroundColor: 'red' }}
-        width={isTablet ? 100 : 50}
-        height={isTablet ? 50 : 30}
-      >
+      <View style={styles.innerBox}>
         {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
           trainTypeName.split('').map((char, idx) => (
-            <Text
-              // style={{
-              //   ...styles.text,
-              //   color: trainTypeColor,
-              //   fontFamily: undefined,
-              //   fontWeight: '800',
-              // }}
-              color={trainTypeColor}
-              fontWeight={800}
-              transform={[{ skewX: '-5deg' }]}
-              fontSize={isTablet ? 48 : 24}
-              x={isTablet ? 50 : 5}
-              y={isTablet ? 50 : 5}
+            <Typography
+              style={{
+                ...styles.text,
+                color: trainTypeColor,
+                fontFamily: undefined,
+                fontWeight: '800',
+              }}
               key={`${char}${idx.toString()}`}
             >
               {char}
-            </Text>
+            </Typography>
           ))
         ) : (
-          <Text
-            // style={{
-            //   ...styles.text,
-            //   color: trainTypeColor,
-            // }}
-            color={trainTypeColor}
-            transform={[{ skewX: '-5deg' }]}
-            fontSize={isTablet ? 48 : 24}
-            x={isTablet ? 50 : 5}
-            y={isTablet ? 50 : 5}
+          <Typography
+            style={{
+              ...styles.text,
+              color: trainTypeColor,
+            }}
           >
             {trainTypeName}
-          </Text>
+          </Typography>
         )}
-      </Svg>
+      </View>
     </View>
   );
 };

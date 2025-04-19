@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Text } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useBoundText } from '../hooks/useBoundText';
@@ -33,9 +33,8 @@ const styles = StyleSheet.create({
   },
   boundContainer: {
     width: '100%',
-    height: isTablet ? 100 : 50,
-    justifyContent: 'flex-end',
-    padding: 8,
+    height: '70%',
+    marginTop: '32%',
   },
   bound: {
     color: '#fff',
@@ -59,28 +58,18 @@ const styles = StyleSheet.create({
     fontSize: STATION_NAME_FONT_SIZE,
   },
   left: {
-    flex: 0.3,
-    justifyContent: 'center',
+    flex: 0.2,
     height: isTablet ? 200 : 128,
-    marginRight: 24,
     position: 'relative',
+    flexDirection: 'row',
+    paddingHorizontal: 16,
   },
   leftTriangle: {
-    position: 'absolute',
-    top: 0,
-    left: Dimensions.get('screen').width * 0.125 + 10,
-  },
-  trainTypeBoxContainer: {
-    flex: 1,
-    marginHorizontal: 12,
-    shadowColor: 'black',
-    shadowRadius: 1,
-    shadowOpacity: 0.5,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 1,
+    marginLeft: '-31%',
   },
   right: {
-    flex: 1,
+    flex: 0.8,
+    paddingLeft: 8,
     justifyContent: 'center',
     height: isTablet ? 200 : 128,
   },
@@ -92,10 +81,20 @@ const styles = StyleSheet.create({
     top: 12,
     marginLeft: 32,
   },
-  clockOverride: {
+  clockContainer: {
     position: 'absolute',
     top: 8,
     right: Dimensions.get('screen').width * 0.25,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  clockLabel: {
+    color: '#fff',
+    fontSize: RFValue(14),
+    marginRight: 4,
+  },
+  clockOverride: {
+    backgroundColor: 'white',
   },
   stationNameContainer: {
     flexDirection: 'row',
@@ -274,13 +273,13 @@ const HeaderJL = () => {
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return isLoopLine ? 'Bound for' : 'for';
+        return 'for';
       case 'ZH':
         return '开往';
       default:
         return '';
     }
-  }, [headerLangState, isLoopLine]);
+  }, [headerLangState]);
   const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -294,10 +293,6 @@ const HeaderJL = () => {
     }
   }, [headerLangState, isLoopLine, isPartiallyLoopLine]);
 
-  const boundContainerMarginTop = useMemo(() => {
-    return 0;
-  }, []);
-
   const boundFontSize = useMemo(() => {
     return RFValue(20);
   }, []);
@@ -310,52 +305,51 @@ const HeaderJL = () => {
           backgroundColor: currentLine?.color ?? 'transparent',
         }}
       >
-        <View style={styles.trainTypeBoxContainer}>
-          <TrainTypeBoxJL trainType={trainType} />
-        </View>
         <View
-          style={{
-            ...styles.boundContainer,
-            marginTop: boundContainerMarginTop,
-          }}
+          style={{ width: '100%', height: '100%', flexDirection: 'column' }}
         >
-          {selectedBound && (
+          <TrainTypeBoxJL
+            trainType={trainType}
+            trainTypeColor={currentLine?.color}
+          />
+          <View style={styles.boundContainer}>
+            {selectedBound && (
+              <Typography
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={{
+                  ...styles.bound,
+                  fontSize: RFValue(14),
+                }}
+              >
+                {boundPrefix}
+              </Typography>
+            )}
             <Typography
-              adjustsFontSizeToFit
-              numberOfLines={1}
               style={{
                 ...styles.bound,
-                fontSize: RFValue(14),
+                fontSize: boundFontSize,
               }}
+              adjustsFontSizeToFit
+              numberOfLines={1}
             >
-              {boundPrefix}
+              {boundText}
             </Typography>
-          )}
-          <Typography
-            style={{
-              ...styles.bound,
-              fontSize: boundFontSize,
-            }}
-            adjustsFontSizeToFit
-            numberOfLines={1}
-          >
-            {boundText}
-          </Typography>
-          {selectedBound && (
-            <Typography
-              style={[
-                {
-                  ...styles.boundSuffix,
-                  fontSize: RFValue(14),
-                },
-                headerLangState === 'KO' ? styles.bound : null,
-              ]}
-            >
-              {boundSuffix}
-            </Typography>
-          )}
+            {selectedBound && (
+              <Typography
+                style={[
+                  {
+                    ...styles.boundSuffix,
+                    fontSize: RFValue(14),
+                  },
+                  headerLangState === 'KO' ? styles.bound : null,
+                ]}
+              >
+                {boundSuffix}
+              </Typography>
+            )}
+          </View>
         </View>
-
         <Svg style={styles.leftTriangle} viewBox="0 0 25 100" fill="none">
           <Path
             d="M25 50L0 0L0 100L25 50Z"
@@ -384,7 +378,10 @@ const HeaderJL = () => {
           </Typography>
         </View>
       </View>
-      <Clock white style={styles.clockOverride} />
+      <View style={styles.clockContainer}>
+        <Typography style={styles.clockLabel}>現在時刻</Typography>
+        <Clock style={styles.clockOverride} />
+      </View>
     </LinearGradient>
   );
 };
