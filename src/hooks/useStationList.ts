@@ -69,7 +69,18 @@ export const useStationList = () => {
         ? prev.stations
         : (byLineIdData?.stations ?? []),
     }));
-  }, [byLineIdData?.stations, setStationState]);
+    if (designatedTrainType) {
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: prev.trainType ? prev.trainType : designatedTrainType,
+      }));
+    }
+  }, [
+    byLineIdData?.stations,
+    designatedTrainType,
+    setNavigationState,
+    setStationState,
+  ]);
 
   useEffect(() => {
     const localType = new TrainType({
