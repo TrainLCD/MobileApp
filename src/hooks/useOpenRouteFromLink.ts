@@ -47,7 +47,6 @@ export const useOpenRouteFromLink = () => {
         trainType: station.trainType ?? null,
         leftStations: [],
         stationForHeader: station,
-        fromBuilder: true,
       }));
       setStationState((prev) => ({
         ...prev,

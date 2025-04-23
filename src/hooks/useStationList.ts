@@ -1,6 +1,6 @@
 import { useQuery } from '@connectrpc/connect-query';
 import { useEffect, useMemo } from 'react';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   getStationsByLineId,
   getTrainTypesByStationId,
@@ -17,7 +17,7 @@ import { useCurrentStation } from './useCurrentStation';
 
 export const useStationList = () => {
   const setStationState = useSetRecoilState(stationState);
-  const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState);
+  const setNavigationState = useSetRecoilState(navigationState);
   const { selectedLine } = useRecoilValue(lineState);
 
   const station = useCurrentStation();
@@ -38,7 +38,7 @@ export const useStationList = () => {
     // NOTE: ここでselectedLineを使わないとどの路線選んでも同じ行先が表示される
     { lineId: selectedLine?.id, stationId: selectedLine?.station?.id },
     {
-      enabled: !fromBuilder && !!selectedLine,
+      enabled: !!selectedLine,
     }
   );
 
@@ -69,19 +69,7 @@ export const useStationList = () => {
         ? prev.stations
         : (byLineIdData?.stations ?? []),
     }));
-    if (!fromBuilder && designatedTrainType) {
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: prev.trainType ? prev.trainType : designatedTrainType,
-      }));
-    }
-  }, [
-    byLineIdData?.stations,
-    designatedTrainType,
-    fromBuilder,
-    setNavigationState,
-    setStationState,
-  ]);
+  }, [byLineIdData?.stations, setStationState]);
 
   useEffect(() => {
     const localType = new TrainType({
