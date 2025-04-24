@@ -171,5 +171,6 @@
   "confirmChangeLineText": "現在の路線は%{currentLineName}です。%{lineName}に切り替えますか？",
   "trainTypesFilter": "種別の絞り込み",
   "trainTypeListEmpty": "該当する種別が見つかりませんでした。",
+  "jlLike": "常磐線風",
   "routeListTitle": "%{stationName}駅までの経路"
 }

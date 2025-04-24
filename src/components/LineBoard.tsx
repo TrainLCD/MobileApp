@@ -120,6 +120,10 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
         );
+      case APP_THEME.JL:
+        return (
+          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
+        );
       default:
         return null;
     }
