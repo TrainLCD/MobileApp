@@ -7,31 +7,32 @@ export const useDeepLink = () => {
 
   const handleParsedUrl = useCallback(
     async (parsedUrl: Linking.ParsedURL) => {
-      if (parsedUrl.queryParams) {
-        const { sgid, dir, lgid, lid } = parsedUrl.queryParams;
-
-        const stationGroupId = Number(sgid);
-        const direction = Number(dir);
-        const lineGroupId = Number(lgid);
-        const lineId = Number(lid);
-
-        if (
-          typeof stationGroupId === 'undefined' ||
-          typeof direction === 'undefined'
-        ) {
-          return;
-        }
-        if (direction !== 0 && direction !== 1) {
-          return;
-        }
-
-        openRoute({
-          stationGroupId,
-          direction,
-          lineGroupId,
-          lineId,
-        });
+      if (!parsedUrl.queryParams) {
+        return;
       }
+      const { sgid, dir, lgid, lid } = parsedUrl.queryParams;
+
+      const stationGroupId = Number(sgid);
+      const direction = Number(dir);
+      const lineGroupId = Number(lgid);
+      const lineId = Number(lid);
+
+      if (
+        typeof stationGroupId === 'undefined' ||
+        typeof direction === 'undefined'
+      ) {
+        return;
+      }
+      if (direction !== 0 && direction !== 1) {
+        return;
+      }
+
+      openRoute({
+        stationGroupId,
+        direction,
+        lineGroupId,
+        lineId,
+      });
     },
     [openRoute]
   );

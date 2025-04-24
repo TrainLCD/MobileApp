@@ -93,7 +93,6 @@ const SavedRoutesScreen: React.FC = () => {
         trainType: selectedStation.trainType ?? null,
         leftStations: [],
         stationForHeader: selectedStation,
-        fromBuilder: true,
       }));
       setLineState((prev) => ({
         ...prev,
