@@ -106,7 +106,7 @@ const FakeStationSettingsScreen: React.FC = () => {
       navigation.goBack();
       return;
     }
-    navigation.navigate('MainStack');
+    navigation.navigate('MainStack' as never);
   }, [navigation]);
 
   const handleSubmit = useCallback(() => {
@@ -130,13 +130,9 @@ const FakeStationSettingsScreen: React.FC = () => {
     [byCoordsData, byNameData]
   );
 
-  // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
-    () =>
-      groupStations(foundStations).filter(
-        (sta) => sta.groupId !== currentStation?.groupId
-      ),
-    [currentStation?.groupId, foundStations]
+    () => groupStations(foundStations),
+    [foundStations]
   );
 
   const handleStationPress = useCallback(
