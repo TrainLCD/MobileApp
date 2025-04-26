@@ -46,7 +46,7 @@ const ItemCell = ({
   onSelect: (item: Station) => void;
   withoutTransfer?: boolean;
 }) => {
-  const ownLine = item.line;
+  const ownLine = useMemo(() => item.line, [item.line]);
   const otherLines = useMemo(
     () => item.lines.filter((l) => l.id !== ownLine?.id),
     [item.lines, ownLine?.id]
