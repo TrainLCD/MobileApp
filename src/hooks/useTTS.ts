@@ -167,8 +167,7 @@ export const useTTS = (): void => {
     if (
       !enabled ||
       playingRef.current ||
-      prevTextJa === textJa ||
-      prevTextEn === textEn
+      (prevTextJa === textJa && prevTextEn === textEn)
     ) {
       return;
     }
