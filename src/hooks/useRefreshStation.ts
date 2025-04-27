@@ -33,6 +33,7 @@ const useRefreshStation = (): void => {
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const speed = useLocationStore((state) => state?.coords.speed);
+  const accuracy = useLocationStore((state) => state?.coords.accuracy);
 
   const nextStation = useNextStation();
   const actualNextStation = useNextStation(false);
@@ -51,6 +52,18 @@ const useRefreshStation = (): void => {
     }
 
     if (speed && !getIsPass(nearestStation)) {
+      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が100m以上ある場合は走行速度を停車判定に使用しない
+      if (!accuracy || (accuracy && accuracy >= 100)) {
+        return isPointWithinRadius(
+          { latitude, longitude },
+          {
+            latitude: nearestStation.latitude,
+            longitude: nearestStation.longitude,
+          },
+          arrivedThreshold
+        );
+      }
+
       const speedKMH = (speed * 3600) / 1000;
       return (
         isPointWithinRadius(
@@ -72,7 +85,7 @@ const useRefreshStation = (): void => {
       },
       arrivedThreshold
     );
-  }, [arrivedThreshold, latitude, longitude, nearestStation, speed]);
+  }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
     if (
