@@ -1,5 +1,5 @@
 // 間隔(ミリ秒)
-export const DEFAULT_HEADER_TRANSITION_INTERVAL = 2000; // ms
+export const DEFAULT_HEADER_TRANSITION_INTERVAL = 5000; // ms
 export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
 // 遅延(ミリ秒)
 export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
@@ -11,6 +11,7 @@ export const ARRIVED_MAXIMUM_SPEED = 30; // km/h
 export const MANY_LINES_THRESHOLD = 7;
 export const OMIT_JR_THRESHOLD = 3; // これ以上JR線があったら「JR線」で省略しよう
 export const JR_LINE_MAX_ID = 6;
+export const BAD_ACCURACY_THRESHOLD = 100; // m
 // オートモード
 export const AUTO_MODE_RUNNING_DURATION = 15000;
 export const AUTO_MODE_STOPPING_DURATION = AUTO_MODE_RUNNING_DURATION + 1000;
