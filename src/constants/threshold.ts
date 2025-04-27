@@ -1,5 +1,5 @@
 // 間隔(ミリ秒)
-export const DEFAULT_HEADER_TRANSITION_INTERVAL = 5000; // ms
+export const DEFAULT_HEADER_TRANSITION_INTERVAL = 3000; // ms
 export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
 // 遅延(ミリ秒)
 export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
