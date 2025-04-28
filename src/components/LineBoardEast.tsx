@@ -61,19 +61,6 @@ type Props = {
   hasTerminus: boolean;
 };
 
-const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
-  if (!isTablet) {
-    return {
-      width: heightScale(320),
-      marginBottom: 58,
-    };
-  }
-  return {
-    width: 250,
-    marginBottom: 96,
-  };
-};
-
 const getBarTerminalRight = (): number => {
   if (isTablet) {
     return -42;
@@ -99,6 +86,10 @@ const styles = StyleSheet.create({
   root: {
     height: '100%',
     paddingBottom: isTablet ? screenHeight / 2.5 : undefined,
+    flexDirection: 'row',
+    justifyContent: isTablet ? 'flex-start' : undefined,
+    marginLeft: 32,
+    flex: 1,
   },
   bar: {
     position: 'absolute',
@@ -111,12 +102,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: getBarTerminalRight(),
     bottom: barTerminalBottom,
-  },
-  stationNameWrapper: {
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
-    flex: 1,
   },
   stationNameContainer: {
     width: screenWidth / 9,
@@ -133,11 +118,10 @@ const styles = StyleSheet.create({
     marginBottom: Platform.select({ android: -3, ios: 0 }),
     includeFontPadding: false,
   },
-  stationNameEn: {
+  stationNameHorizontal: {
     fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
-    marginLeft: -30,
+    paddingBottom: 16,
   },
   grayColor: {
     color: '#ccc',
@@ -153,11 +137,10 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: 32,
+    bottom: isTablet ? screenHeight / 2.5 + 32 : 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
-    marginTop: isTablet ? -6 : -4,
   },
   chevronArea: {
     width: isTablet ? 48 : 16,
@@ -199,13 +182,27 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station);
+  const stationNameR = useMemo(() => getStationNameR(station), [station]);
+
+  const nameEnExtraStyle = useMemo(() => {
+    if (!isTablet) {
+      return {
+        width: heightScale(320),
+        marginBottom: 58,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: 96,
+    };
+  }, []);
+
   if (en) {
     return (
       <Typography
         style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(),
+          styles.stationNameHorizontal,
+          nameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -218,8 +215,8 @@ const StationName: React.FC<StationNameProps> = ({
     return (
       <Typography
         style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(),
+          styles.stationNameHorizontal,
+          nameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -368,13 +365,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View key={station.name} style={styles.stationNameContainer}>
-        <StationName
-          station={station}
-          en={isEn}
-          horizontal={includesLongStationName}
-          passed={getIsPass(station) || shouldGrayscale}
-        />
+      <View key={station.id} style={styles.stationNameContainer}>
+        <View
+          style={
+            isEn || includesLongStationName
+              ? {
+                  transform: [{ rotate: '-55deg' }],
+                }
+              : {}
+          }
+        >
+          <StationName
+            station={station}
+            en={isEn}
+            horizontal={includesLongStationName}
+            passed={getIsPass(station) || shouldGrayscale}
+          />
+        </View>
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
@@ -557,6 +564,11 @@ const LineBoardEast: React.FC<Props> = ({
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
+      const isLast =
+        [...stations, ...Array.from({ length: 8 - stations.length })].length -
+          1 ===
+        i;
+
       if (!s) {
         return (
           <EmptyStationNameCell
@@ -564,12 +576,7 @@ const LineBoardEast: React.FC<Props> = ({
               lineColors[lineColors.length - 1] || line?.color || '#fff'
             }
             key={i}
-            isLast={
-              [...stations, ...Array.from({ length: 8 - stations.length })]
-                .length -
-                1 ===
-              i
-            }
+            isLast={isLast}
             hasTerminus={hasTerminus}
           />
         );
@@ -580,7 +587,7 @@ const LineBoardEast: React.FC<Props> = ({
       }
 
       return (
-        <React.Fragment key={s.groupId}>
+        <React.Fragment key={s.id}>
           <StationNameCell
             station={s}
             stations={stations}
@@ -596,16 +603,18 @@ const LineBoardEast: React.FC<Props> = ({
     [chevronColor, hasTerminus, line, lineColors, stations]
   );
 
+  const stationsWithEmpty = useMemo(
+    () =>
+      [
+        ...stations,
+        ...Array.from({ length: 8 - stations.length }),
+      ] as Station[],
+    [stations]
+  );
+
   return (
     <View style={styles.root}>
-      <View style={styles.stationNameWrapper}>
-        {(
-          [
-            ...stations,
-            ...Array.from({ length: 8 - stations.length }),
-          ] as Station[]
-        ).map(stationNameCellForMap)}
-      </View>
+      {stationsWithEmpty.map(stationNameCellForMap)}
     </View>
   );
 };

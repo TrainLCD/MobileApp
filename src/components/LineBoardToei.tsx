@@ -1,6 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import {
+  Dimensions,
+  Platform,
+  type StyleProp,
+  StyleSheet,
+  type TextStyle,
+  View,
+} from 'react-native';
 import { useRecoilValue } from 'recoil';
 import type {
   Line,
@@ -18,7 +25,7 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { widthScale } from '../utils/scale';
+import { heightScale, widthScale } from '../utils/scale';
 import BarTerminal from './BarTerminalEast';
 import Chevron from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
@@ -26,7 +33,6 @@ import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-const BAR_HEIGHT = isTablet ? 48 : 32;
 
 const useBarStyles = ({
   index,
@@ -85,11 +91,15 @@ const styles = StyleSheet.create({
   root: {
     height: '100%',
     paddingBottom: isTablet ? screenHeight / 2.5 : undefined,
+    flexDirection: 'row',
+    justifyContent: isTablet ? 'flex-start' : undefined,
+    marginLeft: 32,
+    flex: 1,
   },
   bar: {
     position: 'absolute',
     bottom: barBottom,
-    height: BAR_HEIGHT,
+    height: isTablet ? 48 : 32,
   },
   barTerminal: {
     width: isTablet ? 42 : 33.7,
@@ -98,59 +108,24 @@ const styles = StyleSheet.create({
     right: getBarTerminalRight(),
     bottom: barTerminalBottom,
   },
-  stationNameWrapper: {
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
   stationNameContainer: {
-    position: 'relative',
     width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
+    paddingBottom: isTablet ? 0 : 64,
   },
   stationName: {
     textAlign: 'center',
-    fontSize: RFValue(16),
+    fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginLeft: isTablet ? 5 : 2.5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
+  },
+  stationNameHorizontal: {
+    fontSize: RFValue(18),
+    fontWeight: 'bold',
   },
   stationNameExtra: {
-    width: RFValue(10),
-    textAlign: 'center',
     fontSize: RFValue(10),
-    fontWeight: 'bold',
-    marginBottom: 0,
-  },
-  stationNameEn: {
-    fontSize: RFValue(16),
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: isTablet ? 0 : -30,
-  },
-  stationNameHorizontalContainer: {
-    position: isTablet ? 'absolute' : 'relative',
-    bottom: 0,
-    justifyContent: 'flex-start',
-  },
-  stationNameHorizontalWrapper: {
-    bottom: isTablet ? 32 : 24,
-  },
-  stationNameHorizontalText: {
-    position: 'absolute',
-    transform: [{ rotate: '-55deg' }],
-    fontSize: RFValue(16),
-    fontWeight: 'bold',
-    bottom: isTablet ? BAR_HEIGHT + 15 : BAR_HEIGHT + 35,
-    left: isTablet ? -BAR_HEIGHT / 2 : -BAR_HEIGHT,
-    width: isTablet ? 200 : screenHeight / 2,
-  },
-  stationNameHorizontalTextExtra: {
-    fontSize: RFValue(10),
-    lineHeight: Platform.select({ ios: undefined, android: RFValue(11) }),
     fontWeight: 'bold',
   },
   grayColor: {
@@ -167,11 +142,10 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: 32,
+    bottom: isTablet ? screenHeight / 2.5 + 32 : 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
-    marginTop: isTablet ? -6 : -4,
   },
   chevronArea: {
     width: isTablet ? 48 : 16,
@@ -186,16 +160,12 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-end',
-    bottom: 24,
   },
   stationNumber: {
-    position: 'absolute',
-    bottom: isTablet ? 0 : barBottom + 32,
-    width: isTablet ? 60 : 45,
-    marginLeft: -5,
+    width: screenWidth / 9,
     fontSize: RFValue(12),
     fontWeight: 'bold',
-    textAlign: 'center',
+    marginLeft: -5,
   },
   marksContainer: { top: 38, position: 'absolute' },
 });
@@ -204,6 +174,7 @@ interface StationNameProps {
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
+  hasNumbering?: boolean;
 }
 
 interface StationNameCellProps {
@@ -221,58 +192,60 @@ const StationName: React.FC<StationNameProps> = ({
   en,
   horizontal,
   passed,
+  hasNumbering,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
 
+  const nameEnExtraStyle = useMemo(() => {
+    if (!isTablet) {
+      return {
+        width: heightScale(320),
+        marginBottom: 90,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: hasNumbering ? 110 : 100,
+    };
+  }, [hasNumbering]);
+
   if (en) {
     return (
-      <View style={styles.stationNameHorizontalContainer}>
-        <View style={styles.stationNameHorizontalWrapper}>
-          <Typography
-            style={[
-              styles.stationNameHorizontalText,
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {stationNameR}
-            {'\n'}
-            <Typography
-              style={[
-                styles.stationNameHorizontalTextExtra,
-                passed ? styles.grayColor : null,
-              ]}
-            >
-              {station.nameChinese}
-            </Typography>
-          </Typography>
-        </View>
-      </View>
+      <Typography
+        style={[
+          styles.stationNameHorizontal,
+          nameEnExtraStyle,
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {stationNameR}
+        {'\n'}
+        <Typography
+          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
+        >
+          {station.nameChinese}
+        </Typography>
+      </Typography>
     );
   }
 
   if (horizontal) {
     return (
-      <View style={styles.stationNameHorizontalContainer}>
-        <View style={styles.stationNameHorizontalWrapper}>
-          <Typography
-            style={[
-              styles.stationNameHorizontalText,
-              passed ? styles.grayColor : null,
-            ]}
-          >
-            {station.name}
-            {'\n'}
-            <Typography
-              style={[
-                styles.stationNameHorizontalTextExtra,
-                passed ? styles.grayColor : null,
-              ]}
-            >
-              {station.nameKorean}
-            </Typography>
-          </Typography>
-        </View>
-      </View>
+      <Typography
+        style={[
+          styles.stationNameHorizontal,
+          nameEnExtraStyle,
+          passed ? styles.grayColor : null,
+        ]}
+      >
+        {station.name}
+        {'\n'}
+        <Typography
+          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
+        >
+          {station.nameKorean}
+        </Typography>
+      </Typography>
     );
   }
 
@@ -438,19 +411,24 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View
-        key={station.name}
-        style={{
-          ...styles.stationNameContainer,
-          paddingBottom: isTablet ? 0 : numberingObj ? 64 : 48,
-        }}
-      >
-        <StationName
-          station={station}
-          en={isEn}
-          horizontal={includesLongStationName}
-          passed={getIsPass(station) || shouldGrayscale}
-        />
+      <View key={station.id} style={styles.stationNameContainer}>
+        <View
+          style={
+            isEn || includesLongStationName
+              ? {
+                  transform: [{ rotate: '-55deg' }],
+                }
+              : {}
+          }
+        >
+          <StationName
+            station={station}
+            en={isEn}
+            horizontal={includesLongStationName}
+            passed={getIsPass(station) || shouldGrayscale}
+            hasNumbering={!!numberingObj}
+          />
+        </View>
         <Typography
           style={[
             styles.stationNumber,
@@ -615,6 +593,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
     </View>
   );
 };
+
 const LineBoardToei: React.FC<Props> = ({
   stations,
   hasTerminus,
@@ -642,6 +621,11 @@ const LineBoardToei: React.FC<Props> = ({
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
+      const isLast =
+        [...stations, ...Array.from({ length: 8 - stations.length })].length -
+          1 ===
+        i;
+
       if (!s) {
         return (
           <EmptyStationNameCell
@@ -649,12 +633,7 @@ const LineBoardToei: React.FC<Props> = ({
               lineColors[lineColors.length - 1] || line?.color || '#fff'
             }
             key={i}
-            isLast={
-              [...stations, ...Array.from({ length: 8 - stations.length })]
-                .length -
-                1 ===
-              i
-            }
+            isLast={isLast}
             hasTerminus={hasTerminus}
           />
         );
@@ -665,7 +644,7 @@ const LineBoardToei: React.FC<Props> = ({
       }
 
       return (
-        <React.Fragment key={s.groupId}>
+        <React.Fragment key={s.id}>
           <StationNameCell
             station={s}
             stations={stations}
@@ -681,16 +660,18 @@ const LineBoardToei: React.FC<Props> = ({
     [chevronColor, hasTerminus, line, lineColors, stations]
   );
 
+  const stationsWithEmpty = useMemo(
+    () =>
+      [
+        ...stations,
+        ...Array.from({ length: 8 - stations.length }),
+      ] as Station[],
+    [stations]
+  );
+
   return (
     <View style={styles.root}>
-      <View style={styles.stationNameWrapper}>
-        {(
-          [
-            ...stations,
-            ...Array.from({ length: 8 - stations.length }),
-          ] as Station[]
-        ).map(stationNameCellForMap)}
-      </View>
+      {stationsWithEmpty.map(stationNameCellForMap)}
     </View>
   );
 };
