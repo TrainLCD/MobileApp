@@ -54,14 +54,11 @@ const barTerminalBottom = ((): number => {
 })();
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    marginLeft: isTablet ? 48 : 32,
-  },
   root: {
     flex: 1,
     height: screenHeight,
     bottom: isTablet ? screenHeight / 2.5 : undefined,
+    marginLeft: isTablet ? 48 : 32,
   },
   stoppingChevron: {
     position: 'absolute',
@@ -121,10 +118,7 @@ const styles = StyleSheet.create({
   },
   stationNameEn: {
     fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
-    marginLeft: -30,
-    paddingBottom: 0,
   },
   verticalStationName: {
     marginBottom: 0,
@@ -166,49 +160,40 @@ const styles = StyleSheet.create({
   },
 });
 
-const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
-  if (!isTablet) {
-    return {
-      width: heightScale(300),
-      marginBottom: 58,
-    };
-  }
-  if (isLast) {
-    return {
-      width: 200,
-      marginBottom: 70,
-    };
-  }
-  return {
-    width: 250,
-    marginBottom: 84,
-  };
-};
 interface StationNameProps {
-  stations: Station[];
   station: Station;
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
-  index: number;
 }
 
 const StationName: React.FC<StationNameProps> = ({
-  stations,
   station,
   en,
   horizontal,
   passed,
-  index,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station);
+  const stationNameR = useMemo(() => getStationNameR(station), [station]);
+
+  const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
+    if (!isTablet) {
+      return {
+        width: heightScale(300),
+        marginBottom: 90,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: 120,
+    };
+  }, []);
 
   if (en) {
     return (
       <Typography
         style={[
           styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
+          stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -221,7 +206,7 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
+          stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -292,15 +277,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [arrived, numberingObj, stationInLoop]
   );
   return (
-    <View key={stationInLoop.name} style={styles.stationNameContainer}>
-      <StationName
-        stations={stations}
-        station={stationInLoop}
-        en={isEn}
-        horizontal={includesLongStationName}
-        passed={isPass}
-        index={loopIndex}
-      />
+    <View key={stationInLoop.id} style={styles.stationNameContainer}>
+      <View
+        style={
+          isEn || includesLongStationName
+            ? {
+                transform: [{ rotate: '-55deg' }],
+              }
+            : {}
+        }
+      >
+        <StationName
+          station={stationInLoop}
+          en={isEn}
+          horizontal={includesLongStationName}
+          passed={isPass}
+        />
+      </View>
       <View style={styles.numberingIconContainer}>
         {numberingObj && isTablet && hasNumberedStation ? (
           <NumberingIcon
@@ -349,7 +342,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     (s: Station, i: number): JSX.Element => {
       return (
         <StationNameCell
-          key={s.groupId}
+          key={s.id}
           station={s}
           stations={stations}
           arrived={!isPassing}
@@ -391,111 +384,108 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   }
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.root}>
-        {[...lineColors, ...emptyArray].map((lc, i) => (
-          <React.Fragment key={`${lc}${i.toString()}`}>
-            <View
-              key={`${lc}${i.toString()}`}
-              style={{
-                ...styles.bar,
-                left: barWidth * i,
-                backgroundColor: (() => {
-                  if (i <= currentStationIndex) {
-                    if (!arrived) {
-                      return '#888';
-                    }
-                    if (i === currentStationIndex) {
-                      return '#dc143c';
-                    }
+    <View style={styles.root}>
+      {[...lineColors, ...emptyArray].map((lc, i) => (
+        <React.Fragment key={`${lc}${i.toString()}`}>
+          <View
+            key={`${lc}${i.toString()}`}
+            style={{
+              ...styles.bar,
+              left: barWidth * i,
+              backgroundColor: (() => {
+                if (i <= currentStationIndex) {
+                  if (!arrived) {
                     return '#888';
                   }
+                  if (i === currentStationIndex) {
+                    return '#dc143c';
+                  }
+                  return '#888';
+                }
 
-                  return lc ?? '#888';
-                })(),
-              }}
-            />
-            <View
-              style={{
-                ...styles.bar,
-                left: barWidth * i,
-                backgroundColor: (() => {
-                  if (i <= currentStationIndex) {
-                    if (!arrived) {
-                      return '#888';
-                    }
-                    if (i === currentStationIndex) {
-                      return '#dc143c';
-                    }
+                return lc ?? '#888';
+              })(),
+            }}
+          />
+          <View
+            style={{
+              ...styles.bar,
+              left: barWidth * i,
+              backgroundColor: (() => {
+                if (i <= currentStationIndex) {
+                  if (!arrived) {
                     return '#888';
                   }
+                  if (i === currentStationIndex) {
+                    return '#dc143c';
+                  }
+                  return '#888';
+                }
 
-                  return lc ?? '#888';
-                })(),
+                return lc ?? '#888';
+              })(),
+            }}
+          />
+          {getIsPass(stations[i]) ? (
+            <View
+              style={{
+                ...styles.barDot,
+                left: getLeft(i),
+                bottom: getBottom(i),
+                width: i <= currentStationIndex ? 16 : 32,
+                height: i <= currentStationIndex ? 16 : 32,
+              }}
+            >
+              <PassChevronTY />
+            </View>
+          ) : (
+            <View
+              style={{
+                ...styles.barDot,
+                backgroundColor: stations.length <= i ? 'transparent' : 'white',
+                left: getLeft(i),
+                bottom: getBottom(i),
+                width: i <= currentStationIndex ? 16 : 32,
+                height: i <= currentStationIndex ? 16 : 32,
               }}
             />
-            {getIsPass(stations[i]) ? (
-              <View
-                style={{
-                  ...styles.barDot,
-                  left: getLeft(i),
-                  bottom: getBottom(i),
-                  width: i <= currentStationIndex ? 16 : 32,
-                  height: i <= currentStationIndex ? 16 : 32,
-                }}
-              >
-                <PassChevronTY />
-              </View>
-            ) : (
-              <View
-                style={{
-                  ...styles.barDot,
-                  backgroundColor:
-                    stations.length <= i ? 'transparent' : 'white',
-                  left: getLeft(i),
-                  bottom: getBottom(i),
-                  width: i <= currentStationIndex ? 16 : 32,
-                  height: i <= currentStationIndex ? 16 : 32,
-                }}
-              />
-            )}
-          </React.Fragment>
-        ))}
+          )}
+        </React.Fragment>
+      ))}
 
-        {arrived ? (
-          <View
-            style={[
-              styles.stoppingChevron,
-              { left: barWidth * (currentStationIndex + 1) },
-            ]}
-          >
-            <JOCurrentArrowEdge
-              width={isTablet ? 24 : 15}
-              height={isTablet ? 64 : 40}
-            />
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.chevron,
-              { left: barWidth * (currentStationIndex + 1) - 32 },
-            ]}
-          >
-            <ChevronJO width={isTablet ? 60 : 50} height={isTablet ? 65 : 40} />
-          </View>
-        )}
-
+      {arrived ? (
         <View
-          style={{
-            ...styles.barTerminal,
-            borderBottomColor: line.color
-              ? lineColors[lineColors.length - 1] || line.color
-              : '#000',
-          }}
-        />
-        <View style={styles.stationNameWrapper}>
-          {stations.map(stationNameCellForMap)}
+          style={[
+            styles.stoppingChevron,
+            { left: barWidth * (currentStationIndex + 1) },
+          ]}
+        >
+          <JOCurrentArrowEdge
+            width={isTablet ? 24 : 15}
+            height={isTablet ? 64 : 40}
+          />
         </View>
+      ) : (
+        <View
+          style={[
+            styles.chevron,
+            { left: barWidth * (currentStationIndex + 1) - 32 },
+          ]}
+        >
+          <ChevronJO width={isTablet ? 60 : 50} height={isTablet ? 65 : 40} />
+        </View>
+      )}
+
+      <View
+        style={{
+          ...styles.barTerminal,
+          borderBottomColor: line.color
+            ? lineColors[lineColors.length - 1] || line.color
+            : '#000',
+        }}
+      />
+      <View style={styles.stationNameWrapper}>
+        {stations.map(stationNameCellForMap)}
       </View>
     </View>
   );
