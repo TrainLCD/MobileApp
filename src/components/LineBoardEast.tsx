@@ -564,13 +564,10 @@ const LineBoardEast: React.FC<Props> = ({
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element | null => {
-      const isLast = useMemo(
-        () =>
-          [...stations, ...Array.from({ length: 8 - stations.length })].length -
-            1 ===
-          i,
-        [stations, i]
-      );
+      const isLast =
+        [...stations, ...Array.from({ length: 8 - stations.length })].length -
+          1 ===
+        i;
 
       if (!s) {
         return (
