@@ -111,12 +111,10 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? 6 : 84,
   },
   stationName: {
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: isTablet ? 6 : 3,
     marginBottom: Platform.select({ android: -3, ios: 0 }),
-    includeFontPadding: false,
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
