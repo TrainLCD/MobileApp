@@ -116,7 +116,6 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? 0 : 64,
   },
   stationName: {
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
   },
@@ -162,10 +161,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   stationNumber: {
-    width: screenWidth / 9,
+    width: isTablet ? 60 : 45,
     fontSize: RFValue(12),
     fontWeight: 'bold',
     marginLeft: -5,
+    textAlign: 'center',
   },
   marksContainer: { top: 38, position: 'absolute' },
 });
