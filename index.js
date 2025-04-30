@@ -38,17 +38,11 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
 
     const latestLocation = data.locations[data.locations.length - 1];
-    const bestAccuracyLocation = data.locations.reduce((best, cur) => {
-      if (best.coords.accuracy > cur.coords.accuracy) {
-        return cur;
-      }
-      return best;
-    }, latestLocation);
-    if (bestAccuracyLocation) {
-      if (bestAccuracyLocation.coords.accuracy > MAX_PERMIT_ACCURACY) {
+    if (latestLocation) {
+      if (latestLocation.coords.accuracy > MAX_PERMIT_ACCURACY) {
         return;
       }
-      setLocation(bestAccuracyLocation);
+      setLocation(latestLocation);
     }
   });
 }
