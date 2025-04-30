@@ -261,7 +261,7 @@ const SelectBoundScreen: React.FC = () => {
       return (
         <Button
           style={styles.button}
-          key={boundStations[0]?.groupId}
+          key={boundStations[0]?.id}
           onPress={boundSelectOnPress}
         >
           {directionText}
