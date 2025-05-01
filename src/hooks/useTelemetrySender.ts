@@ -30,11 +30,7 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
   const speed = useLocationStore((state) => state?.coords.speed);
 
   useEffect(() => {
-    if (
-      !__DEV__ ||
-      !ENABLE_EXPERIMENTAL_TELEMETRY ||
-      ENABLE_EXPERIMENTAL_TELEMETRY === 'false'
-    ) {
+    if (!__DEV__ || ENABLE_EXPERIMENTAL_TELEMETRY !== 'true') {
       return;
     }
 
