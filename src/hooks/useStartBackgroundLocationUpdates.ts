@@ -5,34 +5,43 @@ import { translate } from '../translation';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { setLocation } from './useLocationStore';
+import { AppState } from 'react-native';
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
   const { autoModeEnabled } = useApplicationFlagStore();
 
   useEffect(() => {
-    (async () => {
-      if (autoModeEnabled || !bgPermGranted) {
-        return;
-      }
-      try {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          ...LOCATION_TASK_OPTIONS,
-          // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
-          // OtherNavigationは必須
-          activityType: Location.ActivityType.OtherNavigation,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    })();
+    let subscription: Location.LocationSubscription | null = null;
+
+    if (autoModeEnabled || !bgPermGranted) {
+      return;
+    }
+    try {
+      subscription = AppState.addEventListener(
+        'change',
+        async (nextAppState) => {
+          if (nextAppState === 'active') {
+            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+              ...LOCATION_TASK_OPTIONS,
+              // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+              // OtherNavigationは必須
+              activityType: Location.ActivityType.OtherNavigation,
+              foregroundService: {
+                notificationTitle: translate('bgAlertTitle'),
+                notificationBody: translate('bgAlertContent'),
+                killServiceOnDestroy: true,
+              },
+            });
+          }
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
 
     return () => {
+      subscription?.remove();
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
   }, [autoModeEnabled, bgPermGranted]);
