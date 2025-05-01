@@ -57,10 +57,6 @@ describe('useTelemetrySender', () => {
   it('sends telemetry when all conditions are met', async () => {
     renderHook(() => useTelemetrySender());
 
-    await act(async () => {
-      await new Promise((res) => setTimeout(res, 0));
-    });
-
     await waitFor(() => {
       const wsInstance = mockWebSocketInstance;
 
