@@ -1,11 +1,11 @@
 import * as Location from 'expo-location';
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { setLocation } from './useLocationStore';
-import { AppState } from 'react-native';
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
