@@ -12,13 +12,11 @@ export const useStartBackgroundLocationUpdates = () => {
   const { autoModeEnabled } = useApplicationFlagStore();
 
   useEffect(() => {
-    let subscription: Location.LocationSubscription | null = null;
-
     if (autoModeEnabled || !bgPermGranted) {
       return;
     }
     try {
-      subscription = AppState.addEventListener(
+      const subscription = AppState.addEventListener(
         'change',
         async (nextAppState) => {
           if (nextAppState === 'active') {
