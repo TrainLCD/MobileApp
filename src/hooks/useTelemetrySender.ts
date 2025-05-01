@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { Accelerometer, type AccelerometerMeasurement } from 'expo-sensors';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
 import { z } from 'zod';
 import { useLocationStore } from './useLocationStore';
@@ -23,11 +23,32 @@ type TelemetryPayload = z.infer<typeof TelemetryPayload>;
 
 export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
   const socketRef = useRef<WebSocket | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
   const speed = useLocationStore((state) => state?.coords.speed);
+
+  useEffect(() => {
+    if (
+      !__DEV__ ||
+      !ENABLE_EXPERIMENTAL_TELEMETRY ||
+      ENABLE_EXPERIMENTAL_TELEMETRY === 'false'
+    ) {
+      return;
+    }
+
+    const checkPermission = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setPermissionGranted(status === 'granted');
+      if (status !== 'granted') {
+        console.warn('Location permission not granted');
+      }
+    };
+
+    checkPermission();
+  }, []);
 
   useEffect(() => {
     if (!__DEV__ || ENABLE_EXPERIMENTAL_TELEMETRY !== 'true') {
@@ -56,8 +77,7 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
 
   useEffect(() => {
     const start = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (!permissionGranted) {
         console.warn('Location permission not granted');
         return;
       }
@@ -93,5 +113,5 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
     };
 
     start();
-  }, [accuracy, latitude, longitude, speed]);
+  }, [accuracy, latitude, longitude, speed, permissionGranted]);
 };
