@@ -20,10 +20,6 @@ jest.mock('../../src/hooks/useLocationStore', () => ({
   ),
 }));
 
-jest.mock('../../src/utils/isDevApp', () => ({
-  isDevApp: true,
-}));
-
 jest.mock('react-native-dotenv', () => ({
   ENABLE_EXPERIMENTAL_TELEMETRY: 'true',
 }));

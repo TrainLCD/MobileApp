@@ -3,7 +3,6 @@ import { Accelerometer, type AccelerometerMeasurement } from 'expo-sensors';
 import { useEffect, useRef } from 'react';
 import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
 import { z } from 'zod';
-import { isDevApp } from '../utils/isDevApp';
 import { useLocationStore } from './useLocationStore';
 
 const TelemetryPayload = z.object({
@@ -32,7 +31,7 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
 
   useEffect(() => {
     if (
-      !isDevApp ||
+      !__DEV__ ||
       !ENABLE_EXPERIMENTAL_TELEMETRY ||
       ENABLE_EXPERIMENTAL_TELEMETRY === 'false'
     ) {
