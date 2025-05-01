@@ -1,6 +1,6 @@
-import { getIsHoliday } from '../../src/utils/isHoliday'
+import { getIsHoliday } from '../../src/utils/isHoliday';
 
-jest.useFakeTimers()
+jest.useFakeTimers();
 
 describe('Should be weekend', () => {
   it.each([
@@ -9,10 +9,10 @@ describe('Should be weekend', () => {
     // 日曜日
     new Date(2024, 0, 7),
   ])('%p must be weekend', (date) => {
-    jest.setSystemTime(date)
-    expect(getIsHoliday()).toBeTruthy()
-  })
-})
+    jest.setSystemTime(date);
+    expect(getIsHoliday()).toBeTruthy();
+  });
+});
 
 describe('Should **not** be weekend', () => {
   it.each([
@@ -21,10 +21,10 @@ describe('Should **not** be weekend', () => {
     // 火曜日
     new Date(2024, 0, 16, 0, 0, 0, 0),
   ])('%p must be weekday', (date) => {
-    jest.setSystemTime(date)
-    expect(getIsHoliday()).toBeFalsy()
-  })
-})
+    jest.setSystemTime(date);
+    expect(getIsHoliday()).toBeFalsy();
+  });
+});
 
 describe('Should be national holiday', () => {
   it.each([
@@ -35,7 +35,7 @@ describe('Should be national holiday', () => {
     // 天皇誕生日(2024年2月12日 金曜日)
     new Date(2024, 1, 23),
   ])('%p must be national holiday', (date) => {
-    jest.setSystemTime(date)
-    expect(getIsHoliday()).toBeTruthy()
-  })
-})
+    jest.setSystemTime(date);
+    expect(getIsHoliday()).toBeTruthy();
+  });
+});
