@@ -58,7 +58,7 @@ describe('useTelemetrySender', () => {
     renderHook(() => useTelemetrySender());
 
     await act(async () => {
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((res) => setTimeout(res, 0));
     });
 
     await waitFor(() => {
