@@ -1,6 +1,7 @@
 import * as Application from 'expo-application';
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
+import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
 import { useDistanceToNextStation } from '../hooks/useDistanceToNextStation';
 import { useLocationStore } from '../hooks/useLocationStore';
 import { useThreshold } from '../hooks/useThreshold';
@@ -78,6 +79,9 @@ const DevOverlay: React.FC = () => {
       </Typography>
       <Typography style={styles.text}>
         Arrived: {arrivedThreshold.toLocaleString()}m
+      </Typography>
+      <Typography style={styles.text}>
+        Telemetry: {ENABLE_EXPERIMENTAL_TELEMETRY ?? 'false'}
       </Typography>
     </View>
   );

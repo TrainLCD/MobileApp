@@ -1219,6 +1219,8 @@ PODS:
     - ExpoModulesCore
   - ExpoScreenCapture (7.0.0):
     - ExpoModulesCore
+  - ExpoSensors (14.0.2):
+    - ExpoModulesCore
   - ExpoSplashScreen (0.29.13):
     - ExpoModulesCore
   - ExpoWebBrowser (14.0.1):
@@ -3424,6 +3426,7 @@ DEPENDENCIES:
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoNetwork (from `../node_modules/expo-network/ios`)
   - ExpoScreenCapture (from `../node_modules/expo-screen-capture/ios`)
+  - ExpoSensors (from `../node_modules/expo-sensors/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
@@ -3591,6 +3594,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-network/ios"
   ExpoScreenCapture:
     :path: "../node_modules/expo-screen-capture/ios"
+  ExpoSensors:
+    :path: "../node_modules/expo-sensors/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   ExpoWebBrowser:
@@ -3788,6 +3793,7 @@ SPEC CHECKSUMS:
   ExpoModulesCore: 5cc9ddb17bc297cda7fb5a07456fe3dbf8f8391a
   ExpoNetwork: 16083eb5ed34ce1c8e916fb6292fdb6e9daac0ca
   ExpoScreenCapture: 4695c6c999a497327f9935133fd0e61547d7c21c
+  ExpoSensors: 02a52ddab1e3a8a1438258c3d87d1ee5f721743a
   ExpoSplashScreen: 8fe6e54b8b734a997da3c21d84b3ef61faa1bbf6
   ExpoWebBrowser: b658ba8a9161f1b54afb279591cfce2cb73330fa
   EXTaskManager: 5a684cca9e6c84ab339aa221d4fef5d2e6bbc159

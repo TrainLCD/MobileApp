@@ -37,6 +37,7 @@ import { useResetMainState } from '../hooks/useResetMainState';
 import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
 import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates';
 import { useTTS } from '../hooks/useTTS';
+import { useTelemetrySender } from '../hooks/useTelemetrySender';
 import { useThemeStore } from '../hooks/useThemeStore';
 import useTransferLines from '../hooks/useTransferLines';
 import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
@@ -83,6 +84,8 @@ const MainScreen: React.FC = () => {
 
   useAutoMode(autoModeEnabled);
   // useSimulationMode(autoModeEnabled);
+
+  useTelemetrySender();
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
