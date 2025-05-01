@@ -38,9 +38,6 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
     const checkPermission = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setPermissionGranted(status === 'granted');
-      if (status !== 'granted') {
-        console.warn('Location permission not granted');
-      }
     };
 
     checkPermission();
@@ -74,7 +71,6 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
   useEffect(() => {
     const start = async () => {
       if (!permissionGranted) {
-        console.warn('Location permission not granted');
         return;
       }
 
