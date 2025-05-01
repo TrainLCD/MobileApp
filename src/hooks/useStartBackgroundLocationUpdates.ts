@@ -33,6 +33,7 @@ export const useStartBackgroundLocationUpdates = () => {
                 killServiceOnDestroy: true,
               },
             });
+            subscription?.remove();
           }
         }
       );
@@ -41,7 +42,6 @@ export const useStartBackgroundLocationUpdates = () => {
     }
 
     return () => {
-      subscription?.remove();
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     };
   }, [autoModeEnabled, bgPermGranted]);
