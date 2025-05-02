@@ -109,8 +109,6 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? undefined : 96,
   },
   stationName: {
-    width: RFValue(18),
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: isTablet ? 12 : 4,
@@ -150,7 +148,7 @@ const styles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
     bottom: -155,
-    left: -32,
+    left: isTablet ? -16 : -32,
     transform: [{ scale: 0.3 }],
   },
   padLineMarksContainer: {
