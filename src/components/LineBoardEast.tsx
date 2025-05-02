@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
   stationName: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginLeft: isTablet ? 6 : 3,
-    marginBottom: Platform.select({ android: -3, ios: 0 }),
+    marginLeft: 5,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),

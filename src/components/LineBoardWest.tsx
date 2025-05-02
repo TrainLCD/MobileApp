@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
   },
   stationName: {
     width: isTablet ? 48 : 32,
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginBottom: Platform.select({ android: -6, ios: 0 }),
+    marginLeft: 5,
     bottom: isTablet ? 32 : 0,
   },
   stationNameEn: {

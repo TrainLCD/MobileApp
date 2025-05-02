@@ -109,8 +109,6 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? undefined : 96,
   },
   stationName: {
-    width: RFValue(18),
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: isTablet ? 12 : 4,
