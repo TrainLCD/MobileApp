@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
     bottom: -155,
-    left: -32,
+    left: isTablet ? -16 : -32,
     transform: [{ scale: 0.3 }],
   },
   padLineMarksContainer: {
