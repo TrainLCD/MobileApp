@@ -7,15 +7,6 @@ jest.mock('expo-location', () => ({
   ),
 }));
 
-jest.mock('expo-sensors', () => ({
-  Accelerometer: {
-    addListener: jest.fn((cb) => {
-      setTimeout(() => cb({ x: 1, y: 2, z: 3 }), 0);
-      return { remove: jest.fn() };
-    }),
-  },
-}));
-
 jest.mock('../../src/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn((selector) =>
     selector({
@@ -70,7 +61,6 @@ describe('useTelemetrySender', () => {
           accuracy: 5,
           speed: 15,
         },
-        accel: { x: 1, y: 2, z: 3 },
       });
       expect(sent.timestamp).toBeGreaterThan(0);
     });

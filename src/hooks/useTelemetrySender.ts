@@ -1,5 +1,4 @@
 import * as Location from 'expo-location';
-import { Accelerometer, type AccelerometerMeasurement } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
 import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
 import { z } from 'zod';
@@ -11,11 +10,6 @@ const TelemetryPayload = z.object({
     longitude: z.number(),
     accuracy: z.number().nullable(),
     speed: z.number(),
-  }),
-  accel: z.object({
-    x: z.number(),
-    y: z.number(),
-    z: z.number(),
   }),
   timestamp: z.number(),
 });
@@ -74,15 +68,6 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
         return;
       }
 
-      const latestAccel = await new Promise<AccelerometerMeasurement>(
-        (resolve) => {
-          const sub = Accelerometer.addListener((data) => {
-            resolve(data);
-            sub.remove();
-          });
-        }
-      );
-
       const payload = TelemetryPayload.safeParse({
         coords: {
           latitude: latitude ?? 0,
@@ -90,7 +75,6 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
           accuracy: accuracy ?? null,
           speed: speed ?? -1,
         },
-        accel: latestAccel,
         timestamp: Date.now(),
       });
 
