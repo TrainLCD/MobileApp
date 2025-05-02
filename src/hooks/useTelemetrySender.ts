@@ -1,8 +1,15 @@
+import * as Device from 'expo-device';
 import * as Location from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
 import { z } from 'zod';
 import { useLocationStore } from './useLocationStore';
+import { useRecoilValue } from 'recoil';
+import stationState from '../store/atoms/station';
+import useIsPassing from './useIsPassing';
+
+const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
+type MovingState = z.infer<typeof MovingState>;
 
 const TelemetryPayload = z.object({
   coords: z.object({
@@ -11,6 +18,8 @@ const TelemetryPayload = z.object({
     accuracy: z.number().nullable(),
     speed: z.number(),
   }),
+  device: z.string(),
+  state: MovingState,
   timestamp: z.number(),
 });
 type TelemetryPayload = z.infer<typeof TelemetryPayload>;
@@ -23,6 +32,24 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
   const speed = useLocationStore((state) => state?.coords.speed);
+
+  const { arrived: arrivedFromState, approaching: approachingFromState } =
+    useRecoilValue(stationState);
+
+  const passing = useIsPassing();
+
+  const state = useMemo<MovingState>(() => {
+    if (passing) {
+      return 'passing';
+    }
+    if (arrivedFromState) {
+      return 'arrived';
+    }
+    if (approachingFromState) {
+      return 'approaching';
+    }
+    return 'moving';
+  }, [arrivedFromState, approachingFromState, passing]);
 
   useEffect(() => {
     if (!__DEV__ || ENABLE_EXPERIMENTAL_TELEMETRY !== 'true') {
@@ -75,6 +102,8 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
           accuracy: accuracy ?? null,
           speed: speed ?? -1,
         },
+        device: Device.modelName ?? 'unknown',
+        state,
         timestamp: Date.now(),
       });
 
@@ -89,5 +118,5 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
     };
 
     start();
-  }, [accuracy, latitude, longitude, speed, permissionGranted]);
+  }, [accuracy, latitude, longitude, speed, permissionGranted, state]);
 };
