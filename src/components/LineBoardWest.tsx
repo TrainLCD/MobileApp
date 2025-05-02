@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginBottom: Platform.select({ android: -6, ios: 0 }),
+    bottom: isTablet ? 32 : 0,
   },
   stationNameEn: {
     fontSize: RFValue(18),
@@ -118,12 +119,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 28,
     position: 'absolute',
     zIndex: 9999,
-    bottom: (() => {
-      if (isTablet) {
-        return -70;
-      }
-      return 50;
-    })(),
+    bottom: isTablet ? -70 : 50,
     overflow: 'visible',
     borderRadius: 24,
   },
