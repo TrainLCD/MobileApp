@@ -2,11 +2,11 @@ import * as Device from 'expo-device';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
-import { z } from 'zod';
-import { useLocationStore } from './useLocationStore';
 import { useRecoilValue } from 'recoil';
+import { z } from 'zod';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
+import { useLocationStore } from './useLocationStore';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
