@@ -15,11 +15,11 @@ export const useStartBackgroundLocationUpdates = () => {
     if (autoModeEnabled || !bgPermGranted) {
       return;
     }
-    try {
-      const subscription = AppState.addEventListener(
-        'change',
-        async (nextAppState) => {
-          if (nextAppState === 'active') {
+    const subscription = AppState.addEventListener(
+      'change',
+      async (nextAppState) => {
+        if (nextAppState === 'active') {
+          try {
             await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
               ...LOCATION_TASK_OPTIONS,
               // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
@@ -32,12 +32,12 @@ export const useStartBackgroundLocationUpdates = () => {
               },
             });
             subscription?.remove();
+          } catch (err) {
+            console.error(err);
           }
         }
-      );
-    } catch (err) {
-      console.error(err);
-    }
+      }
+    );
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
