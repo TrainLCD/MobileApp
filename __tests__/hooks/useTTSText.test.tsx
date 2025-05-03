@@ -1,21 +1,21 @@
 import { renderHook } from '@testing-library/react-native';
 import React, { useEffect } from 'react';
 import { RecoilRoot, useSetRecoilState } from 'recoil';
+import { setupMockUseNumbering } from '~/hooks/useNumbering/__mocks__';
+import useTTSText from '~/hooks/useTTSText';
+import { useThemeStore } from '~/hooks/useThemeStore';
+import type { LineDirection } from '~/models/Bound';
+import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
+import type { AppTheme } from '~/models/Theme';
+import lineState from '~/store/atoms/line';
+import navigationState from '~/store/atoms/navigation';
+import stationState from '~/store/atoms/station';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station';
 import { setupMockUseNextStation } from '../../__mocks__/useNextStation';
 import { StationNumber } from '../../gen/proto/stationapi_pb';
-import { setupMockUseNumbering } from '../../src/hooks/useNumbering/__mocks__';
-import useTTSText from '../../src/hooks/useTTSText';
-import { useThemeStore } from '../../src/hooks/useThemeStore';
-import type { LineDirection } from '../../src/models/Bound';
-import type { HeaderStoppingState } from '../../src/models/HeaderTransitionState';
-import type { AppTheme } from '../../src/models/Theme';
-import lineState from '../../src/store/atoms/line';
-import navigationState from '../../src/store/atoms/navigation';
-import stationState from '../../src/store/atoms/station';
 
-jest.mock('../../src/translation', () => ({ isJapanese: true }));
+jest.mock('~/translation', () => ({ isJapanese: true }));
 
 const useTTSTextWithRecoilAndNumbering = (
   theme: AppTheme,
