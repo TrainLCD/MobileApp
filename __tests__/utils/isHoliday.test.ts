@@ -1,4 +1,4 @@
-import { getIsHoliday } from '../../src/utils/isHoliday';
+import { getIsHoliday } from '~/utils/isHoliday';
 
 jest.useFakeTimers();
 

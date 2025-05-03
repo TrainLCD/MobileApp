@@ -1,4 +1,4 @@
-import { SSMLBuilder } from '../../src/utils/ssml';
+import { SSMLBuilder } from '~/utils/ssml';
 
 describe('utils/ssml.ts', () => {
   it('Should be wrapped by <speak>', () => {

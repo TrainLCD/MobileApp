@@ -4,7 +4,7 @@ import {
   generateStationGroupTestId,
   generateStationTestId,
   generateTrainTypeTestId,
-} from '../../src/utils/generateTestID';
+} from '~/utils/generateTestID';
 
 describe('utils/generateTestId.ts', () => {
   it('駅単体ID', () => {
