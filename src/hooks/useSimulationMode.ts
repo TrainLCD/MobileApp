@@ -172,6 +172,9 @@ export const useSimulationMode = (enabled: boolean): void => {
       if (i >= speeds.length) {
         childIndexRef.current = 0;
         segmentIndexRef.current += 1;
+        if (segmentIndexRef.current >= speedProfilesRef.current.length) {
+          segmentIndexRef.current = 0;
+        }
         return;
       }
 
