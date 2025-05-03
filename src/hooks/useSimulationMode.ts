@@ -161,7 +161,6 @@ export const useSimulationMode = (enabled: boolean): void => {
 
     const intervalId = setInterval(() => {
       const speeds = speedProfilesRef.current[segmentIndexRef.current] ?? [];
-      console.log('speeds.length', speeds.length);
 
       const i = childIndexRef.current;
       if (i >= speeds.length) {
