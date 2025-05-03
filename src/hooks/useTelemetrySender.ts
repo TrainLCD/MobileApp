@@ -2,10 +2,10 @@ import * as Device from 'expo-device';
 import { useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
 import { z } from 'zod';
+import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
-import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
