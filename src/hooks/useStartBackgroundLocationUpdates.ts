@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
@@ -11,26 +12,32 @@ export const useStartBackgroundLocationUpdates = () => {
   const { autoModeEnabled } = useApplicationFlagStore();
 
   useEffect(() => {
-    (async () => {
-      if (autoModeEnabled || !bgPermGranted) {
-        return;
+    if (autoModeEnabled || !bgPermGranted) {
+      return;
+    }
+    const subscription = AppState.addEventListener(
+      'change',
+      async (nextAppState) => {
+        if (nextAppState === 'active') {
+          try {
+            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+              ...LOCATION_TASK_OPTIONS,
+              // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+              // OtherNavigationは必須
+              activityType: Location.ActivityType.OtherNavigation,
+              foregroundService: {
+                notificationTitle: translate('bgAlertTitle'),
+                notificationBody: translate('bgAlertContent'),
+                killServiceOnDestroy: true,
+              },
+            });
+            subscription?.remove();
+          } catch (err) {
+            console.error(err);
+          }
+        }
       }
-      try {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          ...LOCATION_TASK_OPTIONS,
-          // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
-          // OtherNavigationは必須
-          activityType: Location.ActivityType.OtherNavigation,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
-          },
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    })();
+    );
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);

@@ -4,7 +4,10 @@ import { PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants';
 export const groupStations = (stations: Station[]): Station[] => {
   return stations
     .filter(
-      (sta, idx, arr) => arr.findIndex((s) => s.groupId === sta.groupId) === idx
+      (sta, idx, arr) =>
+        arr.findIndex(
+          (s) => s.groupId === sta.groupId && s.name === sta.name
+        ) === idx
     )
     .map((sta, idx, arr) => {
       // 駅名が同じだが都道府県は違う場合は都道府県名を付与する

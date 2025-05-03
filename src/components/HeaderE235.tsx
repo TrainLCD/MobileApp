@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
   stationNameContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    flex: 1,
     marginBottom: 8,
   },
 });

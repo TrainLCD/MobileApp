@@ -3,7 +3,10 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import type { Station } from '../../gen/proto/stationapi_pb';
-import { ARRIVED_MAXIMUM_SPEED } from '../constants/threshold';
+import {
+  ARRIVED_MAXIMUM_SPEED,
+  BAD_ACCURACY_THRESHOLD,
+} from '../constants/threshold';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -33,6 +36,7 @@ const useRefreshStation = (): void => {
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const speed = useLocationStore((state) => state?.coords.speed);
+  const accuracy = useLocationStore((state) => state?.coords.accuracy);
 
   const nextStation = useNextStation();
   const actualNextStation = useNextStation(false);
@@ -51,6 +55,18 @@ const useRefreshStation = (): void => {
     }
 
     if (speed && !getIsPass(nearestStation)) {
+      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が100m以上ある場合は走行速度を停車判定に使用しない
+      if (!accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)) {
+        return isPointWithinRadius(
+          { latitude, longitude },
+          {
+            latitude: nearestStation.latitude,
+            longitude: nearestStation.longitude,
+          },
+          arrivedThreshold
+        );
+      }
+
       const speedKMH = (speed * 3600) / 1000;
       return (
         isPointWithinRadius(
@@ -72,7 +88,7 @@ const useRefreshStation = (): void => {
       },
       arrivedThreshold
     );
-  }, [arrivedThreshold, latitude, longitude, nearestStation, speed]);
+  }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
     if (
