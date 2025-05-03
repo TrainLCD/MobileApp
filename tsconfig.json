@@ -8,7 +8,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {"~/*": ["./src/*"]},
   },
   "typeRoots": ["./src/@types"],
   "exclude": ["functions"],
