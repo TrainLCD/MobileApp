@@ -49,8 +49,13 @@ export const useSimulationMode = (enabled: boolean): void => {
     const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
       const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
 
-      const next = stationsWithoutPass[stationsWithoutPass.indexOf(cur) + 1];
+      const curIdx = stationsWithoutPass.indexOf(cur);
+      if (curIdx === -1) {
+        // 通過駅は速度プロファイル生成対象外
+        return [];
+      }
 
+      const next = stationsWithoutPass[curIdx + 1];
       if (!next) {
         return [];
       }
@@ -87,6 +92,7 @@ export const useSimulationMode = (enabled: boolean): void => {
       (s) => s.groupId === station?.groupId
     );
     speedProfilesRef.current = speedProfiles;
+    childIndexRef.current = 0;
   }, [currentLineType, stations, selectedDirection, station]);
 
   const step = useCallback(
