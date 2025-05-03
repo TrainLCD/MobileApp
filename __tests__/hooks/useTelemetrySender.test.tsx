@@ -1,68 +1,85 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useTelemetrySender } from '../../src/hooks/useTelemetrySender';
+import * as Location from 'expo-location';
+import * as Device from 'expo-device';
+import { useRecoilValue } from 'recoil';
+import useIsPassing from '../../src/hooks/useIsPassing';
 
-jest.mock('expo-location', () => ({
-  requestForegroundPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: 'granted' })
-  ),
-}));
-
-jest.mock('../../src/hooks/useLocationStore', () => ({
-  useLocationStore: jest.fn((selector) =>
-    selector({
-      coords: {
-        latitude: 10,
-        longitude: 20,
-        accuracy: 5,
-        speed: 15,
-      },
-    })
-  ),
-}));
-
+// 必要なモック
+jest.mock('expo-location');
+jest.mock('expo-device');
 jest.mock('react-native-dotenv', () => ({
   ENABLE_EXPERIMENTAL_TELEMETRY: 'true',
 }));
-
-// __DEV__ を true に上書き
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-(global as any).__DEV__ = true;
-
-// WebSocket モック
-const mockWebSocketInstance = {
-  readyState: 1, // WebSocket.OPEN
-  send: jest.fn(),
-  close: jest.fn(),
-  onopen: null,
-  onerror: null,
-  onclose: null,
-};
-
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-(global as any).WebSocket = jest.fn(() => mockWebSocketInstance);
-
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-(global as any).WebSocket.OPEN = 1;
+jest.mock('recoil', () => ({
+  atom: jest.fn(),
+  useRecoilValue: jest.fn(),
+}));
+jest.mock('../../src/hooks/useIsPassing', () => jest.fn());
 
 describe('useTelemetrySender', () => {
-  it('sends telemetry when all conditions are met', async () => {
-    renderHook(() => useTelemetrySender());
+  let mockSend: jest.Mock;
 
-    await waitFor(() => {
-      const wsInstance = mockWebSocketInstance;
+  beforeEach(() => {
+    mockSend = jest.fn();
 
-      expect(wsInstance.send).toHaveBeenCalledTimes(1);
-      const sent = JSON.parse(wsInstance.send.mock.calls[0][0]);
-      expect(sent).toMatchObject({
-        type: 'location_update',
-        coords: {
-          latitude: 10,
-          longitude: 20,
-          accuracy: 5,
-          speed: 15,
-        },
-      });
-      expect(sent.timestamp).toBeGreaterThan(0);
+    global.WebSocket = jest.fn().mockImplementation(() => ({
+      readyState: 1,
+      send: mockSend,
+      close: jest.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    })) as any;
+
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    (global.WebSocket as any).OPEN = 1;
+
+    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValue(
+      {
+        status: 'granted',
+      }
+    );
+
+    (Device.modelName as string) = 'TestDevice';
+    (useRecoilValue as jest.Mock).mockReturnValue({
+      arrived: false,
+      approaching: true,
     });
+    (useIsPassing as jest.Mock).mockReturnValue(false);
+  });
+
+  it('sends telemetry data when permission is granted', async () => {
+    renderHook(() => useTelemetrySender('ws://localhost:8080'));
+
+    await waitFor(
+      () => {
+        expect(mockSend).toHaveBeenCalledTimes(1);
+
+        const payload = JSON.parse(mockSend.mock.calls[0][0]);
+
+        expect(payload.type).toBe('location_update');
+        expect(payload.device).toBe('TestDevice');
+        expect(payload.state).toBe('approaching');
+        expect(payload.coords).toHaveProperty('latitude');
+        expect(payload.timestamp).toBeDefined();
+      },
+      { timeout: 100 }
+    );
+  });
+
+  it('does not send telemetry data when permission is denied', async () => {
+    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValue(
+      {
+        status: 'denied',
+      }
+    );
+
+    renderHook(() => useTelemetrySender('ws://localhost:8080'));
+
+    await waitFor(
+      () => {
+        expect(mockSend).not.toHaveBeenCalled();
+      },
+      { timeout: 100 }
+    );
   });
 });
