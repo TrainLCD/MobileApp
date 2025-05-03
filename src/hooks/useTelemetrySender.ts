@@ -1,12 +1,11 @@
 import * as Device from 'expo-device';
-import * as Location from 'expo-location';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
+import { useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
 import { z } from 'zod';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
@@ -26,7 +25,6 @@ type TelemetryPayload = z.infer<typeof TelemetryPayload>;
 
 export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
   const socketRef = useRef<WebSocket | null>(null);
-  const [permissionGranted, setPermissionGranted] = useState(false);
 
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
@@ -52,20 +50,7 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
   }, [arrivedFromState, approachingFromState, passing]);
 
   useEffect(() => {
-    if (!__DEV__ || ENABLE_EXPERIMENTAL_TELEMETRY !== 'true') {
-      return;
-    }
-
-    const checkPermission = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setPermissionGranted(status === 'granted');
-    };
-
-    checkPermission();
-  }, []);
-
-  useEffect(() => {
-    if (!__DEV__ || ENABLE_EXPERIMENTAL_TELEMETRY !== 'true') {
+    if (!isTelemetryEnabled) {
       return;
     }
 
@@ -91,7 +76,7 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
 
   useEffect(() => {
     const start = async () => {
-      if (!permissionGranted) {
+      if (!isTelemetryEnabled) {
         return;
       }
 
@@ -118,5 +103,5 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
     };
 
     start();
-  }, [accuracy, latitude, longitude, speed, permissionGranted, state]);
+  }, [accuracy, latitude, longitude, speed, state]);
 };
