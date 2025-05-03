@@ -54,17 +54,21 @@ export const useSimulationMode = (enabled: boolean): void => {
         return [];
       }
 
-      const stationIndex = stations.findIndex(
-        (s) => s.groupId === cur?.groupId
+      const maybeRevsersedStations =
+        selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
+
+      const stationIndex = maybeRevsersedStations.findIndex(
+        (s) => s.groupId === cur.groupId
       );
-      const nextStationIndex = stations.findIndex(
-        (s) => s.groupId === next?.groupId
+      const nextStationIndex = maybeRevsersedStations.findIndex(
+        (s) => s.groupId === next.groupId
       );
 
-      const betweenNextStation = stations.slice(
+      const betweenNextStation = maybeRevsersedStations.slice(
         stationIndex + 1,
         nextStationIndex
       );
+
       const points: GeolibInputCoordinates[] = [
         { latitude: cur.latitude, longitude: cur.longitude },
         ...betweenNextStation.map((s) => ({
