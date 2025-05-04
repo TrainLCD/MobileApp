@@ -42,10 +42,14 @@ export const useSimulationMode = (enabled: boolean): void => {
     [currentLine]
   );
 
-  useEffect(() => {
-    const maybeRevsersedStations =
-      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
+  const maybeRevsersedStations = useMemo(
+    () =>
+      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
+    [stations, selectedDirection]
+  );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
+  useEffect(() => {
     const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
       const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
 
@@ -60,8 +64,8 @@ export const useSimulationMode = (enabled: boolean): void => {
         return [];
       }
 
-      const stationIndex = arr.findIndex((s) => s.groupId === cur.groupId);
-      const nextStationIndex = arr.findIndex((s) => s.groupId === next.groupId);
+      const stationIndex = arr.findIndex((s) => s.id === cur.id);
+      const nextStationIndex = arr.findIndex((s) => s.id === next.id);
 
       const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
 
@@ -89,15 +93,33 @@ export const useSimulationMode = (enabled: boolean): void => {
     });
 
     segmentIndexRef.current = maybeRevsersedStations.findIndex(
-      (s) => s.groupId === station?.groupId
+      (s) => s.id === station?.id
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
-  }, [currentLineType, stations, selectedDirection, station]);
+  }, []);
 
   const step = useCallback(
     (speed: number) => {
-      if (!station || !nextStation) {
+      if (!station) {
+        return;
+      }
+
+      if (!nextStation) {
+        segmentIndexRef.current = 0;
+        useLocationStore.setState((prev) =>
+          prev
+            ? {
+                ...prev,
+                coords: {
+                  ...prev.coords,
+                  latitude: maybeRevsersedStations[0]?.latitude,
+                  longitude: maybeRevsersedStations[0]?.longitude,
+                },
+                timestamp: new Date().getTime(),
+              }
+            : prev
+        );
         return;
       }
 
@@ -139,7 +161,7 @@ export const useSimulationMode = (enabled: boolean): void => {
         };
       });
     },
-    [station, nextStation]
+    [station, nextStation, maybeRevsersedStations]
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -166,15 +188,17 @@ export const useSimulationMode = (enabled: boolean): void => {
     }
 
     const intervalId = setInterval(() => {
+      const i = childIndexRef.current;
+
       const speeds = speedProfilesRef.current[segmentIndexRef.current] ?? [];
 
-      const i = childIndexRef.current;
       if (i >= speeds.length) {
+        const nextSegmentIndex = speedProfilesRef.current.findIndex(
+          (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
+        );
+
+        segmentIndexRef.current = nextSegmentIndex;
         childIndexRef.current = 0;
-        segmentIndexRef.current += 1;
-        if (segmentIndexRef.current >= speedProfilesRef.current.length) {
-          segmentIndexRef.current = 0;
-        }
         return;
       }
 
