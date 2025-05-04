@@ -48,6 +48,7 @@
     "expo-linking": "~7.0.3",
     "expo-localization": "~16.0.0",
     "expo-location": "~18.0.2",
+    "expo-network": "~7.0.5",
     "expo-notifications": "~0.29.8",
     "expo-screen-capture": "~7.0.0",
     "expo-splash-screen": "~0.29.13",
@@ -76,8 +77,8 @@
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "~0.19.13",
     "recoil": "^0.7.7",
-    "zustand": "^4.5.2",
-    "expo-network": "~7.0.5"
+    "zod": "^3.24.3",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",
