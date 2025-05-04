@@ -42,6 +42,7 @@ export const useSimulationMode = (enabled: boolean): void => {
     [currentLine]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {
     const maybeRevsersedStations =
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
@@ -93,7 +94,7 @@ export const useSimulationMode = (enabled: boolean): void => {
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
-  }, [currentLineType, stations, selectedDirection, station]);
+  }, []);
 
   const step = useCallback(
     (speed: number) => {
@@ -166,12 +167,17 @@ export const useSimulationMode = (enabled: boolean): void => {
     }
 
     const intervalId = setInterval(() => {
+      const i = childIndexRef.current;
+
       const speeds = speedProfilesRef.current[segmentIndexRef.current] ?? [];
 
-      const i = childIndexRef.current;
       if (i >= speeds.length) {
+        const nextSegmentIndex = speedProfilesRef.current.findIndex(
+          (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
+        );
+
+        segmentIndexRef.current = nextSegmentIndex;
         childIndexRef.current = 0;
-        segmentIndexRef.current += 1;
         if (segmentIndexRef.current >= speedProfilesRef.current.length) {
           segmentIndexRef.current = 0;
         }
