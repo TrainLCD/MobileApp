@@ -42,11 +42,14 @@ export const useSimulationMode = (enabled: boolean): void => {
     [currentLine]
   );
 
+  const maybeRevsersedStations = useMemo(
+    () =>
+      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
+    [stations, selectedDirection]
+  );
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {
-    const maybeRevsersedStations =
-      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
-
     const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
       const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
 
@@ -98,7 +101,25 @@ export const useSimulationMode = (enabled: boolean): void => {
 
   const step = useCallback(
     (speed: number) => {
-      if (!station || !nextStation) {
+      if (!station) {
+        return;
+      }
+
+      if (!nextStation) {
+        segmentIndexRef.current = 0;
+        useLocationStore.setState((prev) =>
+          prev
+            ? {
+                ...prev,
+                coords: {
+                  ...prev.coords,
+                  latitude: maybeRevsersedStations[0]?.latitude,
+                  longitude: maybeRevsersedStations[0]?.longitude,
+                },
+                timestamp: new Date().getTime(),
+              }
+            : prev
+        );
         return;
       }
 
@@ -140,7 +161,7 @@ export const useSimulationMode = (enabled: boolean): void => {
         };
       });
     },
-    [station, nextStation]
+    [station, nextStation, maybeRevsersedStations]
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
@@ -178,9 +199,6 @@ export const useSimulationMode = (enabled: boolean): void => {
 
         segmentIndexRef.current = nextSegmentIndex;
         childIndexRef.current = 0;
-        if (segmentIndexRef.current >= speedProfilesRef.current.length) {
-          segmentIndexRef.current = 0;
-        }
         return;
       }
 
