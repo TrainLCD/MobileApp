@@ -15,29 +15,28 @@ export const useStartBackgroundLocationUpdates = () => {
     if (autoModeEnabled || !bgPermGranted) {
       return;
     }
-    const subscription = AppState.addEventListener(
-      'change',
-      async (nextAppState) => {
-        if (nextAppState === 'active') {
-          try {
-            await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-              ...LOCATION_TASK_OPTIONS,
-              // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
-              // OtherNavigationは必須
-              activityType: Location.ActivityType.OtherNavigation,
-              foregroundService: {
-                notificationTitle: translate('bgAlertTitle'),
-                notificationBody: translate('bgAlertContent'),
-                killServiceOnDestroy: true,
-              },
-            });
-            subscription?.remove();
-          } catch (err) {
-            console.error(err);
-          }
+
+    const startUpdateAsync = async () => {
+      if (AppState.currentState === 'active') {
+        try {
+          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+            ...LOCATION_TASK_OPTIONS,
+            // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+            // OtherNavigationは必須
+            activityType: Location.ActivityType.OtherNavigation,
+            foregroundService: {
+              notificationTitle: translate('bgAlertTitle'),
+              notificationBody: translate('bgAlertContent'),
+              killServiceOnDestroy: true,
+            },
+          });
+        } catch (err) {
+          console.error(err);
         }
       }
-    );
+    };
+
+    startUpdateAsync();
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
