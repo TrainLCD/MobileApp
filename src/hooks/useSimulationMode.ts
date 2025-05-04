@@ -61,8 +61,8 @@ export const useSimulationMode = (enabled: boolean): void => {
         return [];
       }
 
-      const stationIndex = arr.findIndex((s) => s.groupId === cur.groupId);
-      const nextStationIndex = arr.findIndex((s) => s.groupId === next.groupId);
+      const stationIndex = arr.findIndex((s) => s.id === cur.id);
+      const nextStationIndex = arr.findIndex((s) => s.id === next.id);
 
       const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
 
@@ -90,7 +90,7 @@ export const useSimulationMode = (enabled: boolean): void => {
     });
 
     segmentIndexRef.current = maybeRevsersedStations.findIndex(
-      (s) => s.groupId === station?.groupId
+      (s) => s.id === station?.id
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
