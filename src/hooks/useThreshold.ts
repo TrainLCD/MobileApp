@@ -6,7 +6,7 @@ import { useNextStation } from './useNextStation';
 
 export const useThreshold = () => {
   const currentStation = useCurrentStation(true);
-  const nextStation = useNextStation();
+  const nextStation = useNextStation(false);
 
   const betweenDistance = useMemo(() => {
     if (!currentStation || !nextStation) {
@@ -39,7 +39,7 @@ export const useThreshold = () => {
       return ARRIVED_MAX_THRESHOLD;
     }
 
-    const threshold = betweenDistance / 4;
+    const threshold = betweenDistance / 3;
     if (threshold > ARRIVED_MAX_THRESHOLD) {
       return ARRIVED_MAX_THRESHOLD;
     }
