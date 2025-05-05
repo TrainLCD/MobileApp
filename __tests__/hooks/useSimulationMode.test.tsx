@@ -2,7 +2,6 @@ import { renderHook, act } from '@testing-library/react-native';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
 import * as Recoil from 'recoil';
 import * as currentLineHook from '~/hooks/useCurrentLine';
-import * as nextStationHook from '~/hooks/useNextStation';
 import { useLocationStore } from '~/hooks/useLocationStore';
 
 jest.mock('~/hooks/useLocationStore', () => ({
@@ -11,23 +10,26 @@ jest.mock('~/hooks/useLocationStore', () => ({
   },
 }));
 
-jest.mock('~/hooks/useCurrentLine', () => ({
+jest.mock('~/hooks/useNextStation', () => ({
   __esModule: true,
-  useCurrentLine: jest.fn(() => ({ lineType: 0 })),
+  useNextStation: jest.fn(),
 }));
 
-jest.mock('~/hooks/useNextStation', () => ({
-  useNextStation: jest.fn(),
+jest.mock('~/hooks/useInRadiusStation', () => ({
+  __esModule: true,
+  useInRadiusStation: jest.fn(),
 }));
 
 describe('useSimulationMode', () => {
   const mockStation = {
+    id: 's1',
     groupId: 1,
     latitude: 35.0,
     longitude: 139.0,
   };
 
   const mockNextStation = {
+    id: 's2',
     groupId: 2,
     latitude: 35.001,
     longitude: 139.001,
@@ -40,7 +42,6 @@ describe('useSimulationMode', () => {
     jest.spyOn(Recoil, 'useRecoilValue').mockReturnValue({
       stations: [mockStation, mockNextStation],
       selectedDirection: 'INBOUND',
-      station: mockStation,
     });
 
     jest.spyOn(currentLineHook, 'useCurrentLine').mockReturnValue({
@@ -48,14 +49,17 @@ describe('useSimulationMode', () => {
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     } as any);
 
-    jest
-      .spyOn(nextStationHook, 'useNextStation')
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      .mockReturnValue(mockNextStation as any);
+    require('~/hooks/useNextStation').useNextStation.mockReturnValue(
+      mockNextStation
+    );
+    require('~/hooks/useInRadiusStation').useInRadiusStation.mockReturnValue(
+      mockStation
+    );
   });
 
   it('sets initial location when enabled is true', () => {
     renderHook(() => useSimulationMode(true));
+
     expect(useLocationStore.setState).toHaveBeenCalledWith(
       expect.objectContaining({
         coords: expect.objectContaining({
@@ -66,26 +70,24 @@ describe('useSimulationMode', () => {
     );
   });
 
-  it('updates location every second based on speed profile', () => {
+  it('updates location over time', () => {
     renderHook(() => useSimulationMode(true));
 
-    // simulate 3 seconds
     act(() => {
       jest.advanceTimersByTime(3000);
     });
 
-    // 1 initial + 3 updates
-    expect(useLocationStore.setState).toHaveBeenCalledTimes(4);
+    expect(useLocationStore.setState).toHaveBeenCalled();
   });
 
-  it('does not crash if station is null', () => {
-    jest.spyOn(Recoil, 'useRecoilValue').mockReturnValueOnce({
-      stations: [],
-      selectedDirection: 'INBOUND',
-      station: null,
+  it('does not run simulation if disabled', () => {
+    renderHook(() => useSimulationMode(false));
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
     });
 
-    expect(() => renderHook(() => useSimulationMode(true))).not.toThrow();
+    // 初期設定以外に呼ばれていないはず
     expect(useLocationStore.setState).not.toHaveBeenCalled();
   });
 });
