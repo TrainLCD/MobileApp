@@ -71,22 +71,33 @@ describe('useTelemetrySender', () => {
 
   const RENDER_WAIT_TIME = 50;
 
-  it('sends telemetry data when telemetry is enabled', async () => {
-    renderHook(() => useTelemetrySender('ws://localhost:8080'));
+  it.each([
+    ['secure', true],
+    ['non-secure', false],
+  ])(
+    'sends telemetry data when telemetry is enabled(%s protool)',
+    async (_, isSecure) => {
+      renderHook(() =>
+        useTelemetrySender(
+          isSecure ? 'wss://127.0.0.1:8080' : 'ws://127.0.1:8080'
+        )
+      );
 
-    await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
+      await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
 
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    const payload = JSON.parse(mockSend.mock.calls[0][0]);
-    expect(payload).toMatchObject({
-      type: 'location_update',
-      device: 'TestDevice',
-      state: 'approaching',
-    });
-  });
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      const payload = JSON.parse(mockSend.mock.calls[0][0]);
+      expect(payload).toMatchObject({
+        type: 'location_update',
+        device: 'TestDevice',
+        state: 'approaching',
+      });
+    }
+  );
+
   it('properly handles WebSocket lifecycle', async () => {
     const { unmount } = renderHook(() =>
-      useTelemetrySender('ws://localhost:8080')
+      useTelemetrySender('wss://127.0.0.1:8080')
     );
 
     await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
@@ -99,13 +110,24 @@ describe('useTelemetrySender', () => {
   });
 
   it.each([
-    ['arrived', true, false, false],
-    ['approaching', false, true, false],
-    ['passing', false, false, true],
-    ['moving', false, false, false],
+    ['arrived (non-secure protocol)', true, false, false, false, 'arrived'],
+    [
+      'approaching (non-secure protocol)',
+      false,
+      true,
+      false,
+      false,
+      'approaching',
+    ],
+    ['passing (non-secure protocol)', false, false, true, false, 'passing'],
+    ['moving (non-secure protocol)', false, false, false, false, 'moving'],
+    ['arrived (secure protocol)', true, false, false, true, 'arrived'],
+    ['approaching (secure protocol)', false, true, false, true, 'approaching'],
+    ['passing (secure protocol)', false, false, true, true, 'passing'],
+    ['moving (secure protocol)', false, false, false, true, 'moving'],
   ])(
     'sends correct state %s',
-    async (expectedState, arrived, approaching, isPassing) => {
+    async (_, arrived, approaching, isPassing, isSecure, expectedState) => {
       // モックを上書き
       jest.spyOn(require('recoil'), 'useRecoilValue').mockReturnValue({
         arrived,
@@ -115,7 +137,11 @@ describe('useTelemetrySender', () => {
         .spyOn(require('~/hooks/useIsPassing'), 'default')
         .mockReturnValue(isPassing);
 
-      renderHook(() => useTelemetrySender('ws://localhost:8080'));
+      renderHook(() =>
+        useTelemetrySender(
+          isSecure ? 'wss://127.0.0.1:8080' : 'ws://127.0.1:8080'
+        )
+      );
 
       await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
 

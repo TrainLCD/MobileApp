@@ -1,7 +1,9 @@
 import * as Device from 'expo-device';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import { z } from 'zod';
+import { webSocketUrlRegexp } from '~/constants/regexp';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
@@ -23,7 +25,9 @@ const TelemetryPayload = z.object({
 });
 type TelemetryPayload = z.infer<typeof TelemetryPayload>;
 
-export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
+export const useTelemetrySender = (
+  wsUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL
+) => {
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
@@ -61,31 +65,39 @@ export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
     }
 
     const connectWebSocket = () => {
-      const socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
-      socket.onopen = () => {
-        console.log('WebSocket connected');
-        reconnectAttempts = 0;
-      };
-      socket.onerror = (e) => {
-        console.warn('WebSocket error', e);
-      };
-      socket.onclose = () => {
-        console.log('WebSocket closed');
-        if (reconnectAttempts < maxReconnectAttempts) {
-          reconnectAttempts++;
-          const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
-          reconnectTimeout = setTimeout(connectWebSocket, delay);
-        }
-      };
+      if (!wsUrl.match(webSocketUrlRegexp)) {
+        console.warn('Invalid WebSocket URL');
+        return;
+      }
 
-      return socket;
+      try {
+        const socket = new WebSocket(wsUrl);
+        socketRef.current = socket;
+        socket.onopen = () => {
+          console.log('WebSocket connected');
+          reconnectAttempts = 0;
+        };
+        socket.onerror = (e) => {
+          console.warn('WebSocket error', e);
+        };
+        socket.onclose = () => {
+          console.log('WebSocket closed');
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
+            reconnectTimeout = setTimeout(connectWebSocket, delay);
+          }
+        };
+        return socket;
+      } catch (error) {
+        console.error('WebSocket connection error:', error);
+      }
     };
 
     const socket = connectWebSocket();
 
     return () => {
-      socket.close();
+      socket?.close();
       clearTimeout(reconnectTimeout);
     };
   }, [wsUrl]);

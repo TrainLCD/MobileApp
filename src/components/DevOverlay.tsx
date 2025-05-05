@@ -1,7 +1,7 @@
 import * as Application from 'expo-application';
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { ENABLE_EXPERIMENTAL_TELEMETRY } from 'react-native-dotenv';
+import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import { useDistanceToNextStation } from '../hooks/useDistanceToNextStation';
 import { useLocationStore } from '../hooks/useLocationStore';
 import { useThreshold } from '../hooks/useThreshold';
@@ -82,7 +82,7 @@ const DevOverlay: React.FC = () => {
       </Typography>
       {__DEV__ && (
         <Typography style={styles.text}>
-          Telemetry: {ENABLE_EXPERIMENTAL_TELEMETRY ?? 'false'}
+          Telemetry: {isTelemetryEnabled}
         </Typography>
       )}
     </View>
