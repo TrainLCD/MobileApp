@@ -15,9 +15,9 @@ import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
+import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
-import { useInRadiusStation } from './useInRadiusStation';
 
 export const useSimulationMode = (enabled: boolean): void => {
   const { stations: rawStations, selectedDirection } =

@@ -1,9 +1,9 @@
-import { useRecoilValue } from 'recoil';
-import { useEffect, useState } from 'react';
-import stationState from '~/store/atoms/station';
 import type { Station } from 'gen/proto/stationapi_pb';
-import { useLocationStore } from './useLocationStore';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
+import { useEffect, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import stationState from '~/store/atoms/station';
+import { useLocationStore } from './useLocationStore';
 
 export const useInRadiusStation = (radius: number) => {
   const { stations, station } = useRecoilValue(stationState);
