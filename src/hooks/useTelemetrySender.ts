@@ -7,6 +7,7 @@ import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { urlRegexp } from '~/constants/regexp';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
@@ -64,31 +65,39 @@ export const useTelemetrySender = (
     }
 
     const connectWebSocket = () => {
-      const socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
-      socket.onopen = () => {
-        console.log('WebSocket connected');
-        reconnectAttempts = 0;
-      };
-      socket.onerror = (e) => {
-        console.warn('WebSocket error', e);
-      };
-      socket.onclose = () => {
-        console.log('WebSocket closed');
-        if (reconnectAttempts < maxReconnectAttempts) {
-          reconnectAttempts++;
-          const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
-          reconnectTimeout = setTimeout(connectWebSocket, delay);
-        }
-      };
+      if (!wsUrl.match(urlRegexp)) {
+        console.warn('Invalid WebSocket URL');
+        return;
+      }
 
-      return socket;
+      try {
+        const socket = new WebSocket(wsUrl);
+        socketRef.current = socket;
+        socket.onopen = () => {
+          console.log('WebSocket connected');
+          reconnectAttempts = 0;
+        };
+        socket.onerror = (e) => {
+          console.warn('WebSocket error', e);
+        };
+        socket.onclose = () => {
+          console.log('WebSocket closed');
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
+            reconnectTimeout = setTimeout(connectWebSocket, delay);
+          }
+        };
+        return socket;
+      } catch (error) {
+        console.error('WebSocket connection error:', error);
+      }
     };
 
     const socket = connectWebSocket();
 
     return () => {
-      socket.close();
+      socket?.close();
       clearTimeout(reconnectTimeout);
     };
   }, [wsUrl]);
