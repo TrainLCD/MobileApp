@@ -2,7 +2,7 @@ import { LineType } from '../../gen/proto/stationapi_pb';
 
 // 路線種別による最高速度
 export const LINE_TYPE_MAX_SPEEDS_IN_M_S: Record<LineType, number> = {
-  [LineType.BulletTrain]: 83.33333333333, // 300km/h
+  [LineType.BulletTrain]: 88.88888889, // 320km/h
   [LineType.MonorailOrAGT]: 22.22222222222, // 80km/h
   [LineType.Normal]: 25, // 90km/h
   [LineType.OtherLineType]: 25, // 90km/h
