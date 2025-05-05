@@ -72,7 +72,7 @@ describe('useTelemetrySender', () => {
   const RENDER_WAIT_TIME = 50;
 
   it('sends telemetry data when telemetry is enabled', async () => {
-    renderHook(() => useTelemetrySender('ws://localhost:8080'));
+    renderHook(() => useTelemetrySender('https://127.0.0.1:8080'));
 
     await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
 
@@ -86,7 +86,7 @@ describe('useTelemetrySender', () => {
   });
   it('properly handles WebSocket lifecycle', async () => {
     const { unmount } = renderHook(() =>
-      useTelemetrySender('ws://localhost:8080')
+      useTelemetrySender('https://127.0.0.1:8080')
     );
 
     await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
@@ -115,7 +115,7 @@ describe('useTelemetrySender', () => {
         .spyOn(require('~/hooks/useIsPassing'), 'default')
         .mockReturnValue(isPassing);
 
-      renderHook(() => useTelemetrySender('ws://localhost:8080'));
+      renderHook(() => useTelemetrySender('https://127.0.0.1:8080'));
 
       await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
 
