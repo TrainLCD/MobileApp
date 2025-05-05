@@ -6,6 +6,7 @@ import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
@@ -23,7 +24,9 @@ const TelemetryPayload = z.object({
 });
 type TelemetryPayload = z.infer<typeof TelemetryPayload>;
 
-export const useTelemetrySender = (wsUrl = 'ws://localhost:8080') => {
+export const useTelemetrySender = (
+  wsUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL
+) => {
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
