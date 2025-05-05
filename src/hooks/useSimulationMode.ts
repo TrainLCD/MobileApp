@@ -65,8 +65,8 @@ export const useSimulationMode = (enabled: boolean): void => {
         return [];
       }
 
-      const stationIndex = arr.findIndex((s) => s.id === cur.id);
-      const nextStationIndex = arr.findIndex((s) => s.id === next.id);
+      const stationIndex = arr.findIndex((s) => s.groupId === cur.groupId);
+      const nextStationIndex = arr.findIndex((s) => s.groupId === next.groupId);
 
       const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
 
