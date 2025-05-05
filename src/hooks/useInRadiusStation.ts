@@ -8,8 +8,9 @@ import { useLocationStore } from './useLocationStore';
 export const useInRadiusStation = (radius: number) => {
   const { stations, station } = useRecoilValue(stationState);
 
-  const latitude = useLocationStore()?.coords.latitude;
-  const longitude = useLocationStore()?.coords.longitude;
+  const locationState = useLocationStore();
+  const latitude = locationState?.coords.latitude;
+  const longitude = locationState?.coords.longitude;
 
   const [latestMatchedStation, setLatestMatchedStation] =
     useState<Station | null>(station);
