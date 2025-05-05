@@ -17,20 +17,16 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
+import { useInRadiusStation } from './useInRadiusStation';
 
 export const useSimulationMode = (enabled: boolean): void => {
-  const {
-    stations: rawStations,
-    selectedDirection,
-    station,
-  } = useRecoilValue(stationState);
+  const { stations: rawStations, selectedDirection } =
+    useRecoilValue(stationState);
   const currentLine = useCurrentLine();
 
   const segmentIndexRef = useRef(0);
   const childIndexRef = useRef(0);
   const speedProfilesRef = useRef<number[][]>([]);
-
-  const nextStation = useNextStation(false);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -41,6 +37,11 @@ export const useSimulationMode = (enabled: boolean): void => {
     () => currentLine?.lineType ?? LineType.Normal,
     [currentLine]
   );
+
+  const station = useInRadiusStation(
+    LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLine?.lineType ?? LineType.Normal] / 2
+  );
+  const nextStation = useNextStation(false, station ?? undefined);
 
   const maybeRevsersedStations = useMemo(
     () =>
@@ -93,7 +94,7 @@ export const useSimulationMode = (enabled: boolean): void => {
     });
 
     segmentIndexRef.current = maybeRevsersedStations.findIndex(
-      (s) => s.id === station?.id
+      (s) => s.groupId === station?.groupId
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
