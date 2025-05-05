@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import { z } from 'zod';
+import { urlRegexp } from '~/constants/regexp';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
-import { urlRegexp } from '~/constants/regexp';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
