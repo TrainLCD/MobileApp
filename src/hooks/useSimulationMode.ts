@@ -39,7 +39,7 @@ export const useSimulationMode = (enabled: boolean): void => {
   );
 
   const station = useInRadiusStation(
-    LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLine?.lineType ?? LineType.Normal]
+    LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLine?.lineType ?? LineType.Normal] / 1.5
   );
   const nextStation = useNextStation(false, station ?? undefined);
 
