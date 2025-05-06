@@ -85,7 +85,7 @@ const MainScreen: React.FC = () => {
   useAutoMode(autoModeEnabled);
   // useSimulationMode(autoModeEnabled);
 
-  useTelemetrySender();
+  useTelemetrySender(true);
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
