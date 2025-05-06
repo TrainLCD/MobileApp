@@ -13,19 +13,28 @@ const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
 
 const TelemetryPayload = z.object({
-  coords: z.object({
-    latitude: z.number().nullable(),
-    longitude: z.number().nullable(),
-    accuracy: z.number().nullable(),
-    speed: z.number().nullable(),
-  }),
+  coords: z
+    .object({
+      latitude: z.number().nullable(),
+      longitude: z.number().nullable(),
+      accuracy: z.number().nullable(),
+      speed: z.number().nullable(),
+    })
+    .optional(),
+  log: z
+    .object({
+      level: z.enum(['debug', 'info', 'warn', 'error']),
+      message: z.string(),
+    })
+    .optional(),
+  state: MovingState.optional(),
   device: z.string(),
-  state: MovingState,
   timestamp: z.number(),
 });
 type TelemetryPayload = z.infer<typeof TelemetryPayload>;
 
 export const useTelemetrySender = (
+  sendTelemetryAutomatically = false,
   wsUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL
 ) => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -102,6 +111,39 @@ export const useTelemetrySender = (
     };
   }, [wsUrl]);
 
+  const sendLog = useCallback((message: string, level = 'debug') => {
+    const now = Date.now();
+    if (now - lastSentRef.current < THROTTLE_MS) {
+      return;
+    }
+
+    const payload = TelemetryPayload.safeParse({
+      log: {
+        level,
+        message,
+      },
+      device: Device.modelName ?? 'unknown',
+      timestamp: now,
+    });
+
+    if (payload.error) {
+      console.error('Invalid telemetry payload:', payload.error);
+      return;
+    }
+
+    if (socketRef.current?.readyState === WebSocket.OPEN && payload.success) {
+      if (payload.data.log) {
+        socketRef.current.send(
+          JSON.stringify({
+            type: 'log',
+            ...payload.data,
+          })
+        );
+        lastSentRef.current = now;
+      }
+    }
+  }, []);
+
   const sendTelemetry = useCallback(() => {
     const now = Date.now();
     if (now - lastSentRef.current < THROTTLE_MS) {
@@ -120,26 +162,35 @@ export const useTelemetrySender = (
       timestamp: now,
     });
 
-    if (
-      socketRef.current?.readyState === WebSocket.OPEN &&
-      payload.success &&
-      payload.data.coords.latitude != null &&
-      payload.data.coords.longitude != null
-    ) {
-      socketRef.current.send(
-        JSON.stringify({
-          type: 'location_update',
-          ...payload.data,
-        })
-      );
+    if (payload.error) {
+      console.error('Invalid telemetry payload:', payload.error);
+      return;
+    }
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      if (
+        payload.data.coords &&
+        payload.data.coords.latitude != null &&
+        payload.data.coords.longitude != null
+      ) {
+        socketRef.current.send(
+          JSON.stringify({
+            type: 'location_update',
+            ...payload.data,
+          })
+        );
+        lastSentRef.current = now;
+      }
     }
   }, [accuracy, latitude, longitude, speed, state]);
 
   useEffect(() => {
-    if (!isTelemetryEnabled) {
+    if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
       return;
     }
 
     sendTelemetry();
-  }, [sendTelemetry]);
+  }, [sendTelemetry, sendTelemetryAutomatically]);
+
+  return { sendLog };
 };

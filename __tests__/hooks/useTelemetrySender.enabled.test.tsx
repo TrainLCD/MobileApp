@@ -79,6 +79,7 @@ describe('useTelemetrySender', () => {
     async (_, isSecure) => {
       renderHook(() =>
         useTelemetrySender(
+          true,
           isSecure ? 'wss://127.0.0.1:8080' : 'ws://127.0.1:8080'
         )
       );
@@ -97,7 +98,7 @@ describe('useTelemetrySender', () => {
 
   it('properly handles WebSocket lifecycle', async () => {
     const { unmount } = renderHook(() =>
-      useTelemetrySender('wss://127.0.0.1:8080')
+      useTelemetrySender(true, 'wss://127.0.0.1:8080')
     );
 
     await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
@@ -139,6 +140,7 @@ describe('useTelemetrySender', () => {
 
       renderHook(() =>
         useTelemetrySender(
+          true,
           isSecure ? 'wss://127.0.0.1:8080' : 'ws://127.0.1:8080'
         )
       );
