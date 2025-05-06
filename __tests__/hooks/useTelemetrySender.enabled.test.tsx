@@ -50,14 +50,14 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-test('should send log when WebSocket is open', () => {
+test('should send log when WebSocket is open', async () => {
   const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
   act(() => {
     result.current.sendLog('Test log', 'info');
   });
 
-  waitFor(() => {
+  await waitFor(() => {
     expect(mockWebSocketSend).toHaveBeenCalled();
     const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
     expect(message.type).toBe('log');
@@ -65,7 +65,7 @@ test('should send log when WebSocket is open', () => {
   });
 });
 
-test('should throttle log sending within 1s', () => {
+test('should throttle log sending within 1s', async () => {
   const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
   act(() => {
@@ -73,7 +73,7 @@ test('should throttle log sending within 1s', () => {
     result.current.sendLog('Second');
   });
 
-  waitFor(() => {
+  await waitFor(() => {
     expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
   });
 });
