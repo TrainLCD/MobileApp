@@ -82,7 +82,7 @@ const DevOverlay: React.FC = () => {
       </Typography>
       {__DEV__ && (
         <Typography style={styles.text}>
-          Telemetry: {isTelemetryEnabled}
+          Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
         </Typography>
       )}
     </View>
