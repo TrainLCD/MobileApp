@@ -3,6 +3,7 @@ import { useSimulationMode } from '~/hooks/useSimulationMode';
 import * as Recoil from 'recoil';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
+import { isDevApp } from '~/utils/isDevApp';
 
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: {
@@ -18,6 +19,10 @@ jest.mock('~/hooks/useNextStation', () => ({
 jest.mock('~/hooks/useInRadiusStation', () => ({
   __esModule: true,
   useInRadiusStation: jest.fn(),
+}));
+
+jest.mock('~/utils/isDevApp', () => ({
+  isDevApp: true,
 }));
 
 describe('useSimulationMode', () => {
