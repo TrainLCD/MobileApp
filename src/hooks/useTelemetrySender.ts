@@ -139,6 +139,7 @@ export const useTelemetrySender = (
             ...payload.data,
           })
         );
+        lastSentRef.current = now;
       }
     }
   }, []);
@@ -178,6 +179,7 @@ export const useTelemetrySender = (
             ...payload.data,
           })
         );
+        lastSentRef.current = now;
       }
     }
   }, [accuracy, latitude, longitude, speed, state]);
