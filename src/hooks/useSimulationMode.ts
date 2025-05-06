@@ -102,10 +102,6 @@ export const useSimulationMode = (enabled: boolean): void => {
 
   const step = useCallback(
     (speed: number) => {
-      if (!station) {
-        return;
-      }
-
       if (!nextStation) {
         segmentIndexRef.current = 0;
         useLocationStore.setState((prev) =>
@@ -124,21 +120,21 @@ export const useSimulationMode = (enabled: boolean): void => {
         return;
       }
 
-      const bearingForNextStation = getRhumbLineBearing(
-        {
-          latitude: station.latitude,
-          longitude: station.longitude,
-        },
-        {
-          latitude: nextStation.latitude,
-          longitude: nextStation.longitude,
-        }
-      );
-
       useLocationStore.setState((prev) => {
         if (!prev) {
           return prev;
         }
+
+        const bearingForNextStation = getRhumbLineBearing(
+          {
+            latitude: prev.coords.latitude,
+            longitude: prev.coords.longitude,
+          },
+          {
+            latitude: nextStation.latitude,
+            longitude: nextStation.longitude,
+          }
+        );
 
         const nextPoint = computeDestinationPoint(
           {
@@ -162,7 +158,7 @@ export const useSimulationMode = (enabled: boolean): void => {
         };
       });
     },
-    [station, nextStation, maybeRevsersedStations]
+    [nextStation, maybeRevsersedStations]
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
