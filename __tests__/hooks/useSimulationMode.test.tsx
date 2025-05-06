@@ -91,6 +91,10 @@ describe('useSimulationMode', () => {
     testTrainKind(TrainTypeKind.Rapid);
   });
 
+  it('handles HighSpeedRapid train correctly', () => {
+    testTrainKind(TrainTypeKind.HighSpeedRapid);
+  });
+
   it('handles empty kind fallback correctly', () => {
     require('~/hooks/useCurrentTrainType').default.mockReturnValue({
       kind: undefined,
