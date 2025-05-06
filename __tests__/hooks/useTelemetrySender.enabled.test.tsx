@@ -91,7 +91,7 @@ test('should not send telemetry if coordinates are null', () => {
   expect(mockWebSocketSend).not.toHaveBeenCalled();
 });
 
-test('should enqueue message if WebSocket is not open', () => {
+test('should enqueue message if WebSocket is not open', async () => {
   mockWebSocket.readyState = WebSocket.CONNECTING;
   const { result } = renderHook(() => useTelemetrySender(), { wrapper });
   act(() => {
@@ -106,9 +106,11 @@ test('should enqueue message if WebSocket is not open', () => {
     mockWebSocket.onopen?.();
   });
 
-  expect(mockWebSocketSend).toHaveBeenCalled();
-  const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-  expect(message.log.message).toBe('Queued message');
+  await waitFor(() => {
+    expect(mockWebSocketSend).toHaveBeenCalled();
+    const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+    expect(message.log.message).toBe('Queued message');
+  });
 });
 
 test('should not connect with invalid WebSocket URL', () => {
