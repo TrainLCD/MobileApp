@@ -80,11 +80,9 @@ const DevOverlay: React.FC = () => {
       <Typography style={styles.text}>
         Arrived: {arrivedThreshold.toLocaleString()}m
       </Typography>
-      {__DEV__ && (
-        <Typography style={styles.text}>
-          Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
-        </Typography>
-      )}
+      <Typography style={styles.text}>
+        Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
+      </Typography>
     </View>
   );
 };
