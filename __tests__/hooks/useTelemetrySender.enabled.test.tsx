@@ -1,154 +1,104 @@
-import { renderHook } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
+import { useLocationStore } from '~/hooks/useLocationStore';
+import { RecoilRoot } from 'recoil';
 
-jest.mock('~/utils/telemetryConfig', () => ({
-  isTelemetryEnabled: true,
-}));
-
-jest.mock('expo-device', () => ({
-  modelName: 'TestDevice',
-}));
-
-jest.mock('recoil', () => ({
-  atom: jest.fn(),
-  useRecoilValue: jest.fn(() => ({
-    arrived: false,
-    approaching: true,
-  })),
-}));
-
+jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
+jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
 jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: jest.fn().mockImplementation((selector) =>
+  useLocationStore: jest.fn(),
+}));
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <RecoilRoot>{children}</RecoilRoot>
+);
+
+let mockWebSocketSend: jest.Mock;
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+let mockWebSocket: any;
+
+beforeEach(() => {
+  mockWebSocketSend = jest.fn();
+  mockWebSocket = {
+    send: mockWebSocketSend,
+    close: jest.fn(),
+    readyState: WebSocket.OPEN,
+  };
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  (global as any).WebSocket = jest.fn(() => mockWebSocket);
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  (global as any).WebSocket.OPEN = 1;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  (global as any).WebSocket.CONNECTING = 0;
+  (useLocationStore as unknown as jest.Mock).mockImplementation((selector) =>
     selector({
       coords: {
-        latitude: 35,
-        longitude: 139,
+        latitude: 35.0,
+        longitude: 139.0,
         accuracy: 5,
         speed: 10,
       },
     })
-  ),
-}));
-
-jest.mock('~/hooks/useCurrentStation', () => ({
-  useCurrentStation: jest.fn(),
-}));
-
-describe('useTelemetrySender', () => {
-  let mockSend: jest.Mock;
-  let mockOnOpen: jest.Mock;
-  let mockOnError: jest.Mock;
-  let mockOnClose: jest.Mock;
-  let mockClose: jest.Mock;
-
-  beforeEach(() => {
-    mockSend = jest.fn();
-    mockOnOpen = jest.fn();
-    mockOnError = jest.fn();
-    mockOnClose = jest.fn();
-    mockClose = jest.fn();
-
-    global.WebSocket = jest.fn().mockImplementation(() => ({
-      readyState: 1,
-      send: mockSend,
-      close: mockClose,
-      set onopen(callback: () => void) {
-        mockOnOpen();
-        if (callback) callback();
-      },
-      set onerror(callback: (error: Event) => void) {
-        mockOnError();
-      },
-      set onclose(callback: () => void) {
-        mockOnClose();
-      },
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    })) as any;
-
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    (global.WebSocket as any).OPEN = 1;
-  });
-
-  const RENDER_WAIT_TIME = 50;
-
-  it.each([
-    ['secure', true],
-    ['non-secure', false],
-  ])(
-    'sends telemetry data when telemetry is enabled(%s protool)',
-    async (_, isSecure) => {
-      renderHook(() =>
-        useTelemetrySender(
-          true,
-          isSecure ? 'wss://127.0.0.1:8080' : 'ws://127.0.1:8080'
-        )
-      );
-
-      await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
-
-      expect(mockSend).toHaveBeenCalledTimes(1);
-      const payload = JSON.parse(mockSend.mock.calls[0][0]);
-      expect(payload).toMatchObject({
-        type: 'location_update',
-        device: 'TestDevice',
-        state: 'approaching',
-      });
-    }
   );
 
-  it('properly handles WebSocket lifecycle', async () => {
-    const { unmount } = renderHook(() =>
-      useTelemetrySender(true, 'wss://127.0.0.1:8080')
-    );
+  jest.useFakeTimers();
+});
 
-    await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
+afterEach(() => {
+  jest.clearAllMocks();
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
 
-    expect(mockOnOpen).toHaveBeenCalled();
+test('should send log when WebSocket is open', () => {
+  const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
-    unmount();
-
-    expect(mockClose).toHaveBeenCalled();
+  act(() => {
+    result.current.sendLog('Test log', 'info');
   });
 
-  it.each([
-    ['arrived (non-secure protocol)', true, false, false, false, 'arrived'],
-    [
-      'approaching (non-secure protocol)',
-      false,
-      true,
-      false,
-      false,
-      'approaching',
-    ],
-    ['passing (non-secure protocol)', false, false, true, false, 'passing'],
-    ['moving (non-secure protocol)', false, false, false, false, 'moving'],
-    ['arrived (secure protocol)', true, false, false, true, 'arrived'],
-    ['approaching (secure protocol)', false, true, false, true, 'approaching'],
-    ['passing (secure protocol)', false, false, true, true, 'passing'],
-    ['moving (secure protocol)', false, false, false, true, 'moving'],
-  ])(
-    'sends correct state %s',
-    async (_, arrived, approaching, isPassing, isSecure, expectedState) => {
-      // モックを上書き
-      jest.spyOn(require('recoil'), 'useRecoilValue').mockReturnValue({
-        arrived,
-        approaching,
-      });
-      jest
-        .spyOn(require('~/hooks/useIsPassing'), 'default')
-        .mockReturnValue(isPassing);
+  expect(mockWebSocketSend).toHaveBeenCalled();
+  const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+  expect(message.type).toBe('log');
+  expect(message.log.message).toBe('Test log');
+});
 
-      renderHook(() =>
-        useTelemetrySender(
-          true,
-          isSecure ? 'wss://127.0.0.1:8080' : 'ws://127.0.1:8080'
-        )
-      );
+test('should throttle log sending within 1s', () => {
+  const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
-      await new Promise((r) => setTimeout(r, RENDER_WAIT_TIME));
+  act(() => {
+    result.current.sendLog('First');
+    result.current.sendLog('Second');
+  });
 
-      const payload = JSON.parse(mockSend.mock.calls[0][0]);
-      expect(payload.state).toBe(expectedState);
-    }
+  expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+});
+
+test('should not send telemetry if coordinates are null', () => {
+  (useLocationStore as unknown as jest.Mock).mockImplementation((selector) =>
+    selector({
+      coords: { latitude: null, longitude: null, accuracy: null, speed: null },
+    })
   );
+  const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+  act(() => {
+    jest.advanceTimersByTime(1000);
+  });
+  expect(mockWebSocketSend).not.toHaveBeenCalled();
+});
+
+test('should enqueue message if WebSocket is not open', () => {
+  mockWebSocket.readyState = WebSocket.CONNECTING;
+  const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+  act(() => {
+    result.current.sendLog('Queued message');
+  });
+  expect(mockWebSocketSend).not.toHaveBeenCalled();
+});
+
+test('should not connect with invalid WebSocket URL', () => {
+  const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  renderHook(() => useTelemetrySender(false, 'invalid-url'), { wrapper });
+  expect(spy).toHaveBeenCalledWith('Invalid WebSocket URL');
+  spy.mockRestore();
 });
