@@ -1,6 +1,7 @@
 import getCenter from 'geolib/es/getCenter';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { isDevApp } from '~/utils/isDevApp';
 import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
@@ -13,7 +14,7 @@ import { useLocationStore } from './useLocationStore';
 import { useLoopLine } from './useLoopLine';
 import useValueRef from './useValueRef';
 
-const useAutoMode = (enabled: boolean): void => {
+export const useAutoMode = (enabled: boolean): void => {
   const {
     stations: rawStations,
     selectedDirection,
@@ -42,6 +43,7 @@ const useAutoMode = (enabled: boolean): void => {
   const startApproachingTimer = useCallback(() => {
     if (
       !enabled ||
+      isDevApp ||
       autoModeApproachingTimerRef.current ||
       !selectedDirection ||
       !selectedLine
@@ -173,6 +175,7 @@ const useAutoMode = (enabled: boolean): void => {
 
     if (
       !enabled ||
+      isDevApp ||
       autoModeArriveTimerRef.current ||
       !direction ||
       !selectedLine
@@ -272,5 +275,3 @@ const useAutoMode = (enabled: boolean): void => {
     };
   }, []);
 };
-
-export default useAutoMode;
