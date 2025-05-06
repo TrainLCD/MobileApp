@@ -533,6 +533,7 @@ const HeaderJRWest: React.FC = () => {
       case TrainTypeKind.LimitedExpress:
         return fetchJRWLtdExpressLogo();
       case TrainTypeKind.Rapid:
+      case TrainTypeKind.HighSpeedRapid:
         return fetchJRWRapidLogo();
       default:
         return fetchJRWLocalLogo();
