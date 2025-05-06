@@ -98,6 +98,17 @@ test('should enqueue message if WebSocket is not open', () => {
     result.current.sendLog('Queued message');
   });
   expect(mockWebSocketSend).not.toHaveBeenCalled();
+
+  // WebSocketが開通した時にキューからメッセージが送信されることを検証
+  act(() => {
+    mockWebSocket.readyState = WebSocket.OPEN;
+    // onopen イベントをトリガー
+    mockWebSocket.onopen?.();
+  });
+
+  expect(mockWebSocketSend).toHaveBeenCalled();
+  const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+  expect(message.log.message).toBe('Queued message');
 });
 
 test('should not connect with invalid WebSocket URL', () => {
