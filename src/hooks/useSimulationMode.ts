@@ -4,6 +4,7 @@ import getRhumbLineBearing from 'geolib/es/getRhumbLineBearing';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
+import { isDevApp } from '~/utils/isDevApp';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import { LineType } from '../../gen/proto/stationapi_pb';
 import {
@@ -163,7 +164,7 @@ export const useSimulationMode = (enabled: boolean): void => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (enabled && station) {
+    if (enabled && isDevApp && station) {
       useLocationStore.setState({
         timestamp: new Date().getTime(),
         coords: {
@@ -180,7 +181,7 @@ export const useSimulationMode = (enabled: boolean): void => {
   }, [enabled]);
 
   useEffect(() => {
-    if (!enabled || !selectedDirection) {
+    if (!enabled || !isDevApp || !selectedDirection) {
       return;
     }
 

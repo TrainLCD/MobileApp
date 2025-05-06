@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useSimulationMode } from '~/hooks/useSimulationMode';
 import {
   LineType,
   type Station,
@@ -25,7 +26,7 @@ import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
-import useAutoMode from '../hooks/useAutoMode';
+import { useAutoMode } from '../hooks/useAutoMode';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import useCurrentTrainType from '../hooks/useCurrentTrainType';
@@ -83,7 +84,7 @@ const MainScreen: React.FC = () => {
   const nextStation = useNextStation();
 
   useAutoMode(autoModeEnabled);
-  // useSimulationMode(autoModeEnabled);
+  useSimulationMode(autoModeEnabled);
 
   useTelemetrySender(true);
 
