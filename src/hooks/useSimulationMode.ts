@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDevApp } from '~/utils/isDevApp';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
-import { LineType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
+import { LineType } from '../../gen/proto/stationapi_pb';
 import {
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
@@ -102,13 +102,19 @@ export const useSimulationMode = (enabled: boolean): void => {
 
       const distanceForNextStation = getPathLength(points);
 
-      return generateTrainSpeedProfile({
+      const speedProfile = generateTrainSpeedProfile({
         distance: distanceForNextStation,
         maxSpeed,
         accel: LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType],
         decel: LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType],
         interval: 1,
       });
+
+      const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
+      const distanceRatio = distanceForNextStation / profileDistance;
+      const correctedProfile = speedProfile.map((v) => v * distanceRatio);
+
+      return correctedProfile;
     });
 
     segmentIndexRef.current = maybeRevsersedStations.findIndex(
