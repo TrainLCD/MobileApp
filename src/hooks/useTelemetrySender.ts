@@ -40,7 +40,7 @@ export const useTelemetrySender = (
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
-  const messageQueue: string[] = [];
+  const messageQueue = useRef<string[]>([]).current;
 
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
@@ -120,42 +120,50 @@ export const useTelemetrySender = (
       socket?.close();
       clearTimeout(reconnectTimeout);
     };
-  }, [wsUrl, sendTelemetryAutomatically]);
+  }, [
+    wsUrl,
+    sendTelemetryAutomatically,
+    messageQueue.length,
+    messageQueue.shift,
+  ]);
 
-  const sendLog = useCallback((message: string, level = 'debug') => {
-    const now = Date.now();
-    if (now - lastSentRef.current < THROTTLE_MS) {
-      return;
-    }
-
-    const payload = TelemetryPayload.safeParse({
-      log: {
-        level,
-        message,
-      },
-      device: Device.modelName ?? 'unknown',
-      timestamp: now,
-    });
-
-    if (payload.error) {
-      console.error('Invalid telemetry payload:', payload.error);
-      return;
-    }
-
-    const strigifiedMessage = JSON.stringify({
-      type: 'log',
-      ...payload.data,
-    });
-
-    if (socketRef.current?.readyState === WebSocket.OPEN && payload.success) {
-      if (payload.data.log) {
-        socketRef.current.send(strigifiedMessage);
-        lastSentRef.current = now;
+  const sendLog = useCallback(
+    (message: string, level = 'debug') => {
+      const now = Date.now();
+      if (now - lastSentRef.current < THROTTLE_MS) {
+        return;
       }
-    } else {
-      messageQueue.push(strigifiedMessage);
-    }
-  }, []);
+
+      const payload = TelemetryPayload.safeParse({
+        log: {
+          level,
+          message,
+        },
+        device: Device.modelName ?? 'unknown',
+        timestamp: now,
+      });
+
+      if (payload.error) {
+        console.error('Invalid telemetry payload:', payload.error);
+        return;
+      }
+
+      const strigifiedMessage = JSON.stringify({
+        type: 'log',
+        ...payload.data,
+      });
+
+      if (socketRef.current?.readyState === WebSocket.OPEN && payload.success) {
+        if (payload.data.log) {
+          socketRef.current.send(strigifiedMessage);
+          lastSentRef.current = now;
+        }
+      } else {
+        messageQueue.push(strigifiedMessage);
+      }
+    },
+    [messageQueue.push]
+  );
 
   const sendTelemetry = useCallback(() => {
     const now = Date.now();
