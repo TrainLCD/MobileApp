@@ -4,7 +4,7 @@ import { type TrainType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
 export const getIsLocal = (tt: TrainType | null): boolean =>
   (tt?.kind ?? TrainTypeKind.Default) === TrainTypeKind.Default;
 export const getIsRapid = (tt: TrainType | null): boolean =>
-  tt?.kind === TrainTypeKind.Rapid;
+  tt?.kind === TrainTypeKind.Rapid || tt?.kind === TrainTypeKind.HighSpeedRapid;
 export const getIsLtdExp = (tt: TrainType | null): boolean =>
   tt?.kind === TrainTypeKind.LimitedExpress;
 

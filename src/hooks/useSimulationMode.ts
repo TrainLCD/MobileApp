@@ -49,10 +49,9 @@ export const useSimulationMode = (enabled: boolean): void => {
 
     const defaultMaxSpeed = LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLineType];
 
-    if (trainType?.kind === TrainTypeKind.LimitedExpress) {
+    if (trainType?.kind && TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[trainType?.kind]) {
       return (
-        TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[TrainTypeKind.LimitedExpress] ??
-        defaultMaxSpeed
+        TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[trainType.kind] ?? defaultMaxSpeed
       );
     }
 

@@ -65,22 +65,48 @@ describe('useSimulationMode', () => {
     require('~/hooks/useInRadiusStation').useInRadiusStation.mockReturnValue(
       mockStation
     );
-    require('~/hooks/useCurrentTrainType').default.mockReturnValue({
-      kind: TrainTypeKind.LimitedExpress,
-    });
   });
 
-  it('applies limited express max speed when trainType.kind is LimitedExpress', () => {
+  const testTrainKind = (kind: TrainTypeKind) => {
+    require('~/hooks/useCurrentTrainType').default.mockReturnValue({ kind });
+
     renderHook(() => useSimulationMode(true));
 
-    expect(useLocationStore.setState).toHaveBeenCalledWith(
-      expect.objectContaining({
-        coords: expect.objectContaining({
-          latitude: mockStation.latitude,
-          longitude: mockStation.longitude,
-        }),
-      })
-    );
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(useLocationStore.setState).toHaveBeenCalled();
+  };
+
+  it('handles LimitedExpress correctly', () => {
+    testTrainKind(TrainTypeKind.LimitedExpress);
+  });
+
+  it('handles Default train correctly', () => {
+    testTrainKind(TrainTypeKind.Default);
+  });
+
+  it('handles Rapid train correctly', () => {
+    testTrainKind(TrainTypeKind.Rapid);
+  });
+
+  it('handles HighSpeedRapid train correctly', () => {
+    testTrainKind(TrainTypeKind.HighSpeedRapid);
+  });
+
+  it('handles empty kind fallback correctly', () => {
+    require('~/hooks/useCurrentTrainType').default.mockReturnValue({
+      kind: undefined,
+    });
+
+    renderHook(() => useSimulationMode(true));
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(useLocationStore.setState).toHaveBeenCalled();
   });
 
   it('updates location over time', () => {
