@@ -16,7 +16,9 @@ export function generateTrainSpeedProfile({
   const rng = Math.random();
 
   // 惰行の有無とパラメータをランダムで決定
-  const hasCoast = enableRandomCoast && rng < 0.5; // 50%の確率で惰行
+  const hasCoast =
+    enableRandomCoast &&
+    (distance > 800 ? Math.random() < 0.9 : Math.random() < 0.3);
   const coastingDecel = hasCoast ? 0.2 + Math.random() * 0.3 : 0;
   const tCoast = hasCoast ? 10 + Math.floor(Math.random() * 20) : 0;
   const vAfterCoast = maxSpeed - coastingDecel * tCoast;
