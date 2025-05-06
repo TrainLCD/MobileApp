@@ -22,7 +22,7 @@ beforeEach(() => {
   mockWebSocket = {
     send: mockWebSocketSend,
     close: jest.fn(),
-    readyState: WebSocket.OPEN,
+    readyState: 1, // WebSocket.OPEN
   };
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   (global as any).WebSocket = jest.fn(() => mockWebSocket);
