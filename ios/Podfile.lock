@@ -1182,7 +1182,7 @@ PODS:
     - SDWebImage (~> 5.19.1)
     - SDWebImageAVIFCoder (~> 0.11.0)
     - SDWebImageSVGCoder (~> 1.7.0)
-  - ExpoKeepAwake (14.0.1):
+  - ExpoKeepAwake (14.0.3):
     - ExpoModulesCore
   - ExpoLinearGradient (14.0.1):
     - ExpoModulesCore
@@ -3780,7 +3780,7 @@ SPEC CHECKSUMS:
   ExpoFont: 12b0217e42ac97029d0f317f0486039a8508cf52
   ExpoHaptics: f8eacde90398b8be3648ed823b6e9e6bf87ece3f
   ExpoImage: 8af6e284f0f20d9d1ae75d0a5dadf20e5b0b64a1
-  ExpoKeepAwake: 22173f45d767c7d37403fdf48292726901d69ce7
+  ExpoKeepAwake: b0171a73665bfcefcfcc311742a72a956e6aa680
   ExpoLinearGradient: 18148bd38f98fa0229c1f9df23393b32ab6d2d32
   ExpoLinking: 40e30b571ffb77b280a38bed137d89b21f46f2a0
   ExpoLocalization: d81f70d53db94b31e4a0b1e11007424ea1011a1c
