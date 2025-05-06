@@ -3,6 +3,7 @@ import { useSimulationMode } from '~/hooks/useSimulationMode';
 import * as Recoil from 'recoil';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
+import { TrainTypeKind } from '../../gen/proto/stationapi_pb';
 
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: {
@@ -18,6 +19,11 @@ jest.mock('~/hooks/useNextStation', () => ({
 jest.mock('~/hooks/useInRadiusStation', () => ({
   __esModule: true,
   useInRadiusStation: jest.fn(),
+}));
+
+jest.mock('~/hooks/useCurrentTrainType', () => ({
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 jest.mock('~/utils/isDevApp', () => ({
@@ -59,9 +65,12 @@ describe('useSimulationMode', () => {
     require('~/hooks/useInRadiusStation').useInRadiusStation.mockReturnValue(
       mockStation
     );
+    require('~/hooks/useCurrentTrainType').default.mockReturnValue({
+      kind: TrainTypeKind.LimitedExpress,
+    });
   });
 
-  it('sets initial location when enabled is true', () => {
+  it('applies limited express max speed when trainType.kind is LimitedExpress', () => {
     renderHook(() => useSimulationMode(true));
 
     expect(useLocationStore.setState).toHaveBeenCalledWith(
@@ -91,7 +100,55 @@ describe('useSimulationMode', () => {
       jest.advanceTimersByTime(3000);
     });
 
-    // 初期設定以外に呼ばれていないはず
+    expect(useLocationStore.setState).not.toHaveBeenCalled();
+  });
+
+  it('handles null station gracefully', () => {
+    jest.spyOn(Recoil, 'useRecoilValue').mockReturnValue({
+      stations: [],
+      selectedDirection: 'INBOUND',
+    });
+
+    require('~/hooks/useInRadiusStation').useInRadiusStation.mockReturnValue(
+      null
+    );
+
+    renderHook(() => useSimulationMode(true));
+
+    expect(useLocationStore.setState).not.toHaveBeenCalled();
+  });
+
+  it('resets to first station if nextStation is null', () => {
+    require('~/hooks/useNextStation').useNextStation.mockReturnValue(null);
+
+    renderHook(() => useSimulationMode(true));
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(useLocationStore.setState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coords: expect.objectContaining({
+          latitude: expect.any(Number),
+          longitude: expect.any(Number),
+        }),
+      })
+    );
+  });
+
+  it('skips update if no speed profile exists', () => {
+    jest.spyOn(Recoil, 'useRecoilValue').mockReturnValue({
+      stations: [],
+      selectedDirection: 'INBOUND',
+    });
+
+    renderHook(() => useSimulationMode(true));
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
     expect(useLocationStore.setState).not.toHaveBeenCalled();
   });
 });

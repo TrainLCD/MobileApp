@@ -6,16 +6,18 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isDevApp } from '~/utils/isDevApp';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
-import { LineType } from '../../gen/proto/stationapi_pb';
+import { LineType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
 import {
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
   LINE_TYPE_MAX_SPEEDS_IN_M_S,
+  TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '../constants/simulationMode';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
+import useCurrentTrainType from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
@@ -24,6 +26,7 @@ export const useSimulationMode = (enabled: boolean): void => {
   const { stations: rawStations, selectedDirection } =
     useRecoilValue(stationState);
   const currentLine = useCurrentLine();
+  const trainType = useCurrentTrainType();
 
   const segmentIndexRef = useRef(0);
   const childIndexRef = useRef(0);
@@ -39,9 +42,24 @@ export const useSimulationMode = (enabled: boolean): void => {
     [currentLine]
   );
 
-  const station = useInRadiusStation(
-    LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLine?.lineType ?? LineType.Normal] / 2
-  );
+  const maxSpeed = useMemo<number>(() => {
+    if (currentLineType === LineType.BulletTrain) {
+      return LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain];
+    }
+
+    const defaultMaxSpeed = LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLineType];
+
+    if (trainType?.kind === TrainTypeKind.LimitedExpress) {
+      return (
+        TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[TrainTypeKind.LimitedExpress] ??
+        defaultMaxSpeed
+      );
+    }
+
+    return defaultMaxSpeed;
+  }, [currentLineType, trainType]);
+
+  const station = useInRadiusStation(maxSpeed / 2);
   const nextStation = useNextStation(false, station ?? undefined);
 
   const maybeRevsersedStations = useMemo(
@@ -87,7 +105,7 @@ export const useSimulationMode = (enabled: boolean): void => {
 
       return generateTrainSpeedProfile({
         distance: distanceForNextStation,
-        maxSpeed: LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLineType],
+        maxSpeed,
         accel: LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType],
         decel: LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType],
         interval: 1,
@@ -164,7 +182,7 @@ export const useSimulationMode = (enabled: boolean): void => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (enabled && isDevApp && station) {
+    if (enabled && isDevApp && stations.length > 0 && station) {
       useLocationStore.setState({
         timestamp: new Date().getTime(),
         coords: {
