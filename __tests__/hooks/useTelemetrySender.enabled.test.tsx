@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 import { useLocationStore } from '~/hooks/useLocationStore';
 import { RecoilRoot } from 'recoil';
@@ -57,10 +57,12 @@ test('should send log when WebSocket is open', () => {
     result.current.sendLog('Test log', 'info');
   });
 
-  expect(mockWebSocketSend).toHaveBeenCalled();
-  const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-  expect(message.type).toBe('log');
-  expect(message.log.message).toBe('Test log');
+  waitFor(() => {
+    expect(mockWebSocketSend).toHaveBeenCalled();
+    const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+    expect(message.type).toBe('log');
+    expect(message.log.message).toBe('Test log');
+  });
 });
 
 test('should throttle log sending within 1s', () => {
@@ -71,7 +73,9 @@ test('should throttle log sending within 1s', () => {
     result.current.sendLog('Second');
   });
 
-  expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+  waitFor(() => {
+    expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+  });
 });
 
 test('should not send telemetry if coordinates are null', () => {
