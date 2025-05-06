@@ -72,20 +72,6 @@ export const useSimulationMode = (enabled: boolean): void => {
     const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
       const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
 
-      const wholePoints: GeolibInputCoordinates[] = [
-        { latitude: stations[0].latitude, longitude: stations[0].longitude },
-        ...stations.slice(1, -1).map((s) => ({
-          latitude: s.latitude,
-          longitude: s.longitude,
-        })),
-        {
-          latitude: stations[stations.length - 1].latitude,
-          longitude: stations[stations.length - 1].longitude,
-        },
-      ];
-
-      const wholeActualDistance = getPathLength(wholePoints);
-
       const curIdx = stationsWithoutPass.indexOf(cur);
       if (curIdx === -1) {
         // 通過駅は速度プロファイル生成対象外
