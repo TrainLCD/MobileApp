@@ -3,7 +3,6 @@ import { useSimulationMode } from '~/hooks/useSimulationMode';
 import * as Recoil from 'recoil';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
-import { isDevApp } from '~/utils/isDevApp';
 
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: {
