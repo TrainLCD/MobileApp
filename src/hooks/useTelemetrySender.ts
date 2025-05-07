@@ -200,17 +200,20 @@ export const useTelemetrySender = (
       ...payload.data,
     });
 
+    const isPayloadValid =
+      payload.data.coords &&
+      payload.data.coords.latitude != null &&
+      payload.data.coords.longitude != null;
+
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      if (
-        payload.data.coords &&
-        payload.data.coords.latitude != null &&
-        payload.data.coords.longitude != null
-      ) {
+      if (isPayloadValid) {
         socketRef.current.send(strigifiedData);
         lastSentRef.current = now;
       }
     } else {
-      telemetryQueue.push(strigifiedData);
+      if (isPayloadValid) {
+        telemetryQueue.push(strigifiedData);
+      }
     }
   }, [accuracy, latitude, longitude, speed, state, telemetryQueue.push]);
 
