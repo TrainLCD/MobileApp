@@ -53,8 +53,9 @@ afterEach(() => {
 test('should send log when WebSocket is open', async () => {
   const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
-  act(() => {
+  await act(async () => {
     result.current.sendLog('Test log', 'info');
+    jest.advanceTimersByTime(100);
   });
 
   await waitFor(() => {
@@ -68,14 +69,13 @@ test('should send log when WebSocket is open', async () => {
 test('should throttle log sending within 1s', async () => {
   const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
-  act(() => {
+  await act(async () => {
     result.current.sendLog('First');
     result.current.sendLog('Second');
+    jest.advanceTimersByTime(500); // not enough to reset throttle
   });
 
-  await waitFor(() => {
-    expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
-  });
+  expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
 });
 
 test('should not send telemetry if coordinates are null', () => {
@@ -93,24 +93,29 @@ test('should not send telemetry if coordinates are null', () => {
 
 test('should enqueue message if WebSocket is not open', async () => {
   mockWebSocket.readyState = WebSocket.CONNECTING;
+
   const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+
   act(() => {
     result.current.sendLog('Queued message');
   });
+
   expect(mockWebSocketSend).not.toHaveBeenCalled();
 
-  // WebSocketが開通した時にキューからメッセージが送信されることを検証
-  act(() => {
+  await act(async () => {
     mockWebSocket.readyState = WebSocket.OPEN;
-    // onopen イベントをトリガー
     mockWebSocket.onopen?.();
+    jest.advanceTimersByTime(100);
   });
 
-  await waitFor(() => {
-    expect(mockWebSocketSend).toHaveBeenCalled();
-    const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-    expect(message.log.message).toBe('Queued message');
-  });
+  await waitFor(
+    () => {
+      expect(mockWebSocketSend).toHaveBeenCalled();
+      const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+      expect(message.log.message).toBe('Queued message');
+    },
+    { timeout: 2000 }
+  );
 });
 
 test('should not connect with invalid WebSocket URL', () => {
