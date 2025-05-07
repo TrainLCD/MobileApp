@@ -213,9 +213,9 @@ export const useTelemetrySender = (
           })
         );
         lastSentRef.current = now;
-      } else {
-        telemetryQueue.push(strigifiedData);
       }
+    } else {
+      telemetryQueue.push(strigifiedData);
     }
   }, [accuracy, latitude, longitude, speed, state, telemetryQueue.push]);
 
