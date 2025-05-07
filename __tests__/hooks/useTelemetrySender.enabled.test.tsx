@@ -58,8 +58,10 @@ describe('useTelemetrySender', () => {
     await act(async () => {
       result.current.sendLog('Test log', 'info');
       jest.advanceTimersByTime(100);
+      await Promise.resolve(); // イベントループ1回分回す
     });
 
+    jest.runOnlyPendingTimers();
     await waitFor(() => {
       expect(mockWebSocketSend).toHaveBeenCalled();
       const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
@@ -75,6 +77,7 @@ describe('useTelemetrySender', () => {
       result.current.sendLog('First');
       result.current.sendLog('Second');
       jest.advanceTimersByTime(500); // not enough to reset throttle
+      await Promise.resolve(); // イベントループ1回分回す
     });
 
     expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
@@ -113,8 +116,10 @@ describe('useTelemetrySender', () => {
       mockWebSocket.readyState = WebSocket.OPEN;
       mockWebSocket.onopen?.();
       jest.advanceTimersByTime(100);
+      await Promise.resolve(); // イベントループ1回分回す
     });
 
+    jest.runOnlyPendingTimers();
     await waitFor(
       () => {
         expect(mockWebSocketSend).toHaveBeenCalled();
