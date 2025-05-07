@@ -40,8 +40,17 @@ export const useTelemetrySender = (
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
+  const MAX_QUEUE_SIZE = 1000; // 各キューの最大サイズを制限
   const telemetryQueue = useRef<string[]>([]).current;
   const messageQueue = useRef<string[]>([]).current;
+
+  // キューにメッセージを追加し、サイズ超過時は古いものを削除
+  const enqueueMessage = useCallback((queue: string[], message: string) => {
+    queue.push(message);
+    if (queue.length > MAX_QUEUE_SIZE) {
+      queue.shift();
+    }
+  }, []);
 
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
@@ -166,10 +175,10 @@ export const useTelemetrySender = (
           lastSentRef.current = now;
         }
       } else {
-        messageQueue.push(strigifiedMessage);
+        enqueueMessage(messageQueue, strigifiedMessage);
       }
     },
-    [messageQueue.push]
+    [messageQueue, enqueueMessage]
   );
 
   const sendTelemetry = useCallback(() => {
@@ -211,9 +220,17 @@ export const useTelemetrySender = (
         lastSentRef.current = now;
       }
     } else if (isPayloadValid) {
-      telemetryQueue.push(strigifiedData);
+      enqueueMessage(telemetryQueue, strigifiedData);
     }
-  }, [accuracy, latitude, longitude, speed, state, telemetryQueue.push]);
+  }, [
+    accuracy,
+    latitude,
+    longitude,
+    speed,
+    state,
+    enqueueMessage,
+    telemetryQueue,
+  ]);
 
   useEffect(() => {
     if (!isTelemetryEnabled || !sendTelemetryAutomatically) {

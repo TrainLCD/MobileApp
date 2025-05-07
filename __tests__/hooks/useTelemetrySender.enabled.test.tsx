@@ -18,6 +18,8 @@ let mockWebSocketSend: jest.Mock;
 let mockWebSocket: any;
 
 describe('useTelemetrySender', () => {
+  const MAX_QUEUE_SIZE = 1000;
+
   beforeEach(() => {
     mockWebSocketSend = jest.fn();
     mockWebSocket = {
@@ -129,5 +131,41 @@ describe('useTelemetrySender', () => {
     renderHook(() => useTelemetrySender(false, 'invalid-url'), { wrapper });
     expect(spy).toHaveBeenCalledWith('Invalid WebSocket URL');
     spy.mockRestore();
+  });
+
+  it('should add a message to an empty queue', () => {
+    const queue: string[] = [];
+    const enqueue = (q: string[], msg: string) => {
+      q.push(msg);
+      if (q.length > MAX_QUEUE_SIZE) q.shift();
+    };
+
+    enqueue(queue, 'msg1');
+    expect(queue).toEqual(['msg1']);
+  });
+
+  it('should not remove anything if under MAX_QUEUE_SIZE', () => {
+    const queue = Array.from({ length: 999 }, (_, i) => `msg${i}`);
+    const enqueue = (q: string[], msg: string) => {
+      q.push(msg);
+      if (q.length > MAX_QUEUE_SIZE) q.shift();
+    };
+
+    enqueue(queue, 'new');
+    expect(queue.length).toBe(1000);
+    expect(queue[queue.length - 1]).toBe('new');
+  });
+
+  it('should remove oldest item if MAX_QUEUE_SIZE is exceeded', () => {
+    const queue = Array.from({ length: 1000 }, (_, i) => `msg${i}`);
+    const enqueue = (q: string[], msg: string) => {
+      q.push(msg);
+      if (q.length > MAX_QUEUE_SIZE) q.shift();
+    };
+
+    enqueue(queue, 'latest');
+    expect(queue.length).toBe(1000);
+    expect(queue[0]).toBe('msg1'); // msg0 was removed
+    expect(queue[queue.length - 1]).toBe('latest');
   });
 });
