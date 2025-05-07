@@ -1,6 +1,6 @@
-import { getPathLength } from 'geolib';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
-import getRhumbLineBearing from 'geolib/es/getRhumbLineBearing';
+import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
+import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -149,7 +149,7 @@ export const useSimulationMode = (enabled: boolean): void => {
           return prev;
         }
 
-        const bearingForNextStation = getRhumbLineBearing(
+        const bearingForNextStation = getGreatCircleBearing(
           {
             latitude: prev.coords.latitude,
             longitude: prev.coords.longitude,
