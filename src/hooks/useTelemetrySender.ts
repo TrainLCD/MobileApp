@@ -206,12 +206,7 @@ export const useTelemetrySender = (
         payload.data.coords.latitude != null &&
         payload.data.coords.longitude != null
       ) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: 'location_update',
-            ...payload.data,
-          })
-        );
+        socketRef.current.send(strigifiedData);
         lastSentRef.current = now;
       }
     } else {
