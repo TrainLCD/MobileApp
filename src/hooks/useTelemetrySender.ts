@@ -4,6 +4,7 @@ import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
 import { useRecoilValue } from 'recoil';
 import { z } from 'zod';
 import { webSocketUrlRegexp } from '~/constants/regexp';
+import { TELEMETRY_MAX_QUEUE_SIZE } from '~/constants/telemetry';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
@@ -40,7 +41,16 @@ export const useTelemetrySender = (
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
+  const telemetryQueue = useRef<string[]>([]).current;
   const messageQueue = useRef<string[]>([]).current;
+
+  // キューにメッセージを追加し、サイズ超過時は古いものを削除
+  const enqueueMessage = useCallback((queue: string[], message: string) => {
+    queue.push(message);
+    if (queue.length > TELEMETRY_MAX_QUEUE_SIZE) {
+      queue.shift();
+    }
+  }, []);
 
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
@@ -95,6 +105,10 @@ export const useTelemetrySender = (
             const msg = messageQueue.shift();
             if (msg) socket.send(msg);
           }
+          while (telemetryQueue.length > 0) {
+            const msg = telemetryQueue.shift();
+            if (msg) socket.send(msg);
+          }
         };
         socket.onerror = (e) => {
           console.warn('WebSocket error', e);
@@ -125,6 +139,8 @@ export const useTelemetrySender = (
     sendTelemetryAutomatically,
     messageQueue.length,
     messageQueue.shift,
+    telemetryQueue.length,
+    telemetryQueue.shift,
   ]);
 
   const sendLog = useCallback(
@@ -159,10 +175,10 @@ export const useTelemetrySender = (
           lastSentRef.current = now;
         }
       } else {
-        messageQueue.push(strigifiedMessage);
+        enqueueMessage(messageQueue, strigifiedMessage);
       }
     },
-    [messageQueue.push]
+    [messageQueue, enqueueMessage]
   );
 
   const sendTelemetry = useCallback(() => {
@@ -188,22 +204,33 @@ export const useTelemetrySender = (
       return;
     }
 
+    const strigifiedData = JSON.stringify({
+      type: 'location_update',
+      ...payload.data,
+    });
+
+    const isPayloadValid =
+      payload.data.coords &&
+      payload.data.coords.latitude != null &&
+      payload.data.coords.longitude != null;
+
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      if (
-        payload.data.coords &&
-        payload.data.coords.latitude != null &&
-        payload.data.coords.longitude != null
-      ) {
-        socketRef.current.send(
-          JSON.stringify({
-            type: 'location_update',
-            ...payload.data,
-          })
-        );
+      if (isPayloadValid) {
+        socketRef.current.send(strigifiedData);
         lastSentRef.current = now;
       }
+    } else if (isPayloadValid) {
+      enqueueMessage(telemetryQueue, strigifiedData);
     }
-  }, [accuracy, latitude, longitude, speed, state]);
+  }, [
+    accuracy,
+    latitude,
+    longitude,
+    speed,
+    state,
+    enqueueMessage,
+    telemetryQueue,
+  ]);
 
   useEffect(() => {
     if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
