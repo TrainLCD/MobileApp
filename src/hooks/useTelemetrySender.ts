@@ -210,10 +210,8 @@ export const useTelemetrySender = (
         socketRef.current.send(strigifiedData);
         lastSentRef.current = now;
       }
-    } else {
-      if (isPayloadValid) {
-        telemetryQueue.push(strigifiedData);
-      }
+    } else if (isPayloadValid) {
+      telemetryQueue.push(strigifiedData);
     }
   }, [accuracy, latitude, longitude, speed, state, telemetryQueue.push]);
 
