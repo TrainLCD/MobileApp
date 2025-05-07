@@ -40,6 +40,7 @@ export const useTelemetrySender = (
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
+  const telemetryQueue = useRef<string[]>([]).current;
   const messageQueue = useRef<string[]>([]).current;
 
   const latitude = useLocationStore((state) => state?.coords.latitude);
@@ -95,6 +96,10 @@ export const useTelemetrySender = (
             const msg = messageQueue.shift();
             if (msg) socket.send(msg);
           }
+          while (telemetryQueue.length > 0) {
+            const msg = telemetryQueue.shift();
+            if (msg) socket.send(msg);
+          }
         };
         socket.onerror = (e) => {
           console.warn('WebSocket error', e);
@@ -125,6 +130,8 @@ export const useTelemetrySender = (
     sendTelemetryAutomatically,
     messageQueue.length,
     messageQueue.shift,
+    telemetryQueue.length,
+    telemetryQueue.shift,
   ]);
 
   const sendLog = useCallback(
@@ -188,6 +195,11 @@ export const useTelemetrySender = (
       return;
     }
 
+    const strigifiedData = JSON.stringify({
+      type: 'location_update',
+      ...payload.data,
+    });
+
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       if (
         payload.data.coords &&
@@ -201,9 +213,11 @@ export const useTelemetrySender = (
           })
         );
         lastSentRef.current = now;
+      } else {
+        telemetryQueue.push(strigifiedData);
       }
     }
-  }, [accuracy, latitude, longitude, speed, state]);
+  }, [accuracy, latitude, longitude, speed, state, telemetryQueue.push]);
 
   useEffect(() => {
     if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
