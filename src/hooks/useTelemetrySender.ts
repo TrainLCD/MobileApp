@@ -8,6 +8,7 @@ import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import useIsPassing from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { TELEMETRY_MAX_QUEUE_SIZE } from '~/constants/telemetry';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
@@ -40,14 +41,13 @@ export const useTelemetrySender = (
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const THROTTLE_MS = 1000; // 1秒間に1回までの送信に制限
-  const MAX_QUEUE_SIZE = 1000; // 各キューの最大サイズを制限
   const telemetryQueue = useRef<string[]>([]).current;
   const messageQueue = useRef<string[]>([]).current;
 
   // キューにメッセージを追加し、サイズ超過時は古いものを削除
   const enqueueMessage = useCallback((queue: string[], message: string) => {
     queue.push(message);
-    if (queue.length > MAX_QUEUE_SIZE) {
+    if (queue.length > TELEMETRY_MAX_QUEUE_SIZE) {
       queue.shift();
     }
   }, []);

@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 import { useLocationStore } from '~/hooks/useLocationStore';
 import { RecoilRoot } from 'recoil';
+import { TELEMETRY_MAX_QUEUE_SIZE } from '~/constants/telemetry';
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
 jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
@@ -18,8 +19,6 @@ let mockWebSocketSend: jest.Mock;
 let mockWebSocket: any;
 
 describe('useTelemetrySender', () => {
-  const MAX_QUEUE_SIZE = 1000;
-
   beforeEach(() => {
     mockWebSocketSend = jest.fn();
     mockWebSocket = {
@@ -137,34 +136,40 @@ describe('useTelemetrySender', () => {
     const queue: string[] = [];
     const enqueue = (q: string[], msg: string) => {
       q.push(msg);
-      if (q.length > MAX_QUEUE_SIZE) q.shift();
+      if (q.length > TELEMETRY_MAX_QUEUE_SIZE) q.shift();
     };
 
     enqueue(queue, 'msg1');
     expect(queue).toEqual(['msg1']);
   });
 
-  it('should not remove anything if under MAX_QUEUE_SIZE', () => {
-    const queue = Array.from({ length: 999 }, (_, i) => `msg${i}`);
+  it('should not remove anything if under TELEMETRY_MAX_QUEUE_SIZE', () => {
+    const queue = Array.from(
+      { length: TELEMETRY_MAX_QUEUE_SIZE - 1 },
+      (_, i) => `msg${i}`
+    );
     const enqueue = (q: string[], msg: string) => {
       q.push(msg);
-      if (q.length > MAX_QUEUE_SIZE) q.shift();
+      if (q.length > TELEMETRY_MAX_QUEUE_SIZE) q.shift();
     };
 
     enqueue(queue, 'new');
-    expect(queue.length).toBe(1000);
+    expect(queue.length).toBe(TELEMETRY_MAX_QUEUE_SIZE);
     expect(queue[queue.length - 1]).toBe('new');
   });
 
-  it('should remove oldest item if MAX_QUEUE_SIZE is exceeded', () => {
-    const queue = Array.from({ length: 1000 }, (_, i) => `msg${i}`);
+  it('should remove oldest item if TELEMETRY_MAX_QUEUE_SIZE is exceeded', () => {
+    const queue = Array.from(
+      { length: TELEMETRY_MAX_QUEUE_SIZE },
+      (_, i) => `msg${i}`
+    );
     const enqueue = (q: string[], msg: string) => {
       q.push(msg);
-      if (q.length > MAX_QUEUE_SIZE) q.shift();
+      if (q.length > TELEMETRY_MAX_QUEUE_SIZE) q.shift();
     };
 
     enqueue(queue, 'latest');
-    expect(queue.length).toBe(1000);
+    expect(queue.length).toBe(TELEMETRY_MAX_QUEUE_SIZE);
     expect(queue[0]).toBe('msg1'); // msg0 was removed
     expect(queue[queue.length - 1]).toBe('latest');
   });
