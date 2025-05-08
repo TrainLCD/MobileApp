@@ -1,8 +1,8 @@
-import { renderHook, act } from '@testing-library/react-native';
-import { useSimulationMode } from '~/hooks/useSimulationMode';
+import { act, renderHook } from '@testing-library/react-native';
 import * as Recoil from 'recoil';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
+import { useSimulationMode } from '~/hooks/useSimulationMode';
 import { TrainTypeKind } from '../../gen/proto/stationapi_pb';
 
 jest.mock('~/hooks/useLocationStore', () => ({
