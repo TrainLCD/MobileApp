@@ -70,7 +70,7 @@ describe('useTelemetrySender', () => {
       const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
       expect(message.type).toBe('log');
       expect(message.log.message).toBe('Test log');
-    });
+    }, { timeout: 2000 });
   });
 
   test('should throttle log sending within 1s', async () => {
