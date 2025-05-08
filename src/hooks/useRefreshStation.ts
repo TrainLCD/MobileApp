@@ -38,7 +38,6 @@ const useRefreshStation = (): void => {
   const speed = useLocationStore((state) => state?.coords.speed);
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
 
-  const nextStation = useNextStation();
   const actualNextStation = useNextStation(false);
   const approachingNotifiedIdRef = useRef<number>();
   const arrivedNotifiedIdRef = useRef<number>();
@@ -94,7 +93,7 @@ const useRefreshStation = (): void => {
     if (
       !latitude ||
       !longitude ||
-      !nextStation ||
+      !nearestStation ||
       (actualNextStation && getIsPass(actualNextStation))
     ) {
       return false;
@@ -103,8 +102,8 @@ const useRefreshStation = (): void => {
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation.latitude,
-        longitude: nextStation.longitude,
+        latitude: nearestStation.latitude,
+        longitude: nearestStation.longitude,
       },
       approachingThreshold
     );
@@ -112,8 +111,8 @@ const useRefreshStation = (): void => {
     approachingThreshold,
     latitude,
     longitude,
-    nextStation,
     actualNextStation,
+    nearestStation,
   ]);
 
   const sendApproachingNotification = useCallback(
