@@ -81,9 +81,25 @@ describe('useTelemetrySender', () => {
       result.current.sendLog('Second');
     });
 
-    await waitFor(() => {
-      expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+    await waitFor(
+      () => {
+        expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 2000 }
+    );
+
+    // スロットリング時間を過ぎた後に2回目のメッセージが送信されることを確認
+    act(() => {
+      jest.advanceTimersByTime(TELEMETRY_THROTTLE_MS);
+      result.current.sendLog('Third');
     });
+
+    await waitFor(
+      () => {
+        expect(mockWebSocketSend).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 2000 }
+    );
   });
 
   test('should not send telemetry if coordinates are null', () => {
@@ -118,11 +134,14 @@ describe('useTelemetrySender', () => {
       mockWebSocket.onopen?.();
     });
 
-    await waitFor(() => {
-      expect(mockWebSocketSend).toHaveBeenCalled();
-      const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-      expect(message.log.message).toBe('Queued message');
-    });
+    await waitFor(
+      () => {
+        expect(mockWebSocketSend).toHaveBeenCalled();
+        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+        expect(message.log.message).toBe('Queued message');
+      },
+      { timeout: 2000 }
+    );
   });
 
   test('should not connect with invalid WebSocket URL', () => {
