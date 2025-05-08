@@ -78,3 +78,17 @@ abstract_target 'TrainLCD' do
     end
   end
 end
+
+target 'ProdWatchApp' do
+  platform :watchos, '7.1'
+end
+target 'ProdWatchApp Extension' do
+  platform :watchos, '7.1'
+end
+
+target 'CanaryWatchApp' do
+  platform :watchos, '7.1'
+end
+target 'CanaryWatchApp Extension' do
+  platform :watchos, '7.1'
+end
