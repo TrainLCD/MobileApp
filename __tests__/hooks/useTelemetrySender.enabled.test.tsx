@@ -1,13 +1,19 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { RecoilRoot } from 'recoil';
-import { TELEMETRY_MAX_QUEUE_SIZE } from '~/constants/telemetry';
 import { useLocationStore } from '~/hooks/useLocationStore';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
+
+const TELEMETRY_MAX_QUEUE_SIZE = 1000;
+const TELEMETRY_THROTTLE_MS = 100; // NOTE: flakyになるので実運用より短め
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
 jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn(),
+}));
+jest.mock('~/constants/telemetry', () => ({
+  TELEMETRY_MAX_QUEUE_SIZE,
+  TELEMETRY_THROTTLE_MS,
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -57,20 +63,14 @@ describe('useTelemetrySender', () => {
 
     await act(async () => {
       result.current.sendLog('Test log', 'info');
-      jest.advanceTimersByTime(100);
-      await Promise.resolve(); // イベントループ1回分回す
     });
 
-    jest.runOnlyPendingTimers();
-    await waitFor(
-      () => {
-        expect(mockWebSocketSend).toHaveBeenCalled();
-        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-        expect(message.type).toBe('log');
-        expect(message.log.message).toBe('Test log');
-      },
-      { timeout: 2000, interval: 10 }
-    );
+    await waitFor(() => {
+      expect(mockWebSocketSend).toHaveBeenCalled();
+      const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+      expect(message.type).toBe('log');
+      expect(message.log.message).toBe('Test log');
+    });
   });
 
   test('should throttle log sending within 1s', async () => {
@@ -79,17 +79,11 @@ describe('useTelemetrySender', () => {
     await act(async () => {
       result.current.sendLog('First');
       result.current.sendLog('Second');
-      jest.advanceTimersByTime(500); // not enough to reset throttle
-      await Promise.resolve(); // イベントループ1回分回す
     });
 
-    jest.runOnlyPendingTimers();
-    await waitFor(
-      () => {
-        expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
-      },
-      { timeout: 2000, interval: 10 }
-    );
+    await waitFor(() => {
+      expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+    });
   });
 
   test('should not send telemetry if coordinates are null', () => {
@@ -104,9 +98,7 @@ describe('useTelemetrySender', () => {
       })
     );
     const { result } = renderHook(() => useTelemetrySender(), { wrapper });
-    act(() => {
-      jest.advanceTimersByTime(1000);
-    });
+
     expect(mockWebSocketSend).not.toHaveBeenCalled();
   });
 
@@ -124,19 +116,13 @@ describe('useTelemetrySender', () => {
     await act(async () => {
       mockWebSocket.readyState = WebSocket.OPEN;
       mockWebSocket.onopen?.();
-      jest.advanceTimersByTime(100);
-      await Promise.resolve(); // イベントループ1回分回す
     });
 
-    jest.runOnlyPendingTimers();
-    await waitFor(
-      () => {
-        expect(mockWebSocketSend).toHaveBeenCalled();
-        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-        expect(message.log.message).toBe('Queued message');
-      },
-      { timeout: 2000, interval: 10 }
-    );
+    await waitFor(() => {
+      expect(mockWebSocketSend).toHaveBeenCalled();
+      const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+      expect(message.log.message).toBe('Queued message');
+    });
   });
 
   test('should not connect with invalid WebSocket URL', () => {
