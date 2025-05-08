@@ -38,7 +38,7 @@ const useRefreshStation = (): void => {
   const speed = useLocationStore((state) => state?.coords.speed);
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
 
-  const actualNextStation = useNextStation(false);
+  const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number>();
   const arrivedNotifiedIdRef = useRef<number>();
   const { targetStationIds } = useRecoilValue(notifyState);
@@ -90,30 +90,19 @@ const useRefreshStation = (): void => {
   }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
-    if (
-      !latitude ||
-      !longitude ||
-      !nearestStation ||
-      (actualNextStation && getIsPass(actualNextStation))
-    ) {
+    if (!latitude || !longitude || !nextStation) {
       return false;
     }
 
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nearestStation.latitude,
-        longitude: nearestStation.longitude,
+        latitude: nextStation.latitude,
+        longitude: nextStation.longitude,
       },
       approachingThreshold
     );
-  }, [
-    approachingThreshold,
-    latitude,
-    longitude,
-    actualNextStation,
-    nearestStation,
-  ]);
+  }, [approachingThreshold, latitude, longitude, nextStation]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
