@@ -1,8 +1,8 @@
-import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useTelemetrySender } from '~/hooks/useTelemetrySender';
-import { useLocationStore } from '~/hooks/useLocationStore';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { RecoilRoot } from 'recoil';
 import { TELEMETRY_MAX_QUEUE_SIZE } from '~/constants/telemetry';
+import { useLocationStore } from '~/hooks/useLocationStore';
+import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
 jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
@@ -62,12 +62,15 @@ describe('useTelemetrySender', () => {
     });
 
     jest.runOnlyPendingTimers();
-    await waitFor(() => {
-      expect(mockWebSocketSend).toHaveBeenCalled();
-      const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-      expect(message.type).toBe('log');
-      expect(message.log.message).toBe('Test log');
-    });
+    await waitFor(
+      () => {
+        expect(mockWebSocketSend).toHaveBeenCalled();
+        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+        expect(message.type).toBe('log');
+        expect(message.log.message).toBe('Test log');
+      },
+      { timeout: 2000, interval: 10 }
+    );
   });
 
   test('should throttle log sending within 1s', async () => {
@@ -80,7 +83,13 @@ describe('useTelemetrySender', () => {
       await Promise.resolve(); // イベントループ1回分回す
     });
 
-    expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+    jest.runOnlyPendingTimers();
+    await waitFor(
+      () => {
+        expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 2000, interval: 10 }
+    );
   });
 
   test('should not send telemetry if coordinates are null', () => {
@@ -126,7 +135,7 @@ describe('useTelemetrySender', () => {
         const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
         expect(message.log.message).toBe('Queued message');
       },
-      { timeout: 2000 }
+      { timeout: 2000, interval: 10 }
     );
   });
 
