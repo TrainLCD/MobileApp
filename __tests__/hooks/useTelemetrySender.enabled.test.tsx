@@ -4,7 +4,7 @@ import { useLocationStore } from '~/hooks/useLocationStore';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 
 const TELEMETRY_MAX_QUEUE_SIZE = 1000;
-const TELEMETRY_THROTTLE_MS = 100; // NOTE: flakyになるので実運用より短め
+const TELEMETRY_THROTTLE_MS = 10; // NOTE: flakyになるので実運用より短め
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
 jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
@@ -65,12 +65,15 @@ describe('useTelemetrySender', () => {
       result.current.sendLog('Test log', 'info');
     });
 
-    await waitFor(() => {
-      expect(mockWebSocketSend).toHaveBeenCalled();
-      const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-      expect(message.type).toBe('log');
-      expect(message.log.message).toBe('Test log');
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(mockWebSocketSend).toHaveBeenCalled();
+        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+        expect(message.type).toBe('log');
+        expect(message.log.message).toBe('Test log');
+      },
+      { timeout: 2000 }
+    );
   });
 
   test('should throttle log sending within 1s', async () => {
