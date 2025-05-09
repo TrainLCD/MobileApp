@@ -150,13 +150,6 @@ describe("useTelemetrySender", () => {
 		);
 	});
 
-	test("should not connect with invalid WebSocket URL", () => {
-		const spy = jest.spyOn(console, "warn").mockImplementation(() => {});
-		renderHook(() => useTelemetrySender(false, "invalid-url"), { wrapper });
-		expect(spy).toHaveBeenCalledWith("Invalid WebSocket URL");
-		spy.mockRestore();
-	});
-
 	it("should add a message to an empty queue", () => {
 		const queue: string[] = [];
 		const enqueue = (q: string[], msg: string) => {

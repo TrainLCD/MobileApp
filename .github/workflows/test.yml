@@ -13,7 +13,6 @@ on:
 env:
   cache-version: v1
   TZ: "Asia/Tokyo"
-  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "wss://exampel.com"
 
 jobs:
   test:
