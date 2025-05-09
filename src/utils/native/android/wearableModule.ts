@@ -1,21 +1,21 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform } from "react-native";
 
 const { WearableModule } = NativeModules;
 
 type StationInfoPayload = {
-  stationName: string;
-  stationNameRoman: string;
-  currentStateKey: string;
-  stationNumber: string;
-  badAccuracy: boolean;
-  isNextLastStop: boolean;
+	stationName: string;
+	stationNameRoman: string;
+	currentStateKey: string;
+	stationNumber: string;
+	badAccuracy: boolean;
+	isNextLastStop: boolean;
 };
 
 const sendStationInfoToWatch = (payload: StationInfoPayload): Promise<void> => {
-  if (Platform.OS !== 'android') {
-    return Promise.resolve();
-  }
-  return WearableModule?.sendStationInfoToWatch(payload);
+	if (Platform.OS !== "android") {
+		return Promise.resolve();
+	}
+	return WearableModule?.sendStationInfoToWatch(payload);
 };
 
 export default sendStationInfoToWatch;
