@@ -1,34 +1,34 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const useInterval = (
-	handler: () => void,
-	timeout: number,
+  handler: () => void,
+  timeout: number
 ): {
-	isPausing: boolean;
-	pause: () => void;
+  isPausing: boolean;
+  pause: () => void;
 } => {
-	const intervalId = useRef<NodeJS.Timeout>();
-	const [isPausing, setIsPausing] = useState(false);
+  const intervalId = useRef<NodeJS.Timeout>();
+  const [isPausing, setIsPausing] = useState(false);
 
-	useEffect(() => {
-		if (isPausing) {
-			return () => undefined;
-		}
+  useEffect(() => {
+    if (isPausing) {
+      return () => undefined;
+    }
 
-		const id = setInterval(handler, timeout);
-		intervalId.current = id;
+    const id = setInterval(handler, timeout);
+    intervalId.current = id;
 
-		return () => clearInterval(id);
-	}, [handler, isPausing, timeout]);
+    return () => clearInterval(id);
+  }, [handler, isPausing, timeout]);
 
-	const pause = useCallback(() => {
-		setIsPausing(true);
-		const id = setTimeout(() => {
-			setIsPausing(false);
-		}, timeout);
+  const pause = useCallback(() => {
+    setIsPausing(true);
+    const id = setTimeout(() => {
+      setIsPausing(false);
+    }, timeout);
 
-		return () => clearTimeout(id);
-	}, [timeout]);
+    return () => clearTimeout(id);
+  }, [timeout]);
 
-	return { isPausing, pause };
+  return { isPausing, pause };
 };
