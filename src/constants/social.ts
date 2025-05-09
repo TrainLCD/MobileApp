@@ -1,1 +1,1 @@
-export const STATUS_URL = 'https://status.trainlcd.app';
+export const STATUS_URL = "https://status.trainlcd.app";
