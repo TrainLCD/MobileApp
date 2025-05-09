@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: mongolyy/reviewdog-action-biome@v1
+      - uses: mongolyy/reviewdog-action-biome@a7a10e692e815deb2ea9279f599fd7bc825138cc
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
