@@ -4,7 +4,10 @@ import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from "react-native-dotenv";
 import { useRecoilValue } from "recoil";
 import { z } from "zod";
 import { webSocketUrlRegexp } from "~/constants/regexp";
-import { TELEMETRY_MAX_QUEUE_SIZE } from "~/constants/telemetry";
+import {
+	TELEMETRY_MAX_QUEUE_SIZE,
+	TELEMETRY_THROTTLE_MS,
+} from "~/constants/telemetry";
 import { isTelemetryEnabled } from "~/utils/telemetryConfig";
 import stationState from "../store/atoms/station";
 import useIsPassing from "./useIsPassing";
@@ -40,7 +43,6 @@ export const useTelemetrySender = (
 ) => {
 	const socketRef = useRef<WebSocket | null>(null);
 	const lastSentRef = useRef<number>(0);
-	const throttleMs = 1000; // 1秒間に1回までの送信に制限
 	const telemetryQueue = useRef<string[]>([]).current;
 	const messageQueue = useRef<string[]>([]).current;
 
@@ -143,7 +145,7 @@ export const useTelemetrySender = (
 	const sendLog = useCallback(
 		(message: string, level = "debug") => {
 			const now = Date.now();
-			if (now - lastSentRef.current < throttleMs) {
+			if (now - lastSentRef.current < TELEMETRY_THROTTLE_MS) {
 				return;
 			}
 
@@ -179,7 +181,7 @@ export const useTelemetrySender = (
 
 	const sendTelemetry = useCallback(() => {
 		const now = Date.now();
-		if (now - lastSentRef.current < throttleMs) {
+		if (now - lastSentRef.current < TELEMETRY_THROTTLE_MS) {
 			return;
 		}
 
