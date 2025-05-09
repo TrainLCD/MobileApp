@@ -4,7 +4,7 @@ import { useLocationStore } from "~/hooks/useLocationStore";
 import { useTelemetrySender } from "~/hooks/useTelemetrySender";
 
 const TELEMETRY_MAX_QUEUE_SIZE = 1000;
-const TELEMETRY_THROTTLE_MS = 10; // NOTE: flakyになるので実運用より短め
+const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
 
 jest.mock("expo-device", () => ({ modelName: "MockDevice" }));
 jest.mock("~/utils/telemetryConfig", () => ({ isTelemetryEnabled: true }));
