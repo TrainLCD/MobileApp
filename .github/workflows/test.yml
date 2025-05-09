@@ -2,17 +2,16 @@ name: Jest
 
 on:
   push:
-  pull_request:
     branches:
-      - "**"
+      - '**'
     paths:
-      - "package.json"
-      - "package-lock.json"
-      - "src/**"
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/**'
 
 env:
   cache-version: v1
-  TZ: "Asia/Tokyo"
+  TZ: 'Asia/Tokyo'
 
 jobs:
   test:
@@ -25,7 +24,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
       - name: Run Jest
