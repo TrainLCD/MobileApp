@@ -63,6 +63,7 @@ describe("useTelemetrySender", () => {
 
 		await act(async () => {
 			result.current.sendLog("Test log", "info");
+			await Promise.resolve(); // イベントループ1回分回す
 		});
 
 		await waitFor(
@@ -82,6 +83,7 @@ describe("useTelemetrySender", () => {
 		await act(async () => {
 			result.current.sendLog("First");
 			result.current.sendLog("Second");
+			await Promise.resolve(); // イベントループ1回分回す
 		});
 
 		await waitFor(
@@ -135,6 +137,7 @@ describe("useTelemetrySender", () => {
 		await act(async () => {
 			mockWebSocket.readyState = WebSocket.OPEN;
 			mockWebSocket.onopen?.();
+			await Promise.resolve(); // イベントループ1回分回す
 		});
 
 		await waitFor(
