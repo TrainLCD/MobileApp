@@ -26,15 +26,9 @@ const Marquee = ({ children }: Props) => {
 
   const startScroll = useCallback(
     (width: number) => {
-      const screenWidth = Dimensions.get('screen').width;
-      const distance = width + screenWidth;
-      const duration = Math.max(
-        MIN_DURATION,
-        Math.min(MAX_DURATION, (distance / SCROLL_SPEED) * 1000)
-      );
       offsetX.value = withRepeat(
         withTiming(-width, {
-          duration,
+          duration: width * 3,
           easing: Easing.linear,
         }),
         -1
