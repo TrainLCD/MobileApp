@@ -128,7 +128,6 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(18),
-    includeFontPadding: false,
   },
   textEn: {
     color: '#fff',
