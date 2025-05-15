@@ -1,3 +1,11 @@
 export const YAMANOTE_LINE_BOARD_FILL_DURATION = 2000;
 export const YAMANOTE_CHEVRON_SCALE_DURATION = 500;
 export const YAMANOTE_CHEVRON_MOVE_DURATION = 750;
+// 間隔(ミリ秒)
+export const DEFAULT_HEADER_TRANSITION_INTERVAL = 3000; // ms
+export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
+// 遅延(ミリ秒)
+export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
+export const LONG_PRESS_DURATION = 500;
+
+export const ARRIVED_GRACE_PERIOD_MS = 15000; // １５秒間は停車中をキープ

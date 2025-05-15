@@ -20,6 +20,7 @@ import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
+import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
 
@@ -42,6 +43,7 @@ const useRefreshStation = (): void => {
   const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number>();
   const arrivedNotifiedIdRef = useRef<number>();
+  const lastArrivedTimeRef = useRef<number>(0);
   const { targetStationIds } = useRecoilValue(notifyState);
 
   const nearestStation = useNearestStation();
@@ -50,7 +52,10 @@ const useRefreshStation = (): void => {
   const { arrivedThreshold, approachingThreshold } = useThreshold();
 
   const isArrived = useMemo((): boolean => {
-    if (!latitude || !longitude || !nearestStation) {
+    const inGracePeriod =
+      Date.now() - lastArrivedTimeRef.current < ARRIVED_GRACE_PERIOD_MS;
+
+    if (!latitude || !longitude || !nearestStation || inGracePeriod) {
       return true;
     }
 
@@ -85,7 +90,7 @@ const useRefreshStation = (): void => {
       );
     }
 
-    return isPointWithinRadius(
+    const arrived = isPointWithinRadius(
       { latitude, longitude },
       {
         latitude: nearestStation.latitude,
@@ -93,6 +98,12 @@ const useRefreshStation = (): void => {
       },
       arrivedThreshold
     );
+
+    if (arrived) {
+      lastArrivedTimeRef.current = Date.now();
+    }
+
+    return arrived;
   }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
