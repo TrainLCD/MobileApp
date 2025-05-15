@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
-export const LOCATION_ACCURACY = Location.Accuracy.High;
+export const LOCATION_ACCURACY = Location.Accuracy.Highest;
 export const LOCATION_DISTANCE_INTERVAL = 50;
 
 export const MAX_PERMIT_ACCURACY = 2000;
