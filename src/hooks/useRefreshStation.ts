@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import type { Station } from '../../gen/proto/stationapi_pb';
 import {
   ARRIVED_CANCELLATION_THRESHOLD,
@@ -20,7 +21,6 @@ import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 import useStationNumberIndexFunc from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
-import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
 
