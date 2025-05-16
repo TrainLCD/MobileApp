@@ -5,7 +5,6 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import type { Station } from '../../gen/proto/stationapi_pb';
 import {
-  ARRIVED_CANCELLATION_THRESHOLD,
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,
 } from '../constants/threshold';
@@ -57,11 +56,6 @@ const useRefreshStation = (): void => {
 
     if (!latitude || !longitude || !nearestStation || inGracePeriod) {
       return true;
-    }
-
-    // NOTE: 位置情報の取得誤差が一定以上ある場合は停車判定を無視する
-    if (accuracy && accuracy > ARRIVED_CANCELLATION_THRESHOLD) {
-      return false;
     }
 
     if (speed && !getIsPass(nearestStation)) {
