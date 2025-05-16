@@ -1158,21 +1158,21 @@ PODS:
   - EXAV (15.0.1):
     - ExpoModulesCore
     - ReactCommon/turbomodule/core
-  - EXConstants (17.0.8):
+  - EXConstants (17.0.3):
     - ExpoModulesCore
   - EXNotifications (0.29.8):
     - ExpoModulesCore
-  - Expo (52.0.46):
+  - Expo (52.0.11):
     - ExpoModulesCore
-  - ExpoAsset (11.0.5):
+  - ExpoAsset (11.0.1):
     - ExpoModulesCore
   - ExpoCrypto (14.0.2):
     - ExpoModulesCore
   - ExpoDevice (7.0.1):
     - ExpoModulesCore
-  - ExpoFileSystem (18.0.12):
+  - ExpoFileSystem (18.0.4):
     - ExpoModulesCore
-  - ExpoFont (13.0.4):
+  - ExpoFont (13.0.1):
     - ExpoModulesCore
   - ExpoHaptics (14.0.0):
     - ExpoModulesCore
@@ -1182,7 +1182,7 @@ PODS:
     - SDWebImage (~> 5.19.1)
     - SDWebImageAVIFCoder (~> 0.11.0)
     - SDWebImageSVGCoder (~> 1.7.0)
-  - ExpoKeepAwake (14.0.3):
+  - ExpoKeepAwake (14.0.1):
     - ExpoModulesCore
   - ExpoLinearGradient (14.0.1):
     - ExpoModulesCore
@@ -1192,7 +1192,7 @@ PODS:
     - ExpoModulesCore
   - ExpoLocation (18.0.2):
     - ExpoModulesCore
-  - ExpoModulesCore (2.2.3):
+  - ExpoModulesCore (2.0.6):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -3770,22 +3770,22 @@ SPEC CHECKSUMS:
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   EXApplication: 88ebf1a95f85faa5d2df160016d61f2d060e9438
   EXAV: fc9706da25733f79db3305035ee3bc6174a6590c
-  EXConstants: fcfc75800824ac2d5c592b5bc74130bad17b146b
+  EXConstants: 277129d9a42ba2cf1fad375e7eaa9939005c60be
   EXNotifications: 12d6eba22b7f70f2218f4ea352cf5e3a0ce61313
-  Expo: a6ff273c618506b12129a0d06f2a08201bfbcf43
-  ExpoAsset: 48386d40d53a8c1738929b3ed509bcad595b5516
+  Expo: 8948e8e417f699ed125a80389e150aabbae404bf
+  ExpoAsset: 6f7a8887cbb9fb39fdb0808e7f6f74ba0e1ae9b6
   ExpoCrypto: e97e864c8d7b9ce4a000bca45dddb93544a1b2b4
   ExpoDevice: 449822f2c45660c1ce83283dd51c67fe5404996c
-  ExpoFileSystem: 42d363d3b96f9afab980dcef60d5657a4443c655
-  ExpoFont: f354e926f8feae5e831ec8087f36652b44a0b188
+  ExpoFileSystem: 83da9dbce2371cc72c3a3ef49e0df54a117310f1
+  ExpoFont: 12b0217e42ac97029d0f317f0486039a8508cf52
   ExpoHaptics: f8eacde90398b8be3648ed823b6e9e6bf87ece3f
   ExpoImage: 8af6e284f0f20d9d1ae75d0a5dadf20e5b0b64a1
-  ExpoKeepAwake: b0171a73665bfcefcfcc311742a72a956e6aa680
+  ExpoKeepAwake: 22173f45d767c7d37403fdf48292726901d69ce7
   ExpoLinearGradient: 18148bd38f98fa0229c1f9df23393b32ab6d2d32
   ExpoLinking: 40e30b571ffb77b280a38bed137d89b21f46f2a0
   ExpoLocalization: d81f70d53db94b31e4a0b1e11007424ea1011a1c
   ExpoLocation: 1f193245a788fb827302fb7f7e0a3aad128d4a2b
-  ExpoModulesCore: ba9b945045622419389980d0c3a3d89d155595b0
+  ExpoModulesCore: 5cc9ddb17bc297cda7fb5a07456fe3dbf8f8391a
   ExpoNetwork: 16083eb5ed34ce1c8e916fb6292fdb6e9daac0ca
   ExpoScreenCapture: 4695c6c999a497327f9935133fd0e61547d7c21c
   ExpoSplashScreen: 8fe6e54b8b734a997da3c21d84b3ef61faa1bbf6
