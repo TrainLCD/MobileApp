@@ -195,7 +195,7 @@ const useTransitionHeaderState = (): void => {
           break;
       }
 
-      if (approaching && !arrived) {
+      if (approaching) {
         switch (currentHeaderState) {
           case 'CURRENT':
           case 'NEXT':
@@ -233,7 +233,6 @@ const useTransitionHeaderState = (): void => {
         }
       }
     }, [
-      arrived,
       approaching,
       enabledLanguages,
       headerStateRef,
