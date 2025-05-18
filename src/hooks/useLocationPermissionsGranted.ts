@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 export const useLocationPermissionsGranted = () => {
-  const [permissionsGranted, setPermissionsGranted] = useState(true);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
 
   useEffect(() => {
     (async () => {
