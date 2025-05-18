@@ -7,8 +7,10 @@ export const useLocationPermissionsGranted = () => {
 
   useEffect(() => {
     (async () => {
-      const { granted } = await Location.getBackgroundPermissionsAsync();
-      setPermissionsGranted(granted);
+      if (AppState.currentState === 'active') {
+        const { granted } = await Location.getBackgroundPermissionsAsync();
+        setPermissionsGranted(granted);
+      }
     })();
 
     const { remove } = AppState.addEventListener('change', async (state) => {
