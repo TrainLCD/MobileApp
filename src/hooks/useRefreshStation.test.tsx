@@ -1,85 +1,153 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
+import React from 'react';
 import { RecoilRoot } from 'recoil';
+import * as CanGoForward from '~/hooks/useCanGoForward';
+import * as LocationStore from '~/hooks/useLocationStore';
+import * as NearestStation from '~/hooks/useNearestStation';
+import * as NextStation from '~/hooks/useNextStation';
+import { useRefreshStation } from '~/hooks/useRefreshStation';
+import * as Threshold from '~/hooks/useThreshold';
+import navigationState from '~/store/atoms/navigation';
+import notifyState from '~/store/atoms/notify';
+import stationState from '~/store/atoms/station';
 import sendNotificationAsync from '~/utils/native/ios/sensitiveNotificationMoudle';
-import { useRefreshStation } from './useRefreshStation';
 
-jest.mock('expo-notifications');
-jest.mock('geolib/es/isPointWithinRadius', () => jest.fn());
-jest.mock('~/utils/native/ios/sensitiveNotificationMoudle', () => ({
-  default: jest.fn(),
-}));
-jest.mock('~/hooks/useCanGoForward', () => jest.fn());
-jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: jest.fn(),
-}));
-jest.mock('~/hooks/useNearestStation', () => ({
-  useNearestStation: jest.fn(),
-}));
-jest.mock('~/hooks/useNextStation', () => ({
-  useNextStation: jest.fn(),
-}));
-jest.mock('~/hooks/useStationNumberIndexFunc', () => jest.fn());
-jest.mock('~/hooks/useThreshold', () => jest.fn());
-jest.mock('~/utils/isPass', () => jest.fn());
-jest.mock('~/translation', () => jest.fn());
+jest.mock('geolib/es/isPointWithinRadius');
+jest.mock('~/utils/native/ios/sensitiveNotificationMoudle');
 
-describe.skip('useRefreshStation', () => {
+const Dummy = () => {
+  useRefreshStation();
+  return null;
+};
+
+describe('useRefreshStation', () => {
+  const dummyStation = {
+    id: 100,
+    name: 'テスト駅',
+    nameRoman: 'Test Station',
+    latitude: 35,
+    longitude: 135,
+    stationNumbers: [{ stationNumber: 'T01' }],
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+
+    jest
+      .spyOn(LocationStore, 'useLocationStore')
+      .mockImplementation((selector) =>
+        selector({
+          coords: {
+            latitude: 35,
+            longitude: 135,
+            speed: 0,
+            accuracy: 10,
+          },
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        } as any)
+      );
+
+    jest
+      .spyOn(NearestStation, 'useNearestStation')
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      .mockReturnValue(dummyStation as any);
+    jest
+      .spyOn(NextStation, 'useNextStation')
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      .mockReturnValue(dummyStation as any);
+    jest.spyOn(Threshold, 'useThreshold').mockReturnValue({
+      arrivedThreshold: 100,
+      approachingThreshold: 300,
+    });
+    jest.spyOn(CanGoForward, 'useCanGoForward').mockReturnValue(true);
+
+    (isPointWithinRadius as jest.Mock).mockReturnValue(true);
   });
 
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <RecoilRoot>{children}</RecoilRoot>
-  );
-
-  it('通知が送信される（APPROACHING）', async () => {
-    // Arrange
-    require('~/hooks/useLocationStore').useLocationStore.mockImplementation(
-      (selector) =>
-        selector({
-          coords: { latitude: 35.0, longitude: 135.0, speed: 0, accuracy: 5 },
-        })
+  it('通知対象の駅に到着・接近時、通知を送る', async () => {
+    const { unmount } = render(
+      <RecoilRoot
+        initializeState={({ set }) => {
+          set(notifyState, { targetStationIds: [100] });
+          set(stationState, {
+            station: null,
+            approaching: false,
+            arrived: false,
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          } as any);
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          set(navigationState, { stationForHeader: null } as any);
+        }}
+      >
+        <Dummy />
+      </RecoilRoot>
     );
-    require('~/hooks/useNearestStation').useNearestStation.mockReturnValue({
-      id: 1,
-      name: 'TestStation',
-      nameRoman: 'TestStation',
-      latitude: 35.0,
-      longitude: 135.0,
-      stationNumbers: [{ stationNumber: 'A01' }],
-    });
-    require('~/hooks/useNextStation').useNextStation.mockReturnValue({
-      id: 2,
-      latitude: 35.0005,
-      longitude: 135.0005,
-    });
-    require('~/hooks/useCanGoForward').mockReturnValue(true);
-    require('~/hooks/useStationNumberIndexFunc').default.mockReturnValue(0);
-    require('~/hooks/useThreshold').useThreshold.mockReturnValue({
-      arrivedThreshold: 100,
-      approachingThreshold: 200,
-    });
-    require('~/utils/isPass').default.mockReturnValue(false);
-    (isPointWithinRadius as jest.Mock).mockReturnValue(true);
 
-    const notifyStateValue = {
-      targetStationIds: [1],
-    };
+    await act(() => Promise.resolve());
 
-    // Recoil の状態を初期化した上で Hook を実行
-    const { result, rerender } = renderHook(() => useRefreshStation(), {
-      wrapper,
-    });
-
-    // Act: エフェクトはマウント時に走るので何もしなくてもよい
-
-    // Assert
     expect(sendNotificationAsync).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: expect.any(String),
-        body: expect.stringContaining('到着します'),
+        body: expect.stringContaining('Arriving at Test Station(T01).'),
       })
     );
+    expect(sendNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.stringContaining('Arriving at Test Station(T01).'),
+      })
+    );
+
+    unmount();
+  });
+
+  it('通知済み駅には再送しない', async () => {
+    const { rerender } = render(
+      <RecoilRoot
+        initializeState={({ set }) => {
+          set(notifyState, { targetStationIds: [100] });
+          set(stationState, {
+            station: null,
+            approaching: false,
+            arrived: false,
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          } as any);
+          set(navigationState, {
+            stationForHeader: null,
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          } as any);
+        }}
+      >
+        <Dummy />
+      </RecoilRoot>
+    );
+
+    await act(() => Promise.resolve());
+
+    expect(sendNotificationAsync).toHaveBeenCalledTimes(2); // arrived + approaching
+
+    // 再描画（再送されないことを期待）
+    rerender(
+      <RecoilRoot
+        initializeState={({ set }) => {
+          set(notifyState, { targetStationIds: [100] });
+          set(stationState, {
+            station: null,
+            approaching: false,
+            arrived: false,
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          } as any);
+          set(navigationState, {
+            stationForHeader: null,
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          } as any);
+        }}
+      >
+        <Dummy />
+      </RecoilRoot>
+    );
+
+    await act(() => Promise.resolve());
+
+    expect(sendNotificationAsync).toHaveBeenCalledTimes(2);
   });
 });
