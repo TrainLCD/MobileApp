@@ -2,8 +2,8 @@
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
+import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { isEnSelector } from '~/store/selectors/isEn';

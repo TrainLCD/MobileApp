@@ -6,11 +6,6 @@ import { StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import { LineType, TrainTypeKind } from '~/gen/proto/stationapi_pb';
 import {
-  NUMBERING_ICON_SIZE,
-  STATION_NAME_FONT_SIZE,
-  parenthesisRegexp,
-} from '../constants';
-import {
   useBoundText,
   useCurrentLine,
   useCurrentStation,
@@ -20,6 +15,11 @@ import {
   useNextStation,
   useNumbering,
 } from '~/hooks';
+import {
+  NUMBERING_ICON_SIZE,
+  STATION_NAME_FONT_SIZE,
+  parenthesisRegexp,
+} from '../constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

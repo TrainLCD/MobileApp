@@ -3,8 +3,15 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3 } from "@bufbuild/protobuf";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from '@bufbuild/protobuf';
+import { Message, type proto3 } from '@bufbuild/protobuf';
 
 /**
  * @generated from enum app.trainlcd.grpc.OperationStatus
@@ -213,16 +220,28 @@ export declare class GetStationByIdRequest extends Message<GetStationByIdRequest
   constructor(data?: PartialMessage<GetStationByIdRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationByIdRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetStationByIdRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationByIdRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationByIdRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationByIdRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByIdRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationByIdRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByIdRequest;
 
-  static equals(a: GetStationByIdRequest | PlainMessage<GetStationByIdRequest> | undefined, b: GetStationByIdRequest | PlainMessage<GetStationByIdRequest> | undefined): boolean;
+  static equals(
+    a: GetStationByIdRequest | PlainMessage<GetStationByIdRequest> | undefined,
+    b: GetStationByIdRequest | PlainMessage<GetStationByIdRequest> | undefined
+  ): boolean;
 }
 
 /**
@@ -237,16 +256,34 @@ export declare class GetStationByIdListRequest extends Message<GetStationByIdLis
   constructor(data?: PartialMessage<GetStationByIdListRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationByIdListRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetStationByIdListRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationByIdListRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationByIdListRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationByIdListRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByIdListRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationByIdListRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByIdListRequest;
 
-  static equals(a: GetStationByIdListRequest | PlainMessage<GetStationByIdListRequest> | undefined, b: GetStationByIdListRequest | PlainMessage<GetStationByIdListRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetStationByIdListRequest
+      | PlainMessage<GetStationByIdListRequest>
+      | undefined,
+    b:
+      | GetStationByIdListRequest
+      | PlainMessage<GetStationByIdListRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -261,16 +298,34 @@ export declare class GetStationByGroupIdRequest extends Message<GetStationByGrou
   constructor(data?: PartialMessage<GetStationByGroupIdRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationByGroupIdRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetStationByGroupIdRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationByGroupIdRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationByGroupIdRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationByGroupIdRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByGroupIdRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationByGroupIdRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByGroupIdRequest;
 
-  static equals(a: GetStationByGroupIdRequest | PlainMessage<GetStationByGroupIdRequest> | undefined, b: GetStationByGroupIdRequest | PlainMessage<GetStationByGroupIdRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetStationByGroupIdRequest
+      | PlainMessage<GetStationByGroupIdRequest>
+      | undefined,
+    b:
+      | GetStationByGroupIdRequest
+      | PlainMessage<GetStationByGroupIdRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -295,16 +350,34 @@ export declare class GetStationByCoordinatesRequest extends Message<GetStationBy
   constructor(data?: PartialMessage<GetStationByCoordinatesRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationByCoordinatesRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetStationByCoordinatesRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationByCoordinatesRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationByCoordinatesRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationByCoordinatesRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByCoordinatesRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationByCoordinatesRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByCoordinatesRequest;
 
-  static equals(a: GetStationByCoordinatesRequest | PlainMessage<GetStationByCoordinatesRequest> | undefined, b: GetStationByCoordinatesRequest | PlainMessage<GetStationByCoordinatesRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetStationByCoordinatesRequest
+      | PlainMessage<GetStationByCoordinatesRequest>
+      | undefined,
+    b:
+      | GetStationByCoordinatesRequest
+      | PlainMessage<GetStationByCoordinatesRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -324,16 +397,34 @@ export declare class GetStationByLineIdRequest extends Message<GetStationByLineI
   constructor(data?: PartialMessage<GetStationByLineIdRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationByLineIdRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetStationByLineIdRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationByLineIdRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationByLineIdRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationByLineIdRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByLineIdRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationByLineIdRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationByLineIdRequest;
 
-  static equals(a: GetStationByLineIdRequest | PlainMessage<GetStationByLineIdRequest> | undefined, b: GetStationByLineIdRequest | PlainMessage<GetStationByLineIdRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetStationByLineIdRequest
+      | PlainMessage<GetStationByLineIdRequest>
+      | undefined,
+    b:
+      | GetStationByLineIdRequest
+      | PlainMessage<GetStationByLineIdRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -358,16 +449,34 @@ export declare class GetStationsByNameRequest extends Message<GetStationsByNameR
   constructor(data?: PartialMessage<GetStationsByNameRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationsByNameRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetStationsByNameRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationsByNameRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationsByNameRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationsByNameRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationsByNameRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationsByNameRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationsByNameRequest;
 
-  static equals(a: GetStationsByNameRequest | PlainMessage<GetStationsByNameRequest> | undefined, b: GetStationsByNameRequest | PlainMessage<GetStationsByNameRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetStationsByNameRequest
+      | PlainMessage<GetStationsByNameRequest>
+      | undefined,
+    b:
+      | GetStationsByNameRequest
+      | PlainMessage<GetStationsByNameRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -397,16 +506,28 @@ export declare class GetRouteRequest extends Message<GetRouteRequest> {
   constructor(data?: PartialMessage<GetRouteRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetRouteRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetRouteRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRouteRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetRouteRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRouteRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetRouteRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRouteRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetRouteRequest;
 
-  static equals(a: GetRouteRequest | PlainMessage<GetRouteRequest> | undefined, b: GetRouteRequest | PlainMessage<GetRouteRequest> | undefined): boolean;
+  static equals(
+    a: GetRouteRequest | PlainMessage<GetRouteRequest> | undefined,
+    b: GetRouteRequest | PlainMessage<GetRouteRequest> | undefined
+  ): boolean;
 }
 
 /**
@@ -421,16 +542,35 @@ export declare class GetStationsByLineGroupIdRequest extends Message<GetStations
   constructor(data?: PartialMessage<GetStationsByLineGroupIdRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetStationsByLineGroupIdRequest";
+  static readonly typeName =
+    'app.trainlcd.grpc.GetStationsByLineGroupIdRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetStationsByLineGroupIdRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetStationsByLineGroupIdRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetStationsByLineGroupIdRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetStationsByLineGroupIdRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetStationsByLineGroupIdRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetStationsByLineGroupIdRequest;
 
-  static equals(a: GetStationsByLineGroupIdRequest | PlainMessage<GetStationsByLineGroupIdRequest> | undefined, b: GetStationsByLineGroupIdRequest | PlainMessage<GetStationsByLineGroupIdRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetStationsByLineGroupIdRequest
+      | PlainMessage<GetStationsByLineGroupIdRequest>
+      | undefined,
+    b:
+      | GetStationsByLineGroupIdRequest
+      | PlainMessage<GetStationsByLineGroupIdRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -445,16 +585,35 @@ export declare class GetTrainTypesByStationIdRequest extends Message<GetTrainTyp
   constructor(data?: PartialMessage<GetTrainTypesByStationIdRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetTrainTypesByStationIdRequest";
+  static readonly typeName =
+    'app.trainlcd.grpc.GetTrainTypesByStationIdRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTrainTypesByStationIdRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetTrainTypesByStationIdRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetTrainTypesByStationIdRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetTrainTypesByStationIdRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetTrainTypesByStationIdRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetTrainTypesByStationIdRequest;
 
-  static equals(a: GetTrainTypesByStationIdRequest | PlainMessage<GetTrainTypesByStationIdRequest> | undefined, b: GetTrainTypesByStationIdRequest | PlainMessage<GetTrainTypesByStationIdRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetTrainTypesByStationIdRequest
+      | PlainMessage<GetTrainTypesByStationIdRequest>
+      | undefined,
+    b:
+      | GetTrainTypesByStationIdRequest
+      | PlainMessage<GetTrainTypesByStationIdRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -469,16 +628,28 @@ export declare class GetLineByIdRequest extends Message<GetLineByIdRequest> {
   constructor(data?: PartialMessage<GetLineByIdRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetLineByIdRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetLineByIdRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLineByIdRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetLineByIdRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetLineByIdRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetLineByIdRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetLineByIdRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetLineByIdRequest;
 
-  static equals(a: GetLineByIdRequest | PlainMessage<GetLineByIdRequest> | undefined, b: GetLineByIdRequest | PlainMessage<GetLineByIdRequest> | undefined): boolean;
+  static equals(
+    a: GetLineByIdRequest | PlainMessage<GetLineByIdRequest> | undefined,
+    b: GetLineByIdRequest | PlainMessage<GetLineByIdRequest> | undefined
+  ): boolean;
 }
 
 /**
@@ -503,16 +674,28 @@ export declare class CoordinatesRequest extends Message<CoordinatesRequest> {
   constructor(data?: PartialMessage<CoordinatesRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.CoordinatesRequest";
+  static readonly typeName = 'app.trainlcd.grpc.CoordinatesRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CoordinatesRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): CoordinatesRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CoordinatesRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): CoordinatesRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CoordinatesRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): CoordinatesRequest;
 
-  static equals(a: CoordinatesRequest | PlainMessage<CoordinatesRequest> | undefined, b: CoordinatesRequest | PlainMessage<CoordinatesRequest> | undefined): boolean;
+  static equals(
+    a: CoordinatesRequest | PlainMessage<CoordinatesRequest> | undefined,
+    b: CoordinatesRequest | PlainMessage<CoordinatesRequest> | undefined
+  ): boolean;
 }
 
 /**
@@ -532,16 +715,28 @@ export declare class GetLinesByNameRequest extends Message<GetLinesByNameRequest
   constructor(data?: PartialMessage<GetLinesByNameRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetLinesByNameRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetLinesByNameRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLinesByNameRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetLinesByNameRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetLinesByNameRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetLinesByNameRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetLinesByNameRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetLinesByNameRequest;
 
-  static equals(a: GetLinesByNameRequest | PlainMessage<GetLinesByNameRequest> | undefined, b: GetLinesByNameRequest | PlainMessage<GetLinesByNameRequest> | undefined): boolean;
+  static equals(
+    a: GetLinesByNameRequest | PlainMessage<GetLinesByNameRequest> | undefined,
+    b: GetLinesByNameRequest | PlainMessage<GetLinesByNameRequest> | undefined
+  ): boolean;
 }
 
 /**
@@ -561,16 +756,34 @@ export declare class GetConnectedStationsRequest extends Message<GetConnectedSta
   constructor(data?: PartialMessage<GetConnectedStationsRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.GetConnectedStationsRequest";
+  static readonly typeName = 'app.trainlcd.grpc.GetConnectedStationsRequest';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetConnectedStationsRequest;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): GetConnectedStationsRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetConnectedStationsRequest;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): GetConnectedStationsRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetConnectedStationsRequest;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): GetConnectedStationsRequest;
 
-  static equals(a: GetConnectedStationsRequest | PlainMessage<GetConnectedStationsRequest> | undefined, b: GetConnectedStationsRequest | PlainMessage<GetConnectedStationsRequest> | undefined): boolean;
+  static equals(
+    a:
+      | GetConnectedStationsRequest
+      | PlainMessage<GetConnectedStationsRequest>
+      | undefined,
+    b:
+      | GetConnectedStationsRequest
+      | PlainMessage<GetConnectedStationsRequest>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -600,16 +813,28 @@ export declare class StationNumber extends Message<StationNumber> {
   constructor(data?: PartialMessage<StationNumber>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.StationNumber";
+  static readonly typeName = 'app.trainlcd.grpc.StationNumber';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StationNumber;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): StationNumber;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StationNumber;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): StationNumber;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StationNumber;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): StationNumber;
 
-  static equals(a: StationNumber | PlainMessage<StationNumber> | undefined, b: StationNumber | PlainMessage<StationNumber> | undefined): boolean;
+  static equals(
+    a: StationNumber | PlainMessage<StationNumber> | undefined,
+    b: StationNumber | PlainMessage<StationNumber> | undefined
+  ): boolean;
 }
 
 /**
@@ -684,16 +909,28 @@ export declare class TrainType extends Message<TrainType> {
   constructor(data?: PartialMessage<TrainType>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.TrainType";
+  static readonly typeName = 'app.trainlcd.grpc.TrainType';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TrainType;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): TrainType;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TrainType;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): TrainType;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TrainType;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): TrainType;
 
-  static equals(a: TrainType | PlainMessage<TrainType> | undefined, b: TrainType | PlainMessage<TrainType> | undefined): boolean;
+  static equals(
+    a: TrainType | PlainMessage<TrainType> | undefined,
+    b: TrainType | PlainMessage<TrainType> | undefined
+  ): boolean;
 }
 
 /**
@@ -818,16 +1055,28 @@ export declare class Station extends Message<Station> {
   constructor(data?: PartialMessage<Station>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.Station";
+  static readonly typeName = 'app.trainlcd.grpc.Station';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Station;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): Station;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Station;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): Station;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Station;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): Station;
 
-  static equals(a: Station | PlainMessage<Station> | undefined, b: Station | PlainMessage<Station> | undefined): boolean;
+  static equals(
+    a: Station | PlainMessage<Station> | undefined,
+    b: Station | PlainMessage<Station> | undefined
+  ): boolean;
 }
 
 /**
@@ -842,16 +1091,28 @@ export declare class SingleStationResponse extends Message<SingleStationResponse
   constructor(data?: PartialMessage<SingleStationResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.SingleStationResponse";
+  static readonly typeName = 'app.trainlcd.grpc.SingleStationResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SingleStationResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): SingleStationResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SingleStationResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): SingleStationResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SingleStationResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): SingleStationResponse;
 
-  static equals(a: SingleStationResponse | PlainMessage<SingleStationResponse> | undefined, b: SingleStationResponse | PlainMessage<SingleStationResponse> | undefined): boolean;
+  static equals(
+    a: SingleStationResponse | PlainMessage<SingleStationResponse> | undefined,
+    b: SingleStationResponse | PlainMessage<SingleStationResponse> | undefined
+  ): boolean;
 }
 
 /**
@@ -866,16 +1127,34 @@ export declare class MultipleStationResponse extends Message<MultipleStationResp
   constructor(data?: PartialMessage<MultipleStationResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.MultipleStationResponse";
+  static readonly typeName = 'app.trainlcd.grpc.MultipleStationResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MultipleStationResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): MultipleStationResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MultipleStationResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): MultipleStationResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MultipleStationResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): MultipleStationResponse;
 
-  static equals(a: MultipleStationResponse | PlainMessage<MultipleStationResponse> | undefined, b: MultipleStationResponse | PlainMessage<MultipleStationResponse> | undefined): boolean;
+  static equals(
+    a:
+      | MultipleStationResponse
+      | PlainMessage<MultipleStationResponse>
+      | undefined,
+    b:
+      | MultipleStationResponse
+      | PlainMessage<MultipleStationResponse>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -890,16 +1169,34 @@ export declare class MultipleTrainTypeResponse extends Message<MultipleTrainType
   constructor(data?: PartialMessage<MultipleTrainTypeResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.MultipleTrainTypeResponse";
+  static readonly typeName = 'app.trainlcd.grpc.MultipleTrainTypeResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MultipleTrainTypeResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): MultipleTrainTypeResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MultipleTrainTypeResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): MultipleTrainTypeResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MultipleTrainTypeResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): MultipleTrainTypeResponse;
 
-  static equals(a: MultipleTrainTypeResponse | PlainMessage<MultipleTrainTypeResponse> | undefined, b: MultipleTrainTypeResponse | PlainMessage<MultipleTrainTypeResponse> | undefined): boolean;
+  static equals(
+    a:
+      | MultipleTrainTypeResponse
+      | PlainMessage<MultipleTrainTypeResponse>
+      | undefined,
+    b:
+      | MultipleTrainTypeResponse
+      | PlainMessage<MultipleTrainTypeResponse>
+      | undefined
+  ): boolean;
 }
 
 /**
@@ -914,16 +1211,28 @@ export declare class SingleLineResponse extends Message<SingleLineResponse> {
   constructor(data?: PartialMessage<SingleLineResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.SingleLineResponse";
+  static readonly typeName = 'app.trainlcd.grpc.SingleLineResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SingleLineResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): SingleLineResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SingleLineResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): SingleLineResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SingleLineResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): SingleLineResponse;
 
-  static equals(a: SingleLineResponse | PlainMessage<SingleLineResponse> | undefined, b: SingleLineResponse | PlainMessage<SingleLineResponse> | undefined): boolean;
+  static equals(
+    a: SingleLineResponse | PlainMessage<SingleLineResponse> | undefined,
+    b: SingleLineResponse | PlainMessage<SingleLineResponse> | undefined
+  ): boolean;
 }
 
 /**
@@ -938,16 +1247,28 @@ export declare class MultipleLineResponse extends Message<MultipleLineResponse> 
   constructor(data?: PartialMessage<MultipleLineResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.MultipleLineResponse";
+  static readonly typeName = 'app.trainlcd.grpc.MultipleLineResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MultipleLineResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): MultipleLineResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MultipleLineResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): MultipleLineResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MultipleLineResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): MultipleLineResponse;
 
-  static equals(a: MultipleLineResponse | PlainMessage<MultipleLineResponse> | undefined, b: MultipleLineResponse | PlainMessage<MultipleLineResponse> | undefined): boolean;
+  static equals(
+    a: MultipleLineResponse | PlainMessage<MultipleLineResponse> | undefined,
+    b: MultipleLineResponse | PlainMessage<MultipleLineResponse> | undefined
+  ): boolean;
 }
 
 /**
@@ -972,16 +1293,28 @@ export declare class DistanceResponse extends Message<DistanceResponse> {
   constructor(data?: PartialMessage<DistanceResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.DistanceResponse";
+  static readonly typeName = 'app.trainlcd.grpc.DistanceResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DistanceResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): DistanceResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DistanceResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): DistanceResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DistanceResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): DistanceResponse;
 
-  static equals(a: DistanceResponse | PlainMessage<DistanceResponse> | undefined, b: DistanceResponse | PlainMessage<DistanceResponse> | undefined): boolean;
+  static equals(
+    a: DistanceResponse | PlainMessage<DistanceResponse> | undefined,
+    b: DistanceResponse | PlainMessage<DistanceResponse> | undefined
+  ): boolean;
 }
 
 /**
@@ -1001,16 +1334,28 @@ export declare class RouteResponse extends Message<RouteResponse> {
   constructor(data?: PartialMessage<RouteResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.RouteResponse";
+  static readonly typeName = 'app.trainlcd.grpc.RouteResponse';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RouteResponse;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): RouteResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RouteResponse;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): RouteResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RouteResponse;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): RouteResponse;
 
-  static equals(a: RouteResponse | PlainMessage<RouteResponse> | undefined, b: RouteResponse | PlainMessage<RouteResponse> | undefined): boolean;
+  static equals(
+    a: RouteResponse | PlainMessage<RouteResponse> | undefined,
+    b: RouteResponse | PlainMessage<RouteResponse> | undefined
+  ): boolean;
 }
 
 /**
@@ -1035,16 +1380,28 @@ export declare class LineSymbol extends Message<LineSymbol> {
   constructor(data?: PartialMessage<LineSymbol>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.LineSymbol";
+  static readonly typeName = 'app.trainlcd.grpc.LineSymbol';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LineSymbol;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): LineSymbol;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LineSymbol;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): LineSymbol;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LineSymbol;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): LineSymbol;
 
-  static equals(a: LineSymbol | PlainMessage<LineSymbol> | undefined, b: LineSymbol | PlainMessage<LineSymbol> | undefined): boolean;
+  static equals(
+    a: LineSymbol | PlainMessage<LineSymbol> | undefined,
+    b: LineSymbol | PlainMessage<LineSymbol> | undefined
+  ): boolean;
 }
 
 /**
@@ -1109,16 +1466,28 @@ export declare class Company extends Message<Company> {
   constructor(data?: PartialMessage<Company>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.Company";
+  static readonly typeName = 'app.trainlcd.grpc.Company';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Company;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): Company;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Company;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): Company;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Company;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): Company;
 
-  static equals(a: Company | PlainMessage<Company> | undefined, b: Company | PlainMessage<Company> | undefined): boolean;
+  static equals(
+    a: Company | PlainMessage<Company> | undefined,
+    b: Company | PlainMessage<Company> | undefined
+  ): boolean;
 }
 
 /**
@@ -1205,16 +1574,28 @@ export declare class Line extends Message<Line> {
   constructor(data?: PartialMessage<Line>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.Line";
+  static readonly typeName = 'app.trainlcd.grpc.Line';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Line;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): Line;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Line;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): Line;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Line;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): Line;
 
-  static equals(a: Line | PlainMessage<Line> | undefined, b: Line | PlainMessage<Line> | undefined): boolean;
+  static equals(
+    a: Line | PlainMessage<Line> | undefined,
+    b: Line | PlainMessage<Line> | undefined
+  ): boolean;
 }
 
 /**
@@ -1229,16 +1610,28 @@ export declare class SingleLine extends Message<SingleLine> {
   constructor(data?: PartialMessage<SingleLine>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.SingleLine";
+  static readonly typeName = 'app.trainlcd.grpc.SingleLine';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SingleLine;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): SingleLine;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SingleLine;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): SingleLine;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SingleLine;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): SingleLine;
 
-  static equals(a: SingleLine | PlainMessage<SingleLine> | undefined, b: SingleLine | PlainMessage<SingleLine> | undefined): boolean;
+  static equals(
+    a: SingleLine | PlainMessage<SingleLine> | undefined,
+    b: SingleLine | PlainMessage<SingleLine> | undefined
+  ): boolean;
 }
 
 /**
@@ -1253,16 +1646,28 @@ export declare class MultipleLine extends Message<MultipleLine> {
   constructor(data?: PartialMessage<MultipleLine>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.MultipleLine";
+  static readonly typeName = 'app.trainlcd.grpc.MultipleLine';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MultipleLine;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): MultipleLine;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MultipleLine;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): MultipleLine;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MultipleLine;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): MultipleLine;
 
-  static equals(a: MultipleLine | PlainMessage<MultipleLine> | undefined, b: MultipleLine | PlainMessage<MultipleLine> | undefined): boolean;
+  static equals(
+    a: MultipleLine | PlainMessage<MultipleLine> | undefined,
+    b: MultipleLine | PlainMessage<MultipleLine> | undefined
+  ): boolean;
 }
 
 /**
@@ -1282,15 +1687,26 @@ export declare class Route extends Message<Route> {
   constructor(data?: PartialMessage<Route>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "app.trainlcd.grpc.Route";
+  static readonly typeName = 'app.trainlcd.grpc.Route';
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Route;
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>
+  ): Route;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Route;
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>
+  ): Route;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Route;
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>
+  ): Route;
 
-  static equals(a: Route | PlainMessage<Route> | undefined, b: Route | PlainMessage<Route> | undefined): boolean;
+  static equals(
+    a: Route | PlainMessage<Route> | undefined,
+    b: Route | PlainMessage<Route> | undefined
+  ): boolean;
 }
-

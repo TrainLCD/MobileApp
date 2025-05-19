@@ -1,5 +1,4 @@
 import { atom } from 'recoil';
-import type { Station, TrainType } from '../~/gen/proto/stationapi_pb';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,
@@ -8,6 +7,7 @@ import {
 import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { isJapanese } from '../../translation';
+import type { Station, TrainType } from '../~/gen/proto/stationapi_pb';
 
 export interface NavigationState {
   leftStations: Station[];

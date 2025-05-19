@@ -15,7 +15,11 @@ import {
 import { isClip } from 'react-native-app-clip';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
-  useSimulationMode,
+  LineType,
+  type Station,
+  StopCondition,
+} from '~/gen/proto/stationapi_pb';
+import {
   useApplicationFlagStore,
   useAutoMode,
   useCurrentLine,
@@ -27,6 +31,7 @@ import {
   useRefreshStation,
   useResetMainState,
   useShouldHideTypeChange,
+  useSimulationMode,
   useStartBackgroundLocationUpdates,
   useTTS,
   useTelemetrySender,
@@ -37,11 +42,6 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
-import {
-  LineType,
-  type Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';

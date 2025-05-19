@@ -1,6 +1,6 @@
 import { atom } from 'recoil';
-import type { Line } from '~/gen/proto/stationapi_pb';
 import { RECOIL_STATES } from '~/constants';
+import type { Line } from '~/gen/proto/stationapi_pb';
 
 export interface LineState {
   selectedLine: Line | null;

@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Svg, { Path, Text } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
-import { STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
   useCurrentLine,
@@ -14,6 +13,7 @@ import {
   useNextStation,
   useNumbering,
 } from '~/hooks';
+import { STATION_NAME_FONT_SIZE } from '../constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

@@ -8,8 +8,8 @@ import {
   View,
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { FONTS } from '~/constants';
+import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
   useCurrentStation,

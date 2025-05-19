@@ -1,12 +1,12 @@
 import * as Application from 'expo-application';
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import {
   useDistanceToNextStation,
   useLocationStore,
   useThreshold,
 } from '~/hooks';
+import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import Typography from './Typography';
 
 const { width: screenWidth } = Dimensions.get('screen');

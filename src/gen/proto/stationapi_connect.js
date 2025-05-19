@@ -3,20 +3,39 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetConnectedStationsRequest, GetLineByIdRequest, GetLinesByNameRequest, GetRouteRequest, GetStationByCoordinatesRequest, GetStationByGroupIdRequest, GetStationByIdListRequest, GetStationByIdRequest, GetStationByLineIdRequest, GetStationsByLineGroupIdRequest, GetStationsByNameRequest, GetTrainTypesByStationIdRequest, MultipleLineResponse, MultipleStationResponse, MultipleTrainTypeResponse, RouteResponse, SingleLineResponse, SingleStationResponse } from "./stationapi_pb.js";
-import { MethodKind } from "@bufbuild/protobuf";
+import { MethodKind } from '@bufbuild/protobuf';
+import {
+  GetConnectedStationsRequest,
+  GetLineByIdRequest,
+  GetLinesByNameRequest,
+  GetRouteRequest,
+  GetStationByCoordinatesRequest,
+  GetStationByGroupIdRequest,
+  GetStationByIdListRequest,
+  GetStationByIdRequest,
+  GetStationByLineIdRequest,
+  GetStationsByLineGroupIdRequest,
+  GetStationsByNameRequest,
+  GetTrainTypesByStationIdRequest,
+  MultipleLineResponse,
+  MultipleStationResponse,
+  MultipleTrainTypeResponse,
+  RouteResponse,
+  SingleLineResponse,
+  SingleStationResponse,
+} from './stationapi_pb.js';
 
 /**
  * @generated from service app.trainlcd.grpc.StationAPI
  */
 export const StationAPI = {
-  typeName: "app.trainlcd.grpc.StationAPI",
+  typeName: 'app.trainlcd.grpc.StationAPI',
   methods: {
     /**
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationById
      */
     getStationById: {
-      name: "GetStationById",
+      name: 'GetStationById',
       I: GetStationByIdRequest,
       O: SingleStationResponse,
       kind: MethodKind.Unary,
@@ -25,7 +44,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationByIdList
      */
     getStationByIdList: {
-      name: "GetStationByIdList",
+      name: 'GetStationByIdList',
       I: GetStationByIdListRequest,
       O: MultipleStationResponse,
       kind: MethodKind.Unary,
@@ -34,7 +53,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationsByGroupId
      */
     getStationsByGroupId: {
-      name: "GetStationsByGroupId",
+      name: 'GetStationsByGroupId',
       I: GetStationByGroupIdRequest,
       O: MultipleStationResponse,
       kind: MethodKind.Unary,
@@ -43,7 +62,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationsByCoordinates
      */
     getStationsByCoordinates: {
-      name: "GetStationsByCoordinates",
+      name: 'GetStationsByCoordinates',
       I: GetStationByCoordinatesRequest,
       O: MultipleStationResponse,
       kind: MethodKind.Unary,
@@ -52,7 +71,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationsByLineId
      */
     getStationsByLineId: {
-      name: "GetStationsByLineId",
+      name: 'GetStationsByLineId',
       I: GetStationByLineIdRequest,
       O: MultipleStationResponse,
       kind: MethodKind.Unary,
@@ -61,7 +80,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationsByName
      */
     getStationsByName: {
-      name: "GetStationsByName",
+      name: 'GetStationsByName',
       I: GetStationsByNameRequest,
       O: MultipleStationResponse,
       kind: MethodKind.Unary,
@@ -70,7 +89,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetStationsByLineGroupId
      */
     getStationsByLineGroupId: {
-      name: "GetStationsByLineGroupId",
+      name: 'GetStationsByLineGroupId',
       I: GetStationsByLineGroupIdRequest,
       O: MultipleStationResponse,
       kind: MethodKind.Unary,
@@ -79,7 +98,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetTrainTypesByStationId
      */
     getTrainTypesByStationId: {
-      name: "GetTrainTypesByStationId",
+      name: 'GetTrainTypesByStationId',
       I: GetTrainTypesByStationIdRequest,
       O: MultipleTrainTypeResponse,
       kind: MethodKind.Unary,
@@ -88,7 +107,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetRoutes
      */
     getRoutes: {
-      name: "GetRoutes",
+      name: 'GetRoutes',
       I: GetRouteRequest,
       O: RouteResponse,
       kind: MethodKind.Unary,
@@ -97,7 +116,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetLineById
      */
     getLineById: {
-      name: "GetLineById",
+      name: 'GetLineById',
       I: GetLineByIdRequest,
       O: SingleLineResponse,
       kind: MethodKind.Unary,
@@ -106,7 +125,7 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetLinesByName
      */
     getLinesByName: {
-      name: "GetLinesByName",
+      name: 'GetLinesByName',
       I: GetLinesByNameRequest,
       O: MultipleLineResponse,
       kind: MethodKind.Unary,
@@ -115,11 +134,10 @@ export const StationAPI = {
      * @generated from rpc app.trainlcd.grpc.StationAPI.GetConnectedRoutes
      */
     getConnectedRoutes: {
-      name: "GetConnectedRoutes",
+      name: 'GetConnectedRoutes',
       I: GetConnectedStationsRequest,
       O: RouteResponse,
       kind: MethodKind.Unary,
     },
-  }
+  },
 };
-

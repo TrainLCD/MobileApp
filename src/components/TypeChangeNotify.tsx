@@ -2,12 +2,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '~/constants';
 import {
   type Line,
   StopCondition,
   type TrainType,
 } from '~/gen/proto/stationapi_pb';
-import { parenthesisRegexp } from '~/constants';
 import {
   useCurrentLine,
   useCurrentStation,

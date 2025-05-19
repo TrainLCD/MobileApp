@@ -3,469 +3,752 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { proto3 } from "@bufbuild/protobuf";
+import { proto3 } from '@bufbuild/protobuf';
 
 /**
  * @generated from enum app.trainlcd.grpc.OperationStatus
  */
 export const OperationStatus = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.OperationStatus",
+  'app.trainlcd.grpc.OperationStatus',
   [
-    {no: 0, name: "InOperation"},
-    {no: 1, name: "NotOpened"},
-    {no: 2, name: "Closed"},
-  ],
+    { no: 0, name: 'InOperation' },
+    { no: 1, name: 'NotOpened' },
+    { no: 2, name: 'Closed' },
+  ]
 );
 
 /**
  * @generated from enum app.trainlcd.grpc.StopCondition
  */
 export const StopCondition = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.StopCondition",
+  'app.trainlcd.grpc.StopCondition',
   [
-    {no: 0, name: "All"},
-    {no: 1, name: "Not"},
-    {no: 2, name: "Partial"},
-    {no: 3, name: "Weekday"},
-    {no: 4, name: "Holiday"},
-    {no: 5, name: "PartialStop"},
-  ],
+    { no: 0, name: 'All' },
+    { no: 1, name: 'Not' },
+    { no: 2, name: 'Partial' },
+    { no: 3, name: 'Weekday' },
+    { no: 4, name: 'Holiday' },
+    { no: 5, name: 'PartialStop' },
+  ]
 );
 
 /**
  * @generated from enum app.trainlcd.grpc.TrainDirection
  */
 export const TrainDirection = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.TrainDirection",
+  'app.trainlcd.grpc.TrainDirection',
   [
-    {no: 0, name: "Both"},
-    {no: 1, name: "Inbound"},
-    {no: 2, name: "Outbound"},
-  ],
+    { no: 0, name: 'Both' },
+    { no: 1, name: 'Inbound' },
+    { no: 2, name: 'Outbound' },
+  ]
 );
 
 /**
  * @generated from enum app.trainlcd.grpc.TrainTypeKind
  */
 export const TrainTypeKind = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.TrainTypeKind",
+  'app.trainlcd.grpc.TrainTypeKind',
   [
-    {no: 0, name: "Default"},
-    {no: 1, name: "Branch"},
-    {no: 2, name: "Rapid"},
-    {no: 3, name: "Express"},
-    {no: 4, name: "LimitedExpress"},
-    {no: 5, name: "HighSpeedRapid"},
-  ],
+    { no: 0, name: 'Default' },
+    { no: 1, name: 'Branch' },
+    { no: 2, name: 'Rapid' },
+    { no: 3, name: 'Express' },
+    { no: 4, name: 'LimitedExpress' },
+    { no: 5, name: 'HighSpeedRapid' },
+  ]
 );
 
 /**
  * @generated from enum app.trainlcd.grpc.DistanceResponseState
  */
 export const DistanceResponseState = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.DistanceResponseState",
+  'app.trainlcd.grpc.DistanceResponseState',
   [
-    {no: 0, name: "Away"},
-    {no: 1, name: "Arrived"},
-    {no: 2, name: "Approaching"},
-  ],
+    { no: 0, name: 'Away' },
+    { no: 1, name: 'Arrived' },
+    { no: 2, name: 'Approaching' },
+  ]
 );
 
 /**
  * @generated from enum app.trainlcd.grpc.LineType
  */
 export const LineType = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.LineType",
+  'app.trainlcd.grpc.LineType',
   [
-    {no: 0, name: "OtherLineType"},
-    {no: 1, name: "BulletTrain"},
-    {no: 2, name: "Normal"},
-    {no: 3, name: "Subway"},
-    {no: 4, name: "Tram"},
-    {no: 5, name: "MonorailOrAGT"},
-  ],
+    { no: 0, name: 'OtherLineType' },
+    { no: 1, name: 'BulletTrain' },
+    { no: 2, name: 'Normal' },
+    { no: 3, name: 'Subway' },
+    { no: 4, name: 'Tram' },
+    { no: 5, name: 'MonorailOrAGT' },
+  ]
 );
 
 /**
  * @generated from enum app.trainlcd.grpc.CompanyType
  */
 export const CompanyType = /*@__PURE__*/ proto3.makeEnum(
-  "app.trainlcd.grpc.CompanyType",
+  'app.trainlcd.grpc.CompanyType',
   [
-    {no: 0, name: "OtherCompany"},
-    {no: 1, name: "JR"},
-    {no: 2, name: "Private"},
-    {no: 3, name: "Major"},
-    {no: 4, name: "SemiMajor"},
-  ],
+    { no: 0, name: 'OtherCompany' },
+    { no: 1, name: 'JR' },
+    { no: 2, name: 'Private' },
+    { no: 3, name: 'Major' },
+    { no: 4, name: 'SemiMajor' },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationByIdRequest
  */
 export const GetStationByIdRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationByIdRequest",
-  () => [
-    { no: 1, name: "id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-  ],
+  'app.trainlcd.grpc.GetStationByIdRequest',
+  () => [{ no: 1, name: 'id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ }]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationByIdListRequest
  */
 export const GetStationByIdListRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationByIdListRequest",
+  'app.trainlcd.grpc.GetStationByIdListRequest',
   () => [
-    { no: 1, name: "ids", kind: "scalar", T: 13 /* ScalarType.UINT32 */, repeated: true },
-  ],
+    {
+      no: 1,
+      name: 'ids',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+      repeated: true,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationByGroupIdRequest
  */
 export const GetStationByGroupIdRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationByGroupIdRequest",
+  'app.trainlcd.grpc.GetStationByGroupIdRequest',
   () => [
-    { no: 1, name: "group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-  ],
+    { no: 1, name: 'group_id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationByCoordinatesRequest
  */
-export const GetStationByCoordinatesRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationByCoordinatesRequest",
-  () => [
-    { no: 1, name: "latitude", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 2, name: "longitude", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 3, name: "limit", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-  ],
-);
+export const GetStationByCoordinatesRequest =
+  /*@__PURE__*/ proto3.makeMessageType(
+    'app.trainlcd.grpc.GetStationByCoordinatesRequest',
+    () => [
+      { no: 1, name: 'latitude', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+      {
+        no: 2,
+        name: 'longitude',
+        kind: 'scalar',
+        T: 1 /* ScalarType.DOUBLE */,
+      },
+      {
+        no: 3,
+        name: 'limit',
+        kind: 'scalar',
+        T: 13 /* ScalarType.UINT32 */,
+        opt: true,
+      },
+    ]
+  );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationByLineIdRequest
  */
 export const GetStationByLineIdRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationByLineIdRequest",
+  'app.trainlcd.grpc.GetStationByLineIdRequest',
   () => [
-    { no: 1, name: "line_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "station_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-  ],
+    { no: 1, name: 'line_id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    {
+      no: 2,
+      name: 'station_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+      opt: true,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationsByNameRequest
  */
 export const GetStationsByNameRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationsByNameRequest",
+  'app.trainlcd.grpc.GetStationsByNameRequest',
   () => [
-    { no: 1, name: "station_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "limit", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-    { no: 3, name: "from_station_group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-  ],
+    {
+      no: 1,
+      name: 'station_name',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 2,
+      name: 'limit',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+      opt: true,
+    },
+    {
+      no: 3,
+      name: 'from_station_group_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+      opt: true,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetRouteRequest
  */
 export const GetRouteRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetRouteRequest",
+  'app.trainlcd.grpc.GetRouteRequest',
   () => [
-    { no: 1, name: "from_station_group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "to_station_group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 3, name: "page_size", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 4, name: "page_token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
+    {
+      no: 1,
+      name: 'from_station_group_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+    {
+      no: 2,
+      name: 'to_station_group_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+    { no: 3, name: 'page_size', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 4, name: 'page_token', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetStationsByLineGroupIdRequest
  */
-export const GetStationsByLineGroupIdRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetStationsByLineGroupIdRequest",
-  () => [
-    { no: 1, name: "line_group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-  ],
-);
+export const GetStationsByLineGroupIdRequest =
+  /*@__PURE__*/ proto3.makeMessageType(
+    'app.trainlcd.grpc.GetStationsByLineGroupIdRequest',
+    () => [
+      {
+        no: 1,
+        name: 'line_group_id',
+        kind: 'scalar',
+        T: 13 /* ScalarType.UINT32 */,
+      },
+    ]
+  );
 
 /**
  * @generated from message app.trainlcd.grpc.GetTrainTypesByStationIdRequest
  */
-export const GetTrainTypesByStationIdRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetTrainTypesByStationIdRequest",
-  () => [
-    { no: 1, name: "station_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-  ],
-);
+export const GetTrainTypesByStationIdRequest =
+  /*@__PURE__*/ proto3.makeMessageType(
+    'app.trainlcd.grpc.GetTrainTypesByStationIdRequest',
+    () => [
+      {
+        no: 1,
+        name: 'station_id',
+        kind: 'scalar',
+        T: 13 /* ScalarType.UINT32 */,
+      },
+    ]
+  );
 
 /**
  * @generated from message app.trainlcd.grpc.GetLineByIdRequest
  */
 export const GetLineByIdRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetLineByIdRequest",
+  'app.trainlcd.grpc.GetLineByIdRequest',
   () => [
-    { no: 1, name: "line_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-  ],
+    { no: 1, name: 'line_id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.CoordinatesRequest
  */
 export const CoordinatesRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.CoordinatesRequest",
+  'app.trainlcd.grpc.CoordinatesRequest',
   () => [
-    { no: 1, name: "latitude", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 2, name: "longitude", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 3, name: "line_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-  ],
+    { no: 1, name: 'latitude', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+    { no: 2, name: 'longitude', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+    {
+      no: 3,
+      name: 'line_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+      opt: true,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetLinesByNameRequest
  */
 export const GetLinesByNameRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetLinesByNameRequest",
+  'app.trainlcd.grpc.GetLinesByNameRequest',
   () => [
-    { no: 1, name: "line_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "limit", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-  ],
+    { no: 1, name: 'line_name', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'limit',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+      opt: true,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.GetConnectedStationsRequest
  */
 export const GetConnectedStationsRequest = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.GetConnectedStationsRequest",
+  'app.trainlcd.grpc.GetConnectedStationsRequest',
   () => [
-    { no: 1, name: "from_station_group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "to_station_group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-  ],
+    {
+      no: 1,
+      name: 'from_station_group_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+    {
+      no: 2,
+      name: 'to_station_group_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.StationNumber
  */
 export const StationNumber = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.StationNumber",
+  'app.trainlcd.grpc.StationNumber',
   () => [
-    { no: 1, name: "line_symbol", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "line_symbol_color", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "line_symbol_shape", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "station_number", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
+    {
+      no: 1,
+      name: 'line_symbol',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 2,
+      name: 'line_symbol_color',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 3,
+      name: 'line_symbol_shape',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 4,
+      name: 'station_number',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.TrainType
  */
 export const TrainType = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.TrainType",
+  'app.trainlcd.grpc.TrainType',
   () => [
-    { no: 1, name: "id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "type_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 3, name: "group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 4, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "name_katakana", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "name_roman", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 7, name: "name_chinese", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 8, name: "name_korean", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 9, name: "color", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 10, name: "lines", kind: "message", T: Line, repeated: true },
-    { no: 11, name: "line", kind: "message", T: Line, opt: true },
-    { no: 12, name: "direction", kind: "enum", T: proto3.getEnumType(TrainDirection) },
-    { no: 13, name: "kind", kind: "enum", T: proto3.getEnumType(TrainTypeKind) },
-  ],
+    { no: 1, name: 'id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 2, name: 'type_id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 3, name: 'group_id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 4, name: 'name', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 5,
+      name: 'name_katakana',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 6,
+      name: 'name_roman',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 7,
+      name: 'name_chinese',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 8,
+      name: 'name_korean',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    { no: 9, name: 'color', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 10, name: 'lines', kind: 'message', T: Line, repeated: true },
+    { no: 11, name: 'line', kind: 'message', T: Line, opt: true },
+    {
+      no: 12,
+      name: 'direction',
+      kind: 'enum',
+      T: proto3.getEnumType(TrainDirection),
+    },
+    {
+      no: 13,
+      name: 'kind',
+      kind: 'enum',
+      T: proto3.getEnumType(TrainTypeKind),
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.Station
  */
 export const Station = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.Station",
+  'app.trainlcd.grpc.Station',
   () => [
-    { no: 1, name: "id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "group_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 3, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "name_katakana", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "name_roman", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 6, name: "name_chinese", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 7, name: "name_korean", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 8, name: "three_letter_code", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 9, name: "lines", kind: "message", T: Line, repeated: true },
-    { no: 10, name: "line", kind: "message", T: Line, opt: true },
-    { no: 11, name: "prefecture_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 12, name: "postal_code", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 13, name: "address", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 14, name: "latitude", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 15, name: "longitude", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 16, name: "opened_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 17, name: "closed_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 18, name: "status", kind: "enum", T: proto3.getEnumType(OperationStatus) },
-    { no: 19, name: "station_numbers", kind: "message", T: StationNumber, repeated: true },
-    { no: 20, name: "stop_condition", kind: "enum", T: proto3.getEnumType(StopCondition) },
-    { no: 21, name: "distance", kind: "scalar", T: 1 /* ScalarType.DOUBLE */, opt: true },
-    { no: 22, name: "has_train_types", kind: "scalar", T: 8 /* ScalarType.BOOL */, opt: true },
-    { no: 23, name: "train_type", kind: "message", T: TrainType, opt: true },
-  ],
+    { no: 1, name: 'id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 2, name: 'group_id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 3, name: 'name', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 4,
+      name: 'name_katakana',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 5,
+      name: 'name_roman',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 6,
+      name: 'name_chinese',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 7,
+      name: 'name_korean',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 8,
+      name: 'three_letter_code',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    { no: 9, name: 'lines', kind: 'message', T: Line, repeated: true },
+    { no: 10, name: 'line', kind: 'message', T: Line, opt: true },
+    {
+      no: 11,
+      name: 'prefecture_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+    {
+      no: 12,
+      name: 'postal_code',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 13, name: 'address', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 14, name: 'latitude', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+    { no: 15, name: 'longitude', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+    { no: 16, name: 'opened_at', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 17, name: 'closed_at', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 18,
+      name: 'status',
+      kind: 'enum',
+      T: proto3.getEnumType(OperationStatus),
+    },
+    {
+      no: 19,
+      name: 'station_numbers',
+      kind: 'message',
+      T: StationNumber,
+      repeated: true,
+    },
+    {
+      no: 20,
+      name: 'stop_condition',
+      kind: 'enum',
+      T: proto3.getEnumType(StopCondition),
+    },
+    {
+      no: 21,
+      name: 'distance',
+      kind: 'scalar',
+      T: 1 /* ScalarType.DOUBLE */,
+      opt: true,
+    },
+    {
+      no: 22,
+      name: 'has_train_types',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+      opt: true,
+    },
+    { no: 23, name: 'train_type', kind: 'message', T: TrainType, opt: true },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.SingleStationResponse
  */
 export const SingleStationResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.SingleStationResponse",
-  () => [
-    { no: 1, name: "station", kind: "message", T: Station },
-  ],
+  'app.trainlcd.grpc.SingleStationResponse',
+  () => [{ no: 1, name: 'station', kind: 'message', T: Station }]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.MultipleStationResponse
  */
 export const MultipleStationResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.MultipleStationResponse",
+  'app.trainlcd.grpc.MultipleStationResponse',
   () => [
-    { no: 1, name: "stations", kind: "message", T: Station, repeated: true },
-  ],
+    { no: 1, name: 'stations', kind: 'message', T: Station, repeated: true },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.MultipleTrainTypeResponse
  */
 export const MultipleTrainTypeResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.MultipleTrainTypeResponse",
+  'app.trainlcd.grpc.MultipleTrainTypeResponse',
   () => [
-    { no: 1, name: "train_types", kind: "message", T: TrainType, repeated: true },
-  ],
+    {
+      no: 1,
+      name: 'train_types',
+      kind: 'message',
+      T: TrainType,
+      repeated: true,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.SingleLineResponse
  */
 export const SingleLineResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.SingleLineResponse",
-  () => [
-    { no: 1, name: "line", kind: "message", T: Line },
-  ],
+  'app.trainlcd.grpc.SingleLineResponse',
+  () => [{ no: 1, name: 'line', kind: 'message', T: Line }]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.MultipleLineResponse
  */
 export const MultipleLineResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.MultipleLineResponse",
-  () => [
-    { no: 1, name: "lines", kind: "message", T: Line, repeated: true },
-  ],
+  'app.trainlcd.grpc.MultipleLineResponse',
+  () => [{ no: 1, name: 'lines', kind: 'message', T: Line, repeated: true }]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.DistanceResponse
  */
 export const DistanceResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.DistanceResponse",
+  'app.trainlcd.grpc.DistanceResponse',
   () => [
-    { no: 1, name: "station_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "distance", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-    { no: 3, name: "state", kind: "enum", T: proto3.getEnumType(DistanceResponseState) },
-  ],
+    {
+      no: 1,
+      name: 'station_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+    { no: 2, name: 'distance', kind: 'scalar', T: 1 /* ScalarType.DOUBLE */ },
+    {
+      no: 3,
+      name: 'state',
+      kind: 'enum',
+      T: proto3.getEnumType(DistanceResponseState),
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.RouteResponse
  */
 export const RouteResponse = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.RouteResponse",
+  'app.trainlcd.grpc.RouteResponse',
   () => [
-    { no: 1, name: "routes", kind: "message", T: Route, repeated: true },
-    { no: 2, name: "next_page_token", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
+    { no: 1, name: 'routes', kind: 'message', T: Route, repeated: true },
+    {
+      no: 2,
+      name: 'next_page_token',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.LineSymbol
  */
 export const LineSymbol = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.LineSymbol",
+  'app.trainlcd.grpc.LineSymbol',
   () => [
-    { no: 1, name: "symbol", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "color", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "shape", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
+    { no: 1, name: 'symbol', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'color', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'shape', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.Company
  */
 export const Company = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.Company",
+  'app.trainlcd.grpc.Company',
   () => [
-    { no: 1, name: "id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "railroad_id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 3, name: "name_short", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "name_katakana", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "name_full", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "name_english_short", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 7, name: "name_english_full", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 8, name: "url", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 9, name: "type", kind: "enum", T: proto3.getEnumType(CompanyType) },
-    { no: 10, name: "status", kind: "enum", T: proto3.getEnumType(OperationStatus) },
-    { no: 11, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ],
+    { no: 1, name: 'id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    {
+      no: 2,
+      name: 'railroad_id',
+      kind: 'scalar',
+      T: 13 /* ScalarType.UINT32 */,
+    },
+    { no: 3, name: 'name_short', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 4,
+      name: 'name_katakana',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 5, name: 'name_full', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 6,
+      name: 'name_english_short',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 7,
+      name: 'name_english_full',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 8,
+      name: 'url',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    { no: 9, name: 'type', kind: 'enum', T: proto3.getEnumType(CompanyType) },
+    {
+      no: 10,
+      name: 'status',
+      kind: 'enum',
+      T: proto3.getEnumType(OperationStatus),
+    },
+    { no: 11, name: 'name', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.Line
  */
 export const Line = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.Line",
+  'app.trainlcd.grpc.Line',
   () => [
-    { no: 1, name: "id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "name_short", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "name_katakana", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "name_full", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "name_roman", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 6, name: "name_chinese", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 7, name: "name_korean", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
-    { no: 8, name: "color", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 9, name: "line_type", kind: "enum", T: proto3.getEnumType(LineType) },
-    { no: 10, name: "line_symbols", kind: "message", T: LineSymbol, repeated: true },
-    { no: 11, name: "status", kind: "enum", T: proto3.getEnumType(OperationStatus) },
-    { no: 12, name: "station", kind: "message", T: Station, opt: true },
-    { no: 13, name: "company", kind: "message", T: Company, opt: true },
-    { no: 14, name: "train_type", kind: "message", T: TrainType, opt: true },
-    { no: 15, name: "average_distance", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
-  ],
+    { no: 1, name: 'id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 2, name: 'name_short', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'name_katakana',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 4, name: 'name_full', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 5,
+      name: 'name_roman',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 6,
+      name: 'name_chinese',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    {
+      no: 7,
+      name: 'name_korean',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      opt: true,
+    },
+    { no: 8, name: 'color', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: 'line_type', kind: 'enum', T: proto3.getEnumType(LineType) },
+    {
+      no: 10,
+      name: 'line_symbols',
+      kind: 'message',
+      T: LineSymbol,
+      repeated: true,
+    },
+    {
+      no: 11,
+      name: 'status',
+      kind: 'enum',
+      T: proto3.getEnumType(OperationStatus),
+    },
+    { no: 12, name: 'station', kind: 'message', T: Station, opt: true },
+    { no: 13, name: 'company', kind: 'message', T: Company, opt: true },
+    { no: 14, name: 'train_type', kind: 'message', T: TrainType, opt: true },
+    {
+      no: 15,
+      name: 'average_distance',
+      kind: 'scalar',
+      T: 1 /* ScalarType.DOUBLE */,
+    },
+  ]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.SingleLine
  */
 export const SingleLine = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.SingleLine",
-  () => [
-    { no: 1, name: "line", kind: "message", T: Line },
-  ],
+  'app.trainlcd.grpc.SingleLine',
+  () => [{ no: 1, name: 'line', kind: 'message', T: Line }]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.MultipleLine
  */
 export const MultipleLine = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.MultipleLine",
-  () => [
-    { no: 1, name: "lines", kind: "message", T: Line, repeated: true },
-  ],
+  'app.trainlcd.grpc.MultipleLine',
+  () => [{ no: 1, name: 'lines', kind: 'message', T: Line, repeated: true }]
 );
 
 /**
  * @generated from message app.trainlcd.grpc.Route
  */
 export const Route = /*@__PURE__*/ proto3.makeMessageType(
-  "app.trainlcd.grpc.Route",
+  'app.trainlcd.grpc.Route',
   () => [
-    { no: 1, name: "id", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
-    { no: 2, name: "stops", kind: "message", T: Station, repeated: true },
-  ],
+    { no: 1, name: 'id', kind: 'scalar', T: 13 /* ScalarType.UINT32 */ },
+    { no: 2, name: 'stops', kind: 'message', T: Station, repeated: true },
+  ]
 );
-

@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation } from '~/hooks';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';

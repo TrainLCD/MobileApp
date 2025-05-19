@@ -9,8 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '~/constants';
+import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';

@@ -30,12 +30,12 @@ import Heading from '../components/Heading';
 import { StationList } from '../components/StationList';
 import { FONTS } from '../constants';
 import { useCurrentStation, useLocationStore, useThemeStore } from '../hooks';
+import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { TestIds } from '../test/e2e';
 import { translate } from '../translation';
 import { groupStations } from '../utils/groupStations';
-import { APP_THEME } from '../models/Theme';
 
 const styles = StyleSheet.create({
   root: {
