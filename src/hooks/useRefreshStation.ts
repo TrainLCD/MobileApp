@@ -58,45 +58,33 @@ const useRefreshStation = (): void => {
       return true;
     }
 
-    if (speed && !getIsPass(nearestStation)) {
-      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が100m以上ある場合は走行速度を停車判定に使用しない
-      if (!accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)) {
-        return isPointWithinRadius(
-          { latitude, longitude },
-          {
-            latitude: nearestStation.latitude,
-            longitude: nearestStation.longitude,
-          },
-          arrivedThreshold
-        );
-      }
-
-      const speedKMH = (speed * 3600) / 1000;
-      return (
-        isPointWithinRadius(
-          { latitude, longitude },
-          {
-            latitude: nearestStation.latitude,
-            longitude: nearestStation.longitude,
-          },
-          arrivedThreshold
-        ) && speedKMH < ARRIVED_MAXIMUM_SPEED
-      );
+    if (getIsPass(nearestStation)) {
+      return false;
     }
 
-    const arrived = isPointWithinRadius(
-      { latitude, longitude },
-      {
-        latitude: nearestStation.latitude,
-        longitude: nearestStation.longitude,
-      },
-      arrivedThreshold
-    );
+    const arrived =
+      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が100m以上ある場合は走行速度を停車判定に使用しない
+      !accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)
+        ? isPointWithinRadius(
+            { latitude, longitude },
+            {
+              latitude: nearestStation.latitude,
+              longitude: nearestStation.longitude,
+            },
+            arrivedThreshold
+          )
+        : isPointWithinRadius(
+            { latitude, longitude },
+            {
+              latitude: nearestStation.latitude,
+              longitude: nearestStation.longitude,
+            },
+            arrivedThreshold
+          ) && (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED; // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
     }
-
     return arrived;
   }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
