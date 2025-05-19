@@ -59,7 +59,14 @@ const useRefreshStation = (): void => {
     }
 
     if (getIsPass(nearestStation)) {
-      return false;
+      return isPointWithinRadius(
+        { latitude, longitude },
+        {
+          latitude: nearestStation.latitude,
+          longitude: nearestStation.longitude,
+        },
+        arrivedThreshold
+      );
     }
 
     const arrived =
