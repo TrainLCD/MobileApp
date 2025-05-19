@@ -1,8 +1,8 @@
-import { groupStations } from '~/utils/groupStations';
 import {
   AMAGASAKI_STATIONS_FROM_SEARCH,
   OCHIAI_STATIONS_FROM_SEARCH,
 } from '../../__mocks__/fixture/search';
+import { groupStations } from './groupStations';
 
 describe('useStationGrouping', () => {
   it('should be empty array', () => {
