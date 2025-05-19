@@ -63,7 +63,7 @@ const useRefreshStation = (): void => {
     }
 
     const arrived =
-      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が100m以上ある場合は走行速度を停車判定に使用しない
+      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が200m以上ある場合は走行速度を停車判定に使用しない
       !accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)
         ? isPointWithinRadius(
             { latitude, longitude },
