@@ -9,9 +9,9 @@ import stationState from '../../store/atoms/station';
 import getIsPass from '../../utils/isPass';
 import { useCurrentLine } from '../useCurrentLine';
 import { useCurrentStation } from '../useCurrentStation';
-import useCurrentTrainType from '../useCurrentTrainType';
+import { useCurrentTrainType } from '../useCurrentTrainType';
 import { useNextStation } from '../useNextStation';
-import useStationNumberIndexFunc from '../useStationNumberIndexFunc';
+import { useStationNumberIndexFunc } from '../useStationNumberIndexFunc';
 
 export const useNumbering = (
   priorCurrent?: boolean

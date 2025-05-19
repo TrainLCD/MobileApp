@@ -16,12 +16,12 @@ import {
   parenthesisRegexp,
 } from '../constants';
 import { useBoundText } from '../hooks/useBoundText';
-import useConnectedLines from '../hooks/useConnectedLines';
+import { useConnectedLines } from '../hooks/useConnectedLines';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import useLazyPrevious from '../hooks/useLazyPrevious';
+import { useCurrentTrainType } from '../hooks/useCurrentTrainType';
+import { useIsNextLastStop } from '../hooks/useIsNextLastStop';
+import { useLazyPrevious } from '../hooks/useLazyPrevious';
 import { useNextStation } from '../hooks/useNextStation';
 import { useNumbering } from '../hooks/useNumbering';
 import { usePrevious } from '../hooks/usePrevious';

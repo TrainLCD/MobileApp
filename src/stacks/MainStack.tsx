@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
-import useConnectivity from '../hooks/useConnectivity';
+import { useConnectivity } from '../hooks/useConnectivity';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { useUnderMaintenance } from '../hooks/useUnderMaintenance';
 import { APP_THEME } from '../models/Theme';

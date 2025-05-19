@@ -10,7 +10,7 @@ type Option = {
   omitJR?: boolean;
 };
 
-const useTransferLinesFromStation = (
+export const useTransferLinesFromStation = (
   station: Station | null,
   option?: Option
 ): Line[] => {
@@ -92,5 +92,3 @@ const useTransferLinesFromStation = (
     }))
     .map((l) => new Line(l));
 };
-
-export default useTransferLinesFromStation;

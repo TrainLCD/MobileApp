@@ -16,11 +16,11 @@ import {
   parenthesisRegexp,
 } from '../constants';
 import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
-import useConnectivity from '../hooks/useConnectivity';
+import { useConnectivity } from '../hooks/useConnectivity';
 import { useCurrentStation } from '../hooks/useCurrentStation';
 import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce';
 import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation';
-import useGetLineMark from '../hooks/useGetLineMark';
+import { useGetLineMark } from '../hooks/useGetLineMark';
 import { useLocationStore } from '../hooks/useLocationStore';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';

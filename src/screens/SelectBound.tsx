@@ -20,7 +20,7 @@ import Heading from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
-import useBounds from '../hooks/useBounds';
+import { useBounds } from '../hooks/useBounds';
 import { useLoopLine } from '../hooks/useLoopLine';
 import { useStationList } from '../hooks/useStationList';
 import { type LineDirection, directionToDirectionName } from '../models/Bound';

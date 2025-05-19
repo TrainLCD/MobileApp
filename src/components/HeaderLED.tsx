@@ -3,7 +3,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants';
 import { useCurrentStation } from '../hooks/useCurrentStation';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
+import { useIsNextLastStop } from '../hooks/useIsNextLastStop';
 import { useNextStation } from '../hooks/useNextStation';
 import { useNumbering } from '../hooks/useNumbering';
 import type { HeaderLangState } from '../models/HeaderTransitionState';

@@ -9,11 +9,11 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
 import { useThemeStore } from './useThemeStore';
 
-const useRefreshLeftStations = (): void => {
+export const useRefreshLeftStations = (): void => {
   const {
     station: normalStation,
     stations: normalStations,
@@ -189,5 +189,3 @@ const useRefreshLeftStations = (): void => {
     trainType,
   ]);
 };
-
-export default useRefreshLeftStations;

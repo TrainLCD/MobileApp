@@ -3,7 +3,7 @@ import firestore from '@react-native-firebase/firestore';
 import { useQuery } from '@tanstack/react-query';
 import { getStationByIdList } from '../../gen/proto/stationapi-StationAPI_connectquery';
 import type { SavedRoute } from '../models/SavedRoute';
-import useCachedInitAnonymousUser from './useCachedAnonymousUser';
+import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 
 export const useSavedRoutes = () => {
   useCachedInitAnonymousUser();

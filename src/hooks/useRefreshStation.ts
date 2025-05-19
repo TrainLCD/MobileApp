@@ -14,11 +14,11 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
-import useCanGoForward from './useCanGoForward';
+import { useCanGoForward } from './useCanGoForward';
 import { useLocationStore } from './useLocationStore';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
@@ -31,7 +31,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const useRefreshStation = (): void => {
+export const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
@@ -71,7 +71,7 @@ const useRefreshStation = (): void => {
 
     const arrived =
       // NOTE: 位置情報が取得できない or 位置情報の取得誤差が200m以上ある場合は走行速度を停車判定に使用しない
-      !accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)
+      !speed || !accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)
         ? isPointWithinRadius(
             { latitude, longitude },
             {
@@ -189,5 +189,3 @@ const useRefreshStation = (): void => {
     }
   }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
 };
-
-export default useRefreshStation;

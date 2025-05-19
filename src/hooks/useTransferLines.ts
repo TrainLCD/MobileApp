@@ -5,11 +5,11 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
-import useTransferLinesFromStation from './useTransferLinesFromStation';
+import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
 type Option = { omitRepeatingLine?: boolean; omitJR?: boolean };
 
-const useTransferLines = (options?: Option): Line[] => {
+export const useTransferLines = (options?: Option): Line[] => {
   const { arrived } = useRecoilValue(stationState);
   const currentStation = useCurrentStation(false, true);
   const nextStation = useNextStation();
@@ -33,5 +33,3 @@ const useTransferLines = (options?: Option): Line[] => {
 
   return transferLines;
 };
-
-export default useTransferLines;

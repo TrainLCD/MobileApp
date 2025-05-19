@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react-native';
 import React, { useEffect } from 'react';
 import { RecoilRoot, useSetRecoilState } from 'recoil';
 import { setupMockUseNumbering } from '~/hooks/useNumbering/__mocks__';
-import useTTSText from '~/hooks/useTTSText';
+import { useTTSText } from '~/hooks/useTTSText';
 import { useThemeStore } from '~/hooks/useThemeStore';
 import type { LineDirection } from '~/models/Bound';
 import type { HeaderStoppingState } from '~/models/HeaderTransitionState';

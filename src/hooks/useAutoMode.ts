@@ -12,7 +12,7 @@ import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import { useLocationStore } from './useLocationStore';
 import { useLoopLine } from './useLoopLine';
-import useValueRef from './useValueRef';
+import { useValueRef } from './useValueRef';
 
 export const useAutoMode = (enabled: boolean): void => {
   const {

@@ -7,7 +7,7 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 
-const useCurrentTrainType = (): TrainType | null => {
+export const useCurrentTrainType = (): TrainType | null => {
   const { stations } = useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
 
@@ -50,5 +50,3 @@ const useCurrentTrainType = (): TrainType | null => {
 
   return cachedTrainType;
 };
-
-export default useCurrentTrainType;

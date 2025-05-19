@@ -7,20 +7,20 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { useAfterNextStation } from './useAfterNextStation';
-import useBounds from './useBounds';
-import useConnectedLines from './useConnectedLines';
+import { useBounds } from './useBounds';
+import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
-import useIsTerminus from './useIsTerminus';
+import { useCurrentTrainType } from './useCurrentTrainType';
+import { useIsTerminus } from './useIsTerminus';
 import { useLoopLine } from './useLoopLine';
-import useLoopLineBound from './useLoopLineBound';
+import { useLoopLineBound } from './useLoopLineBound';
 import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useSlicedStations } from './useSlicedStations';
 import { useStoppingState } from './useStoppingState';
 import { useThemeStore } from './useThemeStore';
-import useTransferLines from './useTransferLines';
+import { useTransferLines } from './useTransferLines';
 
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
@@ -34,7 +34,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
 };
 
-const useTTSText = (
+export const useTTSText = (
   firstSpeech = true,
   enabled = false
 ): [string, string] | undefined[] => {
@@ -1006,5 +1006,3 @@ const useTTSText = (
 
   return [jaText, enText];
 };
-
-export default useTTSText;

@@ -24,7 +24,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RecoilRoot } from 'recoil';
 import ErrorFallback from './components/ErrorBoundary';
 import TuningSettings from './components/TuningSettings';
-import useAnonymousUser from './hooks/useAnonymousUser';
+import { useAnonymousUser } from './hooks/useAnonymousUser';
 import { useFeedback } from './hooks/useFeedback';
 import { queryClient, transport } from './lib/grpc';
 import DeepLinkProvider from './providers/DeepLinkProvider';

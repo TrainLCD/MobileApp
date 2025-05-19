@@ -16,10 +16,10 @@ import {
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
-import useAndroidWearable from '../hooks/useAndroidWearable';
-import useAppleWatch from '../hooks/useAppleWatch';
-import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
-import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
+import { useAndroidWearable } from '../hooks/useAndroidWearable';
+import { useAppleWatch } from '../hooks/useAppleWatch';
+import { useCachedInitAnonymousUser } from '../hooks/useCachedAnonymousUser';
+import { useCheckStoreVersion } from '../hooks/useCheckStoreVersion';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useFeedback } from '../hooks/useFeedback';
 import { useThemeStore } from '../hooks/useThemeStore';

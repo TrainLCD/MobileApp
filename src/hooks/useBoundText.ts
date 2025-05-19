@@ -8,7 +8,7 @@ import {
 } from '../constants/station';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import stationState from '../store/atoms/station';
-import useBounds from './useBounds';
+import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';

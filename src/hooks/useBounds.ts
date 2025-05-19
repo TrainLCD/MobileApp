@@ -16,7 +16,7 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
-const useBounds = (): {
+export const useBounds = (): {
   bounds: [Station[], Station[]];
   directionalStops: Station[];
 } => {
@@ -103,5 +103,3 @@ const useBounds = (): {
 
   return { bounds, directionalStops };
 };
-
-export default useBounds;

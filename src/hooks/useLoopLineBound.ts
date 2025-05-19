@@ -8,7 +8,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import { useLoopLine } from './useLoopLine';
 
-const useLoopLineBound = (
+export const useLoopLineBound = (
   reflectHeaderLanguage = true,
   preferredLanguage?: PreferredLanguage
 ): {
@@ -100,5 +100,3 @@ const useLoopLineBound = (
 
   return bounds;
 };
-
-export default useLoopLineBound;

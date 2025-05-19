@@ -17,7 +17,7 @@ import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';

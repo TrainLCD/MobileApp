@@ -5,7 +5,7 @@ import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 
-const useConnectedLines = (excludePassed = true): Line[] => {
+export const useConnectedLines = (excludePassed = true): Line[] => {
   const { selectedBound, selectedDirection, stations } =
     useRecoilValue(stationState);
   const currentLine = useCurrentLine();
@@ -146,5 +146,3 @@ const useConnectedLines = (excludePassed = true): Line[] => {
 
   return excludeSameNameLines(belongLines);
 };
-
-export default useConnectedLines;

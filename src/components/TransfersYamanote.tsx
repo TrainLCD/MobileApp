@@ -9,8 +9,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Line, Station } from '../../gen/proto/stationapi_pb';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import useGetLineMark from '../hooks/useGetLineMark';
-import useTransferLines from '../hooks/useTransferLines';
+import { useGetLineMark } from '../hooks/useGetLineMark';
+import { useTransferLines } from '../hooks/useTransferLines';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';

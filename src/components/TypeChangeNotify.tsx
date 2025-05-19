@@ -10,8 +10,8 @@ import {
 import { parenthesisRegexp } from '../constants';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useNextTrainType from '../hooks/useNextTrainType';
+import { useCurrentTrainType } from '../hooks/useCurrentTrainType';
+import { useNextTrainType } from '../hooks/useNextTrainType';
 import { useThemeStore } from '../hooks/useThemeStore';
 import stationState from '../store/atoms/station';
 import isTablet from '../utils/isTablet';

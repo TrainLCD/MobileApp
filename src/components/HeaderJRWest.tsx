@@ -13,9 +13,9 @@ import {
 import { useBoundText } from '../hooks/useBoundText';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useGetLineMark from '../hooks/useGetLineMark';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
+import { useCurrentTrainType } from '../hooks/useCurrentTrainType';
+import { useGetLineMark } from '../hooks/useGetLineMark';
+import { useIsNextLastStop } from '../hooks/useIsNextLastStop';
 import { useNextStation } from '../hooks/useNextStation';
 import { useNumbering } from '../hooks/useNumbering';
 import type { HeaderLangState } from '../models/HeaderTransitionState';

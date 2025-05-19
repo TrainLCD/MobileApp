@@ -6,7 +6,7 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 
-const usePreviousStation = (skipPass = true): Station | undefined => {
+export const usePreviousStation = (skipPass = true): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
     useRecoilValue(stationState);
   const station = useCurrentStation(true);
@@ -40,5 +40,3 @@ const usePreviousStation = (skipPass = true): Station | undefined => {
 
   return beforeStations[beforeStations.length - 1];
 };
-
-export default usePreviousStation;

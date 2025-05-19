@@ -12,7 +12,7 @@ import { useRecoilValue } from 'recoil';
 import type { Line, Station } from '../../gen/proto/stationapi_pb';
 import { useCurrentLine } from '../hooks/useCurrentLine';
 import { useInterval } from '../hooks/useInterval';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import { useTransferLinesFromStation } from '../hooks/useTransferLinesFromStation';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isEnSelector } from '../store/selectors/isEn';

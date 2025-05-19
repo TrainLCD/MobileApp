@@ -12,7 +12,7 @@ import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useStoppingState } from './useStoppingState';
 
-const useAppleWatch = (): void => {
+export const useAppleWatch = (): void => {
   const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
@@ -111,5 +111,3 @@ const useAppleWatch = (): void => {
     }
   }, [sendToWatch, reachable]);
 };
-
-export default useAppleWatch;

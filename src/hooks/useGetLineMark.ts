@@ -3,9 +3,9 @@ import { type Line, LineType } from '../../gen/proto/stationapi_pb';
 import { MARK_SHAPE } from '../constants';
 import { getLineSymbolImage } from '../lineSymbolImage';
 import type { LineMark } from '../models/LineMark';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
-const useGetLineMark = () => {
+export const useGetLineMark = () => {
   const getNumberingIndex = useStationNumberIndexFunc();
 
   const func = useCallback(
@@ -82,5 +82,3 @@ const useGetLineMark = () => {
 
   return func;
 };
-
-export default useGetLineMark;

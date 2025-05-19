@@ -11,7 +11,7 @@ import Animated, {
 import { useRecoilValue } from 'recoil';
 import type { TrainType } from '../../gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
-import useLazyPrevious from '../hooks/useLazyPrevious';
+import { useLazyPrevious } from '../hooks/useLazyPrevious';
 import { usePrevious } from '../hooks/usePrevious';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { getIsLocal } from '../utils/trainTypeString';
-import useCurrentTrainType from './useCurrentTrainType';
-import useNextTrainType from './useNextTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
+import { useNextTrainType } from './useNextTrainType';
 
 export const useTypeWillChange = (): boolean => {
   const trainType = useCurrentTrainType();

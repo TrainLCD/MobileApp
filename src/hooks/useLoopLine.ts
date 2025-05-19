@@ -14,7 +14,7 @@ import stationState from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 
 export const useLoopLine = () => {
   const { stations } = useRecoilValue(stationState);
