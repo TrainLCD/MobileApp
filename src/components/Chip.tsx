@@ -7,11 +7,9 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '../models/Theme';
 import type { ButtonTestId } from '../test/e2e';
-import { hexToRgb } from '../utils/hex2rgb';
-import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { TrainType } from '../../gen/proto/stationapi_pb';
+import { TrainType } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';

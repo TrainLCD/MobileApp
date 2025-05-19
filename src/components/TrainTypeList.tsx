@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Line, TrainType } from '../../gen/proto/stationapi_pb';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { APP_THEME } from '../models/Theme';
-import { isJapanese, translate } from '../translation';
-import { RFValue } from '../utils/rfValue';
+import type { Line, TrainType } from '~/gen/proto/stationapi_pb';
+import { useCurrentLine } from '~/hooks';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese, translate } from '~/translation';
+import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({

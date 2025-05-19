@@ -1,6 +1,6 @@
 import { selector } from 'recoil';
-import { RECOIL_STATES } from '../../constants';
-import navigationState from '../atoms/navigation';
+import { RECOIL_STATES } from '~/constants';
+import navigationState from '~/store/atoms/navigation';
 
 export const isEnSelector = selector({
   key: RECOIL_STATES.isEnSelector,

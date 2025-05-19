@@ -3,7 +3,7 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,

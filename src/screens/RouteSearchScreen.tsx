@@ -21,17 +21,19 @@ import {
   getRoutes,
   getStationByIdList,
   getStationsByName,
-} from '../../gen/proto/stationapi-StationAPI_connectquery';
-import type { Route, Station } from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
+import type { Route, Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import { RouteListModal } from '../components/RouteListModal';
 import { StationList } from '../components/StationList';
 import { FONTS } from '../constants';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useGetStationsWithTermination } from '../hooks/useGetStationsWithTermination';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { useTrainTypeStations } from '../hooks/useTrainTypeStations';
+import {
+  useCurrentStation,
+  useGetStationsWithTermination,
+  useThemeStore,
+  useTrainTypeStations,
+} from '../hooks';
 import type { LineDirection } from '../models/Bound';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';

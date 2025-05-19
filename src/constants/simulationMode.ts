@@ -1,4 +1,4 @@
-import { LineType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
+import { LineType, TrainTypeKind } from '~/gen/proto/stationapi_pb';
 
 // 路線種別による最高速度
 export const LINE_TYPE_MAX_SPEEDS_IN_M_S: Record<LineType, number> = {

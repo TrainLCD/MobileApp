@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import {
   TOEI_OEDO_LINE_MAJOR_STATIONS_ID,

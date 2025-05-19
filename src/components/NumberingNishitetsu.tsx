@@ -5,7 +5,7 @@ import {
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
-import isTablet from '../utils/isTablet';
+import isTablet from '~/utils/isTablet';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import Typography from './Typography';
 

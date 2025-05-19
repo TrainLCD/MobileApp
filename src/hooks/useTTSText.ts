@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { Station } from '../../gen/proto/stationapi_pb';
+import { Station } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';

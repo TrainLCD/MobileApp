@@ -6,7 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
 import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants';
-import { useThemeStore } from '../../hooks/useThemeStore';
+import { useThemeStore } from '../../hooks';
 import { APP_THEME, type AppTheme } from '../../models/Theme';
 import { translate } from '../../translation';
 import { isDevApp } from '../../utils/isDevApp';

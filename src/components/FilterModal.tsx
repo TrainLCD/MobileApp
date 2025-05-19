@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { FlatList, Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '../constants';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '../models/Theme';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';

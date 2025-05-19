@@ -16,14 +16,16 @@ import {
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
-import { useAndroidWearable } from '../hooks/useAndroidWearable';
-import { useAppleWatch } from '../hooks/useAppleWatch';
-import { useCachedInitAnonymousUser } from '../hooks/useCachedAnonymousUser';
-import { useCheckStoreVersion } from '../hooks/useCheckStoreVersion';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useFeedback } from '../hooks/useFeedback';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { useWarningInfo } from '../hooks/useWarningInfo';
+import {
+  useAndroidWearable,
+  useAppleWatch,
+  useCachedInitAnonymousUser,
+  useCheckStoreVersion,
+  useCurrentLine,
+  useFeedback,
+  useThemeStore,
+  useWarningInfo,
+} from '../hooks';
 import type { AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';

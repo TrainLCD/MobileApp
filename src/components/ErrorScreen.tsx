@@ -2,11 +2,11 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import React, { useCallback } from 'react';
 import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { STATUS_URL } from '../constants';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { APP_THEME } from '../models/Theme';
-import { translate } from '../translation';
-import { RFValue } from '../utils/rfValue';
+import { STATUS_URL } from '~/constants';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import { translate } from '~/translation';
+import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({

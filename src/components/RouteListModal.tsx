@@ -5,11 +5,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSetRecoilState } from 'recoil';
-import { getTrainTypesByStationId } from '../../gen/proto/stationapi-StationAPI_connectquery';
-import type { Route, Station, TrainType } from '../../gen/proto/stationapi_pb';
+import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { LED_THEME_BG_COLOR } from '../constants';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useCurrentStation, useThemeStore } from '~/hooks';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import { isJapanese, translate } from '../translation';
@@ -19,6 +17,7 @@ import Heading from './Heading';
 import Loading from './Loading';
 import { RouteList } from './RouteList';
 import { TrainTypeInfoPage } from './TrainTypeInfoPage';
+import { getTrainTypesByStationId } from '~/gen/proto/stationapi-StationAPI_connectquery';
 
 type Props = {
   finalStation: Station;

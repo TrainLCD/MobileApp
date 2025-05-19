@@ -3,7 +3,7 @@ import * as Recoil from 'recoil';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
-import { TrainTypeKind } from '../../gen/proto/stationapi_pb';
+import { TrainTypeKind } from '~/gen/proto/stationapi_pb';
 
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: {

@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSetRecoilState } from 'recoil';
-import type { Line } from '../../gen/proto/stationapi_pb';
+import type { Line } from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
@@ -15,13 +15,15 @@ import {
   LOCATION_TASK_NAME,
   parenthesisRegexp,
 } from '../constants';
-import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
-import { useConnectivity } from '../hooks/useConnectivity';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce';
-import { useFetchNearbyStation } from '../hooks/useFetchNearbyStation';
-import { useGetLineMark } from '../hooks/useGetLineMark';
-import { useLocationStore } from '../hooks/useLocationStore';
+import {
+  useApplicationFlagStore,
+  useConnectivity,
+  useCurrentStation,
+  useFetchCurrentLocationOnce,
+  useFetchNearbyStation,
+  useGetLineMark,
+  useLocationStore,
+} from '../hooks';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

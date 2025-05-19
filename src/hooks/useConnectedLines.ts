@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { Line } from '../../gen/proto/stationapi_pb';
-import { parenthesisRegexp } from '../constants';
-import stationState from '../store/atoms/station';
+import { Line } from '~/gen/proto/stationapi_pb';
+import { parenthesisRegexp } from '~/constants';
+import stationState from '~/store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 
 export const useConnectedLines = (excludePassed = true): Line[] => {

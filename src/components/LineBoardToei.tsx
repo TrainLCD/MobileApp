@@ -9,15 +9,13 @@ import {
   View,
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import type {
-  Line,
-  Station,
-  StationNumber,
-} from '../../gen/proto/stationapi_pb';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useInterval } from '../hooks/useInterval';
-import { useStationNumberIndexFunc } from '../hooks/useStationNumberIndexFunc';
-import { useTransferLinesFromStation } from '../hooks/useTransferLinesFromStation';
+import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useInterval,
+  useStationNumberIndexFunc,
+  useTransferLinesFromStation,
+} from '../hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isEnSelector } from '../store/selectors/isEn';

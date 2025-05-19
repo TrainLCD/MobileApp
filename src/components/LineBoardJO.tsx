@@ -8,12 +8,14 @@ import {
   View,
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import type { Station, StationNumber } from '../../gen/proto/stationapi_pb';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useIsPassing } from '../hooks/useIsPassing';
-import { useStationNumberIndexFunc } from '../hooks/useStationNumberIndexFunc';
-import { useTransferLinesFromStation } from '../hooks/useTransferLinesFromStation';
+import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useCurrentStation,
+  useIsPassing,
+  useStationNumberIndexFunc,
+  useTransferLinesFromStation,
+} from '~/hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isEnSelector } from '../store/selectors/isEn';

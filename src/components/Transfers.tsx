@@ -2,13 +2,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import { Line, Station, StationNumber } from '../../gen/proto/stationapi_pb';
+import { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useGetLineMark } from '../hooks/useGetLineMark';
-import { useNextStation } from '../hooks/useNextStation';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { useTransferLines } from '../hooks/useTransferLines';
+import {
+  useCurrentStation,
+  useGetLineMark,
+  useNextStation,
+  useThemeStore,
+  useTransferLines,
+} from '../hooks';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';

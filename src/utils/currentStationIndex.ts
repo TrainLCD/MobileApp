@@ -1,4 +1,4 @@
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 
 const getCurrentStationIndex = (
   stations: Station[],
