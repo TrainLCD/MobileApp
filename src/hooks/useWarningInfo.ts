@@ -8,7 +8,7 @@ import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useBadAccuracy } from './useBadAccuracy';
-import useConnectivity from './useConnectivity';
+import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 
 const WARNING_PANEL_LEVEL = {

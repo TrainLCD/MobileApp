@@ -10,15 +10,15 @@ import {
   stopLiveActivity,
   updateLiveActivity,
 } from '../utils/native/ios/liveActivityModule';
-import useBounds from './useBounds';
+import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
-import useIsNextLastStop from './useIsNextLastStop';
-import useIsPassing from './useIsPassing';
+import { useCurrentTrainType } from './useCurrentTrainType';
+import { useIsNextLastStop } from './useIsNextLastStop';
+import { useIsPassing } from './useIsPassing';
 import { useLoopLine } from './useLoopLine';
 import { useNextStation } from './useNextStation';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 export const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);

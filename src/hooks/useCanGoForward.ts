@@ -4,7 +4,7 @@ import { useLoopLine } from './useLoopLine';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 
-const useCanGoForward = (): boolean => {
+export const useCanGoForward = (): boolean => {
   const currentStation = useCurrentStation();
   const nextStation = useNextStation();
   const nearestStation = useNearestStation();
@@ -28,5 +28,3 @@ const useCanGoForward = (): boolean => {
 
   return canGoForward;
 };
-
-export default useCanGoForward;

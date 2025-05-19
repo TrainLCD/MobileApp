@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Station } from '../../gen/proto/stationapi_pb';
+import { Station } from '~/gen/proto/stationapi_pb';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';

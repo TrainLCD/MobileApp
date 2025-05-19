@@ -1,7 +1,7 @@
 import type React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { FONTS } from '../constants';
-import isTablet from '../utils/isTablet';
+import { FONTS } from '~/constants';
+import isTablet from '~/utils/isTablet';
 import Typography from './Typography';
 
 type Props = {

@@ -1,9 +1,9 @@
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useLoopLine } from './useLoopLine';
 
-const useIsTerminus = (station: Station | undefined) => {
+export const useIsTerminus = (station: Station | undefined) => {
   const { stations } = useRecoilValue(stationState);
   const { isLoopLine } = useLoopLine();
 
@@ -16,5 +16,3 @@ const useIsTerminus = (station: Station | undefined) => {
     stations[stations.length - 1]?.id === station.id
   );
 };
-
-export default useIsTerminus;

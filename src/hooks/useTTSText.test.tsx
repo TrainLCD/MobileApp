@@ -1,8 +1,8 @@
 import { renderHook } from '@testing-library/react-native';
 import React, { useEffect } from 'react';
 import { RecoilRoot, useSetRecoilState } from 'recoil';
-import { setupMockUseNumbering } from '~/hooks/useNumbering/__mocks__';
-import useTTSText from '~/hooks/useTTSText';
+import { StationNumber } from '~/gen/proto/stationapi_pb';
+import { useTTSText } from '~/hooks/useTTSText';
 import { useThemeStore } from '~/hooks/useThemeStore';
 import type { LineDirection } from '~/models/Bound';
 import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
@@ -13,9 +13,20 @@ import stationState from '~/store/atoms/station';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station';
 import { setupMockUseNextStation } from '../../__mocks__/useNextStation';
-import { StationNumber } from '../../gen/proto/stationapi_pb';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
+jest.mock('~/hooks/useNumbering', () => ({
+  useNumbering: jest.fn(),
+}));
+
+const setupMockUseNumbering = ([stationNumber, threeLetterCode]: [
+  StationNumber | undefined,
+  string,
+]) =>
+  require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+    stationNumber,
+    threeLetterCode,
+  ]);
 
 const useTTSTextWithRecoilAndNumbering = (
   theme: AppTheme,

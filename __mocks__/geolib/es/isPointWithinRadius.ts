@@ -1,0 +1,1 @@
+export default jest.fn(() => false); // 必要に応じてテスト内で動的に変更

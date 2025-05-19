@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import isTablet from '~/utils/isTablet';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
-import isTablet from '../utils/isTablet';
 import NumberingIconReversedSquare from './NumberingIconReversedSquare';
 import Typography from './Typography';
 

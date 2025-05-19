@@ -10,7 +10,7 @@ import Heading from '../../components/Heading';
 import LEDThemeSwitch from '../../components/LEDThemeSwitch';
 import Typography from '../../components/Typography';
 import { ASYNC_STORAGE_KEYS } from '../../constants';
-import { useThemeStore } from '../../hooks/useThemeStore';
+import { useThemeStore } from '../../hooks';
 import { APP_THEME } from '../../models/Theme';
 import speechState from '../../store/atoms/speech';
 import { translate } from '../../translation';

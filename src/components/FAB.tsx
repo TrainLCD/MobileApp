@@ -6,9 +6,9 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import type { GlyphNames } from '../@types/ionicons';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { APP_THEME } from '../models/Theme';
+import type { GlyphNames } from '~/@types/ionicons';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
 
 interface Props {
   icon: GlyphNames;

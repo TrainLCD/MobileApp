@@ -1,6 +1,6 @@
 import type React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MARK_SHAPE, type NumberingIconSize } from '../constants';
+import { MARK_SHAPE, type NumberingIconSize } from '~/constants';
 import NumberingIconHalfSquare from './NumberingIconHalfSquare';
 import NumberingIconHankyu from './NumberingIconHankyu';
 import NumberingIconHanshin from './NumberingIconHanshin';

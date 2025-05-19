@@ -10,7 +10,7 @@ import {
 } from '~/constants/telemetry';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
-import useIsPassing from './useIsPassing';
+import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);

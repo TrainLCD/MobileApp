@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import type { PreferredLanguage } from '../models/PreferredLanguage';
 import navigationState from '../store/atoms/navigation';
@@ -8,7 +8,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import { useLoopLine } from './useLoopLine';
 
-const useLoopLineBound = (
+export const useLoopLineBound = (
   reflectHeaderLanguage = true,
   preferredLanguage?: PreferredLanguage
 ): {
@@ -100,5 +100,3 @@ const useLoopLineBound = (
 
   return bounds;
 };
-
-export default useLoopLineBound;

@@ -11,16 +11,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
-import { useBoundText } from '../hooks/useBoundText';
-import useConnectedLines from '../hooks/useConnectedLines';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import useLazyPrevious from '../hooks/useLazyPrevious';
-import { useNextStation } from '../hooks/useNextStation';
-import { useNumbering } from '../hooks/useNumbering';
-import { usePrevious } from '../hooks/usePrevious';
+import {
+  useBoundText,
+  useConnectedLines,
+  useCurrentLine,
+  useCurrentStation,
+  useCurrentTrainType,
+  useIsNextLastStop,
+  useLazyPrevious,
+  useNextStation,
+  useNumbering,
+  usePrevious,
+} from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

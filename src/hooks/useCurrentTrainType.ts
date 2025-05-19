@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { TrainType } from '../../gen/proto/stationapi_pb';
+import type { TrainType } from '~/gen/proto/stationapi_pb';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 
-const useCurrentTrainType = (): TrainType | null => {
+export const useCurrentTrainType = (): TrainType | null => {
   const { stations } = useRecoilValue(stationState);
   const { trainType } = useRecoilValue(navigationState);
 
@@ -50,5 +50,3 @@ const useCurrentTrainType = (): TrainType | null => {
 
   return cachedTrainType;
 };
-
-export default useCurrentTrainType;

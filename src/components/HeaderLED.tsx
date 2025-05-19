@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import { useNextStation } from '../hooks/useNextStation';
-import { useNumbering } from '../hooks/useNumbering';
+import {
+  useCurrentStation,
+  useIsNextLastStop,
+  useNextStation,
+  useNumbering,
+} from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

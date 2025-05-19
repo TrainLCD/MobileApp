@@ -1,7 +1,7 @@
 import React, { memo, type ReactNode, useEffect } from 'react';
 import { Alert } from 'react-native';
 import Loading from '../components/Loading';
-import { useDeepLink } from '../hooks/useDeepLink';
+import { useDeepLink } from '../hooks';
 import { translate } from '../translation';
 
 type Props = {

@@ -21,7 +21,7 @@ import {
   ASYNC_STORAGE_KEYS,
   type AvailableLanguage,
 } from '../constants';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import { isJapanese, translate } from '../translation';
