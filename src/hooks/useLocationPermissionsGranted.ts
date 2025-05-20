@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 export const useLocationPermissionsGranted = () => {
-  const [permissionsGranted, setPermissionsGranted] = useState(true);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { granted } = await Location.getBackgroundPermissionsAsync();
-      setPermissionsGranted(granted);
+      if (AppState.currentState === 'active') {
+        const { granted } = await Location.getBackgroundPermissionsAsync();
+        setPermissionsGranted(granted);
+      }
     })();
 
     const { remove } = AppState.addEventListener('change', async (state) => {

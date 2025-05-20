@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
@@ -14,7 +14,7 @@ import stationState from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 
 export const useLoopLine = () => {
   const { stations } = useRecoilValue(stationState);

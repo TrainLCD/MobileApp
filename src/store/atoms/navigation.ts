@@ -1,5 +1,5 @@
 import { atom } from 'recoil';
-import type { Station, TrainType } from '../../../gen/proto/stationapi_pb';
+import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,

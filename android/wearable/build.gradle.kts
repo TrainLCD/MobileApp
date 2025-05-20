@@ -38,13 +38,13 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 81101001
-      versionName = "8.11.1"
+      versionCode = 81200051
+      versionName = "8.12.0"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 81101001
-      versionName = "8.11.1"
+      versionCode = 81200001
+      versionName = "8.12.0"
     }
   }
 
@@ -59,7 +59,7 @@ android {
     compose = true
   }
   composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.14"
+    kotlinCompilerExtensionVersion = "1.5.15"
   }
 }
 

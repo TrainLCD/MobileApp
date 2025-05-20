@@ -1,35 +1,36 @@
-import { getPathLength } from 'geolib';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
-import getRhumbLineBearing from 'geolib/es/getRhumbLineBearing';
+import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
+import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue } from 'recoil';
+import { LineType } from '~/gen/proto/stationapi_pb';
+import { isDevApp } from '~/utils/isDevApp';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
-import { LineType } from '../../gen/proto/stationapi_pb';
 import {
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
   LINE_TYPE_MAX_SPEEDS_IN_M_S,
+  TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '../constants/simulationMode';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
+import { useCurrentTrainType } from './useCurrentTrainType';
+import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
 export const useSimulationMode = (enabled: boolean): void => {
-  const {
-    stations: rawStations,
-    selectedDirection,
-    station,
-  } = useRecoilValue(stationState);
+  const { stations: rawStations, selectedDirection } =
+    useRecoilValue(stationState);
   const currentLine = useCurrentLine();
+  const trainType = useCurrentTrainType();
 
-  const indexRef = useRef(0);
+  const segmentIndexRef = useRef(0);
+  const childIndexRef = useRef(0);
   const speedProfilesRef = useRef<number[][]>([]);
-
-  const nextStation = useNextStation(false);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -41,33 +42,51 @@ export const useSimulationMode = (enabled: boolean): void => {
     [currentLine]
   );
 
+  const maxSpeed = useMemo<number>(() => {
+    if (currentLineType === LineType.BulletTrain) {
+      return LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain];
+    }
+
+    const defaultMaxSpeed = LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLineType];
+
+    if (trainType?.kind && TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[trainType?.kind]) {
+      return (
+        TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[trainType.kind] ?? defaultMaxSpeed
+      );
+    }
+
+    return defaultMaxSpeed;
+  }, [currentLineType, trainType]);
+
+  const station = useInRadiusStation(maxSpeed / 2);
+  const nextStation = useNextStation(false, station ?? undefined);
+
+  const maybeRevsersedStations = useMemo(
+    () =>
+      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
+    [stations, selectedDirection]
+  );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {
-    speedProfilesRef.current = stations.map((cur) => {
-      const stationsWithoutPass = stations.filter((s) => !getIsPass(s));
+    const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
+      const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
 
-      const next =
-        selectedDirection === 'INBOUND'
-          ? stationsWithoutPass[stationsWithoutPass.indexOf(cur) + 1]
-          : stationsWithoutPass[stationsWithoutPass.indexOf(cur) - 1];
+      const curIdx = stationsWithoutPass.indexOf(cur);
+      if (curIdx === -1) {
+        // 通過駅は速度プロファイル生成対象外
+        return [];
+      }
 
+      const next = stationsWithoutPass[curIdx + 1];
       if (!next) {
         return [];
       }
 
-      const maybeRevsersedStations =
-        selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
+      const stationIndex = arr.findIndex((s) => s.id === cur.id);
+      const nextStationIndex = arr.findIndex((s) => s.id === next.id);
 
-      const stationIndex = maybeRevsersedStations.findIndex(
-        (s) => s.groupId === cur.groupId
-      );
-      const nextStationIndex = maybeRevsersedStations.findIndex(
-        (s) => s.groupId === next.groupId
-      );
-
-      const betweenNextStation = maybeRevsersedStations.slice(
-        stationIndex + 1,
-        nextStationIndex
-      );
+      const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
 
       const points: GeolibInputCoordinates[] = [
         { latitude: cur.latitude, longitude: cur.longitude },
@@ -83,37 +102,63 @@ export const useSimulationMode = (enabled: boolean): void => {
 
       const distanceForNextStation = getPathLength(points);
 
-      return generateTrainSpeedProfile({
+      const speedProfile = generateTrainSpeedProfile({
         distance: distanceForNextStation,
-        maxSpeed: LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLineType],
+        maxSpeed,
         accel: LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType],
         decel: LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType],
         interval: 1,
       });
+
+      const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
+      const distanceRatio = distanceForNextStation / profileDistance;
+      const correctedProfile = speedProfile.map((v) => v * distanceRatio);
+
+      return correctedProfile;
     });
-  }, [currentLineType, stations, selectedDirection]);
+
+    segmentIndexRef.current = maybeRevsersedStations.findIndex(
+      (s) => s.groupId === station?.groupId
+    );
+    speedProfilesRef.current = speedProfiles;
+    childIndexRef.current = 0;
+  }, []);
 
   const step = useCallback(
     (speed: number) => {
-      if (!station || !nextStation) {
+      if (!nextStation) {
+        segmentIndexRef.current = 0;
+        useLocationStore.setState((prev) =>
+          prev
+            ? {
+                ...prev,
+                coords: {
+                  ...prev.coords,
+                  latitude: maybeRevsersedStations[0]?.latitude,
+                  longitude: maybeRevsersedStations[0]?.longitude,
+                },
+                timestamp: new Date().getTime(),
+              }
+            : prev
+        );
         return;
       }
-
-      const bearingForNextStation = getRhumbLineBearing(
-        {
-          latitude: station.latitude,
-          longitude: station.longitude,
-        },
-        {
-          latitude: nextStation.latitude,
-          longitude: nextStation.longitude,
-        }
-      );
 
       useLocationStore.setState((prev) => {
         if (!prev) {
           return prev;
         }
+
+        const bearingForNextStation = getGreatCircleBearing(
+          {
+            latitude: prev.coords.latitude,
+            longitude: prev.coords.longitude,
+          },
+          {
+            latitude: nextStation.latitude,
+            longitude: nextStation.longitude,
+          }
+        );
 
         const nextPoint = computeDestinationPoint(
           {
@@ -137,12 +182,12 @@ export const useSimulationMode = (enabled: boolean): void => {
         };
       });
     },
-    [station, nextStation]
+    [nextStation, maybeRevsersedStations]
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (enabled && station) {
+    if (enabled && isDevApp && stations.length > 0 && station) {
       useLocationStore.setState({
         timestamp: new Date().getTime(),
         coords: {
@@ -159,29 +204,33 @@ export const useSimulationMode = (enabled: boolean): void => {
   }, [enabled]);
 
   useEffect(() => {
-    if (!enabled || !selectedDirection) {
+    if (!enabled || !isDevApp || !selectedDirection) {
       return;
     }
 
     const intervalId = setInterval(() => {
-      const speeds =
-        speedProfilesRef.current[
-          stations.findIndex((s) => s.groupId === station?.groupId)
-        ] ?? [];
+      const i = childIndexRef.current;
 
-      const i = indexRef.current;
+      const speeds = speedProfilesRef.current[segmentIndexRef.current] ?? [];
+
       if (i >= speeds.length) {
-        indexRef.current = 0;
+        const nextSegmentIndex = speedProfilesRef.current.findIndex(
+          (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
+        );
+
+        segmentIndexRef.current = nextSegmentIndex;
+        childIndexRef.current = 0;
         return;
       }
 
       const speed = speeds[i];
+
       step(speed);
-      indexRef.current += 1;
+      childIndexRef.current += 1;
     }, 1000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [enabled, selectedDirection, station, stations, step]);
+  }, [enabled, selectedDirection, step]);
 };

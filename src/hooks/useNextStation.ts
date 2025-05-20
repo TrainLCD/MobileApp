@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import { APP_THEME } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -63,7 +63,7 @@ export const useNextStation = (
     return actualNextStation && getIsPass(actualNextStation) && ignorePass
       ? stations
           .slice(inboundCurrentStationIndex - stations.length + 1)
-          .filter((s) => !getIsPass(s))[0]
+          .find((s) => !getIsPass(s))
       : actualNextStation;
   }, [actualNextStation, ignorePass, station?.groupId, stations]);
 
@@ -78,7 +78,7 @@ export const useNextStation = (
           .slice()
           .reverse()
           .slice(outboundCurrentStationIndex - stations.length + 1)
-          .filter((s) => !getIsPass(s))[0]
+          .find((s) => !getIsPass(s))
       : actualNextStation;
   }, [actualNextStation, ignorePass, station, stations]);
 

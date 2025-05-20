@@ -1,16 +1,18 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import { StopCondition } from '../../gen/proto/stationapi_pb';
+import { StopCondition } from '~/gen/proto/stationapi_pb';
 import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
-import { useAfterNextStation } from '../hooks/useAfterNextStation';
-import useBounds from '../hooks/useBounds';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import { useLoopLine } from '../hooks/useLoopLine';
-import { useNextStation } from '../hooks/useNextStation';
-import { useNumbering } from '../hooks/useNumbering';
-import useTransferLines from '../hooks/useTransferLines';
+import {
+  useAfterNextStation,
+  useBounds,
+  useCurrentLine,
+  useCurrentTrainType,
+  useLoopLine,
+  useNextStation,
+  useNumbering,
+  useTransferLines,
+} from '../hooks';
 import type { HeaderStoppingState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

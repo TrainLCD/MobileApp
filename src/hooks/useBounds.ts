@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import {
   TOEI_OEDO_LINE_MAJOR_STATIONS_ID,
@@ -16,7 +16,7 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
-const useBounds = (): {
+export const useBounds = (): {
   bounds: [Station[], Station[]];
   directionalStops: Station[];
 } => {
@@ -103,5 +103,3 @@ const useBounds = (): {
 
   return { bounds, directionalStops };
 };
-
-export default useBounds;

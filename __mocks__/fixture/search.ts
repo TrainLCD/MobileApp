@@ -1,4 +1,4 @@
-import { Station } from '../../gen/proto/stationapi_pb'
+import { Station } from '~/gen/proto/stationapi_pb'
 
 export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
   {

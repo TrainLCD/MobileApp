@@ -4,11 +4,11 @@ import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
 import { useInterval } from './useInterval';
-import useShouldHideTypeChange from './useShouldHideTypeChange';
+import { useShouldHideTypeChange } from './useShouldHideTypeChange';
 import { useThemeStore } from './useThemeStore';
-import useTransferLines from './useTransferLines';
+import { useTransferLines } from './useTransferLines';
 import { useTypeWillChange } from './useTypeWillChange';
-import useValueRef from './useValueRef';
+import { useValueRef } from './useValueRef';
 
 export const useUpdateBottomState = () => {
   const [{ bottomState }, setNavigation] = useRecoilState(navigationState);

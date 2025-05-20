@@ -16,27 +16,22 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 });
 
-const SCROLL_SPEED = 512; // px/sec
-const MAX_DURATION = 15000;
-const MIN_DURATION = 5000;
-
 const Marquee = ({ children }: Props) => {
   const wrapperViewRef = useRef<View>(null);
   const offsetX = useSharedValue(Dimensions.get('screen').width);
 
   const startScroll = useCallback(
     (width: number) => {
-      const screenWidth = Dimensions.get('screen').width;
-      const distance = width + screenWidth;
-      const duration = Math.max(
-        MIN_DURATION,
-        Math.min(MAX_DURATION, (distance / SCROLL_SPEED) * 1000)
+      // 1ピクセルあたり15msで計算し、3秒〜10秒の範囲に制限
+      const durationPerPixel = 15;
+      const minDuration = 3000;
+      const maxDuration = 10000;
+      const duration = Math.min(
+        Math.max(width * durationPerPixel, minDuration),
+        maxDuration
       );
       offsetX.value = withRepeat(
-        withTiming(-width, {
-          duration,
-          easing: Easing.linear,
-        }),
+        withTiming(-width, { duration, easing: Easing.linear }),
         -1
       );
     },

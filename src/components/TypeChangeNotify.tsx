@@ -2,17 +2,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
+import { parenthesisRegexp } from '~/constants';
 import {
   type Line,
   StopCondition,
   type TrainType,
-} from '../../gen/proto/stationapi_pb';
-import { parenthesisRegexp } from '../constants';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useNextTrainType from '../hooks/useNextTrainType';
-import { useThemeStore } from '../hooks/useThemeStore';
+} from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useCurrentStation,
+  useCurrentTrainType,
+  useNextTrainType,
+  useThemeStore,
+} from '../hooks';
 import stationState from '../store/atoms/station';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -138,6 +140,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(12),
+    includeFontPadding: false,
   },
   lineText: {
     width: isTablet ? 200 : 128,

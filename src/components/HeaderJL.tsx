@@ -3,15 +3,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Svg, { Path, Text } from 'react-native-svg';
 import { useRecoilValue } from 'recoil';
+import {
+  useBoundText,
+  useCurrentLine,
+  useCurrentStation,
+  useCurrentTrainType,
+  useIsNextLastStop,
+  useLoopLine,
+  useNextStation,
+  useNumbering,
+} from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import { useBoundText } from '../hooks/useBoundText';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import { useLoopLine } from '../hooks/useLoopLine';
-import { useNextStation } from '../hooks/useNextStation';
-import { useNumbering } from '../hooks/useNumbering';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

@@ -4,20 +4,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import { LineType, TrainTypeKind } from '../../gen/proto/stationapi_pb';
+import { LineType, TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import {
+  useBoundText,
+  useCurrentLine,
+  useCurrentStation,
+  useCurrentTrainType,
+  useGetLineMark,
+  useIsNextLastStop,
+  useNextStation,
+  useNumbering,
+} from '~/hooks';
 import {
   NUMBERING_ICON_SIZE,
   STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
 } from '../constants';
-import { useBoundText } from '../hooks/useBoundText';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useGetLineMark from '../hooks/useGetLineMark';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import { useNextStation } from '../hooks/useNextStation';
-import { useNumbering } from '../hooks/useNumbering';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -533,6 +535,7 @@ const HeaderJRWest: React.FC = () => {
       case TrainTypeKind.LimitedExpress:
         return fetchJRWLtdExpressLogo();
       case TrainTypeKind.Rapid:
+      case TrainTypeKind.HighSpeedRapid:
         return fetchJRWRapidLogo();
       default:
         return fetchJRWLocalLogo();

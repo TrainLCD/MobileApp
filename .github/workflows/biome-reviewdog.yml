@@ -1,0 +1,17 @@
+name: biome-reviewdog
+on: pull_request
+
+jobs:
+  biome:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mongolyy/reviewdog-action-biome@a7a10e692e815deb2ea9279f599fd7bc825138cc
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          filter_mode: added

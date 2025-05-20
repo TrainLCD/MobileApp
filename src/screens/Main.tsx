@@ -18,31 +18,35 @@ import {
   LineType,
   type Station,
   StopCondition,
-} from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi_pb';
+import {
+  useApplicationFlagStore,
+  useAutoMode,
+  useCurrentLine,
+  useCurrentStation,
+  useCurrentTrainType,
+  useLoopLine,
+  useNextStation,
+  useRefreshLeftStations,
+  useRefreshStation,
+  useResetMainState,
+  useShouldHideTypeChange,
+  useSimulationMode,
+  useStartBackgroundLocationUpdates,
+  useTTS,
+  useTelemetrySender,
+  useThemeStore,
+  useTransferLines,
+  useTransitionHeaderState,
+  useTypeWillChange,
+  useUpdateBottomState,
+  useUpdateLiveActivities,
+} from '~/hooks';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import { ASYNC_STORAGE_KEYS } from '../constants';
-import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
-import useAutoMode from '../hooks/useAutoMode';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import { useLoopLine } from '../hooks/useLoopLine';
-import { useNextStation } from '../hooks/useNextStation';
-import useRefreshLeftStations from '../hooks/useRefreshLeftStations';
-import useRefreshStation from '../hooks/useRefreshStation';
-import { useResetMainState } from '../hooks/useResetMainState';
-import useShouldHideTypeChange from '../hooks/useShouldHideTypeChange';
-import { useStartBackgroundLocationUpdates } from '../hooks/useStartBackgroundLocationUpdates';
-import { useTTS } from '../hooks/useTTS';
-import { useThemeStore } from '../hooks/useThemeStore';
-import useTransferLines from '../hooks/useTransferLines';
-import useTransitionHeaderState from '../hooks/useTransitionHeaderState';
-import { useTypeWillChange } from '../hooks/useTypeWillChange';
-import { useUpdateBottomState } from '../hooks/useUpdateBottomState';
-import { useUpdateLiveActivities } from '../hooks/useUpdateLiveActivities';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -82,7 +86,9 @@ const MainScreen: React.FC = () => {
   const nextStation = useNextStation();
 
   useAutoMode(autoModeEnabled);
-  // useSimulationMode(autoModeEnabled);
+  useSimulationMode(autoModeEnabled);
+
+  useTelemetrySender(true);
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
