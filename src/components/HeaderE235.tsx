@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
@@ -100,15 +100,15 @@ type Props = {
   isJO?: boolean;
 };
 
-const HeaderE235: React.FC<Props> = ({ isJO }) => {
+const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
 
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station?.name || '');
-  const { headerState } = useRecoilValue(navigationState);
-  const { selectedBound, arrived } = useRecoilValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
+  const { selectedBound, arrived } = useAtomValue(stationState);
   const isLast = useIsNextLastStop();
   const trainType = useCurrentTrainType();
   const boundStationNameList = useBoundText(true);

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Alert,
@@ -13,7 +14,6 @@ import {
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
   LineType,
   type Station,
@@ -70,10 +70,10 @@ const MainScreen: React.FC = () => {
   const isLEDTheme = theme === APP_THEME.LED;
 
   const [{ stations, selectedDirection, arrived }, setStationState] =
-    useRecoilState(stationState);
+    useAtom(stationState);
   const [{ leftStations, bottomState }, setNavigationState] =
-    useRecoilState(navigationState);
-  const setLineState = useSetRecoilState(lineState);
+    useAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();

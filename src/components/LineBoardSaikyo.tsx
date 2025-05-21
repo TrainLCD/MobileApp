@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Dimensions,
@@ -8,7 +9,6 @@ import {
   type TextStyle,
   View,
 } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
@@ -17,7 +17,7 @@ import {
 } from '../hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import { isEnSelector } from '../store/selectors/isEn';
+import { isEnAtom } from '../store/selectors/isEn';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -311,8 +311,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
   chevronColor,
 }: StationNameCellProps) => {
-  const { station: currentStation, arrived } = useRecoilValue(stationState);
-  const isEn = useRecoilValue(isEnSelector);
+  const { station: currentStation, arrived } = useAtomValue(stationState);
+  const isEn = useAtomValue(isEnAtom);
 
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
@@ -507,7 +507,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   lineColors,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
-  const { selectedLine } = useRecoilValue(lineState);
+  const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
   const line = useMemo(

@@ -32,10 +32,8 @@ jobs:
         with:
           ruby-version: '3.2'
           bundler-cache: true
-      - name: Install protoc-gen-connect-query@2 and protoc-gen-connect-es@1
-        run: npm install -g @connectrpc/protoc-gen-connect-query@2 @connectrpc/protoc-gen-connect-es@1  
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps # TODO: --legacy-peer-depsをしばく
       - name: Run bundle install
         working-directory: ./android
         shell: bash

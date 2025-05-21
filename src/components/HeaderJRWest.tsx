@@ -1,9 +1,9 @@
 /* eslint-disable global-require */
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { LineType, TrainTypeKind } from '~/gen/proto/stationapi_pb';
 import {
   useBoundText,
@@ -33,8 +33,8 @@ import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 const HeaderJRWest: React.FC = () => {
-  const { headerState } = useRecoilValue(navigationState);
-  const { selectedBound, arrived } = useRecoilValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
+  const { selectedBound, arrived } = useAtomValue(stationState);
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const station = useCurrentStation();
   const currentLine = useCurrentLine();

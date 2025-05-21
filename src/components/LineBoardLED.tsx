@@ -1,6 +1,6 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { StopCondition } from '~/gen/proto/stationapi_pb';
 import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
 import {
@@ -45,8 +45,8 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 );
 
 const LineBoardLED = () => {
-  const { selectedDirection } = useRecoilValue(stationState);
-  const { headerState } = useRecoilValue(navigationState);
+  const { selectedDirection } = useAtomValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
   const line = useCurrentLine();
 
   const stoppingState = useMemo(

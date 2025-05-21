@@ -1,6 +1,6 @@
 import { useMutation } from '@connectrpc/connect-query';
+import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
 import {
   getStationsByLineGroupId,
   getStationsByLineId,
@@ -16,9 +16,9 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
 export const useOpenRouteFromLink = () => {
-  const setStationState = useSetRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setLineState = useSetRecoilState(lineState);
+  const setStationState = useSetAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
 
   const {
     mutateAsync: fetchStationsByLineGroupId,

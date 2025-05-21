@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Line } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -10,7 +10,7 @@ import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 type Option = { omitRepeatingLine?: boolean; omitJR?: boolean };
 
 export const useTransferLines = (options?: Option): Line[] => {
-  const { arrived } = useRecoilValue(stationState);
+  const { arrived } = useAtomValue(stationState);
   const currentStation = useCurrentStation(false, true);
   const nextStation = useNextStation();
   const targetStation = useMemo(

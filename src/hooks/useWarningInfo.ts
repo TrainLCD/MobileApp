@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useForegroundPermissions } from 'expo-location';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
-import { useRecoilValue } from 'recoil';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import { ASYNC_STORAGE_KEYS } from '~/constants';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { useApplicationFlagStore } from './useApplicationFlagStore';
@@ -27,7 +27,7 @@ export const useWarningInfo = () => {
   ] = useState(true);
   const [screenshotTaken, setScreenshotTaken] = useState(false);
 
-  const { selectedBound } = useRecoilValue(stationState);
+  const { selectedBound } = useAtomValue(stationState);
 
   const badAccuracy = useBadAccuracy();
   const [fgPermStatus] = useForegroundPermissions();

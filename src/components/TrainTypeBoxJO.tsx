@@ -1,6 +1,6 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState } = useAtomValue(navigationState);
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;

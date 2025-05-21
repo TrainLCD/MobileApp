@@ -1,10 +1,10 @@
 import type { ConnectError } from '@connectrpc/connect';
 import { useMutation } from '@connectrpc/connect-query';
+import { useSetAtom } from 'jotai';
 import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSetRecoilState } from 'recoil';
 import { getTrainTypesByStationId } from '~/gen/proto/stationapi-StationAPI_connectquery';
 import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useThemeStore } from '~/hooks';
@@ -70,7 +70,7 @@ export const RouteListModal: React.FC<Props> = ({
   const [selectedRoute, setSelectedRoute] = useState<Route>();
   const [selectedTrainType, setSelectedTrainType] = useState<TrainType>();
 
-  const setLineState = useSetRecoilState(lineState);
+  const setLineState = useSetAtom(lineState);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();

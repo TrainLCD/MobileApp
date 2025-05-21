@@ -1,5 +1,5 @@
+import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useRef, useTransition } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
@@ -11,8 +11,8 @@ import { useTypeWillChange } from './useTypeWillChange';
 import { useValueRef } from './useValueRef';
 
 export const useUpdateBottomState = () => {
-  const [{ bottomState }, setNavigation] = useRecoilState(navigationState);
-  const { bottomTransitionInterval } = useRecoilValue(tuningState);
+  const [{ bottomState }, setNavigation] = useAtom(navigationState);
+  const { bottomTransitionInterval } = useAtomValue(tuningState);
   const bottomStateRef = useValueRef(bottomState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
@@ -30,6 +30,7 @@ export const useUpdateBottomState = () => {
       setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
     }
   }, [setNavigation, transferLines.length]);
+
   const { pause } = useInterval(
     useCallback(() => {
       if (isLEDThemeRef.current) {

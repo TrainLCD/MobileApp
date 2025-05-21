@@ -1,4 +1,5 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -7,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   Line,
   type Station,
@@ -73,10 +73,10 @@ type RenderButtonProps = {
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation();
   const [{ station, stations, wantedDestination }, setStationState] =
-    useRecoilState(stationState);
+    useAtom(stationState);
   const [{ trainType, fetchedTrainTypes }, setNavigationState] =
-    useRecoilState(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
+    useAtom(navigationState);
+  const { selectedLine } = useAtomValue(lineState);
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled
   );

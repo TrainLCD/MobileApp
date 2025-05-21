@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -8,7 +9,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useRecoilValue } from 'recoil';
 import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import {
@@ -79,8 +79,8 @@ const AnimatedTypography = Animated.createAnimatedComponent(Typography);
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { headerState } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const { headerState } = useAtomValue(navigationState);
+  const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useThemeStore();
   const currentLine = useCurrentLine();
 

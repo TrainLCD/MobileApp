@@ -19,8 +19,6 @@
 		7F3DCB005699FC9762FD31BB /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */; };
 		94000A5A2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
 		94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
-		942388072B83C58D00DD0A29 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 942388062B83C58D00DD0A29 /* main.m */; };
-		942388082B83C59500DD0A29 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 942388062B83C58D00DD0A29 /* main.m */; };
 		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
 		942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658E29B9A349007329A6 /* LiveActivityModule.swift */; };
 		942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
@@ -63,6 +61,8 @@
 		942CB6232A32AC77008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6212A32AC77008339D2 /* GoogleService-Info.plist */; };
 		942CB6252A32AC8B008339D2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
 		942CB62B2A32B01D008339D2 /* CanaryWatchApp Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9438A5A22DDD82D8008D2796 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9438A5A12DDD8222008D2796 /* AppDelegate.swift */; };
+		9438A5A32DDD82E8008D2796 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9438A5A12DDD8222008D2796 /* AppDelegate.swift */; };
 		944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */; };
 		944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
 		944C2C4A28DAD2330004DA72 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4828DAD2330004DA72 /* Line.swift */; };
@@ -143,8 +143,6 @@
 		94E2CBCB2D65AEE50090392E /* FuturaLTPro-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 94E2CBC72D65AEE50090392E /* FuturaLTPro-Bold.ttf */; };
 		94E6881B2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */; };
 		94E6881C2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */; };
-		94F428672ADCE78A002E1175 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.mm */; };
-		94F428682ADCE78A002E1175 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 94F428662ADCE78A002E1175 /* AppDelegate.mm */; };
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
 		9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */; };
@@ -324,8 +322,6 @@
 		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		94000A592AD73E8900B5A11C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		94093B772B83BB1B000B8A7E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		942388062B83C58D00DD0A29 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		942CB5D92A32AA97008339D2 /* CanaryTrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryTrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		942CB5E72A32AA9E008339D2 /* CanaryWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		942CB6022A32AAA6008339D2 /* CanaryWatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "CanaryWatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -340,6 +336,7 @@
 		942CB6472A32B95B008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
 		942CB6492A32BA0A008339D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
 		942CB64A2A32BA12008339D2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
+		9438A5A12DDD8222008D2796 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		944C2C4828DAD2330004DA72 /* Line.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		944C2C4928DAD2330004DA72 /* Station.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		944C2C6A28DB0DD10004DA72 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -363,7 +360,6 @@
 		94B9CDE428D3025900D68287 /* RideSessionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionActivity.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = RideSessionActivity.intentdefinition; sourceTree = "<group>"; };
 		94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionAttributes.swift; sourceTree = "<group>"; };
-		94BF7DA72525451C00444502 /* translations */ = {isa = PBXFileReference; lastKnownFileType = folder; name = translations; path = TrainLCD/translations; sourceTree = "<group>"; };
 		94BFA3B7258F0FF3001D95E4 /* StationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationListView.swift; sourceTree = "<group>"; };
 		94BFA3BC258F10A7001D95E4 /* sampleStationList.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleStationList.json; sourceTree = "<group>"; };
 		94BFA3CA258F16EF001D95E4 /* sampleLine.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sampleLine.json; sourceTree = "<group>"; };
@@ -393,7 +389,6 @@
 		94E2CBB02D659DBB0090392E /* verdana-bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "verdana-bold.ttf"; sourceTree = "<group>"; };
 		94E2CBC72D65AEE50090392E /* FuturaLTPro-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "FuturaLTPro-Bold.ttf"; sourceTree = "<group>"; };
 		94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigurationExtension.swift; sourceTree = "<group>"; };
-		94F428662ADCE78A002E1175 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -536,6 +531,7 @@
 		13B07FAE1A68108700A75B9A /* TrainLCD */ = {
 			isa = PBXGroup;
 			children = (
+				9438A5A12DDD8222008D2796 /* AppDelegate.swift */,
 				94E2CB792D6588680090392E /* CanaryTrainLCD.entitlements */,
 				94E2CB782D6588570090392E /* ProdTrainLCD.entitlements */,
 				9485EFF12A33613200382D09 /* SplashScreen.storyboard */,
@@ -544,15 +540,11 @@
 				942CB63E2A32B6A6008339D2 /* Info.plist */,
 				942CB6212A32AC77008339D2 /* GoogleService-Info.plist */,
 				942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */,
-				94BF7DA72525451C00444502 /* translations */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				0731D3B524204D62009CAE85 /* Expo.plist */,
-				942388062B83C58D00DD0A29 /* main.m */,
 				94FF39FE24710B8B00528ED8 /* InfoPlist.strings */,
 				94FF39F624710AE800528ED8 /* InfoPlist.strings */,
-				94F428662ADCE78A002E1175 /* AppDelegate.mm */,
-				94093B772B83BB1B000B8A7E /* AppDelegate.h */,
 			);
 			name = TrainLCD;
 			sourceTree = "<group>";
@@ -2014,13 +2006,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94F428672ADCE78A002E1175 /* AppDelegate.mm in Sources */,
+				9438A5A32DDD82E8008D2796 /* AppDelegate.swift in Sources */,
 				94C1658529B99E0A007329A6 /* SensitiveNotificationModule.swift in Sources */,
 				94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */,
 				944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */,
 				94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */,
 				94C1658029B99DEB007329A6 /* LiveActivityModuleBridge.m in Sources */,
-				942388072B83C58D00DD0A29 /* main.m in Sources */,
 				9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2029,13 +2020,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94F428682ADCE78A002E1175 /* AppDelegate.mm in Sources */,
+				9438A5A22DDD82D8008D2796 /* AppDelegate.swift in Sources */,
 				942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */,
 				942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */,
 				942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
 				942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */,
-				942388082B83C59500DD0A29 /* main.m in Sources */,
 				F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2245,7 +2235,7 @@
 				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "TrainLCD-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,4";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -2282,7 +2272,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "TrainLCD-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,4";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
@@ -2374,7 +2364,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				USE_HERMES = true;
 			};
 			name = Debug;
@@ -2460,7 +2450,7 @@
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -2499,7 +2489,7 @@
 				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "TrainLCD-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,4";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -2536,7 +2526,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "TrainLCD-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,4";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
@@ -2576,7 +2566,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Debug;
@@ -2616,7 +2606,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Release;
@@ -2661,7 +2651,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Debug;
@@ -2706,7 +2696,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Release;
@@ -2756,7 +2746,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -2805,7 +2795,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -2854,7 +2844,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -2903,7 +2893,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -2947,7 +2937,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Debug;
@@ -2992,7 +2982,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Release;
@@ -3033,7 +3023,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Debug;
@@ -3074,7 +3064,7 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
+				TARGETED_DEVICE_FAMILY = 1;
 				WATCHOS_DEPLOYMENT_TARGET = 7.1;
 			};
 			name = Release;
@@ -3127,7 +3117,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -3175,7 +3165,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -3228,7 +3218,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -3277,7 +3267,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

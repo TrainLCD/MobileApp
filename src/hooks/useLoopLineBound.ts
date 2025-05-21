@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import type { PreferredLanguage } from '../models/PreferredLanguage';
@@ -16,8 +16,8 @@ export const useLoopLineBound = (
   boundForKatakana: string;
   stations: Station[];
 } | null => {
-  const { headerState } = useRecoilValue(navigationState);
-  const { selectedDirection } = useRecoilValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
+  const { selectedDirection } = useAtomValue(stationState);
 
   const {
     isLoopLine,

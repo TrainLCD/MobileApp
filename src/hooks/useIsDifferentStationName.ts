@@ -1,10 +1,10 @@
+import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
-import { isEnSelector } from '../store/selectors/isEn';
+import { isEnAtom } from '../store/selectors/isEn';
 
-export const useIsDifferentStationName = () => {
-  const isEn = useRecoilValue(isEnSelector);
+export const useIsDifferentStationName = (): boolean => {
+  const isEn = useAtomValue(isEnAtom);
 
   const isDifferentStationName = useCallback(
     (station: Station, line: Line) => {
