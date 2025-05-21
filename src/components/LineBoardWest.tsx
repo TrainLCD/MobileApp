@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
@@ -7,7 +8,6 @@ import {
   type TextStyle,
   View,
 } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { FONTS } from '~/constants';
 import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import {
@@ -25,7 +25,7 @@ import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
-import { isEnSelector } from '~/store/selectors/isEn';
+import { isEnAtom } from '~/store/selectors/isEn';
 import getStationNameR from '~/utils/getStationNameR';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
@@ -255,9 +255,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station: stationInLoop,
   index,
 }: StationNameCellProps) => {
-  const { leftStations } = useRecoilValue(navigationState);
-  const { stations: allStations } = useRecoilValue(stationState);
-  const isEn = useRecoilValue(isEnSelector);
+  const { leftStations } = useAtomValue(navigationState);
+  const { stations: allStations } = useAtomValue(stationState);
+  const isEn = useAtomValue(isEnAtom);
 
   const station = useCurrentStation();
   const transferLines = useTransferLinesFromStation(stationInLoop, {
@@ -424,8 +424,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { selectedLine } = useRecoilValue(lineState);
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { selectedLine } = useAtomValue(lineState);
+  const { arrived, approaching } = useAtomValue(stationState);
 
   const isPassing = useIsPassing();
   const currentLine = useCurrentLine();

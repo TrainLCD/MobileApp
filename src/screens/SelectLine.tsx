@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import { useSetAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { useSetRecoilState } from 'recoil';
 import type { Line } from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
@@ -53,9 +53,9 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setLineState = useSetRecoilState(lineState);
+  const setStationState = useSetAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
 
   const autoModeEnabled = useApplicationFlagStore(
     (state) => state.autoModeEnabled

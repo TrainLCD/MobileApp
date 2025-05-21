@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '../constants';
 import { directionToDirectionName } from '../models/Bound';
 import stationState from '../store/atoms/station';
@@ -27,7 +27,7 @@ export const useUpdateLiveActivities = (): void => {
     approaching: approachingFromState,
     selectedBound,
     selectedDirection,
-  } = useRecoilValue(stationState);
+  } = useAtomValue(stationState);
 
   const currentLine = useCurrentLine();
   const previousStation = useCurrentStation(true);

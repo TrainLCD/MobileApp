@@ -4,12 +4,12 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
@@ -49,9 +49,9 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const { selectedBound } = useRecoilValue(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
-  const setSpeech = useSetRecoilState(speechState);
+  const { selectedBound } = useAtomValue(stationState);
+  const setNavigation = useSetAtom(navigationState);
+  const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');

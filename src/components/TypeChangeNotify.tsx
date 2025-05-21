@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '~/constants';
 import {
   type Line,
@@ -821,7 +821,7 @@ const HeadingEn = React.memo(
 
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
-    useRecoilValue(stationState);
+    useAtomValue(stationState);
   const theme = useThemeStore();
   const station = useCurrentStation();
   const currentLine = useCurrentLine();

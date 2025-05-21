@@ -1,5 +1,5 @@
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -14,12 +14,14 @@ import { useLoopLine } from './useLoopLine';
 import { useThemeStore } from './useThemeStore';
 
 export const useRefreshLeftStations = (): void => {
+  const setNavigation = useSetAtom(navigationState);
+  const setStation = useSetAtom(stationState);
   const {
     station: normalStation,
     stations: normalStations,
     selectedDirection,
-  } = useRecoilValue(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
+  } = useAtomValue(stationState);
+
   const theme = useThemeStore();
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();

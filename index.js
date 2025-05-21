@@ -1,3 +1,4 @@
+import 'web-streams-polyfill/polyfill';
 import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';

@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "strict": true,
     "baseUrl": ".",
-    "paths": {"~/*": ["./src/*"]},
+    "paths": { "~/*": ["./src/*"] }
   },
   "typeRoots": ["./src/@types"],
   "exclude": ["functions"],

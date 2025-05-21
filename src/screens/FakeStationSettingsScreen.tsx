@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,7 +13,6 @@ import {
   type TextInputKeyPressEventData,
   View,
 } from 'react-native';
-import { useRecoilState, useSetRecoilState } from 'recoil';
 import { RFValue } from '../utils/rfValue';
 
 import { useMutation, useQuery } from '@connectrpc/connect-query';
@@ -70,8 +70,8 @@ const FakeStationSettingsScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const navigation = useNavigation();
   const [{ station: stationFromState }, setStationState] =
-    useRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
+    useAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);

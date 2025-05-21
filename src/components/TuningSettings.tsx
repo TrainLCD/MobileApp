@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import {
   Alert,
@@ -11,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilState } from 'recoil';
 import { FONTS } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
 });
 
 const TuningSettings: React.FC = () => {
-  const [settings, setSettings] = useRecoilState(tuningState);
+  const [settings, setSettings] = useAtom(tuningState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const navigation = useNavigation();

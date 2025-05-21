@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
@@ -10,7 +10,7 @@ import {
 } from '~/hooks';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
-import { isEnSelector } from '~/store/selectors/isEn';
+import { isEnAtom } from '~/store/selectors/isEn';
 import getIsPass from '~/utils/isPass';
 import PadArch from './PadArch';
 
@@ -19,9 +19,9 @@ interface Props {
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
-  const { station, arrived } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
-  const isEn = useRecoilValue(isEnSelector);
+  const { station, arrived } = useAtomValue(stationState);
+  const { selectedLine } = useAtomValue(lineState);
+  const isEn = useAtomValue(isEnAtom);
 
   const currentLine = useCurrentLine();
   const getLineMarkFunc = useGetLineMark();

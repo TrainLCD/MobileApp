@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
-import * as Recoil from 'recoil';
+import * as Jotai from 'jotai';
 import { TrainTypeKind } from '~/gen/proto/stationapi_pb';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
@@ -49,7 +49,7 @@ describe.skip('useSimulationMode', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
 
-    jest.spyOn(Recoil, 'useRecoilValue').mockReturnValue({
+    jest.spyOn(Jotai, 'useAtomValue').mockReturnValue({
       stations: [mockStation, mockNextStation],
       selectedDirection: 'INBOUND',
     });
@@ -132,7 +132,7 @@ describe.skip('useSimulationMode', () => {
   });
 
   it('handles null station gracefully', () => {
-    jest.spyOn(Recoil, 'useRecoilValue').mockReturnValue({
+    jest.spyOn(Jotai, 'useAtomValue').mockReturnValue({
       stations: [],
       selectedDirection: 'INBOUND',
     });
@@ -166,7 +166,7 @@ describe.skip('useSimulationMode', () => {
   });
 
   it('skips update if no speed profile exists', () => {
-    jest.spyOn(Recoil, 'useRecoilValue').mockReturnValue({
+    jest.spyOn(Jotai, 'useAtomValue').mockReturnValue({
       stations: [],
       selectedDirection: 'INBOUND',
     });

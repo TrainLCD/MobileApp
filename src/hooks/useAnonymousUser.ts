@@ -3,7 +3,7 @@ import auth from '@react-native-firebase/auth';
 import { useEffect, useRef } from 'react';
 
 /**
- * Recoilが使えない環境の時にもユーザーを持ちたい場合に使います。基本的に `useCachedAnonymousUser` を使ってください。
+ * Jotaiが使えない環境の時にもユーザーを持ちたい場合に使います。基本的に `useCachedAnonymousUser` を使ってください。
  */
 export const useAnonymousUser = (): FirebaseAuthTypes.User | undefined => {
   const userRef = useRef<FirebaseAuthTypes.User>();

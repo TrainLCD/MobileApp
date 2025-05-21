@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import { Station } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
@@ -40,7 +40,7 @@ export const useTTSText = (
 ): [string, string] | undefined[] => {
   const theme = useThemeStore();
 
-  const { selectedBound: selectedBoundOrigin } = useRecoilValue(stationState);
+  const { selectedBound: selectedBoundOrigin } = useAtomValue(stationState);
   const station = useCurrentStation();
   const currentLineOrigin = useCurrentLine();
 

@@ -1,15 +1,15 @@
+import { type Atom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
-import { type RecoilValue, useRecoilValue } from 'recoil';
 
 type Props<T> = {
-  node: RecoilValue<T>;
+  node: Atom<T>;
   onChange: (value: T) => void;
 };
 
-const RecoilObserver = <T,>({ node, onChange }: Props<T>): null => {
-  const value = useRecoilValue(node);
+const JotaiObserver = <T,>({ node, onChange }: Props<T>): null => {
+  const value = useAtomValue(node);
   useEffect(() => onChange(value), [onChange, value]);
   return null;
 };
 
-export default RecoilObserver;
+export default JotaiObserver;

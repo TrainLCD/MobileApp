@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useRecoilState } from 'recoil';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
@@ -57,9 +57,8 @@ const styles = StyleSheet.create({
 
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
-    useRecoilState(speechState);
+    useAtom(speechState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-
   const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {

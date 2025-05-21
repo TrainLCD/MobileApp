@@ -1,7 +1,7 @@
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilValue } from 'recoil';
 import { StopCondition } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useThemeStore((state) => state);
-  const { leftStations } = useRecoilValue(navigationState);
+  const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
   const isLEDTheme = theme === APP_THEME.LED;
 

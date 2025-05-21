@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import {
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
 });
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
-  const { arrived } = useRecoilValue(stationState);
+  const { arrived } = useAtomValue(stationState);
   const currentStation = useCurrentStation();
 
   const lines = useTransferLines();

@@ -1,11 +1,7 @@
-import { selector } from 'recoil';
-import { RECOIL_STATES } from '~/constants';
+import { atom } from 'jotai';
 import navigationState from '~/store/atoms/navigation';
 
-export const isEnSelector = selector({
-  key: RECOIL_STATES.isEnSelector,
-  get: ({ get }) => {
-    const { headerState } = get(navigationState);
-    return headerState.endsWith('_EN') || headerState.endsWith('_ZH');
-  },
+export const isEnAtom = atom((get) => {
+  const { headerState } = get(navigationState);
+  return headerState.endsWith('_EN') || headerState.endsWith('_ZH');
 });

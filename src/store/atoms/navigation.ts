@@ -1,9 +1,8 @@
-import { atom } from 'recoil';
+import { atom } from 'jotai';
 import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,
-  RECOIL_STATES,
 } from '../../constants';
 import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -31,9 +30,6 @@ export const initialNavigationState: NavigationState = {
   fetchedTrainTypes: [],
 };
 
-const navigationState = atom<NavigationState>({
-  key: RECOIL_STATES.navigation,
-  default: initialNavigationState,
-});
+const navigationState = atom<NavigationState>(initialNavigationState);
 
 export default navigationState;

@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import {
@@ -32,8 +32,8 @@ Notifications.setNotificationHandler({
 });
 
 export const useRefreshStation = (): void => {
-  const setStation = useSetRecoilState(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
+  const setStation = useSetAtom(stationState);
+  const setNavigation = useSetAtom(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const speed = useLocationStore((state) => state?.coords.speed);
@@ -43,7 +43,7 @@ export const useRefreshStation = (): void => {
   const approachingNotifiedIdRef = useRef<number>();
   const arrivedNotifiedIdRef = useRef<number>();
   const lastArrivedTimeRef = useRef<number>(0);
-  const { targetStationIds } = useRecoilValue(notifyState);
+  const { targetStationIds } = useAtomValue(notifyState);
 
   const nearestStation = useNearestStation();
   const canGoForward = useCanGoForward();

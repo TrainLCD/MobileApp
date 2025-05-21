@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -8,7 +8,7 @@ import { useCurrentStation } from './useCurrentStation';
 
 export const usePreviousStation = (skipPass = true): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
-    useRecoilValue(stationState);
+    useAtomValue(stationState);
   const station = useCurrentStation(true);
 
   const stations = useMemo(

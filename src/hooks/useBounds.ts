@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import {
@@ -21,8 +21,8 @@ export const useBounds = (): {
   directionalStops: Station[];
 } => {
   const { stations, selectedDirection, selectedBound } =
-    useRecoilValue(stationState);
-  const { trainType } = useRecoilValue(navigationState);
+    useAtomValue(stationState);
+  const { trainType } = useAtomValue(navigationState);
   const currentStation = useCurrentStation();
   const currentLine = useCurrentLine();
 

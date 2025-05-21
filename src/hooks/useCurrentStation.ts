@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 
@@ -11,7 +11,7 @@ export const useCurrentStation = (
     stations,
     station: stationFromState,
     selectedDirection,
-  } = useRecoilValue(stationState);
+  } = useAtomValue(stationState);
 
   // NOTE: 選択した路線と現在の駅の路線を一致させる
   const station = useMemo(

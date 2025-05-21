@@ -1,4 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
+import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import {
@@ -10,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilValue } from 'recoil';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation } from '~/hooks';
@@ -162,7 +162,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
 
   const [asTerminus, setAsTerminus] = useState(false);
 
-  const { selectedLine } = useRecoilValue(lineState);
+  const { selectedLine } = useAtomValue(lineState);
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
 

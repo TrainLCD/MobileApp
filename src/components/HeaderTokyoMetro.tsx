@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -9,7 +10,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useRecoilValue } from 'recoil';
 import {
   MARK_SHAPE,
   STATION_NAME_FONT_SIZE,
@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
 });
 
 const HeaderTokyoMetro: React.FC = () => {
-  const { selectedBound, arrived } = useRecoilValue(stationState);
-  const { headerState } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const { selectedBound, arrived } = useAtomValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
+  const { headerTransitionDelay } = useAtomValue(tuningState);
 
   const currentStation = useCurrentStation();
   const currentLine = useCurrentLine();

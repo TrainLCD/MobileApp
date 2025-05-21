@@ -1,6 +1,7 @@
 import getCenter from 'geolib/es/getCenter';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { Station } from '~/gen/proto/stationapi_pb';
 import { isDevApp } from '~/utils/isDevApp';
 import {
   AUTO_MODE_RUNNING_DURATION,
@@ -16,11 +17,11 @@ import { useValueRef } from './useValueRef';
 
 export const useAutoMode = (enabled: boolean): void => {
   const {
+    station,
     stations: rawStations,
     selectedDirection,
-    station,
-  } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
+  } = useAtomValue(stationState);
+  const { selectedLine } = useAtomValue(lineState);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),

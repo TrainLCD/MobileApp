@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { APP_THEME } from '../models/Theme';
 import stationState from '../store/atoms/station';
@@ -14,7 +14,7 @@ export const useNextStation = (
   originStation?: Station
 ): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
-    useRecoilValue(stationState);
+    useAtomValue(stationState);
   const theme = useThemeStore();
   const currentStation = useCurrentStation(
     theme === APP_THEME.JR_WEST || theme === APP_THEME.LED

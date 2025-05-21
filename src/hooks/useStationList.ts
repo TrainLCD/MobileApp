@@ -1,6 +1,6 @@
 import { useQuery } from '@connectrpc/connect-query';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   getStationsByLineId,
   getTrainTypesByStationId,
@@ -12,13 +12,15 @@ import {
 } from '~/gen/proto/stationapi_pb';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
+import type { NavigationState } from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import type { StationState } from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useStationList = () => {
-  const setStationState = useSetRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
+  const setStationState = useSetAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const { selectedLine } = useAtomValue(lineState);
 
   const station = useCurrentStation();
 
@@ -63,14 +65,14 @@ export const useStationList = () => {
   );
 
   useEffect(() => {
-    setStationState((prev) => ({
+    setStationState((prev: StationState) => ({
       ...prev,
       stations: prev.stations.length
         ? prev.stations
         : (byLineIdData?.stations ?? []),
     }));
     if (designatedTrainType) {
-      setNavigationState((prev) => ({
+      setNavigationState((prev: NavigationState) => ({
         ...prev,
         trainType: prev.trainType ? prev.trainType : designatedTrainType,
       }));
@@ -101,14 +103,14 @@ export const useStationList = () => {
     const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? [];
 
     if (!designatedTrainType) {
-      setNavigationState((prev) => ({
+      setNavigationState((prev: NavigationState) => ({
         ...prev,
         fetchedTrainTypes: [localType, ...fetchedTrainTypes],
       }));
       return;
     }
 
-    setNavigationState((prev) => ({
+    setNavigationState((prev: NavigationState) => ({
       ...prev,
       fetchedTrainTypes,
     }));
