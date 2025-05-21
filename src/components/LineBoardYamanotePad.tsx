@@ -1,15 +1,17 @@
 import React, { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import useGetLineMark from '../hooks/useGetLineMark';
-import { useNextStation } from '../hooks/useNextStation';
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
-import useTransferLines from '../hooks/useTransferLines';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
-import { isEnSelector } from '../store/selectors/isEn';
-import getIsPass from '../utils/isPass';
+import type { Station } from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useGetLineMark,
+  useNextStation,
+  useStationNumberIndexFunc,
+  useTransferLines,
+} from '~/hooks';
+import lineState from '~/store/atoms/line';
+import stationState from '~/store/atoms/station';
+import { isEnSelector } from '~/store/selectors/isEn';
+import getIsPass from '~/utils/isPass';
 import PadArch from './PadArch';
 
 interface Props {

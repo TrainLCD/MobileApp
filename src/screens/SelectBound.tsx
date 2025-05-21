@@ -13,16 +13,18 @@ import {
   type Station,
   StopCondition,
   TrainType,
-} from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
-import { useApplicationFlagStore } from '../hooks/useApplicationFlagStore';
-import useBounds from '../hooks/useBounds';
-import { useLoopLine } from '../hooks/useLoopLine';
-import { useStationList } from '../hooks/useStationList';
+import {
+  useApplicationFlagStore,
+  useBounds,
+  useLoopLine,
+  useStationList,
+} from '../hooks';
 import { type LineDirection, directionToDirectionName } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';

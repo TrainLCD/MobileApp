@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import {
-  type StationNumber,
-  TrainTypeKind,
-} from '../../../gen/proto/stationapi_pb';
-import { JOBAN_LINE_IDS } from '../../constants';
-import stationState from '../../store/atoms/station';
-import getIsPass from '../../utils/isPass';
-import { useCurrentLine } from '../useCurrentLine';
-import { useCurrentStation } from '../useCurrentStation';
-import useCurrentTrainType from '../useCurrentTrainType';
-import { useNextStation } from '../useNextStation';
-import useStationNumberIndexFunc from '../useStationNumberIndexFunc';
+import { type StationNumber, TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import { JOBAN_LINE_IDS } from '../constants';
+import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import { useCurrentTrainType } from './useCurrentTrainType';
+import { useNextStation } from './useNextStation';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 export const useNumbering = (
   priorCurrent?: boolean

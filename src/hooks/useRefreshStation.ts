@@ -3,7 +3,7 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,
@@ -14,11 +14,11 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
-import useCanGoForward from './useCanGoForward';
+import { useCanGoForward } from './useCanGoForward';
 import { useLocationStore } from './useLocationStore';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
@@ -31,7 +31,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const useRefreshStation = (): void => {
+export const useRefreshStation = (): void => {
   const setStation = useSetRecoilState(stationState);
   const setNavigation = useSetRecoilState(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
@@ -58,45 +58,40 @@ const useRefreshStation = (): void => {
       return true;
     }
 
-    if (speed && !getIsPass(nearestStation)) {
-      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が100m以上ある場合は走行速度を停車判定に使用しない
-      if (!accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)) {
-        return isPointWithinRadius(
-          { latitude, longitude },
-          {
-            latitude: nearestStation.latitude,
-            longitude: nearestStation.longitude,
-          },
-          arrivedThreshold
-        );
-      }
-
-      const speedKMH = (speed * 3600) / 1000;
-      return (
-        isPointWithinRadius(
-          { latitude, longitude },
-          {
-            latitude: nearestStation.latitude,
-            longitude: nearestStation.longitude,
-          },
-          arrivedThreshold
-        ) && speedKMH < ARRIVED_MAXIMUM_SPEED
+    if (getIsPass(nearestStation)) {
+      return isPointWithinRadius(
+        { latitude, longitude },
+        {
+          latitude: nearestStation.latitude,
+          longitude: nearestStation.longitude,
+        },
+        arrivedThreshold
       );
     }
 
-    const arrived = isPointWithinRadius(
-      { latitude, longitude },
-      {
-        latitude: nearestStation.latitude,
-        longitude: nearestStation.longitude,
-      },
-      arrivedThreshold
-    );
+    const arrived =
+      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が200m以上ある場合は走行速度を停車判定に使用しない
+      !speed || !accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)
+        ? isPointWithinRadius(
+            { latitude, longitude },
+            {
+              latitude: nearestStation.latitude,
+              longitude: nearestStation.longitude,
+            },
+            arrivedThreshold
+          )
+        : isPointWithinRadius(
+            { latitude, longitude },
+            {
+              latitude: nearestStation.latitude,
+              longitude: nearestStation.longitude,
+            },
+            arrivedThreshold
+          ) && (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED; // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
     }
-
     return arrived;
   }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
@@ -194,5 +189,3 @@ const useRefreshStation = (): void => {
     }
   }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
 };
-
-export default useRefreshStation;

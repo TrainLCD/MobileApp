@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 /**
  * Recoilが使えない環境の時にもユーザーを持ちたい場合に使います。基本的に `useCachedAnonymousUser` を使ってください。
  */
-const useAnonymousUser = (): FirebaseAuthTypes.User | undefined => {
+export const useAnonymousUser = (): FirebaseAuthTypes.User | undefined => {
   const userRef = useRef<FirebaseAuthTypes.User>();
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((authUser) => {
@@ -24,5 +24,3 @@ const useAnonymousUser = (): FirebaseAuthTypes.User | undefined => {
 
   return userRef.current;
 };
-
-export default useAnonymousUser;

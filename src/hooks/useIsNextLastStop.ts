@@ -4,7 +4,7 @@ import stationState from '../store/atoms/station';
 import { useLoopLine } from './useLoopLine';
 import { useNextStation } from './useNextStation';
 
-const useIsNextLastStop = (): boolean => {
+export const useIsNextLastStop = (): boolean => {
   const { selectedBound } = useRecoilValue(stationState);
   const nextStation = useNextStation();
   const { isLoopLine } = useLoopLine();
@@ -19,5 +19,3 @@ const useIsNextLastStop = (): boolean => {
 
   return isNextLastStop;
 };
-
-export default useIsNextLastStop;

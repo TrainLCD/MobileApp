@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useRecoilValue } from 'recoil';
-import type { Line, Station } from '../../gen/proto/stationapi_pb';
+import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { isEnSelector } from '../store/selectors/isEn';
 
-const useIsDifferentStationName = () => {
+export const useIsDifferentStationName = () => {
   const isEn = useRecoilValue(isEnSelector);
 
   const isDifferentStationName = useCallback(
@@ -44,5 +44,3 @@ const useIsDifferentStationName = () => {
   );
   return isDifferentStationName;
 };
-
-export default useIsDifferentStationName;

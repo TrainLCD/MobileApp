@@ -8,27 +8,29 @@ import {
   View,
 } from 'react-native';
 import { useRecoilValue } from 'recoil';
-import type { Station, StationNumber } from '../../gen/proto/stationapi_pb';
-import { FONTS } from '../constants';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useGetLineMark from '../hooks/useGetLineMark';
-import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion';
-import useIsPassing from '../hooks/useIsPassing';
-import { useNextStation } from '../hooks/useNextStation';
-import usePreviousStation from '../hooks/usePreviousStation';
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
-import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isEnSelector } from '../store/selectors/isEn';
-import getStationNameR from '../utils/getStationNameR';
-import getIsPass from '../utils/isPass';
-import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
-import { heightScale } from '../utils/scale';
+import { FONTS } from '~/constants';
+import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useCurrentStation,
+  useGetLineMark,
+  useHasPassStationInRegion,
+  useIsPassing,
+  useNextStation,
+  usePreviousStation,
+  useStationNumberIndexFunc,
+  useTransferLinesFromStation,
+} from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import lineState from '~/store/atoms/line';
+import navigationState from '~/store/atoms/navigation';
+import stationState from '~/store/atoms/station';
+import { isEnSelector } from '~/store/selectors/isEn';
+import getStationNameR from '~/utils/getStationNameR';
+import getIsPass from '~/utils/isPass';
+import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
+import { heightScale } from '~/utils/scale';
 import Chevron from './ChevronJRWest';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';

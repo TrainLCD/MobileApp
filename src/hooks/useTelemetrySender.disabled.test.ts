@@ -17,7 +17,9 @@ jest.mock('recoil', () => ({
   })),
 }));
 
-jest.mock('~/hooks/useIsPassing', () => jest.fn(() => false));
+jest.mock('~/hooks/useIsPassing', () => ({
+  useIsPassing: jest.fn(() => false),
+}));
 
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn().mockImplementation((selector) =>

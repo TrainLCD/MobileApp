@@ -1,4 +1,4 @@
-import { type Station, StopCondition } from '../../gen/proto/stationapi_pb';
+import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
 import { getIsHoliday } from './isHoliday';
 
 const getIsPass = (

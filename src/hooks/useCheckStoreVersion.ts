@@ -3,7 +3,7 @@ import { Alert, Linking } from 'react-native';
 import VersionCheck from 'react-native-version-check';
 import { translate } from '../translation';
 
-const useCheckStoreVersion = (): void => {
+export const useCheckStoreVersion = (): void => {
   const showUpdateRequestDialog = useCallback((storeURL: string) => {
     Alert.alert(
       translate('annoucementTitle'),
@@ -34,5 +34,3 @@ const useCheckStoreVersion = (): void => {
     f();
   }, [showUpdateRequestDialog]);
 };
-
-export default useCheckStoreVersion;

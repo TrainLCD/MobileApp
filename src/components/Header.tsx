@@ -1,7 +1,6 @@
 import React from 'react';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { APP_THEME } from '../models/Theme';
+import { useCurrentStation, useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
 import HeaderE235 from './HeaderE235';
 import HeaderJL from './HeaderJL';
 import HeaderJRWest from './HeaderJRWest';

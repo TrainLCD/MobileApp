@@ -1,4 +1,4 @@
-import { Line, LineType } from '../../gen/proto/stationapi_pb';
+import { Line, LineType } from '~/gen/proto/stationapi_pb';
 import { JR_LINE_MAX_ID, MARK_SHAPE, OMIT_JR_THRESHOLD } from '../constants';
 
 export const isJRLine = (line: Line): boolean =>

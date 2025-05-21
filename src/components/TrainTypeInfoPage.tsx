@@ -11,21 +11,17 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecoilValue } from 'recoil';
-import {
-  Line,
-  type Station,
-  type TrainType,
-} from '../../gen/proto/stationapi_pb';
-import { LED_THEME_BG_COLOR } from '../constants';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
-import { isJapanese, translate } from '../translation';
-import dropEitherJunctionStation from '../utils/dropJunctionStation';
-import getIsPass from '../utils/isPass';
-import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
+import { LED_THEME_BG_COLOR } from '~/constants';
+import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
+import { useCurrentStation } from '~/hooks';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import lineState from '~/store/atoms/line';
+import { isJapanese, translate } from '~/translation';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
+import getIsPass from '~/utils/isPass';
+import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import Heading from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';

@@ -14,11 +14,11 @@ import {
 import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';

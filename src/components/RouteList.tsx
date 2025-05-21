@@ -1,9 +1,8 @@
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import type { Route, Station } from '../../gen/proto/stationapi_pb';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useThemeStore } from '../hooks/useThemeStore';
+import type { Route, Station } from '~/gen/proto/stationapi_pb';
+import { useCurrentStation, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
 import { RFValue } from '../utils/rfValue';

@@ -4,12 +4,12 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   getStationsByLineId,
   getTrainTypesByStationId,
-} from '../../gen/proto/stationapi-StationAPI_connectquery';
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
 import {
   TrainDirection,
   TrainType,
   TrainTypeKind,
-} from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi_pb';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';

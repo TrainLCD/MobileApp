@@ -3,7 +3,7 @@ import type {
   Route,
   Station,
   TrainType,
-} from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi_pb';
 
 export const generateStationTestId = (station: Pick<Station, 'id'>) =>
   `station_${station.id}`;

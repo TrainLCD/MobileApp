@@ -7,7 +7,7 @@ import {
   type TextStyle,
 } from 'react-native';
 import { FONTS } from '../constants';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {

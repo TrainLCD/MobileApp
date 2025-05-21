@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { TrainType } from '../../gen/proto/stationapi_pb';
+import { TrainType } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 
-const useNextTrainType = (): TrainType | null => {
+export const useNextTrainType = (): TrainType | null => {
   const { stations, selectedDirection } = useRecoilValue(stationState);
   const currentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
@@ -55,5 +55,3 @@ const useNextTrainType = (): TrainType | null => {
 
   return nextTrainType;
 };
-
-export default useNextTrainType;
