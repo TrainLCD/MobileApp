@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
   },
   boundContainer: {
     width: '100%',
-    height: isTablet ? 100 : 50,
-    justifyContent: 'center',
+    height: '50%',
+    justifyContent: 'flex-end',
   },
   bound: {
     color: '#fff',
@@ -316,7 +316,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
             marginTop: boundContainerMarginTop,
           }}
         >
-          {selectedBound && (
+          {selectedBound && boundPrefix.length ? (
             <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
@@ -327,7 +327,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
             >
               {boundPrefix}
             </Typography>
-          )}
+          ) : null}
           <Typography
             style={{
               ...styles.bound,
@@ -338,7 +338,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
           >
             {boundText}
           </Typography>
-          {selectedBound && (
+          {selectedBound && boundSuffix.length ? (
             <Typography
               style={[
                 {
@@ -350,7 +350,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
             >
               {boundSuffix}
             </Typography>
-          )}
+          ) : null}
         </View>
       </View>
       <View
