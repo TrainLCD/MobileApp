@@ -34,9 +34,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   boundContainer: {
+    position: 'absolute',
+    top: isTablet ? 79 : 47,
     width: '100%',
-    height: '70%',
-    marginTop: isTablet ? '38%' : '32%',
+    height: '50%',
+    justifyContent: 'flex-end',
   },
   bound: {
     color: '#fff',
@@ -292,10 +294,6 @@ const HeaderJL = () => {
     }
   }, [headerLangState, isLoopLine, isPartiallyLoopLine]);
 
-  const boundFontSize = useMemo(() => {
-    return RFValue(20);
-  }, []);
-
   const clockLabel = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -325,7 +323,7 @@ const HeaderJL = () => {
             trainTypeColor={currentLine?.color}
           />
           <View style={styles.boundContainer}>
-            {selectedBound && (
+            {selectedBound && boundPrefix.length ? (
               <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
@@ -336,30 +334,28 @@ const HeaderJL = () => {
               >
                 {boundPrefix}
               </Typography>
-            )}
+            ) : null}
+
             <Typography
               style={{
                 ...styles.bound,
-                fontSize: boundFontSize,
+                fontSize: RFValue(20),
               }}
               adjustsFontSizeToFit
               numberOfLines={1}
             >
               {boundText}
             </Typography>
-            {selectedBound && (
+            {selectedBound && boundSuffix.length ? (
               <Typography
-                style={[
-                  {
-                    ...styles.boundSuffix,
-                    fontSize: RFValue(14),
-                  },
-                  headerLangState === 'KO' ? styles.bound : null,
-                ]}
+                style={{
+                  ...styles.boundSuffix,
+                  fontSize: RFValue(14),
+                }}
               >
                 {boundSuffix}
               </Typography>
-            )}
+            ) : null}
           </View>
         </View>
         <Svg
