@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     transform: [{ skewX: '-5deg' }],
     fontSize: isTablet ? 36 : 24,
-    flex: 1
+    flex: 1,
   },
 });
 
