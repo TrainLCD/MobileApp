@@ -101,12 +101,17 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
     return trainType?.color ?? '#222';
   }, [trainType]);
 
+  const numberOfLines = useMemo(
+    () => (trainTypeName.split('\n')[0].length <= 10 ? 1 : 2),
+    [trainTypeName]
+  );
+
   return (
     <View style={styles.box}>
       {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
         trainTypeName.split('').map((char, idx) => (
           <Typography
-            numberOfLines={1}
+            numberOfLines={numberOfLines}
             adjustsFontSizeToFit
             style={{
               ...styles.text,
