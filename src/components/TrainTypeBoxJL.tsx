@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: isTablet ? 36 : 24,
     lineHeight: isTablet ? 55 : 35,
+    flex: 1,
   },
 });
 
@@ -107,6 +108,8 @@ const TrainTypeBoxJL: React.FC<Props> = ({
         {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
           trainTypeName.split('').map((char, idx) => (
             <Typography
+              numberOfLines={1}
+              adjustsFontSizeToFit
               style={{
                 ...styles.text,
                 color: trainTypeColor,
@@ -120,6 +123,8 @@ const TrainTypeBoxJL: React.FC<Props> = ({
           ))
         ) : (
           <Typography
+            numberOfLines={1}
+            adjustsFontSizeToFit
             style={{
               ...styles.text,
               color: trainTypeColor,
