@@ -86,13 +86,13 @@ const TrainTypeBoxJL: React.FC<Props> = ({
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR;
+        return trainTypeNameR.split('\n')[0]?.trim();
       case 'ZH':
-        return trainTypeNameZh;
+        return trainTypeNameZh.split('\n')[0]?.trim();
       case 'KO':
-        return trainTypeNameKo;
+        return trainTypeNameKo.split('\n')[0]?.trim();
       default:
-        return trainTypeNameJa;
+        return trainTypeNameJa.split('\n')[0]?.trim();
     }
   }, [
     headerLangState,
@@ -102,13 +102,19 @@ const TrainTypeBoxJL: React.FC<Props> = ({
     trainTypeNameZh,
   ]);
 
+
+  const numberOfLines = useMemo(
+    () => (trainTypeName.split('\n')[0].length <= 10 ? 1 : 2),
+    [trainTypeName]
+  );
+
   return (
     <View style={styles.box}>
       <View style={styles.innerBox}>
         {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
           trainTypeName.split('').map((char, idx) => (
             <Typography
-              numberOfLines={1}
+              numberOfLines={numberOfLines}
               adjustsFontSizeToFit
               style={{
                 ...styles.text,
