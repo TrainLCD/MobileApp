@@ -71,10 +71,13 @@ const styles = StyleSheet.create({
   },
   right: {
     flex: 1,
-    justifyContent: 'center',
+    position: 'relative',
+    justifyContent: 'flex-end',
     height: isTablet ? 200 : 128,
   },
   state: {
+    position: 'absolute',
+    top: isTablet ? 24 : 12,
     color: '#fff',
     fontWeight: 'bold',
     fontSize: RFValue(21),
