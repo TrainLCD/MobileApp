@@ -14,13 +14,23 @@ class IgnoreBatteryOptimizationsModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun requestIgnoreBatteryOptimizations() {
-    val packageName = reactApplicationContext.packageName
-    val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-      val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-      intent.data = Uri.parse("package:$packageName")
-      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-      context.startActivity(intent)
+    try {
+      val packageName = reactApplicationContext.packageName
+      val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        ?: return
+      if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+        intent.data = Uri.parse("package:$packageName")
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        context.startActivity(intent)
+      }
+    } catch (e: Exception) {
+      // ログを出力し、エラーを適切に処理する
+      android.util.Log.e(
+        "IgnoreBatteryOptimizations",
+        "Error requesting battery optimization exemption",
+        e
+      )
     }
   }
 }
