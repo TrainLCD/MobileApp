@@ -4,7 +4,7 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
@@ -139,21 +139,26 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      const buttons = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          translate('report'),
-          translate('cancel'),
-        ],
-        android: [translate('share'), translate('report'), translate('cancel')],
-      });
+      const options =
+        Platform.select({
+          ios: [
+            translate('back'),
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+          android: [
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+        }) ?? [];
 
       showActionSheetWithOptions(
         {
-          options: buttons || [],
+          options,
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: buttons && buttons.length - 1,
+          cancelButtonIndex: options.length - 1,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
