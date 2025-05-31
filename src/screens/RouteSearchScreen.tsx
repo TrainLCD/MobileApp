@@ -187,7 +187,7 @@ const RouteSearchScreen = () => {
 
       if (!trainType?.id) {
         const { stations } = await fetchStationByIdList({
-          ids: route?.stops.map((r) => r.groupId),
+          ids: route?.stops.map((r) => r.id),
         });
         const stationInRoute =
           stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
