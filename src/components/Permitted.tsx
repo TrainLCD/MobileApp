@@ -7,7 +7,7 @@ import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import {
@@ -104,13 +104,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const urlString = `data:image/jpeg;base64,${res}`;
       const message = isJapanese
         ? `${currentLine.nameShort.replace(
-            parenthesisRegexp,
-            ''
-          )}で移動中です！ #TrainLCD https://trainlcd.app`
+          parenthesisRegexp,
+          ''
+        )}で移動中です！ #TrainLCD https://trainlcd.app`
         : `I'm riding ${currentLine.nameRoman?.replace(
-            parenthesisRegexp,
-            ''
-          )} with #TrainLCD https://trainlcd.app`;
+          parenthesisRegexp,
+          ''
+        )} with #TrainLCD https://trainlcd.app`;
       const options = {
         title: 'TrainLCD',
         message,
@@ -125,15 +125,21 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }
   }, [currentLine]);
 
-  const onLongPress = useCallback(async (): Promise<void> => {
-    if (!selectedBound) {
-      return;
-    }
+  const onLongPress = useCallback(
+    async ({
+      nativeEvent,
+    }: {
+      nativeEvent: {
+        state: State;
+      };
+    }): Promise<void> => {
+      if (!selectedBound || nativeEvent.state !== State.ACTIVE) {
+        return;
+      }
 
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const options =
-      Platform.select({
+      const options = Platform.select({
         ios: [
           translate('back'),
           translate('share'),
@@ -143,57 +149,59 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         android: [translate('share'), translate('report'), translate('cancel')],
       }) ?? [];
 
-    showActionSheetWithOptions(
-      {
-        options,
-        destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-        cancelButtonIndex: options.length - 1,
-      },
-      (buttonIndex) => {
-        switch (buttonIndex) {
-          // iOS: back, Android: share
-          case 0:
-            if (Platform.OS === 'ios') {
-              navigation.dispatch(
-                StackActions.replace('MainStack', { screen: 'SelectBound' })
-              );
-              break;
-            }
-            handleShare();
-            break;
-          // iOS: share, Android: feedback
-          case 1:
-            if (Platform.OS === 'ios') {
+      showActionSheetWithOptions(
+        {
+          options,
+          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+          cancelButtonIndex: options.length - 1,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            // iOS: back, Android: share
+            case 0:
+              if (Platform.OS === 'ios') {
+                navigation.dispatch(
+                  StackActions.replace('MainStack', { screen: 'SelectBound' })
+                );
+                break;
+              }
               handleShare();
               break;
-            }
-            handleReport();
-            break;
-          // iOS: feedback, Android: cancel
-          case 2: {
-            if (Platform.OS === 'ios') {
+            // iOS: share, Android: feedback
+            case 1:
+              if (Platform.OS === 'ios') {
+                handleShare();
+                break;
+              }
               handleReport();
               break;
+            // iOS: feedback, Android: cancel
+            case 2: {
+              if (Platform.OS === 'ios') {
+                handleReport();
+                break;
+              }
+              break;
             }
-            break;
+            // iOS: cancel, Android: will be not passed here
+            case 3: {
+              break;
+            }
+            // iOS, Android: will be not passed here
+            default:
+              break;
           }
-          // iOS: cancel, Android: will be not passed here
-          case 3: {
-            break;
-          }
-          // iOS, Android: will be not passed here
-          default:
-            break;
         }
-      }
-    );
-  }, [
-    handleReport,
-    handleShare,
-    navigation,
-    selectedBound,
-    showActionSheetWithOptions,
-  ]);
+      );
+    },
+    [
+      handleReport,
+      handleShare,
+      navigation,
+      selectedBound,
+      showActionSheetWithOptions,
+    ]
+  );
 
   useEffect(() => {
     const loadSettingsAsync = async () => {
@@ -312,14 +320,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
-      <Pressable onLongPress={onLongPress} delayLongPress={LONG_PRESS_DURATION}>
+      <LongPressGestureHandler
+        onHandlerStateChange={onLongPress}
+        minDurationMs={LONG_PRESS_DURATION}
+      >
         <View style={styles.root}>
           {isDevApp && <DevOverlay />}
           <Header />
           {children}
           <NullableWarningPanel />
         </View>
-      </Pressable>
+      </LongPressGestureHandler>
       {/* NOTE: このViewを外すとフィードバックモーダルのレイアウトが崩御する */}
       <View>
         <NewReportModal
