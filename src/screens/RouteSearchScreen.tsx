@@ -15,8 +15,8 @@ import {
 import { RFValue } from '../utils/rfValue';
 
 import { useMutation, useQuery } from '@connectrpc/connect-query';
+import { useSetAtom } from 'jotai';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
-import { useSetRecoilState } from 'recoil';
 import {
   getRoutes,
   getStationByIdList,
@@ -79,9 +79,9 @@ const RouteSearchScreen = () => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false);
-  const setStationState = useSetRecoilState(stationState);
-  const setLineState = useSetRecoilState(lineState);
-  const setNavigationState = useSetRecoilState(navigationState);
+  const setStationState = useSetAtom(stationState);
+  const setLineState = useSetAtom(lineState);
+  const setNavigationState = useSetAtom(navigationState);
 
   const currentStation = useCurrentStation();
   const getTerminatedStations = useGetStationsWithTermination();
@@ -187,7 +187,7 @@ const RouteSearchScreen = () => {
 
       if (!trainType?.id) {
         const { stations } = await fetchStationByIdList({
-          ids: route?.stops.map((r) => r.groupId),
+          ids: route?.stops.map((r) => r.id),
         });
         const stationInRoute =
           stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
