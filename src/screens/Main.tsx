@@ -304,10 +304,11 @@ const MainScreen: React.FC = () => {
       }
 
       if (Platform.OS === 'android' && bgPermStatus.granted) {
+        const { status: bgStatus } = await Location.getBackgroundPermissionsAsync();
         const dozeAlertDismissed = await AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
         );
-        if (dozeAlertDismissed !== 'true') {
+        if (bgStatus === "granted" && dozeAlertDismissed !== 'true') {
           Alert.alert(
             translate('annoucementTitle'),
             translate('dozeAlertText'),
