@@ -104,13 +104,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const urlString = `data:image/jpeg;base64,${res}`;
       const message = isJapanese
         ? `${currentLine.nameShort.replace(
-          parenthesisRegexp,
-          ''
-        )}で移動中です！ #TrainLCD https://trainlcd.app`
+            parenthesisRegexp,
+            ''
+          )}で移動中です！ #TrainLCD https://trainlcd.app`
         : `I'm riding ${currentLine.nameRoman?.replace(
-          parenthesisRegexp,
-          ''
-        )} with #TrainLCD https://trainlcd.app`;
+            parenthesisRegexp,
+            ''
+          )} with #TrainLCD https://trainlcd.app`;
       const options = {
         title: 'TrainLCD',
         message,
@@ -139,15 +139,20 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      const options = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          translate('report'),
-          translate('cancel'),
-        ],
-        android: [translate('share'), translate('report'), translate('cancel')],
-      }) ?? [];
+      const options =
+        Platform.select({
+          ios: [
+            translate('back'),
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+          android: [
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+        }) ?? [];
 
       showActionSheetWithOptions(
         {
