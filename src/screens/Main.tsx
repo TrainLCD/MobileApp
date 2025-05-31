@@ -42,6 +42,7 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
@@ -284,7 +285,11 @@ const MainScreen: React.FC = () => {
               text: 'OK',
               onPress: async () => {
                 try {
-                  await Location.requestBackgroundPermissionsAsync();
+                  const { status } =
+                    await Location.requestBackgroundPermissionsAsync();
+                  if (status === 'granted') {
+                    await requestIgnoreBatteryOptimizationsAndroid();
+                  }
                 } catch (error) {
                   Alert.alert(
                     translate('errorTitle'),
