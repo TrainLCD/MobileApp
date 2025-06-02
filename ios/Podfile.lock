@@ -3597,7 +3597,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSentry (6.10.0):
+  - RNSentry (6.14.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -3620,7 +3620,7 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - Sentry/HybridSDK (= 8.48.0)
+    - Sentry/HybridSDK (= 8.50.2)
     - Yoga
   - RNShare (11.1.0):
     - DoubleConversion
@@ -3708,7 +3708,7 @@ PODS:
   - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
-  - Sentry/HybridSDK (8.48.0)
+  - Sentry/HybridSDK (8.50.2)
   - SocketRocket (0.7.1)
   - UMAppLoader (5.1.3)
   - Yoga (0.0.0)
@@ -3721,7 +3721,7 @@ DEPENDENCIES:
   - "EXConstants (from `../node_modules/.pnpm/expo-constants@17.1.6_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7._f172bf6251c3efc66f4f288b5ed6846c/node_modules/expo-constants/ios`)"
   - "EXNotifications (from `../node_modules/.pnpm/expo-notifications@0.31.2_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+cor_33d4b1c1651344d15dca9a8a86021e84/node_modules/expo-notifications/ios`)"
   - "Expo (from `../node_modules/.pnpm/expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27.1_@react-native-com_7c99f87ee59f4f47c46caf175e40dd36/node_modules/expo`)"
-  - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - "ExpoAsset (from `../node_modules/.pnpm/expo-asset@11.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27.1_ad8fe7fe5dd3f28d0b8f44e98d44d84f/node_modules/expo-asset/ios`)"
   - "ExpoCrypto (from `../node_modules/.pnpm/expo-crypto@14.1.4_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27._4069c80df195c1db3ce3c049c3121cd1/node_modules/expo-crypto/ios`)"
   - "ExpoDevice (from `../node_modules/.pnpm/expo-device@7.1.4_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27.1_867e847a7cb9aff0a61ce6972fabcfd9/node_modules/expo-device/ios`)"
   - "ExpoFileSystem (from `../node_modules/.pnpm/expo-file-system@18.1.10_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core_4ce316560b0b0e001a1357b5829c0934/node_modules/expo-file-system/ios`)"
@@ -3733,7 +3733,7 @@ DEPENDENCIES:
   - "ExpoLinking (from `../node_modules/.pnpm/expo-linking@7.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27._9091fc3898e92ed842adc6a10aff64de/node_modules/expo-linking/ios`)"
   - "ExpoLocalization (from `../node_modules/.pnpm/expo-localization@16.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core_84340674918b02f733654b85df623291/node_modules/expo-localization/ios`)"
   - "ExpoLocation (from `../node_modules/.pnpm/expo-location@18.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.2_c6a4af4be4d428d30445ad85c5ba41a2/node_modules/expo-location/ios`)"
-  - ExpoModulesCore (from `../node_modules/expo-modules-core`)
+  - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@2.3.13/node_modules/expo-modules-core`)"
   - "ExpoNetwork (from `../node_modules/.pnpm/expo-network@7.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27._ddb0b8dca4c5cb7ad6a153bc13ffb1d7/node_modules/expo-network/ios`)"
   - "ExpoScreenCapture (from `../node_modules/.pnpm/expo-screen-capture@7.1.4_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+cor_05c433b55321c64f71c239a8dbd11932/node_modules/expo-screen-capture/ios`)"
   - "ExpoSplashScreen (from `../node_modules/.pnpm/expo-splash-screen@0.30.8_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+cor_edd8edec927d9a70a32a8fdf92662cc1/node_modules/expo-splash-screen/ios`)"
@@ -3828,7 +3828,7 @@ DEPENDENCIES:
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWatch (from `../node_modules/react-native-watch-connectivity`)
-  - UMAppLoader (from `../node_modules/unimodules-app-loader/ios`)
+  - "UMAppLoader (from `../node_modules/.pnpm/unimodules-app-loader@5.1.3/node_modules/unimodules-app-loader/ios`)"
   - "Yoga (from `../node_modules/.pnpm/react-native@0.79.2_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._004bb81c9bd4cc34416c2f98968c91c3/node_modules/react-native/ReactCommon/yoga`)"
 
 SPEC REPOS:
@@ -3883,7 +3883,7 @@ EXTERNAL SOURCES:
   Expo:
     :path: "../node_modules/.pnpm/expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27.1_@react-native-com_7c99f87ee59f4f47c46caf175e40dd36/node_modules/expo"
   ExpoAsset:
-    :path: "../node_modules/expo-asset/ios"
+    :path: "../node_modules/.pnpm/expo-asset@11.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27.1_ad8fe7fe5dd3f28d0b8f44e98d44d84f/node_modules/expo-asset/ios"
   ExpoCrypto:
     :path: "../node_modules/.pnpm/expo-crypto@14.1.4_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27._4069c80df195c1db3ce3c049c3121cd1/node_modules/expo-crypto/ios"
   ExpoDevice:
@@ -3907,7 +3907,7 @@ EXTERNAL SOURCES:
   ExpoLocation:
     :path: "../node_modules/.pnpm/expo-location@18.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.2_c6a4af4be4d428d30445ad85c5ba41a2/node_modules/expo-location/ios"
   ExpoModulesCore:
-    :path: "../node_modules/expo-modules-core"
+    :path: "../node_modules/.pnpm/expo-modules-core@2.3.13/node_modules/expo-modules-core"
   ExpoNetwork:
     :path: "../node_modules/.pnpm/expo-network@7.1.5_expo@53.0.9_@babel+core@7.27.1_react-native@0.79.2_@babel+core@7.27._ddb0b8dca4c5cb7ad6a153bc13ffb1d7/node_modules/expo-network/ios"
   ExpoScreenCapture:
@@ -4094,7 +4094,7 @@ EXTERNAL SOURCES:
   RNWatch:
     :path: "../node_modules/react-native-watch-connectivity"
   UMAppLoader:
-    :path: "../node_modules/unimodules-app-loader/ios"
+    :path: "../node_modules/.pnpm/unimodules-app-loader@5.1.3/node_modules/unimodules-app-loader/ios"
   Yoga:
     :path: "../node_modules/.pnpm/react-native@0.79.2_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._004bb81c9bd4cc34416c2f98968c91c3/node_modules/react-native/ReactCommon/yoga"
 
@@ -4234,7 +4234,7 @@ SPEC CHECKSUMS:
   RNLocalize: 530e4a79bacbc6d7c13df44edb266e805903f656
   RNReanimated: 12d6ad1648685c907c5723e944143d3eba3eef8d
   RNScreens: a25b818417609cbd805474dffd2d28b229704cfc
-  RNSentry: 12d6285a94b3a4fe74d2678ee8cfbbfdba2a3b6c
+  RNSentry: 33bc24cea8f87ab26521a9330549a82c703b5db4
   RNShare: 87bbb919fd97b92b1e20b6b6415037d9ac8d5eeb
   RNSVG: 4470464e129f6bc58b78b961850b054dbbea8ef7
   RNWatch: 28fe1f5e0c6410d45fd20925f4796fce05522e3f
@@ -4242,7 +4242,7 @@ SPEC CHECKSUMS:
   SDWebImageAVIFCoder: 00310d246aab3232ce77f1d8f0076f8c4b021d90
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
-  Sentry: 1ca8405451040482877dcd344dfa3ef80b646631
+  Sentry: d95f5f3b32d01324b3e27d3c52747005302cc026
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   UMAppLoader: 55159b69750129faa7a51c493cb8ea55a7b64eb9
   Yoga: 50518ade05048235d91a78b803336dbb5b159d5d
