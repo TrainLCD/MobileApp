@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -989,7 +989,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 94E2C8482D64E1AA0090392E /* Build configuration list for PBXNativeTarget "ProdAppClip" */;
 			buildPhases = (
-				9418BBBF2DEDE3120050C548 /* Sync project version from ProdTrainLCD */,
 				C68E3B5B19F7C96F6F5AE470 /* [CP] Check Pods Manifest.lock */,
 				94E2C9762D64E3CA0090392E /* Start Packager */,
 				1A78635B90394D55806B7BCD /* [Expo] Configure project */,
@@ -1016,7 +1015,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 94E2C8682D64E1CB0090392E /* Build configuration list for PBXNativeTarget "CanaryAppClip" */;
 			buildPhases = (
-				9418BBBE2DEDE2A30050C548 /* Sync project version from CanaryTrainLCD */,
 				BF3BCE3CF1C0B36E818B4D24 /* [CP] Check Pods Manifest.lock */,
 				94E2C86D2D64E3520090392E /* Start Packager */,
 				8F03479E048D5EF9905129F1 /* [Expo] Configure project */,
@@ -1421,42 +1419,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/expo-configure-project.sh\"\n";
-		};
-		9418BBBE2DEDE2A30050C548 /* Sync project version from CanaryTrainLCD */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Sync project version from CanaryTrainLCD";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "#!/bin/bash\n\nPARENT_PLIST=\"${PROJECT_DIR}/${TARGET_NAME}/${INFOPLIST_FILE}\"\nAPPCLIP_PLIST=\"${PROJECT_DIR}/CanaryAppClip/Info.plist\"\n\nVERSION=$(/usr/libexec/PlistBuddy -c \"Print :CFBundleVersion\" \"$PARENT_PLIST\")\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION\" \"$APPCLIP_PLIST\"\n";
-		};
-		9418BBBF2DEDE3120050C548 /* Sync project version from ProdTrainLCD */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Sync project version from ProdTrainLCD";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "#!/bin/bash\n\nPARENT_PLIST=\"${PROJECT_DIR}/${TARGET_NAME}/${INFOPLIST_FILE}\"\nAPPCLIP_PLIST=\"${PROJECT_DIR}/ProdAppClip/Info.plist\"\n\nVERSION=$(/usr/libexec/PlistBuddy -c \"Print :CFBundleVersion\" \"$PARENT_PLIST\")\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION\" \"$APPCLIP_PLIST\"\n";
 		};
 		942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
