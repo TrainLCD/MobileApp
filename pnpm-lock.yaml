@@ -31,7 +31,7 @@ importers:
         version: 4.1.1(react@19.0.0)
       '@expo/vector-icons':
         specifier: ^14.1.0
-        version: 14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@react-native-async-storage/async-storage':
         specifier: 2.1.2
         version: 2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
@@ -40,19 +40,19 @@ importers:
         version: 15.1.3(typescript@5.8.3)
       '@react-native-firebase/analytics':
         specifier: ^21.6.0
-        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       '@react-native-firebase/app':
         specifier: ^21.6.0
-        version: 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@react-native-firebase/auth':
         specifier: ^21.6.0
-        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       '@react-native-firebase/firestore':
         specifier: ^21.6.0
-        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       '@react-native-firebase/storage':
         specifier: ^21.6.0
-        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       '@react-native-picker/picker':
         specifier: 2.11.0
         version: 2.11.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -64,7 +64,7 @@ importers:
         version: 7.3.14(@react-navigation/native@7.1.10(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-safe-area-context@5.4.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-screens@4.10.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@sentry/react-native':
         specifier: ~6.10.0
-        version: 6.10.0(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 6.10.0(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@tanstack/react-query':
         specifier: ^5.76.1
         version: 5.76.1(react@19.0.0)
@@ -73,67 +73,67 @@ importers:
         version: 1.11.13
       expo:
         specifier: ^53.0.0
-        version: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       expo-application:
         specifier: ~6.1.4
-        version: 6.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 6.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-av:
         specifier: ~15.1.4
-        version: 15.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 15.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       expo-constants:
         specifier: ~17.1.6
-        version: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+        version: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       expo-crypto:
         specifier: ~14.1.4
-        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-device:
         specifier: ~7.1.4
-        version: 7.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 7.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-file-system:
         specifier: ~18.1.10
-        version: 18.1.10(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+        version: 18.1.10(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       expo-font:
         specifier: ~13.3.1
-        version: 13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        version: 13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-haptics:
         specifier: ~14.1.4
-        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-image:
         specifier: ~2.1.7
-        version: 2.1.7(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 2.1.7(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       expo-keep-awake:
         specifier: ~14.1.4
-        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-linear-gradient:
         specifier: ~14.1.4
-        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       expo-linking:
         specifier: ~7.1.5
-        version: 7.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 7.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       expo-localization:
         specifier: ~16.1.5
-        version: 16.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        version: 16.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-location:
         specifier: ~18.1.5
-        version: 18.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 18.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-network:
         specifier: ~7.1.5
-        version: 7.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        version: 7.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-notifications:
         specifier: ~0.31.2
-        version: 0.31.2(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 0.31.2(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       expo-screen-capture:
         specifier: ~7.1.4
-        version: 7.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+        version: 7.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-splash-screen:
         specifier: ~0.30.8
-        version: 0.30.8(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        version: 0.30.8(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-task-manager:
         specifier: ~13.1.5
-        version: 13.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+        version: 13.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       expo-web-browser:
         specifier: ~14.1.6
-        version: 14.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+        version: 14.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       geolib:
         specifier: ^3.3.4
         version: 3.3.4
@@ -163,7 +163,7 @@ importers:
         version: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
       react-native-app-clip:
         specifier: ^0.5.1
-        version: 0.5.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 0.5.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-device-info:
         specifier: ^10.2.1
         version: 10.14.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
@@ -233,7 +233,7 @@ importers:
         version: 4.0.13(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)
       '@testing-library/react-native':
         specifier: ^13.2.0
-        version: 13.2.0(jest@29.7.0(@types/node@12.20.55))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 13.2.0(jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)
       '@types/i18n-js':
         specifier: ^3.0.1
         version: 3.8.9
@@ -266,10 +266,10 @@ importers:
         version: 13.0.0(@babel/core@7.27.1)
       jest:
         specifier: ^29.2.1
-        version: 29.7.0(@types/node@12.20.55)
+        version: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       jest-expo:
         specifier: ~53.0.5
-        version: 53.0.5(@babel/core@7.27.1)(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(jest@29.7.0(@types/node@12.20.55))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(webpack@5.99.9)
+        version: 53.0.5(@babel/core@7.27.1)(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(webpack@5.99.9)
       react-native-dotenv:
         specifier: ^3.4.8
         version: 3.4.11(@babel/runtime@7.27.1)
@@ -946,6 +946,10 @@ packages:
       '@bufbuild/protoc-gen-es':
         optional: true
 
+  '@cspotcode/source-map-support@0.8.1':
+    resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
+    engines: {node: '>=12'}
+
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
     engines: {node: '>=0.8.0'}
@@ -1385,6 +1389,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
+  '@jridgewell/trace-mapping@0.3.9':
+    resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -1783,6 +1790,18 @@ packages:
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
     engines: {node: '>= 10'}
 
+  '@tsconfig/node10@1.0.11':
+    resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
+
+  '@tsconfig/node12@1.0.11':
+    resolution: {integrity: sha512-cqefuRsh12pWyGsIoBKJA9luFu3mRxCA+ORZvA4ktLSzIuCUtWVxGIuXigEwO5/ywWFMZ2QEGKWvkZG1zDMTag==}
+
+  '@tsconfig/node14@1.0.3':
+    resolution: {integrity: sha512-ysT8mhdixWK6Hw3i1V2AeRqZ5WfXg1G43mqoYlM2nc6388Fq5jcXyr5mRsqViLx/GJYdoL0bfXD8nmF+Zn/Iow==}
+
+  '@tsconfig/node16@1.0.4':
+    resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
 
@@ -2046,6 +2065,9 @@ packages:
 
   appdirsjs@1.2.7:
     resolution: {integrity: sha512-Quji6+8kLBC3NnBeo14nPDq0+2jUs5s3/xEye+udFHumHhRk4M7aAMXp/PBJqkKYGuuyR9M/6Dq7d2AViiGmhw==}
+
+  arg@4.1.3:
+    resolution: {integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==}
 
   arg@5.0.2:
     resolution: {integrity: sha512-PYjyFOLKQ9y57JvQ6QLo8dAgNqswh8M1RMJYdQduT6xbWSgK36P/Z/v+p888pM69jMMfS8Xd8F6I1kQ/I9HUGg==}
@@ -2419,6 +2441,9 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     hasBin: true
 
+  create-require@1.1.1:
+    resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
+
   cross-fetch@3.2.0:
     resolution: {integrity: sha512-Q+xVJLoGOeIMXZmbUK4HYk+69cQH6LudR0Vu/pRm2YlU/hDV9CiS0gKUMaWY5f2NeUH9C1nV3bsTlCo0FsTV1Q==}
 
@@ -2562,6 +2587,10 @@ packages:
   diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  diff@4.0.2:
+    resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
+    engines: {node: '>=0.3.1'}
 
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
@@ -3074,6 +3103,10 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  graphql@16.8.1:
+    resolution: {integrity: sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw==}
+    engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
   has-flag@3.0.0:
     resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
@@ -3708,6 +3741,9 @@ packages:
   make-dir@4.0.0:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
     engines: {node: '>=10'}
+
+  make-error@1.3.6:
+    resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
 
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
@@ -4826,6 +4862,20 @@ packages:
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
+  ts-node@10.9.2:
+    resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -4936,6 +4986,9 @@ packages:
   uuid@7.0.3:
     resolution: {integrity: sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==}
     hasBin: true
+
+  v8-compile-cache-lib@3.0.1:
+    resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
 
   v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
@@ -5165,6 +5218,10 @@ packages:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
 
+  yn@3.1.1:
+    resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
+    engines: {node: '>=6'}
+
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
@@ -5189,7 +5246,9 @@ packages:
 
 snapshots:
 
-  '@0no-co/graphql.web@1.1.2': {}
+  '@0no-co/graphql.web@1.1.2(graphql@16.8.1)':
+    optionalDependencies:
+      graphql: 16.8.1
 
   '@ampproject/remapping@2.3.0':
     dependencies:
@@ -5913,15 +5972,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@cspotcode/source-map-support@0.8.1':
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.9
+    optional: true
+
   '@egjs/hammerjs@2.0.17':
     dependencies:
       '@types/hammerjs': 2.0.46
 
   '@expo-google-fonts/roboto@0.2.3': {}
 
-  '@expo/cli@0.24.13':
+  '@expo/cli@0.24.13(graphql@16.8.1)':
     dependencies:
-      '@0no-co/graphql.web': 1.1.2
+      '@0no-co/graphql.web': 1.1.2(graphql@16.8.1)
       '@babel/runtime': 7.27.1
       '@expo/code-signing-certificates': 0.0.5
       '@expo/config': 11.0.10
@@ -5939,8 +6003,8 @@ snapshots:
       '@expo/ws-tunnel': 1.0.6
       '@expo/xcpretty': 4.3.2
       '@react-native/dev-middleware': 0.79.2
-      '@urql/core': 5.1.1
-      '@urql/exchange-retry': 1.3.1(@urql/core@5.1.1)
+      '@urql/core': 5.1.1(graphql@16.8.1)
+      '@urql/exchange-retry': 1.3.1(@urql/core@5.1.1(graphql@16.8.1))
       accepts: 1.3.8
       arg: 5.0.2
       better-opn: 3.0.2
@@ -6188,9 +6252,9 @@ snapshots:
 
   '@expo/sudo-prompt@9.3.2': {}
 
-  '@expo/vector-icons@14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@expo/vector-icons@14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
-      expo-font: 13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      expo-font: 13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
 
@@ -6577,7 +6641,7 @@ snapshots:
       jest-util: 29.7.0
       slash: 3.0.0
 
-  '@jest/core@29.7.0':
+  '@jest/core@29.7.0(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))':
     dependencies:
       '@jest/console': 29.7.0
       '@jest/reporters': 29.7.0
@@ -6591,7 +6655,7 @@ snapshots:
       exit: 0.1.2
       graceful-fs: 4.2.11
       jest-changed-files: 29.7.0
-      jest-config: 29.7.0(@types/node@22.15.18)
+      jest-config: 29.7.0(@types/node@22.15.18)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
       jest-regex-util: 29.6.3
@@ -6763,6 +6827,12 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  '@jridgewell/trace-mapping@0.3.9':
+    dependencies:
+      '@jridgewell/resolve-uri': 3.1.2
+      '@jridgewell/sourcemap-codec': 1.5.0
+    optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -6944,35 +7014,35 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@react-native-firebase/analytics@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
+  '@react-native-firebase/analytics@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
     dependencies:
-      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       superstruct: 2.0.2
 
-  '@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
       firebase: 11.3.1(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     optionalDependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - '@react-native-async-storage/async-storage'
 
-  '@react-native-firebase/auth@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
+  '@react-native-firebase/auth@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
     dependencies:
-      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       plist: 3.1.0
     optionalDependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  '@react-native-firebase/firestore@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
+  '@react-native-firebase/firestore@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
     dependencies:
-      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  '@react-native-firebase/storage@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
+  '@react-native-firebase/storage@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
     dependencies:
-      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
   '@react-native-picker/picker@2.11.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
@@ -7284,7 +7354,7 @@ snapshots:
 
   '@sentry/core@8.54.0': {}
 
-  '@sentry/react-native@6.10.0(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
+  '@sentry/react-native@6.10.0(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@sentry/babel-plugin-component-annotate': 3.2.2
       '@sentry/browser': 8.54.0
@@ -7296,7 +7366,7 @@ snapshots:
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     optionalDependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -7352,7 +7422,7 @@ snapshots:
       react-test-renderer: 19.0.0(react@19.0.0)
       redent: 3.0.0
 
-  '@testing-library/react-native@13.2.0(jest@29.7.0(@types/node@12.20.55))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@testing-library/react-native@13.2.0(jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       chalk: 4.1.2
       jest-matcher-utils: 29.7.0
@@ -7362,9 +7432,21 @@ snapshots:
       react-test-renderer: 19.0.0(react@19.0.0)
       redent: 3.0.0
     optionalDependencies:
-      jest: 29.7.0(@types/node@12.20.55)
+      jest: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
 
   '@tootallnate/once@2.0.0': {}
+
+  '@tsconfig/node10@1.0.11':
+    optional: true
+
+  '@tsconfig/node12@1.0.11':
+    optional: true
+
+  '@tsconfig/node14@1.0.3':
+    optional: true
+
+  '@tsconfig/node16@1.0.4':
+    optional: true
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -7489,16 +7571,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@urql/core@5.1.1':
+  '@urql/core@5.1.1(graphql@16.8.1)':
     dependencies:
-      '@0no-co/graphql.web': 1.1.2
+      '@0no-co/graphql.web': 1.1.2(graphql@16.8.1)
       wonka: 6.3.5
     transitivePeerDependencies:
       - graphql
 
-  '@urql/exchange-retry@1.3.1(@urql/core@5.1.1)':
+  '@urql/exchange-retry@1.3.1(@urql/core@5.1.1(graphql@16.8.1))':
     dependencies:
-      '@urql/core': 5.1.1
+      '@urql/core': 5.1.1(graphql@16.8.1)
       wonka: 6.3.5
 
   '@webassemblyjs/ast@1.14.1':
@@ -7675,6 +7757,9 @@ snapshots:
       picomatch: 2.3.1
 
   appdirsjs@1.2.7: {}
+
+  arg@4.1.3:
+    optional: true
 
   arg@5.0.2: {}
 
@@ -8128,13 +8213,13 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
-  create-jest@29.7.0(@types/node@12.20.55):
+  create-jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)):
     dependencies:
       '@jest/types': 29.6.3
       chalk: 4.1.2
       exit: 0.1.2
       graceful-fs: 4.2.11
-      jest-config: 29.7.0(@types/node@12.20.55)
+      jest-config: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       jest-util: 29.7.0
       prompts: 2.4.2
     transitivePeerDependencies:
@@ -8142,6 +8227,9 @@ snapshots:
       - babel-plugin-macros
       - supports-color
       - ts-node
+
+  create-require@1.1.1:
+    optional: true
 
   cross-fetch@3.2.0:
     dependencies:
@@ -8253,6 +8341,9 @@ snapshots:
   diff-sequences@26.6.2: {}
 
   diff-sequences@29.6.3: {}
+
+  diff@4.0.2:
+    optional: true
 
   dom-serializer@2.0.0:
     dependencies:
@@ -8414,84 +8505,84 @@ snapshots:
       jest-message-util: 29.7.0
       jest-util: 29.7.0
 
-  expo-application@6.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  expo-application@6.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  expo-asset@11.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo-asset@11.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
       '@expo/image-utils': 0.7.4
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     transitivePeerDependencies:
       - supports-color
 
-  expo-av@15.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo-av@15.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     optionalDependencies:
       react-native-web: 0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
-  expo-constants@17.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
+  expo-constants@17.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
     dependencies:
       '@expo/config': 11.0.10
       '@expo/env': 1.0.5
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     transitivePeerDependencies:
       - supports-color
 
-  expo-crypto@14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  expo-crypto@14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
       base64-js: 1.5.1
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  expo-device@7.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  expo-device@7.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       ua-parser-js: 0.7.40
 
-  expo-file-system@18.1.10(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
+  expo-file-system@18.1.10(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
 
-  expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+  expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       fontfaceobserver: 2.3.0
       react: 19.0.0
 
-  expo-haptics@14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  expo-haptics@14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
-  expo-image@2.1.7(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo-image@2.1.7(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     optionalDependencies:
       react-native-web: 0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
-  expo-keep-awake@14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+  expo-keep-awake@14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
 
-  expo-linear-gradient@14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo-linear-gradient@14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
 
-  expo-linking@7.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo-linking@7.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       invariant: 2.2.4
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
@@ -8499,15 +8590,15 @@ snapshots:
       - expo
       - supports-color
 
-  expo-localization@16.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+  expo-localization@16.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       rtl-detect: 1.1.2
 
-  expo-location@18.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  expo-location@18.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
   expo-modules-autolinking@2.1.10:
     dependencies:
@@ -8523,64 +8614,64 @@ snapshots:
     dependencies:
       invariant: 2.2.4
 
-  expo-network@7.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+  expo-network@7.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
 
-  expo-notifications@0.31.2(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo-notifications@0.31.2(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
       '@expo/image-utils': 0.7.4
       '@ide/backoff': 1.0.0
       abort-controller: 3.0.0
       assert: 2.1.0
       badgin: 1.2.3
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      expo-application: 6.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
-      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo-application: 6.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     transitivePeerDependencies:
       - supports-color
 
-  expo-screen-capture@7.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+  expo-screen-capture@7.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
 
-  expo-splash-screen@0.30.8(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  expo-splash-screen@0.30.8(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
       '@expo/prebuild-config': 9.0.6
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - supports-color
 
-  expo-task-manager@13.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
+  expo-task-manager@13.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
       unimodules-app-loader: 5.1.3
 
-  expo-web-browser@14.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
+  expo-web-browser@14.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
     dependencies:
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
 
-  expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
       '@babel/runtime': 7.27.1
-      '@expo/cli': 0.24.13
+      '@expo/cli': 0.24.13(graphql@16.8.1)
       '@expo/config': 11.0.10
       '@expo/config-plugins': 10.0.2
       '@expo/fingerprint': 0.12.4
       '@expo/metro-config': 0.20.14
-      '@expo/vector-icons': 14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      '@expo/vector-icons': 14.1.0(expo-font@13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       babel-preset-expo: 13.1.11(@babel/core@7.27.1)
-      expo-asset: 11.1.5(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
-      expo-file-system: 18.1.10(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
-      expo-font: 13.3.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
-      expo-keep-awake: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      expo-asset: 11.1.5(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo-constants: 17.1.6(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+      expo-file-system: 18.1.10(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
+      expo-font: 13.3.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      expo-keep-awake: 14.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-modules-autolinking: 2.1.10
       expo-modules-core: 2.3.13
       react: 19.0.0
@@ -8813,6 +8904,9 @@ snapshots:
   gopd@1.2.0: {}
 
   graceful-fs@4.2.11: {}
+
+  graphql@16.8.1:
+    optional: true
 
   has-flag@3.0.0: {}
 
@@ -9102,16 +9196,16 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  jest-cli@29.7.0(@types/node@12.20.55):
+  jest-cli@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)):
     dependencies:
-      '@jest/core': 29.7.0
+      '@jest/core': 29.7.0(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
       chalk: 4.1.2
-      create-jest: 29.7.0(@types/node@12.20.55)
+      create-jest: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       exit: 0.1.2
       import-local: 3.2.0
-      jest-config: 29.7.0(@types/node@12.20.55)
+      jest-config: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       jest-util: 29.7.0
       jest-validate: 29.7.0
       yargs: 17.7.2
@@ -9121,7 +9215,7 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest-config@29.7.0(@types/node@12.20.55):
+  jest-config@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)):
     dependencies:
       '@babel/core': 7.27.1
       '@jest/test-sequencer': 29.7.0
@@ -9147,11 +9241,12 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 12.20.55
+      ts-node: 10.9.2(@types/node@12.20.55)(typescript@5.8.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@29.7.0(@types/node@22.15.18):
+  jest-config@29.7.0(@types/node@22.15.18)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)):
     dependencies:
       '@babel/core': 7.27.1
       '@jest/test-sequencer': 29.7.0
@@ -9177,6 +9272,7 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 22.15.18
+      ts-node: 10.9.2(@types/node@12.20.55)(typescript@5.8.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
@@ -9231,19 +9327,19 @@ snapshots:
       jest-mock: 29.7.0
       jest-util: 29.7.0
 
-  jest-expo@53.0.5(@babel/core@7.27.1)(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(jest@29.7.0(@types/node@12.20.55))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(webpack@5.99.9):
+  jest-expo@53.0.5(@babel/core@7.27.1)(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)))(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(webpack@5.99.9):
     dependencies:
       '@expo/config': 11.0.10
       '@expo/json-file': 9.1.4
       '@jest/create-cache-key-function': 29.7.0
       '@jest/globals': 29.7.0
       babel-jest: 29.7.0(@babel/core@7.27.1)
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       find-up: 5.0.0
       jest-environment-jsdom: 29.7.0
       jest-snapshot: 29.7.0
       jest-watch-select-projects: 2.0.0
-      jest-watch-typeahead: 2.2.1(jest@29.7.0(@types/node@12.20.55))
+      jest-watch-typeahead: 2.2.1(jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)))
       json5: 2.2.3
       lodash: 4.17.21
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
@@ -9439,11 +9535,11 @@ snapshots:
       chalk: 3.0.0
       prompts: 2.4.2
 
-  jest-watch-typeahead@2.2.1(jest@29.7.0(@types/node@12.20.55)):
+  jest-watch-typeahead@2.2.1(jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))):
     dependencies:
       ansi-escapes: 6.2.1
       chalk: 4.1.2
-      jest: 29.7.0(@types/node@12.20.55)
+      jest: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       jest-regex-util: 29.6.3
       jest-watcher: 29.7.0
       slash: 5.1.0
@@ -9463,7 +9559,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.15.18
+      '@types/node': 12.20.55
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -9474,12 +9570,12 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  jest@29.7.0(@types/node@12.20.55):
+  jest@29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3)):
     dependencies:
-      '@jest/core': 29.7.0
+      '@jest/core': 29.7.0(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
       '@jest/types': 29.6.3
       import-local: 3.2.0
-      jest-cli: 29.7.0(@types/node@12.20.55)
+      jest-cli: 29.7.0(@types/node@12.20.55)(ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -9678,6 +9774,9 @@ snapshots:
   make-dir@4.0.0:
     dependencies:
       semver: 7.7.2
+
+  make-error@1.3.6:
+    optional: true
 
   makeerror@1.0.12:
     dependencies:
@@ -10282,11 +10381,11 @@ snapshots:
 
   react-is@19.1.0: {}
 
-  react-native-app-clip@0.5.1(expo@53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  react-native-app-clip@0.5.1(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
       '@expo/config-plugins': 9.0.17
       '@expo/plist': 0.2.2
-      expo: 53.0.9(@babel/core@7.27.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
     transitivePeerDependencies:
@@ -10920,6 +11019,25 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
+  ts-node@10.9.2(@types/node@12.20.55)(typescript@5.8.3):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.11
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 12.20.55
+      acorn: 8.14.1
+      acorn-walk: 8.3.4
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.8.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optional: true
+
   tslib@2.8.1: {}
 
   type-detect@4.0.8: {}
@@ -10999,6 +11117,9 @@ snapshots:
       base64-arraybuffer: 1.0.2
 
   uuid@7.0.3: {}
+
+  v8-compile-cache-lib@3.0.1:
+    optional: true
 
   v8-to-istanbul@9.3.0:
     dependencies:
@@ -11223,6 +11344,9 @@ snapshots:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+
+  yn@3.1.1:
+    optional: true
 
   yocto-queue@0.1.0: {}
 
