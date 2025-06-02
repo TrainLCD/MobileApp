@@ -1,6 +1,4 @@
 #!/bin/bash
-bash +set -euo pipefail +
-
 
 echo $DOTENV_LOCAL | base64 --decode > .env.local
 
