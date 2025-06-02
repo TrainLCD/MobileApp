@@ -403,14 +403,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */ = {
+		94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 94E2C8292D64E1A90090392E /* ProdAppClip */;
 		};
-		94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */ = {
+		94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -420,30 +420,8 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = ProdAppClip;
-			sourceTree = "<group>";
-		};
-		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = CanaryAppClip;
-			sourceTree = "<group>";
-		};
+		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ProdAppClip; sourceTree = "<group>"; };
+		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CanaryAppClip; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1011,6 +989,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 94E2C8482D64E1AA0090392E /* Build configuration list for PBXNativeTarget "ProdAppClip" */;
 			buildPhases = (
+				9418BBBF2DEDE3120050C548 /* Sync project version from ProdTrainLCD */,
 				C68E3B5B19F7C96F6F5AE470 /* [CP] Check Pods Manifest.lock */,
 				94E2C9762D64E3CA0090392E /* Start Packager */,
 				1A78635B90394D55806B7BCD /* [Expo] Configure project */,
@@ -1037,6 +1016,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 94E2C8682D64E1CB0090392E /* Build configuration list for PBXNativeTarget "CanaryAppClip" */;
 			buildPhases = (
+				9418BBBE2DEDE2A30050C548 /* Sync project version from CanaryTrainLCD */,
 				BF3BCE3CF1C0B36E818B4D24 /* [CP] Check Pods Manifest.lock */,
 				94E2C86D2D64E3520090392E /* Start Packager */,
 				8F03479E048D5EF9905129F1 /* [Expo] Configure project */,
@@ -1441,6 +1421,42 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/expo-configure-project.sh\"\n";
+		};
+		9418BBBE2DEDE2A30050C548 /* Sync project version from CanaryTrainLCD */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Sync project version from CanaryTrainLCD";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "#!/bin/bash\n\nPARENT_PLIST=\"${PROJECT_DIR}/${TARGET_NAME}/${INFOPLIST_FILE}\"\nAPPCLIP_PLIST=\"${PROJECT_DIR}/CanaryAppClip/Info.plist\"\n\nVERSION=$(/usr/libexec/PlistBuddy -c \"Print :CFBundleVersion\" \"$PARENT_PLIST\")\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION\" \"$APPCLIP_PLIST\"\n";
+		};
+		9418BBBF2DEDE3120050C548 /* Sync project version from ProdTrainLCD */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Sync project version from ProdTrainLCD";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "#!/bin/bash\n\nPARENT_PLIST=\"${PROJECT_DIR}/${TARGET_NAME}/${INFOPLIST_FILE}\"\nAPPCLIP_PLIST=\"${PROJECT_DIR}/ProdAppClip/Info.plist\"\n\nVERSION=$(/usr/libexec/PlistBuddy -c \"Print :CFBundleVersion\" \"$PARENT_PLIST\")\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION\" \"$APPCLIP_PLIST\"\n";
 		};
 		942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3198,7 +3214,6 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryAppClip/CanaryAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3254,7 +3269,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
