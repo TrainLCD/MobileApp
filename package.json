@@ -13,7 +13,8 @@
     "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
     "generate": "buf generate --path proto",
-    "postinstall": "pnpm run generate"
+    "postinstall": "pnpm run generate",
+    "eas-build-pre-install": "./.easbuild/eas-build-pre-install.sh"
   },
   "dependencies": {
     "@connectrpc/connect": "^1.4.0",

@@ -2,6 +2,11 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "dad36dde-0056-4760-8eda-37f05e7c9c6c"
+      }
+    }
   }
 }
