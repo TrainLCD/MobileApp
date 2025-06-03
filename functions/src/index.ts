@@ -271,6 +271,9 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     if (deviceInfo?.osName === 'iOS') {
       return '🍎 iOS';
     }
+    if (deviceInfo?.osName === 'iPadOS') {
+      return '🍎 iPadOS';
+    }
     if (deviceInfo?.osName === 'Android') {
       return '🤖 Android';
     }
