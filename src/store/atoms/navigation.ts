@@ -18,6 +18,8 @@ export interface NavigationState {
   stationForHeader: Station | null;
   enabledLanguages: AvailableLanguage[];
   fetchedTrainTypes: TrainType[];
+  autoModeEnabled: boolean;
+  enableLegacyAutoMode: boolean;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -28,6 +30,8 @@ export const initialNavigationState: NavigationState = {
   stationForHeader: null,
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   fetchedTrainTypes: [],
+  autoModeEnabled: false,
+  enableLegacyAutoMode: false,
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

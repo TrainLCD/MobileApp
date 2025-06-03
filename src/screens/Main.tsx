@@ -20,7 +20,6 @@ import {
   StopCondition,
 } from '~/gen/proto/stationapi_pb';
 import {
-  useApplicationFlagStore,
   useAutoMode,
   useCurrentLine,
   useCurrentStation,
@@ -80,14 +79,10 @@ const MainScreen: React.FC = () => {
   const currentStation = useCurrentStation();
   const trainType = useCurrentTrainType();
 
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
-
   const nextStation = useNextStation();
 
-  useAutoMode(autoModeEnabled);
-  useSimulationMode(autoModeEnabled);
+  useAutoMode();
+  useSimulationMode();
 
   useTelemetrySender(true);
 

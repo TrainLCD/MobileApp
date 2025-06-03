@@ -4,9 +4,9 @@ import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
+import navigationState from '~/store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
-import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
@@ -28,14 +28,12 @@ export const useWarningInfo = () => {
   const [screenshotTaken, setScreenshotTaken] = useState(false);
 
   const { selectedBound } = useAtomValue(stationState);
+  const { autoModeEnabled } = useAtomValue(navigationState);
 
   const badAccuracy = useBadAccuracy();
   const [fgPermStatus] = useForegroundPermissions();
   const bgPermGranted = useLocationPermissionsGranted();
 
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
   const isInternetAvailable = useConnectivity();
 
   useEffect(() => {

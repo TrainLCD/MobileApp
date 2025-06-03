@@ -11,6 +11,7 @@ import {
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
 import { LineType } from '~/gen/proto/stationapi_pb';
+import navigationState from '~/store/atoms/navigation';
 import { isDevApp } from '~/utils/isDevApp';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
@@ -22,9 +23,12 @@ import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
-export const useSimulationMode = (enabled: boolean): void => {
+export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
     useAtomValue(stationState);
+  const { enableLegacyAutoMode, autoModeEnabled } =
+    useAtomValue(navigationState);
+
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
 
@@ -66,6 +70,10 @@ export const useSimulationMode = (enabled: boolean): void => {
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
     [stations, selectedDirection]
   );
+
+  const enabled = useMemo(() => {
+    return !enableLegacyAutoMode && autoModeEnabled;
+  }, [enableLegacyAutoMode, autoModeEnabled]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {

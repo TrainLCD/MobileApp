@@ -19,12 +19,7 @@ import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
-import {
-  useApplicationFlagStore,
-  useBounds,
-  useLoopLine,
-  useStationList,
-} from '../hooks';
+import { useBounds, useLoopLine, useStationList } from '../hooks';
 import { type LineDirection, directionToDirectionName } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -74,15 +69,11 @@ const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation();
   const [{ station, stations, wantedDestination }, setStationState] =
     useAtom(stationState);
-  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
-    useAtom(navigationState);
+  const [
+    { trainType, fetchedTrainTypes, autoModeEnabled },
+    setNavigationState,
+  ] = useAtom(navigationState);
   const { selectedLine } = useAtomValue(lineState);
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
-  const toggleAutoModeEnabled = useApplicationFlagStore(
-    (state) => state.toggleAutoModeEnabled
-  );
 
   const { loading, error, refetchStations } = useStationList();
   const { isLoopLine } = useLoopLine();
@@ -216,7 +207,7 @@ const SelectBoundScreen: React.FC = () => {
     [inboundStations, outboundStations, selectedLine]
   );
 
-  const renderButton: React.FC<RenderButtonProps> = useCallback(
+  const renderButton = useCallback(
     ({ boundStations, direction }: RenderButtonProps) => {
       if (wantedDestination) {
         const currentStationIndex = stations.findIndex(
@@ -321,6 +312,13 @@ const SelectBoundScreen: React.FC = () => {
       </ScrollView>
     );
   }
+
+  const toggleAutoModeEnabled = useCallback(() => {
+    setNavigationState((prev) => ({
+      ...prev,
+      autoModeEnabled: !prev.autoModeEnabled,
+    }));
+  }, [setNavigationState]);
 
   return (
     <ScrollView contentContainerStyle={styles.bottom}>

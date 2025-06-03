@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import type { Line } from '~/gen/proto/stationapi_pb';
@@ -16,7 +16,6 @@ import {
   parenthesisRegexp,
 } from '../constants';
 import {
-  useApplicationFlagStore,
   useConnectivity,
   useCurrentStation,
   useFetchCurrentLocationOnce,
@@ -54,15 +53,8 @@ const styles = StyleSheet.create({
 
 const SelectLineScreen: React.FC = () => {
   const setStationState = useSetAtom(stationState);
-  const setNavigationState = useSetAtom(navigationState);
+  const [{ autoModeEnabled }, setNavigationState] = useAtom(navigationState);
   const setLineState = useSetAtom(lineState);
-
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
-  const toggleAutoModeEnabled = useApplicationFlagStore(
-    (state) => state.toggleAutoModeEnabled
-  );
 
   const {
     fetchByCoords,
@@ -77,6 +69,13 @@ const SelectLineScreen: React.FC = () => {
   } = useFetchCurrentLocationOnce();
   const station = useCurrentStation();
   const locationState = useLocationStore();
+
+  const toggleAutoModeEnabled = useCallback(() => {
+    setNavigationState((prev) => ({
+      ...prev,
+      autoModeEnabled: !prev.autoModeEnabled,
+    }));
+  }, [setNavigationState]);
 
   useEffect(() => {
     const stopLocationUpdatesAsync = async () => {
@@ -186,7 +185,7 @@ const SelectLineScreen: React.FC = () => {
     [getLineMarkFunc, station]
   );
 
-  const renderLineButton: React.FC<Line> = useCallback(
+  const renderLineButton = useCallback(
     (line: Line) => {
       const buttonOnPress = (): void => handleLineSelected(line);
       const buttonText = getButtonText(line);
