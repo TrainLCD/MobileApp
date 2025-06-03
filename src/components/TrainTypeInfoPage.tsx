@@ -17,6 +17,7 @@ import { useCurrentStation } from '~/hooks';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
+import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
@@ -26,7 +27,6 @@ import Button from './Button';
 import Heading from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
-import navigationState from '~/store/atoms/navigation';
 
 type Props = {
   trainType: TrainType | null;
