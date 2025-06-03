@@ -3,7 +3,6 @@ export * from './useAfterNextStation';
 export * from './useAndroidWearable';
 export * from './useAnonymousUser';
 export * from './useAppleWatch';
-export * from './useApplicationFlagStore';
 export * from './useAutoMode';
 export * from './useBadAccuracy';
 export * from './useBounds';
