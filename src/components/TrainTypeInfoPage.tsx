@@ -1,5 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import {
@@ -17,6 +17,7 @@ import { useCurrentStation } from '~/hooks';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
+import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
@@ -64,9 +65,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 16,
   },
-  enableTerminusSwitchContainer: {
+  switchContainer: {
     flexDirection: 'row',
-    marginVertical: 12,
   },
   enableTerminusText: {
     fontWeight: 'bold',
@@ -163,6 +163,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
   const [asTerminus, setAsTerminus] = useState(false);
 
   const { selectedLine } = useAtomValue(lineState);
+  const [{ autoModeEnabled }, setNavigationState] = useAtom(navigationState);
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
 
@@ -386,7 +387,8 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             {fromRouteListModal && (
               <View
                 style={{
-                  ...styles.enableTerminusSwitchContainer,
+                  ...styles.switchContainer,
+                  marginTop: 16,
                   paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
                   paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
                 }}
@@ -416,19 +418,57 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                 </Typography>
               </View>
             )}
-          </View>
 
-          <View style={styles.buttons}>
-            <Button
-              color={isLEDTheme ? undefined : '#008ffe'}
-              onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
-              disabled={loading || disabled}
+            <View
+              style={{
+                ...styles.switchContainer,
+                marginTop: 8,
+                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
+              }}
             >
-              {translate('submit')}
-            </Button>
-            <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-              {translate('cancel')}
-            </Button>
+              {isLEDTheme ? (
+                <LEDThemeSwitch
+                  style={{ marginRight: 8 }}
+                  value={autoModeEnabled}
+                  onValueChange={() =>
+                    setNavigationState((prev) => ({
+                      ...prev,
+                      autoModeEnabled: !prev.autoModeEnabled,
+                    }))
+                  }
+                />
+              ) : (
+                <Switch
+                  style={{ marginRight: 8 }}
+                  value={autoModeEnabled}
+                  onValueChange={() =>
+                    setNavigationState((prev) => ({
+                      ...prev,
+                      autoModeEnabled: !prev.autoModeEnabled,
+                    }))
+                  }
+                  ios_backgroundColor={'#fff'}
+                />
+              )}
+
+              <Typography style={styles.enableTerminusText}>
+                {translate('setAutoModeText')}
+              </Typography>
+            </View>
+
+            <View style={styles.buttons}>
+              <Button
+                color={isLEDTheme ? undefined : '#008ffe'}
+                onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
+                disabled={loading || disabled}
+              >
+                {translate('submit')}
+              </Button>
+              <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
+                {translate('cancel')}
+              </Button>
+            </View>
           </View>
         </ScrollView>
       </View>

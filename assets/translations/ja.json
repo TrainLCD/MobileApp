@@ -167,6 +167,7 @@
   "failedToRequestPermission": "位置情報の常時取得をリクエスト中にエラーが発生しました。お手数ですが、スマートフォンの設定画面から位置情報の『常に許可』を手動で設定してください。",
   "failedToOpenSettings": "設定画面の起動に失敗しました。",
   "setTerminusText": "%{stationName}駅を終点に設定する",
+  "setAutoModeText": "オートモードを有効にする",
   "confirmChangeLineTitle": "%{lineName}に切り替えますか？",
   "confirmChangeLineText": "現在の路線は%{currentLineName}です。%{lineName}に切り替えますか？",
   "trainTypesFilter": "種別の絞り込み",
