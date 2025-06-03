@@ -4,6 +4,7 @@ import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
+import navigationState from '~/store/atoms/navigation';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
@@ -16,7 +17,6 @@ import speechState from '../../store/atoms/speech';
 import { translate } from '../../translation';
 import { isDevApp } from '../../utils/isDevApp';
 import { RFValue } from '../../utils/rfValue';
-import navigationState from '~/store/atoms/navigation';
 
 const styles = StyleSheet.create({
   rootPadding: {
