@@ -281,6 +281,13 @@ const SelectBoundScreen: React.FC = () => {
     };
   }, []);
 
+  const toggleAutoModeEnabled = useCallback(() => {
+    setNavigationState((prev) => ({
+      ...prev,
+      autoModeEnabled: !prev.autoModeEnabled,
+    }));
+  }, [setNavigationState]);
+
   if (error) {
     return (
       <ErrorScreen
@@ -312,13 +319,6 @@ const SelectBoundScreen: React.FC = () => {
       </ScrollView>
     );
   }
-
-  const toggleAutoModeEnabled = useCallback(() => {
-    setNavigationState((prev) => ({
-      ...prev,
-      autoModeEnabled: !prev.autoModeEnabled,
-    }));
-  }, [setNavigationState]);
 
   return (
     <ScrollView contentContainerStyle={styles.bottom}>
