@@ -173,5 +173,6 @@
   "trainTypesFilter": "種別の絞り込み",
   "trainTypeListEmpty": "該当する種別が見つかりませんでした。",
   "jlLike": "常磐線風",
-  "routeListTitle": "%{stationName}駅までの経路"
+  "routeListTitle": "%{stationName}駅までの経路",
+  "legacyAutoModeTitle": "従来のオートモードを有効にする"
 }

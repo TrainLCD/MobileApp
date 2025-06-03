@@ -10,6 +10,7 @@ export const ASYNC_STORAGE_KEYS = {
     '@TrainLCD:alwaysPermissionNotGrantedWarningDismissed',
   BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
   BG_TTS_NOTICE: '@TrainLCD:bgTtsNotice',
+  LEGACY_AUTO_MODE_ENABLED: '@TrainLCD:enableLegacyAutoMode',
 } as const;
 
 export type AsyncStorageKeys =

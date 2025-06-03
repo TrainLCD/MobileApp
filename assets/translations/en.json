@@ -172,5 +172,6 @@
   "trainTypesFilter": "Train type filtering",
   "trainTypeListEmpty": "No matching train types were found.",
   "jlLike": "Joban Line",
-  "routeListTitle": "Directions to %{stationName} Station"
+  "routeListTitle": "Directions to %{stationName} Station",
+  "legacyAutoModeTitle": "Enable legacy auto mode"
 }

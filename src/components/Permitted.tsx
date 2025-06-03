@@ -241,6 +241,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         backgroundEnabled: bgTTSEnabledStr === 'true',
       }));
+
+      const legacyAutoModeEnabledStr = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED
+      );
+      setNavigation((prev) => ({
+        ...prev,
+        enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
+      }));
     };
 
     loadSettingsAsync();
