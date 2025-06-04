@@ -3328,30 +3328,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNCPicker (2.11.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - RNDeviceInfo (10.14.0):
     - React-Core
   - RNFBAnalytics (21.14.0):
@@ -3813,7 +3789,6 @@ DEPENDENCIES:
   - "ReactCommon/turbomodule/core (from `../node_modules/.pnpm/react-native@0.79.2_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._004bb81c9bd4cc34416c2f98968c91c3/node_modules/react-native/ReactCommon`)"
   - "ReactNativeAppClip (from `../node_modules/.pnpm/react-native-app-clip@0.5.1_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@_7d3505d3d5e41db8e0a696c7266b0c14/node_modules/react-native-app-clip/ios`)"
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
-  - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - "RNFBAnalytics (from `../node_modules/@react-native-firebase/analytics`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
@@ -4063,8 +4038,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native-app-clip@0.5.1_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@_7d3505d3d5e41db8e0a696c7266b0c14/node_modules/react-native-app-clip/ios"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
-  RNCPicker:
-    :path: "../node_modules/@react-native-picker/picker"
   RNDeviceInfo:
     :path: "../node_modules/react-native-device-info"
   RNFBAnalytics:
@@ -4223,7 +4196,6 @@ SPEC CHECKSUMS:
   ReactNativeAppClip: c50da4b8683ead7e0e2cd45fb063ea349bdf3b7f
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   RNCAsyncStorage: 646c1bf2ebfc78d6632a3b0399f471fba8101e73
-  RNCPicker: c4e9fdf00bbd0d37c6c4f1df6eae3d4d7d32f1e3
   RNDeviceInfo: 98bb51ba1519cd3f19f14e7236b5bb1c312c780f
   RNFBAnalytics: b33dc47a5cdf688a58ad284f2c0b184299b59fd3
   RNFBApp: 4105e54d9ca4a1c10893a032268470f670181110

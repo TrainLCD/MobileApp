@@ -173,5 +173,6 @@
   "trainTypeListEmpty": "No matching train types were found.",
   "jlLike": "Joban Line",
   "routeListTitle": "Directions to %{stationName} Station",
-  "legacyAutoModeTitle": "Enable legacy auto mode"
+  "legacyAutoModeTitle": "Enable legacy auto mode",
+  "inUse": "In use"
 }
