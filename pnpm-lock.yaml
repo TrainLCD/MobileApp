@@ -53,9 +53,6 @@ importers:
       '@react-native-firebase/storage':
         specifier: ^21.6.0
         version: 21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
-      '@react-native-picker/picker':
-        specifier: 2.11.0
-        version: 2.11.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@react-navigation/native':
         specifier: ^7.0.14
         version: 7.1.10(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -1520,12 +1517,6 @@ packages:
     resolution: {integrity: sha512-aI3ufzrz6vhrj/oE5i2dQ42xavS3sr1lWySpaBSfoF304vWwV9RqUIZTKQAsaB8PktDO0a3IMwnYwZrx56IddQ==}
     peerDependencies:
       '@react-native-firebase/app': 21.14.0
-
-  '@react-native-picker/picker@2.11.0':
-    resolution: {integrity: sha512-QuZU6gbxmOID5zZgd/H90NgBnbJ3VV6qVzp6c7/dDrmWdX8S0X5YFYgDcQFjE3dRen9wB9FWnj2VVdPU64adSg==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
 
   '@react-native/assets-registry@0.79.2':
     resolution: {integrity: sha512-5h2Z7/+/HL/0h88s0JHOdRCW4CXMCJoROxqzHqxdrjGL6EBD1DdaB4ZqkCOEVSW4Vjhir5Qb97C8i/MPWEYPtg==}
@@ -7061,11 +7052,6 @@ snapshots:
   '@react-native-firebase/storage@21.14.0(@react-native-firebase/app@21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))':
     dependencies:
       '@react-native-firebase/app': 21.14.0(@react-native-async-storage/async-storage@2.1.2(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)))(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-
-  '@react-native-picker/picker@2.11.0(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)':
-    dependencies:
-      react: 19.0.0
-      react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
 
   '@react-native/assets-registry@0.79.2': {}
 

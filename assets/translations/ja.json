@@ -174,5 +174,6 @@
   "trainTypeListEmpty": "該当する種別が見つかりませんでした。",
   "jlLike": "常磐線風",
   "routeListTitle": "%{stationName}駅までの経路",
-  "legacyAutoModeTitle": "従来のオートモードを有効にする"
+  "legacyAutoModeTitle": "従来のオートモードを有効にする",
+  "currentTheme": "現在のテーマ"
 }
