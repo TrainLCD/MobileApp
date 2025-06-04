@@ -8,25 +8,54 @@ import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
-  cell: { paddingHorizontal: 12, paddingVertical: 16 },
+  cell: {
+    paddingHorizontal: 24,
+    height: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   stationNameText: {
     fontSize: RFValue(14),
-  },
-  descriptionText: {
-    fontSize: RFValue(11),
-    marginTop: 12,
     fontWeight: 'bold',
   },
-  separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
+  activeContainer: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  activeText: {
+    fontSize: RFValue(11),
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  separator: { height: 1, width: '100%', backgroundColor: '#cfcfcf' },
   emptyText: {
     textAlign: 'center',
     marginTop: 12,
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });
 
 const Separator = () => <View style={styles.separator} />;
+
+const IN_USE_COLOR_MAP: Record<AppTheme, string> = {
+  TOKYO_METRO: '#00a9ce',
+  TY: '#dc143c',
+  YAMANOTE: '#9acd32',
+  JR_WEST: '#0072bc',
+  SAIKYO: '#00ac9a',
+  TOEI: '#45B035',
+  LED: '#212121',
+  JO: '#0067C0',
+  JL: '#808080',
+};
 
 const ItemCell = ({
   item,
@@ -37,20 +66,36 @@ const ItemCell = ({
   onSelect: (item: AppTheme) => void;
   isSelected: boolean;
 }) => {
+  const theme = useThemeStore((state) => state);
+  const isLEDTheme = useMemo(() => theme === APP_THEME.LED, [theme]);
+
+  const rootBackgroundColor = useMemo(() => {
+    if (isLEDTheme) {
+      return 'transparent';
+    }
+    return isSelected ? '#f5f5f5' : '#fff';
+  }, [isSelected, isLEDTheme]);
+
   return (
-    <TouchableOpacity style={styles.cell} onPress={() => onSelect(item.value)}>
-      <Typography
-        style={{
-          ...styles.stationNameText,
-          fontWeight: isSelected ? 'bold' : 'regular',
-        }}
-      >
-        {item.label}
-      </Typography>
+    <TouchableOpacity
+      style={{
+        ...styles.cell,
+        backgroundColor: rootBackgroundColor,
+      }}
+      onPress={() => onSelect(item.value)}
+    >
+      <Typography style={styles.stationNameText}>{item.label}</Typography>
       {isSelected ? (
-        <Typography style={styles.descriptionText}>
-          {translate('currentTheme')}
-        </Typography>
+        <View
+          style={{
+            ...styles.activeContainer,
+            backgroundColor: IN_USE_COLOR_MAP[theme],
+          }}
+        >
+          <Typography style={styles.activeText}>
+            {translate('inUse')}
+          </Typography>
+        </View>
       ) : null}
     </TouchableOpacity>
   );

@@ -174,5 +174,5 @@
   "jlLike": "Joban Line",
   "routeListTitle": "Directions to %{stationName} Station",
   "legacyAutoModeTitle": "Enable legacy auto mode",
-  "currentTheme": "Current theme"
+  "inUse": "In use"
 }

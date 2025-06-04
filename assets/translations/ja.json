@@ -175,5 +175,5 @@
   "jlLike": "常磐線風",
   "routeListTitle": "%{stationName}駅までの経路",
   "legacyAutoModeTitle": "従来のオートモードを有効にする",
-  "currentTheme": "現在のテーマ"
+  "inUse": "使用中"
 }
