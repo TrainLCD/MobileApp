@@ -205,12 +205,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }));
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.length <= 10 ? 1 : 2),
-    [trainTypeName.length]
+    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => ((prevTrainTypeText?.length ?? 0) <= 10 ? 1 : 2),
-    [prevTrainTypeText?.length]
+    () => (prevTrainTypeText.split('\n').length === 1 ? 1 : 2),
+    [prevTrainTypeText]
   );
 
   return (

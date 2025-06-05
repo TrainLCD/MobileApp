@@ -207,15 +207,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     [currentLine, nextLine]
   );
 
-  // 表示に使う１行目のみの文字数で判定
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n')[0].length <= 10 ? 1 : 2),
+    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
     () =>
       prevTrainTypeName
-        ? prevTrainTypeName.split('\n')[0].length <= 10
+        ? prevTrainTypeName.split('\n').length === 1
           ? 1
           : 2
         : 0,
