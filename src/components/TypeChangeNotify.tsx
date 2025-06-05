@@ -163,24 +163,6 @@ const MetroBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
-  const leftNumberOfLines = useMemo(
-    () =>
-      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
-        .length ?? 0) <= 10
-        ? 1
-        : 2,
-    [trainType?.name]
-  );
-  const rightNumberOfLines = useMemo(
-    () =>
-      ((nextTrainType ?? trainType)?.name
-        .replace('\n', '')
-        .replace(parenthesisRegexp, '').length ?? 0) <= 10
-        ? 1
-        : 2,
-    [nextTrainType, trainType]
-  );
-
   if (!trainType || !nextTrainType) {
     return null;
   }
@@ -287,11 +269,15 @@ const MetroBars = ({
           <Typography
             style={styles.text}
             adjustsFontSizeToFit
-            numberOfLines={leftNumberOfLines}
+            numberOfLines={1}
           >
             {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
-          <Typography adjustsFontSizeToFit style={styles.textEn}>
+          <Typography
+            adjustsFontSizeToFit
+            style={styles.textEn}
+            numberOfLines={1}
+          >
             {truncateTrainType(
               trainType.nameRoman
                 ?.replace('\n', '')
@@ -329,13 +315,17 @@ const MetroBars = ({
           <Typography
             style={styles.text}
             adjustsFontSizeToFit
-            numberOfLines={rightNumberOfLines}
+            numberOfLines={1}
           >
             {nextTrainType.name
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
-          <Typography adjustsFontSizeToFit style={styles.textEn}>
+          <Typography
+            adjustsFontSizeToFit
+            style={styles.textEn}
+            numberOfLines={1}
+          >
             {truncateTrainType(
               nextTrainType.nameRoman
                 ?.replace('\n', '')
@@ -373,24 +363,6 @@ const SaikyoBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
-  const leftNumberOfLines = useMemo(
-    () =>
-      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
-        .length ?? 0) <= 10
-        ? 1
-        : 2,
-    [trainType?.name]
-  );
-  const rightNumberOfLines = useMemo(
-    () =>
-      ((nextTrainType ?? trainType)?.name
-        .replace('\n', '')
-        .replace(parenthesisRegexp, '').length ?? 0) <= 10
-        ? 1
-        : 2,
-    [nextTrainType, trainType]
-  );
-
   return (
     <View style={styles.linesContainer}>
       {/* Current line */}
@@ -490,12 +462,16 @@ const SaikyoBars = ({
         <View style={styles.textWrapper}>
           <Typography
             adjustsFontSizeToFit
-            numberOfLines={leftNumberOfLines}
+            numberOfLines={1}
             style={styles.text}
           >
             {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
-          <Typography adjustsFontSizeToFit style={styles.textEn}>
+          <Typography
+            adjustsFontSizeToFit
+            style={styles.textEn}
+            numberOfLines={1}
+          >
             {truncateTrainType(
               trainType.nameRoman
                 ?.replace('\n', '')
@@ -533,7 +509,7 @@ const SaikyoBars = ({
 
         <View style={styles.textWrapper}>
           <Typography
-            numberOfLines={rightNumberOfLines}
+            numberOfLines={1}
             adjustsFontSizeToFit
             style={styles.text}
           >
@@ -541,7 +517,11 @@ const SaikyoBars = ({
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
-          <Typography adjustsFontSizeToFit style={styles.textEn}>
+          <Typography
+            adjustsFontSizeToFit
+            style={styles.textEn}
+            numberOfLines={1}
+          >
             {truncateTrainType(
               (nextTrainType ?? trainType).nameRoman
                 ?.replace('\n', '')
@@ -578,24 +558,6 @@ const JOBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
-  const leftNumberOfLines = useMemo(
-    () =>
-      (trainType?.name.replace('\n', '').replace(parenthesisRegexp, '')
-        .length ?? 0) <= 10
-        ? 1
-        : 2,
-    [trainType?.name]
-  );
-  const rightNumberOfLines = useMemo(
-    () =>
-      ((nextTrainType ?? trainType)?.name
-        .replace('\n', '')
-        .replace(parenthesisRegexp, '').length ?? 0) <= 10
-        ? 1
-        : 2,
-    [nextTrainType, trainType]
-  );
-
   return (
     <View style={styles.linesContainer}>
       {/* Current line */}
@@ -651,7 +613,7 @@ const JOBars = ({
         <View style={styles.textWrapper}>
           <Typography
             adjustsFontSizeToFit
-            numberOfLines={leftNumberOfLines}
+            numberOfLines={1}
             style={[styles.text, { shadowOpacity: 0 }]}
           >
             {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
@@ -659,6 +621,7 @@ const JOBars = ({
           <Typography
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
+            numberOfLines={1}
           >
             {truncateTrainType(
               trainType.nameRoman
@@ -695,7 +658,7 @@ const JOBars = ({
       >
         <View style={styles.textWrapper}>
           <Typography
-            numberOfLines={rightNumberOfLines}
+            numberOfLines={1}
             adjustsFontSizeToFit
             style={[styles.text, { shadowOpacity: 0 }]}
           >
@@ -706,6 +669,7 @@ const JOBars = ({
           <Typography
             adjustsFontSizeToFit
             style={[styles.textEn, { shadowOpacity: 0 }]}
+            numberOfLines={1}
           >
             {truncateTrainType(
               nextTrainType.nameRoman
