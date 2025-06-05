@@ -1,10 +1,10 @@
-import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import { useAtomValue } from 'jotai';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useLoopLine } from './useLoopLine';
 
-const useIsTerminus = (station: Station | undefined) => {
-  const { stations } = useRecoilValue(stationState);
+export const useIsTerminus = (station: Station | undefined) => {
+  const { stations } = useAtomValue(stationState);
   const { isLoopLine } = useLoopLine();
 
   if (!station || isLoopLine) {
@@ -16,5 +16,3 @@ const useIsTerminus = (station: Station | undefined) => {
     stations[stations.length - 1]?.id === station.id
   );
 };
-
-export default useIsTerminus;

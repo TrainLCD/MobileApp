@@ -7,7 +7,7 @@ import {
   type TextStyle,
 } from 'react-native';
 import { FONTS } from '../constants';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
@@ -27,7 +27,7 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
       {
         fontFamily,
         color: isLEDTheme ? '#fff' : '#333',
-        textAlignVertical: 'top',
+        textAlignVertical: 'center',
       },
       props.style,
       // NOTE: LEDテーマ用フォントはファイルサイズが大きいのでボールドの方を廃止した

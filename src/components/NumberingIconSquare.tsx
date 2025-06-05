@@ -1,5 +1,5 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 24 * 1.5 : 24,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: 4,
+    marginTop: Platform.OS === 'ios' ? 4 : 0,
   },
   stationNumber: {
     lineHeight: isTablet ? 32 * 1.5 : 32,

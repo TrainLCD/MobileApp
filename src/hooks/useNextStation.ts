@@ -1,6 +1,6 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import { APP_THEME } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -14,7 +14,7 @@ export const useNextStation = (
   originStation?: Station
 ): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
-    useRecoilValue(stationState);
+    useAtomValue(stationState);
   const theme = useThemeStore();
   const currentStation = useCurrentStation(
     theme === APP_THEME.JR_WEST || theme === APP_THEME.LED
@@ -63,7 +63,7 @@ export const useNextStation = (
     return actualNextStation && getIsPass(actualNextStation) && ignorePass
       ? stations
           .slice(inboundCurrentStationIndex - stations.length + 1)
-          .filter((s) => !getIsPass(s))[0]
+          .find((s) => !getIsPass(s))
       : actualNextStation;
   }, [actualNextStation, ignorePass, station?.groupId, stations]);
 
@@ -78,7 +78,7 @@ export const useNextStation = (
           .slice()
           .reverse()
           .slice(outboundCurrentStationIndex - stations.length + 1)
-          .filter((s) => !getIsPass(s))[0]
+          .find((s) => !getIsPass(s))
       : actualNextStation;
   }, [actualNextStation, ignorePass, station, stations]);
 

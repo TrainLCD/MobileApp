@@ -1,6 +1,7 @@
 plugins {
   id("com.android.application")
   id("org.jetbrains.kotlin.android")
+  id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" // this version matches your Kotlin version
 }
 
 android {
@@ -38,13 +39,13 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 81003001
-      versionName = "8.10.3"
+      versionCode = 90000101
+      versionName = "9.0.0"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 81003001
-      versionName = "8.10.3"
+      versionCode = 90000001
+      versionName = "9.0.0"
     }
   }
 
@@ -59,7 +60,7 @@ android {
     compose = true
   }
   composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.14"
+    kotlinCompilerExtensionVersion = "1.5.15"
   }
 }
 

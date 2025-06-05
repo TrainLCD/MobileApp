@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Dimensions,
@@ -8,14 +9,15 @@ import {
   type TextStyle,
   View,
 } from 'react-native';
-import { useRecoilValue } from 'recoil';
-import type { Line, Station } from '../../gen/proto/stationapi_pb';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useInterval } from '../hooks/useInterval';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
+import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useInterval,
+  useTransferLinesFromStation,
+} from '../hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import { isEnSelector } from '../store/selectors/isEn';
+import { isEnAtom } from '../store/selectors/isEn';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -98,6 +100,10 @@ const styles = StyleSheet.create({
   root: {
     height: '100%',
     paddingBottom: isTablet ? screenHeight / 2.5 : undefined,
+    flexDirection: 'row',
+    justifyContent: isTablet ? 'flex-start' : undefined,
+    marginLeft: 32,
+    flex: 1,
   },
   bar: {
     position: 'absolute',
@@ -111,12 +117,6 @@ const styles = StyleSheet.create({
     right: getBarTerminalRight(),
     bottom: barTerminalBottom,
   },
-  stationNameWrapper: {
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
   stationNameContainer: {
     width: screenWidth / 9,
     flexWrap: 'wrap',
@@ -125,28 +125,17 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? 6 : 84,
   },
   stationName: {
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
     color: '#3a3a3a',
-    marginLeft: isTablet ? 10 : 5,
-    marginBottom: Platform.select({ android: -3, ios: 0 }),
-    includeFontPadding: false,
-  },
-  stationNameEn: {
-    fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
-    fontWeight: 'bold',
-    marginLeft: -30,
-    color: '#3a3a3a',
-    paddingBottom: 0,
+    marginLeft: 5,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
-    marginLeft: -30,
     color: '#3a3a3a',
+    paddingBottom: 16,
   },
   grayColor: {
     color: '#ccc',
@@ -162,7 +151,7 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: 32,
+    bottom: isTablet ? screenHeight / 2.5 + 32 : 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
@@ -257,14 +246,27 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station);
+  const stationNameR = useMemo(() => getStationNameR(station), [station]);
+
+  const nameEnExtraStyle = useMemo(() => {
+    if (!isTablet) {
+      return {
+        width: heightScale(320),
+        marginBottom: 58,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: 96,
+    };
+  }, []);
 
   if (en) {
     return (
       <Typography
         style={[
-          styles.stationNameEn,
-          getStationNameEnExtraStyle(),
+          styles.stationNameHorizontal,
+          nameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -277,7 +279,7 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameHorizontal,
-          getStationNameEnExtraStyle(),
+          nameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -309,8 +311,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
   chevronColor,
 }: StationNameCellProps) => {
-  const { station: currentStation, arrived } = useRecoilValue(stationState);
-  const isEn = useRecoilValue(isEnSelector);
+  const { station: currentStation, arrived } = useAtomValue(stationState);
+  const isEn = useAtomValue(isEnAtom);
 
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
@@ -375,13 +377,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View key={station.name} style={styles.stationNameContainer}>
-        <StationName
-          station={station}
-          en={isEn}
-          horizontal={includesLongStationName}
-          passed={getIsPass(station) || shouldGrayscale}
-        />
+      <View key={station.id} style={styles.stationNameContainer}>
+        <View
+          style={
+            isEn || includesLongStationName
+              ? {
+                  transform: [{ rotate: '-55deg' }],
+                }
+              : {}
+          }
+        >
+          <StationName
+            station={station}
+            en={isEn}
+            horizontal={includesLongStationName}
+            passed={getIsPass(station) || shouldGrayscale}
+          />
+        </View>
         <LinearGradient
           colors={['#fff', '#000', '#000']}
           locations={[0.1, 0.5, 0.9]}
@@ -495,7 +507,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   lineColors,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
-  const { selectedLine } = useRecoilValue(lineState);
+  const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
   const line = useMemo(
@@ -537,16 +549,18 @@ const LineBoardSaikyo: React.FC<Props> = ({
     [chevronColor, hasTerminus, line, lineColors, stations]
   );
 
+  const stationsWithEmpty = useMemo(
+    () =>
+      [
+        ...stations,
+        ...Array.from({ length: 8 - stations.length }),
+      ] as Station[],
+    [stations]
+  );
+
   return (
     <View style={styles.root}>
-      <View style={styles.stationNameWrapper}>
-        {(
-          [
-            ...stations,
-            ...Array.from({ length: 8 - stations.length }),
-          ] as Station[]
-        ).map(stationNameCellForMap)}
-      </View>
+      {stationsWithEmpty.map(stationNameCellForMap)}
     </View>
   );
 };

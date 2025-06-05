@@ -1,11 +1,11 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import auth from '@react-native-firebase/auth';
+import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
 import authState from '../store/atoms/auth';
 
-const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
-  const [{ user }, setUser] = useRecoilState(authState);
+export const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
+  const [{ user }, setUser] = useAtom(authState);
 
   useEffect(() => {
     // アプリ実行中に匿名ユーザーが変わることはないので、キャッシュしている値を使用し追加で取得しない
@@ -29,5 +29,3 @@ const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
 
   return user;
 };
-
-export default useCachedInitAnonymousUser;

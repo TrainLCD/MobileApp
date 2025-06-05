@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
   StyleSheet,
@@ -9,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
-import { useRecoilState } from 'recoil';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
@@ -21,7 +21,7 @@ import {
   ASYNC_STORAGE_KEYS,
   type AvailableLanguage,
 } from '../constants';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import { isJapanese, translate } from '../translation';
@@ -141,7 +141,7 @@ const ListItem: React.FC<ListItemProps> = ({
 };
 
 const EnabledLanguagesSettings: React.FC = () => {
-  const [{ enabledLanguages }, setNavigation] = useRecoilState(navigationState);
+  const [{ enabledLanguages }, setNavigation] = useAtom(navigationState);
   const navigation = useNavigation();
 
   const onPressBack = useCallback(async () => {

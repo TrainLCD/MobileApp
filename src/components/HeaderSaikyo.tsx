@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -10,18 +11,19 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
-import { useBoundText } from '../hooks/useBoundText';
-import useConnectedLines from '../hooks/useConnectedLines';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useCurrentTrainType from '../hooks/useCurrentTrainType';
-import useIsNextLastStop from '../hooks/useIsNextLastStop';
-import useLazyPrevious from '../hooks/useLazyPrevious';
-import { useNextStation } from '../hooks/useNextStation';
-import { useNumbering } from '../hooks/useNumbering';
-import { usePrevious } from '../hooks/usePrevious';
+import {
+  useBoundText,
+  useConnectedLines,
+  useCurrentLine,
+  useCurrentStation,
+  useCurrentTrainType,
+  useIsNextLastStop,
+  useLazyPrevious,
+  useNextStation,
+  useNumbering,
+  usePrevious,
+} from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -152,9 +154,9 @@ const HeaderSaikyo: React.FC = () => {
   const nextStation = useNextStation();
 
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
-  const { selectedBound, arrived } = useRecoilValue(stationState);
-  const { headerState } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const { selectedBound, arrived } = useAtomValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
+  const { headerTransitionDelay } = useAtomValue(tuningState);
 
   const connectedLines = useConnectedLines();
   const isLast = useIsNextLastStop();

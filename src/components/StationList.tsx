@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Station } from '../../gen/proto/stationapi_pb';
-import { useThemeStore } from '../hooks/useThemeStore';
+import type { Station } from '~/gen/proto/stationapi_pb';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese, translate } from '../translation';
 import { generateStationGroupTestId } from '../utils/generateTestID';
@@ -46,7 +46,7 @@ const ItemCell = ({
   onSelect: (item: Station) => void;
   withoutTransfer?: boolean;
 }) => {
-  const ownLine = item.line;
+  const ownLine = useMemo(() => item.line, [item.line]);
   const otherLines = useMemo(
     () => item.lines.filter((l) => l.id !== ownLine?.id),
     [item.lines, ownLine?.id]

@@ -1,16 +1,12 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { atom } from 'recoil';
-import { RECOIL_STATES } from '../../constants';
+import { atom } from 'jotai';
 
 export type AuthState = {
   user: FirebaseAuthTypes.User | null;
 };
 
 const authState = atom<AuthState>({
-  key: RECOIL_STATES.authState,
-  default: {
-    user: null,
-  },
+  user: null,
 });
 
 export default authState;

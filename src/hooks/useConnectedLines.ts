@@ -1,13 +1,13 @@
+import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { Line } from '../../gen/proto/stationapi_pb';
-import { parenthesisRegexp } from '../constants';
+import { parenthesisRegexp } from '~/constants';
+import { Line } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 
-const useConnectedLines = (excludePassed = true): Line[] => {
+export const useConnectedLines = (excludePassed = true): Line[] => {
   const { selectedBound, selectedDirection, stations } =
-    useRecoilValue(stationState);
+    useAtomValue(stationState);
   const currentLine = useCurrentLine();
 
   const belongLines = useMemo(
@@ -146,5 +146,3 @@ const useConnectedLines = (excludePassed = true): Line[] => {
 
   return excludeSameNameLines(belongLines);
 };
-
-export default useConnectedLines;

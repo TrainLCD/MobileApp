@@ -1,4 +1,5 @@
-import { Station } from "../gen/proto/stationapi_pb"
+import { Station } from "~/gen/proto/stationapi_pb"
+
 
 export const useNextStation = jest.fn().mockReturnValue(null)
 

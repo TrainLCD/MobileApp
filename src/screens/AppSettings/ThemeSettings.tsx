@@ -1,27 +1,30 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { ThemeList } from '~/components/ThemeList';
+import { getSettingsThemes } from '~/utils/theme';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
-import { ASYNC_STORAGE_KEYS, LED_THEME_BG_COLOR } from '../../constants';
-import { useThemeStore } from '../../hooks/useThemeStore';
-import { APP_THEME, type AppTheme } from '../../models/Theme';
+import { ASYNC_STORAGE_KEYS } from '../../constants';
+import { useThemeStore } from '../../hooks';
+import type { AppTheme } from '../../models/Theme';
 import { translate } from '../../translation';
 import { isDevApp } from '../../utils/isDevApp';
-import getSettingsThemes from './themes';
 
 const styles = StyleSheet.create({
   rootPadding: {
-    padding: 24,
+    marginTop: 12,
+  },
+  listContainer: {
+    height: '100%',
+    paddingBottom: 96,
+    marginTop: 12,
   },
 });
 
 const ThemeSettingsScreen: React.FC = () => {
   const theme = useThemeStore((state) => state);
-
-  const isLEDTheme = theme === APP_THEME.LED;
 
   const onThemeValueChange = useCallback((t: AppTheme) => {
     useThemeStore.setState(t);
@@ -43,29 +46,15 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={styles.rootPadding}>
+      <SafeAreaView style={styles.rootPadding}>
         <Heading>{translate('selectThemeTitle')}</Heading>
-        <Picker
-          selectedValue={theme}
-          onValueChange={onThemeValueChange}
-          dropdownIconColor={isLEDTheme ? '#fff' : '#000'}
-          style={{
-            width: '100%',
-          }}
-        >
-          {unlockedSettingsThemes.map((t) => (
-            <Picker.Item
-              color={isLEDTheme ? '#fff' : '#000'}
-              style={{
-                backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined,
-              }}
-              key={t.value}
-              label={t.label}
-              value={t.value}
-            />
-          ))}
-        </Picker>
-      </View>
+        <View style={styles.listContainer}>
+          <ThemeList
+            data={unlockedSettingsThemes}
+            onSelect={onThemeValueChange}
+          />
+        </View>
+      </SafeAreaView>
       <FAB onPress={onPressBack} icon="checkmark" />
     </>
   );

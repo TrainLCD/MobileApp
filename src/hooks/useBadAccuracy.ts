@@ -1,18 +1,17 @@
 import { useMemo } from 'react';
+import { BAD_ACCURACY_THRESHOLD } from '../constants';
 import { useLocationStore } from './useLocationStore';
-import { useThreshold } from './useThreshold';
 
 export const useBadAccuracy = (): boolean => {
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
-  const { arrivedThreshold } = useThreshold();
 
   return useMemo(() => {
     if (!accuracy) {
       return false;
     }
-    if ((accuracy || 0) > arrivedThreshold) {
+    if ((accuracy || 0) > BAD_ACCURACY_THRESHOLD) {
       return true;
     }
     return false;
-  }, [arrivedThreshold, accuracy]);
+  }, [accuracy]);
 };

@@ -1,22 +1,25 @@
 const getLocales = () => [
-  // you can choose / add the locales you want
+  {
+    countryCode: 'JP',
+    languageTag: 'ja-JP',
+    languageCode: 'ja',
+    isRTL: false,
+  },
   {
     countryCode: 'US',
     languageTag: 'en-US',
     languageCode: 'en',
     isRTL: false,
   },
-  {
-    countryCode: 'FR',
-    languageTag: 'fr-FR',
-    languageCode: 'fr',
-    isRTL: false,
-  },
 ]
 
 // use a provided translation, or return undefined to test your fallback
 const findBestAvailableLanguage = () => ({
-  languageTag: 'en-US',
+  languageTag: 'ja-JP',
+  isRTL: false,
+})
+const findBestLanguageTag = () => ({
+  languageTag: 'ja-JP',
   isRTL: false,
 })
 
@@ -38,6 +41,7 @@ const removeEventListener = jest.fn()
 
 export {
   findBestAvailableLanguage,
+  findBestLanguageTag,
   getLocales,
   getNumberFormatSettings,
   getCalendar,

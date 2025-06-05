@@ -1,14 +1,14 @@
 import { isClip } from 'react-native-app-clip';
-import { APP_THEME, type AppTheme } from '../../models/Theme';
-import { translate } from '../../translation';
+import { APP_THEME, type AppTheme } from '~/models/Theme';
+import { translate } from '~/translation';
 
-interface SettingsTheme {
+export interface SettingsTheme {
   label: string;
   value: AppTheme;
   devOnly: boolean;
 }
 
-const getSettingsThemes = (): SettingsTheme[] =>
+export const getSettingsThemes = (): SettingsTheme[] =>
   [
     {
       label: translate('tokyoMetroLike'),
@@ -56,5 +56,3 @@ const getSettingsThemes = (): SettingsTheme[] =>
       devOnly: true,
     },
   ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示
-
-export default getSettingsThemes;

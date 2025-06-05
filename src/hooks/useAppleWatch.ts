@@ -1,7 +1,7 @@
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import { sendMessage, useReachability } from 'react-native-watch-connectivity';
-import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -12,8 +12,8 @@ import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useStoppingState } from './useStoppingState';
 
-const useAppleWatch = (): void => {
-  const { arrived, stations, selectedDirection } = useRecoilValue(stationState);
+export const useAppleWatch = (): void => {
+  const { arrived, stations, selectedDirection } = useAtomValue(stationState);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
 
@@ -111,5 +111,3 @@ const useAppleWatch = (): void => {
     }
   }, [sendToWatch, reachable]);
 };
-
-export default useAppleWatch;

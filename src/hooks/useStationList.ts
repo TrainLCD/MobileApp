@@ -1,24 +1,26 @@
 import { useQuery } from '@connectrpc/connect-query';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   getStationsByLineId,
   getTrainTypesByStationId,
-} from '../../gen/proto/stationapi-StationAPI_connectquery';
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
 import {
   TrainDirection,
   TrainType,
   TrainTypeKind,
-} from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi_pb';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
+import type { NavigationState } from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import type { StationState } from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useStationList = () => {
-  const setStationState = useSetRecoilState(stationState);
-  const [{ fromBuilder }, setNavigationState] = useRecoilState(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
+  const setStationState = useSetAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const { selectedLine } = useAtomValue(lineState);
 
   const station = useCurrentStation();
 
@@ -38,7 +40,7 @@ export const useStationList = () => {
     // NOTE: ここでselectedLineを使わないとどの路線選んでも同じ行先が表示される
     { lineId: selectedLine?.id, stationId: selectedLine?.station?.id },
     {
-      enabled: !fromBuilder && !!selectedLine,
+      enabled: !!selectedLine,
     }
   );
 
@@ -63,14 +65,14 @@ export const useStationList = () => {
   );
 
   useEffect(() => {
-    setStationState((prev) => ({
+    setStationState((prev: StationState) => ({
       ...prev,
       stations: prev.stations.length
         ? prev.stations
         : (byLineIdData?.stations ?? []),
     }));
-    if (!fromBuilder && designatedTrainType) {
-      setNavigationState((prev) => ({
+    if (designatedTrainType) {
+      setNavigationState((prev: NavigationState) => ({
         ...prev,
         trainType: prev.trainType ? prev.trainType : designatedTrainType,
       }));
@@ -78,7 +80,6 @@ export const useStationList = () => {
   }, [
     byLineIdData?.stations,
     designatedTrainType,
-    fromBuilder,
     setNavigationState,
     setStationState,
   ]);
@@ -102,14 +103,14 @@ export const useStationList = () => {
     const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? [];
 
     if (!designatedTrainType) {
-      setNavigationState((prev) => ({
+      setNavigationState((prev: NavigationState) => ({
         ...prev,
         fetchedTrainTypes: [localType, ...fetchedTrainTypes],
       }));
       return;
     }
 
-    setNavigationState((prev) => ({
+    setNavigationState((prev: NavigationState) => ({
       ...prev,
       fetchedTrainTypes,
     }));

@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
   Dimensions,
@@ -7,28 +8,29 @@ import {
   type TextStyle,
   View,
 } from 'react-native';
-import { useRecoilValue } from 'recoil';
-import type { Station, StationNumber } from '../../gen/proto/stationapi_pb';
-import { FONTS } from '../constants';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import useGetLineMark from '../hooks/useGetLineMark';
-import useHasPassStationInRegion from '../hooks/useHasPassStationInRegion';
-import useIsPassing from '../hooks/useIsPassing';
-import { useNextStation } from '../hooks/useNextStation';
-import usePreviousStation from '../hooks/usePreviousStation';
-import useStationNumberIndexFunc from '../hooks/useStationNumberIndexFunc';
-import useTransferLinesFromStation from '../hooks/useTransferLinesFromStation';
-import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { isEnSelector } from '../store/selectors/isEn';
-import getStationNameR from '../utils/getStationNameR';
-import getIsPass from '../utils/isPass';
-import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
-import { heightScale } from '../utils/scale';
+import { FONTS } from '~/constants';
+import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import {
+  useCurrentLine,
+  useCurrentStation,
+  useGetLineMark,
+  useHasPassStationInRegion,
+  useIsPassing,
+  useNextStation,
+  usePreviousStation,
+  useStationNumberIndexFunc,
+  useTransferLinesFromStation,
+} from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import lineState from '~/store/atoms/line';
+import navigationState from '~/store/atoms/navigation';
+import stationState from '~/store/atoms/station';
+import { isEnAtom } from '~/store/selectors/isEn';
+import getStationNameR from '~/utils/getStationNameR';
+import getIsPass from '~/utils/isPass';
+import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
+import { heightScale } from '~/utils/scale';
 import Chevron from './ChevronJRWest';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
@@ -101,20 +103,15 @@ const styles = StyleSheet.create({
   },
   stationName: {
     width: isTablet ? 48 : 32,
-    textAlign: 'center',
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginBottom: Platform.select({ android: -6, ios: 0 }),
+    marginLeft: 5,
+    bottom: isTablet ? 32 : 0,
   },
   stationNameEn: {
     fontSize: RFValue(18),
-    transform: [{ rotate: '-55deg' }],
     fontWeight: 'bold',
-    marginLeft: -30,
-    paddingBottom: isTablet ? 32 : 0,
-  },
-  verticalStationName: {
-    marginBottom: isTablet ? 24 : 8,
   },
   grayColor: {
     color: '#ccc',
@@ -124,12 +121,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 28,
     position: 'absolute',
     zIndex: 9999,
-    bottom: (() => {
-      if (isTablet) {
-        return -70;
-      }
-      return 50;
-    })(),
+    bottom: isTablet ? -70 : 50,
     overflow: 'visible',
     borderRadius: 24,
   },
@@ -180,49 +172,42 @@ const styles = StyleSheet.create({
   },
 });
 
-const getStationNameEnExtraStyle = (isLast: boolean): StyleProp<TextStyle> => {
-  if (!isTablet) {
-    return {
-      width: heightScale(300),
-      marginBottom: 58,
-    };
-  }
-  if (isLast) {
-    return {
-      width: 200,
-      marginBottom: 70,
-    };
-  }
-  return {
-    width: 250,
-    marginBottom: 84,
-  };
-};
 interface StationNameProps {
-  stations: Station[];
   station: Station;
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
-  index: number;
+  hasNumbering?: boolean;
 }
 
 const StationName: React.FC<StationNameProps> = ({
-  stations,
   station,
   en,
   horizontal,
   passed,
-  index,
+  hasNumbering,
 }: StationNameProps) => {
-  const stationNameR = getStationNameR(station);
+  const stationNameR = useMemo(() => getStationNameR(station), [station]);
+
+  const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
+    if (!isTablet) {
+      return {
+        width: heightScale(300),
+        marginBottom: 80,
+      };
+    }
+    return {
+      width: 250,
+      marginBottom: hasNumbering ? 150 : 120,
+    };
+  }, [hasNumbering]);
 
   if (en) {
     return (
       <Typography
         style={[
           styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
+          stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -235,7 +220,7 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameEn,
-          getStationNameEnExtraStyle(index === stations.length - 1),
+          stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}
       >
@@ -244,7 +229,7 @@ const StationName: React.FC<StationNameProps> = ({
     );
   }
   return (
-    <View style={styles.verticalStationName}>
+    <View>
       {station.name.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
@@ -270,9 +255,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station: stationInLoop,
   index,
 }: StationNameCellProps) => {
-  const { leftStations } = useRecoilValue(navigationState);
-  const { stations: allStations } = useRecoilValue(stationState);
-  const isEn = useRecoilValue(isEnSelector);
+  const { leftStations } = useAtomValue(navigationState);
+  const { stations: allStations } = useAtomValue(stationState);
+  const isEn = useAtomValue(isEnAtom);
 
   const station = useCurrentStation();
   const transferLines = useTransferLinesFromStation(stationInLoop, {
@@ -352,20 +337,29 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <View
-      key={stationInLoop.name}
+      key={stationInLoop.id}
       style={{
         ...styles.stationNameContainer,
         paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
       }}
     >
-      <StationName
-        stations={stations}
-        station={stationInLoop}
-        en={isEn}
-        horizontal={includesLongStationName}
-        passed={passed}
-        index={index}
-      />
+      <View
+        style={
+          isEn || includesLongStationName
+            ? {
+                transform: [{ rotate: '-55deg' }],
+              }
+            : {}
+        }
+      >
+        <StationName
+          station={stationInLoop}
+          en={isEn}
+          horizontal={includesLongStationName}
+          passed={passed}
+          hasNumbering={!!numberingObj}
+        />
+      </View>
       {numberingObj ? (
         <View
           style={{
@@ -430,8 +424,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { selectedLine } = useRecoilValue(lineState);
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { selectedLine } = useAtomValue(lineState);
+  const { arrived, approaching } = useAtomValue(stationState);
 
   const isPassing = useIsPassing();
   const currentLine = useCurrentLine();
@@ -444,7 +438,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): JSX.Element => (
       <StationNameCell
-        key={s.groupId}
+        key={s.id}
         station={s}
         stations={stations}
         arrived={!isPassing && !approaching && arrived}
@@ -462,13 +456,18 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [lineColors]
   );
 
+  const stationsWithEmpty = useMemo(
+    () => [...lineColors, ...emptyArray],
+    [emptyArray, lineColors]
+  );
+
   if (!line) {
     return null;
   }
 
   return (
     <View style={styles.root}>
-      {[...lineColors, ...emptyArray].map((lc, i) => (
+      {stationsWithEmpty.map((lc, i) => (
         <View
           key={`${lc}${i.toString()}`}
           style={{

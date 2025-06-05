@@ -1,14 +1,14 @@
 import findNearest from 'geolib/es/findNearest';
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useLocationStore } from './useLocationStore';
 
 export const useNearestStation = (): Station | null => {
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
-  const { stations } = useRecoilValue(stationState);
+  const { stations } = useAtomValue(stationState);
 
   const nearestStation = useMemo<Station | null>(() => {
     if (!latitude || !longitude) {

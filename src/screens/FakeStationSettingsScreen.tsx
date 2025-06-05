@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,7 +13,6 @@ import {
   type TextInputKeyPressEventData,
   View,
 } from 'react-native';
-import { useRecoilState, useSetRecoilState } from 'recoil';
 import { RFValue } from '../utils/rfValue';
 
 import { useMutation, useQuery } from '@connectrpc/connect-query';
@@ -23,15 +23,13 @@ import {
 import {
   getStationsByCoordinates,
   getStationsByName,
-} from '../../gen/proto/stationapi-StationAPI_connectquery';
-import type { Station } from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import { StationList } from '../components/StationList';
 import { FONTS } from '../constants';
-import { useCurrentStation } from '../hooks/useCurrentStation';
-import { useLocationStore } from '../hooks/useLocationStore';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useCurrentStation, useLocationStore, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -72,8 +70,8 @@ const FakeStationSettingsScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const navigation = useNavigation();
   const [{ station: stationFromState }, setStationState] =
-    useRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
+    useAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
@@ -106,7 +104,7 @@ const FakeStationSettingsScreen: React.FC = () => {
       navigation.goBack();
       return;
     }
-    navigation.navigate('MainStack');
+    navigation.navigate('MainStack' as never);
   }, [navigation]);
 
   const handleSubmit = useCallback(() => {
@@ -130,13 +128,9 @@ const FakeStationSettingsScreen: React.FC = () => {
     [byCoordsData, byNameData]
   );
 
-  // NOTE: 今いる駅は出なくていい
   const groupedStations = useMemo(
-    () =>
-      groupStations(foundStations).filter(
-        (sta) => sta.groupId !== currentStation?.groupId
-      ),
-    [currentStation?.groupId, foundStations]
+    () => groupStations(foundStations),
+    [foundStations]
   );
 
   const handleStationPress = useCallback(

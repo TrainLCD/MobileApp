@@ -1,13 +1,13 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
-export const useSlicedStations = () => {
-  const { stations, arrived, selectedDirection } = useRecoilValue(stationState);
+export const useSlicedStations = (): Station[] => {
+  const { stations, arrived, selectedDirection } = useAtomValue(stationState);
 
   const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();

@@ -1,6 +1,5 @@
-import { atom } from 'recoil';
-import type { Station } from '../../../gen/proto/stationapi_pb';
-import { RECOIL_STATES } from '../../constants';
+import { atom } from 'jotai';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import type { LineDirection } from '../../models/Bound';
 
 export interface StationState {
@@ -13,8 +12,8 @@ export interface StationState {
   wantedDestination: Station | null;
 }
 
-export const initialStationState: StationState = {
-  arrived: true,
+const initialStationState: StationState = {
+  arrived: false,
   approaching: false,
   station: null,
   stations: [],
@@ -23,9 +22,6 @@ export const initialStationState: StationState = {
   wantedDestination: null,
 };
 
-const stationState = atom<StationState>({
-  key: RECOIL_STATES.station,
-  default: initialStationState,
-});
+const stationState = atom<StationState>(initialStationState);
 
 export default stationState;

@@ -4,27 +4,29 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   ALL_AVAILABLE_LANGUAGES,
   ASYNC_STORAGE_KEYS,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
-import useAndroidWearable from '../hooks/useAndroidWearable';
-import useAppleWatch from '../hooks/useAppleWatch';
-import { useBLEDiagnostic } from '../hooks/useBLEDiagnostic';
-import useCachedInitAnonymousUser from '../hooks/useCachedAnonymousUser';
-import useCheckStoreVersion from '../hooks/useCheckStoreVersion';
-import { useCurrentLine } from '../hooks/useCurrentLine';
-import { useFeedback } from '../hooks/useFeedback';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { useWarningInfo } from '../hooks/useWarningInfo';
+import {
+  useAndroidWearable,
+  useAppleWatch,
+  useCachedInitAnonymousUser,
+  useCheckStoreVersion,
+  useCurrentLine,
+  useFeedback,
+  useThemeStore,
+  useWarningInfo,
+  useBLEDiagnostic,
+} from '../hooks';
 import type { AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
@@ -48,9 +50,9 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const { selectedBound } = useRecoilValue(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
-  const setSpeech = useSetRecoilState(speechState);
+  const { selectedBound } = useAtomValue(stationState);
+  const setNavigation = useSetAtom(navigationState);
+  const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
@@ -139,21 +141,26 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      const buttons = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          translate('report'),
-          translate('cancel'),
-        ],
-        android: [translate('share'), translate('report'), translate('cancel')],
-      });
+      const options =
+        Platform.select({
+          ios: [
+            translate('back'),
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+          android: [
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+        }) ?? [];
 
       showActionSheetWithOptions(
         {
-          options: buttons || [],
+          options,
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: buttons && buttons.length - 1,
+          cancelButtonIndex: options.length - 1,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
@@ -235,6 +242,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       setSpeech((prev) => ({
         ...prev,
         backgroundEnabled: bgTTSEnabledStr === 'true',
+      }));
+
+      const legacyAutoModeEnabledStr = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED
+      );
+      setNavigation((prev) => ({
+        ...prev,
+        enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
       }));
     };
 

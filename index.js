@@ -1,12 +1,14 @@
-require('fast-text-encoding');
-
+import 'web-streams-polyfill/polyfill';
 import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
 import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
-import { setLocation } from './src/hooks/useLocationStore';
+import { setLocation } from './src/hooks';
+import { fetch } from 'expo/fetch';
+
+global.fetch = fetch;
 
 if (!__DEV__) {
   Sentry.init({
@@ -37,17 +39,11 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
 
     const latestLocation = data.locations[data.locations.length - 1];
-    const bestAccuracyLocation = data.locations.reduce((best, cur) => {
-      if (best.coords.accuracy > cur.coords.accuracy) {
-        return cur;
-      }
-      return best;
-    }, latestLocation);
-    if (bestAccuracyLocation) {
-      if (bestAccuracyLocation.coords.accuracy > MAX_PERMIT_ACCURACY) {
+    if (latestLocation) {
+      if (latestLocation.coords.accuracy > MAX_PERMIT_ACCURACY) {
         return;
       }
-      setLocation(bestAccuracyLocation);
+      setLocation(latestLocation);
     }
   });
 }

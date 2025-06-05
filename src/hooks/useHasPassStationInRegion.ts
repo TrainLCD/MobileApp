@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import getIsPass from '../utils/isPass';
 
-const useHasPassStationInRegion = (
+export const useHasPassStationInRegion = (
   stations: Station[],
   prevStation: Station | null,
   nextStation: Station | null
@@ -34,5 +34,3 @@ const useHasPassStationInRegion = (
 
   return false;
 };
-
-export default useHasPassStationInRegion;

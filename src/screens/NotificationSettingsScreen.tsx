@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Alert,
@@ -13,12 +14,11 @@ import {
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -113,8 +113,8 @@ const ListItem: React.FC<ListItemProps> = ({
 const NotificationSettings: React.FC = () => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const { stations } = useRecoilValue(stationState);
-  const [{ targetStationIds }, setNotify] = useRecoilState(notifyState);
+  const { stations } = useAtomValue(stationState);
+  const [{ targetStationIds }, setNotify] = useAtom(notifyState);
   const navigation = useNavigation();
 
   const handlePressBack = useCallback(() => {

@@ -1,7 +1,7 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
-import type { TrainType } from '../../gen/proto/stationapi_pb';
+import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
@@ -34,11 +34,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     transform: [{ skewX: '-5deg' }],
     fontSize: isTablet ? 36 : 24,
+    flex: 1,
   },
 });
 
 const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
-  const { headerState } = useRecoilValue(navigationState);
+  const { headerState } = useAtomValue(navigationState);
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
@@ -74,13 +75,13 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR;
+        return trainTypeNameR.split('\n')[0]?.trim();
       case 'ZH':
-        return trainTypeNameZh;
+        return trainTypeNameZh.split('\n')[0]?.trim();
       case 'KO':
-        return trainTypeNameKo;
+        return trainTypeNameKo.split('\n')[0]?.trim();
       default:
-        return trainTypeNameJa;
+        return trainTypeNameJa.split('\n')[0]?.trim();
     }
   }, [
     headerLangState,
@@ -100,11 +101,18 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
     return trainType?.color ?? '#222';
   }, [trainType]);
 
+  const numberOfLines = useMemo(
+    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    [trainTypeName]
+  );
+
   return (
     <View style={styles.box}>
       {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
         trainTypeName.split('').map((char, idx) => (
           <Typography
+            numberOfLines={numberOfLines}
+            adjustsFontSizeToFit
             style={{
               ...styles.text,
               color: trainTypeColor,
@@ -118,6 +126,8 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
         ))
       ) : (
         <Typography
+          numberOfLines={1}
+          adjustsFontSizeToFit
           style={{
             ...styles.text,
             color: trainTypeColor,

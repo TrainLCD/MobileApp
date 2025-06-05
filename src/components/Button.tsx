@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { APP_THEME } from '../models/Theme';
-import type { ButtonTestId } from '../test/e2e';
-import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import type { ButtonTestId } from '~/test/e2e';
+import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 type Props = {

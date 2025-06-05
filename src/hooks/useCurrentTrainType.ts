@@ -1,15 +1,15 @@
+import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import type { TrainType } from '../../gen/proto/stationapi_pb';
+import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 
-const useCurrentTrainType = (): TrainType | null => {
-  const { stations } = useRecoilValue(stationState);
-  const { trainType } = useRecoilValue(navigationState);
+export const useCurrentTrainType = (): TrainType | null => {
+  const { stations } = useAtomValue(stationState);
+  const { trainType } = useAtomValue(navigationState);
 
   const currentStation = useCurrentStation(true);
   const currentLine = useCurrentLine();
@@ -29,9 +29,9 @@ const useCurrentTrainType = (): TrainType | null => {
     // 例として渋谷駅で東横線選んで特急種別を選んだ後、同一種別の存在しないメトロ線方面を選んだ等;
     if (currentStation?.line?.id !== currentLine?.id) {
       const actualTrainType = stations.find(
-        (s) => s?.id === currentLine?.station?.id
+        (s: Station) => s?.id === currentLine?.station?.id
       )?.trainType;
-      setCachedTrainType((prev) =>
+      setCachedTrainType((prev: TrainType | null) =>
         prev?.typeId === actualTrainType?.typeId
           ? prev
           : (actualTrainType ?? null)
@@ -40,7 +40,7 @@ const useCurrentTrainType = (): TrainType | null => {
     }
 
     if (!getIsPass(currentStation)) {
-      setCachedTrainType((prev) =>
+      setCachedTrainType((prev: TrainType | null) =>
         prev?.typeId === currentStation?.trainType?.typeId
           ? prev
           : (currentStation?.trainType ?? null)
@@ -50,5 +50,3 @@ const useCurrentTrainType = (): TrainType | null => {
 
   return cachedTrainType;
 };
-
-export default useCurrentTrainType;

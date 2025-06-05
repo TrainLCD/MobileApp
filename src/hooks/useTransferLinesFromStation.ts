@@ -1,6 +1,6 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { Line, type Station } from '../../gen/proto/stationapi_pb';
+import { Line, type Station } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -10,7 +10,7 @@ type Option = {
   omitJR?: boolean;
 };
 
-const useTransferLinesFromStation = (
+export const useTransferLinesFromStation = (
   station: Station | null,
   option?: Option
 ): Line[] => {
@@ -19,7 +19,7 @@ const useTransferLinesFromStation = (
     omitJR: false,
   };
 
-  const { stations } = useRecoilValue(stationState);
+  const { stations } = useAtomValue(stationState);
 
   const transferLines = useMemo(
     () =>
@@ -92,5 +92,3 @@ const useTransferLinesFromStation = (
     }))
     .map((l) => new Line(l));
 };
-
-export default useTransferLinesFromStation;

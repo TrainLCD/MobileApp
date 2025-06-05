@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -8,18 +9,16 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useRecoilValue } from 'recoil';
-import type { TrainType } from '../../gen/proto/stationapi_pb';
-import { parenthesisRegexp } from '../constants';
-import useLazyPrevious from '../hooks/useLazyPrevious';
-import { usePrevious } from '../hooks/usePrevious';
-import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import tuningState from '../store/atoms/tuning';
-import { translate } from '../translation';
-import isTablet from '../utils/isTablet';
-import { getIsLocal, getIsRapid } from '../utils/trainTypeString';
-import truncateTrainType from '../utils/truncateTrainType';
+import { parenthesisRegexp } from '~/constants';
+import type { TrainType } from '~/gen/proto/stationapi_pb';
+import { useLazyPrevious, usePrevious } from '~/hooks';
+import type { HeaderLangState } from '~/models/HeaderTransitionState';
+import navigationState from '~/store/atoms/navigation';
+import tuningState from '~/store/atoms/tuning';
+import { translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
+import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
+import truncateTrainType from '~/utils/truncateTrainType';
 import Typography from './Typography';
 
 type Props = {
@@ -80,8 +79,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 }: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { headerState } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const { headerState } = useAtomValue(navigationState);
+  const { headerTransitionDelay } = useAtomValue(tuningState);
 
   const textOpacityAnim = useSharedValue(0);
 
@@ -206,12 +205,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }));
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.length <= 10 ? 1 : 2),
-    [trainTypeName.length]
+    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => ((prevTrainTypeText?.length ?? 0) <= 10 ? 1 : 2),
-    [prevTrainTypeText?.length]
+    () => (prevTrainTypeText.split('\n').length === 1 ? 1 : 2),
+    [prevTrainTypeText]
   );
 
   return (

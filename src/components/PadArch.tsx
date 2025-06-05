@@ -2,7 +2,7 @@ import { darken } from 'polished';
 import React, { useCallback } from 'react';
 import { Animated, Dimensions, StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '../../gen/proto/stationapi_pb';
+import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,

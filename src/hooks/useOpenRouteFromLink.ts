@@ -1,24 +1,24 @@
 import { useMutation } from '@connectrpc/connect-query';
+import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
 import {
   getStationsByLineGroupId,
   getStationsByLineId,
-} from '../../gen/proto/stationapi-StationAPI_connectquery';
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
 import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
   type Station,
-} from '../../gen/proto/stationapi_pb';
+} from '~/gen/proto/stationapi_pb';
 import type { LineDirection } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
 export const useOpenRouteFromLink = () => {
-  const setStationState = useSetRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setLineState = useSetRecoilState(lineState);
+  const setStationState = useSetAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
 
   const {
     mutateAsync: fetchStationsByLineGroupId,
@@ -47,7 +47,6 @@ export const useOpenRouteFromLink = () => {
         trainType: station.trainType ?? null,
         leftStations: [],
         stationForHeader: station,
-        fromBuilder: true,
       }));
       setStationState((prev) => ({
         ...prev,

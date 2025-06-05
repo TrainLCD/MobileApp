@@ -20,10 +20,13 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.FONTS_SSH_KEY }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+            node-version: 20
+            cache: "pnpm"
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -33,7 +36,7 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
       - name: Install dependencies
-        run: npm ci
+        run: pnpm i
       - name: Run bundle install
         working-directory: ./android
         shell: bash

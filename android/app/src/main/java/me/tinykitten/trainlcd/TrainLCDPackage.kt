@@ -1,5 +1,6 @@
 package me.tinykitten.trainlcd
 
+import IgnoreBatteryOptimizationsModule
 import android.view.View
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule
@@ -15,6 +16,9 @@ class TrainLCDPackage : ReactPackage {
 
   override fun createNativeModules(
     reactContext: ReactApplicationContext
-  ): MutableList<NativeModule> = listOf(WearableModule(reactContext)).toMutableList()
+  ): MutableList<NativeModule> = listOf(
+    WearableModule(reactContext),
+    IgnoreBatteryOptimizationsModule(reactContext)
+  ).toMutableList()
 }
 

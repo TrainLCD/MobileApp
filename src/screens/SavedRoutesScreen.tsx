@@ -1,17 +1,15 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import findNearest from 'geolib/es/findNearest';
+import { useSetAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSetRecoilState } from 'recoil';
-import { Station } from '../../gen/proto/stationapi_pb';
+import { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import Loading from '../components/Loading';
 import Typography from '../components/Typography';
-import { useLocationStore } from '../hooks/useLocationStore';
-import { useSavedRoutes } from '../hooks/useSavedRoutes';
-import { useThemeStore } from '../hooks/useThemeStore';
+import { useLocationStore, useSavedRoutes, useThemeStore } from '../hooks';
 import type { SavedRoute } from '../models/SavedRoute';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
@@ -62,9 +60,9 @@ const ListEmptyComponent: React.FC = () => (
 );
 
 const SavedRoutesScreen: React.FC = () => {
-  const setLineState = useSetRecoilState(lineState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setStationState = useSetRecoilState(stationState);
+  const setLineState = useSetAtom(lineState);
+  const setNavigationState = useSetAtom(navigationState);
+  const setStationState = useSetAtom(stationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
@@ -93,7 +91,6 @@ const SavedRoutesScreen: React.FC = () => {
         trainType: selectedStation.trainType ?? null,
         leftStations: [],
         stationForHeader: selectedStation,
-        fromBuilder: true,
       }));
       setLineState((prev) => ({
         ...prev,

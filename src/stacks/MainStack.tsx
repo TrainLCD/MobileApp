@@ -2,13 +2,11 @@ import {
   type NativeStackNavigationOptions,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
-import useConnectivity from '../hooks/useConnectivity';
-import { useThemeStore } from '../hooks/useThemeStore';
-import { useUnderMaintenance } from '../hooks/useUnderMaintenance';
+import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
@@ -30,7 +28,7 @@ const screenOptions: NativeStackNavigationOptions = {
 };
 
 const MainStack: React.FC = () => {
-  const { station, selectedBound } = useRecoilValue(stationState);
+  const { station, selectedBound } = useAtomValue(stationState);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 

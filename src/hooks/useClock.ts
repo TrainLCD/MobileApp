@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useInterval } from './useInterval';
 
-const useClock = (): [string, string] => {
+export const useClock = (): [string, string] => {
   const [hours, setHours] = useState('00');
   const [minutes, setMinutes] = useState('00');
 
@@ -21,5 +21,3 @@ const useClock = (): [string, string] => {
 
   return [hours, minutes];
 };
-
-export default useClock;

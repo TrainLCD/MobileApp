@@ -1,11 +1,11 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import stationState from '../store/atoms/station';
 import { getIsPassFromStopCondition } from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 
-const useIsPassing = (): boolean => {
-  const { arrived } = useRecoilValue(stationState);
+export const useIsPassing = (): boolean => {
+  const { arrived } = useAtomValue(stationState);
   const currentStation = useCurrentStation();
 
   const passing = useMemo(
@@ -15,5 +15,3 @@ const useIsPassing = (): boolean => {
 
   return passing;
 };
-
-export default useIsPassing;

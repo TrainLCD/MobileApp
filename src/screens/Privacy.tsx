@@ -13,8 +13,7 @@ import {
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Button from '../components/Button';
 import Typography from '../components/Typography';
-import { useFetchCurrentLocationOnce } from '../hooks/useFetchCurrentLocationOnce';
-import { useLocationStore } from '../hooks/useLocationStore';
+import { useFetchCurrentLocationOnce, useLocationStore } from '../hooks';
 import { isJapanese, translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 

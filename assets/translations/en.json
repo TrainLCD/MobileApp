@@ -166,10 +166,13 @@
   "failedToRequestPermission": "An error occurred while requesting \"Always Allow\" location access. Please manually set location access to \"Always Allow\" from your smartphone's settings.",
   "failedToOpenSettings": "Failed to open system settings. Please open the app settings manually.",
   "setTerminusText": "Set %{stationName} Station as the final destination",
+  "setAutoModeText": "Enable auto mode",
   "confirmChangeLineTitle": "Should we transfer to the %{lineName}?",
   "confirmChangeLineText": "The current line is the %{currentLineName}. Should we switch to the %{lineName}?",
   "trainTypesFilter": "Train type filtering",
   "trainTypeListEmpty": "No matching train types were found.",
   "jlLike": "Joban Line",
-  "routeListTitle": "Directions to %{stationName} Station"
+  "routeListTitle": "Directions to %{stationName} Station",
+  "legacyAutoModeTitle": "Enable legacy auto mode",
+  "inUse": "In use"
 }

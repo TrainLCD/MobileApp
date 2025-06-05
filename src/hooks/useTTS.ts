@@ -1,18 +1,17 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
-import { fetch } from 'expo/fetch';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
-import { useRecoilValue } from 'recoil';
 import speechState from '../store/atoms/speech';
 import { isDevApp } from '../utils/isDevApp';
-import useCachedInitAnonymousUser from './useCachedAnonymousUser';
+import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { usePrevious } from './usePrevious';
 import { useTTSCache } from './useTTSCache';
-import useTTSText from './useTTSText';
+import { useTTSText } from './useTTSText';
 
 export const useTTS = (): void => {
-  const { enabled, backgroundEnabled } = useRecoilValue(speechState);
+  const { enabled, backgroundEnabled } = useAtomValue(speechState);
 
   const firstSpeechRef = useRef(true);
   const playingRef = useRef(false);
@@ -168,8 +167,7 @@ export const useTTS = (): void => {
     if (
       !enabled ||
       playingRef.current ||
-      prevTextJa === textJa ||
-      prevTextEn === textEn
+      (prevTextJa === textJa && prevTextEn === textEn)
     ) {
       return;
     }

@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 
-function useLazyPrevious<T>(value: T, shouldUpdate: boolean): T {
+export function useLazyPrevious<T>(value: T, shouldUpdate: boolean): T {
   const [val, setVal] = useState<T>(value);
   useEffect(() => {
-    if (shouldUpdate) {
-      setVal((prev) => (prev === value ? prev : value));
+    if (shouldUpdate && val !== value) {
+      setVal(value);
     }
-  }, [shouldUpdate, value]);
+  }, [shouldUpdate, val, value]);
   return val;
 }
-
-export default useLazyPrevious;

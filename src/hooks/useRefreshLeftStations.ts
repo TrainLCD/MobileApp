@@ -1,6 +1,6 @@
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -9,17 +9,19 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
 import { useThemeStore } from './useThemeStore';
 
-const useRefreshLeftStations = (): void => {
+export const useRefreshLeftStations = (): void => {
+  const setNavigation = useSetAtom(navigationState);
+  const setStation = useSetAtom(stationState);
   const {
     station: normalStation,
     stations: normalStations,
     selectedDirection,
-  } = useRecoilValue(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
+  } = useAtomValue(stationState);
+
   const theme = useThemeStore();
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
@@ -189,5 +191,3 @@ const useRefreshLeftStations = (): void => {
     trainType,
   ]);
 };
-
-export default useRefreshLeftStations;

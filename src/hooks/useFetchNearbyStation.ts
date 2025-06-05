@@ -1,5 +1,5 @@
 import { useMutation } from '@connectrpc/connect-query';
-import { getStationsByCoordinates } from '../../gen/proto/stationapi-StationAPI_connectquery';
+import { getStationsByCoordinates } from '~/gen/proto/stationapi-StationAPI_connectquery';
 
 export const useFetchNearbyStation = () => {
   const {

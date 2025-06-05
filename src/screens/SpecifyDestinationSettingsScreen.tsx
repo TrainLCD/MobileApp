@@ -1,12 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRecoilState } from 'recoil';
-import { type Station, StopCondition } from '../../gen/proto/stationapi_pb';
+import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
 import { StationList } from '../components/StationList';
-import { useGetStationsWithTermination } from '../hooks/useGetStationsWithTermination';
+import { useGetStationsWithTermination } from '../hooks';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
 });
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
-  const [{ stations }, setStationState] = useRecoilState(stationState);
+  const [{ stations }, setStationState] = useAtom(stationState);
   const getTerminatedStations = useGetStationsWithTermination();
 
   const stopStations = useMemo(

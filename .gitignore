@@ -233,4 +233,4 @@ dist/
 # @end expo-cli
 
 ## gRPC
-/gen
+/src/gen

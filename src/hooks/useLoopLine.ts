@@ -1,6 +1,6 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import type { Station } from '../../gen/proto/stationapi_pb';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
@@ -10,16 +10,14 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '../constants';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
-import useCurrentTrainType from './useCurrentTrainType';
+import { useCurrentTrainType } from './useCurrentTrainType';
 
 export const useLoopLine = () => {
-  const { stations } = useRecoilValue(stationState);
-  const { fromBuilder } = useRecoilValue(navigationState);
+  const { stations } = useAtomValue(stationState);
   const station = useCurrentStation();
   const line = useCurrentLine();
 
@@ -69,23 +67,11 @@ export const useLoopLine = () => {
   }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, line]);
 
   const isLoopLine = useMemo((): boolean => {
-    if (
-      !line ||
-      (trainType && !getIsLocal(trainType)) ||
-      (fromBuilder && !isOnlyLoopLine)
-    ) {
+    if (!line || (trainType && !getIsLocal(trainType))) {
       return false;
     }
     return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
-  }, [
-    fromBuilder,
-    isMeijoLine,
-    isOnlyLoopLine,
-    isOsakaLoopLine,
-    isYamanoteLine,
-    line,
-    trainType,
-  ]);
+  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, line, trainType]);
 
   const isPartiallyLoopLine = useMemo(
     () => line?.id === TOEI_OEDO_LINE_ID,
