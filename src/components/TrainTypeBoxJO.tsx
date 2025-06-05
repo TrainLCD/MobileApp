@@ -102,7 +102,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
   }, [trainType]);
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n')[0].length <= 10 ? 1 : 2),
+    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
 
