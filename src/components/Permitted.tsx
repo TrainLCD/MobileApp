@@ -19,13 +19,13 @@ import {
 import {
   useAndroidWearable,
   useAppleWatch,
+  useBLEDiagnostic,
   useCachedInitAnonymousUser,
   useCheckStoreVersion,
   useCurrentLine,
   useFeedback,
   useThemeStore,
   useWarningInfo,
-  useBLEDiagnostic,
 } from '../hooks';
 import type { AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
