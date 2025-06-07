@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BleManager, type Device } from 'react-native-ble-plx';
 import {
   BLE_ENABLED,
   BLE_TARGET_CHARACTERISTIC_UUID,
   BLE_TARGET_SERVICE_UUID,
 } from 'react-native-dotenv';
-import { useRecoilValue } from 'recoil';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
-import useIsPassing from './useIsPassing';
+import { useIsPassing } from './useIsPassing';
 import { useNextStation } from './useNextStation';
-import useStationNumberIndexFunc from './useStationNumberIndexFunc';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 const manager = new BleManager();
 
 export const useBLEDiagnostic = (): void => {
-  const { arrived, approaching, selectedBound } = useRecoilValue(stationState);
+  const { arrived, approaching, selectedBound } = useAtomValue(stationState);
   const [device, setDevice] = useState<Device | null>(null);
 
   const station = useCurrentStation();
@@ -24,6 +24,8 @@ export const useBLEDiagnostic = (): void => {
   const currentLine = useCurrentLine();
   const isPassing = useIsPassing();
   const getStationNumberIndex = useStationNumberIndexFunc();
+
+  const prevSentPayloads = useRef<string[]>([]);
 
   const stateText = useMemo(() => {
     if (isPassing) {
@@ -67,6 +69,16 @@ export const useBLEDiagnostic = (): void => {
     };
   }, []);
 
+  const removeMacron = useCallback((str: string) => {
+    return str
+      .replace(/[ŌŪ]/g, (match) => {
+        return match.replace('Ō', 'O').replace('Ū', 'U');
+      })
+      .replace(/[ōū]/g, (match) => {
+        return match.replace('ō', 'o').replace('ū', 'u');
+      });
+  }, []);
+
   const payloads = useMemo(() => {
     const stationNumberIndex = getStationNumberIndex(station);
     const nextStationNumberIndex =
@@ -80,12 +92,12 @@ export const useBLEDiagnostic = (): void => {
       `stt:${stateText}`,
       selectedBound
         ? `num:${
-            (!isPassing && arrived ? stationNumber : nextStationNumber) ?? 'N/A'
+            (!isPassing && arrived ? stationNumber : nextStationNumber) ?? ''
           }`
         : 'num:',
-      `stn:${!isPassing && arrived ? station?.nameRoman : nextStation?.nameRoman}`,
+      `stn:${(!isPassing && arrived ? station?.nameRoman : nextStation?.nameRoman) ?? ''}`,
       `tfr:${
-        !isPassing && arrived
+        (!isPassing && arrived
           ? station?.lines
               .filter((l) => l?.id !== currentLine?.id)
               .map((l) => l.nameRoman)
@@ -93,10 +105,10 @@ export const useBLEDiagnostic = (): void => {
           : nextStation?.lines
               .filter((l) => l?.id !== currentLine?.id)
               .map((l) => l.nameRoman)
-              .join(', ')
+              .join(', ')) ?? ''
       }`,
       isPassing && arrived
-        ? `pss:${station?.nameRoman}${stationNumber ? `(${stationNumber})` : ''}`
+        ? `pss:${station?.nameRoman ?? ''}${stationNumber ? `(${stationNumber})` : ''}`
         : 'pss:',
     ];
   }, [
@@ -127,14 +139,17 @@ export const useBLEDiagnostic = (): void => {
       return;
     }
 
-    for (const val of payloads) {
-      device?.writeCharacteristicWithResponseForService(
-        BLE_TARGET_SERVICE_UUID,
-        BLE_TARGET_CHARACTERISTIC_UUID,
-        btoa(unescape(encodeURIComponent(val)))
-      );
+    if (JSON.stringify(prevSentPayloads.current) !== JSON.stringify(payloads)) {
+      for (const val of payloads) {
+        device?.writeCharacteristicWithResponseForService(
+          BLE_TARGET_SERVICE_UUID,
+          BLE_TARGET_CHARACTERISTIC_UUID,
+          btoa(unescape(encodeURIComponent(removeMacron(val))))
+        );
+        prevSentPayloads.current = payloads;
+      }
     }
-  }, [device, payloads]);
+  }, [device, payloads, removeMacron]);
 
   useEffect(() => {
     if (BLE_ENABLED) {
