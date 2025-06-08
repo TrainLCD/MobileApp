@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BleManager, type Device } from 'react-native-ble-plx';
 import {
   BLE_ENABLED,
-  BLE_TARGET_LOCAL_NAME,
   BLE_TARGET_CHARACTERISTIC_UUID,
+  BLE_TARGET_LOCAL_NAME,
   BLE_TARGET_SERVICE_UUID,
 } from 'react-native-dotenv';
 import stationState from '../store/atoms/station';
