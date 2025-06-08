@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BleManager, type Device } from 'react-native-ble-plx';
 import {
   BLE_ENABLED,
+  BLE_TARGET_LOCAL_NAME,
   BLE_TARGET_CHARACTERISTIC_UUID,
   BLE_TARGET_SERVICE_UUID,
 } from 'react-native-dotenv';
@@ -43,24 +44,20 @@ export const useBLEDiagnostic = (): void => {
   }, [approaching, arrived, isPassing]);
 
   const scanAndConnect = useCallback(() => {
-    manager.startDeviceScan(
-      [BLE_TARGET_SERVICE_UUID],
-      null,
-      async (err, dev) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-
-        if (dev) {
-          setDevice(
-            await (await dev.connect()).discoverAllServicesAndCharacteristics()
-          );
-          manager.stopDeviceScan();
-          console.log('connected', dev.localName);
-        }
+    manager.startDeviceScan([], null, async (err, dev) => {
+      if (err) {
+        console.error(err);
+        return;
       }
-    );
+      console.log(dev?.localName, dev?.serviceUUIDs);
+      if (dev && dev.localName === BLE_TARGET_LOCAL_NAME) {
+        setDevice(
+          await (await dev.connect()).discoverAllServicesAndCharacteristics()
+        );
+        manager.stopDeviceScan();
+        console.log('connected', dev?.localName);
+      }
+    });
   }, []);
 
   useEffect(() => {
