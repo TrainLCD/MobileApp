@@ -88,12 +88,13 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       '<phoneme alphabet="ipa" ph="toɾʲide">とりで</phoneme>'
     )
     // 日本語はjoを「ホ」と読まない
-    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
+    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤoː">じょう</phoneme>')
     .replace(/JR/gi, 'J-R')
     .replace(
       /Ryogoku/gi,
       '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
-    );
+    )
+    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koːeɴ">こうえん</phoneme>');
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
