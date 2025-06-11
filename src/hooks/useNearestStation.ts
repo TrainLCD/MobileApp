@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
@@ -10,6 +11,7 @@ export const useNearestStation = (): Station | null => {
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const { stations } = useAtomValue(stationState);
+  const currentStation = useCurrentStation(false);
   const nextStation = useNextStation(false);
 
   const nearestStation = useMemo<Station | null>(() => {
@@ -41,11 +43,11 @@ export const useNearestStation = (): Station | null => {
     );
 
     return (
-      nearestStations.find((s) => s.id === nextStation?.id) ??
-      nearestStations[0] ??
-      null
+      nearestStations.find(
+        (s) => s.id === currentStation?.id || s.id === nextStation?.id
+      ) ?? null
     );
-  }, [latitude, longitude, stations, nextStation]);
+  }, [latitude, longitude, stations, currentStation, nextStation]);
 
   return nearestStation;
 };
