@@ -172,19 +172,16 @@ export const useRefreshStation = (): void => {
       ...prev,
       approaching: isApproaching,
       arrived: isArrived,
-      station:
-        isArrived && prev.station?.id !== nearestStation.id
-          ? nearestStation
-          : prev.station,
     }));
 
     if (isArrived && !getIsPass(nearestStation)) {
+      setStation((prev) => ({
+        ...prev,
+        station: nearestStation,
+      }));
       setNavigation((prev) => ({
         ...prev,
-        stationForHeader:
-          prev.stationForHeader?.id !== nearestStation.id
-            ? nearestStation
-            : prev.stationForHeader,
+        stationForHeader: nearestStation,
       }));
     }
   }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
