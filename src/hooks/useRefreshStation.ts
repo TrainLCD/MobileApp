@@ -177,11 +177,17 @@ export const useRefreshStation = (): void => {
     if (isArrived && !getIsPass(nearestStation)) {
       setStation((prev) => ({
         ...prev,
-        station: nearestStation,
+        station:
+          prev.station?.id !== nearestStation.id
+            ? nearestStation
+            : prev.station,
       }));
       setNavigation((prev) => ({
         ...prev,
-        stationForHeader: nearestStation,
+        stationForHeader:
+          prev.stationForHeader?.id !== nearestStation.id
+            ? nearestStation
+            : prev.stationForHeader,
       }));
     }
   }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
