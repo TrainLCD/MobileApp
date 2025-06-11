@@ -45,7 +45,9 @@ export const useNearestStation = (): Station | null => {
     return (
       nearestStations.find(
         (s) => s.id === currentStation?.id || s.id === nextStation?.id
-      ) ?? null
+      ) ??
+      nearestStations[0] ??
+      null
     );
   }, [latitude, longitude, stations, currentStation, nextStation]);
 
