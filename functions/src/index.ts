@@ -403,6 +403,10 @@ ${reporterUid}
                 value: reporterUid,
               },
               {
+                name: 'オートモード',
+                value: `${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}`,
+              },
+              {
                 name: 'GitHub Issue',
                 value: issuesRes.html_url,
               },
