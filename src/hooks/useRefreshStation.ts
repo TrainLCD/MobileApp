@@ -170,7 +170,7 @@ export const useRefreshStation = (): void => {
 
     setStation((prev) => ({
       ...prev,
-      approaching: isApproaching,
+      approaching: !isArrived && !getIsPass(nearestStation) && isApproaching,
       arrived: isArrived,
       station:
         isArrived && prev.station?.id !== nearestStation.id

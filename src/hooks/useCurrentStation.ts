@@ -11,13 +11,22 @@ export const useCurrentStation = (
     stations,
     station: stationFromState,
     selectedDirection,
+    selectedBound,
   } = useAtomValue(stationState);
 
   // NOTE: 選択した路線と現在の駅の路線を一致させる
-  const station = useMemo(
-    () => stations.find((s) => s.groupId === stationFromState?.groupId),
-    [stationFromState?.groupId, stations]
-  );
+  const station = useMemo(() => {
+    if (!selectedBound) {
+      return stations.find((s) => s.groupId === stationFromState?.groupId);
+    }
+
+    return stations.find((s) => s.id === stationFromState?.id);
+  }, [
+    stationFromState?.id,
+    stationFromState?.groupId,
+    stations,
+    selectedBound,
+  ]);
 
   const withTrainTypeStation = useMemo(() => {
     const foundStation = stations

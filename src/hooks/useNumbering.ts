@@ -22,7 +22,7 @@ export const useNumbering = (
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
-  const nextStation = useNextStation(true, currentLine?.station);
+  const nextStation = useNextStation(true);
 
   const getStationNumberIndex = useStationNumberIndexFunc();
 

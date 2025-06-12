@@ -87,7 +87,9 @@ const SelectBoundScreen: React.FC = () => {
     [fetchedTrainTypes]
   );
 
-  const currentIndex = getCurrentStationIndex(stations, station);
+  const currentIndex = stations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
     setStationState((prev) => ({
