@@ -6,9 +6,17 @@ import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Linking,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
+import VersionCheck from 'react-native-version-check';
 import ViewShot from 'react-native-view-shot';
 import {
   ALL_AVAILABLE_LANGUAGES,
@@ -72,11 +80,29 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const viewShotRef = useRef<ViewShot>(null);
 
   const handleReport = useCallback(async () => {
-    if (!viewShotRef.current?.capture) {
-      return;
-    }
-
     try {
+      const res = await VersionCheck.needUpdate();
+      if (res?.isNeeded) {
+        Alert.alert(
+          translate('announcementTitle'),
+          translate('updateRequiredForReport'),
+          [
+            {
+              text: translate('updateApp'),
+              style: 'destructive',
+              onPress: () => {
+                Linking.openURL(res.storeUrl);
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      if (!viewShotRef.current?.capture) {
+        return;
+      }
+
       const uri = await viewShotRef.current.capture();
       setScreenShotBase64(
         await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
