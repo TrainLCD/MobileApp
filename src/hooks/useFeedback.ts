@@ -14,6 +14,8 @@ import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
 import type { Report, ReportType } from '../models/Report';
 import { isJapanese } from '../translation';
 import { isDevApp } from '../utils/isDevApp';
+import { useAtomValue } from 'jotai';
+import navigationState from '~/store/atoms/navigation';
 
 const {
   brand,
@@ -49,6 +51,9 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
+  const { autoModeEnabled, enableLegacyAutoMode } =
+    useAtomValue(navigationState);
+
   const sendReport = useCallback(
     async ({
       reportType,
@@ -98,6 +103,8 @@ export const useFeedback = (
         reporterUid: user.uid,
         language: isJapanese ? 'ja-JP' : 'en-US',
         appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
+        autoModeEnabled,
+        enableLegacyAutoMode,
         deviceInfo: Device.isDevice
           ? {
               brand,
@@ -138,7 +145,7 @@ export const useFeedback = (
         throw new Error(`フィードバックの送信に失敗しました: ${res.status}`);
       }
     },
-    [user]
+    [user, autoModeEnabled, enableLegacyAutoMode]
   );
 
   return {
