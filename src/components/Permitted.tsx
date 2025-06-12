@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
-import VersionCheck from 'react-native-version-check';
 import ViewShot from 'react-native-view-shot';
 import {
   ALL_AVAILABLE_LANGUAGES,
@@ -93,12 +92,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               style: 'destructive',
               onPress: async () => {
                 try {
-                  await Linking.openURL(
-                    Platform.select({
-                      ios: APP_STORE_URL,
-                      android: GOOGLE_PLAY_URL,
-                    }) ?? ''
-                  );
+                  const url = Platform.select({
+                    ios: APP_STORE_URL,
+                    android: GOOGLE_PLAY_URL,
+                  });
+                  if (!url) {
+                    return;
+                  }
+                  await Linking.openURL(url);
                 } catch (e) {
                   Alert.alert(translate('errorTitle'), String(e));
                 }

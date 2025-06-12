@@ -29,17 +29,23 @@ export const useCheckStoreVersion = (): void => {
   useEffect(() => {
     const f = async () => {
       if (__DEV__) {
+        setNavigationState((prev) => ({
+          ...prev,
+          isAppLatest: true,
+        }));
         return;
       }
       try {
         const res = await VersionCheck.needUpdate();
         if (res?.isNeeded) {
-          showUpdateRequestDialog(
-            Platform.select({
-              ios: APP_STORE_URL,
-              android: GOOGLE_PLAY_URL,
-            }) ?? ''
-          );
+          const url = Platform.select({
+            ios: APP_STORE_URL,
+            android: GOOGLE_PLAY_URL,
+          });
+          if (!url) {
+            return;
+          }
+          showUpdateRequestDialog(url);
         } else {
           setNavigationState((prev) => ({
             ...prev,
