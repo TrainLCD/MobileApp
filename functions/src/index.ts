@@ -404,7 +404,9 @@ ${reporterUid}
               },
               {
                 name: 'オートモード',
-                value: `${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}`,
+                value:
+                  autoModeLabel ??
+                  (autoModeEnabled === false ? '無効' : '不明'),
               },
               {
                 name: 'GitHub Issue',
@@ -438,7 +440,9 @@ ${reporterUid}
               },
               {
                 name: 'オートモード',
-                value: `${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}`,
+                value:
+                  autoModeLabel ??
+                  (autoModeEnabled === false ? '無効' : '不明'),
               },
               {
                 name: 'GitHub Issue',
