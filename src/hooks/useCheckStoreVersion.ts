@@ -1,10 +1,10 @@
+import { useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
 import VersionCheck from 'react-native-version-check';
-import { translate } from '../translation';
-import navigationState from '~/store/atoms/navigation';
-import { useSetAtom } from 'jotai';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from '~/constants';
+import navigationState from '~/store/atoms/navigation';
+import { translate } from '../translation';
 
 export const useCheckStoreVersion = (): void => {
   const setNavigationState = useSetAtom(navigationState);
