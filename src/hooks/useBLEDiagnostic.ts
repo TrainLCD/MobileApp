@@ -49,13 +49,11 @@ export const useBLEDiagnostic = (): void => {
         console.error(err);
         return;
       }
-      console.log(dev?.localName, dev?.serviceUUIDs);
       if (dev && dev.localName === BLE_TARGET_LOCAL_NAME) {
         setDevice(
           await (await dev.connect()).discoverAllServicesAndCharacteristics()
         );
         manager.stopDeviceScan();
-        console.log('connected', dev?.localName);
       }
     });
   }, []);
