@@ -1,9 +1,14 @@
+import { useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import VersionCheck from 'react-native-version-check';
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from '~/constants';
+import navigationState from '~/store/atoms/navigation';
 import { translate } from '../translation';
 
 export const useCheckStoreVersion = (): void => {
+  const setNavigationState = useSetAtom(navigationState);
+
   const showUpdateRequestDialog = useCallback((storeURL: string) => {
     Alert.alert(
       translate('announcementTitle'),
@@ -24,13 +29,33 @@ export const useCheckStoreVersion = (): void => {
   useEffect(() => {
     const f = async () => {
       if (__DEV__) {
+        setNavigationState((prev) => ({
+          ...prev,
+          isAppLatest: true,
+        }));
         return;
       }
-      const res = await VersionCheck.needUpdate();
-      if (res?.isNeeded && res?.storeUrl) {
-        showUpdateRequestDialog(res.storeUrl);
+      try {
+        const res = await VersionCheck.needUpdate();
+        if (res?.isNeeded) {
+          const url = Platform.select({
+            ios: APP_STORE_URL,
+            android: GOOGLE_PLAY_URL,
+          });
+          if (!url) {
+            return;
+          }
+          showUpdateRequestDialog(url);
+        } else {
+          setNavigationState((prev) => ({
+            ...prev,
+            isAppLatest: true,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
       }
     };
     f();
-  }, [showUpdateRequestDialog]);
+  }, [showUpdateRequestDialog, setNavigationState]);
 };

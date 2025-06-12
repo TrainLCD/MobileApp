@@ -6,13 +6,22 @@ import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Linking,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import {
   ALL_AVAILABLE_LANGUAGES,
+  APP_STORE_URL,
   ASYNC_STORAGE_KEYS,
+  GOOGLE_PLAY_URL,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
@@ -68,15 +77,47 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
-
+  const { isAppLatest } = useAtomValue(navigationState);
   const viewShotRef = useRef<ViewShot>(null);
 
   const handleReport = useCallback(async () => {
-    if (!viewShotRef.current?.capture) {
-      return;
-    }
-
     try {
+      if (!isAppLatest) {
+        Alert.alert(
+          translate('announcementTitle'),
+          translate('updateRequiredForReport'),
+          [
+            {
+              text: translate('updateApp'),
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const url = Platform.select({
+                    ios: APP_STORE_URL,
+                    android: GOOGLE_PLAY_URL,
+                  });
+                  if (!url) {
+                    return;
+                  }
+                  await Linking.openURL(url);
+                } catch (e) {
+                  Alert.alert(translate('errorTitle'), String(e));
+                }
+              },
+            },
+            {
+              text: translate('cancel'),
+              style: 'cancel',
+            },
+          ]
+        );
+        return;
+      }
+
+      if (!viewShotRef.current?.capture) {
+        return;
+      }
+
       const uri = await viewShotRef.current.capture();
       setScreenShotBase64(
         await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
@@ -87,7 +128,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       console.error(err);
       Alert.alert(translate('errorTitle'), translate('reportError'));
     }
-  }, []);
+  }, [isAppLatest]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {

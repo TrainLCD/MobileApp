@@ -18,3 +18,4 @@ export * from './storage';
 export * from './theme';
 export * from './threshold';
 export * from './simulationMode';
+export * from './url';
