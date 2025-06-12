@@ -331,11 +331,8 @@ ${language}
 ## アプリのバージョン
 ${appVersion}
 
-## オートモード2.0
-${autoModeEnabled && !enableLegacyAutoMode ? '有効' : '無効'}
-
-## オートモード1.0
-${autoModeEnabled && enableLegacyAutoMode ? '有効' : '無効'}
+## オートモード
+${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
 
 ## レポーターUID
 ${reporterUid}
