@@ -17,4 +17,6 @@ export type Report = {
   appClip: boolean;
   createdAt: number;
   updatedAt: number;
+  autoModeEnabled: boolean;
+  enableLegacyAutoMode: boolean;
 };

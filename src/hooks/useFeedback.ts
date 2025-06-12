@@ -4,12 +4,14 @@ import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
+import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
 import { isClip } from 'react-native-app-clip';
 import {
   DEV_FEEDBACK_API_URL,
   PRODUCTION_FEEDBACK_API_URL,
 } from 'react-native-dotenv';
+import navigationState from '~/store/atoms/navigation';
 import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
 import type { Report, ReportType } from '../models/Report';
 import { isJapanese } from '../translation';
@@ -49,6 +51,9 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
+  const { autoModeEnabled, enableLegacyAutoMode } =
+    useAtomValue(navigationState);
+
   const sendReport = useCallback(
     async ({
       reportType,
@@ -98,6 +103,8 @@ export const useFeedback = (
         reporterUid: user.uid,
         language: isJapanese ? 'ja-JP' : 'en-US',
         appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
+        autoModeEnabled,
+        enableLegacyAutoMode,
         deviceInfo: Device.isDevice
           ? {
               brand,
@@ -138,7 +145,7 @@ export const useFeedback = (
         throw new Error(`フィードバックの送信に失敗しました: ${res.status}`);
       }
     },
-    [user]
+    [user, autoModeEnabled, enableLegacyAutoMode]
   );
 
   return {

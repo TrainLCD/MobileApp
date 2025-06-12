@@ -259,6 +259,8 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     imageUrl,
     appEdition,
     appClip,
+    autoModeEnabled,
+    enableLegacyAutoMode,
   } = report;
   const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
 
@@ -279,6 +281,16 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
       return '🤖 Android';
     }
     return '❓ Other OS';
+  })();
+
+  const autoModeLabel = (() => {
+    if (autoModeEnabled && !enableLegacyAutoMode) {
+      return '🤖 Auto Mode 2.0';
+    }
+    if (autoModeEnabled && enableLegacyAutoMode) {
+      return '🤖 Auto Mode 1.0';
+    }
+    return undefined;
   })();
 
   try {
@@ -319,6 +331,9 @@ ${language}
 ## アプリのバージョン
 ${appVersion}
 
+## オートモード
+${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
+
 ## レポーターUID
 ${reporterUid}
         `.trim(),
@@ -332,6 +347,7 @@ ${reporterUid}
             appClip && '📎 App Clip',
             isSpamUser && '💩 Spam',
             osNameLabel,
+            autoModeLabel,
           ].filter(Boolean),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
