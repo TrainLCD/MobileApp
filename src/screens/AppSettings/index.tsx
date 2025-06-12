@@ -20,7 +20,7 @@ import { RFValue } from '../../utils/rfValue';
 
 const styles = StyleSheet.create({
   rootPadding: {
-    paddingTop: 24,
+    paddingVertical: 24,
   },
   settingsItemHeading: {
     fontSize: RFValue(14),
@@ -160,7 +160,7 @@ const AppSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <ScrollView style={styles.rootPadding}>
+      <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
 
         <View style={styles.settingItems}>
