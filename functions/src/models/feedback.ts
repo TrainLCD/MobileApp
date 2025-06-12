@@ -34,4 +34,6 @@ export type Report = {
   imageUrl: string | null;
   appEdition: 'canary' | 'production';
   appClip: boolean;
+  autoModeEnabled: boolean;
+  enableLegacyAutoMode: boolean;
 };

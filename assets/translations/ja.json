@@ -126,7 +126,7 @@
   "publishShareText": "TrainLCDで私の位置を確認してください！",
   "publishProhibited": "配信に接続している間は新たに配信できません。",
   "publisherNotReady": "配信者が行き先を選択していません。",
-  "annoucementTitle": "お知らせ",
+  "announcementTitle": "お知らせ",
   "appCrashedText": "アプリで予期しない問題が発生しました。大変恐れ入りますが、もう一度最初からやり直してください。",
   "stacktrace": "スタックトレース",
   "newVersionAvailableText": "TrainLCDの新しいバージョンがアプリストアにリリースされました🎉\nぜひアップデートしてみてください！",
@@ -175,5 +175,8 @@
   "jlLike": "常磐線風",
   "routeListTitle": "%{stationName}駅までの経路",
   "legacyAutoModeTitle": "従来のオートモードを有効にする",
-  "inUse": "使用中"
+  "inUse": "使用中",
+  "autoModeV2AlertText": "オートモードが新しくなりました。駅間距離に応じて動作しますので、駅間距離が長い場合は切り替わりが遅くなる場合があります。設定画面で元のオートモードに戻すことができます。",
+  "updateRequiredForReport": "フィードバックを送信するにはアプリをアップデートしてください。",
+  "updateApp": "アプリをアップデート"
 }

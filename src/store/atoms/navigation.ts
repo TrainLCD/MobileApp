@@ -20,6 +20,7 @@ export interface NavigationState {
   fetchedTrainTypes: TrainType[];
   autoModeEnabled: boolean;
   enableLegacyAutoMode: boolean;
+  isAppLatest: boolean;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -32,6 +33,7 @@ export const initialNavigationState: NavigationState = {
   fetchedTrainTypes: [],
   autoModeEnabled: false,
   enableLegacyAutoMode: false,
+  isAppLatest: false,
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

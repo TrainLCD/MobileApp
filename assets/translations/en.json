@@ -125,7 +125,7 @@
   "publishShareText": "Check my location on the Train LCD!",
   "publishProhibited": "You cannot publish a position while subscribing to another person.",
   "publisherNotReady": "The publisher has not selected a destination.",
-  "annoucementTitle": "Announcement",
+  "announcementTitle": "Announcement",
   "appCrashedText": "An unexpected problem has occurred with the app. We apologize for the inconvenience, but please try again from the beginning.",
   "stacktrace": "Stacktrace",
   "newVersionAvailableText": "A new version of TrainLCD is now available in the app store 🎉\nPlease update!",
@@ -174,5 +174,8 @@
   "jlLike": "Joban Line",
   "routeListTitle": "Directions to %{stationName} Station",
   "legacyAutoModeTitle": "Enable legacy auto mode",
-  "inUse": "In use"
+  "inUse": "In use",
+  "autoModeV2AlertText": "Auto mode has been updated. It will operate according to the distance between stations. If the distance between stations is long, it may take a while to switch. You can return to the original auto mode in the settings.",
+  "updateRequiredForReport": "Please update the app to send a feedback.",
+  "updateApp": "Update app"
 }
