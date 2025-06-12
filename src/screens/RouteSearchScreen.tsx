@@ -176,7 +176,9 @@ const RouteSearchScreen = () => {
 
   const handleSelect = useCallback(
     async (route: Route | undefined, asTerminus: boolean) => {
-      const stop = route?.stops.find((s) => s.id === currentStation?.id);
+      const stop = route?.stops.find(
+        (s) => s.groupId === currentStation?.groupId
+      );
       if (!stop) {
         return;
       }
@@ -226,7 +228,10 @@ const RouteSearchScreen = () => {
         lineGroupId: trainType.groupId,
       });
 
-      const station = stations.find((s) => s.id === currentStation?.id) ?? null;
+      const station =
+        stations.find((s) => s.id === currentStation?.id) ??
+        stations.find((s) => s.groupId === currentStation?.groupId) ??
+        null;
 
       const direction: LineDirection =
         stations.findIndex((s) => s.id === currentStation?.id) <
@@ -263,6 +268,7 @@ const RouteSearchScreen = () => {
     },
     [
       currentStation?.id,
+      currentStation?.groupId,
       fetchStationByIdList,
       fetchStationsByLineGroupId,
       navigation,
