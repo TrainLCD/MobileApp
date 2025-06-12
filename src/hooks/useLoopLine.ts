@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   MEIJO_LINE_ID,
@@ -17,7 +17,7 @@ import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 
 export const useLoopLine = () => {
-  const { stations } = useRecoilValue(stationState);
+  const { stations } = useAtomValue(stationState);
   const station = useCurrentStation();
   const line = useCurrentLine();
 

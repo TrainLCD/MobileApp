@@ -1,5 +1,4 @@
-import { atom } from 'recoil';
-import { RECOIL_STATES } from '../../constants';
+import { atom } from 'jotai';
 import { isDevApp } from '../../utils/isDevApp';
 
 export interface StationState {
@@ -9,12 +8,9 @@ export interface StationState {
 }
 
 const speechState = atom<StationState>({
-  key: RECOIL_STATES.speech,
-  default: {
-    enabled: false,
-    backgroundEnabled: false,
-    monetizedPlanEnabled: isDevApp,
-  },
+  enabled: false,
+  backgroundEnabled: false,
+  monetizedPlanEnabled: isDevApp,
 });
 
 export default speechState;

@@ -1,12 +1,12 @@
+import { useAtomValue } from 'jotai';
 /* eslint-disable react-native/no-unused-styles */
 import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
-import { isEnSelector } from '~/store/selectors/isEn';
+import { isEnAtom } from '~/store/selectors/isEn';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import TransferLineDot from './TransferLineDot';
@@ -74,7 +74,7 @@ const PadLineMarks: React.FC<Props> = ({
   station,
   theme,
 }) => {
-  const isEn = useRecoilValue(isEnSelector);
+  const isEn = useAtomValue(isEnAtom);
 
   const styles = useMemo(
     () => (theme === APP_THEME.JR_WEST ? stylesWest : stylesNormal),

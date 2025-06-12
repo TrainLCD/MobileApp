@@ -1,14 +1,18 @@
 import findNearest from 'geolib/es/findNearest';
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useLocationStore } from './useLocationStore';
+import { useNextStation } from './useNextStation';
 
 export const useNearestStation = (): Station | null => {
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
-  const { stations } = useRecoilValue(stationState);
+  const { stations } = useAtomValue(stationState);
+  const currentStation = useCurrentStation(false);
+  const nextStation = useNextStation(false);
 
   const nearestStation = useMemo<Station | null>(() => {
     if (!latitude || !longitude) {
@@ -38,17 +42,14 @@ export const useNearestStation = (): Station | null => {
         sta.longitude === nearestCoordinates.longitude
     );
 
-    // NOTE: 都営大江戸線特例
-    if (
-      // NOTE: どちらのIDも都庁前
-      nearestStations[0]?.id === 9930100 &&
-      nearestStations[1]?.id === 9930101
-    ) {
-      return nearestStations.slice().reverse()[0];
-    }
-
-    return nearestStations[0] ?? null;
-  }, [latitude, longitude, stations]);
+    return (
+      nearestStations.find(
+        (s) => s.id === currentStation?.id || s.id === nextStation?.id
+      ) ??
+      nearestStations[0] ??
+      null
+    );
+  }, [latitude, longitude, stations, currentStation, nextStation]);
 
   return nearestStation;
 };

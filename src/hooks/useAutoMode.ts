@@ -1,6 +1,7 @@
 import getCenter from 'geolib/es/getCenter';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import navigationState from '~/store/atoms/navigation';
 import { isDevApp } from '~/utils/isDevApp';
 import {
   AUTO_MODE_RUNNING_DURATION,
@@ -14,13 +15,15 @@ import { useLocationStore } from './useLocationStore';
 import { useLoopLine } from './useLoopLine';
 import { useValueRef } from './useValueRef';
 
-export const useAutoMode = (enabled: boolean): void => {
+export const useAutoMode = (): void => {
   const {
+    station,
     stations: rawStations,
     selectedDirection,
-    station,
-  } = useRecoilValue(stationState);
-  const { selectedLine } = useRecoilValue(lineState);
+  } = useAtomValue(stationState);
+  const { selectedLine } = useAtomValue(lineState);
+  const { enableLegacyAutoMode, autoModeEnabled } =
+    useAtomValue(navigationState);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -35,10 +38,14 @@ export const useAutoMode = (enabled: boolean): void => {
   );
   const autoModeInboundIndexRef = useValueRef(autoModeInboundIndex);
   const autoModeOutboundIndexRef = useValueRef(autoModeOutboundIndex);
-  const autoModeApproachingTimerRef = useRef<NodeJS.Timer>();
-  const autoModeArriveTimerRef = useRef<NodeJS.Timer>();
+  const autoModeApproachingTimerRef = useRef<number>(null);
+  const autoModeArriveTimerRef = useRef<number>(null);
 
   const { isLoopLine } = useLoopLine();
+
+  const enabled = useMemo(() => {
+    return enableLegacyAutoMode && autoModeEnabled;
+  }, [enableLegacyAutoMode, autoModeEnabled]);
 
   const startApproachingTimer = useCallback(() => {
     if (

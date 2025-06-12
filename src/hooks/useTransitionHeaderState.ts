@@ -1,5 +1,5 @@
+import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -18,7 +18,7 @@ type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 export const useTransitionHeaderState = (): void => {
-  const { arrived, approaching, selectedBound } = useRecoilValue(stationState);
+  const { arrived, approaching, selectedBound } = useAtomValue(stationState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const [
     {
@@ -27,8 +27,8 @@ export const useTransitionHeaderState = (): void => {
       stationForHeader,
     },
     setNavigation,
-  ] = useRecoilState(navigationState);
-  const { headerTransitionInterval } = useRecoilValue(tuningState);
+  ] = useAtom(navigationState);
+  const { headerTransitionInterval } = useAtomValue(tuningState);
   const station = useCurrentStation();
 
   const headerStateRef = useValueRef(headerState);

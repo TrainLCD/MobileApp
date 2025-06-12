@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { HeaderStoppingState } from '../models/HeaderTransitionState';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -7,7 +7,7 @@ import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
 export const useStoppingState = (): HeaderStoppingState => {
-  const { arrived, approaching } = useRecoilValue(stationState);
+  const { arrived, approaching } = useAtomValue(stationState);
   const currentStation = useCurrentStation();
   const nextStation = useNextStation();
 

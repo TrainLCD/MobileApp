@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useRecoilState } from 'recoil';
+import navigationState from '~/store/atoms/navigation';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
 import Heading from '../../components/Heading';
@@ -19,7 +20,7 @@ import { RFValue } from '../../utils/rfValue';
 
 const styles = StyleSheet.create({
   rootPadding: {
-    paddingTop: 24,
+    paddingVertical: 24,
   },
   settingsItemHeading: {
     fontSize: RFValue(14),
@@ -57,9 +58,10 @@ const styles = StyleSheet.create({
 
 const AppSettingsScreen: React.FC = () => {
   const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
-    useRecoilState(speechState);
+    useAtom(speechState);
+  const [{ enableLegacyAutoMode }, setNavigationState] =
+    useAtom(navigationState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-
   const navigation = useNavigation();
 
   const onPressBack = useCallback(() => {
@@ -143,12 +145,22 @@ const AppSettingsScreen: React.FC = () => {
   const toThemeSettings = () => navigation.navigate('ThemeSettings' as never);
   const toEnabledLanguagesSettings = () =>
     navigation.navigate('EnabledLanguagesSettings' as never);
-
   const toTuning = () => navigation.navigate('TuningSettings' as never);
+  const onToggleLegacyAutoMode = useCallback(async () => {
+    await AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED,
+      !enableLegacyAutoMode ? 'true' : 'false'
+    );
+
+    setNavigationState((prev) => ({
+      ...prev,
+      enableLegacyAutoMode: !prev.enableLegacyAutoMode,
+    }));
+  }, [setNavigationState, enableLegacyAutoMode]);
 
   return (
     <>
-      <ScrollView style={styles.rootPadding}>
+      <ScrollView contentContainerStyle={styles.rootPadding}>
         <Heading>{translate('settings')}</Heading>
 
         <View style={styles.settingItems}>
@@ -219,6 +231,35 @@ const AppSettingsScreen: React.FC = () => {
               {translate('bgTtsAppClipAlertText')}
             </Typography>
           )}
+
+          <View
+            style={[
+              styles.settingItem,
+              {
+                flexDirection: 'row',
+                marginTop: 8,
+              },
+            ]}
+          >
+            {isLEDTheme ? (
+              <LEDThemeSwitch
+                style={{ marginRight: 8 }}
+                value={enableLegacyAutoMode}
+                onValueChange={onToggleLegacyAutoMode}
+              />
+            ) : (
+              <Switch
+                style={{ marginRight: 8 }}
+                value={enableLegacyAutoMode}
+                onValueChange={onToggleLegacyAutoMode}
+                ios_backgroundColor={'#fff'}
+              />
+            )}
+
+            <Typography style={styles.settingsItemHeading}>
+              {translate('legacyAutoModeTitle')}
+            </Typography>
+          </View>
         </View>
 
         <View style={styles.settingItemList}>

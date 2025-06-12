@@ -84,7 +84,7 @@ const PrivacyScreen: React.FC = () => {
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {
       Alert.alert(
-        translate('annoucementTitle'),
+        translate('announcementTitle'),
         translate(
           devicePermissionDenied ? 'privacyDeniedByDevice' : 'privacyDenied'
         ),

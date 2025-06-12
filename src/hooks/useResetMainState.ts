@@ -1,12 +1,12 @@
+import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import { useSetRecoilState } from 'recoil';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 
 export const useResetMainState = () => {
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setStationState = useSetRecoilState(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const setStationState = useSetAtom(stationState);
 
   const reset = useCallback(() => {
     setNavigationState((prev) => ({

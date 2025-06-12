@@ -15,8 +15,8 @@ import {
 import { RFValue } from '../utils/rfValue';
 
 import { useMutation, useQuery } from '@connectrpc/connect-query';
+import { useSetAtom } from 'jotai';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
-import { useSetRecoilState } from 'recoil';
 import {
   getRoutes,
   getStationByIdList,
@@ -79,9 +79,9 @@ const RouteSearchScreen = () => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false);
-  const setStationState = useSetRecoilState(stationState);
-  const setLineState = useSetRecoilState(lineState);
-  const setNavigationState = useSetRecoilState(navigationState);
+  const setStationState = useSetAtom(stationState);
+  const setLineState = useSetAtom(lineState);
+  const setNavigationState = useSetAtom(navigationState);
 
   const currentStation = useCurrentStation();
   const getTerminatedStations = useGetStationsWithTermination();
@@ -141,9 +141,9 @@ const RouteSearchScreen = () => {
   const groupedStations = useMemo(
     () =>
       groupStations(byNameData?.stations ?? []).filter(
-        (sta) => sta.groupId !== currentStation?.groupId
+        (sta) => sta.id !== currentStation?.id
       ),
-    [byNameData?.stations, currentStation?.groupId]
+    [byNameData?.stations, currentStation?.id]
   );
 
   const handleStationPress = useCallback(
@@ -176,9 +176,9 @@ const RouteSearchScreen = () => {
 
   const handleSelect = useCallback(
     async (route: Route | undefined, asTerminus: boolean) => {
-      const stop = route?.stops.find(
-        (s) => s.groupId === currentStation?.groupId
-      );
+      const stop =
+        route?.stops.find((s) => s.id === currentStation?.id) ??
+        route?.stops.find((s) => s.groupId === currentStation?.groupId);
       if (!stop) {
         return;
       }
@@ -190,15 +190,11 @@ const RouteSearchScreen = () => {
           ids: route?.stops.map((r) => r.id),
         });
         const stationInRoute =
-          stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
+          stations.find((s) => s.id === currentStation?.id) ?? null;
 
         const direction: LineDirection =
-          (stations ?? []).findIndex(
-            (s) => s.groupId === currentStation?.groupId
-          ) <
-          (stations ?? []).findIndex(
-            (s) => s.groupId === selectedStation?.groupId
-          )
+          (stations ?? []).findIndex((s) => s.id === currentStation?.id) <
+          (stations ?? []).findIndex((s) => s.id === selectedStation?.id)
             ? 'INBOUND'
             : 'OUTBOUND';
 
@@ -233,11 +229,13 @@ const RouteSearchScreen = () => {
       });
 
       const station =
-        stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
+        stations.find((s) => s.id === currentStation?.id) ??
+        stations.find((s) => s.groupId === currentStation?.groupId) ??
+        null;
 
       const direction: LineDirection =
-        stations.findIndex((s) => s.groupId === currentStation?.groupId) <
-        stations.findIndex((s) => s.groupId === selectedStation?.groupId)
+        stations.findIndex((s) => s.id === currentStation?.id) <
+        stations.findIndex((s) => s.id === selectedStation?.id)
           ? 'INBOUND'
           : 'OUTBOUND';
 
@@ -269,6 +267,7 @@ const RouteSearchScreen = () => {
       );
     },
     [
+      currentStation?.id,
       currentStation?.groupId,
       fetchStationByIdList,
       fetchStationsByLineGroupId,

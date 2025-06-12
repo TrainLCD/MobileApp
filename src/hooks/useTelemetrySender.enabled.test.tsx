@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { RecoilRoot } from 'recoil';
+import { Provider } from 'jotai';
 import { useLocationStore } from '~/hooks/useLocationStore';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 
@@ -17,7 +17,7 @@ jest.mock('~/constants/telemetry', () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <RecoilRoot>{children}</RecoilRoot>
+  <Provider>{children}</Provider>
 );
 
 let mockWebSocketSend: jest.Mock;
@@ -38,15 +38,17 @@ describe('useTelemetrySender', () => {
     (global as any).WebSocket.OPEN = 1;
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (global as any).WebSocket.CONNECTING = 0;
-    (useLocationStore as unknown as jest.Mock).mockImplementation((selector) =>
-      selector({
-        coords: {
-          latitude: 35.0,
-          longitude: 139.0,
-          accuracy: 5,
-          speed: 10,
-        },
-      })
+    (useLocationStore as unknown as jest.Mock).mockImplementation(
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      (selector: (state: any) => any) =>
+        selector({
+          coords: {
+            latitude: 35.0,
+            longitude: 139.0,
+            accuracy: 5,
+            speed: 10,
+          },
+        })
     );
 
     jest.useFakeTimers();

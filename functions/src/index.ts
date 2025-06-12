@@ -93,7 +93,8 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(
       /Ryogoku/gi,
       '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
-    );
+    )
+    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');
 
   if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
     throw new HttpsError(
@@ -258,6 +259,8 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     imageUrl,
     appEdition,
     appClip,
+    autoModeEnabled,
+    enableLegacyAutoMode,
   } = report;
   const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
 
@@ -271,10 +274,23 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     if (deviceInfo?.osName === 'iOS') {
       return '🍎 iOS';
     }
+    if (deviceInfo?.osName === 'iPadOS') {
+      return '🍎 iPadOS';
+    }
     if (deviceInfo?.osName === 'Android') {
       return '🤖 Android';
     }
     return '❓ Other OS';
+  })();
+
+  const autoModeLabel = (() => {
+    if (autoModeEnabled && !enableLegacyAutoMode) {
+      return '🤖 Auto Mode 2.0';
+    }
+    if (autoModeEnabled && enableLegacyAutoMode) {
+      return '🤖 Auto Mode 1.0';
+    }
+    return undefined;
   })();
 
   try {
@@ -315,6 +331,9 @@ ${language}
 ## アプリのバージョン
 ${appVersion}
 
+## オートモード
+${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
+
 ## レポーターUID
 ${reporterUid}
         `.trim(),
@@ -328,6 +347,7 @@ ${reporterUid}
             appClip && '📎 App Clip',
             isSpamUser && '💩 Spam',
             osNameLabel,
+            autoModeLabel,
           ].filter(Boolean),
           headers: {
             'X-GitHub-Api-Version': '2022-11-28',
@@ -383,6 +403,12 @@ ${reporterUid}
                 value: reporterUid,
               },
               {
+                name: 'オートモード',
+                value:
+                  autoModeLabel ??
+                  (autoModeEnabled === false ? '無効' : '不明'),
+              },
+              {
                 name: 'GitHub Issue',
                 value: issuesRes.html_url,
               },
@@ -411,6 +437,12 @@ ${reporterUid}
               {
                 name: 'レポーターUID',
                 value: reporterUid,
+              },
+              {
+                name: 'オートモード',
+                value:
+                  autoModeLabel ??
+                  (autoModeEnabled === false ? '無効' : '不明'),
               },
               {
                 name: 'GitHub Issue',

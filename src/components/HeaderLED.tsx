@@ -1,6 +1,6 @@
+import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useCurrentStation,
@@ -63,8 +63,8 @@ const HeaderLED = () => {
   const [nextStationNumber] = useNumbering();
   const [currentStationNumber] = useNumbering(true);
 
-  const { selectedBound } = useRecoilValue(stationState);
-  const { headerState } = useRecoilValue(navigationState);
+  const { selectedBound } = useAtomValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
 
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');

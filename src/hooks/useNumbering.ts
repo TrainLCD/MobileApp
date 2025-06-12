@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
 import { type StationNumber, TrainTypeKind } from '~/gen/proto/stationapi_pb';
 import { JOBAN_LINE_IDS } from '../constants';
 import stationState from '../store/atoms/station';
@@ -13,7 +13,7 @@ import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 export const useNumbering = (
   priorCurrent?: boolean
 ): [StationNumber | undefined, string | undefined] => {
-  const { arrived, selectedBound } = useRecoilValue(stationState);
+  const { arrived, selectedBound } = useAtomValue(stationState);
   const stoppedCurrentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
 
@@ -22,7 +22,7 @@ export const useNumbering = (
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
-  const nextStation = useNextStation(true, currentLine?.station);
+  const nextStation = useNextStation(true);
 
   const getStationNumberIndex = useStationNumberIndexFunc();
 

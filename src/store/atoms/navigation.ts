@@ -1,9 +1,8 @@
-import { atom } from 'recoil';
+import { atom } from 'jotai';
 import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,
-  RECOIL_STATES,
 } from '../../constants';
 import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
@@ -19,6 +18,9 @@ export interface NavigationState {
   stationForHeader: Station | null;
   enabledLanguages: AvailableLanguage[];
   fetchedTrainTypes: TrainType[];
+  autoModeEnabled: boolean;
+  enableLegacyAutoMode: boolean;
+  isAppLatest: boolean;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -29,11 +31,11 @@ export const initialNavigationState: NavigationState = {
   stationForHeader: null,
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   fetchedTrainTypes: [],
+  autoModeEnabled: false,
+  enableLegacyAutoMode: false,
+  isAppLatest: false,
 };
 
-const navigationState = atom<NavigationState>({
-  key: RECOIL_STATES.navigation,
-  default: initialNavigationState,
-});
+const navigationState = atom<NavigationState>(initialNavigationState);
 
 export default navigationState;

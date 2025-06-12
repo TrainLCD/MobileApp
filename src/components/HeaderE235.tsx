@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { useRecoilValue } from 'recoil';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
   },
   boundContainer: {
     width: '100%',
-    height: isTablet ? 100 : 50,
-    justifyContent: 'center',
+    height: '50%',
+    justifyContent: 'flex-end',
   },
   bound: {
     color: '#fff',
@@ -71,10 +71,13 @@ const styles = StyleSheet.create({
   },
   right: {
     flex: 1,
-    justifyContent: 'center',
+    position: 'relative',
+    justifyContent: 'flex-end',
     height: isTablet ? 200 : 128,
   },
   state: {
+    position: 'absolute',
+    top: isTablet ? 24 : 12,
     color: '#fff',
     fontWeight: 'bold',
     fontSize: RFValue(21),
@@ -100,15 +103,15 @@ type Props = {
   isJO?: boolean;
 };
 
-const HeaderE235: React.FC<Props> = ({ isJO }) => {
+const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
 
   const [stateText, setStateText] = useState(translate('nowStoppingAt'));
   const [stationText, setStationText] = useState(station?.name || '');
-  const { headerState } = useRecoilValue(navigationState);
-  const { selectedBound, arrived } = useRecoilValue(stationState);
+  const { headerState } = useAtomValue(navigationState);
+  const { selectedBound, arrived } = useAtomValue(stationState);
   const isLast = useIsNextLastStop();
   const trainType = useCurrentTrainType();
   const boundStationNameList = useBoundText(true);
@@ -316,7 +319,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
             marginTop: boundContainerMarginTop,
           }}
         >
-          {selectedBound && (
+          {selectedBound && boundPrefix.length ? (
             <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
@@ -327,7 +330,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
             >
               {boundPrefix}
             </Typography>
-          )}
+          ) : null}
           <Typography
             style={{
               ...styles.bound,
@@ -338,7 +341,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
           >
             {boundText}
           </Typography>
-          {selectedBound && (
+          {selectedBound && boundSuffix.length ? (
             <Typography
               style={[
                 {
@@ -350,7 +353,7 @@ const HeaderE235: React.FC<Props> = ({ isJO }) => {
             >
               {boundSuffix}
             </Typography>
-          )}
+          ) : null}
         </View>
       </View>
       <View

@@ -1,5 +1,5 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import { Line, type Station } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
@@ -19,7 +19,7 @@ export const useTransferLinesFromStation = (
     omitJR: false,
   };
 
-  const { stations } = useRecoilValue(stationState);
+  const { stations } = useAtomValue(stationState);
 
   const transferLines = useMemo(
     () =>

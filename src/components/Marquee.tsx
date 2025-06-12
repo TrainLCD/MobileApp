@@ -22,16 +22,8 @@ const Marquee = ({ children }: Props) => {
 
   const startScroll = useCallback(
     (width: number) => {
-      // 1ピクセルあたり15msで計算し、3秒〜30秒の範囲に制限
-      const durationPerPixel = 15;
-      const minDuration = 3000;
-      const maxDuration = 30000;
-      const duration = Math.min(
-        Math.max(width * durationPerPixel, minDuration),
-        maxDuration
-      );
       offsetX.value = withRepeat(
-        withTiming(-width, { duration, easing: Easing.linear }),
+        withTiming(-width, { duration: 8500, easing: Easing.linear }),
         -1
       );
     },

@@ -4,21 +4,31 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  Linking,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   ALL_AVAILABLE_LANGUAGES,
+  APP_STORE_URL,
   ASYNC_STORAGE_KEYS,
+  GOOGLE_PLAY_URL,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
 import {
   useAndroidWearable,
   useAppleWatch,
+  useAutoModeAlert,
   useCachedInitAnonymousUser,
   useCheckStoreVersion,
   useCurrentLine,
@@ -49,9 +59,9 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const { selectedBound } = useRecoilValue(stationState);
-  const setNavigation = useSetRecoilState(navigationState);
-  const setSpeech = useSetRecoilState(speechState);
+  const { selectedBound } = useAtomValue(stationState);
+  const setNavigation = useSetAtom(navigationState);
+  const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
@@ -67,15 +77,47 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
-
+  const { isAppLatest } = useAtomValue(navigationState);
   const viewShotRef = useRef<ViewShot>(null);
 
   const handleReport = useCallback(async () => {
-    if (!viewShotRef.current?.capture) {
-      return;
-    }
-
     try {
+      if (!isAppLatest) {
+        Alert.alert(
+          translate('announcementTitle'),
+          translate('updateRequiredForReport'),
+          [
+            {
+              text: translate('updateApp'),
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const url = Platform.select({
+                    ios: APP_STORE_URL,
+                    android: GOOGLE_PLAY_URL,
+                  });
+                  if (!url) {
+                    return;
+                  }
+                  await Linking.openURL(url);
+                } catch (e) {
+                  Alert.alert(translate('errorTitle'), String(e));
+                }
+              },
+            },
+            {
+              text: translate('cancel'),
+              style: 'cancel',
+            },
+          ]
+        );
+        return;
+      }
+
+      if (!viewShotRef.current?.capture) {
+        return;
+      }
+
       const uri = await viewShotRef.current.capture();
       setScreenShotBase64(
         await FileSystem.readAsStringAsync(uri, { encoding: 'base64' })
@@ -86,7 +128,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       console.error(err);
       Alert.alert(translate('errorTitle'), translate('reportError'));
     }
-  }, []);
+  }, [isAppLatest]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {
@@ -139,21 +181,26 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      const buttons = Platform.select({
-        ios: [
-          translate('back'),
-          translate('share'),
-          translate('report'),
-          translate('cancel'),
-        ],
-        android: [translate('share'), translate('report'), translate('cancel')],
-      });
+      const options =
+        Platform.select({
+          ios: [
+            translate('back'),
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+          android: [
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+        }) ?? [];
 
       showActionSheetWithOptions(
         {
-          options: buttons || [],
+          options,
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-          cancelButtonIndex: buttons && buttons.length - 1,
+          cancelButtonIndex: options.length - 1,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
@@ -236,6 +283,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ...prev,
         backgroundEnabled: bgTTSEnabledStr === 'true',
       }));
+
+      const legacyAutoModeEnabledStr = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED
+      );
+      setNavigation((prev) => ({
+        ...prev,
+        enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
+      }));
     };
 
     loadSettingsAsync();
@@ -280,36 +335,40 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
 
-    Alert.alert(translate('annoucementTitle'), translate('reportConfirmText'), [
-      {
-        text: translate('agree'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setSendingReport(true);
-            await sendReport({
-              reportType: 'feedback',
-              description: reportDescription.trim(),
-              screenShotBase64,
-            });
-            setSendingReport(false);
-            Alert.alert(
-              translate('annoucementTitle'),
-              translate('reportSuccessText')
-            );
-            handleNewReportModalClose();
-          } catch (err) {
-            console.error(err);
-            setSendingReport(false);
-            Alert.alert(translate('errorTitle'), translate('reportError'));
-          }
+    Alert.alert(
+      translate('announcementTitle'),
+      translate('reportConfirmText'),
+      [
+        {
+          text: translate('agree'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setSendingReport(true);
+              await sendReport({
+                reportType: 'feedback',
+                description: reportDescription.trim(),
+                screenShotBase64,
+              });
+              setSendingReport(false);
+              Alert.alert(
+                translate('announcementTitle'),
+                translate('reportSuccessText')
+              );
+              handleNewReportModalClose();
+            } catch (err) {
+              console.error(err);
+              setSendingReport(false);
+              Alert.alert(translate('errorTitle'), translate('reportError'));
+            }
+          },
         },
-      },
-      {
-        text: translate('disagree'),
-        style: 'cancel',
-      },
-    ]);
+        {
+          text: translate('disagree'),
+          style: 'cancel',
+        },
+      ]
+    );
   }, [
     descriptionLowerLimit,
     handleNewReportModalClose,
@@ -317,6 +376,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
     sendReport,
   ]);
+
+  // TODO: 適当なタイミングで消す
+  useAutoModeAlert();
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>

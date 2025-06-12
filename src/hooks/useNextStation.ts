@@ -1,24 +1,19 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
 import type { Station } from '~/gen/proto/stationapi_pb';
-import { APP_THEME } from '../models/Theme';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import stationState from '../store/atoms/station';
-import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
-import { useThemeStore } from './useThemeStore';
 
 export const useNextStation = (
   ignorePass = true,
   originStation?: Station
 ): Station | undefined => {
   const { stations: stationsFromState, selectedDirection } =
-    useRecoilValue(stationState);
-  const theme = useThemeStore();
-  const currentStation = useCurrentStation(
-    theme === APP_THEME.JR_WEST || theme === APP_THEME.LED
-  );
+    useAtomValue(stationState);
+  const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();
 
   const station = useMemo(
@@ -35,8 +30,8 @@ export const useNextStation = (
     if (isLoopLine) {
       const loopLineStationIndex =
         selectedDirection === 'INBOUND'
-          ? stations.findIndex((s) => s?.groupId === station?.groupId) - 1
-          : stations.findIndex((s) => s?.groupId === station?.groupId) + 1;
+          ? stations.findIndex((s) => s?.id === station?.id) - 1
+          : stations.findIndex((s) => s?.id === station?.id) + 1;
 
       if (!stations[loopLineStationIndex]) {
         return stations[
@@ -49,15 +44,15 @@ export const useNextStation = (
 
     const notLoopLineStationIndex =
       selectedDirection === 'INBOUND'
-        ? stations.findIndex((s) => s?.groupId === station?.groupId) + 1
-        : stations.findIndex((s) => s?.groupId === station?.groupId) - 1;
+        ? stations.findIndex((s) => s?.id === station?.id) + 1
+        : stations.findIndex((s) => s?.id === station?.id) - 1;
 
     return stations[notLoopLineStationIndex];
-  }, [isLoopLine, selectedDirection, station?.groupId, stations]);
+  }, [isLoopLine, selectedDirection, station?.id, stations]);
 
   const nextInboundStopStation = useMemo(() => {
     const inboundCurrentStationIndex = stations.findIndex(
-      (s) => s?.groupId === station?.groupId
+      (s) => s?.id === station?.id
     );
 
     return actualNextStation && getIsPass(actualNextStation) && ignorePass
@@ -65,13 +60,13 @@ export const useNextStation = (
           .slice(inboundCurrentStationIndex - stations.length + 1)
           .find((s) => !getIsPass(s))
       : actualNextStation;
-  }, [actualNextStation, ignorePass, station?.groupId, stations]);
+  }, [actualNextStation, ignorePass, station?.id, stations]);
 
   const nextOutboundStopStation = useMemo(() => {
     const outboundCurrentStationIndex = stations
       .slice()
       .reverse()
-      .findIndex((s) => s?.groupId === station?.groupId);
+      .findIndex((s) => s?.id === station?.id);
 
     return actualNextStation && getIsPass(actualNextStation) && ignorePass
       ? stations

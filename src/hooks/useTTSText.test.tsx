@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
-import React, { useEffect } from 'react';
-import { RecoilRoot, useSetRecoilState } from 'recoil';
+import { Provider, useSetAtom } from 'jotai';
+import type React from 'react';
+import { useEffect } from 'react';
 import { StationNumber } from '~/gen/proto/stationapi_pb';
 import { useTTSText } from '~/hooks/useTTSText';
 import { useThemeStore } from '~/hooks/useThemeStore';
@@ -28,13 +29,13 @@ const setupMockUseNumbering = ([stationNumber, threeLetterCode]: [
     threeLetterCode,
   ]);
 
-const useTTSTextWithRecoilAndNumbering = (
+const useTTSTextWithJotaiAndNumbering = (
   theme: AppTheme,
   headerState: HeaderStoppingState
 ) => {
-  const setLineState = useSetRecoilState(lineState);
-  const setStationState = useSetRecoilState(stationState);
-  const setNaivgationState = useSetRecoilState(navigationState);
+  const setLineState = useSetAtom(lineState);
+  const setStationState = useSetAtom(stationState);
+  const setNaivgationState = useSetAtom(navigationState);
 
   useEffect(() => {
     const station = TOEI_SHINJUKU_LINE_STATIONS[0];
@@ -63,6 +64,10 @@ const useTTSTextWithRecoilAndNumbering = (
   const texts = useTTSText(false, true);
   return texts;
 };
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <Provider>{children}</Provider>
+);
 
 // TODO: firstSpeech refの動作検証が取れていないので後でfirstSpeechも対象にして実施する
 describe('Without trainType & With numbering', () => {
@@ -99,12 +104,12 @@ describe('Without trainType & With numbering', () => {
     (theme, state) => {
       const { result } = renderHook(
         () =>
-          useTTSTextWithRecoilAndNumbering(
+          useTTSTextWithJotaiAndNumbering(
             theme as AppTheme,
             state as HeaderStoppingState
           ),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       const [jaSSML, enSSML] = result.current;
@@ -116,9 +121,9 @@ describe('Without trainType & With numbering', () => {
   describe('TOKYO_METRO Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -128,9 +133,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOKYO_METRO', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -143,9 +148,9 @@ describe('Without trainType & With numbering', () => {
   describe('TY Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TY', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('TY', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -155,9 +160,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TY', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('TY', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -170,9 +175,9 @@ describe('Without trainType & With numbering', () => {
   describe('YAMANOTE Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('YAMANOTE', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('YAMANOTE', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -182,9 +187,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('YAMANOTE', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('YAMANOTE', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -197,9 +202,9 @@ describe('Without trainType & With numbering', () => {
   describe('JR_WEST Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('JR_WEST', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('JR_WEST', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -209,9 +214,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('JR_WEST', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('JR_WEST', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -224,9 +229,9 @@ describe('Without trainType & With numbering', () => {
   describe('SAIKYO Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('SAIKYO', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('SAIKYO', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -236,9 +241,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('SAIKYO', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('SAIKYO', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -251,9 +256,9 @@ describe('Without trainType & With numbering', () => {
   describe('TOEI Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOEI', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('TOEI', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -263,9 +268,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('TOEI', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('TOEI', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -278,9 +283,9 @@ describe('Without trainType & With numbering', () => {
   describe('LED Theme', () => {
     test('should be NEXT', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('LED', 'NEXT'),
+        () => useTTSTextWithJotaiAndNumbering('LED', 'NEXT'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([
@@ -290,9 +295,9 @@ describe('Without trainType & With numbering', () => {
     });
     test('should be ARRIVING', () => {
       const { result } = renderHook(
-        () => useTTSTextWithRecoilAndNumbering('LED', 'ARRIVING'),
+        () => useTTSTextWithJotaiAndNumbering('LED', 'ARRIVING'),
         {
-          wrapper: ({ children }) => <RecoilRoot>{children}</RecoilRoot>,
+          wrapper: wrapper,
         }
       );
       expect(result.current).toEqual([

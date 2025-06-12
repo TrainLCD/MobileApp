@@ -1,15 +1,16 @@
 import * as Location from 'expo-location';
+import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
+import navigationState from '~/store/atoms/navigation';
 import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
-import { useApplicationFlagStore } from './useApplicationFlagStore';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { setLocation } from './useLocationStore';
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
-  const { autoModeEnabled } = useApplicationFlagStore();
+  const { autoModeEnabled } = useAtomValue(navigationState);
 
   useEffect(() => {
     if (autoModeEnabled || !bgPermGranted) {

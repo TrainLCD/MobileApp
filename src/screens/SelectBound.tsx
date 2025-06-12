@@ -1,4 +1,5 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -7,7 +8,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   Line,
   type Station,
@@ -19,12 +19,7 @@ import ErrorScreen from '../components/ErrorScreen';
 import Heading from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
-import {
-  useApplicationFlagStore,
-  useBounds,
-  useLoopLine,
-  useStationList,
-} from '../hooks';
+import { useBounds, useLoopLine, useStationList } from '../hooks';
 import { type LineDirection, directionToDirectionName } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -73,16 +68,12 @@ type RenderButtonProps = {
 const SelectBoundScreen: React.FC = () => {
   const navigation = useNavigation();
   const [{ station, stations, wantedDestination }, setStationState] =
-    useRecoilState(stationState);
-  const [{ trainType, fetchedTrainTypes }, setNavigationState] =
-    useRecoilState(navigationState);
-  const { selectedLine } = useRecoilValue(lineState);
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
-  const toggleAutoModeEnabled = useApplicationFlagStore(
-    (state) => state.toggleAutoModeEnabled
-  );
+    useAtom(stationState);
+  const [
+    { trainType, fetchedTrainTypes, autoModeEnabled },
+    setNavigationState,
+  ] = useAtom(navigationState);
+  const { selectedLine } = useAtomValue(lineState);
 
   const { loading, error, refetchStations } = useStationList();
   const { isLoopLine } = useLoopLine();
@@ -96,7 +87,9 @@ const SelectBoundScreen: React.FC = () => {
     [fetchedTrainTypes]
   );
 
-  const currentIndex = getCurrentStationIndex(stations, station);
+  const currentIndex = stations.findIndex(
+    (s) => s.groupId === station?.groupId
+  );
 
   const handleSelectBoundBackButtonPress = useCallback(() => {
     setStationState((prev) => ({
@@ -216,7 +209,7 @@ const SelectBoundScreen: React.FC = () => {
     [inboundStations, outboundStations, selectedLine]
   );
 
-  const renderButton: React.FC<RenderButtonProps> = useCallback(
+  const renderButton = useCallback(
     ({ boundStations, direction }: RenderButtonProps) => {
       if (wantedDestination) {
         const currentStationIndex = stations.findIndex(
@@ -289,6 +282,13 @@ const SelectBoundScreen: React.FC = () => {
       handleSelectBoundBackButtonPress();
     };
   }, []);
+
+  const toggleAutoModeEnabled = useCallback(() => {
+    setNavigationState((prev) => ({
+      ...prev,
+      autoModeEnabled: !prev.autoModeEnabled,
+    }));
+  }, [setNavigationState]);
 
   if (error) {
     return (

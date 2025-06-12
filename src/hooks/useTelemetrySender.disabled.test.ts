@@ -9,9 +9,9 @@ jest.mock('expo-device', () => ({
   modelName: 'TestDevice',
 }));
 
-jest.mock('recoil', () => ({
+jest.mock('jotai', () => ({
   atom: jest.fn(),
-  useRecoilValue: jest.fn(() => ({
+  useAtomValue: jest.fn(() => ({
     arrived: false,
     approaching: true,
   })),
@@ -22,16 +22,19 @@ jest.mock('~/hooks/useIsPassing', () => ({
 }));
 
 jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: jest.fn().mockImplementation((selector) =>
-    selector({
-      coords: {
-        latitude: 35,
-        longitude: 139,
-        accuracy: 5,
-        speed: 10,
-      },
-    })
-  ),
+  useLocationStore: jest
+    .fn()
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    .mockImplementation((selector: (state: any) => any) =>
+      selector({
+        coords: {
+          latitude: 35,
+          longitude: 139,
+          accuracy: 5,
+          speed: 10,
+        },
+      })
+    ),
 }));
 
 describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {

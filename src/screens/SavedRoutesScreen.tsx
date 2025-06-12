@@ -1,9 +1,9 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import findNearest from 'geolib/es/findNearest';
+import { useSetAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSetRecoilState } from 'recoil';
 import { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import Heading from '../components/Heading';
@@ -60,9 +60,9 @@ const ListEmptyComponent: React.FC = () => (
 );
 
 const SavedRoutesScreen: React.FC = () => {
-  const setLineState = useSetRecoilState(lineState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setStationState = useSetRecoilState(stationState);
+  const setLineState = useSetAtom(lineState);
+  const setNavigationState = useSetAtom(navigationState);
+  const setStationState = useSetAtom(stationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);

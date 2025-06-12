@@ -10,6 +10,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
+import { Provider } from 'jotai';
 import React, { type ErrorInfo, useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import {
@@ -21,7 +22,6 @@ import {
 } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { RecoilRoot } from 'recoil';
 import ErrorFallback from './components/ErrorBoundary';
 import TuningSettings from './components/TuningSettings';
 import { useAnonymousUser, useFeedback } from './hooks';
@@ -128,7 +128,7 @@ const App: React.FC = () => {
           <TransportProvider transport={transport}>
             <QueryClientProvider client={queryClient}>
               <ActionSheetProvider>
-                <RecoilRoot>
+                <Provider>
                   <NavigationContainer>
                     <DeepLinkProvider>
                       <Stack.Navigator screenOptions={screenOptions}>
@@ -172,7 +172,7 @@ const App: React.FC = () => {
                       </Stack.Navigator>
                     </DeepLinkProvider>
                   </NavigationContainer>
-                </RecoilRoot>
+                </Provider>
               </ActionSheetProvider>
             </QueryClientProvider>
           </TransportProvider>

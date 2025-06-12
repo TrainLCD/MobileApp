@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Alert,
@@ -13,14 +14,12 @@ import {
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
   LineType,
   type Station,
   StopCondition,
 } from '~/gen/proto/stationapi_pb';
 import {
-  useApplicationFlagStore,
   useAutoMode,
   useCurrentLine,
   useCurrentStation,
@@ -42,6 +41,7 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
@@ -70,23 +70,19 @@ const MainScreen: React.FC = () => {
   const isLEDTheme = theme === APP_THEME.LED;
 
   const [{ stations, selectedDirection, arrived }, setStationState] =
-    useRecoilState(stationState);
+    useAtom(stationState);
   const [{ leftStations, bottomState }, setNavigationState] =
-    useRecoilState(navigationState);
-  const setLineState = useSetRecoilState(lineState);
+    useAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
   const trainType = useCurrentTrainType();
 
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
-
   const nextStation = useNextStation();
 
-  useAutoMode(autoModeEnabled);
-  useSimulationMode(autoModeEnabled);
+  useAutoMode();
+  useSimulationMode();
 
   useTelemetrySender(true);
 
@@ -267,7 +263,7 @@ const MainScreen: React.FC = () => {
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
         Alert.alert(
-          translate('annoucementTitle'),
+          translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
@@ -284,7 +280,11 @@ const MainScreen: React.FC = () => {
               text: 'OK',
               onPress: async () => {
                 try {
-                  await Location.requestBackgroundPermissionsAsync();
+                  const { status } =
+                    await Location.requestBackgroundPermissionsAsync();
+                  if (status === 'granted') {
+                    await requestIgnoreBatteryOptimizationsAndroid();
+                  }
                 } catch (error) {
                   Alert.alert(
                     translate('errorTitle'),
@@ -299,12 +299,14 @@ const MainScreen: React.FC = () => {
       }
 
       if (Platform.OS === 'android' && bgPermStatus.granted) {
+        const { status: bgStatus } =
+          await Location.getBackgroundPermissionsAsync();
         const dozeAlertDismissed = await AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
         );
-        if (dozeAlertDismissed !== 'true') {
+        if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
           Alert.alert(
-            translate('annoucementTitle'),
+            translate('announcementTitle'),
             translate('dozeAlertText'),
             [
               {
@@ -324,7 +326,7 @@ const MainScreen: React.FC = () => {
                     await Linking.openSettings();
                   } catch (error) {
                     Alert.alert(
-                      translate('annoucementTitle'),
+                      translate('announcementTitle'),
                       translate('failedToOpenSettings'),
                       [{ text: 'OK' }]
                     );

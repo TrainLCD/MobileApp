@@ -1,7 +1,7 @@
 import * as Device from 'expo-device';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
-import { useRecoilValue } from 'recoil';
 import { z } from 'zod';
 import { webSocketUrlRegexp } from '~/constants/regexp';
 import {
@@ -60,7 +60,7 @@ export const useTelemetrySender = (
   const speed = useLocationStore((state) => state?.coords.speed);
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
-    useRecoilValue(stationState);
+    useAtomValue(stationState);
 
   const passing = useIsPassing();
 

@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { useSetRecoilState } from 'recoil';
 import type { Line } from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
@@ -16,7 +16,6 @@ import {
   parenthesisRegexp,
 } from '../constants';
 import {
-  useApplicationFlagStore,
   useConnectivity,
   useCurrentStation,
   useFetchCurrentLocationOnce,
@@ -53,16 +52,9 @@ const styles = StyleSheet.create({
 });
 
 const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetRecoilState(stationState);
-  const setNavigationState = useSetRecoilState(navigationState);
-  const setLineState = useSetRecoilState(lineState);
-
-  const autoModeEnabled = useApplicationFlagStore(
-    (state) => state.autoModeEnabled
-  );
-  const toggleAutoModeEnabled = useApplicationFlagStore(
-    (state) => state.toggleAutoModeEnabled
-  );
+  const setStationState = useSetAtom(stationState);
+  const [{ autoModeEnabled }, setNavigationState] = useAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
 
   const {
     fetchByCoords,
@@ -77,6 +69,13 @@ const SelectLineScreen: React.FC = () => {
   } = useFetchCurrentLocationOnce();
   const station = useCurrentStation();
   const locationState = useLocationStore();
+
+  const toggleAutoModeEnabled = useCallback(() => {
+    setNavigationState((prev) => ({
+      ...prev,
+      autoModeEnabled: !prev.autoModeEnabled,
+    }));
+  }, [setNavigationState]);
 
   useEffect(() => {
     const stopLocationUpdatesAsync = async () => {
@@ -186,7 +185,7 @@ const SelectLineScreen: React.FC = () => {
     [getLineMarkFunc, station]
   );
 
-  const renderLineButton: React.FC<Line> = useCallback(
+  const renderLineButton = useCallback(
     (line: Line) => {
       const buttonOnPress = (): void => handleLineSelected(line);
       const buttonText = getButtonText(line);

@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -8,7 +9,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useRecoilValue } from 'recoil';
 import { parenthesisRegexp } from '~/constants';
 import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { useLazyPrevious, usePrevious } from '~/hooks';
@@ -79,8 +79,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 }: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { headerState } = useRecoilValue(navigationState);
-  const { headerTransitionDelay } = useRecoilValue(tuningState);
+  const { headerState } = useAtomValue(navigationState);
+  const { headerTransitionDelay } = useAtomValue(tuningState);
 
   const textOpacityAnim = useSharedValue(0);
 
@@ -205,12 +205,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }));
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.length <= 10 ? 1 : 2),
-    [trainTypeName.length]
+    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => ((prevTrainTypeText?.length ?? 0) <= 10 ? 1 : 2),
-    [prevTrainTypeText?.length]
+    () => (prevTrainTypeText.split('\n').length === 1 ? 1 : 2),
+    [prevTrainTypeText]
   );
 
   return (

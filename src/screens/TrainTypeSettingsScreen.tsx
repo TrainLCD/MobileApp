@@ -1,9 +1,9 @@
 import { useQuery } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRecoilState } from 'recoil';
 import { getStationsByLineGroupId } from '~/gen/proto/stationapi-StationAPI_connectquery';
 import type { TrainType } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
@@ -27,10 +27,9 @@ const TrainTypeSettings: React.FC = () => {
   );
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
 
-  const [{ fetchedTrainTypes }, setNavigationState] =
-    useRecoilState(navigationState);
+  const [{ fetchedTrainTypes }, setNavigationState] = useAtom(navigationState);
   const [{ stations: stationsFromState }, setStationState] =
-    useRecoilState(stationState);
+    useAtom(stationState);
 
   const defaultQueries: SearchQuery[] = useMemo(() => {
     const allLines = uniqBy(
