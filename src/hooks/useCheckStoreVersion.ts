@@ -6,7 +6,7 @@ import { translate } from '../translation';
 export const useCheckStoreVersion = (): void => {
   const showUpdateRequestDialog = useCallback((storeURL: string) => {
     Alert.alert(
-      translate('annoucementTitle'),
+      translate('announcementTitle'),
       translate('newVersionAvailableText'),
       [
         { text: translate('cancel'), style: 'cancel' },

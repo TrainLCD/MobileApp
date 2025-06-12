@@ -294,36 +294,40 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
 
-    Alert.alert(translate('annoucementTitle'), translate('reportConfirmText'), [
-      {
-        text: translate('agree'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setSendingReport(true);
-            await sendReport({
-              reportType: 'feedback',
-              description: reportDescription.trim(),
-              screenShotBase64,
-            });
-            setSendingReport(false);
-            Alert.alert(
-              translate('annoucementTitle'),
-              translate('reportSuccessText')
-            );
-            handleNewReportModalClose();
-          } catch (err) {
-            console.error(err);
-            setSendingReport(false);
-            Alert.alert(translate('errorTitle'), translate('reportError'));
-          }
+    Alert.alert(
+      translate('announcementTitle'),
+      translate('reportConfirmText'),
+      [
+        {
+          text: translate('agree'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setSendingReport(true);
+              await sendReport({
+                reportType: 'feedback',
+                description: reportDescription.trim(),
+                screenShotBase64,
+              });
+              setSendingReport(false);
+              Alert.alert(
+                translate('announcementTitle'),
+                translate('reportSuccessText')
+              );
+              handleNewReportModalClose();
+            } catch (err) {
+              console.error(err);
+              setSendingReport(false);
+              Alert.alert(translate('errorTitle'), translate('reportError'));
+            }
+          },
         },
-      },
-      {
-        text: translate('disagree'),
-        style: 'cancel',
-      },
-    ]);
+        {
+          text: translate('disagree'),
+          style: 'cancel',
+        },
+      ]
+    );
   }, [
     descriptionLowerLimit,
     handleNewReportModalClose,
