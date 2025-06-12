@@ -94,6 +94,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 Linking.openURL(res.storeUrl);
               },
             },
+            {
+              text: translate('cancel'),
+              style: 'cancel',
+            },
           ]
         );
         return;
