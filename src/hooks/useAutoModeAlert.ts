@@ -18,7 +18,7 @@ export const useAutoModeAlert = () => {
         );
         if (autoModeEnabled && !enableLegacyAutoMode && !alreadyConfirmed) {
           Alert.alert(
-            translate('annoucementTitle'),
+            translate('announcementTitle'),
             translate('autoModeV2AlertText'),
             [
               {

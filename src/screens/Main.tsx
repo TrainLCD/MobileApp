@@ -263,7 +263,7 @@ const MainScreen: React.FC = () => {
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
         Alert.alert(
-          translate('annoucementTitle'),
+          translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
@@ -306,7 +306,7 @@ const MainScreen: React.FC = () => {
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
           Alert.alert(
-            translate('annoucementTitle'),
+            translate('announcementTitle'),
             translate('dozeAlertText'),
             [
               {
@@ -326,7 +326,7 @@ const MainScreen: React.FC = () => {
                     await Linking.openSettings();
                   } catch (error) {
                     Alert.alert(
-                      translate('annoucementTitle'),
+                      translate('announcementTitle'),
                       translate('failedToOpenSettings'),
                       [{ text: 'OK' }]
                     );

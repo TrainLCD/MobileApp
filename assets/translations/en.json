@@ -125,7 +125,7 @@
   "publishShareText": "Check my location on the Train LCD!",
   "publishProhibited": "You cannot publish a position while subscribing to another person.",
   "publisherNotReady": "The publisher has not selected a destination.",
-  "annoucementTitle": "Announcement",
+  "announcementTitle": "Announcement",
   "appCrashedText": "An unexpected problem has occurred with the app. We apologize for the inconvenience, but please try again from the beginning.",
   "stacktrace": "Stacktrace",
   "newVersionAvailableText": "A new version of TrainLCD is now available in the app store 🎉\nPlease update!",
