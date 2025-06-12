@@ -90,8 +90,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             {
               text: translate('updateApp'),
               style: 'destructive',
-              onPress: () => {
-                Linking.openURL(res.storeUrl);
+              onPress: async () => {
+                if (res.storeUrl) {
+                  try {
+                    await Linking.openURL(res.storeUrl);
+                  } catch (e) {
+                    Alert.alert(translate('errorTitle'), String(e));
+                  }
+                }
               },
             },
             {
