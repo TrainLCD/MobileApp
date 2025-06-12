@@ -12,11 +12,11 @@ export const useAutoModeAlert = () => {
 
   useEffect(() => {
     const showAlert = async (): Promise<void> => {
-      const alreadyConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED
-      );
-      if (autoModeEnabled && !enableLegacyAutoMode && !alreadyConfirmed) {
-        try {
+      try {
+        const alreadyConfirmed = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED
+        );
+        if (autoModeEnabled && !enableLegacyAutoMode && !alreadyConfirmed) {
           Alert.alert(
             translate('annoucementTitle'),
             translate('autoModeV2AlertText'),
@@ -36,9 +36,9 @@ export const useAutoModeAlert = () => {
               },
             ]
           );
-        } catch (error) {
-          console.error(error);
         }
+      } catch (error) {
+        console.error(error);
       }
     };
 
