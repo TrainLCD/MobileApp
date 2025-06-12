@@ -20,7 +20,9 @@ import VersionCheck from 'react-native-version-check';
 import ViewShot from 'react-native-view-shot';
 import {
   ALL_AVAILABLE_LANGUAGES,
+  APP_STORE_URL,
   ASYNC_STORAGE_KEYS,
+  GOOGLE_PLAY_URL,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
@@ -76,13 +78,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
-
+  const { isAppLatest } = useAtomValue(navigationState);
   const viewShotRef = useRef<ViewShot>(null);
 
   const handleReport = useCallback(async () => {
     try {
-      const res = await VersionCheck.needUpdate();
-      if (res?.isNeeded) {
+      if (!isAppLatest) {
         Alert.alert(
           translate('announcementTitle'),
           translate('updateRequiredForReport'),
@@ -91,12 +92,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               text: translate('updateApp'),
               style: 'destructive',
               onPress: async () => {
-                if (res.storeUrl) {
-                  try {
-                    await Linking.openURL(res.storeUrl);
-                  } catch (e) {
-                    Alert.alert(translate('errorTitle'), String(e));
-                  }
+                try {
+                  await Linking.openURL(
+                    Platform.select({
+                      ios: APP_STORE_URL,
+                      android: GOOGLE_PLAY_URL,
+                    }) ?? ''
+                  );
+                } catch (e) {
+                  Alert.alert(translate('errorTitle'), String(e));
                 }
               },
             },
@@ -123,7 +127,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       console.error(err);
       Alert.alert(translate('errorTitle'), translate('reportError'));
     }
-  }, []);
+  }, [isAppLatest]);
 
   const handleShare = useCallback(async () => {
     if (!viewShotRef || !currentLine) {
