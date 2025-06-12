@@ -16,25 +16,29 @@ export const useAutoModeAlert = () => {
         ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED
       );
       if (autoModeEnabled && !enableLegacyAutoMode && !alreadyConfirmed) {
-        Alert.alert(
-          translate('annoucementTitle'),
-          translate('autoModeV2AlertText'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED,
-                  'true'
-                );
+        try {
+          Alert.alert(
+            translate('annoucementTitle'),
+            translate('autoModeV2AlertText'),
+            [
+              {
+                text: translate('doNotShowAgain'),
+                style: 'cancel',
+                onPress: async (): Promise<void> => {
+                  await AsyncStorage.setItem(
+                    ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED,
+                    'true'
+                  );
+                },
               },
-            },
-            {
-              text: 'OK',
-            },
-          ]
-        );
+              {
+                text: 'OK',
+              },
+            ]
+          );
+        } catch (error) {
+          console.error(error);
+        }
       }
     };
 
