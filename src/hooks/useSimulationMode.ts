@@ -63,7 +63,7 @@ export const useSimulationMode = (): void => {
   }, [currentLineType, trainType]);
 
   const station = useInRadiusStation(maxSpeed / 2);
-  const nextStation = useNextStation(false, station ?? undefined);
+  const nextStation = useNextStation(false);
 
   const maybeRevsersedStations = useMemo(
     () =>

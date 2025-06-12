@@ -15,7 +15,6 @@ import { useThemeStore } from './useThemeStore';
 
 export const useRefreshLeftStations = (): void => {
   const setNavigation = useSetAtom(navigationState);
-  const setStation = useSetAtom(stationState);
   const {
     station: normalStation,
     stations: normalStations,
@@ -167,20 +166,20 @@ export const useRefreshLeftStations = (): void => {
       return;
     }
     const currentIndex = getCurrentStationIndex(stations, station);
+    if (currentIndex === -1) {
+      return;
+    }
     const leftStations =
       loopLine && getIsLocal(trainType)
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
-    setNavigation((prev) => {
-      const isChanged = leftStations[0]?.id !== prev.leftStations[0]?.id;
-      if (!isChanged) {
-        return prev;
-      }
-      return {
-        ...prev,
-        leftStations,
-      };
-    });
+    setNavigation((prev) => ({
+      ...prev,
+      leftStations:
+        leftStations[0]?.groupId !== prev.leftStations[0]?.groupId
+          ? leftStations
+          : prev.leftStations,
+    }));
   }, [
     getStations,
     getStationsForLoopLine,
