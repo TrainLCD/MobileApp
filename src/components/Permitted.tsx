@@ -18,18 +18,10 @@ import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import {
-  ALL_AVAILABLE_LANGUAGES,
-  APP_STORE_URL,
-  ASYNC_STORAGE_KEYS,
-  GOOGLE_PLAY_URL,
-  LONG_PRESS_DURATION,
-  parenthesisRegexp,
-} from '../constants';
-import {
   useAndroidWearable,
   useAppleWatch,
-  useBLEDiagnostic,
   useAutoModeAlert,
+  useBLEDiagnostic,
   useCachedInitAnonymousUser,
   useCheckStoreVersion,
   useCurrentLine,
@@ -37,6 +29,14 @@ import {
   useThemeStore,
   useWarningInfo,
 } from '~/hooks';
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  APP_STORE_URL,
+  ASYNC_STORAGE_KEYS,
+  GOOGLE_PLAY_URL,
+  LONG_PRESS_DURATION,
+  parenthesisRegexp,
+} from '../constants';
 import type { AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
