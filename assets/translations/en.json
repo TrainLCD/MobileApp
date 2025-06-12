@@ -174,5 +174,6 @@
   "jlLike": "Joban Line",
   "routeListTitle": "Directions to %{stationName} Station",
   "legacyAutoModeTitle": "Enable legacy auto mode",
-  "inUse": "In use"
+  "inUse": "In use",
+  "autoModeV2AlertText": "Auto mode has been updated. It will operate according to the distance between stations. If the distance between stations is long, it may take a while to switch. You can return to the original auto mode in the settings."
 }
