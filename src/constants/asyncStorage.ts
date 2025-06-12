@@ -11,6 +11,7 @@ export const ASYNC_STORAGE_KEYS = {
   BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
   BG_TTS_NOTICE: '@TrainLCD:bgTtsNotice',
   LEGACY_AUTO_MODE_ENABLED: '@TrainLCD:enableLegacyAutoMode',
+  AUTO_MODE_V2_CONFIRMED: '@TrainLCD:autoModeV2Confirmed',
 } as const;
 
 export type AsyncStorageKeys =
