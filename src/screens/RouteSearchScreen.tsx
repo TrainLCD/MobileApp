@@ -176,9 +176,9 @@ const RouteSearchScreen = () => {
 
   const handleSelect = useCallback(
     async (route: Route | undefined, asTerminus: boolean) => {
-      const stop = route?.stops.find(
-        (s) => s.groupId === currentStation?.groupId
-      );
+      const stop =
+        route?.stops.find((s) => s.id === currentStation?.id) ??
+        route?.stops.find((s) => s.groupId === currentStation?.groupId);
       if (!stop) {
         return;
       }
