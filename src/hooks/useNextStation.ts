@@ -1,27 +1,29 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/gen/proto/stationapi_pb';
-import { APP_THEME } from '../models/Theme';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
-import { useThemeStore } from './useThemeStore';
 
 export const useNextStation = (
   ignorePass = true,
   originStation?: Station
 ): Station | undefined => {
-  const { stations, selectedDirection } = useAtomValue(stationState);
-  const theme = useThemeStore();
-  const currentStation = useCurrentStation(
-    theme === APP_THEME.JR_WEST || theme === APP_THEME.LED
-  );
+  const { stations: stationsFromState, selectedDirection } =
+    useAtomValue(stationState);
+  const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();
 
   const station = useMemo(
     () => originStation ?? currentStation,
     [originStation, currentStation]
+  );
+
+  const stations = useMemo(
+    () => dropEitherJunctionStation(stationsFromState, selectedDirection),
+    [selectedDirection, stationsFromState]
   );
 
   const actualNextStation = useMemo(() => {
