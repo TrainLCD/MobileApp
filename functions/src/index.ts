@@ -403,6 +403,12 @@ ${reporterUid}
                 value: reporterUid,
               },
               {
+                name: 'オートモード',
+                value:
+                  autoModeLabel ??
+                  (autoModeEnabled === false ? '無効' : '不明'),
+              },
+              {
                 name: 'GitHub Issue',
                 value: issuesRes.html_url,
               },
@@ -431,6 +437,12 @@ ${reporterUid}
               {
                 name: 'レポーターUID',
                 value: reporterUid,
+              },
+              {
+                name: 'オートモード',
+                value:
+                  autoModeLabel ??
+                  (autoModeEnabled === false ? '無効' : '不明'),
               },
               {
                 name: 'GitHub Issue',
