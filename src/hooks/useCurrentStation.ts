@@ -20,7 +20,12 @@ export const useCurrentStation = (
       return stations.find((s) => s.groupId === stationFromState?.groupId);
     }
 
-    return stations.find((s) => s.id === stationFromState?.id);
+    const foundStation = stations.find((s) => s.id === stationFromState?.id);
+    if (foundStation) {
+      return foundStation;
+    }
+
+    return stations.find((s) => s.groupId === stationFromState?.groupId);
   }, [
     stationFromState?.id,
     stationFromState?.groupId,
