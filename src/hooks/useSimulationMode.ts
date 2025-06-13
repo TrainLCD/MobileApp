@@ -12,7 +12,6 @@ import {
 } from '~/constants';
 import { LineType } from '~/gen/proto/stationapi_pb';
 import navigationState from '~/store/atoms/navigation';
-import { isDevApp } from '~/utils/isDevApp';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -195,7 +194,7 @@ export const useSimulationMode = (): void => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (enabled && isDevApp && stations.length > 0 && station) {
+    if (enabled && stations.length > 0 && station) {
       useLocationStore.setState({
         timestamp: new Date().getTime(),
         coords: {
@@ -212,7 +211,7 @@ export const useSimulationMode = (): void => {
   }, [enabled]);
 
   useEffect(() => {
-    if (!enabled || !isDevApp || !selectedDirection) {
+    if (!enabled || !selectedDirection) {
       return;
     }
 
