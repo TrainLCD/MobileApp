@@ -16,14 +16,21 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 });
 
+const PIXELS_PER_SECOND = 400;
+
+const screenWidth = Dimensions.get('screen').width;
+
 const Marquee = ({ children }: Props) => {
   const wrapperViewRef = useRef<View>(null);
-  const offsetX = useSharedValue(Dimensions.get('screen').width);
+  const offsetX = useSharedValue(screenWidth);
 
   const startScroll = useCallback(
     (width: number) => {
+      const totalDistance = screenWidth + width;
+      const duration = (totalDistance / PIXELS_PER_SECOND) * 1000;
+
       offsetX.value = withRepeat(
-        withTiming(-width, { duration: 8500, easing: Easing.linear }),
+        withTiming(-width, { duration, easing: Easing.linear }),
         -1
       );
     },
@@ -52,7 +59,7 @@ const Marquee = ({ children }: Props) => {
   const animatedViewStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: offsetX.get(),
+        translateX: offsetX.value,
       },
     ],
   }));
