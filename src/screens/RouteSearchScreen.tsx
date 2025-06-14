@@ -141,9 +141,9 @@ const RouteSearchScreen = () => {
   const groupedStations = useMemo(
     () =>
       groupStations(byNameData?.stations ?? []).filter(
-        (sta) => sta.id !== currentStation?.id
+        (sta) => sta.groupId !== currentStation?.groupId
       ),
-    [byNameData?.stations, currentStation?.id]
+    [byNameData?.stations, currentStation?.groupId]
   );
 
   const handleStationPress = useCallback(
@@ -176,9 +176,9 @@ const RouteSearchScreen = () => {
 
   const handleSelect = useCallback(
     async (route: Route | undefined, asTerminus: boolean) => {
-      const stop =
-        route?.stops.find((s) => s.id === currentStation?.id) ??
-        route?.stops.find((s) => s.groupId === currentStation?.groupId);
+      const stop = route?.stops.find(
+        (s) => s.groupId === currentStation?.groupId
+      );
       if (!stop) {
         return;
       }
@@ -190,11 +190,15 @@ const RouteSearchScreen = () => {
           ids: route?.stops.map((r) => r.id),
         });
         const stationInRoute =
-          stations.find((s) => s.id === currentStation?.id) ?? null;
+          stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
         const direction: LineDirection =
-          (stations ?? []).findIndex((s) => s.id === currentStation?.id) <
-          (stations ?? []).findIndex((s) => s.id === selectedStation?.id)
+          (stations ?? []).findIndex(
+            (s) => s.groupId === currentStation?.groupId
+          ) <
+          (stations ?? []).findIndex(
+            (s) => s.groupId === selectedStation?.groupId
+          )
             ? 'INBOUND'
             : 'OUTBOUND';
 
@@ -229,13 +233,11 @@ const RouteSearchScreen = () => {
       });
 
       const station =
-        stations.find((s) => s.id === currentStation?.id) ??
-        stations.find((s) => s.groupId === currentStation?.groupId) ??
-        null;
+        stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
       const direction: LineDirection =
-        stations.findIndex((s) => s.id === currentStation?.id) <
-        stations.findIndex((s) => s.id === selectedStation?.id)
+        stations.findIndex((s) => s.groupId === currentStation?.groupId) <
+        stations.findIndex((s) => s.groupId === selectedStation?.groupId)
           ? 'INBOUND'
           : 'OUTBOUND';
 
@@ -267,7 +269,6 @@ const RouteSearchScreen = () => {
       );
     },
     [
-      currentStation?.id,
       currentStation?.groupId,
       fetchStationByIdList,
       fetchStationsByLineGroupId,
