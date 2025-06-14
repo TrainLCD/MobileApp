@@ -192,15 +192,22 @@ const RouteSearchScreen = () => {
         const stationInRoute =
           stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
-        const direction: LineDirection =
-          (stations ?? []).findIndex(
+        const direction: LineDirection | null = (() => {
+          const fromIdx = (stations ?? []).findIndex(
             (s) => s.groupId === currentStation?.groupId
-          ) <
-          (stations ?? []).findIndex(
+          );
+          const toIdx = (stations ?? []).findIndex(
             (s) => s.groupId === selectedStation?.groupId
-          )
-            ? 'INBOUND'
-            : 'OUTBOUND';
+          );
+          if (fromIdx === -1 || toIdx === -1) {
+            return null;
+          }
+          return fromIdx < toIdx ? 'INBOUND' : 'OUTBOUND';
+        })();
+
+        if (!direction) {
+          return;
+        }
 
         setNavigationState((prev) => ({ ...prev, trainType: null }));
 
@@ -235,11 +242,22 @@ const RouteSearchScreen = () => {
       const station =
         stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
 
-      const direction: LineDirection =
-        stations.findIndex((s) => s.groupId === currentStation?.groupId) <
-        stations.findIndex((s) => s.groupId === selectedStation?.groupId)
-          ? 'INBOUND'
-          : 'OUTBOUND';
+      const direction: LineDirection | null = (() => {
+        const fromIdx = (stations ?? []).findIndex(
+          (s) => s.groupId === currentStation?.groupId
+        );
+        const toIdx = (stations ?? []).findIndex(
+          (s) => s.groupId === selectedStation?.groupId
+        );
+        if (fromIdx === -1 || toIdx === -1) {
+          return null;
+        }
+        return fromIdx < toIdx ? 'INBOUND' : 'OUTBOUND';
+      })();
+
+      if (!direction) {
+        return;
+      }
 
       const terminatedStations = getTerminatedStations(
         selectedStation,
