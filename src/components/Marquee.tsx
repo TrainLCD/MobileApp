@@ -16,6 +16,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 });
 
+const PIXELS_PER_SECOND = 400;
+
 const screenWidth = Dimensions.get('screen').width;
 
 const Marquee = ({ children }: Props) => {
@@ -25,8 +27,7 @@ const Marquee = ({ children }: Props) => {
   const startScroll = useCallback(
     (width: number) => {
       const totalDistance = screenWidth + width;
-      const pixelsPerSecond = 400;
-      const duration = (totalDistance / pixelsPerSecond) * 1000;
+      const duration = (totalDistance / PIXELS_PER_SECOND) * 1000;
 
       offsetX.value = withRepeat(
         withTiming(-width, { duration, easing: Easing.linear }),
