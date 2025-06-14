@@ -48,12 +48,9 @@ export const useCurrentStation = (
     const reversedStations =
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
 
-    let curIndex = reversedStations.findIndex((s) => s.id === station?.id);
-    if (curIndex < 0) {
-      curIndex = reversedStations.findIndex(
-        (s) => s.groupId === station?.groupId
-      );
-    }
+    const curIndex = reversedStations.findIndex(
+      (s) => s.id === station?.id || s.groupId === station?.groupId
+    );
 
     const stationsFromRange = reversedStations
       .slice(0, curIndex)
