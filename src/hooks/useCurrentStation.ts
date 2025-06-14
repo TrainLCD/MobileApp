@@ -34,9 +34,13 @@ export const useCurrentStation = (
   ]);
 
   const withTrainTypeStation = useMemo(() => {
-    const foundStation = stations
-      .filter((s) => (skipPassStation ? !getIsPass(s) : true))
-      .find((rs) => rs.id === station?.id);
+    const foundStation =
+      stations
+        .filter((s) => (skipPassStation ? !getIsPass(s) : true))
+        .find((rs) => rs.id === station?.id) ??
+      stations
+        .filter((s) => (skipPassStation ? !getIsPass(s) : true))
+        .find((rs) => rs.groupId === station?.groupId);
     if (foundStation) {
       return foundStation;
     }
@@ -44,12 +48,20 @@ export const useCurrentStation = (
     const reversedStations =
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
 
-    const curIndex = reversedStations.findIndex((s) => s.id === station?.id);
+    const curIndex =
+      reversedStations.findIndex((s) => s.id === station?.id) ??
+      reversedStations.findIndex((s) => s.groupId === station?.groupId);
     const stationsFromRange = reversedStations
       .slice(0, curIndex)
       .filter((s) => (skipPassStation ? !getIsPass(s) : true));
     return stationsFromRange[stationsFromRange.length - 1] ?? null;
-  }, [selectedDirection, skipPassStation, station?.id, stations]);
+  }, [
+    selectedDirection,
+    skipPassStation,
+    station?.id,
+    station?.groupId,
+    stations,
+  ]);
 
   if (skipPassStation || withTrainTypes) {
     return withTrainTypeStation;
