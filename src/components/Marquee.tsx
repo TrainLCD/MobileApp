@@ -16,13 +16,14 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 });
 
+const screenWidth = Dimensions.get('screen').width;
+
 const Marquee = ({ children }: Props) => {
   const wrapperViewRef = useRef<View>(null);
-  const offsetX = useSharedValue(Dimensions.get('screen').width);
+  const offsetX = useSharedValue(screenWidth);
 
   const startScroll = useCallback(
     (width: number) => {
-      const screenWidth = Dimensions.get('screen').width;
       const totalDistance = screenWidth + width;
       const pixelsPerSecond = 400;
       const duration = (totalDistance / pixelsPerSecond) * 1000;
@@ -57,7 +58,7 @@ const Marquee = ({ children }: Props) => {
   const animatedViewStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: offsetX.get(),
+        translateX: offsetX.value,
       },
     ],
   }));
