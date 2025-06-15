@@ -26,12 +26,39 @@ export const useNextStation = (
     [selectedDirection, stationsFromState]
   );
 
+  const stationIndex = useMemo(() => {
+    const index = stations.findIndex((s) => s.id === station?.id);
+    if (index !== -1) {
+      return index;
+    }
+
+    return stations.findIndex((s) => s.groupId === station?.groupId);
+  }, [station?.id, station?.groupId, stations]);
+
+  const outboundStationIndex = useMemo(() => {
+    const index = stations
+      .slice()
+      .reverse()
+      .findIndex((s) => s.id === station?.id);
+
+    if (index !== -1) {
+      return index;
+    }
+
+    return stations
+      .slice()
+      .reverse()
+      .findIndex((s) => s.groupId === station?.groupId);
+  }, [station?.id, station?.groupId, stations]);
+
   const actualNextStation = useMemo(() => {
+    if (stationIndex === -1) {
+      return;
+    }
+
     if (isLoopLine) {
       const loopLineStationIndex =
-        selectedDirection === 'INBOUND'
-          ? stations.findIndex((s) => s?.id === station?.id) - 1
-          : stations.findIndex((s) => s?.id === station?.id) + 1;
+        selectedDirection === 'INBOUND' ? stationIndex - 1 : stationIndex + 1;
 
       if (!stations[loopLineStationIndex]) {
         return stations[
@@ -43,43 +70,38 @@ export const useNextStation = (
     }
 
     const notLoopLineStationIndex =
-      selectedDirection === 'INBOUND'
-        ? stations.findIndex((s) => s?.id === station?.id) + 1
-        : stations.findIndex((s) => s?.id === station?.id) - 1;
+      selectedDirection === 'INBOUND' ? stationIndex + 1 : stationIndex - 1;
 
     return stations[notLoopLineStationIndex];
-  }, [isLoopLine, selectedDirection, station?.id, stations]);
+  }, [isLoopLine, selectedDirection, stationIndex, stations]);
 
   const nextInboundStopStation = useMemo(() => {
-    const inboundCurrentStationIndex = stations.findIndex(
-      (s) => s?.id === station?.id
-    );
+    if (stationIndex === -1) {
+      return;
+    }
 
     return actualNextStation && getIsPass(actualNextStation) && ignorePass
       ? stations
-          .slice(inboundCurrentStationIndex - stations.length + 1)
+          .slice(stationIndex - stations.length + 1)
           .find((s) => !getIsPass(s))
       : actualNextStation;
-  }, [actualNextStation, ignorePass, station?.id, stations]);
+  }, [actualNextStation, ignorePass, stationIndex, stations]);
 
   const nextOutboundStopStation = useMemo(() => {
-    const outboundCurrentStationIndex = stations
-      .slice()
-      .reverse()
-      .findIndex((s) => s?.id === station?.id);
+    if (outboundStationIndex === -1) {
+      return;
+    }
 
     return actualNextStation && getIsPass(actualNextStation) && ignorePass
       ? stations
           .slice()
           .reverse()
-          .slice(outboundCurrentStationIndex - stations.length + 1)
+          .slice(outboundStationIndex - stations.length + 1)
           .find((s) => !getIsPass(s))
       : actualNextStation;
-  }, [actualNextStation, ignorePass, station, stations]);
+  }, [actualNextStation, ignorePass, outboundStationIndex, stations]);
 
-  return (
-    (selectedDirection === 'INBOUND'
-      ? nextInboundStopStation
-      : nextOutboundStopStation) ?? undefined
-  );
+  return selectedDirection === 'INBOUND'
+    ? nextInboundStopStation
+    : nextOutboundStopStation;
 };
