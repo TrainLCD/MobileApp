@@ -254,7 +254,7 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
         subSignPath: require('../assets/marks/hokuso/hs.png'),
       };
     case 99329: // 新京成
-      return { signPath: require('../assets/marks/shinkeisei/sl.png') };
+      return { signPath: require('../assets/marks/keisei/ks.png') };
     case 99340: // 北総線
       return { signPath: require('../assets/marks/hokuso/hs.png') };
 
@@ -767,7 +767,7 @@ const getLineSymbolImageGrayscaleImage = (
         subSignPath: require('../assets/marks/hokuso/hs_g.png'),
       };
     case 99329: // 新京成
-      return { signPath: require('../assets/marks/shinkeisei/sl_g.png') };
+      return { signPath: require('../assets/marks/keisei/ks_g.png') };
     case 99340: // 北総線
       return { signPath: require('../assets/marks/hokuso/hs_g.png') };
     case 99324: // 芝山線
