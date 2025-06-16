@@ -1290,6 +1290,31 @@ PODS:
     - ExpoModulesCore
   - ExpoScreenCapture (7.1.4):
     - ExpoModulesCore
+  - ExpoScreenOrientation (8.1.7):
+    - DoubleConversion
+    - ExpoModulesCore
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - ExpoSplashScreen (0.30.8):
     - ExpoModulesCore
   - ExpoWebBrowser (14.1.6):
@@ -3712,6 +3737,7 @@ DEPENDENCIES:
   - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@2.3.13/node_modules/expo-modules-core`)"
   - "ExpoNetwork (from `../node_modules/.pnpm/expo-network@7.1.5_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0.79.2_@b_071dc0be2ab3f72ffb3f31f84808082c/node_modules/expo-network/ios`)"
   - "ExpoScreenCapture (from `../node_modules/.pnpm/expo-screen-capture@7.1.4_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0._8e154e00cded91536ef25215046de21d/node_modules/expo-screen-capture/ios`)"
+  - "ExpoScreenOrientation (from `../node_modules/.pnpm/expo-screen-orientation@8.1.7_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-nativ_0a7dec6f748ff98df385c6570edb20d0/node_modules/expo-screen-orientation/ios`)"
   - "ExpoSplashScreen (from `../node_modules/.pnpm/expo-splash-screen@0.30.8_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0._d6bb11cbf91e181d1452dcce98bf4eb6/node_modules/expo-splash-screen/ios`)"
   - "ExpoWebBrowser (from `../node_modules/.pnpm/expo-web-browser@14.1.6_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0.79_c2b6d93e41cabb71086d218a425f9bf0/node_modules/expo-web-browser/ios`)"
   - "EXTaskManager (from `../node_modules/.pnpm/expo-task-manager@13.1.5_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0.7_1f3d3ff67af5097401a4a73c37d6b7c0/node_modules/expo-task-manager/ios`)"
@@ -3887,6 +3913,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo-network@7.1.5_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0.79.2_@b_071dc0be2ab3f72ffb3f31f84808082c/node_modules/expo-network/ios"
   ExpoScreenCapture:
     :path: "../node_modules/.pnpm/expo-screen-capture@7.1.4_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0._8e154e00cded91536ef25215046de21d/node_modules/expo-screen-capture/ios"
+  ExpoScreenOrientation:
+    :path: "../node_modules/.pnpm/expo-screen-orientation@8.1.7_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-nativ_0a7dec6f748ff98df385c6570edb20d0/node_modules/expo-screen-orientation/ios"
   ExpoSplashScreen:
     :path: "../node_modules/.pnpm/expo-splash-screen@0.30.8_expo@53.0.9_@babel+core@7.27.1_graphql@16.8.1_react-native@0._d6bb11cbf91e181d1452dcce98bf4eb6/node_modules/expo-splash-screen/ios"
   ExpoWebBrowser:
@@ -4096,6 +4124,7 @@ SPEC CHECKSUMS:
   ExpoModulesCore: dd685d326fd8638b23f5a944a6451f1aa06c76ef
   ExpoNetwork: 92cac43c13a2d9e9c1470ec8804836574ff34068
   ExpoScreenCapture: 9a8af9f915c2d733d1af8c6c34456f17dc6ede0a
+  ExpoScreenOrientation: c883a8f448232c4f185cea4f08ce54ebdf9d010d
   ExpoSplashScreen: f524572afd81522e40850eaa7163e2ae99cce783
   ExpoWebBrowser: 06fb5f767f53ad53944b068cdd207984cb998712
   EXTaskManager: a7a2d34c0fa6a459dcd9f50844ecbec886bd2da8

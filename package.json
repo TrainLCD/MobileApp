@@ -54,6 +54,7 @@
     "expo-network": "~7.1.5",
     "expo-notifications": "~0.31.2",
     "expo-screen-capture": "~7.1.4",
+    "expo-screen-orientation": "~8.1.7",
     "expo-splash-screen": "~0.30.8",
     "expo-task-manager": "~13.1.5",
     "expo-web-browser": "~14.1.6",

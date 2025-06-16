@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  expo-screen-orientation:
+    hash: 668bc72431f262869ce6ba68db977d0a94f377069d599efa5160d3fdbbcee21b
+    path: patches/expo-screen-orientation.patch
+
 importers:
 
   .:
@@ -122,6 +127,9 @@ importers:
       expo-screen-capture:
         specifier: ~7.1.4
         version: 7.1.4(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      expo-screen-orientation:
+        specifier: ~8.1.7
+        version: 8.1.7(patch_hash=668bc72431f262869ce6ba68db977d0a94f377069d599efa5160d3fdbbcee21b)(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))
       expo-splash-screen:
         specifier: ~0.30.8
         version: 0.30.8(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
@@ -2910,6 +2918,12 @@ packages:
     peerDependencies:
       expo: '*'
       react: '*'
+
+  expo-screen-orientation@8.1.7:
+    resolution: {integrity: sha512-nYwadYtdU6mMDk0MCHMPPPQtBoeFYJ2FspLRW+J35CMLqzE4nbpwGeiImfXzkvD94fpOCfI4KgLj5vGauC3pfA==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-splash-screen@0.30.8:
     resolution: {integrity: sha512-2eh+uA543brfeG5HILXmtNKA7E2/pfywKzNumzy3Ef6OtDjYy6zJUGNSbhnZRbVEjUZo3/QNRs0JRBfY80okZg==}
@@ -8667,6 +8681,11 @@ snapshots:
     dependencies:
       expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
+
+  expo-screen-orientation@8.1.7(patch_hash=668bc72431f262869ce6ba68db977d0a94f377069d599efa5160d3fdbbcee21b)(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)):
+    dependencies:
+      expo: 53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native: 0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0)
 
   expo-splash-screen@0.30.8(expo@53.0.9(@babel/core@7.27.1)(graphql@16.8.1)(react-native@0.79.2(@babel/core@7.27.1)(@react-native-community/cli@15.1.3(typescript@5.8.3))(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
