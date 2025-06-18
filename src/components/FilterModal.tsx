@@ -10,7 +10,7 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Chip from './Chip';
 import FAB from './FAB';
-import Heading from './Heading';
+import { Heading } from './Heading';
 import Typography from './Typography';
 
 type SearchQueryOption = {

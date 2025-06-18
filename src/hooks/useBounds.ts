@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-
 import { useAtomValue } from 'jotai';
+import { useMemo } from 'react';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import {

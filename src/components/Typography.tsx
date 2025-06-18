@@ -1,4 +1,4 @@
-import React, { type LegacyRef, forwardRef, useMemo } from 'react';
+import React, { forwardRef, type LegacyRef, useMemo } from 'react';
 import {
   type StyleProp,
   StyleSheet,

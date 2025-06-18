@@ -9,7 +9,7 @@ export const groupStations = (stations: Station[]): Station[] => {
           (s) => s.groupId === sta.groupId && s.name === sta.name
         ) === idx
     )
-    .map((sta, idx, arr) => {
+    .map((sta, _idx, arr) => {
       // 駅名が同じだが都道府県は違う場合は都道府県名を付与する
       if (
         arr.some(

@@ -2,14 +2,14 @@ import { useMutation } from '@connectrpc/connect-query';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 import {
-  getStationsByLineGroupId,
-  getStationsByLineId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
-import {
   GetStationByLineIdRequest,
   GetStationsByLineGroupIdRequest,
   type Station,
 } from '~/gen/proto/stationapi_pb';
+import {
+  getStationsByLineGroupId,
+  getStationsByLineId,
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
 import type { LineDirection } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';

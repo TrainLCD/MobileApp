@@ -10,9 +10,9 @@
     "esModuleInterop": true,
     "strict": true,
     "baseUrl": ".",
-    "paths": { "~/*": ["./src/*"] }
+    "paths": { "~/*": ["./src/*"] },
+    "typeRoots": ["./src/@types", "./node_modules/@types"]
   },
-  "typeRoots": ["./src/@types"],
   "exclude": ["functions"],
   "extends": "expo/tsconfig.base"
 }

@@ -127,7 +127,7 @@ const PrivacyScreen: React.FC = () => {
           await Notifications.requestPermissionsAsync();
           break;
       }
-    } catch (err) {
+    } catch (_err) {
       Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);

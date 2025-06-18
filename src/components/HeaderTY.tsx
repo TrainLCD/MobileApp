@@ -10,7 +10,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
+import { parenthesisRegexp, STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
   useConnectedLines,

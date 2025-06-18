@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { ThemeList } from '~/components/ThemeList';
 import { getSettingsThemes } from '~/utils/theme';
 import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
+import { Heading } from '../../components/Heading';
 import { ASYNC_STORAGE_KEYS } from '../../constants';
 import { useThemeStore } from '../../hooks';
 import type { AppTheme } from '../../models/Theme';
@@ -31,10 +31,10 @@ const ThemeSettingsScreen: React.FC = () => {
   }, []);
 
   const navigation = useNavigation();
-  const settingsThemes = getSettingsThemes();
-  const unlockedSettingsThemes = isDevApp
-    ? settingsThemes
-    : settingsThemes.filter((t) => !t.devOnly);
+  const unlockedSettingsThemes = useMemo(() => {
+    const settingsThemes = getSettingsThemes();
+    return isDevApp ? settingsThemes : settingsThemes.filter((t) => !t.devOnly);
+  }, []);
 
   const onPressBack = useCallback(async () => {
     await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);

@@ -35,7 +35,6 @@ const TelemetryPayload = z.object({
   device: z.string(),
   timestamp: z.number(),
 });
-type TelemetryPayload = z.infer<typeof TelemetryPayload>;
 
 export const useTelemetrySender = (
   sendTelemetryAutomatically = false,
@@ -76,74 +75,6 @@ export const useTelemetrySender = (
     }
     return 'moving';
   }, [arrivedFromState, approachingFromState, passing]);
-
-  useEffect(() => {
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
-    let reconnectTimeout: NodeJS.Timeout;
-
-    if (!isTelemetryEnabled) {
-      return;
-    }
-
-    const connectWebSocket = () => {
-      if (!wsUrl.match(webSocketUrlRegexp)) {
-        console.warn('Invalid WebSocket URL');
-        return;
-      }
-
-      try {
-        const socket = new WebSocket(wsUrl);
-        socketRef.current = socket;
-        socket.onopen = () => {
-          console.log('WebSocket connected');
-          reconnectAttempts = 0;
-
-          if (sendTelemetryAutomatically) {
-            sendLog('Connected to the telemetry server as a client', 'info');
-          }
-
-          while (messageQueue.length > 0) {
-            const msg = messageQueue.shift();
-            if (msg) socket.send(msg);
-          }
-          while (telemetryQueue.length > 0) {
-            const msg = telemetryQueue.shift();
-            if (msg) socket.send(msg);
-          }
-        };
-        socket.onerror = (e) => {
-          console.warn('WebSocket error', e);
-        };
-        socket.onclose = () => {
-          console.log('WebSocket closed');
-          sendLog('Disconnected from the telemetry server as a client', 'info');
-          if (reconnectAttempts < maxReconnectAttempts) {
-            reconnectAttempts++;
-            const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
-            reconnectTimeout = setTimeout(connectWebSocket, delay);
-          }
-        };
-        return socket;
-      } catch (error) {
-        console.error('WebSocket connection error:', error);
-      }
-    };
-
-    const socket = connectWebSocket();
-
-    return () => {
-      socket?.close();
-      clearTimeout(reconnectTimeout);
-    };
-  }, [
-    wsUrl,
-    sendTelemetryAutomatically,
-    messageQueue.length,
-    messageQueue.shift,
-    telemetryQueue.length,
-    telemetryQueue.shift,
-  ]);
 
   const sendLog = useCallback(
     (message: string, level = 'debug') => {
@@ -232,6 +163,75 @@ export const useTelemetrySender = (
     state,
     enqueueMessage,
     telemetryQueue,
+  ]);
+
+  useEffect(() => {
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    let reconnectTimeout: number;
+
+    if (!isTelemetryEnabled) {
+      return;
+    }
+
+    const connectWebSocket = () => {
+      if (!wsUrl.match(webSocketUrlRegexp)) {
+        console.warn('Invalid WebSocket URL');
+        return;
+      }
+
+      try {
+        const socket = new WebSocket(wsUrl);
+        socketRef.current = socket;
+        socket.onopen = () => {
+          console.log('WebSocket connected');
+          reconnectAttempts = 0;
+
+          if (sendTelemetryAutomatically) {
+            sendLog('Connected to the telemetry server as a client', 'info');
+          }
+
+          while (messageQueue.length > 0) {
+            const msg = messageQueue.shift();
+            if (msg) socket.send(msg);
+          }
+          while (telemetryQueue.length > 0) {
+            const msg = telemetryQueue.shift();
+            if (msg) socket.send(msg);
+          }
+        };
+        socket.onerror = (e) => {
+          console.warn('WebSocket error', e);
+        };
+        socket.onclose = () => {
+          console.log('WebSocket closed');
+          sendLog('Disconnected from the telemetry server as a client', 'info');
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
+            reconnectTimeout = setTimeout(connectWebSocket, delay);
+          }
+        };
+        return socket;
+      } catch (error) {
+        console.error('WebSocket connection error:', error);
+      }
+    };
+
+    const socket = connectWebSocket();
+
+    return () => {
+      socket?.close();
+      clearTimeout(reconnectTimeout);
+    };
+  }, [
+    wsUrl,
+    sendTelemetryAutomatically,
+    messageQueue.length,
+    messageQueue.shift,
+    telemetryQueue.length,
+    telemetryQueue.shift,
+    sendLog,
   ]);
 
   useEffect(() => {

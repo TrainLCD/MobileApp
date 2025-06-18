@@ -128,8 +128,8 @@ export const useFeedback = (
         imageUrl,
         appEdition: isDevApp ? 'canary' : 'production',
         appClip: isClip(),
-        createdAt: new Date().getTime(),
-        updatedAt: new Date().getTime(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
 
       const res = await fetch(API_URL, {

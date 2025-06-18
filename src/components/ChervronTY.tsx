@@ -1,11 +1,13 @@
-import type React from 'react';
-import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import { useId } from 'react';
+import { Defs, LinearGradient, Path, Stop, Svg } from 'react-native-svg';
 
 type Props = {
   color: 'RED' | 'BLUE' | 'WHITE';
 };
 
-const ChevronTY: React.FC<Props> = ({ color }: Props) => {
+export const ChevronTY: React.FC<Props> = ({ color }: Props) => {
+  const id = useId();
+
   const colors =
     color === 'BLUE'
       ? ['#3fa9f5', '#1d67e0', '#1765d4']
@@ -15,7 +17,7 @@ const ChevronTY: React.FC<Props> = ({ color }: Props) => {
       <Defs>
         {color === 'WHITE' ? (
           <LinearGradient
-            id="prefix__a"
+            id={id}
             x1={22.98}
             y1={12.4}
             x2={22.98}
@@ -29,7 +31,7 @@ const ChevronTY: React.FC<Props> = ({ color }: Props) => {
           </LinearGradient>
         ) : (
           <LinearGradient
-            id="prefix__a"
+            id={id}
             x1={22.98}
             y1={12.4}
             x2={22.98}
@@ -46,11 +48,9 @@ const ChevronTY: React.FC<Props> = ({ color }: Props) => {
       <Path
         stroke="#fff"
         strokeMiterlimit={10}
-        fill="url(#prefix__a)"
+        fill={`url(#${id})`}
         d="M27.67.5H.98l17.3 24.06L1.06 48.5h26.69l17.23-23.94L27.67.5z"
       />
     </Svg>
   );
 };
-
-export default ChevronTY;

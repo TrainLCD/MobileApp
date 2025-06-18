@@ -3,8 +3,8 @@ import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
 import { StationNumber } from '~/gen/proto/stationapi_pb';
-import { useTTSText } from '~/hooks/useTTSText';
 import { useThemeStore } from '~/hooks/useThemeStore';
+import { useTTSText } from '~/hooks/useTTSText';
 import type { LineDirection } from '~/models/Bound';
 import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
 import type { AppTheme } from '~/models/Theme';
@@ -35,7 +35,7 @@ const useTTSTextWithJotaiAndNumbering = (
 ) => {
   const setLineState = useSetAtom(lineState);
   const setStationState = useSetAtom(stationState);
-  const setNaivgationState = useSetAtom(navigationState);
+  const _setNaivgationState = useSetAtom(navigationState);
 
   useEffect(() => {
     const station = TOEI_SHINJUKU_LINE_STATIONS[0];

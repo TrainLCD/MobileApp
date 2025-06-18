@@ -16,7 +16,7 @@ import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import Typography from '../components/Typography';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
@@ -145,7 +145,7 @@ const NotificationSettings: React.FC = () => {
         onPress: async () => {
           try {
             await Linking.openSettings();
-          } catch (err) {
+          } catch (_err) {
             openFailedToOpenSettingsAlert();
           }
           handlePressBack();
@@ -173,7 +173,7 @@ const NotificationSettings: React.FC = () => {
           onPress: async () => {
             try {
               await Location.requestBackgroundPermissionsAsync();
-            } catch (err) {
+            } catch (_err) {
               openFailedToOpenSettingsAlert();
             }
           },
