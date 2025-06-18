@@ -16,8 +16,8 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { heightScale, widthScale } from '../utils/scale';
-import BarTerminal from './BarTerminalEast';
-import Chevron from './ChervronTY';
+import { BarTerminalEast } from './BarTerminalEast';
+import { ChevronTY } from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
@@ -459,7 +459,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           passed={passed}
         />
         {stations.length - 1 === index ? (
-          <BarTerminal
+          <BarTerminalEast
             style={styles.barTerminal}
             lineColor={
               line.color
@@ -473,7 +473,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View style={[styles.chevron, additionalChevronStyle]}>
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
-          <Chevron color={chevronColor} />
+          <ChevronTY color={chevronColor} />
         ) : null}
       </View>
     </>
@@ -520,7 +520,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         }}
       />
       {isLast ? (
-        <BarTerminal
+        <BarTerminalEast
           style={styles.barTerminal}
           lineColor={lastLineColor}
           hasTerminus={hasTerminus}
@@ -556,7 +556,7 @@ const LineBoardEast: React.FC<Props> = ({
   useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element | null => {
+    (s: Station, i: number): React.ReactNode | null => {
       const isLast =
         [...stations, ...Array.from({ length: 8 - stations.length })].length -
           1 ===

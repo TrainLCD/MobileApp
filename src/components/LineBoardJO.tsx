@@ -25,7 +25,7 @@ import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import { heightScale } from '../utils/scale';
-import ChevronJO from './ChevronJO';
+import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
 import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
