@@ -24,6 +24,7 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useFirstStop,
   useLoopLine,
   useNextStation,
   useRefreshLeftStations,
@@ -83,6 +84,7 @@ const MainScreen: React.FC = () => {
 
   useAutoMode();
   useSimulationMode();
+  useFirstStop(true);
 
   useTelemetrySender(true);
 

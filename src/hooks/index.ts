@@ -23,6 +23,7 @@ export * from './useDistanceToNextStation';
 export * from './useFeedback';
 export * from './useFetchCurrentLocationOnce';
 export * from './useFetchNearbyStation';
+export * from './useFirstStop';
 export * from './useGetLineMark';
 export * from './useGetStationsWithTermination';
 export * from './useHasPassStationInRegion';
