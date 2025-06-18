@@ -1,3 +1,4 @@
+import sortedUniqBy from 'lodash/sortedUniqBy';
 import {
   FlatList,
   TouchableOpacity,
@@ -8,7 +9,6 @@ import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { isJapanese, translate } from '~/translation';
 import { HalfModal } from './HalfModal';
 import Typography from './Typography';
-import sortedUniqBy from 'lodash/sortedUniqBy';
 
 type Props = {
   open: boolean;

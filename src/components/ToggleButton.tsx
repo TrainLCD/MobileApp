@@ -1,5 +1,5 @@
+import { useCallback } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import Typography from './Typography';
 import { Icon } from 'react-native-paper';
 import Animated, {
   Easing,
@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useCallback } from 'react';
+import Typography from './Typography';
 
 type Props = {
   isActive: boolean;

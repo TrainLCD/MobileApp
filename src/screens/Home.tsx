@@ -6,8 +6,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import CircleButton from '~/components/CircleButton';
-import { SearchableModal } from '~/components/SearchableModal';
 import { RoutesModal } from '~/components/RoutesModal';
+import { SearchableModal } from '~/components/SearchableModal';
+import { ToggleButton } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import {
   getRoutes,
@@ -27,7 +28,6 @@ import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import { isJapanese, translate } from '~/translation';
 import { groupStations } from '~/utils/groupStations';
-import { ToggleButton } from '~/components/ToggleButton';
 import { getSettingsThemes } from '~/utils/theme';
 
 const HomeScreen: React.FC = () => {
