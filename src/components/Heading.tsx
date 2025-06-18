@@ -16,8 +16,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const Heading: React.FC<Props> = ({ children, style }: Props) => {
+export const Heading: React.FC<Props> = ({ children, style }: Props) => {
   return <Typography style={[styles.text, style]}>{children}</Typography>;
 };
-
-export default Heading;

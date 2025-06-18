@@ -12,8 +12,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   MARK_SHAPE,
-  STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
+  STATION_NAME_FONT_SIZE,
 } from '../constants';
 import {
   useBoundText,

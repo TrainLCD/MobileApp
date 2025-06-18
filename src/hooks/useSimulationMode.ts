@@ -144,7 +144,7 @@ export const useSimulationMode = (): void => {
                   latitude: maybeRevsersedStations[0]?.latitude,
                   longitude: maybeRevsersedStations[0]?.longitude,
                 },
-                timestamp: new Date().getTime(),
+                timestamp: Date.now(),
               }
             : prev
         );
@@ -177,7 +177,7 @@ export const useSimulationMode = (): void => {
         );
 
         return {
-          timestamp: new Date().getTime(),
+          timestamp: Date.now(),
           coords: {
             ...nextPoint,
             accuracy: 0,
@@ -192,11 +192,10 @@ export const useSimulationMode = (): void => {
     [nextStation, maybeRevsersedStations]
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (enabled && stations.length > 0 && station) {
       useLocationStore.setState({
-        timestamp: new Date().getTime(),
+        timestamp: Date.now(),
         coords: {
           accuracy: null,
           altitude: null,
@@ -208,7 +207,7 @@ export const useSimulationMode = (): void => {
         },
       });
     }
-  }, [enabled]);
+  }, [enabled, station, stations.length]);
 
   useEffect(() => {
     if (!enabled || !selectedDirection) {

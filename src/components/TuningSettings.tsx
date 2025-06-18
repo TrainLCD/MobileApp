@@ -19,7 +19,7 @@ import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import FAB from './FAB';
-import Heading from './Heading';
+import { Heading } from './Heading';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook } from '@testing-library/react-native';
 import * as Jotai from 'jotai';
 import { TrainTypeKind } from '~/gen/proto/stationapi_pb';
@@ -56,7 +57,6 @@ describe.skip('useSimulationMode', () => {
 
     jest.spyOn(currentLineHook, 'useCurrentLine').mockReturnValue({
       lineType: 0,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     } as any);
 
     require('~/hooks/useNextStation').useNextStation.mockReturnValue(
@@ -72,7 +72,7 @@ describe.skip('useSimulationMode', () => {
       kind,
     });
 
-    renderHook(() => useSimulationMode(true));
+    renderHook(() => useSimulationMode());
 
     act(() => {
       jest.advanceTimersByTime(1000);
@@ -102,7 +102,7 @@ describe.skip('useSimulationMode', () => {
       kind: undefined,
     });
 
-    renderHook(() => useSimulationMode(true));
+    renderHook(() => useSimulationMode());
 
     act(() => {
       jest.advanceTimersByTime(1000);
@@ -112,7 +112,7 @@ describe.skip('useSimulationMode', () => {
   });
 
   it('updates location over time', () => {
-    renderHook(() => useSimulationMode(true));
+    renderHook(() => useSimulationMode());
 
     act(() => {
       jest.advanceTimersByTime(3000);
@@ -122,7 +122,7 @@ describe.skip('useSimulationMode', () => {
   });
 
   it('does not run simulation if disabled', () => {
-    renderHook(() => useSimulationMode(false));
+    renderHook(() => useSimulationMode());
 
     act(() => {
       jest.advanceTimersByTime(3000);
@@ -141,7 +141,7 @@ describe.skip('useSimulationMode', () => {
       null
     );
 
-    renderHook(() => useSimulationMode(true));
+    renderHook(() => useSimulationMode());
 
     expect(useLocationStore.setState).not.toHaveBeenCalled();
   });
@@ -149,7 +149,7 @@ describe.skip('useSimulationMode', () => {
   it('resets to first station if nextStation is null', () => {
     require('~/hooks/useNextStation').useNextStation.mockReturnValue(null);
 
-    renderHook(() => useSimulationMode(true));
+    renderHook(() => useSimulationMode());
 
     act(() => {
       jest.advanceTimersByTime(1000);
@@ -171,7 +171,7 @@ describe.skip('useSimulationMode', () => {
       selectedDirection: 'INBOUND',
     });
 
-    renderHook(() => useSimulationMode(true));
+    renderHook(() => useSimulationMode());
 
     act(() => {
       jest.advanceTimersByTime(1000);

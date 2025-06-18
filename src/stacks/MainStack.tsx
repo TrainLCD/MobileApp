@@ -1,6 +1,6 @@
 import {
-  type NativeStackNavigationOptions,
   createNativeStackNavigator,
+  type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';

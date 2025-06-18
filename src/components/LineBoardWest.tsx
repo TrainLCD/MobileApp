@@ -31,7 +31,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { heightScale } from '~/utils/scale';
-import Chevron from './ChevronJRWest';
+import { ChevronJRWest } from './ChevronJRWest';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
 
@@ -398,7 +398,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           {!arrived &&
           (currentStationIndex === index ||
             (currentStationIndex === -1 && !index)) ? (
-            <Chevron />
+            <ChevronJRWest />
           ) : null}
         </View>
         {hasPassStationInRegion && index !== stations.length - 1 ? (
@@ -436,7 +436,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   );
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element => (
+    (s: Station, i: number): React.ReactNode => (
       <StationNameCell
         key={s.id}
         station={s}

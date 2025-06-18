@@ -33,11 +33,11 @@ import {
   useShouldHideTypeChange,
   useSimulationMode,
   useStartBackgroundLocationUpdates,
-  useTTS,
   useTelemetrySender,
   useThemeStore,
   useTransferLines,
   useTransitionHeaderState,
+  useTTS,
   useTypeWillChange,
   useUpdateBottomState,
   useUpdateLiveActivities,
@@ -287,7 +287,7 @@ const MainScreen: React.FC = () => {
                   if (status === 'granted') {
                     await requestIgnoreBatteryOptimizationsAndroid();
                   }
-                } catch (error) {
+                } catch (_error) {
                   Alert.alert(
                     translate('errorTitle'),
                     translate('failedToRequestPermission'),
@@ -326,7 +326,7 @@ const MainScreen: React.FC = () => {
                 onPress: async () => {
                   try {
                     await Linking.openSettings();
-                  } catch (error) {
+                  } catch (_error) {
                     Alert.alert(
                       translate('announcementTitle'),
                       translate('failedToOpenSettings'),

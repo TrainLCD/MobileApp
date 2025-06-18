@@ -17,8 +17,8 @@ import {
 } from '~/hooks';
 import {
   NUMBERING_ICON_SIZE,
-  STATION_NAME_FONT_SIZE,
   parenthesisRegexp,
+  STATION_NAME_FONT_SIZE,
 } from '../constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
