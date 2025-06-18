@@ -1,11 +1,11 @@
 import { TransportProvider } from '@connectrpc/connect-query';
-import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { NavigationContainer } from '@react-navigation/native';
 import {
-  type StackNavigationOptions,
   createStackNavigator,
+  type StackNavigationOptions,
 } from '@react-navigation/stack';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';

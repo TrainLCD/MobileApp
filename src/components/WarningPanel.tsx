@@ -4,8 +4,8 @@ import {
   type GestureResponderEvent,
   StyleSheet,
   TouchableWithoutFeedback,
-  View,
   useWindowDimensions,
+  View,
 } from 'react-native';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';

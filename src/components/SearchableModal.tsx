@@ -1,8 +1,8 @@
 import {
   FlatList,
   TouchableOpacity,
-  View,
   useWindowDimensions,
+  View,
 } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 import type { Station } from '~/gen/proto/stationapi_pb';

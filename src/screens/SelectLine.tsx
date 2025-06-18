@@ -8,7 +8,7 @@ import type { Line } from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import Loading from '../components/Loading';
 import {
   ASYNC_STORAGE_KEYS,
@@ -92,7 +92,7 @@ const SelectLineScreen: React.FC = () => {
     stopLocationUpdatesAsync();
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 初回のみ動いて欲しい
   useEffect(() => {
     const init = async () => {
       if (station) return;

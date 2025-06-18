@@ -10,11 +10,11 @@ import { RoutesModal } from '~/components/RoutesModal';
 import { SearchableModal } from '~/components/SearchableModal';
 import { ToggleButton } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import {
   getRoutes,
   getStationsByName,
 } from '~/gen/proto/stationapi-StationAPI_connectquery';
-import { Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import {
   useDebounce,
   useFetchCurrentLocationOnce,
@@ -44,20 +44,12 @@ const HomeScreen: React.FC = () => {
     return themes.find((t) => t.value === theme)?.label ?? '';
   }, [theme]);
 
-  const {
-    fetchByCoords,
-    isLoading: nearbyStationLoading,
-    error: nearbyStationFetchError,
-  } = useFetchNearbyStation();
-  const {
-    fetchCurrentLocation,
-    loading: locationLoading,
-    error: fetchLocationError,
-  } = useFetchCurrentLocationOnce();
+  const { fetchByCoords, error: nearbyStationFetchError } =
+    useFetchNearbyStation();
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
   const {
     data: byNameData,
     error: byNameError,
-    status: byNameFetchStatus,
     mutate: fetchByName,
   } = useMutation(getStationsByName);
   const {
@@ -155,7 +147,10 @@ const HomeScreen: React.FC = () => {
     async ({
       stations,
       trainType,
-    }: { stations: Station[]; trainType: TrainType | null }) => {
+    }: {
+      stations: Station[];
+      trainType: TrainType | null;
+    }) => {
       try {
         const station = stations[0];
 

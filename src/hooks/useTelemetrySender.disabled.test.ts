@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook } from '@testing-library/react-native';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 
@@ -24,7 +25,6 @@ jest.mock('~/hooks/useIsPassing', () => ({
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest
     .fn()
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     .mockImplementation((selector: (state: any) => any) =>
       selector({
         coords: {
@@ -47,10 +47,8 @@ describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
       readyState: 1,
       send: mockSend,
       close: jest.fn(),
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     })) as any;
 
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (global.WebSocket as any).OPEN = 1;
   });
 

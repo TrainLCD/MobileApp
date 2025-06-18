@@ -1,7 +1,6 @@
-import React from 'react';
 import { Path, Polygon, Svg, type SvgProps } from 'react-native-svg';
 
-const ChevronJO = (props?: SvgProps) => (
+export const ChevronJO = (props?: SvgProps) => (
   <Svg viewBox="0 0 200 400" {...props}>
     <Polygon
       fill="#dc143c"
@@ -15,5 +14,3 @@ const ChevronJO = (props?: SvgProps) => (
     />
   </Svg>
 );
-
-export default ChevronJO;

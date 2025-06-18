@@ -7,14 +7,14 @@ import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
+  parenthesisRegexp,
   YAMANOTE_CHEVRON_MOVE_DURATION,
   YAMANOTE_CHEVRON_SCALE_DURATION,
   YAMANOTE_LINE_BOARD_FILL_DURATION,
-  parenthesisRegexp,
 } from '../constants';
 import type { LineMark } from '../models/LineMark';
 import getIsPass from '../utils/isPass';
-import ChevronYamanote from './ChevronYamanote';
+import { ChevronYamanote } from './ChevronYamanote';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -182,7 +182,7 @@ const Transfers: React.FC<TransfersProps> = ({
   isEn,
 }: TransfersProps) => {
   const renderTransferLines = useCallback(
-    (): JSX.Element[] =>
+    (): React.ReactNode[] =>
       transferLines.map((l, i) => {
         const lineMark = lineMarks[i];
 

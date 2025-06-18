@@ -9,8 +9,8 @@ import {
   SafeAreaView,
   StyleSheet,
   TouchableOpacity,
-  View,
   useWindowDimensions,
+  View,
 } from 'react-native';
 import Animated, {
   Extrapolation,

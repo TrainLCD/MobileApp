@@ -20,8 +20,8 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { getIsLocal } from '../utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
-import BarTerminalEast from './BarTerminalEast';
-import BarTerminalSaikyo from './BarTerminalSaikyo';
+import { BarTerminalEast } from './BarTerminalEast';
+import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import Typography from './Typography';
 
 const { width: screenWidth } = Dimensions.get('screen');

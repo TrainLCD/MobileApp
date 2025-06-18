@@ -10,7 +10,6 @@ import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
-import { isDevApp } from '~/utils/isDevApp';
 import {
   ALL_AVAILABLE_LANGUAGES,
   APP_STORE_URL,
@@ -36,7 +35,6 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
-import DevOverlay from './DevOverlay';
 import Header from './Header';
 import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';

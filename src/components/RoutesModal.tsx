@@ -2,8 +2,8 @@ import sortedUniqBy from 'lodash/sortedUniqBy';
 import {
   FlatList,
   TouchableOpacity,
-  View,
   useWindowDimensions,
+  View,
 } from 'react-native';
 import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { isJapanese, translate } from '~/translation';

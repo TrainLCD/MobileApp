@@ -11,10 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import Typography from '../components/Typography';
-import { RFValue } from '../utils/rfValue';
-
 import {
   ALL_AVAILABLE_LANGUAGES,
   ALL_AVAILABLE_LANGUAGES_WITH_PRIORITY,
@@ -25,6 +23,7 @@ import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import { isJapanese, translate } from '../translation';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {

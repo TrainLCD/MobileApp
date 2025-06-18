@@ -1,6 +1,6 @@
 import * as Application from 'expo-application';
 import React, { useMemo } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   useDistanceToNextStation,
   useLocationStore,

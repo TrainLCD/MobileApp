@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { Provider } from 'jotai';
 import { useLocationStore } from '~/hooks/useLocationStore';
@@ -21,7 +22,6 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 let mockWebSocketSend: jest.Mock;
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 let mockWebSocket: any;
 
 describe('useTelemetrySender', () => {
@@ -32,14 +32,10 @@ describe('useTelemetrySender', () => {
       close: jest.fn(),
       readyState: 1, // WebSocket.OPEN
     };
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (global as any).WebSocket = jest.fn(() => mockWebSocket);
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (global as any).WebSocket.OPEN = 1;
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     (global as any).WebSocket.CONNECTING = 0;
     (useLocationStore as unknown as jest.Mock).mockImplementation(
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       (selector: (state: any) => any) =>
         selector({
           coords: {
@@ -120,7 +116,7 @@ describe('useTelemetrySender', () => {
         },
       })
     );
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+    renderHook(() => useTelemetrySender(), { wrapper });
 
     expect(mockWebSocketSend).not.toHaveBeenCalled();
   });

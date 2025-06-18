@@ -2,19 +2,19 @@ import { useQuery } from '@connectrpc/connect-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import {
-  getStationsByLineId,
-  getTrainTypesByStationId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
-import {
   TrainDirection,
   TrainType,
   TrainTypeKind,
 } from '~/gen/proto/stationapi_pb';
+import {
+  getStationsByLineId,
+  getTrainTypesByStationId,
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
 import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
 import type { NavigationState } from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import navigationState from '../store/atoms/navigation';
 import type { StationState } from '../store/atoms/station';
+import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useStationList = () => {

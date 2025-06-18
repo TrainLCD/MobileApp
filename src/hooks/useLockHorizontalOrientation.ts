@@ -1,6 +1,6 @@
 import {
-  OrientationLock,
   lockAsync,
+  OrientationLock,
   unlockAsync,
 } from 'expo-screen-orientation';
 import { useAtomValue } from 'jotai';

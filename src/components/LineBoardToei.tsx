@@ -1,14 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Dimensions,
-  Platform,
-  type StyleProp,
-  StyleSheet,
-  type TextStyle,
-  View,
-} from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
@@ -24,8 +17,8 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { heightScale, widthScale } from '../utils/scale';
-import BarTerminal from './BarTerminalEast';
-import Chevron from './ChervronTY';
+import { BarTerminalEast } from './BarTerminalEast';
+import { ChevronTY } from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
@@ -521,7 +514,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           passed={passed}
         />
         {stations.length - 1 === index ? (
-          <BarTerminal
+          <BarTerminalEast
             style={styles.barTerminal}
             lineColor={
               line.color
@@ -535,7 +528,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View style={[styles.chevron, additionalChevronStyle]}>
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
-          <Chevron color={chevronColor} />
+          <ChevronTY color={chevronColor} />
         ) : null}
       </View>
     </>
@@ -582,7 +575,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         }}
       />
       {isLast ? (
-        <BarTerminal
+        <BarTerminalEast
           style={styles.barTerminal}
           lineColor={lastLineColor}
           hasTerminus={hasTerminus}
@@ -607,7 +600,7 @@ const LineBoardToei: React.FC<Props> = ({
   );
 
   const intervalStep = useCallback(() => {
-    const timestamp = new Date().getTime();
+    const timestamp = Date.now();
     if (Math.floor(timestamp) % 2 === 0) {
       setChevronColor('RED');
       return;
@@ -618,7 +611,7 @@ const LineBoardToei: React.FC<Props> = ({
   useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element | null => {
+    (s: Station, i: number): React.ReactNode | null => {
       const isLast =
         [...stations, ...Array.from({ length: 8 - stations.length })].length -
           1 ===
