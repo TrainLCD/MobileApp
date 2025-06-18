@@ -6,7 +6,7 @@ import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import Loading from '../components/Loading';
 import Typography from '../components/Typography';
 import { useLocationStore, useSavedRoutes, useThemeStore } from '../hooks';

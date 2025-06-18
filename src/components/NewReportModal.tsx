@@ -20,7 +20,7 @@ import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { widthScale } from '~/utils/scale';
 import Button from './Button';
-import Heading from './Heading';
+import { Heading } from './Heading';
 import Typography from './Typography';
 
 const { height: screenHeight } = Dimensions.get('screen');

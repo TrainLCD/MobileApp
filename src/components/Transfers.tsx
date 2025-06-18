@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -13,13 +12,12 @@ import {
 } from '../hooks';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import Heading from './Heading';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
+import { TransfersHeading } from './TransfersHeading';
 import Typography from './Typography';
 
 interface Props {
@@ -63,18 +61,7 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: 'bold',
   },
-  headingContainerMetro: {
-    height: RFValue(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  headingContainerSaikyo: {
-    marginTop: 24,
-    width: '75%',
-    alignSelf: 'center',
-    zIndex: 1,
-  },
+
   numberingIconContainer: {
     width: (isTablet ? 72 * 1.5 : 72) / 1.25,
     height: (isTablet ? 72 * 1.5 : 72) / 1.25,
@@ -256,39 +243,6 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
     [getLineMarkFunc, onPress, station, stationNumbers, lines]
   );
 
-  const CustomHeading = () => {
-    switch (theme) {
-      case APP_THEME.TOKYO_METRO:
-      case APP_THEME.TY:
-      case APP_THEME.TOEI:
-        return (
-          <LinearGradient
-            colors={['#fcfcfc', '#f5f5f5', '#ddd']}
-            locations={[0, 0.95, 1]}
-            style={styles.headingContainerMetro}
-          >
-            <Heading>{translate('transfer')}</Heading>
-          </LinearGradient>
-        );
-      case APP_THEME.SAIKYO:
-        return (
-          <LinearGradient
-            colors={['white', '#ccc', '#ccc', 'white']}
-            start={[0, 1]}
-            end={[1, 0]}
-            locations={[0, 0.1, 0.9, 1]}
-            style={styles.headingContainerSaikyo}
-          >
-            <Heading style={{ color: '#212121', fontWeight: '600' }}>
-              {translate('transfer')}
-            </Heading>
-          </LinearGradient>
-        );
-      default:
-        return null;
-    }
-  };
-
   if (isLEDTheme) {
     return null;
   }
@@ -299,7 +253,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       activeOpacity={1}
       onPress={() => onPress()}
     >
-      <CustomHeading />
+      <TransfersHeading theme={theme} />
       <FlatList
         contentContainerStyle={styles.transferView}
         data={lines}

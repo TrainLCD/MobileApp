@@ -6,8 +6,8 @@ import HeaderJL from './HeaderJL';
 import HeaderJRWest from './HeaderJRWest';
 import HeaderLED from './HeaderLED';
 import HeaderSaikyo from './HeaderSaikyo';
-import HeaderTY from './HeaderTY';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
+import HeaderTY from './HeaderTY';
 
 const Header = () => {
   const theme = useThemeStore((state) => state);

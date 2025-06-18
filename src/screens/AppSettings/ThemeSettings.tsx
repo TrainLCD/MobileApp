@@ -5,7 +5,7 @@ import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { ThemeList } from '~/components/ThemeList';
 import { getSettingsThemes } from '~/utils/theme';
 import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
+import { Heading } from '../../components/Heading';
 import { ASYNC_STORAGE_KEYS } from '../../constants';
 import { useThemeStore } from '../../hooks';
 import type { AppTheme } from '../../models/Theme';

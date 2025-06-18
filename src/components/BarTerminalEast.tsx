@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useId } from 'react';
 import Svg, {
   Defs,
   LinearGradient,
@@ -12,14 +13,19 @@ type Props = {
   hasTerminus: boolean;
 } & SvgProps;
 
-const BarTerminalEast: React.FC<Props> = (props: Props) => {
+export const BarTerminalEast: React.FC<Props> = (props: Props) => {
+  const aId = useId();
+  const bId = useId();
+  const prefixAId = useId();
+  const prefixBId = useId();
+
   const { lineColor, hasTerminus } = props;
   if (hasTerminus) {
     return (
       <Svg viewBox="0 0 41.57 48" {...props}>
         <Defs>
           <LinearGradient
-            id="a"
+            id={aId}
             x1={20.78}
             y1={48}
             x2={20.78}
@@ -32,7 +38,7 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
             <Stop offset={0.9} stopColor="#fff" />
           </LinearGradient>
           <LinearGradient
-            id="b"
+            id={bId}
             x1={20.78}
             y1={48}
             x2={20.78}
@@ -45,11 +51,11 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
         </Defs>
         <Path
           d="M0,0H34.64c3.83,0,6.93,3.58,6.93,8V40c0,4.42-3.1,8-6.93,8H0V0Z"
-          fill="url(#a)"
+          fill={`url(#${aId})`}
         />
         <Path
           d="M0,0H34.64c3.83,0,6.93,3.58,6.93,8V40c0,4.42-3.1,8-6.93,8H0V0Z"
-          fill="url(#b)"
+          fill={`url(#${bId})`}
         />
       </Svg>
     );
@@ -59,7 +65,7 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
     <Svg viewBox="0 0 41.57 48" {...props}>
       <Defs>
         <LinearGradient
-          id="prefix__a"
+          id={prefixAId}
           x1={0}
           y1={0}
           x2={0}
@@ -72,7 +78,7 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
           <Stop offset={0.9} stopColor="#fff" />
         </LinearGradient>
         <LinearGradient
-          id="prefix__b"
+          id={prefixBId}
           x1={0}
           y1={0}
           x2={0}
@@ -84,15 +90,13 @@ const BarTerminalEast: React.FC<Props> = (props: Props) => {
         </LinearGradient>
       </Defs>
       <Path
-        fill="url(#prefix__a)"
+        fill={`url(#${prefixAId})`}
         d="M0 24V0l20.79 12 20.78 12-20.78 12L0 48V24z"
       />
       <Path
-        fill="url(#prefix__b)"
+        fill={`url(#${prefixBId})`}
         d="M0 24V0l20.79 12 20.78 12-20.78 12L0 48V24z"
       />
     </Svg>
   );
 };
-
-export default BarTerminalEast;

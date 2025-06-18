@@ -25,8 +25,8 @@ import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import { heightScale } from '../utils/scale';
-import ChevronJO from './ChevronJO';
-import JOCurrentArrowEdge from './JOCurrentArrowEdge';
+import { ChevronJO } from './ChevronJO';
+import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
 import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
@@ -232,7 +232,6 @@ interface StationNameCellProps {
   arrived: boolean;
   stations: Station[];
   station: Station;
-  loopIndex: number;
   hasNumberedStation: boolean;
 }
 
@@ -240,7 +239,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station: stationInLoop,
-  loopIndex,
   hasNumberedStation,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
@@ -339,14 +337,13 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   );
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element => {
+    (s: Station) => {
       return (
         <StationNameCell
           key={s.id}
           station={s}
           stations={stations}
           arrived={!isPassing}
-          loopIndex={i}
           hasNumberedStation={s.stationNumbers.length > 0}
         />
       );

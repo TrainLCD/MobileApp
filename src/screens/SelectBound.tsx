@@ -16,16 +16,15 @@ import {
 } from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import { useBounds, useLoopLine, useStationList } from '../hooks';
-import { type LineDirection, directionToDirectionName } from '../models/Bound';
+import { directionToDirectionName, type LineDirection } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
-import getCurrentStationIndex from '../utils/currentStationIndex';
 import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
