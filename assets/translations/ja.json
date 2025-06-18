@@ -178,5 +178,18 @@
   "inUse": "使用中",
   "autoModeV2AlertText": "オートモードが新しくなりました。駅間距離に応じて動作しますので、駅間距離が長い場合は切り替わりが遅くなる場合があります。設定画面で元のオートモードに戻すことができます。",
   "updateRequiredForReport": "フィードバックを送信するにはアプリをアップデートしてください。",
-  "updateApp": "アプリをアップデート"
+  "updateApp": "アプリをアップデート",
+  "homeTitle": "行き先を選んで出発",
+  "notSelected": "未設定",
+  "enterStationName": "駅名を入力してください",
+  "stationNearMe": "現在地から最も近い駅",
+  "searchResult": "検索結果",
+  "searchFromStationTitle": "出発駅を検索",
+  "searchToStationTitle": "到着駅を検索",
+  "distance": "約%{meters}m",
+  "selectDestinationTextForHome": "目的地を選んで、出発ボタンを押してください",
+  "selectDestinationTextForHomeError": "⚠️ 出発駅と到着駅を選択してください",
+  "routesFetching": "⌛️ 経路を検索中...",
+  "departure": "出発",
+  "noRoutes": "経路が見つかりませんでした"
 }

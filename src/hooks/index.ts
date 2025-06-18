@@ -71,3 +71,5 @@ export * from './useUpdateLiveActivities';
 export * from './useValueRef';
 export * from './useWarningInfo';
 export * from './useAutoModeAlert';
+export * from './useLockHorizontalOrientation';
+export * from './useDebounce';

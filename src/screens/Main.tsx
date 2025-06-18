@@ -367,7 +367,7 @@ const MainScreen: React.FC = () => {
         stations: [],
         wantedDestination: null,
       }));
-      navigation.dispatch(StackActions.replace('SelectBound'));
+      navigation.dispatch(StackActions.replace('Home'));
     },
     [navigation, setLineState, setNavigationState, setStationState]
   );

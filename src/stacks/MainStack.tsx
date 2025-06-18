@@ -1,48 +1,39 @@
 import {
-  type NativeStackNavigationOptions,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+  type StackNavigationOptions,
+  createStackNavigator,
+} from '@react-navigation/stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import Home from '~/screens/Home';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
-import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { useConnectivity, useUnderMaintenance } from '../hooks';
 import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import NotificationSettings from '../screens/NotificationSettingsScreen';
-import SelectBound from '../screens/SelectBound';
-import SelectLine from '../screens/SelectLine';
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen';
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
-const screenOptions: NativeStackNavigationOptions = {
+const screenOptions: StackNavigationOptions = {
   animation: 'none',
-  headerShown: false,
+  cardStyle: { backgroundColor: '#fff' },
 };
 
 const MainStack: React.FC = () => {
   const { station, selectedBound } = useAtomValue(stationState);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
 
-  const optionsWithCustomStyle = useMemo<NativeStackNavigationOptions>(
-    () => ({
-      contentStyle: {
-        opacity: 1,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      },
-    }),
-    [isLEDTheme]
+  const optionsForMainScreen = useMemo<StackNavigationOptions>(
+    () => ({ headerShown: false }),
+    []
   );
 
   if (isUnderMaintenance) {
@@ -68,50 +59,33 @@ const MainStack: React.FC = () => {
     <Permitted>
       <Stack.Navigator
         screenOptions={screenOptions}
-        initialRouteName={selectedBound ? 'Main' : 'SelectLine'}
+        initialRouteName={selectedBound ? 'Main' : 'Home'}
       >
         <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="SelectLine"
-          component={SelectLine}
+          options={{
+            title: translate('homeTitle'),
+          }}
+          name="Home"
+          component={Home}
         />
         <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="SelectBound"
-          component={SelectBound}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
+          options={optionsForMainScreen}
           name="Main"
           component={Main}
         />
+        <Stack.Screen name="AppSettings" component={AppSettings} />
         <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="AppSettings"
-          component={AppSettings}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
           name="ThemeSettings"
           component={ThemeSettings}
+          options={{ title: translate('selectThemeTitle') }}
         />
         <Stack.Screen
-          options={optionsWithCustomStyle}
           name="EnabledLanguagesSettings"
           component={EnabledLanguagesSettings}
         />
+        <Stack.Screen name="Notification" component={NotificationSettings} />
+        <Stack.Screen name="TrainType" component={TrainTypeSettings} />
         <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="Notification"
-          component={NotificationSettings}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="TrainType"
-          component={TrainTypeSettings}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
           name="SpecifyDestinationSettings"
           component={SpecifyDestinationSettingsScreen}
         />

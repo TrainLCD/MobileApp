@@ -1,21 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useMemo } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ThemeList } from '~/components/ThemeList';
 import { getSettingsThemes } from '~/utils/theme';
 import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
 import { ASYNC_STORAGE_KEYS } from '../../constants';
 import { useThemeStore } from '../../hooks';
 import type { AppTheme } from '../../models/Theme';
-import { translate } from '../../translation';
 import { isDevApp } from '../../utils/isDevApp';
 
 const styles = StyleSheet.create({
-  rootPadding: {
-    marginTop: 12,
-  },
   listContainer: {
     height: '100%',
     paddingBottom: 96,
@@ -46,15 +41,14 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <SafeAreaView style={styles.rootPadding}>
-        <Heading>{translate('selectThemeTitle')}</Heading>
+      <View>
         <View style={styles.listContainer}>
           <ThemeList
             data={unlockedSettingsThemes}
             onSelect={onThemeValueChange}
           />
         </View>
-      </SafeAreaView>
+      </View>
       <FAB onPress={onPressBack} icon="checkmark" />
     </>
   );

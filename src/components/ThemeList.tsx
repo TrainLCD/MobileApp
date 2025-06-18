@@ -135,7 +135,6 @@ export const ThemeList = ({
         width: '100%',
         alignSelf: 'center',
         borderColor: isLEDTheme ? '#fff' : '#aaa',
-        borderWidth: 1,
       }}
       data={data}
       renderItem={renderItem}

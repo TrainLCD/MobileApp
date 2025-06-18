@@ -1,9 +1,10 @@
-import React from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Dimensions,
   type GestureResponderEvent,
   StyleSheet,
   TouchableWithoutFeedback,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { translate } from '../translation';
@@ -21,7 +22,24 @@ const WarningPanel: React.FC<Props> = ({
   onPress,
   warningLevel,
 }: Props) => {
-  const borderColor = (() => {
+  const [isPortrait, setIsPortrait] = useState(true);
+
+  const { width: windowWidth } = useWindowDimensions();
+
+  useEffect(() => {
+    ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
+      if (
+        orientationInfo.orientation ===
+        ScreenOrientation.Orientation.PORTRAIT_UP
+      ) {
+        setIsPortrait(true);
+      } else {
+        setIsPortrait(false);
+      }
+    });
+  }, []);
+
+  const borderColor = useMemo(() => {
     switch (warningLevel) {
       case 'URGENT':
         return '#f62e36';
@@ -32,17 +50,19 @@ const WarningPanel: React.FC<Props> = ({
       default:
         return '#00bb85';
     }
-  })();
+  }, [warningLevel]);
 
   const styles = StyleSheet.create({
     root: {
-      width: Dimensions.get('screen').width / 2,
+      width: isPortrait ? windowWidth * 0.9 : windowWidth / 2,
       backgroundColor: '#333',
       borderColor,
-      borderLeftWidth: 16,
+      borderLeftWidth: isPortrait ? 0 : 16,
+      borderTopWidth: isPortrait ? 16 : 0,
       position: 'absolute',
-      right: 24,
-      bottom: 24,
+      left: isPortrait ? windowWidth * 0.05 : 0,
+      right: isPortrait ? windowWidth * 0.05 : 24,
+      bottom: isPortrait ? 16 : 24,
       padding: 16,
       zIndex: 9999,
       borderRadius: 4,

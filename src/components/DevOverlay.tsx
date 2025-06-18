@@ -1,6 +1,6 @@
 import * as Application from 'expo-application';
 import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import {
   useDistanceToNextStation,
   useLocationStore,
@@ -9,13 +9,10 @@ import {
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import Typography from './Typography';
 
-const { width: screenWidth } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
   root: {
     position: 'absolute',
     right: 0,
-    width: screenWidth / 4,
     backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 9999,
     padding: 4,
@@ -38,6 +35,7 @@ const DevOverlay: React.FC = () => {
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
   const { approachingThreshold, arrivedThreshold } = useThreshold();
   const distanceToNextStation = useDistanceToNextStation();
+  const { width: windowWidth } = useWindowDimensions();
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
@@ -47,7 +45,7 @@ const DevOverlay: React.FC = () => {
   );
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { width: windowWidth / 2 }]}>
       <Typography style={styles.textHeading}>
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
