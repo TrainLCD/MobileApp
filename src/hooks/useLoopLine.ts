@@ -36,17 +36,6 @@ export const useLoopLine = () => {
     [line?.id]
   );
 
-  const _isOnlyLoopLine = useMemo(
-    () =>
-      stations.filter(
-        (s) =>
-          s.line?.id === YAMANOTE_LINE_ID ||
-          s.line?.id === OSASA_LOOP_LINE_ID ||
-          s.line?.id === MEIJO_LINE_ID
-      ).length === stations.length,
-    [stations]
-  );
-
   const majorStationIds = useMemo(() => {
     if (!line) {
       return [];
