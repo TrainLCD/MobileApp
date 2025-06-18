@@ -1,5 +1,6 @@
 import { useMutation } from '@connectrpc/connect-query';
-import { StackActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { lockAsync, OrientationLock } from 'expo-screen-orientation';
 import getDistance from 'geolib/es/getDistance';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -188,9 +189,11 @@ const HomeScreen: React.FC = () => {
           selectedDirection: direction,
         }));
 
-        navigation.dispatch(
-          StackActions.replace('MainStack', { screen: 'Main' })
-        );
+        lockAsync(OrientationLock.LANDSCAPE)
+          .then(() => console.log('Orientation locked'))
+          .catch(console.error);
+
+        navigation.navigate('Main' as never);
       } catch (err) {
         console.error(err);
         Alert.alert(translate('error'), (err as Error).message);

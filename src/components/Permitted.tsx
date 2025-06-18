@@ -26,7 +26,6 @@ import {
   useCheckStoreVersion,
   useCurrentLine,
   useFeedback,
-  useLockHorizontalOrientation,
   useThemeStore,
   useWarningInfo,
 } from '../hooks';
@@ -62,7 +61,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useAppleWatch();
   useAndroidWearable();
-  useLockHorizontalOrientation();
 
   const user = useCachedInitAnonymousUser();
   const currentLine = useCurrentLine();

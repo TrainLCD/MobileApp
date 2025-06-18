@@ -36,7 +36,6 @@ export * from './useIsTerminus';
 export * from './useLazyPrevious';
 export * from './useLocationPermissionsGranted';
 export * from './useLocationStore';
-export * from './useLockHorizontalOrientation';
 export * from './useLoopLine';
 export * from './useLoopLineBound';
 export * from './useNearestStation';

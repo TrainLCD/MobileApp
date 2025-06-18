@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
+import { unlockAsync } from 'expo-screen-orientation';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
@@ -369,6 +370,11 @@ const MainScreen: React.FC = () => {
         stations: [],
         wantedDestination: null,
       }));
+
+      unlockAsync()
+        .then(() => console.log('Orientation locked'))
+        .catch(console.error);
+
       navigation.dispatch(StackActions.replace('Home'));
     },
     [navigation, setLineState, setNavigationState, setStationState]
