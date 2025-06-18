@@ -20,7 +20,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStore } from '../hooks/useThemeStore';
 import { APP_THEME } from '../models/Theme';
-import Heading from './Heading';
+import { Heading } from './Heading';
 
 type Props = {
   open: boolean;
