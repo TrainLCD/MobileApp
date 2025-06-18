@@ -1,14 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Dimensions,
-  Platform,
-  type StyleProp,
-  StyleSheet,
-  type TextStyle,
-  View,
-} from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
@@ -607,7 +600,7 @@ const LineBoardToei: React.FC<Props> = ({
   );
 
   const intervalStep = useCallback(() => {
-    const timestamp = new Date().getTime();
+    const timestamp = Date.now();
     if (Math.floor(timestamp) % 2 === 0) {
       setChevronColor('RED');
       return;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Path, Polygon, Svg, type SvgProps } from 'react-native-svg';
 
 const ChevronJO = (props?: SvgProps) => (

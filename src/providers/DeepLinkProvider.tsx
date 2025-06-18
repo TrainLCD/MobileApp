@@ -1,4 +1,4 @@
-import React, { memo, type ReactNode, useEffect } from 'react';
+import { memo, type ReactNode, useEffect } from 'react';
 import { Alert } from 'react-native';
 import Loading from '../components/Loading';
 import { useDeepLink } from '../hooks';

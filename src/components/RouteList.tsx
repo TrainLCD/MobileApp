@@ -1,5 +1,5 @@
 import uniqBy from 'lodash/uniqBy';
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Route, Station } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useThemeStore } from '../hooks';

@@ -62,7 +62,7 @@ interface Props {
   hasTerminus: boolean;
 }
 
-const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
+const _getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
       width: heightScale(320),
@@ -516,7 +516,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   );
 
   const intervalStep = useCallback(() => {
-    const timestamp = new Date().getTime();
+    const timestamp = Date.now();
     if (Math.floor(timestamp) % 2 === 0) {
       setChevronColor('RED');
       return;

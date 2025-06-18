@@ -36,7 +36,7 @@ export const useLoopLine = () => {
     [line?.id]
   );
 
-  const isOnlyLoopLine = useMemo(
+  const _isOnlyLoopLine = useMemo(
     () =>
       stations.filter(
         (s) =>

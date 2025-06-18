@@ -7,7 +7,7 @@ import { isClip } from 'react-native-app-clip';
 import navigationState from '~/store/atoms/navigation';
 import Button from '../../components/Button';
 import FAB from '../../components/FAB';
-import Heading from '../../components/Heading';
+import { Heading } from '../../components/Heading';
 import LEDThemeSwitch from '../../components/LEDThemeSwitch';
 import Typography from '../../components/Typography';
 import { ASYNC_STORAGE_KEYS } from '../../constants';
