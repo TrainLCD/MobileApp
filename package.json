@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.0.0",
     "@bufbuild/buf": "^1.40.1",
     "@bufbuild/protobuf": "^1.10.0",
     "@bufbuild/protoc-gen-es": "^1.7.2",

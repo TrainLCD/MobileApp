@@ -1,13 +1,14 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
   "files": {
-    "ignore": [
-      "**/node_modules/**",
-      "**/__mocks__/**",
-      "**/coverage/**",
-      "babel.config.js",
-      "metro.config.js",
-      "jest.setup.js"
+    "includes": [
+      "**",
+      "!**/node_modules/**",
+      "!**/__mocks__/**",
+      "!**/coverage/**",
+      "!**/babel.config.js",
+      "!**/metro.config.js",
+      "!**/jest.setup.js"
     ]
   },
   "formatter": {
@@ -32,7 +33,17 @@
         "noExplicitAny": "error"
       },
       "style": {
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
       }
     }
   }
