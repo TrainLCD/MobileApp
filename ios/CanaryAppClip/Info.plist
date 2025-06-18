@@ -33,8 +33,6 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>FrutigerNeueLTPro-Bold.ttf</string>
@@ -42,5 +40,7 @@
 		<string>FuturaLTPro-Bold.ttf</string>
 		<string>verdana-bold.ttf</string>
 	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
 </dict>
 </plist>
