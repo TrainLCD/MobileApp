@@ -1,3 +1,4 @@
+import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
 import getPathLength from 'geolib/es/getPathLength';
@@ -8,6 +9,7 @@ import {
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
   LINE_TYPE_MAX_SPEEDS_IN_M_S,
+  LOCATION_TASK_NAME,
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
 import { LineType } from '~/gen/proto/stationapi_pb';
@@ -73,6 +75,21 @@ export const useSimulationMode = (): void => {
   const enabled = useMemo(() => {
     return !enableLegacyAutoMode && autoModeEnabled;
   }, [enableLegacyAutoMode, autoModeEnabled]);
+
+  useEffect(() => {
+    const stopLocationUpdatesAsync = async () => {
+      try {
+        const hasStartedLocationUpdates =
+          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStartedLocationUpdates) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    stopLocationUpdatesAsync();
+  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {
