@@ -1,3 +1,4 @@
+import * as Location from 'expo-location';
 import getCenter from 'geolib/es/getCenter';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -6,6 +7,7 @@ import { isDevApp } from '~/utils/isDevApp';
 import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
+  LOCATION_TASK_NAME,
 } from '../constants';
 import { AUTO_MODE_RUNNING_SPEED } from '../constants/threshold';
 import lineState from '../store/atoms/line';
@@ -46,6 +48,23 @@ export const useAutoMode = (): void => {
   const enabled = useMemo(() => {
     return enableLegacyAutoMode && autoModeEnabled;
   }, [enableLegacyAutoMode, autoModeEnabled]);
+
+  useEffect(() => {
+    const stopLocationUpdatesAsync = async () => {
+      try {
+        if (
+          enabled &&
+          (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
+        ) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    stopLocationUpdatesAsync();
+  }, [enabled]);
 
   const startApproachingTimer = useCallback(() => {
     if (
