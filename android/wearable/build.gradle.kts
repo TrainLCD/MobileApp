@@ -10,8 +10,8 @@ android {
 
   defaultConfig {
     applicationId = "me.tinykitten.trainlcd"
-    minSdk = 30
-    targetSdk = 33
+    minSdk = 34
+    targetSdk = 34
     vectorDrawables {
       useSupportLibrary = true
     }
