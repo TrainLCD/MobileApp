@@ -148,9 +148,14 @@ export const useWarningInfo = () => {
     setScreenshotTaken(false);
 
     if (!longPressNoticeDismissed) {
-      AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
-        'true'
+      pipe(
+        Effect.promise(() =>
+          AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
+            'true'
+          )
+        ),
+        Effect.runPromise
       );
     }
   }, [longPressNoticeDismissed]);
