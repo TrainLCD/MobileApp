@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
+import { Effect, pipe } from 'effect';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { Effect, pipe } from 'effect';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {

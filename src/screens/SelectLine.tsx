@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
 import { Effect, pipe } from 'effect';
+import * as Location from 'expo-location';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
