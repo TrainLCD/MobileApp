@@ -1,3 +1,4 @@
+import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
@@ -23,7 +24,6 @@ import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
-import { Effect, pipe } from 'effect';
 
 export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
