@@ -117,7 +117,7 @@ jobs:
             echo "📱 Building and installing Android app..."
             adb devices
             
-            pnpm run android -- --variant devRelease
+            pnpm run android -- --variant devRelease --no-packager
             
             # アプリの起動を待つ
             echo "⏳ Waiting for app to start..."
