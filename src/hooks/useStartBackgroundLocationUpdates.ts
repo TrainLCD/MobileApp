@@ -1,3 +1,4 @@
+import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
@@ -17,10 +18,10 @@ export const useStartBackgroundLocationUpdates = () => {
       return;
     }
 
-    const startUpdateAsync = async () => {
-      if (AppState.currentState === 'active') {
-        try {
-          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    if (AppState.currentState === 'active') {
+      pipe(
+        Effect.promise(() =>
+          Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             ...LOCATION_TASK_OPTIONS,
             // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
             // OtherNavigationは必須
@@ -30,14 +31,11 @@ export const useStartBackgroundLocationUpdates = () => {
               notificationBody: translate('bgAlertContent'),
               killServiceOnDestroy: true,
             },
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    };
-
-    startUpdateAsync();
+          })
+        ),
+        Effect.runPromise
+      );
+    }
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
@@ -47,19 +45,17 @@ export const useStartBackgroundLocationUpdates = () => {
   useEffect(() => {
     let watchPositionSub: Location.LocationSubscription | null = null;
 
-    (async () => {
-      if (autoModeEnabled || bgPermGranted) {
-        return;
-      }
+    if (autoModeEnabled || bgPermGranted) {
+      return;
+    }
 
-      try {
-        watchPositionSub = await Location.watchPositionAsync(
-          LOCATION_TASK_OPTIONS,
-          setLocation
-        );
-      } catch (err) {
-        console.error(err);
-      }
+    (async () => {
+      watchPositionSub = await pipe(
+        Effect.promise(() =>
+          Location.watchPositionAsync(LOCATION_TASK_OPTIONS, setLocation)
+        ),
+        Effect.runPromise
+      );
     })();
 
     return () => {

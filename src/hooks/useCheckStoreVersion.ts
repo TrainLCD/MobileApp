@@ -1,3 +1,4 @@
+import { Effect, pipe } from 'effect';
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
@@ -27,16 +28,17 @@ export const useCheckStoreVersion = (): void => {
   }, []);
 
   useEffect(() => {
-    const f = async () => {
-      if (__DEV__) {
-        setNavigationState((prev) => ({
-          ...prev,
-          isAppLatest: true,
-        }));
-        return;
-      }
-      try {
-        const res = await VersionCheck.needUpdate();
+    if (__DEV__) {
+      setNavigationState((prev) => ({
+        ...prev,
+        isAppLatest: true,
+      }));
+      return;
+    }
+
+    pipe(
+      Effect.promise(() => VersionCheck.needUpdate()),
+      Effect.andThen((res) => {
         if (res?.isNeeded) {
           const url = Platform.select({
             ios: APP_STORE_URL,
@@ -52,10 +54,16 @@ export const useCheckStoreVersion = (): void => {
             isAppLatest: true,
           }));
         }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    f();
+      }),
+      Effect.runPromise,
+      (promise) =>
+        promise.catch(() => {
+          // バージョンチェック失敗時も最新版として扱う
+          setNavigationState((prev) => ({
+            ...prev,
+            isAppLatest: true,
+          }));
+        })
+    );
   }, [showUpdateRequestDialog, setNavigationState]);
 };
