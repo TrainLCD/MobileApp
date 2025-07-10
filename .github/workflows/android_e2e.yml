@@ -1,0 +1,161 @@
+name: Android E2E
+
+on:
+  pull_request:
+
+env:
+  TZ: "Asia/Tokyo"
+
+# 並列実行の制御
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45  # タイムアウト設定
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Restore .env.local
+        shell: bash
+        run: echo "$DOTENV_LOCAL" | tr -d '\r' > ./.env.local
+        env:
+          DOTENV_LOCAL: ${{ secrets.DOTENV_LOCAL }}
+
+      - name: Restore google-services.json
+        shell: bash
+        run: echo "$GOOGLE_SERVICES_JSON" | tr -d '\r' > ./android/app/src/dev/google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Restore play-store-credentials.json
+        shell: bash
+        run: echo "$PLAY_STORE_CREDENTIALS_JSON" | tr -d '\r' > ./android/play-store-credentials.json
+        env:
+          PLAY_STORE_CREDENTIALS_JSON: ${{ secrets.PLAY_STORE_CREDENTIALS_JSON }}
+
+      - name: Restore release.keystore
+        shell: bash
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > ./android/app/release.keystore
+        env:
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+
+      - name: Restore sentry.properties
+        shell: bash
+        run: echo "${{ secrets.SENTRY_PROPERTIES_BASE64 }}" | base64 --decode > ./android/sentry.properties
+        env:
+          SENTRY_PROPERTIES_BASE64: ${{ secrets.SENTRY_PROPERTIES_BASE64 }}
+
+      - name: Install maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          $HOME/.maestro/bin/maestro --version
+
+      - name: Setup Android SDK + emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          script: |
+            # エラーハンドリングの設定
+            set -e
+            
+            # Metro Bundlerを起動
+            echo "🌐 Starting Metro Bundler..."
+            nohup pnpm start --reset-cache > metro.log 2>&1 &
+            METRO_PID=$!
+            
+            # Metro Bundlerの起動を待つ（最大60秒）
+            echo "⏳ Waiting for Metro Bundler..."
+            for i in {1..12}; do
+              if curl -f http://localhost:8081/status > /dev/null 2>&1; then
+                echo "✅ Metro Bundler is ready"
+                break
+              fi
+              if [ $i -eq 12 ]; then
+                echo "❌ Metro Bundler failed to start after 60 seconds"
+                cat metro.log
+                kill $METRO_PID 2>/dev/null || true
+                exit 1
+              fi
+              echo "Waiting... ($i/12)"
+              sleep 5
+            done
+            
+            # Androidアプリをビルド・インストール
+            echo "📱 Building and installing Android app..."
+            adb devices
+            
+            # ビルドのタイムアウト設定
+            timeout 600 pnpm run android -- --variant devRelease || {
+              echo "❌ Android build failed or timed out"
+              exit 1
+            }
+            
+            # アプリの起動を待つ
+            echo "⏳ Waiting for app to start..."
+            sleep 15
+            
+            # Maestroテストを実行（スクリーンショット付き）
+            echo "🧪 Running Maestro tests..."
+            timeout 300 maestro test Flow.yaml --format junit --output maestro-results.xml || {
+              echo "❌ Maestro test failed or timed out"
+              exit 1
+            }
+            
+            # クリーンアップ
+            echo "🧹 Cleaning up..."
+            kill $METRO_PID 2>/dev/null || true
+            pkill -f "metro" 2>/dev/null || true
+
+      - name: Upload Metro logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: metro-logs-${{ github.run_number }}
+          path: metro.log
+
+      - name: Upload Maestro screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-screenshots-${{ github.run_number }}
+          path: maestro-screenshots/
+          retention-days: 30
+
+      - name: Upload Maestro test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-test-results-${{ github.run_number }}
+          path: maestro-results.xml
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        run: |
+          pkill -f "pnpm start" || true
+          pkill -f "metro" || true
