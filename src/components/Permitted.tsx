@@ -435,14 +435,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 catch: captureError,
               }),
               Effect.andThen(() => {
-                () => {
-                  setSendingReport(false);
-                  Alert.alert(
-                    translate('announcementTitle'),
-                    translate('reportSuccessText')
-                  );
-                  handleNewReportModalClose();
-                };
+                setSendingReport(false);
+                Alert.alert(
+                  translate('announcementTitle'),
+                  translate('reportSuccessText')
+                );
+                handleNewReportModalClose();
               }),
               Effect.runPromise
             );
