@@ -37,7 +37,7 @@ jobs:
           java-version: "21"
 
       - name: Install dependencies
-        run: pnpm i
+        run: pnpm install --frozen-lockfile
 
       - name: Restore .env.local
         shell: bash
@@ -88,20 +88,20 @@ jobs:
             nohup pnpm start --reset-cache > metro.log 2>&1 &
             METRO_PID=$!
             
-            # Metro Bundlerの起動を待つ（最大120秒）
+            # Metro Bundlerの起動を待つ（最大60秒）
             echo "⏳ Waiting for Metro Bundler..."
             for i in {1..24}; do
               if curl -f http://localhost:8081/status > /dev/null 2>&1; then
                 echo "✅ Metro Bundler is ready"
                 break
               fi
-              if [ $i -eq 24 ]; then
-                echo "❌ Metro Bundler failed to start after 120 seconds"
+              if [ $i -eq 12 ]; then
+                echo "❌ Metro Bundler failed to start after 60 seconds"
                 cat metro.log
                 kill $METRO_PID 2>/dev/null || true
                 exit 1
               fi
-              echo "Waiting... ($i/24)"
+              echo "Waiting... ($i/12)"
               sleep 5
             done
             
@@ -114,7 +114,7 @@ jobs:
             
             # アプリの起動を待つ
             echo "⏳ Waiting for app to start..."
-            sleep 15
+            sleep 45
             
             # Maestroテストを実行（スクリーンショット付き）
             echo "🧪 Running Maestro tests..."
