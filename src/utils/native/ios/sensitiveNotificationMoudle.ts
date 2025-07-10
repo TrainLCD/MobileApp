@@ -6,7 +6,7 @@ const { SensitiveNotificationModule } = NativeModules;
 const ELIGIBLE_PLATFORM =
   Platform.OS === 'ios' && Number.parseFloat(Platform.Version) >= 15.0;
 
-const sendNotificationAsync = async ({
+const sendNotificationAsync = ({
   title,
   body,
 }: {

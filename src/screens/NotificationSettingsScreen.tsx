@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { Effect, pipe } from 'effect';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
@@ -182,22 +183,28 @@ const NotificationSettings: React.FC = () => {
     );
   }, [handlePressBack, openFailedToOpenSettingsAlert]);
 
+  // effectライブラリを使用した権限チェック
   useEffect(() => {
-    const f = async (): Promise<void> => {
-      const { granted: notifyPermGranted } =
-        await Notifications.requestPermissionsAsync();
-      if (!notifyPermGranted) {
-        showNotificationNotGrantedAlert();
-        return;
-      }
+    pipe(
+      Effect.promise(() => Notifications.requestPermissionsAsync()),
+      Effect.andThen(({ granted: notifyPermGranted }) => {
+        if (!notifyPermGranted) {
+          showNotificationNotGrantedAlert();
+          return;
+        }
 
-      const { granted: bgPermGranted } =
-        await Location.getBackgroundPermissionsAsync();
-      if (!bgPermGranted) {
-        showAlwaysPermissionNotGrantedAlert();
-      }
-    };
-    f();
+        return Effect.promise(() =>
+          Location.getBackgroundPermissionsAsync()
+        ).pipe(
+          Effect.andThen(({ granted: bgPermGranted }) => {
+            if (!bgPermGranted) {
+              showAlwaysPermissionNotGrantedAlert();
+            }
+          })
+        );
+      }),
+      Effect.runPromise
+    );
   }, [showAlwaysPermissionNotGrantedAlert, showNotificationNotGrantedAlert]);
 
   const renderItem = useCallback(

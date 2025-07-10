@@ -37,6 +37,7 @@
     "@sentry/react-native": "~6.14.0",
     "@tanstack/react-query": "^5.76.1",
     "dayjs": "^1.10.7",
+    "effect": "^3.16.12",
     "expo": "^53.0.11",
     "expo-application": "~6.1.4",
     "expo-av": "~15.1.6",
