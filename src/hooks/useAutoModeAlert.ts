@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Effect, pipe } from 'effect';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { Alert } from 'react-native';
@@ -11,11 +12,11 @@ export const useAutoModeAlert = () => {
     useAtomValue(navigationState);
 
   useEffect(() => {
-    const showAlert = async (): Promise<void> => {
-      try {
-        const alreadyConfirmed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED
-        );
+    pipe(
+      Effect.promise(() =>
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED)
+      ),
+      Effect.andThen((alreadyConfirmed) => {
         if (autoModeEnabled && !enableLegacyAutoMode && !alreadyConfirmed) {
           Alert.alert(
             translate('announcementTitle'),
@@ -24,7 +25,7 @@ export const useAutoModeAlert = () => {
               {
                 text: translate('doNotShowAgain'),
                 style: 'cancel',
-                onPress: async (): Promise<void> => {
+                onPress: async () => {
                   await AsyncStorage.setItem(
                     ASYNC_STORAGE_KEYS.AUTO_MODE_V2_CONFIRMED,
                     'true'
@@ -37,11 +38,8 @@ export const useAutoModeAlert = () => {
             ]
           );
         }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    showAlert();
+      }),
+      Effect.runPromise
+    );
   }, [autoModeEnabled, enableLegacyAutoMode]);
 };

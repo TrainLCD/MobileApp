@@ -137,13 +137,10 @@ export const useWarningInfo = () => {
     setScreenshotTaken(false);
 
     if (!longPressNoticeDismissed) {
-      const saveFlagAsync = async () => {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
-          'true'
-        );
-      };
-      saveFlagAsync();
+      AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
+        'true'
+      );
     }
   }, [longPressNoticeDismissed]);
 

@@ -1,4 +1,5 @@
 import firestore from '@react-native-firebase/firestore';
+import { Effect, pipe } from 'effect';
 import { useEffect, useState } from 'react';
 
 type MaintenanceDoc = {
@@ -8,17 +9,18 @@ type MaintenanceDoc = {
 export const useUnderMaintenance = () => {
   const [underMaintenance, setUnderMaintenance] = useState<boolean>();
   useEffect(() => {
-    const fetchUnderMaintenanceAsync = async () => {
-      const snapshot = await firestore()
-        .collection('appConfig')
-        .doc('maintenance')
-        .get();
-      const data = snapshot.data();
-      if (data) {
-        setUnderMaintenance((data as MaintenanceDoc).underMaintenance);
-      }
-    };
-    fetchUnderMaintenanceAsync();
+    pipe(
+      Effect.promise(() =>
+        firestore().collection('appConfig').doc('maintenance').get()
+      ),
+      Effect.andThen((snapshot) => {
+        const data = snapshot.data();
+        if (data) {
+          setUnderMaintenance((data as MaintenanceDoc).underMaintenance);
+        }
+      }),
+      Effect.runPromise
+    );
   }, []);
 
   return underMaintenance;
