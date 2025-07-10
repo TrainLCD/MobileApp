@@ -55,7 +55,15 @@ export const useCheckStoreVersion = (): void => {
           }));
         }
       }),
-      Effect.runPromise
+      Effect.runPromise,
+      (promise) =>
+        promise.catch(() => {
+          // バージョンチェック失敗時も最新版として扱う
+          setNavigationState((prev) => ({
+            ...prev,
+            isAppLatest: true,
+          }));
+        })
     );
   }, [showUpdateRequestDialog, setNavigationState]);
 };
