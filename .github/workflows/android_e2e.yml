@@ -75,10 +75,18 @@ jobs:
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
           $HOME/.maestro/bin/maestro --version
 
+      - name: List available system images
+        run: |
+          echo "📋 Available system images:"
+          sdkmanager --list | grep "system-images" | head -20
+
       - name: Setup Android SDK + emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 31
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
           script: |
             # エラーハンドリングの設定
             set -e
@@ -88,20 +96,20 @@ jobs:
             nohup pnpm start --reset-cache > metro.log 2>&1 &
             METRO_PID=$!
             
-            # Metro Bundlerの起動を待つ（最大60秒）
+            # Metro Bundlerの起動を待つ
             echo "⏳ Waiting for Metro Bundler..."
             for i in {1..24}; do
               if curl -f http://localhost:8081/status > /dev/null 2>&1; then
                 echo "✅ Metro Bundler is ready"
                 break
               fi
-              if [ $i -eq 12 ]; then
-                echo "❌ Metro Bundler failed to start after 60 seconds"
+              if [ $i -eq 24 ]; then
+                echo "❌ Metro Bundler failed to start after 120 seconds"
                 cat metro.log
                 kill $METRO_PID 2>/dev/null || true
                 exit 1
               fi
-              echo "Waiting... ($i/12)"
+              echo "Waiting... ($i/24)"
               sleep 5
             done
             
@@ -109,14 +117,13 @@ jobs:
             echo "📱 Building and installing Android app..."
             adb devices
             
-            # ビルドのタイムアウト設定
             pnpm run android -- --variant devRelease
             
             # アプリの起動を待つ
             echo "⏳ Waiting for app to start..."
             sleep 45
             
-            # Maestroテストを実行（スクリーンショット付き）
+            # Maestroテストを実行
             echo "🧪 Running Maestro tests..."
             maestro test Flow.yaml --format junit --output maestro-results.xml
             
