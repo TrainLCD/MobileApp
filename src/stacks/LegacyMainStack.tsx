@@ -4,15 +4,17 @@ import {
 } from '@react-navigation/stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import Home from '~/screens/Home';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
-import { useConnectivity, useUnderMaintenance } from '../hooks';
+import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
+import { APP_THEME } from '../models/Theme';
 import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import NotificationSettings from '../screens/NotificationSettingsScreen';
+import SelectBound from '../screens/SelectBound';
+import SelectLine from '../screens/SelectLine';
 import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen';
 import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import stationState from '../store/atoms/station';
@@ -22,18 +24,25 @@ const Stack = createStackNavigator();
 
 const screenOptions: StackNavigationOptions = {
   animation: 'none',
-  cardStyle: { backgroundColor: '#fff' },
+  headerShown: false,
 };
 
-const MainStack: React.FC = () => {
+const LegacyMainStack: React.FC = () => {
   const { station, selectedBound } = useAtomValue(stationState);
+
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
 
-  const optionsForMainScreen = useMemo<StackNavigationOptions>(
-    () => ({ headerShown: false }),
-    []
+  const optionsWithCustomStyle = useMemo<StackNavigationOptions>(
+    () => ({
+      cardStyle: {
+        opacity: 1,
+        backgroundColor: isLEDTheme ? '#212121' : '#fff',
+      },
+    }),
+    [isLEDTheme]
   );
 
   if (isUnderMaintenance) {
@@ -59,33 +68,50 @@ const MainStack: React.FC = () => {
     <Permitted>
       <Stack.Navigator
         screenOptions={screenOptions}
-        initialRouteName={selectedBound ? 'Main' : 'Home'}
+        initialRouteName={selectedBound ? 'Main' : 'SelectLine'}
       >
         <Stack.Screen
-          options={{
-            title: translate('homeTitle'),
-          }}
-          name="Home"
-          component={Home}
+          options={optionsWithCustomStyle}
+          name="SelectLine"
+          component={SelectLine}
         />
         <Stack.Screen
-          options={optionsForMainScreen}
+          options={optionsWithCustomStyle}
+          name="SelectBound"
+          component={SelectBound}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
           name="Main"
           component={Main}
         />
-        <Stack.Screen name="AppSettings" component={AppSettings} />
         <Stack.Screen
-          name="ThemeSettings"
-          component={ThemeSettings}
-          options={{ title: translate('selectThemeTitle') }}
+          options={optionsWithCustomStyle}
+          name="AppSettings"
+          component={AppSettings}
         />
         <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="ThemeSettings"
+          component={ThemeSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
           name="EnabledLanguagesSettings"
           component={EnabledLanguagesSettings}
         />
-        <Stack.Screen name="Notification" component={NotificationSettings} />
-        <Stack.Screen name="TrainType" component={TrainTypeSettings} />
         <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="Notification"
+          component={NotificationSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="TrainType"
+          component={TrainTypeSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
           name="SpecifyDestinationSettings"
           component={SpecifyDestinationSettingsScreen}
         />
@@ -94,4 +120,4 @@ const MainStack: React.FC = () => {
   );
 };
 
-export default React.memo(MainStack);
+export default React.memo(LegacyMainStack);

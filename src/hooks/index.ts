@@ -16,6 +16,7 @@ export { useConnectivity } from './useConnectivity';
 export { useCurrentLine } from './useCurrentLine';
 export { useCurrentStation } from './useCurrentStation';
 export { useCurrentTrainType } from './useCurrentTrainType';
+export { useDebounce } from './useDebounce';
 export { useDeepLink } from './useDeepLink';
 export { useDistanceToNextStation } from './useDistanceToNextStation';
 export { useFeedback } from './useFeedback';

@@ -7,14 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Dimensions,
-  Linking,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
@@ -42,8 +35,6 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
-import DevOverlay from './DevOverlay';
 import Header from './Header';
 import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';
@@ -51,7 +42,7 @@ import WarningPanel from './WarningPanel';
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
-    height: Dimensions.get('screen').height,
+    height: '100%',
   },
 });
 
@@ -246,7 +237,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                   if (Platform.OS === 'ios') {
                     navigation.dispatch(
                       StackActions.replace('MainStack', {
-                        screen: 'SelectBound',
+                        screen: 'Home',
                       })
                     );
                     break;
@@ -470,8 +461,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.root}>
-          {isDevApp && <DevOverlay />}
-          <Header />
+          {/* {isDevApp && <DevOverlay />} */}
+          {selectedBound ? <Header /> : null}
           {children}
           <NullableWarningPanel />
         </View>
