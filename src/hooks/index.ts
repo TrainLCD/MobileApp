@@ -72,3 +72,4 @@ export { useUpdateBottomState } from './useUpdateBottomState';
 export { useUpdateLiveActivities } from './useUpdateLiveActivities';
 export { useValueRef } from './useValueRef';
 export { useWarningInfo } from './useWarningInfo';
+export { useDebounce } from './useDebounce';
