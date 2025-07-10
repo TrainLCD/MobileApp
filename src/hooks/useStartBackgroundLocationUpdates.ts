@@ -45,19 +45,17 @@ export const useStartBackgroundLocationUpdates = () => {
   useEffect(() => {
     let watchPositionSub: Location.LocationSubscription | null = null;
 
-    (async () => {
-      if (autoModeEnabled || bgPermGranted) {
-        return;
-      }
+    if (autoModeEnabled || bgPermGranted) {
+      return;
+    }
 
-      try {
-        watchPositionSub = await Location.watchPositionAsync(
-          LOCATION_TASK_OPTIONS,
-          setLocation
-        );
-      } catch (err) {
-        console.error(err);
-      }
+    (async () => {
+      watchPositionSub = await pipe(
+        Effect.promise(() =>
+          Location.watchPositionAsync(LOCATION_TASK_OPTIONS, setLocation)
+        ),
+        Effect.runPromise
+      );
     })();
 
     return () => {
