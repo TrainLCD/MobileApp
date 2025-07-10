@@ -23,6 +23,7 @@ import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
+import { Effect, pipe } from 'effect';
 
 export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
@@ -77,19 +78,24 @@ export const useSimulationMode = (): void => {
   }, [enableLegacyAutoMode, autoModeEnabled]);
 
   useEffect(() => {
-    const stopLocationUpdatesAsync = async () => {
-      try {
-        const hasStartedLocationUpdates =
-          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-        if (hasStartedLocationUpdates) {
-          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (!enabled) {
+      return;
+    }
+
+    pipe(
+      Effect.promise(() =>
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+      ),
+      Effect.andThen((hasStarted) => {
+        if (hasStarted) {
+          return Effect.promise(() =>
+            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+          );
         }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    stopLocationUpdatesAsync();
-  }, []);
+      }),
+      Effect.runPromise
+    );
+  }, [enabled]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {

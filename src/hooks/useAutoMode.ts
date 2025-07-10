@@ -1,3 +1,4 @@
+import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import getCenter from 'geolib/es/getCenter';
 import { useAtomValue } from 'jotai';
@@ -50,20 +51,23 @@ export const useAutoMode = (): void => {
   }, [enableLegacyAutoMode, autoModeEnabled]);
 
   useEffect(() => {
-    const stopLocationUpdatesAsync = async () => {
-      try {
-        if (
-          enabled &&
-          (await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME))
-        ) {
-          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
+    if (!enabled) {
+      return;
+    }
 
-    stopLocationUpdatesAsync();
+    pipe(
+      Effect.promise(() =>
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+      ),
+      Effect.andThen((hasStarted) => {
+        if (hasStarted) {
+          return Effect.promise(() =>
+            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+          );
+        }
+      }),
+      Effect.runPromise
+    );
   }, [enabled]);
 
   const startApproachingTimer = useCallback(() => {
