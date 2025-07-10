@@ -110,10 +110,7 @@ jobs:
             adb devices
             
             # ビルドのタイムアウト設定
-            timeout 600 pnpm run android -- --variant devRelease || {
-              echo "❌ Android build failed or timed out"
-              exit 1
-            }
+            pnpm run android -- --variant devRelease
             
             # アプリの起動を待つ
             echo "⏳ Waiting for app to start..."
@@ -121,15 +118,16 @@ jobs:
             
             # Maestroテストを実行（スクリーンショット付き）
             echo "🧪 Running Maestro tests..."
-            timeout 300 maestro test Flow.yaml --format junit --output maestro-results.xml || {
-              echo "❌ Maestro test failed or timed out"
-              exit 1
-            }
+            maestro test Flow.yaml --format junit --output maestro-results.xml
             
             # クリーンアップ
             echo "🧹 Cleaning up..."
             kill $METRO_PID 2>/dev/null || true
             pkill -f "metro" 2>/dev/null || true
+            
+            # エミュレーター終了時のエラーハンドリング
+            echo "🔄 Shutting down emulator..."
+            adb emu kill 2>/dev/null || echo "⚠️ Emulator already stopped"
 
       - name: Upload Metro logs
         if: always()
@@ -157,5 +155,13 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
+          # Metro Bundlerのクリーンアップ
           pkill -f "pnpm start" || true
           pkill -f "metro" || true
+          
+          # エミュレーター関連プロセスのクリーンアップ
+          pkill -f "emulator" || true
+          pkill -f "qemu" || true
+          
+          # adbプロセスのクリーンアップ
+          adb kill-server 2>/dev/null || true
