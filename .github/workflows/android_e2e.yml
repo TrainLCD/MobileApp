@@ -73,62 +73,69 @@ jobs:
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-          $HOME/.maestro/bin/maestro --version
 
-      - name: List available system images
+      - name: Update cmdline-tools
         run: |
-          echo "📋 Available system images:"
-          sdkmanager --list | grep "system-images" | head -20
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          cd "$ANDROID_SDK_ROOT/cmdline-tools"
+          curl -O https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-*.zip -d temp
+          mv temp "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          rm commandlinetools-linux-*.zip
+          echo "$ANDROID_SDK_ROOT/emulator" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+      - name: Run Android E2E (Metro + AVD + Maestro)
+        shell: bash
+        run: |
+          echo "🧱 Creating AVD..."
+          mkdir -p "$HOME/.android/avd"
+          sdkmanager --licenses < /dev/null
+          sdkmanager "system-images;android-30;google_apis;x86_64"
+          echo "no" | avdmanager create avd \
+            -n test \
+            -k "system-images;android-30;google_apis;x86_64" \
+            -d "Nexus 5"
+          if [ ! -f "$HOME/.android/avd/test.avd/config.ini" ]; then
+            echo "❌ Failed to create AVD"
+            ls -l "$HOME/.android/avd"
+            exit 1
+          fi
+          echo "🚀 Starting emulator..."
+          emulator -avd test -no-snapshot -no-window -gpu swiftshader_indirect -no-audio &
+          EMULATOR_PID=$!
+      
+          echo "⏳ Waiting for emulator boot..."
+          booted=0
+          for i in {1..60}; do
+            if adb shell getprop sys.boot_completed | grep 1 > /dev/null; then
+              echo "✅ Emulator booted"
+              booted=1
+              break
+            fi
+            echo "Waiting for boot... ($i/60)"
+            sleep 5
+          done
 
-      - name: Setup Android SDK + emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          target: google_apis
-          arch: x86_64
-          profile: Nexus 6
-          emulator-options: -no-window -gpu swiftshader_indirect
-          script: |
-            set -e
-            
-            echo "🌐 Starting Metro Bundler..."
-            nohup pnpm start --reset-cache > metro.log 2>&1 &
-            METRO_PID=$!
-            
-            echo "⏳ Waiting for Metro Bundler..."
-            for i in {1..24}; do
-              if curl -f http://localhost:8081/status > /dev/null 2>&1; then
-                echo "✅ Metro Bundler is ready"
-                break
-              fi
-              if [ $i -eq 24 ]; then
-                echo "❌ Metro Bundler failed to start after 120 seconds"
-                cat metro.log
-                kill $METRO_PID 2>/dev/null || true
-                exit 1
-              fi
-              echo "Waiting... ($i/24)"
-              sleep 5
-            done
-            
-            echo "📱 Building and installing Android app..."
-            adb devices
-            
-            pnpm run android -- --variant devRelease --no-packager
-            
-            echo "⏳ Waiting for app to start..."
-            sleep 45
-            
-            echo "🧪 Running Maestro tests..."
-            maestro test Flow.yaml --format junit --output maestro-results.xml
-            
-            echo "🧹 Cleaning up..."
-            kill $METRO_PID 2>/dev/null || true
-            pkill -f "metro" 2>/dev/null || true
-            
-            echo "🔄 Shutting down emulator..."
-            adb emu kill 2>/dev/null || echo "⚠️ Emulator already stopped"
-
+          if [ "$booted" -eq 0 ]; then
+            echo "❌ Emulator failed to boot within 300 seconds"
+            adb logcat -d > emulator_logcat.txt
+            exit 1
+          fi
+      
+          echo "🌐 Starting Metro..."
+          pnpm start --reset-cache &
+          METRO_PID=$!
+      
+          echo "📦 Installing app..."
+          pnpm run android -- --variant devRelease
+      
+          echo "🧪 Running Maestro tests..."
+          $HOME/.maestro/bin/maestro test Flow.yaml
+      
+          echo "🧹 Cleaning up..."
+          kill $METRO_PID || true
+          kill $EMULATOR_PID || true
       - name: Upload Metro logs
         if: always()
         uses: actions/upload-artifact@v4
