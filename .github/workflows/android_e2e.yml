@@ -88,15 +88,12 @@ jobs:
           arch: x86_64
           profile: Nexus 6
           script: |
-            # エラーハンドリングの設定
             set -e
             
-            # Metro Bundlerを起動
             echo "🌐 Starting Metro Bundler..."
             nohup pnpm start --reset-cache > metro.log 2>&1 &
             METRO_PID=$!
             
-            # Metro Bundlerの起動を待つ
             echo "⏳ Waiting for Metro Bundler..."
             for i in {1..24}; do
               if curl -f http://localhost:8081/status > /dev/null 2>&1; then
@@ -113,26 +110,21 @@ jobs:
               sleep 5
             done
             
-            # Androidアプリをビルド・インストール
             echo "📱 Building and installing Android app..."
             adb devices
             
             pnpm run android -- --variant devRelease --no-packager
             
-            # アプリの起動を待つ
             echo "⏳ Waiting for app to start..."
             sleep 45
             
-            # Maestroテストを実行
             echo "🧪 Running Maestro tests..."
             maestro test Flow.yaml --format junit --output maestro-results.xml
             
-            # クリーンアップ
             echo "🧹 Cleaning up..."
             kill $METRO_PID 2>/dev/null || true
             pkill -f "metro" 2>/dev/null || true
             
-            # エミュレーター終了時のエラーハンドリング
             echo "🔄 Shutting down emulator..."
             adb emu kill 2>/dev/null || echo "⚠️ Emulator already stopped"
 
