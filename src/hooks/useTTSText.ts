@@ -801,6 +801,16 @@ export const useTTSText = (
           } ${nextStationNumberText}${
             isNextStopTerminus ? ', the last stop' : ''
           }${
+            transferLines.length
+              ? ` Passengers changing to ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}`
+                      : `the ${l.nameRoman}`
+                  )
+                  .join(', ')}, Please transfer at this station.`
+              : ''
+          }${
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
