@@ -16,8 +16,8 @@ import { useIsTerminus } from './useIsTerminus';
 import { useLoopLine } from './useLoopLine';
 import { useLoopLineBound } from './useLoopLineBound';
 import { useNextStation } from './useNextStation';
-import { useNumbering } from './useNumbering';
 import { useSlicedStations } from './useSlicedStations';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useStoppingState } from './useStoppingState';
 import { useThemeStore } from './useThemeStore';
 import { useTransferLines } from './useTransferLines';
@@ -46,7 +46,6 @@ export const useTTSText = (
 
   const connectedLinesOrigin = useConnectedLines();
   const transferLinesOriginal = useTransferLines();
-  const [nextStationNumber] = useNumbering(false);
   const currentTrainTypeOrigin = useCurrentTrainType();
   const loopLineBoundJa = useLoopLineBound(false);
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
@@ -56,6 +55,16 @@ export const useTTSText = (
   const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
   const slicedStationsOrigin = useSlicedStations();
   const stoppingState = useStoppingState();
+  const getStationNumberIndex = useStationNumberIndexFunc();
+
+  const nextStationNumber = useMemo(() => {
+    if (!nextStationOrigin) {
+      return;
+    }
+
+    const stationNumberIndex = getStationNumberIndex(nextStationOrigin);
+    return nextStationOrigin?.stationNumbers[stationNumberIndex];
+  }, [getStationNumberIndex, nextStationOrigin]);
 
   const replaceJapaneseText = useCallback(
     (name: string | undefined, nameKatakana: string | undefined) =>
