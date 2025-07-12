@@ -17,10 +17,10 @@ import { useLoopLine } from './useLoopLine';
 import { useLoopLineBound } from './useLoopLineBound';
 import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
+import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useStoppingState } from './useStoppingState';
 import { useThemeStore } from './useThemeStore';
 import { useTransferLines } from './useTransferLines';
-import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
