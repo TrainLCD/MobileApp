@@ -337,7 +337,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <View
-      key={stationInLoop.id}
       style={{
         ...styles.stationNameContainer,
         paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
