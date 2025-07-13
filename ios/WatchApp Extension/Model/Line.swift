@@ -13,4 +13,5 @@ struct Line: Decodable, Identifiable {
   let lineColorC: String?
   let name: String
   let nameR: String
+  let lineSymbol: String
 }

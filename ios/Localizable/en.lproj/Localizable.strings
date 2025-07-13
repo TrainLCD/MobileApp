@@ -19,3 +19,4 @@
 "boundStation" = "Bound for %@";
 "boundStationLoopline" = "Bound for %@";
 "pass" = "Pass";
+"ridingOn" = "Riding on %@";

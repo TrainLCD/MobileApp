@@ -37,7 +37,6 @@
 		942CB5EE2A32AAA6008339D2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
 		942CB5EF2A32AAA6008339D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
 		942CB5F02A32AAA6008339D2 /* Station.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4928DAD2330004DA72 /* Station.swift */; };
-		942CB5F12A32AAA6008339D2 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D582588F16B0030FBE2 /* ComplicationController.swift */; };
 		942CB5F22A32AAA6008339D2 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A6A141258DF6AF00A129EB /* SampleData.swift */; };
 		942CB5F32A32AAA6008339D2 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944C2C4828DAD2330004DA72 /* Line.swift */; };
 		942CB5F42A32AAA6008339D2 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
@@ -72,6 +71,12 @@
 		944C2C6828DB0DD10004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		944C2C6F28DB0DE50004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		944C2C7328DB0E030004DA72 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
+		945563372E22749700476E5D /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDDF28D3025900D68287 /* WidgetKit.framework */; };
+		945563382E22749700476E5D /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDE128D3025900D68287 /* SwiftUI.framework */; };
+		945563432E22749800476E5D /* ProdWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 945563362E22749700476E5D /* ProdWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9455634E2E2274AC00476E5D /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDDF28D3025900D68287 /* WidgetKit.framework */; };
+		9455634F2E2274AC00476E5D /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDE128D3025900D68287 /* SwiftUI.framework */; };
+		9455635A2E2274AD00476E5D /* CanaryWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9455634D2E2274AC00476E5D /* CanaryWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		947471FB28E29E0200374B81 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
 		9480F0872959E38F00B79481 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		9480F0882959E39200B79481 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
@@ -107,10 +112,21 @@
 		94CB9D502588F16B0030FBE2 /* ProdWatchApp Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D542588F16B0030FBE2 /* ContentView.swift */; };
 		94CB9D572588F16B0030FBE2 /* TrainLCDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */; };
-		94CB9D592588F16B0030FBE2 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D582588F16B0030FBE2 /* ComplicationController.swift */; };
 		94CB9D5E2588F16C0030FBE2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */; };
 		94CB9D622588F16C0030FBE2 /* ProdWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 94CB9D462588F1690030FBE2 /* ProdWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */; };
+		94D3F4422E229FA900B0F4CB /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F43A2E229FA900B0F4CB /* AppIntent.swift */; };
+		94D3F4432E229FA900B0F4CB /* WatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4402E229FA900B0F4CB /* WatchWidget.swift */; };
+		94D3F4442E229FA900B0F4CB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94D3F43B2E229FA900B0F4CB /* Assets.xcassets */; };
+		94D3F4472E229FA900B0F4CB /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F43A2E229FA900B0F4CB /* AppIntent.swift */; };
+		94D3F4482E229FA900B0F4CB /* WatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4402E229FA900B0F4CB /* WatchWidget.swift */; };
+		94D3F4492E229FA900B0F4CB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94D3F43B2E229FA900B0F4CB /* Assets.xcassets */; };
+		94D3F4522E22ADA500B0F4CB /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
+		94D3F4532E22ADA500B0F4CB /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
+		94D3F4542E22C0E300B0F4CB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
+		94D3F4552E22C0EE00B0F4CB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
+		94D3F4562E22C0EE00B0F4CB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C7228DB0DE50004DA72 /* Localizable.strings */; };
+		94D3F4572E22C0F300B0F4CB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 944C2C6B28DB0DD10004DA72 /* Localizable.strings */; };
 		94E2C8432D64E1AA0090392E /* ProdAppClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = 94E2C82A2D64E1A90090392E /* ProdAppClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94E2C8662D64E1CB0090392E /* CanaryAppClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = 94E2C84D2D64E1CA0090392E /* CanaryAppClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94E2CB522D6575DE0090392E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
@@ -170,6 +186,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 942CB5E92A32AAA6008339D2;
 			remoteInfo = "DevWatchApp Extension";
+		};
+		945563412E22749800476E5D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 945563352E22749700476E5D;
+			remoteInfo = ProdWatchWidgetExtension;
+		};
+		945563582E2274AD00476E5D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9455634C2E2274AC00476E5D;
+			remoteInfo = CanaryWatchWidgetExtension;
 		};
 		94B9CDEC28D3025A00D68287 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -238,6 +268,28 @@
 			dstSubfolderSpec = 13;
 			files = (
 				942CB62B2A32B01D008339D2 /* CanaryWatchApp Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		945563442E22749800476E5D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				945563432E22749800476E5D /* ProdWatchWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9455635F2E2274AD00476E5D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9455635A2E2274AD00476E5D /* CanaryWatchWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -341,6 +393,8 @@
 		944C2C4928DAD2330004DA72 /* Station.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Station.swift; sourceTree = "<group>"; };
 		944C2C6A28DB0DD10004DA72 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		944C2C7128DB0DE50004DA72 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		945563362E22749700476E5D /* ProdWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ProdWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9455634D2E2274AC00476E5D /* CanaryWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CanaryWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9462B5FF28DEE76100782A33 /* SampleJY.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SampleJY.gpx; sourceTree = "<group>"; };
 		9485EFF12A33613200382D09 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TrainLCD/Schemes/Dev/SplashScreen.storyboard; sourceTree = "<group>"; };
 		9485EFF42A33613800382D09 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TrainLCD/Schemes/Prod/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -372,9 +426,15 @@
 		94CB9D4F2588F16B0030FBE2 /* ProdWatchApp Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ProdWatchApp Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		94CB9D542588F16B0030FBE2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		94CB9D562588F16B0030FBE2 /* TrainLCDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainLCDApp.swift; sourceTree = "<group>"; };
-		94CB9D582588F16B0030FBE2 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		94CB9D702588F1EF0030FBE2 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityProvider.swift; sourceTree = "<group>"; };
+		94D3F43A2E229FA900B0F4CB /* AppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntent.swift; sourceTree = "<group>"; };
+		94D3F43B2E229FA900B0F4CB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		94D3F43D2E229FA900B0F4CB /* CanaryWatchWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CanaryWatchWidget.entitlements; sourceTree = "<group>"; };
+		94D3F43F2E229FA900B0F4CB /* ProdWatchWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ProdWatchWidget.entitlements; sourceTree = "<group>"; };
+		94D3F4402E229FA900B0F4CB /* WatchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWidget.swift; sourceTree = "<group>"; };
+		94D3F44C2E229FD500B0F4CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Prod/Info.plist; sourceTree = "<group>"; };
+		94D3F44E2E229FDF00B0F4CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Schemes/Dev/Info.plist; sourceTree = "<group>"; };
 		94E2C82A2D64E1A90090392E /* ProdAppClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProdAppClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94E2C84D2D64E1CA0090392E /* CanaryAppClip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryAppClip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94E2CB782D6588570090392E /* ProdTrainLCD.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ProdTrainLCD.entitlements; sourceTree = "<group>"; };
@@ -403,14 +463,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */ = {
+		94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 94E2C8292D64E1A90090392E /* ProdAppClip */;
 		};
-		94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */ = {
+		94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -420,30 +480,8 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = ProdAppClip;
-			sourceTree = "<group>";
-		};
-		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = CanaryAppClip;
-			sourceTree = "<group>";
-		};
+		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ProdAppClip; sourceTree = "<group>"; };
+		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CanaryAppClip; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -483,6 +521,24 @@
 			files = (
 				942CB60B2A32AAB4008339D2 /* SwiftUI.framework in Frameworks */,
 				942CB60C2A32AAB4008339D2 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		945563332E22749700476E5D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				945563382E22749700476E5D /* SwiftUI.framework in Frameworks */,
+				945563372E22749700476E5D /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9455634A2E2274AC00476E5D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9455634F2E2274AC00476E5D /* SwiftUI.framework in Frameworks */,
+				9455634E2E2274AC00476E5D /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,6 +699,7 @@
 				94B9CDE328D3025900D68287 /* RideSessionActivity */,
 				94E2C82B2D64E1A90090392E /* ProdAppClip */,
 				94E2C84E2D64E1CA0090392E /* CanaryAppClip */,
+				94D3F4412E229FA900B0F4CB /* WatchWidget */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				72E5486571395D51695C2A02 /* Pods */,
@@ -668,6 +725,8 @@
 				942CB6142A32AAB4008339D2 /* CanaryRideSessionActivityExtension.appex */,
 				94E2C82A2D64E1A90090392E /* ProdAppClip.app */,
 				94E2C84D2D64E1CA0090392E /* CanaryAppClip.app */,
+				945563362E22749700476E5D /* ProdWatchWidgetExtension.appex */,
+				9455634D2E2274AC00476E5D /* CanaryWatchWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -803,7 +862,6 @@
 				942CB6472A32B95B008339D2 /* Info.plist */,
 				944C2C4628DACEF00004DA72 /* Model */,
 				94B90E382590551B00418E79 /* ViewModel */,
-				94CB9D582588F16B0030FBE2 /* ComplicationController.swift */,
 				94A6A150258DF7A000A129EB /* Views */,
 				94A6A146258DF71000A129EB /* Resources */,
 				94CB9D5C2588F16C0030FBE2 /* Preview Content */,
@@ -817,6 +875,20 @@
 				94CB9D5D2588F16C0030FBE2 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		94D3F4412E229FA900B0F4CB /* WatchWidget */ = {
+			isa = PBXGroup;
+			children = (
+				94D3F43A2E229FA900B0F4CB /* AppIntent.swift */,
+				94D3F43B2E229FA900B0F4CB /* Assets.xcassets */,
+				94D3F43D2E229FA900B0F4CB /* CanaryWatchWidget.entitlements */,
+				94D3F43F2E229FA900B0F4CB /* ProdWatchWidget.entitlements */,
+				94D3F4402E229FA900B0F4CB /* WatchWidget.swift */,
+				94D3F44C2E229FD500B0F4CB /* Info.plist */,
+				94D3F44E2E229FDF00B0F4CB /* Info.plist */,
+			);
+			path = WatchWidget;
 			sourceTree = "<group>";
 		};
 		94E2CBB12D659DBB0090392E /* Fonts */ = {
@@ -927,10 +999,12 @@
 				942CB5EA2A32AAA6008339D2 /* Sources */,
 				942CB5F62A32AAA6008339D2 /* Frameworks */,
 				942CB5F72A32AAA6008339D2 /* Resources */,
+				9455635F2E2274AD00476E5D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				945563592E2274AD00476E5D /* PBXTargetDependency */,
 			);
 			name = "CanaryWatchApp Extension";
 			productName = "WatchApp Extension";
@@ -952,6 +1026,44 @@
 			name = CanaryRideSessionActivityExtension;
 			productName = RideSessionActivityExtension;
 			productReference = 942CB6142A32AAB4008339D2 /* CanaryRideSessionActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		945563352E22749700476E5D /* ProdWatchWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 945563482E22749800476E5D /* Build configuration list for PBXNativeTarget "ProdWatchWidgetExtension" */;
+			buildPhases = (
+				945563322E22749700476E5D /* Sources */,
+				945563332E22749700476E5D /* Frameworks */,
+				945563342E22749700476E5D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ProdWatchWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = ProdWatchWidgetExtension;
+			productReference = 945563362E22749700476E5D /* ProdWatchWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9455634C2E2274AC00476E5D /* CanaryWatchWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9455635C2E2274AD00476E5D /* Build configuration list for PBXNativeTarget "CanaryWatchWidgetExtension" */;
+			buildPhases = (
+				945563492E2274AC00476E5D /* Sources */,
+				9455634A2E2274AC00476E5D /* Frameworks */,
+				9455634B2E2274AC00476E5D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CanaryWatchWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = CanaryWatchWidgetExtension;
+			productReference = 9455634D2E2274AC00476E5D /* CanaryWatchWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */ = {
@@ -997,10 +1109,12 @@
 				94CB9D4B2588F16B0030FBE2 /* Sources */,
 				94CB9D4C2588F16B0030FBE2 /* Frameworks */,
 				94CB9D4D2588F16B0030FBE2 /* Resources */,
+				945563442E22749800476E5D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				945563422E22749800476E5D /* PBXTargetDependency */,
 			);
 			name = "ProdWatchApp Extension";
 			productName = "WatchApp Extension";
@@ -1065,12 +1179,18 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1410;
+				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 940;
 				ORGANIZATIONNAME = Facebook;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1230;
+					};
+					945563352E22749700476E5D = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					9455634C2E2274AC00476E5D = {
+						CreatedOnToolsVersion = 16.4;
 					};
 					94B9CDDD28D3025900D68287 = {
 						CreatedOnToolsVersion = 14.1;
@@ -1106,11 +1226,13 @@
 				13B07F861A680F5B00A75B9A /* ProdTrainLCD */,
 				94CB9D452588F1690030FBE2 /* ProdWatchApp */,
 				94CB9D4E2588F16B0030FBE2 /* ProdWatchApp Extension */,
+				945563352E22749700476E5D /* ProdWatchWidgetExtension */,
 				94B9CDDD28D3025900D68287 /* ProdRideSessionActivityExtension */,
 				94E2C8292D64E1A90090392E /* ProdAppClip */,
 				942CB5B02A32AA96008339D2 /* CanaryTrainLCD */,
 				942CB5DB2A32AA9E008339D2 /* CanaryWatchApp */,
 				942CB5E92A32AAA6008339D2 /* CanaryWatchApp Extension */,
+				9455634C2E2274AC00476E5D /* CanaryWatchWidgetExtension */,
 				942CB6042A32AAB4008339D2 /* CanaryRideSessionActivityExtension */,
 				94E2C84C2D64E1CA0090392E /* CanaryAppClip */,
 			);
@@ -1198,6 +1320,26 @@
 				942CB60F2A32AAB4008339D2 /* Localizable.strings in Resources */,
 				94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */,
 				942CB6102A32AAB4008339D2 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		945563342E22749700476E5D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94D3F4442E229FA900B0F4CB /* Assets.xcassets in Resources */,
+				94D3F4572E22C0F300B0F4CB /* Localizable.strings in Resources */,
+				94D3F4552E22C0EE00B0F4CB /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9455634B2E2274AC00476E5D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94D3F4492E229FA900B0F4CB /* Assets.xcassets in Resources */,
+				94D3F4562E22C0EE00B0F4CB /* Localizable.strings in Resources */,
+				94D3F4542E22C0E300B0F4CB /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2047,7 +2189,6 @@
 				942CB5EE2A32AAA6008339D2 /* ConnectivityProvider.swift in Sources */,
 				942CB5EF2A32AAA6008339D2 /* ContentView.swift in Sources */,
 				942CB5F02A32AAA6008339D2 /* Station.swift in Sources */,
-				942CB5F12A32AAA6008339D2 /* ComplicationController.swift in Sources */,
 				942CB5F22A32AAA6008339D2 /* SampleData.swift in Sources */,
 				942CB5F32A32AAA6008339D2 /* Line.swift in Sources */,
 				942CB5F42A32AAA6008339D2 /* ColorExtension.swift in Sources */,
@@ -2064,6 +2205,26 @@
 				942CB6082A32AAB4008339D2 /* RideSessionActivity.swift in Sources */,
 				942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */,
 				94E6881C2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		945563322E22749700476E5D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94D3F4522E22ADA500B0F4CB /* ColorExtension.swift in Sources */,
+				94D3F4422E229FA900B0F4CB /* AppIntent.swift in Sources */,
+				94D3F4432E229FA900B0F4CB /* WatchWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		945563492E2274AC00476E5D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94D3F4532E22ADA500B0F4CB /* ColorExtension.swift in Sources */,
+				94D3F4472E229FA900B0F4CB /* AppIntent.swift in Sources */,
+				94D3F4482E229FA900B0F4CB /* WatchWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2089,7 +2250,6 @@
 				94CB9D712588F1EF0030FBE2 /* ConnectivityProvider.swift in Sources */,
 				94CB9D552588F16B0030FBE2 /* ContentView.swift in Sources */,
 				944C2C4C28DAD2330004DA72 /* Station.swift in Sources */,
-				94CB9D592588F16B0030FBE2 /* ComplicationController.swift in Sources */,
 				944C2C4728DACEF60004DA72 /* SampleData.swift in Sources */,
 				944C2C4A28DAD2330004DA72 /* Line.swift in Sources */,
 				944C2C5128DADC8C0004DA72 /* ColorExtension.swift in Sources */,
@@ -2137,6 +2297,16 @@
 			isa = PBXTargetDependency;
 			target = 942CB5E92A32AAA6008339D2 /* CanaryWatchApp Extension */;
 			targetProxy = 942CB62C2A32B01D008339D2 /* PBXContainerItemProxy */;
+		};
+		945563422E22749800476E5D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 945563352E22749700476E5D /* ProdWatchWidgetExtension */;
+			targetProxy = 945563412E22749800476E5D /* PBXContainerItemProxy */;
+		};
+		945563592E2274AD00476E5D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9455634C2E2274AC00476E5D /* CanaryWatchWidgetExtension */;
+			targetProxy = 945563582E2274AD00476E5D /* PBXContainerItemProxy */;
 		};
 		94B9CDED28D3025A00D68287 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2205,7 +2375,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -2246,7 +2415,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -2561,6 +2729,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				MARKETING_VERSION = 9.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -2575,7 +2744,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Debug;
 		};
@@ -2602,6 +2771,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				MARKETING_VERSION = 9.0.0;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
@@ -2615,13 +2785,14 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Release;
 		};
 		942CB6002A32AAA6008339D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd.dev;
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -2641,6 +2812,7 @@
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "WatchApp Extension/Schemes/Dev/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2660,13 +2832,14 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Debug;
 		};
 		942CB6012A32AAA6008339D2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd.dev;
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -2687,6 +2860,7 @@
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "WatchApp Extension/Schemes/Dev/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2705,7 +2879,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Release;
 		};
@@ -2730,7 +2904,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CanaryRideSessionActivity;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2780,7 +2954,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Dev/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CanaryRideSessionActivity;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2807,6 +2981,214 @@
 			};
 			name = Release;
 		};
+		945563452E22749800476E5D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = WatchWidget/ProdWatchWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1837;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WatchWidget/Schemes/Prod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Facebook. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 9.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PODS_ROOT = "${SRCROOT}/Pods";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.watchkitapp.watchkitextension.watchwidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.6;
+			};
+			name = Debug;
+		};
+		945563462E22749800476E5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = WatchWidget/ProdWatchWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1837;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WatchWidget/Schemes/Prod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Facebook. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 9.0.0;
+				MTL_FAST_MATH = YES;
+				PODS_ROOT = "${SRCROOT}/Pods";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.watchkitapp.watchkitextension.watchwidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.6;
+			};
+			name = Release;
+		};
+		9455635D2E2274AD00476E5D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd.dev;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = WatchWidget/CanaryWatchWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1837;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WatchWidget/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Facebook. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 9.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PODS_ROOT = "${SRCROOT}/Pods";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension.watchwidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.6;
+			};
+			name = Debug;
+		};
+		9455635E2E2274AD00476E5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd.dev;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = WatchWidget/CanaryWatchWidget.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1837;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = E6R2G33Z36;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WatchWidget/Schemes/Dev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Facebook. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 9.0.0;
+				MTL_FAST_MATH = YES;
+				PODS_ROOT = "${SRCROOT}/Pods";
+				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.watchkitapp.watchkitextension.watchwidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.6;
+			};
+			name = Release;
+		};
 		94B9CDF028D3025A00D68287 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2828,7 +3210,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Prod/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = RideSessionActivity;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2878,7 +3260,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RideSessionActivity/Schemes/Prod/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = RideSessionActivity;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Facebook. All rights reserved.";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2908,6 +3290,7 @@
 		94CB9D642588F16D0030FBE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd;
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -2927,6 +3310,7 @@
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "WatchApp Extension/Schemes/Prod/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2946,13 +3330,14 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Debug;
 		};
 		94CB9D652588F16D0030FBE2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.me.tinykitten.trainlcd;
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -2973,6 +3358,7 @@
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "WatchApp Extension/Schemes/Prod/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2991,14 +3377,13 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Release;
 		};
 		94CB9D682588F16D0030FBE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3018,6 +3403,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				MARKETING_VERSION = 9.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -3032,14 +3418,13 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Debug;
 		};
 		94CB9D692588F16D0030FBE2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3060,6 +3445,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
 				MARKETING_VERSION = 9.0.0;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
@@ -3073,7 +3459,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				WATCHOS_DEPLOYMENT_TARGET = 7.1;
+				WATCHOS_DEPLOYMENT_TARGET = 9.6;
 			};
 			name = Release;
 		};
@@ -3209,7 +3595,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CanaryAppClip/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CanaryTrainLCD;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -3261,7 +3647,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CanaryAppClip/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = CanaryTrainLCD;
+				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -3340,6 +3726,24 @@
 			buildConfigurations = (
 				942CB6122A32AAB4008339D2 /* Debug */,
 				942CB6132A32AAB4008339D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		945563482E22749800476E5D /* Build configuration list for PBXNativeTarget "ProdWatchWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				945563452E22749800476E5D /* Debug */,
+				945563462E22749800476E5D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9455635C2E2274AD00476E5D /* Build configuration list for PBXNativeTarget "CanaryWatchWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9455635D2E2274AD00476E5D /* Debug */,
+				9455635E2E2274AD00476E5D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

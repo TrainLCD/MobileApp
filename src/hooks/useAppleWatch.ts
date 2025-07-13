@@ -2,9 +2,11 @@ import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import { sendMessage, useReachability } from 'react-native-watch-connectivity';
 import type { Station } from '~/gen/proto/stationapi_pb';
+import { isJapanese } from '~/translation';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
+import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -21,7 +23,8 @@ export const useAppleWatch = (): void => {
   const [currentNumbering] = useNumbering();
   const nextStation = useNextStation();
   const stoppingState = useStoppingState();
-  const { isLoopLine } = useLoopLine();
+  const { isLoopLine: isFullLoopLine, isPartiallyLoopLine } = useLoopLine();
+  const { directionalStops } = useBounds();
 
   const switchedStation = useMemo<Station | null>(
     () => (arrived && !getIsPass(station) ? station : (nextStation ?? null)),
@@ -29,18 +32,26 @@ export const useAppleWatch = (): void => {
   );
 
   const inboundStations = useMemo<Station[]>(() => {
-    if (isLoopLine) {
+    if (isFullLoopLine) {
       return stations.slice().reverse();
     }
     return stations;
-  }, [isLoopLine, stations]);
+  }, [isFullLoopLine, stations]);
 
   const outboundStations = useMemo<Station[]>(() => {
-    if (isLoopLine) {
+    if (isFullLoopLine) {
       return stations;
     }
     return stations.slice().reverse();
-  }, [isLoopLine, stations]);
+  }, [isFullLoopLine, stations]);
+
+  const boundStationName = useMemo(() => {
+    const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき';
+
+    return `${directionalStops
+      .map((s) => (isJapanese ? s.name : s.nameRoman))
+      .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
+  }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
 
   const sendToWatch = useCallback(async (): Promise<void> => {
     if (switchedStation) {
@@ -57,6 +68,7 @@ export const useAppleWatch = (): void => {
               lineColorC: l.color,
               name: l.nameShort.replace(parenthesisRegexp, ''),
               nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
+              lineSymbol: currentNumbering?.lineSymbol ?? '',
             })),
           stationNumber: currentNumbering?.stationNumber,
           pass: false,
@@ -79,6 +91,7 @@ export const useAppleWatch = (): void => {
               lineColorC: l.color,
               name: l.nameShort.replace(parenthesisRegexp, ''),
               nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
+              lineSymbol: currentNumbering?.lineSymbol ?? '',
             })),
           stationNumber: s?.stationNumbers?.[0]?.stationNumber,
           pass: getIsPass(s),
@@ -87,7 +100,10 @@ export const useAppleWatch = (): void => {
           id: currentLine.id,
           name: currentLine.nameShort.replace(parenthesisRegexp, ''),
           nameR: currentLine.nameRoman?.replace(parenthesisRegexp, ''),
+          lineColorC: currentLine.color,
+          lineSymbol: currentNumbering?.lineSymbol ?? '',
         },
+        boundStationName,
       };
       sendMessage(msg);
     } else {
@@ -98,11 +114,13 @@ export const useAppleWatch = (): void => {
   }, [
     currentLine,
     currentNumbering?.stationNumber,
+    currentNumbering?.lineSymbol,
     inboundStations,
     outboundStations,
     selectedDirection,
     stoppingState,
     switchedStation,
+    boundStationName,
   ]);
 
   useEffect(() => {
