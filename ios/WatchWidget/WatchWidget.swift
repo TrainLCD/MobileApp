@@ -31,11 +31,15 @@ struct Provider: AppIntentTimelineProvider {
   
   private func loadEntry() async -> SimpleEntry {
     let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
-    let defaults = UserDefaults(suiteName: appGroupID)
-    let lineColor = defaults?.string(forKey: "lineColor") ?? "000"
-    let lineName = defaults?.string(forKey: "lineName") ?? ""
-    let lineSymbol = defaults?.string(forKey: "lineSymbol") ?? ""
-    let boundFor = defaults?.string(forKey: "boundStationName") ?? ""
+
+    guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
+    }
+    
+    let lineColor = defaults.string(forKey: "lineColor") ?? "000"
+    let lineName = defaults.string(forKey: "lineName") ?? ""
+    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? ""
+    let boundFor = defaults.string(forKey: "boundStationName") ?? ""
     
     var newIntent: ConfigurationAppIntent {
       let intent = ConfigurationAppIntent()
