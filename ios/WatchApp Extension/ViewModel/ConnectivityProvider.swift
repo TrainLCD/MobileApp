@@ -7,6 +7,7 @@
 //
 
 import WatchConnectivity
+import WidgetKit
 
 class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   @Published var receivedState: String?
@@ -69,6 +70,9 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   func processOptionalMessage(_ message: [String: Any]) {
     let decoder = JSONDecoder()
     
+    let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
+    let defaults = UserDefaults(suiteName: appGroupID)
+
     DispatchQueue.main.async {
       do {
         guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>]  else {
@@ -90,6 +94,17 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
           return
         }
         self.selectedLine = try decoder.decode(Line.self, from: selectedLineData)
+        
+        defaults?.set(self.selectedLine?.lineColorC, forKey: "lineColor")
+        defaults?.set(self.selectedLine?.name, forKey: "lineName")
+        defaults?.set(self.selectedLine?.nameR, forKey: "lineNameR")
+        defaults?.set(self.selectedLine?.lineSymbol, forKey: "lineSymbol")
+        
+        if let boundStationName = message["boundStationName"] as? String {
+          defaults?.set(boundStationName, forKey: "boundStationName")
+        } 
+        
+        WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
       } catch {
         print(error.localizedDescription)
       }
