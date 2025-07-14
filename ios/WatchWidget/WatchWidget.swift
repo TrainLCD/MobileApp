@@ -20,7 +20,8 @@ struct Provider: AppIntentTimelineProvider {
   
   func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
     let entry = await loadEntry()
-    let nextUpdate = Calendar.current.date(byAdding: .minute, value: 1, to: Date()) ?? Date().addingTimeInterval(60)
+    let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())
+      ?? Date().addingTimeInterval(5 * 60)
     return Timeline(entries: [entry], policy: .after(nextUpdate))
   }
   
