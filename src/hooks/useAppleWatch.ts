@@ -50,9 +50,10 @@ export const useAppleWatch = (): void => {
   }, [isFullLoopLine, stations]);
 
   const boundStationName = useMemo(() => {
+    const enPrefix = 'For ';
     const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき';
 
-    return `${directionalStops
+    return `${isJapanese ? '' : enPrefix}${directionalStops
       .map((s) => (isJapanese ? s.name : s.nameRoman))
       .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
   }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
