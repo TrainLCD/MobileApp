@@ -66,15 +66,15 @@ export const useAppleWatch = (): void => {
       state: stoppingState,
       station: {
         id: switchedStation.id,
-        name: switchedStation.name,
-        nameR: switchedStation.nameRoman,
+        name: isJapanese ? switchedStation.name : switchedStation.nameRoman,
         lines: switchedStation.lines
           .filter((l) => l.id !== currentLine?.id)
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
-            name: l.nameShort.replace(parenthesisRegexp, ''),
-            nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
+            name: isJapanese
+              ? l.nameShort.replace(parenthesisRegexp, '')
+              : l.nameRoman?.replace(parenthesisRegexp, ''),
             lineSymbol: currentNumbering?.lineSymbol ?? '',
           })),
         stationNumber: currentNumbering?.stationNumber,
@@ -94,15 +94,15 @@ export const useAppleWatch = (): void => {
     return {
       stationList: switchedStations.map((s) => ({
         id: s.id,
-        name: s.name,
-        nameR: s.nameRoman,
+        name: isJapanese ? s.name : s.nameRoman,
         lines: s.lines
           .filter((l) => l.id !== currentLine.id)
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
-            name: l.nameShort.replace(parenthesisRegexp, ''),
-            nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
+            name: isJapanese
+              ? l.nameShort.replace(parenthesisRegexp, '')
+              : l.nameRoman?.replace(parenthesisRegexp, ''),
             lineSymbol: currentNumbering?.lineSymbol ?? '',
           })),
         stationNumber: s?.stationNumbers?.[0]?.stationNumber,
@@ -110,8 +110,9 @@ export const useAppleWatch = (): void => {
       })),
       selectedLine: {
         id: currentLine.id,
-        name: currentLine.nameShort.replace(parenthesisRegexp, ''),
-        nameR: currentLine.nameRoman?.replace(parenthesisRegexp, ''),
+        name: isJapanese
+          ? currentLine.nameShort.replace(parenthesisRegexp, '')
+          : currentLine.nameRoman?.replace(parenthesisRegexp, ''),
         lineColorC: currentLine.color,
         lineSymbol: currentNumbering?.lineSymbol ?? '',
       },

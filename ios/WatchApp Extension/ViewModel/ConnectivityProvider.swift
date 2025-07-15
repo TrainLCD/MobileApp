@@ -85,7 +85,6 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         
         defaults?.set(self.selectedLine?.lineColorC, forKey: "lineColor")
         defaults?.set(self.selectedLine?.name, forKey: "lineName")
-        defaults?.set(self.selectedLine?.nameR, forKey: "lineNameR")
         defaults?.set(self.selectedLine?.lineSymbol, forKey: "lineSymbol")
         
         if let boundStationName = message["boundStationName"] as? String {
