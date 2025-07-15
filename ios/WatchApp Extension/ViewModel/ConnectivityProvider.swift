@@ -34,7 +34,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   
   func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
   
-  func processFirstMessage(_ message: [String : Any]) {
+  func processEssentialMessage(_ message: [String : Any]) {
     let decoder = JSONDecoder()
     DispatchQueue.main.async {
       do {
@@ -67,26 +67,14 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
     }
   }
   
-  func processOptionalMessage(_ message: [String: Any]) {
+  func processAdditionalMessage(_ message: [String: Any]) {
     let decoder = JSONDecoder()
     
     let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
     let defaults = UserDefaults(suiteName: appGroupID)
-
+    
     DispatchQueue.main.async {
       do {
-        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>]  else {
-          return
-        }
-        guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
-          return
-        }
-        let stationList = try decoder.decode([Station].self, from: stationListData)
-        self.receivedStationList = stationList
-        if stationList.count == 0 {
-          self.selectedLine = nil
-        }
-        
         guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any>  else {
           return
         }
@@ -102,9 +90,22 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         
         if let boundStationName = message["boundStationName"] as? String {
           defaults?.set(boundStationName, forKey: "boundStationName")
-        } 
+        }
         
         WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+        
+        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>]  else {
+          return
+        }
+        guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
+          return
+        }
+        
+        let stationList = try decoder.decode([Station].self, from: stationListData)
+        self.receivedStationList = stationList
+        if stationList.count == 0 {
+          self.selectedLine = nil
+        }
       } catch {
         print(error.localizedDescription)
       }
@@ -112,7 +113,15 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   }
   
   func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
-    processFirstMessage(message)
-    processOptionalMessage(message)
+    processEssentialMessage(message)
+    processAdditionalMessage(message)
+  }
+  
+  func session(
+    _ session: WCSession,
+    didReceiveApplicationContext applicationContext: [String : Any]
+  ) {
+    processEssentialMessage(applicationContext)
+    processAdditionalMessage(applicationContext)
   }
 }
