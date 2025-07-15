@@ -11,9 +11,7 @@ struct StationListView: View {
   let currentStation: Station
   let stations: [Station]
   let selectedLine: Line?
-  
-  let isJa = Locale.current.languageCode == "ja"
-  
+
   @ViewBuilder
   var body: some View {
     NavigationView {
