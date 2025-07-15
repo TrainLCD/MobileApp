@@ -1,6 +1,10 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
-import { sendMessage, useReachability } from 'react-native-watch-connectivity';
+import {
+  sendMessage,
+  updateApplicationContext,
+  useReachability,
+} from 'react-native-watch-connectivity';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { isJapanese } from '~/translation';
 import { parenthesisRegexp } from '../constants';
@@ -53,79 +57,109 @@ export const useAppleWatch = (): void => {
       .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
   }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
 
-  const sendToWatch = useCallback(async (): Promise<void> => {
-    if (switchedStation) {
-      const msg = {
-        state: stoppingState,
-        station: {
-          id: switchedStation.id,
-          name: switchedStation.name,
-          nameR: switchedStation.nameRoman,
-          lines: switchedStation.lines
-            .filter((l) => l.id !== currentLine?.id)
-            .map((l) => ({
-              id: l.id,
-              lineColorC: l.color,
-              name: l.nameShort.replace(parenthesisRegexp, ''),
-              nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
-              lineSymbol: currentNumbering?.lineSymbol ?? '',
-            })),
-          stationNumber: currentNumbering?.stationNumber,
-          pass: false,
-        },
-      };
-      sendMessage(msg);
+  const essentialMessage = useMemo(() => {
+    if (!switchedStation) {
+      return;
     }
-    if (currentLine) {
-      const switchedStations =
-        selectedDirection === 'INBOUND' ? inboundStations : outboundStations;
-      const msg = {
-        stationList: switchedStations.map((s) => ({
-          id: s.id,
-          name: s.name,
-          nameR: s.nameRoman,
-          lines: s.lines
-            .filter((l) => l.id !== currentLine.id)
-            .map((l) => ({
-              id: l.id,
-              lineColorC: l.color,
-              name: l.nameShort.replace(parenthesisRegexp, ''),
-              nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
-              lineSymbol: currentNumbering?.lineSymbol ?? '',
-            })),
-          stationNumber: s?.stationNumbers?.[0]?.stationNumber,
-          pass: getIsPass(s),
-        })),
-        selectedLine: {
-          id: currentLine.id,
-          name: currentLine.nameShort.replace(parenthesisRegexp, ''),
-          nameR: currentLine.nameRoman?.replace(parenthesisRegexp, ''),
-          lineColorC: currentLine.color,
-          lineSymbol: currentNumbering?.lineSymbol ?? '',
-        },
-        boundStationName,
-      };
-      sendMessage(msg);
+
+    return {
+      state: stoppingState,
+      station: {
+        id: switchedStation.id,
+        name: switchedStation.name,
+        nameR: switchedStation.nameRoman,
+        lines: switchedStation.lines
+          .filter((l) => l.id !== currentLine?.id)
+          .map((l) => ({
+            id: l.id,
+            lineColorC: l.color,
+            name: l.nameShort.replace(parenthesisRegexp, ''),
+            nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
+            lineSymbol: currentNumbering?.lineSymbol ?? '',
+          })),
+        stationNumber: currentNumbering?.stationNumber,
+        pass: false,
+      },
+    };
+  }, [currentLine, currentNumbering, switchedStation, stoppingState]);
+
+  const additionalMessage = useMemo(() => {
+    if (!currentLine) {
+      return;
+    }
+
+    const switchedStations =
+      selectedDirection === 'INBOUND' ? inboundStations : outboundStations;
+
+    return {
+      stationList: switchedStations.map((s) => ({
+        id: s.id,
+        name: s.name,
+        nameR: s.nameRoman,
+        lines: s.lines
+          .filter((l) => l.id !== currentLine.id)
+          .map((l) => ({
+            id: l.id,
+            lineColorC: l.color,
+            name: l.nameShort.replace(parenthesisRegexp, ''),
+            nameR: l.nameRoman?.replace(parenthesisRegexp, ''),
+            lineSymbol: currentNumbering?.lineSymbol ?? '',
+          })),
+        stationNumber: s?.stationNumbers?.[0]?.stationNumber,
+        pass: getIsPass(s),
+      })),
+      selectedLine: {
+        id: currentLine.id,
+        name: currentLine.nameShort.replace(parenthesisRegexp, ''),
+        nameR: currentLine.nameRoman?.replace(parenthesisRegexp, ''),
+        lineColorC: currentLine.color,
+        lineSymbol: currentNumbering?.lineSymbol ?? '',
+      },
+      boundStationName,
+    };
+  }, [
+    currentLine,
+    currentNumbering,
+    inboundStations,
+    outboundStations,
+    selectedDirection,
+    boundStationName,
+  ]);
+
+  const sendMessagesToWatch = useCallback(async (): Promise<void> => {
+    if (essentialMessage) {
+      sendMessage(essentialMessage, console.log, (err) => {
+        console.error(err);
+        updateApplicationContext(essentialMessage);
+      });
+    }
+
+    if (additionalMessage) {
+      sendMessage(additionalMessage, console.log, (err) => {
+        console.error(err);
+        updateApplicationContext(additionalMessage);
+      });
     } else {
       sendMessage({
         stationList: [],
       });
     }
-  }, [
-    currentLine,
-    currentNumbering?.stationNumber,
-    currentNumbering?.lineSymbol,
-    inboundStations,
-    outboundStations,
-    selectedDirection,
-    stoppingState,
-    switchedStation,
-    boundStationName,
-  ]);
+  }, [essentialMessage, additionalMessage]);
+
+  const updateWatchApplicationContext = useCallback(() => {
+    if (essentialMessage) {
+      updateApplicationContext(essentialMessage);
+    }
+    if (additionalMessage) {
+      updateApplicationContext(additionalMessage);
+    }
+  }, [essentialMessage, additionalMessage]);
 
   useEffect(() => {
     if (reachable) {
-      sendToWatch();
+      sendMessagesToWatch();
+    } else {
+      updateWatchApplicationContext();
     }
-  }, [sendToWatch, reachable]);
+  }, [reachable, sendMessagesToWatch, updateWatchApplicationContext]);
 };

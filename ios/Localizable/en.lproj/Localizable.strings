@@ -20,3 +20,6 @@
 "boundStationLoopline" = "Bound for %@";
 "pass" = "Pass";
 "ridingOn" = "Riding on %@";
+"tapToRefresh" = "Tap to refresh";
+"destinationNotSet" = "Destination not set";
+"lineNotSet" = "No route selected";

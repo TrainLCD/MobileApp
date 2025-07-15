@@ -32,15 +32,15 @@ struct Provider: AppIntentTimelineProvider {
   
   private func loadEntry() async -> SimpleEntry {
     let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
-
+    
     guard let defaults = UserDefaults(suiteName: appGroupID) else {
       return SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
     }
     
-    let lineColor = defaults.string(forKey: "lineColor") ?? "000"
-    let lineName = defaults.string(forKey: "lineName") ?? ""
-    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? ""
-    let boundFor = defaults.string(forKey: "boundStationName") ?? ""
+    let lineColor = defaults.string(forKey: "lineColor") ?? "277BC0"
+    let lineName = defaults.string(forKey: "lineName") ?? String(localized: "lineNotSet")
+    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? "T"
+    let boundFor = defaults.string(forKey: "boundStationName") ?? String(localized: "destinationNotSet")
     
     var newIntent: ConfigurationAppIntent {
       let intent = ConfigurationAppIntent()
@@ -115,7 +115,7 @@ struct WatchWidgetEntryView : View {
     HStack {
       RoundedRectangle(cornerRadius: 4)
         .fill(Color(hex: lineColor))
-        .frame(width: 4, height: 40)
+        .frame(width: 4, height: 50)
       VStack(alignment: .leading) {
         Text("TrainLCD")
           .font(.caption)
@@ -130,6 +130,12 @@ struct WatchWidgetEntryView : View {
           .font(.caption)
           .foregroundColor(.white)
           .multilineTextAlignment(.leading)
+        Text(String(localized: "tapToRefresh"))
+          .font(.caption)
+          .fontWeight(.light)
+          .foregroundStyle(.white)
+          .multilineTextAlignment(.leading)
+          .opacity(0.75)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
