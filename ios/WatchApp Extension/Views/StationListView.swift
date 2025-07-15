@@ -11,9 +11,7 @@ struct StationListView: View {
   let currentStation: Station
   let stations: [Station]
   let selectedLine: Line?
-  
-  let isJa = Locale.current.languageCode == "ja"
-  
+
   @ViewBuilder
   var body: some View {
     NavigationView {
@@ -26,10 +24,10 @@ struct StationListView: View {
           List {
             ForEach(stations) { station in
               if let stationNumber = station.stationNumber {
-                Text("\(isJa ? station.name : station.nameR)(\(stationNumber))")
+                Text("\(station.name)(\(stationNumber))")
                   .opacity(station.pass ? 0.25 : 1)
               } else {
-                Text("\(isJa ? station.name : station.nameR)")
+                Text(station.name)
                   .opacity(station.pass ? 0.25 : 1)
               }
             }
@@ -42,7 +40,7 @@ struct StationListView: View {
         }
       }
     }
-    .navigationBarTitle(Text((isJa ? selectedLine?.name : selectedLine?.nameR) ?? ""))
+    .navigationBarTitle(Text(selectedLine?.name ?? ""))
     
   }
 }
