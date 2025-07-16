@@ -35,20 +35,6 @@ export const useAppleWatch = (): void => {
     [arrived, nextStation, station]
   );
 
-  const inboundStations = useMemo<Station[]>(() => {
-    if (isFullLoopLine) {
-      return stations.slice().reverse();
-    }
-    return stations;
-  }, [isFullLoopLine, stations]);
-
-  const outboundStations = useMemo<Station[]>(() => {
-    if (isFullLoopLine) {
-      return stations;
-    }
-    return stations.slice().reverse();
-  }, [isFullLoopLine, stations]);
-
   const boundStationName = useMemo(() => {
     const enPrefix = 'For ';
     const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき';
@@ -58,10 +44,23 @@ export const useAppleWatch = (): void => {
       .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
   }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
 
-  const essentialMessage = useMemo(() => {
-    if (!switchedStation) {
+  const message = useMemo(() => {
+    if (!switchedStation || !currentLine) {
       return;
     }
+
+    const switchedStations =
+      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
+
+    console.log({
+      id: currentLine.id,
+      name:
+        (isJapanese
+          ? currentLine.nameShort.replace(parenthesisRegexp, '')
+          : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
+      lineColorC: currentLine.color,
+      lineSymbol: currentNumbering?.lineSymbol ?? '',
+    });
 
     return {
       state: stoppingState,
@@ -69,7 +68,7 @@ export const useAppleWatch = (): void => {
         id: switchedStation.id,
         name: isJapanese ? switchedStation.name : switchedStation.nameRoman,
         lines: switchedStation.lines
-          .filter((l) => l.id !== currentLine?.id)
+          .filter((l) => l.id !== currentLine.id)
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
@@ -81,39 +80,19 @@ export const useAppleWatch = (): void => {
         stationNumber: currentNumbering?.stationNumber,
         pass: false,
       },
-    };
-  }, [currentLine, currentNumbering, switchedStation, stoppingState]);
-
-  const additionalMessage = useMemo(() => {
-    if (!currentLine) {
-      return;
-    }
-
-    const switchedStations =
-      selectedDirection === 'INBOUND' ? inboundStations : outboundStations;
-
-    return {
       stationList: switchedStations.map((s) => ({
         id: s.id,
         name: isJapanese ? s.name : s.nameRoman,
-        lines: s.lines
-          .filter((l) => l.id !== currentLine.id)
-          .map((l) => ({
-            id: l.id,
-            lineColorC: l.color,
-            name: isJapanese
-              ? l.nameShort.replace(parenthesisRegexp, '')
-              : l.nameRoman?.replace(parenthesisRegexp, ''),
-            lineSymbol: currentNumbering?.lineSymbol ?? '',
-          })),
+        lines: [],
         stationNumber: s?.stationNumbers?.[0]?.stationNumber,
         pass: getIsPass(s),
       })),
       selectedLine: {
         id: currentLine.id,
-        name: isJapanese
-          ? currentLine.nameShort.replace(parenthesisRegexp, '')
-          : currentLine.nameRoman?.replace(parenthesisRegexp, ''),
+        name:
+          (isJapanese
+            ? currentLine.nameShort.replace(parenthesisRegexp, '')
+            : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
         lineColorC: currentLine.color,
         lineSymbol: currentNumbering?.lineSymbol ?? '',
       },
@@ -122,40 +101,27 @@ export const useAppleWatch = (): void => {
   }, [
     currentLine,
     currentNumbering,
-    inboundStations,
-    outboundStations,
+    switchedStation,
+    stoppingState,
     selectedDirection,
     boundStationName,
+    stations,
   ]);
 
   const sendMessagesToWatch = useCallback(async (): Promise<void> => {
-    if (essentialMessage) {
-      sendMessage(essentialMessage, console.log, (err) => {
+    if (message) {
+      sendMessage(message, console.log, (err) => {
         console.error(err);
-        updateApplicationContext(essentialMessage);
+        updateApplicationContext(message);
       });
     }
-
-    if (additionalMessage) {
-      sendMessage(additionalMessage, console.log, (err) => {
-        console.error(err);
-        updateApplicationContext(additionalMessage);
-      });
-    } else {
-      sendMessage({
-        stationList: [],
-      });
-    }
-  }, [essentialMessage, additionalMessage]);
+  }, [message]);
 
   const updateWatchApplicationContext = useCallback(() => {
-    if (essentialMessage) {
-      updateApplicationContext(essentialMessage);
+    if (message) {
+      updateApplicationContext(message);
     }
-    if (additionalMessage) {
-      updateApplicationContext(additionalMessage);
-    }
-  }, [essentialMessage, additionalMessage]);
+  }, [message]);
 
   useEffect(() => {
     if (reachable) {

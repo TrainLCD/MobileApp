@@ -19,11 +19,17 @@ struct ContentView: View {
           state: connector.receivedState ?? "",
           station: station
         )
-        StationListView(
-          currentStation: station,
-          stations: connector.receivedStationList,
-          selectedLine: connector.selectedLine
-        )
+        if let selectedLine = connector.selectedLine {
+          StationListView(
+            currentStation: station,
+            stations: connector.receivedStationList ?? [],
+            selectedLine: selectedLine
+          )
+        } else {
+          Text(NSLocalizedString("directionNotSelected", comment: ""))
+            .multilineTextAlignment(.center)
+            .font(.subheadline)
+        }
       }.tabViewStyle(PageTabViewStyle())
     } else {
       NotLaunchView()
