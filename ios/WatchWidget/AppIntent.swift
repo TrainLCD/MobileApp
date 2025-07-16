@@ -17,8 +17,10 @@ struct ConfigurationAppIntent: WidgetConfigurationIntent {
   var lineColor: String
   @Parameter(title: "Line name", default: "TrainLCD")
   var lineName: String
-  @Parameter(title: "Line symbol", default: "T")
+  @Parameter(title: "Line symbol", default: "?")
   var lineSymbol: String
   @Parameter(title: "Final destination of train", default: "TrainLCD")
   var boundFor: String
+  @Parameter(title: "Is any data loaded from the App", default: false)
+  var loaded: Bool
 }

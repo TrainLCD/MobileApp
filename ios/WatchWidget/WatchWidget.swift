@@ -21,7 +21,7 @@ struct Provider: AppIntentTimelineProvider {
   func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
     let entry = await loadEntry()
     let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())
-      ?? Date().addingTimeInterval(5 * 60)
+    ?? Date().addingTimeInterval(5 * 60)
     return Timeline(entries: [entry], policy: .after(nextUpdate))
   }
   
@@ -39,8 +39,9 @@ struct Provider: AppIntentTimelineProvider {
     
     let lineColor = defaults.string(forKey: "lineColor") ?? "277BC0"
     let lineName = defaults.string(forKey: "lineName") ?? String(localized: "lineNotSet")
-    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? "T"
+    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? "?"
     let boundFor = defaults.string(forKey: "boundStationName") ?? String(localized: "destinationNotSet")
+    let loaded = defaults.bool(forKey: "loaded")
     
     var newIntent: ConfigurationAppIntent {
       let intent = ConfigurationAppIntent()
@@ -48,6 +49,7 @@ struct Provider: AppIntentTimelineProvider {
       intent.lineName = lineName
       intent.lineSymbol = lineSymbol
       intent.boundFor = boundFor
+      intent.loaded = loaded
       return intent
     }
     
@@ -86,6 +88,7 @@ struct WatchWidgetEntryView : View {
   var lineName: String
   var lineSymbol: String
   var boundFor: String
+  var loaded: Bool
   
   @Environment(\.widgetFamily) var family
   
@@ -144,7 +147,7 @@ struct WatchWidgetEntryView : View {
   
   var inlineView: some View {
     Text(
-      lineName.isEmpty
+      !loaded
       ? "TrainLCD"
       : String(
         format: String(localized: "ridingOn"),
@@ -186,7 +189,8 @@ struct WatchWidget: Widget {
         ? String(entry.configuration.lineName
           .prefix(1))
         : entry.configuration.lineSymbol,
-        boundFor: entry.configuration.boundFor
+        boundFor: entry.configuration.boundFor,
+        loaded: entry.configuration.loaded
       )
       .containerBackground(.fill.tertiary, for: .widget)
     }
@@ -208,8 +212,9 @@ extension ConfigurationAppIntent {
     let intent = ConfigurationAppIntent()
     intent.lineColor = "277BC0"
     intent.lineName = "TrainLCD"
-    intent.lineSymbol = "T"
+    intent.lineSymbol = "?"
     intent.boundFor = "TrainLCD"
+    intent.loaded = false
     return intent
   }
   
@@ -227,8 +232,8 @@ struct WatchWidget_Previews: PreviewProvider {
         lineColor: "80C241",
         lineName: "山手線",
         lineSymbol: "JY",
-        boundFor: "新宿・渋谷方面"
-        
+        boundFor: "新宿・渋谷方面",
+        loaded: true
       )
       .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
     }

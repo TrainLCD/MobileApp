@@ -10,7 +10,7 @@ import SwiftUI
 
 struct Line: Decodable, Identifiable {
   let id: Int
-  let lineColorC: String?
+  let lineColorC: String
   let name: String
   let lineSymbol: String
 }

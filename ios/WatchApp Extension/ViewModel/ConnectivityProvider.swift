@@ -12,7 +12,7 @@ import WidgetKit
 class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   @Published var receivedState: String?
   @Published var receivedStation: Station?
-  @Published var receivedStationList: [Station] = []
+  @Published var receivedStationList: [Station]?
   @Published var selectedLine: Line?
   
   private let session: WCSession
@@ -34,8 +34,11 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   
   func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
   
-  func processEssentialMessage(_ message: [String : Any]) {
+  func parseMessage(_ message: [String : Any]) {
     let decoder = JSONDecoder()
+    let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
+    let defaults = UserDefaults(suiteName: appGroupID)
+    
     DispatchQueue.main.async {
       do {
         guard let stationDic = message["station"] as? Dictionary<String, Any> else {
@@ -45,37 +48,23 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
           return
         }
         self.receivedStation = try decoder.decode(Station.self, from: data)
-      } catch {
-        print(error.localizedDescription)
-        return
-      }
-      
-      guard let rawStateText = message["state"] as? String else {
-        return
-      }
-      
-      switch rawStateText {
-      case "ARRIVING":
-        self.receivedState = NSLocalizedString("arrivingAt", comment: "")
-      case "CURRENT":
-        self.receivedState = NSLocalizedString("nowStoppingAt", comment: "")
-      case "NEXT":
-        self.receivedState = NSLocalizedString("next", comment: "")
-      default:
-        break
-      }
-    }
-  }
-  
-  func processAdditionalMessage(_ message: [String: Any]) {
-    let decoder = JSONDecoder()
-    
-    let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
-    let defaults = UserDefaults(suiteName: appGroupID)
-    
-    DispatchQueue.main.async {
-      do {
-        guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any>  else {
+        
+        guard let rawStateText = message["state"] as? String else {
+          return
+        }
+        
+        switch rawStateText {
+        case "ARRIVING":
+          self.receivedState = NSLocalizedString("arrivingAt", comment: "")
+        case "CURRENT":
+          self.receivedState = NSLocalizedString("nowStoppingAt", comment: "")
+        case "NEXT":
+          self.receivedState = NSLocalizedString("next", comment: "")
+        default:
+          break
+        }
+        
+        guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any> else {
           return
         }
         guard let selectedLineData = try? JSONSerialization.data(withJSONObject: selectedLineDic, options: []) else {
@@ -86,14 +75,12 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         defaults?.set(self.selectedLine?.lineColorC, forKey: "lineColor")
         defaults?.set(self.selectedLine?.name, forKey: "lineName")
         defaults?.set(self.selectedLine?.lineSymbol, forKey: "lineSymbol")
-        
-        if let boundStationName = message["boundStationName"] as? String {
-          defaults?.set(boundStationName, forKey: "boundStationName")
-        }
+        defaults?.set(message["boundStationName"], forKey: "boundStationName")
+        defaults?.set(true, forKey: "loaded")
         
         WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
         
-        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>]  else {
+        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>] else {
           return
         }
         guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
@@ -102,9 +89,6 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         
         let stationList = try decoder.decode([Station].self, from: stationListData)
         self.receivedStationList = stationList
-        if stationList.count == 0 {
-          self.selectedLine = nil
-        }
       } catch {
         print(error.localizedDescription)
       }
@@ -112,15 +96,13 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   }
   
   func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
-    processEssentialMessage(message)
-    processAdditionalMessage(message)
+    parseMessage(message)
   }
   
   func session(
     _ session: WCSession,
     didReceiveApplicationContext applicationContext: [String : Any]
   ) {
-    processEssentialMessage(applicationContext)
-    processAdditionalMessage(applicationContext)
+    parseMessage(applicationContext)
   }
 }
