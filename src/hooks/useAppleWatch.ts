@@ -52,16 +52,6 @@ export const useAppleWatch = (): void => {
     const switchedStations =
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse();
 
-    console.log({
-      id: currentLine.id,
-      name:
-        (isJapanese
-          ? currentLine.nameShort.replace(parenthesisRegexp, '')
-          : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
-      lineColorC: currentLine.color,
-      lineSymbol: currentNumbering?.lineSymbol ?? '',
-    });
-
     return {
       state: stoppingState,
       station: {

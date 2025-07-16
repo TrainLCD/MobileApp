@@ -30,7 +30,7 @@ struct RootView: View {
       List {
         ForEach(station.lines) { line in
           Text(line.name)
-            .listRowPlatterColor(Color(hex: line.lineColorC ?? "000"))
+            .listRowPlatterColor(Color(hex: line.lineColorC))
         }
       }
     }
