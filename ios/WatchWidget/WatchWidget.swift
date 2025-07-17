@@ -37,19 +37,37 @@ struct Provider: AppIntentTimelineProvider {
       return SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
     }
     
-    let lineColor = defaults.string(forKey: "lineColor") ?? "277BC0"
-    let lineName = defaults.string(forKey: "lineName") ?? String(localized: "lineNotSet")
-    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? "?"
-    let boundFor = defaults.string(forKey: "boundStationName") ?? String(localized: "destinationNotSet")
     let loaded = defaults.bool(forKey: "loaded")
     
+    if (!loaded) {
+      var newIntent: ConfigurationAppIntent {
+        let intent = ConfigurationAppIntent()
+        intent.lineColor = "277BC0"
+        intent.lineName = String(localized: "lineNotSet")
+        intent.lineSymbol = "?"
+        intent.boundFor = String(localized: "destinationNotSet")
+        intent.loaded = false
+        return intent
+      }
+      
+      return SimpleEntry (
+        date: Date(),
+        configuration: newIntent
+      )
+    }
+    
+    let lineColor = defaults.string(forKey: "lineColor") ?? ""
+    let lineName = defaults.string(forKey: "lineName") ?? ""
+    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? ""
+    let boundFor = defaults.string(forKey: "boundStationName") ?? ""
+
     var newIntent: ConfigurationAppIntent {
       let intent = ConfigurationAppIntent()
       intent.lineColor = lineColor
       intent.lineName = lineName
       intent.lineSymbol = lineSymbol
       intent.boundFor = boundFor
-      intent.loaded = loaded
+      intent.loaded = true
       return intent
     }
     

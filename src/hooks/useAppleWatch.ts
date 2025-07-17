@@ -46,7 +46,7 @@ export const useAppleWatch = (): void => {
 
   const message = useMemo(() => {
     if (!switchedStation || !currentLine) {
-      return;
+      return {};
     }
 
     const switchedStations =
@@ -99,18 +99,14 @@ export const useAppleWatch = (): void => {
   ]);
 
   const sendMessagesToWatch = useCallback(async (): Promise<void> => {
-    if (message) {
-      sendMessage(message, console.log, (err) => {
-        console.error(err);
-        updateApplicationContext(message);
-      });
-    }
+    sendMessage(message, console.log, (err) => {
+      console.error(err);
+      updateApplicationContext(message);
+    });
   }, [message]);
 
   const updateWatchApplicationContext = useCallback(() => {
-    if (message) {
-      updateApplicationContext(message);
-    }
+    updateApplicationContext(message);
   }, [message]);
 
   useEffect(() => {
