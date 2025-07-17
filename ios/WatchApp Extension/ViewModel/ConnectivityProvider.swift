@@ -41,7 +41,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
     
     DispatchQueue.main.async {
       do {
-        guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any> else {
+        guard let selectedLineDic = message["selectedLine"] as? [String: Any] else {
           defaults?.set(false, forKey: "loaded")
           WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
           return
@@ -67,7 +67,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         
         WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
 
-        guard let stationDic = message["station"] as? Dictionary<String, Any> else {
+        guard let stationDic = message["station"] as? [String: Any] else {
           return
         }
         guard let data = try? JSONSerialization.data(withJSONObject: stationDic, options: []) else {
@@ -90,7 +90,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
           break
         }
         
-        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>] else {
+        guard let stationListDic = message["stationList"] as? [[String: Any]] else {
           return
         }
         guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
