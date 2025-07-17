@@ -41,7 +41,33 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
     
     DispatchQueue.main.async {
       do {
-        guard let stationDic = message["station"] as? Dictionary<String, Any> else {
+        guard let selectedLineDic = message["selectedLine"] as? [String: Any] else {
+          defaults?.set(false, forKey: "loaded")
+          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          return
+        }
+        guard let selectedLineData = try? JSONSerialization.data(withJSONObject: selectedLineDic, options: []) else {
+          defaults?.set(false, forKey: "loaded")
+          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          return
+        }
+        guard let selectedLine = try? decoder.decode(Line.self, from: selectedLineData) else {
+          defaults?.set(false, forKey: "loaded")
+          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          return
+        }
+        
+        self.selectedLine = selectedLine
+        
+        defaults?.set(selectedLine.lineColorC, forKey: "lineColor")
+        defaults?.set(selectedLine.name, forKey: "lineName")
+        defaults?.set(selectedLine.lineSymbol, forKey: "lineSymbol")
+        defaults?.set(message["boundStationName"], forKey: "boundStationName")
+        defaults?.set(true, forKey: "loaded")
+        
+        WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+
+        guard let stationDic = message["station"] as? [String: Any] else {
           return
         }
         guard let data = try? JSONSerialization.data(withJSONObject: stationDic, options: []) else {
@@ -64,23 +90,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
           break
         }
         
-        guard let selectedLineDic = message["selectedLine"] as? Dictionary<String, Any> else {
-          return
-        }
-        guard let selectedLineData = try? JSONSerialization.data(withJSONObject: selectedLineDic, options: []) else {
-          return
-        }
-        self.selectedLine = try decoder.decode(Line.self, from: selectedLineData)
-        
-        defaults?.set(self.selectedLine?.lineColorC, forKey: "lineColor")
-        defaults?.set(self.selectedLine?.name, forKey: "lineName")
-        defaults?.set(self.selectedLine?.lineSymbol, forKey: "lineSymbol")
-        defaults?.set(message["boundStationName"], forKey: "boundStationName")
-        defaults?.set(true, forKey: "loaded")
-        
-        WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
-        
-        guard let stationListDic = message["stationList"] as? [Dictionary<String, Any>] else {
+        guard let stationListDic = message["stationList"] as? [[String: Any]] else {
           return
         }
         guard let stationListData = try? JSONSerialization.data(withJSONObject: stationListDic, options: []) else {
