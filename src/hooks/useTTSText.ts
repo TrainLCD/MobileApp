@@ -531,7 +531,7 @@ export const useTTSText = (
                       )}から先は、後ほどご案内いたします。`
                 }`
               : ''
-          }次は、${
+          }次は、${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? '終点、' : ''}${
             replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
             ''
           }、${
@@ -709,6 +709,8 @@ export const useTTSText = (
       selectedBound,
       transferLines,
       viaStation,
+      nextStation?.groupId,
+      selectedBound?.groupId,
     ]);
 
   const englishTemplate: Record<AppTheme, { [key: string]: string }> | null =
@@ -931,7 +933,7 @@ export const useTTSText = (
                       } will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : ''}${
             nextStationNumber?.lineSymbol.length
               ? ` station number ${nextStationNumberText}`
               : ''
@@ -1030,6 +1032,8 @@ export const useTTSText = (
       isAfterNextStopTerminus,
       isLoopLine,
       isNextStopTerminus,
+      nextStation?.groupId,
+      selectedBound?.groupId,
       nextStation?.nameRoman,
       nextStationNumber?.lineSymbol.length,
       nextStationNumberText,
