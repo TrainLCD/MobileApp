@@ -691,14 +691,18 @@ export const useTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `この列車は${
-            currentTrainType
-              ? replaceJapaneseText(
-                  currentTrainType.name,
-                  currentTrainType.nameKatakana
-                )
-              : '普通'
-          }列車${boundForJa}行きです。次は${replaceJapaneseText(
+          NEXT: `${
+            firstSpeech
+              ? `この列車は${
+                  currentTrainType
+                    ? replaceJapaneseText(
+                        currentTrainType.name,
+                        currentTrainType.nameKatakana
+                      )
+                    : '普通'
+                }、${boundForJa}行きです。`
+              : ''
+          }次は${replaceJapaneseText(
             nextStation?.name,
             nextStation?.nameKatakana
           )}、${replaceJapaneseText(
@@ -1058,7 +1062,7 @@ export const useTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `This is a ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}. The next station is ${
+          NEXT: `${firstSpeech ? `This is a ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}.` : ''} The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}. ${
             transferLines.length
@@ -1066,7 +1070,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')} at ${nextStation?.nameRoman}.`
               : ''
