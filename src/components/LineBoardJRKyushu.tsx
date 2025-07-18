@@ -169,7 +169,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLACK' | 'WHITE';
+  chevronColor: 'BLUE' | 'BLACK' | 'WHITE';
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -564,7 +564,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   hasTerminus,
   lineColors,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLACK'>('BLACK');
+  const [chevronColor, setChevronColor] = useState<'BLUE' | 'BLACK'>('BLACK');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
@@ -574,7 +574,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   );
 
   const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'BLACK' : 'RED')),
+    () => setChevronColor((prev) => (prev === 'BLUE' ? 'BLACK' : 'BLUE')),
     []
   );
 
