@@ -340,29 +340,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   const additionalChevronStyle = useMemo(() => {
+    // 最初の駅の場合
     if (!index) {
-      if (arrived) {
-        return {
-          left: widthScale(-14),
-        };
-      }
-      return null;
+      return arrived ? { left: widthScale(-14) } : null;
     }
+
+    // 到着済みの場合
     if (arrived) {
       return {
         left: widthScale(41.75 * index) - widthScale(14),
       };
     }
+
+    // 通過していない場合
     if (!passed) {
-      if (!arrived) {
-        return {
-          left: widthScale(42 * index),
-        };
-      }
       return {
-        left: widthScale(45 * index),
+        left: widthScale(arrived ? 45 : 42 * index),
       };
     }
+
+    // デフォルト（通過済み）
     return {
       left: widthScale(42 * index),
     };
@@ -515,14 +512,10 @@ const LineBoardSaikyo: React.FC<Props> = ({
     [currentLine, selectedLine]
   );
 
-  const intervalStep = useCallback(() => {
-    const timestamp = Date.now();
-    if (Math.floor(timestamp) % 2 === 0) {
-      setChevronColor('RED');
-      return;
-    }
-    setChevronColor('WHITE');
-  }, []);
+  const intervalStep = useCallback(
+    () => setChevronColor((prev) => (prev === 'RED' ? 'WHITE' : 'RED')),
+    []
+  );
 
   useInterval(intervalStep, 1000);
 

@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     height: isTablet ? 6 : 4,
     elevation: 2,
+    backgroundColor: '#E50012',
   },
   headerTexts: {
     flexDirection: 'row',
@@ -635,12 +636,7 @@ const HeaderJRKyushu: React.FC = () => {
           )}
         </View>
       </LinearGradient>
-      <View
-        style={{
-          ...styles.divider,
-          backgroundColor: '#E50012',
-        }}
-      />
+      <View style={styles.divider} />
     </View>
   );
 };
