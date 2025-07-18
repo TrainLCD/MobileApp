@@ -1,13 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
   useCurrentLine,
   useInterval,
-  useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '../hooks';
 import lineState from '../store/atoms/line';
@@ -19,6 +18,7 @@ import { RFValue } from '../utils/rfValue';
 import { heightScale, widthScale } from '../utils/scale';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChervronTY';
+import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
@@ -104,19 +104,17 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: isTablet ? 0 : 64,
   },
   stationName: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    marginLeft: 5,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-  },
-  stationNameExtra: {
-    fontSize: RFValue(10),
-    fontWeight: 'bold',
+    paddingBottom: 20,
   },
   grayColor: {
     color: '#ccc',
@@ -146,26 +144,22 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
   },
-  splittedStationNameWithExtraLang: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  stationNumber: {
-    width: isTablet ? 60 : 45,
-    fontSize: RFValue(12),
-    fontWeight: 'bold',
-    marginLeft: -5,
-    textAlign: 'center',
-  },
   marksContainer: { top: 38, position: 'absolute' },
+  numberingIconContainer: {
+    position: 'absolute',
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 36 : 24,
+    bottom: isTablet ? 8 : 72,
+    transform: [{ scale: 0.5 }],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 interface StationNameProps {
   station: Station;
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
-  hasNumbering?: boolean;
 }
 
 interface StationNameCellProps {
@@ -175,7 +169,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
+  chevronColor: 'RED' | 'BLACK' | 'WHITE';
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -183,7 +177,6 @@ const StationName: React.FC<StationNameProps> = ({
   en,
   horizontal,
   passed,
-  hasNumbering,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
 
@@ -191,14 +184,14 @@ const StationName: React.FC<StationNameProps> = ({
     if (!isTablet) {
       return {
         width: heightScale(320),
-        marginBottom: 90,
+        marginBottom: 58,
       };
     }
     return {
       width: 250,
-      marginBottom: hasNumbering ? 110 : 100,
+      marginBottom: 96,
     };
-  }, [hasNumbering]);
+  }, []);
 
   if (en) {
     return (
@@ -210,12 +203,6 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {stationNameR}
-        {'\n'}
-        <Typography
-          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
-        >
-          {station.nameChinese}
-        </Typography>
       </Typography>
     );
   }
@@ -230,39 +217,21 @@ const StationName: React.FC<StationNameProps> = ({
         ]}
       >
         {station.name}
-        {'\n'}
-        <Typography
-          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
-        >
-          {station.nameKorean}
-        </Typography>
       </Typography>
     );
   }
 
   return (
-    <View style={styles.splittedStationNameWithExtraLang}>
-      <View>
-        {station.name.split('').map((c, j) => (
-          <Typography
-            style={[styles.stationName, passed ? styles.grayColor : null]}
-            key={`${j + 1}${c}`}
-          >
-            {c}
-          </Typography>
-        ))}
-      </View>
-      <View>
-        {station.nameKorean?.split('').map((c, j) => (
-          <Typography
-            style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
-            key={`${j + 1}${c}`}
-          >
-            {c}
-          </Typography>
-        ))}
-      </View>
-    </View>
+    <>
+      {station.name.split('').map((c, j) => (
+        <Typography
+          style={[styles.stationName, passed ? styles.grayColor : null]}
+          key={`${j + 1}${c}`}
+        >
+          {c}
+        </Typography>
+      ))}
+    </>
   );
 };
 
@@ -387,19 +356,27 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
-  const getStationNumberIndex = useStationNumberIndexFunc();
-  const stationNumberIndex = useMemo(
-    () => getStationNumberIndex(currentStation),
-    [currentStation, getStationNumberIndex]
+  const numberingObj = useMemo(
+    () => station.stationNumbers?.[0],
+    [station.stationNumbers]
   );
-  const numberingObj = useMemo<StationNumber | undefined>(
-    () => station.stationNumbers?.[stationNumberIndex],
-    [station.stationNumbers, stationNumberIndex]
-  );
+
+  const paddingBottom = useMemo(() => {
+    if (isTablet) {
+      return 60;
+    }
+    return numberingObj ? 110 : 84;
+  }, [numberingObj]);
 
   return (
     <>
-      <View key={station.id} style={styles.stationNameContainer}>
+      <View
+        key={station.id}
+        style={{
+          ...styles.stationNameContainer,
+          paddingBottom,
+        }}
+      >
         <View
           style={
             isEn || includesLongStationName
@@ -414,19 +391,19 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             en={isEn}
             horizontal={includesLongStationName}
             passed={getIsPass(station) || shouldGrayscale}
-            hasNumbering={!!numberingObj}
           />
         </View>
-        <Typography
-          style={[
-            styles.stationNumber,
-            getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
-          ]}
-          adjustsFontSizeToFit
-          numberOfLines={1}
-        >
-          {numberingObj?.stationNumber ?? ''}
-        </Typography>
+
+        {numberingObj ? (
+          <View style={styles.numberingIconContainer}>
+            <NumberingIcon
+              shape={numberingObj.lineSymbolShape}
+              lineColor={station.line?.color || '#000'}
+              stationNumber={numberingObj.stationNumber}
+              threeLetterCode={station.threeLetterCode}
+            />
+          </View>
+        ) : null}
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
@@ -582,12 +559,12 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   );
 };
 
-const LineBoardToei: React.FC<Props> = ({
+const LineBoardJRKyushu: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+  const [chevronColor, setChevronColor] = useState<'RED' | 'BLACK'>('BLACK');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
@@ -597,7 +574,7 @@ const LineBoardToei: React.FC<Props> = ({
   );
 
   const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
+    () => setChevronColor((prev) => (prev === 'RED' ? 'BLACK' : 'RED')),
     []
   );
 
@@ -660,4 +637,4 @@ const LineBoardToei: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardToei);
+export default React.memo(LineBoardJRKyushu);

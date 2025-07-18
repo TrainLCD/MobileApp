@@ -32,6 +32,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
 };
 
 export const useTTSText = (
@@ -689,6 +690,44 @@ export const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
+        [APP_THEME.JR_KYUSHU]: {
+          NEXT: `この列車は${
+            currentTrainType
+              ? replaceJapaneseText(
+                  currentTrainType.name,
+                  currentTrainType.nameKatakana
+                )
+              : '普通'
+          }列車${boundForJa}行きです。次は${replaceJapaneseText(
+            nextStation?.name,
+            nextStation?.nameKatakana
+          )}、${replaceJapaneseText(
+            nextStation?.name,
+            nextStation?.nameKatakana
+          )}。${
+            transferLines.length
+              ? `${replaceJapaneseText(
+                  nextStation?.name,
+                  nextStation?.nameKatakana
+                )}では、${transferLines
+                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
+                  .join('、')}にお乗り換えいただけます。`
+              : ''
+          }`,
+          ARRIVING: `まもなく、${replaceJapaneseText(
+            nextStation?.name,
+            nextStation?.nameKatakana
+          )}、${replaceJapaneseText(
+            nextStation?.name,
+            nextStation?.nameKatakana
+          )}。${
+            transferLines.length
+              ? `${transferLines
+                  .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
+                  .join('、')}にお乗り換えいただけます。`
+              : ''
+          }`,
+        },
       };
       return map;
     }, [
@@ -1018,6 +1057,34 @@ export const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
+        [APP_THEME.JR_KYUSHU]: {
+          NEXT: `This is a ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}. The next station is ${
+            nextStation?.nameRoman
+          } ${nextStationNumberText}. ${
+            transferLines.length
+              ? `You can transfer to ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                  )
+                  .join(' ')} at ${nextStation?.nameRoman}.`
+              : ''
+          }`,
+          ARRIVING: `We will soon be arriving at ${
+            nextStation?.nameRoman
+          } ${nextStationNumberText}. ${
+            transferLines.length
+              ? `You can transfer to ${transferLines
+                  .map((l, i, a) =>
+                    a.length > 1 && a.length - 1 === i
+                      ? `and the ${l.nameRoman}.`
+                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                  )
+                  .join(' ')} at ${nextStation?.nameRoman}.`
+              : ''
+          }`,
+        },
       };
       return map;
     }, [
@@ -1050,6 +1117,7 @@ export const useTTSText = (
       }
       return tmpl;
     }
+
     if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
       const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
@@ -1073,6 +1141,7 @@ export const useTTSText = (
       }
       return tmpl;
     }
+
     if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
       const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
