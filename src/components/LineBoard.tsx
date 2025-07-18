@@ -11,6 +11,7 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
+import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardLED from './LineBoardLED';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
@@ -122,6 +123,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
       case APP_THEME.JL:
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
+        );
+      case APP_THEME.JR_KYUSHU:
+        return (
+          <LineBoardJRKyushu
+            stations={slicedLeftStations}
+            lineColors={lineColors}
+            hasTerminus={hasTerminus}
+          />
         );
       default:
         return null;

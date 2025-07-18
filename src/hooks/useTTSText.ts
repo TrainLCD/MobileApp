@@ -32,6 +32,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.LED]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
 };
 
 export const useTTSText = (
@@ -689,6 +690,10 @@ export const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
+        [APP_THEME.JR_KYUSHU]: {
+          NEXT: '',
+          ARRIVING: '',
+        },
       };
       return map;
     }, [
@@ -1018,6 +1023,10 @@ export const useTTSText = (
           NEXT: '',
           ARRIVING: '',
         },
+        [APP_THEME.JR_KYUSHU]: {
+          NEXT: '',
+          ARRIVING: '',
+        },
       };
       return map;
     }, [
@@ -1050,6 +1059,14 @@ export const useTTSText = (
       }
       return tmpl;
     }
+    // FXIME: JR九州と西日本が同じ放送なわけないので仮置き
+    if (theme === APP_THEME.JR_KYUSHU) {
+      const tmpl = japaneseTemplate?.JR_WEST?.[stoppingState];
+      if (!tmpl) {
+        return '';
+      }
+      return tmpl;
+    }
     if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
       const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
       if (!tmpl) {
@@ -1068,6 +1085,14 @@ export const useTTSText = (
   const enText = useMemo(() => {
     if (theme === APP_THEME.LED) {
       const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState];
+      if (!tmpl) {
+        return '';
+      }
+      return tmpl;
+    }
+    // FXIME: JR九州と西日本が同じ放送なわけないので仮置き
+    if (theme === APP_THEME.JR_KYUSHU) {
+      const tmpl = englishTemplate?.JR_WEST?.[stoppingState];
       if (!tmpl) {
         return '';
       }
