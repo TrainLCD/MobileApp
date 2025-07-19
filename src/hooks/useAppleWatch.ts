@@ -17,6 +17,7 @@ import { useLoopLine } from './useLoopLine';
 import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useStoppingState } from './useStoppingState';
+import { Platform } from 'react-native';
 
 export const useAppleWatch = (): void => {
   const { arrived, stations, selectedDirection } = useAtomValue(stationState);
@@ -110,6 +111,10 @@ export const useAppleWatch = (): void => {
   }, [message]);
 
   useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+
     if (reachable) {
       sendMessagesToWatch();
     } else {
