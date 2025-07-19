@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
+import { Platform } from 'react-native';
 import {
   sendMessage,
   updateApplicationContext,
@@ -17,7 +18,6 @@ import { useLoopLine } from './useLoopLine';
 import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useStoppingState } from './useStoppingState';
-import { Platform } from 'react-native';
 
 export const useAppleWatch = (): void => {
   const { arrived, stations, selectedDirection } = useAtomValue(stationState);
