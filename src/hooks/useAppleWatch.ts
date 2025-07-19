@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
+import { Platform } from 'react-native';
 import {
   sendMessage,
   updateApplicationContext,
@@ -110,6 +111,10 @@ export const useAppleWatch = (): void => {
   }, [message]);
 
   useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+
     if (reachable) {
       sendMessagesToWatch();
     } else {
