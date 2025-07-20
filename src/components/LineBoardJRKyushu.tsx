@@ -363,7 +363,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const paddingBottom = useMemo(() => {
     if (isTablet) {
-      return 60;
+      return numberingObj ? 60 : 0;
     }
     return numberingObj ? 110 : 84;
   }, [numberingObj]);
