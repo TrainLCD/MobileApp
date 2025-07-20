@@ -702,7 +702,7 @@ export const useTTSText = (
                     : '普通'
                 }、${boundForJa}行きです。`
               : ''
-          }次は${replaceJapaneseText(
+          }次は${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? '終点、' : ''}${replaceJapaneseText(
             nextStation?.name,
             nextStation?.nameKatakana
           )}、${replaceJapaneseText(
@@ -718,7 +718,7 @@ export const useTTSText = (
                   .join('、')}にお乗り換えいただけます。`
               : ''
           }`,
-          ARRIVING: `まもなく、${replaceJapaneseText(
+          ARRIVING: `まもなく、${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? '終点、' : ''}${replaceJapaneseText(
             nextStation?.name,
             nextStation?.nameKatakana
           )}、${replaceJapaneseText(
@@ -1064,7 +1064,7 @@ export const useTTSText = (
         [APP_THEME.JR_KYUSHU]: {
           NEXT: `${firstSpeech ? `This is a ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}.` : ''} The next station is ${
             nextStation?.nameRoman
-          } ${nextStationNumberText}. ${
+          } ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : ''}. ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
@@ -1077,13 +1077,15 @@ export const useTTSText = (
           }`,
           ARRIVING: `We will soon be arriving at ${
             nextStation?.nameRoman
-          } ${nextStationNumberText}. ${
+          }${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : ''}${nextStationNumberText}. ${
+            isNextStopTerminus ? 'The last stop.' : ''
+          } ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')} at ${nextStation?.nameRoman}.`
               : ''
