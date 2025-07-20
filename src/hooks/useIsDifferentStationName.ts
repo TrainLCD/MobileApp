@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { isEnAtom } from '../store/selectors/isEn';
 
-export const useIsDifferentStationName = (): boolean => {
+export const useIsDifferentStationName = () => {
   const isEn = useAtomValue(isEnAtom);
 
   const isDifferentStationName = useCallback(

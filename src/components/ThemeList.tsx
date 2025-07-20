@@ -55,6 +55,7 @@ const IN_USE_COLOR_MAP: Record<AppTheme, string> = {
   LED: '#212121',
   JO: '#0067C0',
   JL: '#808080',
+  JR_KYUSHU: '#E50012',
 };
 
 const ItemCell = ({

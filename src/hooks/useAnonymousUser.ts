@@ -5,8 +5,8 @@ import { useEffect, useRef } from 'react';
 /**
  * Jotaiが使えない環境の時にもユーザーを持ちたい場合に使います。基本的に `useCachedAnonymousUser` を使ってください。
  */
-export const useAnonymousUser = (): FirebaseAuthTypes.User | undefined => {
-  const userRef = useRef<FirebaseAuthTypes.User>();
+export const useAnonymousUser = (): FirebaseAuthTypes.User | null => {
+  const userRef = useRef<FirebaseAuthTypes.User | null>(null);
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((authUser) => {
       if (authUser) {

@@ -1,7 +1,7 @@
-import type { Station } from 'gen/proto/stationapi_pb';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import stationState from '~/store/atoms/station';
 import { useLocationStore } from './useLocationStore';
 

@@ -1,9 +1,3 @@
-// 間隔(ミリ秒)
-export const DEFAULT_HEADER_TRANSITION_INTERVAL = 3000; // ms
-export const DEFAULT_BOTTOM_TRANSITION_INTERVAL = 8000; // ms
-// 遅延(ミリ秒)
-export const DEFAULT_HEADER_TRANSITION_DELAY = 500; // ms
-export const LONG_PRESS_DURATION = 500;
 // 閾値
 export const APPROACHING_MAX_THRESHOLD = 1000;
 export const ARRIVED_MAX_THRESHOLD = 500;

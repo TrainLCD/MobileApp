@@ -40,9 +40,11 @@ const Marquee = ({ children }: Props) => {
   const childrenCloned = useMemo(
     () =>
       cloneElement(children, {
-        ...children.props,
+        // biome-ignore lint/suspicious/noExplicitAny: どうしょうもない
+        ...(children.props as any),
         style: {
-          ...children.props.style,
+          // biome-ignore lint/suspicious/noExplicitAny: どうしょうもない
+          ...(children.props as any).style,
         },
         onLayout: ({
           nativeEvent: {
