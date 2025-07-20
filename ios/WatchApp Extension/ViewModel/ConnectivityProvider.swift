@@ -8,6 +8,7 @@
 
 import WatchConnectivity
 import WidgetKit
+import ClockKit
 
 class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   @Published var receivedState: String?
@@ -34,6 +35,14 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   
   func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
   
+  func reloadComplecationTimeline() {
+    let isComplicationActive = !(CLKComplicationServer.sharedInstance().activeComplications?.isEmpty ?? true)
+    
+    if isComplicationActive {
+      WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+    }
+  }
+  
   func parseMessage(_ message: [String : Any]) {
     let decoder = JSONDecoder()
     let appGroupID = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String ?? "group.me.tinykitten.trainlcd"
@@ -43,17 +52,17 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
       do {
         guard let selectedLineDic = message["selectedLine"] as? [String: Any] else {
           defaults?.set(false, forKey: "loaded")
-          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          self.reloadComplecationTimeline()
           return
         }
         guard let selectedLineData = try? JSONSerialization.data(withJSONObject: selectedLineDic, options: []) else {
           defaults?.set(false, forKey: "loaded")
-          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          self.reloadComplecationTimeline()
           return
         }
         guard let selectedLine = try? decoder.decode(Line.self, from: selectedLineData) else {
           defaults?.set(false, forKey: "loaded")
-          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          self.reloadComplecationTimeline()
           return
         }
         
@@ -65,8 +74,8 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
         defaults?.set(message["boundStationName"], forKey: "boundStationName")
         defaults?.set(true, forKey: "loaded")
         
-        WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
-
+        self.reloadComplecationTimeline()
+        
         guard let stationDic = message["station"] as? [String: Any] else {
           return
         }
