@@ -20,5 +20,5 @@ export const useCurrentLine = (): Line | null => {
   );
 
   // NOTE: selectedLineがnullishの時はcurrentLineもnullishであってほしい
-  return selectedLine && actualCurrentStation?.line;
+  return (selectedLine && actualCurrentStation?.line) ?? null;
 };

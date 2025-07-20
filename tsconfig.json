@@ -13,6 +13,5 @@
     "paths": { "~/*": ["./src/*"] },
     "typeRoots": ["./src/@types", "./node_modules/@types"]
   },
-  "exclude": ["functions"],
-  "extends": "expo/tsconfig.base"
+  "exclude": ["functions"]
 }
