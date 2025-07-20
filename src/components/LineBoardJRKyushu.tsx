@@ -398,7 +398,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           <View style={styles.numberingIconContainer}>
             <NumberingIcon
               shape={numberingObj.lineSymbolShape}
-              lineColor={station.line?.color || '#000'}
+              lineColor={numberingObj.lineSymbolColor || '#000'}
               stationNumber={numberingObj.stationNumber}
               threeLetterCode={station.threeLetterCode}
             />
