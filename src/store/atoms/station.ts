@@ -13,7 +13,7 @@ export interface StationState {
 }
 
 const initialStationState: StationState = {
-  arrived: false,
+  arrived: true,
   approaching: false,
   station: null,
   stations: [],
