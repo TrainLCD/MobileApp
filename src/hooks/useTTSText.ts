@@ -728,7 +728,9 @@ export const useTTSText = (
             transferLines.length
               ? `${transferLines
                   .map((l) => replaceJapaneseText(l.nameShort, l.nameKatakana))
-                  .join('、')}にお乗り換えいただけます。`
+                  .join(
+                    '、'
+                  )}にお乗り換えいただけます。${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? `${currentLine.nameShort}をご利用くださいまして、ありがとうございました。` : ''}`
               : ''
           }`,
         },
@@ -1087,7 +1089,9 @@ export const useTTSText = (
                       ? `and the ${l.nameRoman}.`
                       : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
-                  .join(' ')} at ${nextStation?.nameRoman}.`
+                  .join(
+                    ' '
+                  )} at ${nextStation?.nameRoman}. ${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? `Thank you for using the ${currentLine.nameShort}.` : ''}`
               : ''
           }`,
         },
