@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(24),
     fontWeight: 'bold',
     textAlign: 'right',
-    lineHeight: Platform.select({ android: RFValue(21) }),
   },
   stateWrapper: {
     width: screenWidth * 0.14,
@@ -109,7 +108,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     textAlign: 'right',
-    lineHeight: Platform.select({ android: RFValue(21) }),
   },
   stationNameWrapper: {
     flex: 1,
@@ -490,9 +488,9 @@ const HeaderJRKyushu: React.FC = () => {
     opacity: 1 - boundOpacityAnim.get(),
   }));
 
-  const boundBottomAnimatedStyles = {
-    opacity: boundOpacityAnim,
-  };
+  const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
+    opacity: boundOpacityAnim.get(),
+  }));
 
   const [currentStationNumber, threeLetterCode] = useNumbering(
     false,
