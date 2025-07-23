@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
@@ -8,7 +9,7 @@ import type { Line } from '~/gen/proto/stationapi_pb';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import Loading from '../components/Loading';
 import {
   ASYNC_STORAGE_KEYS,
@@ -78,68 +79,79 @@ const SelectLineScreen: React.FC = () => {
   }, [setNavigationState]);
 
   useEffect(() => {
-    const stopLocationUpdatesAsync = async () => {
-      try {
-        const hasStartedLocationUpdates =
-          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    pipe(
+      Effect.promise(() =>
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+      ),
+      Effect.andThen((hasStartedLocationUpdates) => {
         if (hasStartedLocationUpdates) {
-          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+          return Effect.promise(() =>
+            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+          );
         }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    stopLocationUpdatesAsync();
+      }),
+      Effect.runPromise
+    );
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 初回のみ動いて欲しい
   useEffect(() => {
-    const init = async () => {
-      if (station) return;
-      const pos = await fetchCurrentLocation(true);
-      if (!pos) {
-        return;
-      }
-      useLocationStore.setState(pos);
-      const data = await fetchByCoords({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-        limit: 1,
-      });
-      const stationFromAPI = data.stations[0] ?? null;
+    if (station) return;
 
-      setStationState((prev) => ({
-        ...prev,
-        station: stationFromAPI,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        stationForHeader: stationFromAPI,
-      }));
-    };
-    init();
+    pipe(
+      Effect.promise(() => fetchCurrentLocation(true)),
+      Effect.andThen((pos) => {
+        if (!pos) {
+          return;
+        }
+        useLocationStore.setState(pos);
+
+        return Effect.promise(() =>
+          fetchByCoords({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            limit: 1,
+          })
+        ).pipe(
+          Effect.andThen((data) => {
+            const stationFromAPI = data.stations[0] ?? null;
+            setStationState((prev) => ({
+              ...prev,
+              station: stationFromAPI,
+            }));
+            setNavigationState((prev) => ({
+              ...prev,
+              stationForHeader: stationFromAPI,
+            }));
+          })
+        );
+      }),
+      Effect.runPromise
+    );
   }, []);
 
   useEffect(() => {
-    const f = async (): Promise<void> => {
-      const firstLaunchPassed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      );
-      if (firstLaunchPassed === null) {
-        Alert.alert(translate('notice'), translate('firstAlertText'), [
-          {
-            text: 'OK',
-            onPress: (): void => {
-              AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                'true'
-              );
+    pipe(
+      Effect.promise(() =>
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED)
+      ),
+      Effect.andThen((firstLaunchPassed) => {
+        if (firstLaunchPassed === null) {
+          Alert.alert(translate('notice'), translate('firstAlertText'), [
+            {
+              text: 'OK',
+              onPress: (): void => {
+                AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                  'true'
+                );
+              },
             },
-          },
-        ]);
-      }
-    };
-    f();
+          ]);
+        }
+      }),
+      Effect.runPromise
+    );
   }, []);
 
   const navigation = useNavigation();

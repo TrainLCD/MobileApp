@@ -1,7 +1,7 @@
 import type React from 'react';
 import { Path, Polygon, Svg } from 'react-native-svg';
 
-const ChevronJRWest: React.FC = () => (
+export const ChevronJRWest: React.FC = () => (
   <Svg viewBox="0 0 296 296">
     <Polygon
       points="21.83 3.46 272.17 148 21.83 292.54 21.83 3.46"
@@ -13,5 +13,3 @@ const ChevronJRWest: React.FC = () => (
     />
   </Svg>
 );
-
-export default ChevronJRWest;

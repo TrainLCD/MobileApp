@@ -21,6 +21,7 @@ export interface NavigationState {
   autoModeEnabled: boolean;
   enableLegacyAutoMode: boolean;
   isAppLatest: boolean;
+  firstStop: boolean;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -34,6 +35,7 @@ export const initialNavigationState: NavigationState = {
   autoModeEnabled: false,
   enableLegacyAutoMode: false,
   isAppLatest: false,
+  firstStop: true,
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

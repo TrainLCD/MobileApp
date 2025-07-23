@@ -1,0 +1,34 @@
+name: TypeScript Check
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'src/**'
+
+env:
+  cache-version: v1
+  TZ: 'Asia/Tokyo'
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm i
+      - name: Run tsc
+        run: pnpm typecheck

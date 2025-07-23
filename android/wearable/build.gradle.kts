@@ -10,8 +10,8 @@ android {
 
   defaultConfig {
     applicationId = "me.tinykitten.trainlcd"
-    minSdk = 30
-    targetSdk = 33
+    minSdk = 34
+    targetSdk = 34
     vectorDrawables {
       useSupportLibrary = true
     }
@@ -39,13 +39,13 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 81305001
-      versionName = "8.13.5"
+      versionCode = 90000311
+      versionName = "9.0.0"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 81305001
-      versionName = "8.13.5"
+      versionCode = 90000000
+      versionName = "9.0.0"
     }
   }
 

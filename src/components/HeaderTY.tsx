@@ -10,13 +10,14 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
+import { parenthesisRegexp, STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
   useConnectedLines,
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useFirstStop,
   useIsNextLastStop,
   useLazyPrevious,
   useNextStation,
@@ -73,6 +74,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: RFValue(18),
   },
+  firstTextWrapper: {
+    width: screenWidth * 0.14,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    marginRight: 12,
+    marginBottom: isTablet ? 8 : 4,
+  },
+  firstText: {
+    position: 'absolute',
+    fontSize: RFValue(24),
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'right',
+  },
   stateWrapper: {
     width: screenWidth * 0.14,
     justifyContent: 'flex-end',
@@ -86,7 +101,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'right',
-    lineHeight: Platform.select({ android: RFValue(21) }),
   },
   stationNameWrapper: {
     flex: 1,
@@ -135,8 +149,9 @@ const HeaderTY: React.FC = () => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const trainType = useCurrentTrainType();
-
+  const boundStationNameList = useBoundText();
   const connectedLines = useConnectedLines();
+  const firstStop = useFirstStop();
 
   const connectionText = useMemo(
     () =>
@@ -148,10 +163,39 @@ const HeaderTY: React.FC = () => {
     [connectedLines]
   );
 
+  const headerLangState = useMemo(
+    () =>
+      headerState.split('_')[1]?.length
+        ? (headerState.split('_')[1] as HeaderLangState)
+        : ('JA' as HeaderLangState),
+    [headerState]
+  );
+  const boundText = useMemo(
+    () => boundStationNameList[headerLangState],
+    [boundStationNameList, headerLangState]
+  );
+
   const stationText = useMemo<string>(() => {
     if (!selectedBound) {
       return currentStation?.name ?? '';
     }
+
+    if (firstStop) {
+      switch (headerLangState) {
+        case 'JA':
+          return selectedBound.name ?? '';
+        case 'KANA':
+          return katakanaToHiragana(selectedBound.nameKatakana ?? '');
+        case 'EN':
+          return selectedBound.nameRoman ?? '';
+        case 'ZH':
+          return selectedBound.nameChinese ?? '';
+        case 'KO':
+          return selectedBound.nameKorean ?? '';
+        default:
+      }
+    }
+
     switch (headerState) {
       case 'ARRIVING':
         return nextStation?.name ?? '';
@@ -194,21 +238,26 @@ const HeaderTY: React.FC = () => {
         return '';
     }
   }, [
-    currentStation?.name,
-    currentStation?.nameChinese,
-    currentStation?.nameKatakana,
-    currentStation?.nameKorean,
-    currentStation?.nameRoman,
+    firstStop,
     headerState,
-    nextStation?.name,
-    nextStation?.nameChinese,
-    nextStation?.nameKatakana,
-    nextStation?.nameKorean,
-    nextStation?.nameRoman,
+    nextStation,
     selectedBound,
+    currentStation,
+    headerLangState,
   ]);
 
   const stateText = useMemo<string>(() => {
+    if (firstStop && selectedBound) {
+      switch (headerLangState) {
+        case 'EN':
+          return 'For';
+        case 'ZH':
+          return '开往';
+        default:
+          return '';
+      }
+    }
+
     if (!selectedBound) {
       return translate('nowStoppingAt');
     }
@@ -244,26 +293,28 @@ const HeaderTY: React.FC = () => {
       default:
         return '';
     }
-  }, [headerState, isLast, selectedBound]);
+  }, [firstStop, headerState, isLast, selectedBound, headerLangState]);
 
-  const boundStationNameList = useBoundText();
-
-  const headerLangState = useMemo(
-    () =>
-      headerState.split('_')[1]?.length
-        ? (headerState.split('_')[1] as HeaderLangState)
-        : ('JA' as HeaderLangState),
-    [headerState]
-  );
-  const boundText = useMemo(
-    () => boundStationNameList[headerLangState],
-    [boundStationNameList, headerLangState]
-  );
+  const stateTextRight = useMemo<string>(() => {
+    if (firstStop && selectedBound) {
+      switch (headerLangState) {
+        case 'JA':
+        case 'KANA':
+          return 'ゆき';
+        case 'KO':
+          return '행';
+        default:
+          return '';
+      }
+    }
+    return '';
+  }, [firstStop, selectedBound, headerLangState]);
 
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
 
   const prevStationText = usePrevious(stationText);
-  const prevStateText = usePrevious(stateText);
+  const prevStateTextLeft = usePrevious(stateText);
+  const prevStateTextRight = usePrevious(stateTextRight);
   const prevBoundText = usePrevious(boundText);
   const prevConnectionText = usePrevious(connectionText);
 
@@ -378,18 +429,18 @@ const HeaderTY: React.FC = () => {
   }, [fade, selectedBound]);
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.get(),
+    opacity: 1 - stateOpacityAnim.value,
   }));
 
   const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.get(),
+    opacity: stateOpacityAnim.value,
   }));
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim.get(), [0, 1], [1, 0]),
+          scaleY: interpolate(topNameScaleYAnim.value, [0, 1], [1, 0]),
         },
       ],
     };
@@ -401,7 +452,7 @@ const HeaderTY: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim.get(),
+          scaleY: topNameScaleYAnim.value,
         },
       ],
     };
@@ -410,25 +461,29 @@ const HeaderTY: React.FC = () => {
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: nameFadeAnim.get(),
+      opacity: nameFadeAnim.value,
     };
   });
 
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(nameFadeAnim.get(), [0, 1], [1, 0]),
+      opacity: interpolate(nameFadeAnim.value, [0, 1], [1, 0]),
     };
   });
 
   const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.get(),
+    opacity: 1 - boundOpacityAnim.value,
   }));
 
   const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: boundOpacityAnim.get(),
+    opacity: boundOpacityAnim.value,
   }));
 
-  const [currentStationNumber, threeLetterCode] = useNumbering();
+  const [currentStationNumber, threeLetterCode] = useNumbering(
+    false,
+    firstStop
+  );
+
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -449,44 +504,56 @@ const HeaderTY: React.FC = () => {
       >
         <View style={styles.headerTexts}>
           <TrainTypeBox isTY trainType={trainType} />
-          <View style={styles.boundWrapper}>
-            <Animated.Text
-              style={[boundTopAnimatedStyles, styles.boundTextContainer]}
-            >
-              <Text
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={styles.connectedLines}
+          {selectedBound && !firstStop ? (
+            <View style={styles.boundWrapper}>
+              <Animated.Text
+                style={[boundTopAnimatedStyles, styles.boundTextContainer]}
               >
-                {connectedLines?.length && isJapaneseState
-                  ? `${connectionText}直通 `
-                  : null}
-              </Text>
-              <Text style={styles.boundText}>{boundText}</Text>
-            </Animated.Text>
-            <Animated.Text
-              style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
-            >
-              <Text
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={styles.connectedLines}
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  style={styles.connectedLines}
+                >
+                  {connectedLines?.length && isJapaneseState
+                    ? `${connectionText}直通 `
+                    : null}
+                </Text>
+                <Text style={styles.boundText}>{boundText}</Text>
+              </Animated.Text>
+              <Animated.Text
+                style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
               >
-                {connectedLines?.length && prevIsJapaneseState
-                  ? `${prevConnectionText}直通 `
-                  : null}
-              </Text>
-              <Text style={styles.boundText}>{prevBoundText}</Text>
-            </Animated.Text>
-          </View>
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  style={styles.connectedLines}
+                >
+                  {connectedLines?.length && prevIsJapaneseState
+                    ? `${prevConnectionText}直通 `
+                    : null}
+                </Text>
+                <Text style={styles.boundText}>{prevBoundText}</Text>
+              </Animated.Text>
+            </View>
+          ) : null}
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+            <Animated.Text
+              style={[
+                stateTopAnimatedStyles,
+                selectedBound && firstStop ? styles.firstText : styles.state,
+              ]}
+            >
               {stateText}
             </Animated.Text>
-            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
-              {prevStateText}
+            <Animated.Text
+              style={[
+                stateBottomAnimatedStyles,
+                selectedBound && firstStop ? styles.firstText : styles.state,
+              ]}
+            >
+              {prevStateTextLeft}
             </Animated.Text>
           </View>
 
@@ -538,6 +605,18 @@ const HeaderTY: React.FC = () => {
               </Animated.Text>
             </View>
           </View>
+          {selectedBound && firstStop ? (
+            <View style={styles.firstTextWrapper}>
+              <Animated.Text style={[stateTopAnimatedStyles, styles.firstText]}>
+                {stateTextRight}
+              </Animated.Text>
+              <Animated.Text
+                style={[stateBottomAnimatedStyles, styles.firstText]}
+              >
+                {prevStateTextRight}
+              </Animated.Text>
+            </View>
+          ) : null}
         </View>
       </LinearGradient>
       <View style={styles.divider} />

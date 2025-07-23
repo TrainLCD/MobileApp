@@ -11,7 +11,8 @@ import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 export const useNumbering = (
-  priorCurrent?: boolean
+  priorCurrent = false,
+  firstStop = false
 ): [StationNumber | undefined, string | undefined] => {
   const { arrived, selectedBound } = useAtomValue(stationState);
   const stoppedCurrentStation = useCurrentStation(true);
@@ -26,9 +27,18 @@ export const useNumbering = (
 
   const getStationNumberIndex = useStationNumberIndexFunc();
 
+  const targetStation = useMemo(
+    () => (firstStop ? selectedBound : stoppedCurrentStation),
+    [firstStop, selectedBound, stoppedCurrentStation]
+  );
+
   const currentStationNumberIndex = useMemo(
-    () => getStationNumberIndex(stoppedCurrentStation ?? null),
-    [getStationNumberIndex, stoppedCurrentStation]
+    () =>
+      getStationNumberIndex(
+        targetStation ?? null,
+        firstStop ? selectedBound?.line : undefined
+      ),
+    [firstStop, getStationNumberIndex, selectedBound?.line, targetStation]
   );
   const nextStationNumberIndex = useMemo(
     () => getStationNumberIndex(nextStation ?? null),
@@ -52,13 +62,13 @@ export const useNumbering = (
   }, [selectedBound]);
 
   useEffect(() => {
-    if (!selectedBound || !stoppedCurrentStation) {
+    if (!selectedBound || !targetStation) {
       return;
     }
 
-    if (priorCurrent && !getIsPass(stoppedCurrentStation)) {
+    if (priorCurrent && !getIsPass(targetStation)) {
       if (isJobanLineRapid) {
-        const jjNumber = stoppedCurrentStation.stationNumbers.find(
+        const jjNumber = targetStation.stationNumbers.find(
           (num) => num.lineSymbol === 'JJ'
         );
         if (jjNumber) {
@@ -66,21 +76,17 @@ export const useNumbering = (
         }
       } else {
         setStationNumber(
-          stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+          targetStation?.stationNumbers?.[currentStationNumberIndex]
         );
       }
 
-      setThreeLetterCode(stoppedCurrentStation?.threeLetterCode);
+      setThreeLetterCode(targetStation?.threeLetterCode);
       return;
     }
 
     // 到着していて、かつ停車駅でない場合は、次の駅の番号を表示する
     // 到着していない場合は無条件で次の駅の番号を表示する
-    if (
-      (arrived && getIsPass(currentStation)) ||
-      !arrived ||
-      priorCurrent === false // priorCurrentを特に指定していない時にデグレしないようにした
-    ) {
+    if ((arrived && getIsPass(currentStation)) || !arrived) {
       if (isJobanLineRapid) {
         const jjNumber = nextStation?.stationNumbers.find(
           (num) => num.lineSymbol === 'JJ'
@@ -98,7 +104,7 @@ export const useNumbering = (
     }
 
     if (isJobanLineRapid) {
-      const jjNumber = stoppedCurrentStation?.stationNumbers.find(
+      const jjNumber = targetStation?.stationNumbers.find(
         (num) => num.lineSymbol === 'JJ'
       );
       if (jjNumber) {
@@ -106,10 +112,10 @@ export const useNumbering = (
       }
     } else {
       setStationNumber(
-        stoppedCurrentStation?.stationNumbers?.[currentStationNumberIndex]
+        targetStation?.stationNumbers?.[currentStationNumberIndex]
       );
     }
-    setThreeLetterCode(stoppedCurrentStation?.threeLetterCode);
+    setThreeLetterCode(targetStation?.threeLetterCode);
   }, [
     arrived,
     currentStation,
@@ -120,7 +126,7 @@ export const useNumbering = (
     nextStationNumberIndex,
     priorCurrent,
     selectedBound,
-    stoppedCurrentStation,
+    targetStation,
   ]);
 
   return [stationNumber, threeLetterCode];

@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import Svg, { Path, Text } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import {
   useBoundText,
   useCurrentLine,

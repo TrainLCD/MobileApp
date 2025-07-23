@@ -12,14 +12,12 @@ struct RootView: View {
   let state: String
   let station: Station
   
-  let isJa = Locale.current.languageCode == "ja"
-  
   var body: some View {
     VStack{
       Text(state)
         .multilineTextAlignment(.center)
         .font(.subheadline)
-      Text(isJa ? station.name : station.nameR)
+      Text(station.name)
         .multilineTextAlignment(.center)
         .font(.title2)
       if let stationNumber = station.stationNumber {
@@ -31,8 +29,8 @@ struct RootView: View {
       }
       List {
         ForEach(station.lines) { line in
-          Text(isJa ? line.name : line.nameR)
-            .listRowPlatterColor(Color(hex: line.lineColorC ?? "000"))
+          Text(line.name)
+            .listRowPlatterColor(Color(hex: line.lineColorC))
         }
       }
     }

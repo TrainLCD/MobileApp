@@ -19,3 +19,8 @@
 "boundStation" = "%@ゆき";
 "boundStationLoopline" = "%@";
 "pass" = "通過中";
+"ridingOn" = "%@に乗車中";
+"tapToRefresh" = "タップで更新";
+"destinationNotSet" = "方面が未設定です";
+"lineNotSet" = "路線が未設定です";
+"lastUpdated" = "最終更新";

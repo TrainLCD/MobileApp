@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,20 +14,17 @@ import {
   type TextInputKeyPressEventData,
   View,
 } from 'react-native';
-import { RFValue } from '../utils/rfValue';
-
-import { useMutation, useQuery } from '@connectrpc/connect-query';
 import {
   NEARBY_STATIONS_LIMIT,
   SEARCH_STATION_RESULT_LIMIT,
 } from 'react-native-dotenv';
+import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   getStationsByCoordinates,
   getStationsByName,
 } from '~/gen/proto/stationapi-StationAPI_connectquery';
-import type { Station } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import { StationList } from '../components/StationList';
 import { FONTS } from '../constants';
 import { useCurrentStation, useLocationStore, useThemeStore } from '../hooks';
@@ -36,6 +34,7 @@ import stationState from '../store/atoms/station';
 import { TestIds } from '../test/e2e';
 import { translate } from '../translation';
 import { groupStations } from '../utils/groupStations';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
@@ -76,7 +75,7 @@ const FakeStationSettingsScreen: React.FC = () => {
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const currentStation = useCurrentStation();
+  const _currentStation = useCurrentStation();
 
   const {
     data: byCoordsData,

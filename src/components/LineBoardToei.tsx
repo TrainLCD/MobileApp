@@ -1,14 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Dimensions,
-  Platform,
-  type StyleProp,
-  StyleSheet,
-  type TextStyle,
-  View,
-} from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
@@ -24,8 +17,8 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { heightScale, widthScale } from '../utils/scale';
-import BarTerminal from './BarTerminalEast';
-import Chevron from './ChervronTY';
+import { BarTerminalEast } from './BarTerminalEast';
+import { ChevronTY } from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
@@ -362,29 +355,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
   const additionalChevronStyle = useMemo(() => {
+    // 最初の駅の場合
     if (!index) {
-      if (arrived) {
-        return {
-          left: widthScale(-14),
-        };
-      }
-      return null;
+      return arrived ? { left: widthScale(-14) } : null;
     }
+
+    // 到着済みの場合
     if (arrived) {
       return {
         left: widthScale(41.75 * index) - widthScale(14),
       };
     }
+
+    // 通過していない場合
     if (!passed) {
-      if (!arrived) {
-        return {
-          left: widthScale(42 * index),
-        };
-      }
       return {
-        left: widthScale(45 * index),
+        left: widthScale(arrived ? 45 : 42 * index),
       };
     }
+
+    // デフォルト（通過済み）
     return {
       left: widthScale(42 * index),
     };
@@ -521,7 +511,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           passed={passed}
         />
         {stations.length - 1 === index ? (
-          <BarTerminal
+          <BarTerminalEast
             style={styles.barTerminal}
             lineColor={
               line.color
@@ -535,7 +525,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View style={[styles.chevron, additionalChevronStyle]}>
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
-          <Chevron color={chevronColor} />
+          <ChevronTY color={chevronColor} />
         ) : null}
       </View>
     </>
@@ -582,7 +572,7 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         }}
       />
       {isLast ? (
-        <BarTerminal
+        <BarTerminalEast
           style={styles.barTerminal}
           lineColor={lastLineColor}
           hasTerminus={hasTerminus}
@@ -606,19 +596,15 @@ const LineBoardToei: React.FC<Props> = ({
     [currentLine, selectedLine]
   );
 
-  const intervalStep = useCallback(() => {
-    const timestamp = new Date().getTime();
-    if (Math.floor(timestamp) % 2 === 0) {
-      setChevronColor('RED');
-      return;
-    }
-    setChevronColor('BLUE');
-  }, []);
+  const intervalStep = useCallback(
+    () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
+    []
+  );
 
   useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element | null => {
+    (s: Station, i: number): React.ReactNode | null => {
       const isLast =
         [...stations, ...Array.from({ length: 8 - stations.length })].length -
           1 ===

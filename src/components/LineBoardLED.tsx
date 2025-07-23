@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { StopCondition } from '~/gen/proto/stationapi_pb';
-import { FONTS, STATION_NAME_FONT_SIZE, parenthesisRegexp } from '../constants';
+import { FONTS, parenthesisRegexp, STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useAfterNextStation,
   useBounds,

@@ -28,6 +28,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -40,8 +42,8 @@ export const useRefreshStation = (): void => {
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
 
   const nextStation = useNextStation();
-  const approachingNotifiedIdRef = useRef<number>();
-  const arrivedNotifiedIdRef = useRef<number>();
+  const approachingNotifiedIdRef = useRef<number | null>(null);
+  const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
   const { targetStationIds } = useAtomValue(notifyState);
 

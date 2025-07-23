@@ -13,8 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
-import { useCurrentStation } from '~/hooks';
-import { useThemeStore } from '~/hooks';
+import { useCurrentStation, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
@@ -24,7 +23,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
-import Heading from './Heading';
+import { Heading } from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
 

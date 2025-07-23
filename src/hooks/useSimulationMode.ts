@@ -1,3 +1,4 @@
+import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
@@ -77,19 +78,24 @@ export const useSimulationMode = (): void => {
   }, [enableLegacyAutoMode, autoModeEnabled]);
 
   useEffect(() => {
-    const stopLocationUpdatesAsync = async () => {
-      try {
-        const hasStartedLocationUpdates =
-          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-        if (hasStartedLocationUpdates) {
-          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (!enabled) {
+      return;
+    }
+
+    pipe(
+      Effect.promise(() =>
+        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+      ),
+      Effect.andThen((hasStarted) => {
+        if (hasStarted) {
+          return Effect.promise(() =>
+            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
+          );
         }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    stopLocationUpdatesAsync();
-  }, []);
+      }),
+      Effect.runPromise
+    );
+  }, [enabled]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {
@@ -161,7 +167,7 @@ export const useSimulationMode = (): void => {
                   latitude: maybeRevsersedStations[0]?.latitude,
                   longitude: maybeRevsersedStations[0]?.longitude,
                 },
-                timestamp: new Date().getTime(),
+                timestamp: Date.now(),
               }
             : prev
         );
@@ -194,7 +200,7 @@ export const useSimulationMode = (): void => {
         );
 
         return {
-          timestamp: new Date().getTime(),
+          timestamp: Date.now(),
           coords: {
             ...nextPoint,
             accuracy: 0,
@@ -209,11 +215,10 @@ export const useSimulationMode = (): void => {
     [nextStation, maybeRevsersedStations]
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (enabled && stations.length > 0 && station) {
       useLocationStore.setState({
-        timestamp: new Date().getTime(),
+        timestamp: Date.now(),
         coords: {
           accuracy: null,
           altitude: null,
@@ -225,7 +230,7 @@ export const useSimulationMode = (): void => {
         },
       });
     }
-  }, [enabled]);
+  }, [enabled, station, stations.length]);
 
   useEffect(() => {
     if (!enabled || !selectedDirection) {

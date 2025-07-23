@@ -26,7 +26,6 @@ export const useTTS = (): void => {
   const soundJaRef = useRef<Audio.Sound | null>(null);
   const soundEnRef = useRef<Audio.Sound | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
@@ -37,7 +36,7 @@ export const useTTS = (): void => {
       interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
       playThroughEarpieceAndroid: false,
     });
-  }, []);
+  }, [backgroundEnabled]);
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
     if (!isLoadableRef.current) {

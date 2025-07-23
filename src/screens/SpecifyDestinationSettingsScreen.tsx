@@ -4,7 +4,7 @@ import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
-import Heading from '../components/Heading';
+import { Heading } from '../components/Heading';
 import { StationList } from '../components/StationList';
 import { useGetStationsWithTermination } from '../hooks';
 import stationState from '../store/atoms/station';

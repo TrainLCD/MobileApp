@@ -117,7 +117,7 @@ const NumberingIconSquare: React.FC<Props> = ({
 
   if (threeLetterCode) {
     return (
-      <View style={{ transform: [{ scale: 0.7 }], transformOrigin: 'bottom' }}>
+      <View style={{ transform: [{ scale: 0.7 }], transformOrigin: 'center' }}>
         <View style={styles.tlcContainer}>
           <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
           <Common

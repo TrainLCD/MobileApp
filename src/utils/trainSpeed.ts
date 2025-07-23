@@ -13,7 +13,7 @@ export function generateTrainSpeedProfile({
   interval?: number;
   enableRandomCoast?: boolean;
 }) {
-  const rng = Math.random();
+  const _rng = Math.random();
 
   // 惰行の有無とパラメータをランダムで決定
   const hasCoast =

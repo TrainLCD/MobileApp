@@ -23,8 +23,8 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { heightScale, widthScale } from '../utils/scale';
-import BarTerminal from './BarTerminalSaikyo';
-import Chevron from './ChervronTY';
+import { BarTerminalSaikyo } from './BarTerminalSaikyo';
+import { ChevronTY } from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
@@ -62,7 +62,7 @@ interface Props {
   hasTerminus: boolean;
 }
 
-const getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
+const _getStationNameEnExtraStyle = (): StyleProp<TextStyle> => {
   if (!isTablet) {
     return {
       width: heightScale(320),
@@ -340,29 +340,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   const additionalChevronStyle = useMemo(() => {
+    // 最初の駅の場合
     if (!index) {
-      if (arrived) {
-        return {
-          left: widthScale(-14),
-        };
-      }
-      return null;
+      return arrived ? { left: widthScale(-14) } : null;
     }
+
+    // 到着済みの場合
     if (arrived) {
       return {
         left: widthScale(41.75 * index) - widthScale(14),
       };
     }
+
+    // 通過していない場合
     if (!passed) {
-      if (!arrived) {
-        return {
-          left: widthScale(42 * index),
-        };
-      }
       return {
-        left: widthScale(45 * index),
+        left: widthScale(arrived ? 45 : 42 * index),
       };
     }
+
+    // デフォルト（通過済み）
     return {
       left: widthScale(42 * index),
     };
@@ -480,7 +477,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           passed={passed}
         />
         {stations.length - 1 === index ? (
-          <BarTerminal
+          <BarTerminalSaikyo
             style={styles.barTerminal}
             lineColor={
               line?.color
@@ -494,7 +491,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View style={[styles.chevron, additionalChevronStyle]}>
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
-          <Chevron color={chevronColor} />
+          <ChevronTY color={chevronColor} />
         ) : null}
       </View>
     </>
@@ -515,19 +512,15 @@ const LineBoardSaikyo: React.FC<Props> = ({
     [currentLine, selectedLine]
   );
 
-  const intervalStep = useCallback(() => {
-    const timestamp = new Date().getTime();
-    if (Math.floor(timestamp) % 2 === 0) {
-      setChevronColor('RED');
-      return;
-    }
-    setChevronColor('WHITE');
-  }, []);
+  const intervalStep = useCallback(
+    () => setChevronColor((prev) => (prev === 'RED' ? 'WHITE' : 'RED')),
+    []
+  );
 
   useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
-    (s: Station, i: number): JSX.Element | null => {
+    (s: Station, i: number): React.ReactNode | null => {
       if (!s) {
         return null;
       }
