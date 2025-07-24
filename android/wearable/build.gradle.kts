@@ -82,6 +82,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
   implementation("androidx.wear:wear-remote-interactions:1.1.0")
   implementation("androidx.wear:wear-phone-interactions:1.0.1")
+  implementation("androidx.core:core-splashscreen:1.2.0-beta02")
   androidTestImplementation(platform("androidx.compose:compose-bom:2025.01.01"))
   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
   debugImplementation("androidx.compose.ui:ui-tooling")
