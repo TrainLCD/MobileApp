@@ -36,11 +36,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
   func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
   
   func reloadComplecationTimeline() {
-    let isComplicationActive = !(CLKComplicationServer.sharedInstance().activeComplications?.isEmpty ?? true)
-    
-    if isComplicationActive {
-      WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
-    }
+    WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
   }
   
   func parseMessage(_ message: [String : Any]) {
