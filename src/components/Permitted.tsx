@@ -394,27 +394,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Alert.alert(translate('errorTitle'), translate('reportError'));
       });
 
-    pipe(
-      Effect.tryPromise({
-        try: () =>
-          sendReport({
-            reportType: 'feedback',
-            description: reportDescription.trim(),
-            screenShotBase64,
-          }),
-        catch: captureError,
-      }),
-      Effect.andThen(() => {
-        setSendingReport(false);
-        Alert.alert(
-          translate('announcementTitle'),
-          translate('reportSuccessText')
-        );
-        handleNewReportModalClose();
-      }),
-      Effect.runPromise
-    );
-
     Alert.alert(
       translate('announcementTitle'),
       translate('reportConfirmText'),
