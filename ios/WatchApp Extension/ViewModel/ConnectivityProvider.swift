@@ -48,7 +48,7 @@ class ConnectivityProvider: NSObject, WCSessionDelegate, ObservableObject {
       do {
         guard let selectedLineDic = message["selectedLine"] as? [String: Any] else {
           defaults?.set(false, forKey: "loaded")
-          WidgetCenter.shared.reloadTimelines(ofKind: "WatchWidget")
+          self.reloadComplecationTimeline()
           return
         }
         guard let selectedLineData = try? JSONSerialization.data(withJSONObject: selectedLineDic, options: []) else {
