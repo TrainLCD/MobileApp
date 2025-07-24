@@ -39,12 +39,12 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 90001001
+      versionCode = 90001011
       versionName = "9.0.1"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 90001001
+      versionCode = 90001011
       versionName = "9.0.1"
     }
   }
@@ -82,6 +82,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
   implementation("androidx.wear:wear-remote-interactions:1.1.0")
   implementation("androidx.wear:wear-phone-interactions:1.0.1")
+  implementation("androidx.core:core-splashscreen:1.2.0-beta02")
   androidTestImplementation(platform("androidx.compose:compose-bom:2025.01.01"))
   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
   debugImplementation("androidx.compose.ui:ui-tooling")
