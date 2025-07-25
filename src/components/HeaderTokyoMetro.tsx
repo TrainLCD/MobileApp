@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -24,7 +24,6 @@ import {
   useFirstStop,
   useIsNextLastStop,
   useLazyPrevious,
-  useMountedRef,
   useNextStation,
   useNumbering,
   usePrevious,
@@ -144,7 +143,6 @@ const HeaderTokyoMetro: React.FC = () => {
 
   const currentStation = useCurrentStation();
   const currentLine = useCurrentLine();
-  const isMountedRef = useMountedRef();
 
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
   const trainType = useCurrentTrainType();
@@ -353,7 +351,7 @@ const HeaderTokyoMetro: React.FC = () => {
     }
 
     const handleFinish = (finished: boolean | undefined) => {
-      if (finished && isMountedRef.current) {
+      if (finished) {
         setFadeOutFinished(true);
       }
     };
@@ -397,7 +395,6 @@ const HeaderTokyoMetro: React.FC = () => {
     selectedBound,
     stateOpacityAnim,
     topNameScaleYAnim,
-    isMountedRef.current,
   ]);
 
   const fadeOut = useCallback((): void => {

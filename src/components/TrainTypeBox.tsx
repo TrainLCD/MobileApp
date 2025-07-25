@@ -14,7 +14,6 @@ import { parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
   useLazyPrevious,
-  useMountedRef,
   useNextLine,
   useNextTrainType,
   usePrevious,
@@ -84,7 +83,6 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useThemeStore();
   const currentLine = useCurrentLine();
-  const isMountedRef = useMountedRef();
 
   const textOpacityAnim = useSharedValue(0);
 
@@ -166,17 +164,17 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
 
+  const handleFinish = useCallback((finished: boolean | undefined) => {
+    if (finished) {
+      setFadeOutFinished(true);
+    }
+  }, []);
+
   const resetValue = useCallback(() => {
     textOpacityAnim.value = 0;
   }, [textOpacityAnim]);
 
   const updateOpacity = useCallback(() => {
-    const handleFinish = (finished: boolean | undefined) => {
-      if (finished && isMountedRef.current) {
-        setFadeOutFinished(true);
-      }
-    };
-
     textOpacityAnim.value = withTiming(
       1,
       {
@@ -185,7 +183,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       },
       (finished) => runOnJS(handleFinish)(finished)
     );
-  }, [headerTransitionDelay, textOpacityAnim, isMountedRef.current]);
+  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   useEffect(() => {
     setFadeOutFinished(false);
