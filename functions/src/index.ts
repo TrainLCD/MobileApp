@@ -334,6 +334,11 @@ ${appVersion}
 ## オートモード
 ${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
 
+## スタックトレース
+${'```'}
+${stacktrace}
+${'```'}
+
 ## レポーターUID
 ${reporterUid}
         `.trim(),
