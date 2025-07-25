@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { TrainType } from '~/gen/proto/stationapi_pb';
 import { parenthesisRegexp } from '../constants';
-import { useLazyPrevious, usePrevious } from '../hooks';
+import { useLazyPrevious, useMountedRef, usePrevious } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
@@ -63,6 +63,8 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
 
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
+
+  const isMountedRef = useMountedRef();
 
   const textOpacityAnim = useSharedValue(0);
 
@@ -135,12 +137,6 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
 
   const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
 
-  const handleFinish = useCallback((finished: boolean | undefined) => {
-    if (finished) {
-      setFadeOutFinished(true);
-    }
-  }, []);
-
   const resetValue = useCallback(() => {
     textOpacityAnim.value = 0;
   }, [textOpacityAnim]);
@@ -152,9 +148,14 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
         duration: headerTransitionDelay,
         easing: Easing.ease,
       },
-      (finished) => runOnJS(handleFinish)(finished)
+      (finished) =>
+        runOnJS((finished) => {
+          if (finished && isMountedRef.current) {
+            setFadeOutFinished(true);
+          }
+        })(finished)
     );
-  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
+  }, [headerTransitionDelay, textOpacityAnim, isMountedRef.current]);
 
   useEffect(() => {
     setFadeOutFinished(false);

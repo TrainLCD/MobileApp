@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { parenthesisRegexp } from '~/constants';
 import type { TrainType } from '~/gen/proto/stationapi_pb';
-import { useLazyPrevious, usePrevious } from '~/hooks';
+import { useLazyPrevious, useMountedRef, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
 import tuningState from '~/store/atoms/tuning';
@@ -81,6 +81,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
+
+  const isMountedRef = useMountedRef();
 
   const textOpacityAnim = useSharedValue(0);
 
@@ -166,12 +168,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
 
-  const handleFinish = useCallback((finished: boolean | undefined) => {
-    if (finished) {
-      setFadeOutFinished(true);
-    }
-  }, []);
-
   const resetValue = useCallback(() => {
     textOpacityAnim.value = 0;
   }, [textOpacityAnim]);
@@ -183,9 +179,14 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         duration: headerTransitionDelay,
         easing: Easing.ease,
       },
-      (finished) => runOnJS(handleFinish)(finished)
+      (finished) =>
+        runOnJS((finished: boolean | undefined) => {
+          if (finished && isMountedRef.current) {
+            setFadeOutFinished(true);
+          }
+        })(finished)
     );
-  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
+  }, [headerTransitionDelay, textOpacityAnim, isMountedRef.current]);
 
   useEffect(() => {
     setFadeOutFinished(false);

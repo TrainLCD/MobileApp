@@ -36,6 +36,7 @@ export { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 export { setLocation, useLocationStore } from './useLocationStore';
 export { useLoopLine } from './useLoopLine';
 export { useLoopLineBound } from './useLoopLineBound';
+export { useMountedRef } from './useMountedRef';
 export { useNearestStation } from './useNearestStation';
 export { useNextLine } from './useNextLine';
 export { useNextStation } from './useNextStation';
