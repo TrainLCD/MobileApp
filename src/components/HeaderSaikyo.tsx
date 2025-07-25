@@ -20,7 +20,6 @@ import {
   useCurrentTrainType,
   useIsNextLastStop,
   useLazyPrevious,
-  useMountedRef,
   useNextStation,
   useNumbering,
   usePrevious,
@@ -153,7 +152,6 @@ const HeaderSaikyo: React.FC = () => {
   const currentStation = useCurrentStation();
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
-  const isMountedRef = useMountedRef();
 
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
   const { selectedBound, arrived } = useAtomValue(stationState);
@@ -322,7 +320,7 @@ const HeaderSaikyo: React.FC = () => {
     }
 
     const handleFinish = (finished: boolean | undefined) => {
-      if (finished && isMountedRef.current) {
+      if (finished) {
         setFadeOutFinished(true);
       }
     };
@@ -366,7 +364,6 @@ const HeaderSaikyo: React.FC = () => {
     selectedBound,
     stateOpacityAnim,
     topNameScaleYAnim,
-    isMountedRef.current,
   ]);
 
   const fadeOut = useCallback((): void => {

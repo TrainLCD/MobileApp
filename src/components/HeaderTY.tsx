@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -20,7 +20,6 @@ import {
   useFirstStop,
   useIsNextLastStop,
   useLazyPrevious,
-  useMountedRef,
   useNextStation,
   useNumbering,
   usePrevious,
@@ -144,7 +143,6 @@ const HeaderTY: React.FC = () => {
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const currentStation = useCurrentStation();
   const currentLine = useCurrentLine();
-  const isMountedRef = useMountedRef();
 
   const nextStation = useNextStation();
   const isLast = useIsNextLastStop();
@@ -344,7 +342,7 @@ const HeaderTY: React.FC = () => {
     }
 
     const handleFinish = (finished: boolean | undefined) => {
-      if (finished && isMountedRef.current) {
+      if (finished) {
         setFadeOutFinished(true);
       }
     };
@@ -378,7 +376,6 @@ const HeaderTY: React.FC = () => {
       });
     }
   }, [
-    isMountedRef.current,
     bottomNameScaleYAnim,
     boundOpacityAnim,
     headerState,
