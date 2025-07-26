@@ -53,6 +53,11 @@ export const getSettingsThemes = (): SettingsTheme[] =>
     {
       label: translate('jlLike'),
       value: APP_THEME.JL,
-      devOnly: true,
+      devOnly: false,
+    },
+    {
+      label: translate('jrKyushuLike'),
+      value: APP_THEME.JR_KYUSHU,
+      devOnly: false,
     },
   ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示

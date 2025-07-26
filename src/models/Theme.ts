@@ -8,6 +8,7 @@ export const APP_THEME = {
   LED: 'LED',
   JO: 'JO',
   JL: 'JL',
+  JR_KYUSHU: 'JR_KYUSHU',
 } as const;
 
 export type AppTheme = (typeof APP_THEME)[keyof typeof APP_THEME];

@@ -453,7 +453,7 @@ struct SmartStackLiveActivityContentView: View {
           }
         }
         Text(
-          "最終更新: \(updatedTime())"
+          "\(String(localized: "lastUpdated")): \(updatedTime())"
         )
         .font(.caption)
         .bold()

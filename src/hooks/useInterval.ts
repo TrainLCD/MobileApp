@@ -7,7 +7,7 @@ export const useInterval = (
   isPausing: boolean;
   pause: () => void;
 } => {
-  const intervalId = useRef<NodeJS.Timeout>();
+  const intervalId = useRef<number | null>(null);
   const [isPausing, setIsPausing] = useState(false);
 
   useEffect(() => {

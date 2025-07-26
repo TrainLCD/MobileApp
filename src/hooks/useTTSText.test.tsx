@@ -9,7 +9,6 @@ import type { LineDirection } from '~/models/Bound';
 import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
 import type { AppTheme } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
-import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station';
@@ -35,7 +34,6 @@ const useTTSTextWithJotaiAndNumbering = (
 ) => {
   const setLineState = useSetAtom(lineState);
   const setStationState = useSetAtom(stationState);
-  const _setNaivgationState = useSetAtom(navigationState);
 
   useEffect(() => {
     const station = TOEI_SHINJUKU_LINE_STATIONS[0];
@@ -166,8 +164,8 @@ describe('Without trainType & With numbering', () => {
         }
       );
       expect(result.current).toEqual([
-        'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
-        'We will soon make a brief stop at Shinjuku-sanchome S 2.',
+        'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>をご利用のお客様はお乗り換えです。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
+        'We will soon make a brief stop at Shinjuku-sanchome S 2. Passengers changing to the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
       ]);
     });
   });

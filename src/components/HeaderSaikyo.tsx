@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
-  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -402,18 +401,18 @@ const HeaderSaikyo: React.FC = () => {
   }, [fade, selectedBound]);
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.get(),
+    opacity: 1 - stateOpacityAnim.value,
   }));
 
   const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.get(),
+    opacity: stateOpacityAnim.value,
   }));
 
   const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim.get(), [0, 1], [1, 0]),
+          scaleY: 1 - topNameScaleYAnim.value,
         },
       ],
     };
@@ -425,7 +424,7 @@ const HeaderSaikyo: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: topNameScaleYAnim.get(),
+          scaleY: topNameScaleYAnim.value,
         },
       ],
     };
@@ -434,22 +433,22 @@ const HeaderSaikyo: React.FC = () => {
 
   const topNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: nameFadeAnim.get(),
+      opacity: nameFadeAnim.value,
     };
   });
 
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(nameFadeAnim.get(), [0, 1], [1, 0]),
+      opacity: 1 - nameFadeAnim.value,
     };
   });
 
   const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.get(),
+    opacity: 1 - boundOpacityAnim.value,
   }));
 
   const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: boundOpacityAnim.get(),
+    opacity: boundOpacityAnim.value,
   }));
 
   const [currentStationNumber, threeLetterCode] = useNumbering();
