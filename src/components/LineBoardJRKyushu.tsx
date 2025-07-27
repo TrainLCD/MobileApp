@@ -401,6 +401,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               lineColor={numberingObj.lineSymbolColor || '#000'}
               stationNumber={numberingObj.stationNumber}
               threeLetterCode={station.threeLetterCode}
+              transformOrigin="center"
             />
           </View>
         ) : null}

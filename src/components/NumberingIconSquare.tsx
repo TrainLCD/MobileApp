@@ -14,6 +14,7 @@ type Props = {
   threeLetterCode?: string;
   allowScaling: boolean;
   size?: NumberingIconSize;
+  transformOrigin?: 'top' | 'center' | 'bottom';
 };
 
 const styles = StyleSheet.create({
@@ -111,13 +112,19 @@ const NumberingIconSquare: React.FC<Props> = ({
   threeLetterCode,
   allowScaling,
   size,
+  transformOrigin = 'bottom',
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   if (threeLetterCode) {
     return (
-      <View style={{ transform: [{ scale: 0.7 }], transformOrigin: 'center' }}>
+      <View
+        style={{
+          transform: [{ scale: 0.7 }],
+          transformOrigin: transformOrigin,
+        }}
+      >
         <View style={styles.tlcContainer}>
           <Typography style={styles.tlcText}>{threeLetterCode}</Typography>
           <Common
