@@ -613,6 +613,7 @@ const HeaderJRKyushu: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
+                transformOrigin="top"
               />
             </View>
           ) : null}

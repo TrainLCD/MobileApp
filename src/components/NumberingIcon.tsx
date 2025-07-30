@@ -37,6 +37,7 @@ type Props = {
   allowScaling?: boolean;
   withDarkTheme?: boolean;
   shouldGrayscale?: boolean;
+  transformOrigin?: 'top' | 'center' | 'bottom';
 };
 
 const styles = StyleSheet.create({ pass: { opacity: 0.25 } });
@@ -49,6 +50,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
   size,
   allowScaling,
   withDarkTheme,
+  transformOrigin,
 }: Props) => {
   switch (shape) {
     case MARK_SHAPE.ROUND:
@@ -182,6 +184,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           threeLetterCode={threeLetterCode}
           allowScaling={allowScaling ?? true}
           size={size}
+          transformOrigin={transformOrigin}
         />
       );
     case MARK_SHAPE.HALF_SQUARE:
