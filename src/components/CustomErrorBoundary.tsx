@@ -23,16 +23,20 @@ const CustomErrorBoundary: React.FC<{ children: React.ReactNode }> = ({
       eventId: string
     ) => {
       if (!__DEV__) {
-        await sendReport({
-          sentryEventId: eventId,
-          reportType: 'crash',
-          description: error instanceof Error ? error.message : 'Unknown error',
-          stacktrace: componentStack
-            ?.split('\n')
-            ?.filter((c) => c.length !== 0)
-            ?.map((c) => c.trim())
-            .join('\n'),
-        });
+        try {
+          await sendReport({
+            sentryEventId: eventId,
+            reportType: 'crash',
+            description: error instanceof Error ? error.message : 'Unknown error',
+            stacktrace: componentStack
+              ?.split('\n')
+              ?.filter((c) => c.length !== 0)
+              ?.map((c) => c.trim())
+              .join('\n'),
+          });
+        } catch (reportError) {
+          console.error('Failed to send crash report:', reportError);
+        }
       }
 
       if (isDevApp) {
