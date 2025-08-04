@@ -19,4 +19,5 @@ export type Report = {
   updatedAt: number;
   autoModeEnabled: boolean;
   enableLegacyAutoMode: boolean;
+  sentryEventId?: string;
 };
