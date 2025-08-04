@@ -69,7 +69,7 @@ const FatalErrorScreen: React.FC<Props> = ({
 }: Props) => {
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
   const showStacktrace = useCallback(() => {
-    if (!isDevApp) {
+    if (!isDevApp || !stacktrace) {
       return;
     }
 
