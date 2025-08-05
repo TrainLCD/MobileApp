@@ -14,6 +14,7 @@ const CustomErrorBoundary: React.FC<{ children: React.ReactNode }> = ({
   const user = useAnonymousUser();
   const { sendReport } = useFeedback(user ?? null);
 
+  const [reason, setReason] = useState<string | undefined>(undefined);
   const [stacktrace, setStacktrace] = useState<string | undefined>(undefined);
 
   const handleError = useCallback(
@@ -41,6 +42,7 @@ const CustomErrorBoundary: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (isDevApp) {
+        setReason(error instanceof Error ? error.message : 'Unknown error');
         setStacktrace(componentStack);
       }
     },
@@ -53,6 +55,7 @@ const CustomErrorBoundary: React.FC<{ children: React.ReactNode }> = ({
           showStatus
           title={translate('errorTitle')}
           text={translate('appCrashedText')}
+          reason={reason}
           stacktrace={stacktrace}
         />
       }
