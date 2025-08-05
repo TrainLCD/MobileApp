@@ -57,6 +57,7 @@ type Props = {
   text: string;
   onRetryPress?: () => void;
   showStatus?: boolean;
+  reason?: string;
   stacktrace?: string;
 };
 
@@ -65,6 +66,7 @@ const FatalErrorScreen: React.FC<Props> = ({
   text,
   onRetryPress,
   showStatus,
+  reason,
   stacktrace,
 }: Props) => {
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
@@ -82,6 +84,7 @@ const FatalErrorScreen: React.FC<Props> = ({
     <SafeAreaView style={styles.root}>
       <Text style={[styles.text, styles.headingText]}>{title}</Text>
       <Text style={styles.text}>{text}</Text>
+      {reason ? <Text style={styles.text}>{reason}</Text> : null}
 
       <View style={styles.buttons}>
         {onRetryPress ? (
