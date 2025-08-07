@@ -106,7 +106,7 @@ npm run shell
 
 ## Project Structure
 
-```
+```text
 src/
 ├── constants/      # Application constants
 ├── domain/         # Business logic and domain models

@@ -15,7 +15,7 @@
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-**TrainLCD is a mobile application that simulates Japanese railway company LCD displays, providing real-time navigation and station information for train passengers.**
+**TrainLCD is a mobile application that simulates Japanese railway company LCDs, providing real-time navigation and station information for train passengers.**
 
 This app recreates the authentic experience of Japanese train travel by displaying station information in the same style as actual train LCD screens. Whether you're a tourist visiting Japan, a daily commuter, or simply fascinated by Japanese railway systems, TrainLCD offers an immersive and practical navigation experience.
 
@@ -48,7 +48,7 @@ This app recreates the authentic experience of Japanese train travel by displayi
 
 ## Features
 
-- **🚆 Authentic LCD Display**: Experience genuine Japanese train LCD interfaces with accurate styling from major railway companies
+- **🚆 Authentic LCD**: Experience genuine Japanese train LCD interfaces with accurate styling from major railway companies
 - **📍 Real-time Location Tracking**: Automatically detect your current position and display relevant station information
 - **🔔 Smart Notifications**: Get notified when approaching or arriving at your destination station
 - **🎨 Multiple Themes**: Choose from various railway company themes including JR East, JR West, Tokyo Metro, and more
@@ -66,7 +66,7 @@ Before you begin, ensure you have met the following requirements:
 - **pnpm** package manager
 - **React Native development environment** set up
 - **Expo CLI** installed globally
-- **Firebase CLI** installed globally (for Cloud Functions development)
+- **Firebase CLI** (for Cloud Functions development)
 - **Android Studio** (for Android development)
 - **Xcode** (for iOS development, macOS only)
 
@@ -109,14 +109,14 @@ pnpm start
 ## Join our community
 
 If you like this project, Join our Discord community!  
-_NOTE: English is welcome, but in the community, we usually uses Japanese for discusstions, announcements, etc._
+_NOTE: English is welcome, but in the community, we usually use Japanese for discussions, announcements, etc._
 [https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
 
 ## Development
 
 ### Project Structure
 
-```
+```text
 src/
 ├── components/     # Reusable UI components
 ├── screens/        # Screen components
@@ -258,7 +258,7 @@ For professional support or custom development, please contact the maintainers.
 
 - Thanks to all contributors who have helped improve this project
 - Special thanks to the Japanese railway companies for providing inspiration
-- The open source community for the amazing tools and libraries
+- The open source community for the excellent tools and libraries
 
 ## Contributors ✨
 
