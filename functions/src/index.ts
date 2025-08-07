@@ -261,6 +261,7 @@ exports.postFeedback = onCall({ region: 'asia-northeast1' }, async (req) => {
     appClip,
     autoModeEnabled,
     enableLegacyAutoMode,
+    sentryEventId,
   } = report;
   const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
 
@@ -333,6 +334,14 @@ ${appVersion}
 
 ## オートモード
 ${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
+
+## スタックトレース
+${'```'}
+${stacktrace}
+${'```'}
+
+## Sentry Event ID
+${sentryEventId}
 
 ## レポーターUID
 ${reporterUid}
@@ -411,6 +420,10 @@ ${reporterUid}
               {
                 name: 'GitHub Issue',
                 value: issuesRes.html_url,
+              },
+              {
+                name: 'Sentry Event ID',
+                value: sentryEventId ?? '不明',
               },
             ],
           },

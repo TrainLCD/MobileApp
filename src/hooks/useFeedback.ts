@@ -43,11 +43,13 @@ export const useFeedback = (
     description,
     screenShotBase64,
     stacktrace,
+    sentryEventId,
   }: {
     reportType: ReportType;
     description: string;
     screenShotBase64?: string;
     stacktrace?: string;
+    sentryEventId?: string;
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
@@ -60,11 +62,13 @@ export const useFeedback = (
       description,
       screenShotBase64,
       stacktrace,
+      sentryEventId,
     }: {
       reportType: ReportType;
       description: string;
       screenShotBase64?: string;
       stacktrace?: string;
+      sentryEventId?: string;
     }) => {
       if (
         description.trim().length < FEEDBACK_DESCRIPTION_LOWER_LIMIT ||
@@ -130,6 +134,7 @@ export const useFeedback = (
         appClip: isClip(),
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        sentryEventId,
       };
 
       const res = await fetch(API_URL, {

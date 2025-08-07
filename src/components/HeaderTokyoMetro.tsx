@@ -1,10 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
-  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -449,7 +448,7 @@ const HeaderTokyoMetro: React.FC = () => {
     const transform = {
       transform: [
         {
-          scaleY: interpolate(topNameScaleYAnim.value, [0, 1], [1, 0]),
+          scaleY: 1 - topNameScaleYAnim.value,
         },
       ],
     };
@@ -477,7 +476,7 @@ const HeaderTokyoMetro: React.FC = () => {
 
   const bottomNameAnimatedStyles = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(nameFadeAnim.value, [0, 1], [1, 0]),
+      opacity: 1 - nameFadeAnim.value,
     };
   });
 

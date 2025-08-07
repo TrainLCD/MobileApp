@@ -36,4 +36,5 @@ export type Report = {
   appClip: boolean;
   autoModeEnabled: boolean;
   enableLegacyAutoMode: boolean;
+  sentryEventId?: string;
 };
