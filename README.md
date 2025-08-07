@@ -12,9 +12,6 @@
 ![Test](https://github.com/TinyKitten/TrainLCD/workflows/Jest/badge.svg)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-[![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
-[![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
-
 **TrainLCD is a mobile application that simulates Japanese railway company LCDs, providing real-time navigation and station information for train passengers.**
 
 This app recreates the authentic experience of Japanese train travel by displaying station information in the same style as actual train LCD screens. Whether you're a tourist visiting Japan, a daily commuter, or simply fascinated by Japanese railway systems, TrainLCD offers an immersive and practical navigation experience.
@@ -106,10 +103,10 @@ pnpm start
 [![Google Play](.github/images/googleplay.png)](https://play.google.com/store/apps/details?id=me.tinykitten.trainlcd)
 [![App Store](.github/images/appstore.svg)](https://apps.apple.com/jp/app/trainlcd/id1486355943)
 
-## Join our community
+## Join our Community
 
 If you like this project, Join our Discord community!  
-_NOTE: English is welcome, but in the community, we usually use Japanese for discussions, announcements, etc._
+**NOTE: English is welcome, but in the community, we usually use Japanese for discussions, announcements, etc.**
 [https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
 
 ## Development
@@ -258,7 +255,7 @@ For professional support or custom development, please contact the maintainers.
 
 - Thanks to all contributors who have helped improve this project
 - Special thanks to the Japanese railway companies for providing inspiration
-- The open source community for the excellent tools and libraries
+- The open-source community for the excellent tools and libraries
 
 ## Contributors ✨
 
