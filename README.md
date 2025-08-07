@@ -105,7 +105,7 @@ pnpm start
 
 ## Join our Community
 
-If you like this project, Join our Discord community!  
+If you like this project, join our Discord community!  
 **NOTE: English is welcome, but in the community, we usually use Japanese for discussions, announcements, etc.**
 [https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
 
