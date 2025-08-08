@@ -92,6 +92,60 @@ exports.tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Fukiage/gi,
       '<phoneme alphabet="ipa" ph="ɸɯkʲiaɡe">ふきあげ</phoneme>'
     )
+    // 新橋
+    .replace(
+      /Shimbashi/gi,
+      '<phoneme alphabet="ipa" ph="ɕimbaɕi">しんばし</phoneme>'
+    )
+    // 渋谷
+    .replace(
+      /Shibuya/gi,
+      '<phoneme alphabet="ipa" ph="ɕibɯja">しぶや</phoneme>'
+    )
+    // 品川
+    .replace(
+      /Shinagawa/gi,
+      '<phoneme alphabet="ipa" ph="ɕinaɡawa">しながわ</phoneme>'
+    )
+    // 上野
+    .replace(/Ueno/gi, '<phoneme alphabet="ipa" ph="ɯeno">うえの</phoneme>')
+    // 池袋
+    .replace(
+      /Ikebukuro/gi,
+      '<phoneme alphabet="ipa" ph="ikebɯkɯɾo">いけぶくろ</phoneme>'
+    )
+    // 新宿
+    .replace(
+      /Shinjuku/gi,
+      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">しんじゅく</phoneme>'
+    )
+    // 大阪
+    .replace(
+      /Osaka/gi,
+      '<phoneme alphabet="ipa" ph="oːsaka">おおさか</phoneme>'
+    )
+    // 京都
+    .replace(
+      /Kyoto/gi,
+      '<phoneme alphabet="ipa" ph="kʲoːto">きょうと</phoneme>'
+    )
+    // 横浜
+    .replace(
+      /Yokohama/gi,
+      '<phoneme alphabet="ipa" ph="jokohama">よこはま</phoneme>'
+    )
+    // 千葉
+    .replace(/Chiba/gi, '<phoneme alphabet="ipa" ph="t͡ɕiba">ちば</phoneme>')
+    // 川崎
+    .replace(
+      /Kawasaki/gi,
+      '<phoneme alphabet="ipa" ph="kawasakʲi">かわさき</phoneme>'
+    )
+    // 鶴見
+    .replace(
+      /Tsurumi/gi,
+      '<phoneme alphabet="ipa" ph="t͡sɯɾɯmi">つるみ</phoneme>'
+    )
     // 日本語はjoを「ホ」と読まない
     .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     .replace(/JR/gi, 'J-R')
