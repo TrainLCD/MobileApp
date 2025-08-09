@@ -788,7 +788,7 @@ export const useTTSText = (
                   currentTrainType && afterNextStation
                     ? `The next stop after ${nextStation?.nameRoman}${`, is ${
                         afterNextStation?.nameRoman
-                      }${isAfterNextStopTerminus ? ' terminal.' : ''}`}.`
+                      }${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
                     : ''
                 }${
                   betweenNextStation.length
@@ -890,8 +890,8 @@ export const useTTSText = (
           ARRIVING: `The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}${
-            isNextStopTerminus ? ', terminal.' : ''
-          } ${
+            isNextStopTerminus ? ', terminal' : ''
+          }. ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
@@ -920,8 +920,8 @@ export const useTTSText = (
           }The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}${
-            isNextStopTerminus ? ', terminal.' : ''
-          } ${
+            isNextStopTerminus ? ', terminal' : ''
+          }. ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
@@ -935,8 +935,8 @@ export const useTTSText = (
           ARRIVING: `The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}${
-            isNextStopTerminus ? ', terminal.' : ''
-          } ${
+            isNextStopTerminus ? ', terminal' : ''
+          }. ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
@@ -978,9 +978,9 @@ export const useTTSText = (
                       } will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : ''}${
+          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${
             nextStationNumber?.lineSymbol.length
-              ? ` station number ${nextStationNumberText}`
+              ? `station number ${nextStationNumberText}`
               : ''
           } ${
             transferLines.length
@@ -1066,7 +1066,7 @@ export const useTTSText = (
         [APP_THEME.JR_KYUSHU]: {
           NEXT: `${firstSpeech ? `This is a ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}.` : ''} The next station is ${
             nextStation?.nameRoman
-          } ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : ''}. ${
+          } ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}. ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
@@ -1079,7 +1079,7 @@ export const useTTSText = (
           }`,
           ARRIVING: `We will soon be arriving at ${
             nextStation?.nameRoman
-          }${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : ''}${nextStationNumberText}. ${
+          }${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${nextStationNumberText}. ${
             isNextStopTerminus ? 'The last stop.' : ''
           } ${
             transferLines.length
