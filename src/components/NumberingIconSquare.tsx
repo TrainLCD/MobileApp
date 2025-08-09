@@ -39,9 +39,10 @@ const styles = StyleSheet.create({
   tlcText: {
     color: 'white',
     textAlign: 'center',
-    lineHeight: isTablet ? 24 * 1.5 : 24,
+    lineHeight: Platform.select({ ios: isTablet ? 24 * 1.5 : 24 }),
     fontSize: isTablet ? 24 * 1.5 : 24,
     fontFamily: FONTS.FrutigerNeueLTProBold,
+    includeFontPadding: false,
   },
   rootSmall: {
     width: 20,
