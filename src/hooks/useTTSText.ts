@@ -1091,7 +1091,7 @@ export const useTTSText = (
                   )
                   .join(
                     ' '
-                  )} at ${nextStation?.nameRoman}. ${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? `Thank you for using the ${currentLine.nameShort}.` : ''}`
+                  )} at ${nextStation?.nameRoman}. ${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? `Thank you for using the ${currentLine.nameRoman}.` : ''}`
               : ''
           }`,
         },
