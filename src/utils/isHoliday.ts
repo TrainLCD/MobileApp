@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
-import nationalHolidays from './assets/nationalHolidays.json';
+import { JAPANESE_NATIONAL_HOLIDAYS } from '~/constants';
 
 export const getIsHoliday = (): boolean => {
   const now = dayjs();
-  const isNationalHoliday = nationalHolidays.some((ev) => {
+  const isNationalHoliday = JAPANESE_NATIONAL_HOLIDAYS.some((ev) => {
     const eventDay = dayjs(ev.date);
     return now.isSame(eventDay, 'month') && now.isSame(eventDay, 'date');
   });
