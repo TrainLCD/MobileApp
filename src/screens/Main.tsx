@@ -42,6 +42,7 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
@@ -56,7 +57,6 @@ import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
-import { getIsHoliday } from '~/utils/isHoliday';
 
 const { height: screenHeight } = Dimensions.get('screen');
 

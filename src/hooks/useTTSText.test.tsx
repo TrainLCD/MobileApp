@@ -19,7 +19,7 @@ jest.mock('~/hooks/useNumbering', () => ({
   useNumbering: jest.fn(),
 }));
 
-const setupMockUseNumbering = ([stationNumber, threeLetterCode]: [
+const _setupMockUseNumbering = ([stationNumber, threeLetterCode]: [
   StationNumber | undefined,
   string,
 ]) =>
