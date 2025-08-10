@@ -42,6 +42,7 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
@@ -54,7 +55,6 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
-import { getIsHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
 
@@ -167,20 +167,22 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
+  const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
+
   useEffect(() => {
     if (
-      stationsFromCurrentStation.findIndex(
+      stationsFromCurrentStation.some(
         (s) => s.stopCondition === StopCondition.Weekday
-      ) !== -1 &&
-      getIsHoliday()
+      ) &&
+      isHoliday
     ) {
       Alert.alert(translate('notice'), translate('holidayNotice'));
     }
     if (
-      stationsFromCurrentStation.findIndex(
+      stationsFromCurrentStation.some(
         (s) => s.stopCondition === StopCondition.Holiday
-      ) !== -1 &&
-      !getIsHoliday()
+      ) &&
+      !isHoliday
     ) {
       Alert.alert(translate('notice'), translate('weekdayNotice'));
     }
@@ -192,7 +194,7 @@ const MainScreen: React.FC = () => {
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'));
     }
-  }, [stationsFromCurrentStation]);
+  }, [stationsFromCurrentStation, isHoliday]);
 
   const transferLines = useTransferLines();
 
