@@ -1,13 +1,19 @@
 import dayjs from 'dayjs';
+import memoize from 'lodash/memoize';
 import { JAPANESE_NATIONAL_HOLIDAYS } from '~/constants';
 
-export const getIsHoliday = (): boolean => {
-  const now = dayjs();
-  const isNationalHoliday = JAPANESE_NATIONAL_HOLIDAYS.some((ev) => {
-    const eventDay = dayjs(ev.date);
-    return now.isSame(eventDay, 'month') && now.isSame(eventDay, 'date');
-  });
-  const isWeekend = now.day() === 0 || now.day() === 6;
+const now = dayjs();
+const date = now.format('YYYY-MM-DD');
 
-  return isWeekend || isNationalHoliday;
-};
+export const getIsHoliday = memoize(
+  (): boolean => {
+    const isNationalHoliday = JAPANESE_NATIONAL_HOLIDAYS.some((ev) => {
+      const eventDay = dayjs(ev.date);
+      return now.isSame(eventDay, 'month') && now.isSame(eventDay, 'date');
+    });
+    const isWeekend = now.day() === 0 || now.day() === 6;
+
+    return isWeekend || isNationalHoliday;
+  },
+  () => date
+);
