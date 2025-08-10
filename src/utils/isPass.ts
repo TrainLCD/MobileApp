@@ -1,17 +1,15 @@
+import memoize from 'lodash/memoize';
 import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
 import { getIsHoliday } from './isHoliday';
 
-const getIsPass = (
-  station: Station | null,
-  ignoreDayCondition?: boolean
-): boolean =>
-  getIsPassFromStopCondition(station?.stopCondition, ignoreDayCondition);
+const getIsPass = memoize((station: Station | null): boolean =>
+  getIsPassFromStopCondition(station?.stopCondition)
+);
 
 export const getIsPassFromStopCondition = (
-  stopCondition: StopCondition | undefined,
-  ignoreDayCondition?: boolean
+  stopCondition: StopCondition | undefined
 ) => {
-  const isHoliday = getIsHoliday();
+  const isHoliday = getIsHoliday(new Date());
 
   switch (stopCondition) {
     case StopCondition.All:
@@ -22,9 +20,9 @@ export const getIsPassFromStopCondition = (
       return true;
     case StopCondition.Weekday:
       // 若干分かりづらい感じはするけど休日に飛ばすという意味
-      return ignoreDayCondition || isHoliday;
+      return isHoliday;
     case StopCondition.Holiday:
-      return ignoreDayCondition || !isHoliday;
+      return !isHoliday;
     default:
       return false;
   }

@@ -3,7 +3,6 @@ export * from './color';
 export * from './duration';
 export * from './feedback';
 export * from './fonts';
-export * from './holiday';
 export * from './ident';
 export * from './languages';
 export * from './line';
