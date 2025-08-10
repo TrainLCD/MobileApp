@@ -806,14 +806,14 @@ export const useTTSText = (
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
-          }${
+          }. ${
             isNextStopTerminus
-              ? ` Thank you for using the ${currentLine?.nameRoman}.`
+              ? `Thank you for using the ${currentLine?.nameRoman}.`
               : ''
           }`,
         },
@@ -882,7 +882,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -890,20 +890,20 @@ export const useTTSText = (
           ARRIVING: `The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}${
-            isNextStopTerminus ? ', terminal' : ''
-          }. ${
+            isNextStopTerminus ? ', terminal.' : ''
+          } ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${l.nameRoman}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
-          }${
+          }. ${
             isNextStopTerminus
-              ? ' Thank you for traveling with us, and look forward to serving you again.'
+              ? 'Thank you for traveling with us, and look forward to serving you again.'
               : ''
           }`,
         },
@@ -919,15 +919,13 @@ export const useTTSText = (
               : ''
           }The next station is ${
             nextStation?.nameRoman
-          } ${nextStationNumberText}${
-            isNextStopTerminus ? ', terminal' : ''
-          }. ${
+          } ${nextStationNumberText}${isNextStopTerminus ? ', terminal' : ''} ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -935,20 +933,20 @@ export const useTTSText = (
           ARRIVING: `The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}${
-            isNextStopTerminus ? ', terminal' : ''
-          }. ${
+            isNextStopTerminus ? ', terminal.' : ''
+          } ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${l.nameRoman}.`
-                      : `the ${l.nameRoman}${a.length === 1 ? '.' : ','}`
+                      : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
-          }${
+          } ${
             isNextStopTerminus
-              ? ' Thank you for traveling with us, and look forward to serving you again.'
+              ? 'Thank you for traveling with us, and look forward to serving you again.'
               : ''
           }`,
         },
@@ -1071,7 +1069,7 @@ export const useTTSText = (
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${l.nameRoman}.`
+                      ? `and the ${l.nameRoman}`
                       : `the ${l.nameRoman}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')} at ${nextStation?.nameRoman}.`
@@ -1172,5 +1170,5 @@ export const useTTSText = (
     return [];
   }
 
-  return [jaText, enText];
+  return [jaText.trim(), enText.trim()];
 };
