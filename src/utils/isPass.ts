@@ -1,17 +1,17 @@
+import memoize from 'lodash/memoize';
 import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
 import { getIsHoliday } from './isHoliday';
 
-const getIsPass = (
-  station: Station | null,
-  ignoreDayCondition?: boolean
-): boolean =>
-  getIsPassFromStopCondition(station?.stopCondition, ignoreDayCondition);
+const getIsPass = memoize(
+  (station: Station | null, ignoreDayCondition?: boolean): boolean =>
+    getIsPassFromStopCondition(station?.stopCondition, ignoreDayCondition)
+);
 
 export const getIsPassFromStopCondition = (
   stopCondition: StopCondition | undefined,
   ignoreDayCondition?: boolean
 ) => {
-  const isHoliday = getIsHoliday();
+  const isHoliday = getIsHoliday(new Date());
 
   switch (stopCondition) {
     case StopCondition.All:

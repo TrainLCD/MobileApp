@@ -167,7 +167,7 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
-  const isHoliday = useMemo(() => getIsHoliday(), []);
+  const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
 
   useEffect(() => {
     if (
