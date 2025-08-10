@@ -54,7 +54,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
-import { getIsHoliday } from '../utils/isHoliday';
+import { isHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
 
@@ -169,18 +169,18 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     if (
-      stationsFromCurrentStation.findIndex(
+      stationsFromCurrentStation.some(
         (s) => s.stopCondition === StopCondition.Weekday
-      ) !== -1 &&
-      getIsHoliday()
+      ) &&
+      isHoliday
     ) {
       Alert.alert(translate('notice'), translate('holidayNotice'));
     }
     if (
-      stationsFromCurrentStation.findIndex(
+      stationsFromCurrentStation.some(
         (s) => s.stopCondition === StopCondition.Holiday
-      ) !== -1 &&
-      !getIsHoliday()
+      ) &&
+      !isHoliday
     ) {
       Alert.alert(translate('notice'), translate('weekdayNotice'));
     }
