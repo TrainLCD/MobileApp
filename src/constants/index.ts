@@ -19,3 +19,4 @@ export * from './storage';
 export * from './theme';
 export * from './threshold';
 export * from './url';
+export * from './holiday';

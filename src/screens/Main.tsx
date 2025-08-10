@@ -54,9 +54,9 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
-import { isHoliday } from '../utils/isHoliday';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
+import { getIsHoliday } from '~/utils/isHoliday';
 
 const { height: screenHeight } = Dimensions.get('screen');
 
@@ -167,6 +167,8 @@ const MainScreen: React.FC = () => {
     }
   }, [stationsFromCurrentStation]);
 
+  const isHoliday = useMemo(() => getIsHoliday(), []);
+
   useEffect(() => {
     if (
       stationsFromCurrentStation.some(
@@ -192,7 +194,7 @@ const MainScreen: React.FC = () => {
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'));
     }
-  }, [stationsFromCurrentStation]);
+  }, [stationsFromCurrentStation, isHoliday]);
 
   const transferLines = useTransferLines();
 

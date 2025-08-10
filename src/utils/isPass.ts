@@ -1,5 +1,5 @@
 import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
-import { isHoliday } from './isHoliday';
+import { getIsHoliday } from './isHoliday';
 
 const getIsPass = (
   station: Station | null,
@@ -11,6 +11,8 @@ export const getIsPassFromStopCondition = (
   stopCondition: StopCondition | undefined,
   ignoreDayCondition?: boolean
 ) => {
+  const isHoliday = getIsHoliday();
+
   switch (stopCondition) {
     case StopCondition.All:
     case StopCondition.PartialStop: // 一部停車は一旦停車扱い
