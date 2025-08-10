@@ -1,10 +1,9 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import {
-  ref as getStorageRef,
-  getStorage,
-  uploadString,
   getDownloadURL,
-  StringFormat,
+  getStorage,
+  ref as getStorageRef,
+  uploadString,
 } from '@react-native-firebase/storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
