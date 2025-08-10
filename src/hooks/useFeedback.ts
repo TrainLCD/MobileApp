@@ -1,7 +1,10 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import {
-  ref as fbStorageRef,
+  ref as getStorageRef,
   getStorage,
+  uploadString,
+  getDownloadURL,
+  StringFormat,
 } from '@react-native-firebase/storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
@@ -80,80 +83,84 @@ export const useFeedback = (
         return;
       }
 
-      const storage = getStorage();
+      try {
+        const storage = getStorage();
 
-      const API_URL = isDevApp
-        ? DEV_FEEDBACK_API_URL
-        : PRODUCTION_FEEDBACK_API_URL;
+        const API_URL = isDevApp
+          ? DEV_FEEDBACK_API_URL
+          : PRODUCTION_FEEDBACK_API_URL;
 
-      const [locale] = Localization.getLocales();
+        const [locale] = Localization.getLocales();
 
-      const feedbackId = Crypto.randomUUID();
+        const feedbackId = Crypto.randomUUID();
 
-      const idToken = await user?.getIdToken();
+        const idToken = await user?.getIdToken();
 
-      let imageUrl: string | null = null;
-      if (screenShotBase64) {
-        const storageRef = fbStorageRef(
-          storage,
-          `public/report-images/${feedbackId}.png`
-        );
-        await storageRef.putString(screenShotBase64, 'base64', {
-          contentType: 'image/png',
+        let imageUrl: string | null = null;
+        if (screenShotBase64) {
+          const storageRef = getStorageRef(
+            storage,
+            `public/report-images/${feedbackId}.png`
+          );
+          await uploadString(storageRef, screenShotBase64, 'base64' as never, {
+            contentType: 'image/png',
+          });
+          imageUrl = await getDownloadURL(storageRef);
+        }
+
+        const report: Report = {
+          id: feedbackId,
+          reportType,
+          description: description.trim(),
+          stacktrace: stacktrace ?? '',
+          resolved: false,
+          reporterUid: user.uid,
+          language: isJapanese ? 'ja-JP' : 'en-US',
+          appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
+          autoModeEnabled,
+          enableLegacyAutoMode,
+          deviceInfo: Device.isDevice
+            ? {
+                brand,
+                manufacturer,
+                modelName,
+                modelId,
+                designName,
+                productName,
+                deviceYearClass,
+                totalMemory,
+                supportedCpuArchitectures,
+                osName,
+                osVersion,
+                osBuildId,
+                osInternalBuildId,
+                osBuildFingerprint,
+                platformApiLevel,
+                locale: locale.languageTag,
+              }
+            : null,
+          imageUrl,
+          appEdition: isDevApp ? 'canary' : 'production',
+          appClip: isClip(),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          sentryEventId,
+        };
+
+        const res = await fetch(API_URL, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ data: { report } }),
+          method: 'POST',
         });
-        imageUrl = await storageRef.getDownloadURL();
-      }
 
-      const report: Report = {
-        id: feedbackId,
-        reportType,
-        description: description.trim(),
-        stacktrace: stacktrace ?? '',
-        resolved: false,
-        reporterUid: user.uid,
-        language: isJapanese ? 'ja-JP' : 'en-US',
-        appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
-        autoModeEnabled,
-        enableLegacyAutoMode,
-        deviceInfo: Device.isDevice
-          ? {
-              brand,
-              manufacturer,
-              modelName,
-              modelId,
-              designName,
-              productName,
-              deviceYearClass,
-              totalMemory,
-              supportedCpuArchitectures,
-              osName,
-              osVersion,
-              osBuildId,
-              osInternalBuildId,
-              osBuildFingerprint,
-              platformApiLevel,
-              locale: locale.languageTag,
-            }
-          : null,
-        imageUrl,
-        appEdition: isDevApp ? 'canary' : 'production',
-        appClip: isClip(),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        sentryEventId,
-      };
-
-      const res = await fetch(API_URL, {
-        headers: {
-          'content-type': 'application/json; charset=UTF-8',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ data: { report } }),
-        method: 'POST',
-      });
-
-      if (!res.ok) {
-        throw new Error(`フィードバックの送信に失敗しました: ${res.status}`);
+        if (!res.ok) {
+          throw new Error(`フィードバックの送信に失敗しました: ${res.status}`);
+        }
+      } catch (err) {
+        throw new Error(`フィードバックの送信に失敗しました: ${err}`);
       }
     },
     [user, autoModeEnabled, enableLegacyAutoMode]
