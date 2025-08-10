@@ -1,5 +1,8 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import storage from '@react-native-firebase/storage';
+import {
+  ref as fbStorageRef,
+  getStorage,
+} from '@react-native-firebase/storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
@@ -77,6 +80,8 @@ export const useFeedback = (
         return;
       }
 
+      const storage = getStorage();
+
       const API_URL = isDevApp
         ? DEV_FEEDBACK_API_URL
         : PRODUCTION_FEEDBACK_API_URL;
@@ -89,7 +94,8 @@ export const useFeedback = (
 
       let imageUrl: string | null = null;
       if (screenShotBase64) {
-        const storageRef = storage().ref(
+        const storageRef = fbStorageRef(
+          storage,
           `public/report-images/${feedbackId}.png`
         );
         await storageRef.putString(screenShotBase64, 'base64', {
