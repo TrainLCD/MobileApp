@@ -2,11 +2,8 @@ import dayjs from 'dayjs';
 import memoize from 'lodash/memoize';
 import { JAPANESE_NATIONAL_HOLIDAYS } from '~/constants';
 
-const formatDate = (date: Date) => [
-  date.getFullYear(),
-  date.getMonth(),
-  date.getDate(),
-];
+const formatDate = (date: Date) =>
+  [date.getFullYear(), date.getMonth(), date.getDate()].join('-');
 
 export const getIsHoliday = memoize((date: Date): boolean => {
   const now = dayjs(date);
