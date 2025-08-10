@@ -19,15 +19,6 @@ jest.mock('~/hooks/useNumbering', () => ({
   useNumbering: jest.fn(),
 }));
 
-const setupMockUseNumbering = ([stationNumber, threeLetterCode]: [
-  StationNumber | undefined,
-  string,
-]) =>
-  require('~/hooks/useNumbering').useNumbering.mockReturnValue([
-    stationNumber,
-    threeLetterCode,
-  ]);
-
 const useTTSTextWithJotaiAndNumbering = (
   theme: AppTheme,
   headerState: HeaderStoppingState
