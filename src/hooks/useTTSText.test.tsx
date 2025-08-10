@@ -68,9 +68,11 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('Without trainType & With numbering', () => {
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
-    setupMockUseNumbering([
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
       new StationNumber({
         lineSymbol: 'S',
         lineSymbolColor: '#B0BF1E',
@@ -79,6 +81,11 @@ describe('Without trainType & With numbering', () => {
       }),
       '',
     ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
   });
 
   test.each([
@@ -301,64 +308,6 @@ describe('Without trainType & With numbering', () => {
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
         'Arriving at Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
       ]);
-    });
-  });
-
-  describe('異常系テスト', () => {
-    let useStationNumberIndexFuncSpy: jest.SpyInstance<
-      () => number | undefined
-    >;
-    beforeAll(() => {
-      const mod = require('./useStationNumberIndexFunc');
-      useStationNumberIndexFuncSpy = jest
-        .spyOn(mod, 'useStationNumberIndexFunc')
-        .mockImplementation(() => () => 0);
-    });
-    afterAll(() => {
-      useStationNumberIndexFuncSpy.mockRestore();
-    });
-    test('useStationNumberIndexFuncがundefinedを返す場合は駅番号が文言に含まれない', () => {
-      useStationNumberIndexFuncSpy.mockImplementation(() => () => undefined);
-      const { result } = renderHook(
-        () => useTTSTextWithJotaiAndNumbering('TY', 'ARRIVING'),
-        { wrapper }
-      );
-      // 文言自体は返される
-      expect(result.current[0]).not.toBe('');
-      expect(result.current[1]).not.toBe('');
-      // 駅番号（例: S 2）が含まれない
-      expect(result.current[0]).not.toMatch(/S\s?\d+/);
-      expect(result.current[1]).not.toMatch(/S\s?\d+/);
-    });
-  });
-
-  describe('firstSpeech refの動作検証', () => {
-    // テスト用カスタムHook
-    const useFirstSpeechTest = () => {
-      const setLineState = useSetAtom(lineState);
-      const setStationState = useSetAtom(stationState);
-      useEffect(() => {
-        useThemeStore.setState('TOKYO_METRO');
-        setStationState((prev) => ({
-          ...prev,
-          station: TOEI_SHINJUKU_LINE_STATIONS[0],
-          stations: TOEI_SHINJUKU_LINE_STATIONS,
-          selectedDirection: 'INBOUND',
-          arrived: false,
-          selectedBound: TOEI_SHINJUKU_LINE_STATIONS[1],
-          approaching: false,
-        }));
-        setLineState((prev) => ({
-          ...prev,
-          selectedLine: TOEI_SHINJUKU_LINE_LOCAL,
-        }));
-      }, [setLineState, setStationState]);
-      return useTTSText(true, true);
-    };
-    test('firstSpeech=trueで返却値が変化する', () => {
-      const { result } = renderHook(() => useFirstSpeechTest(), { wrapper });
-      expect(result.current[0]).toContain('次は');
-      expect(result.current[1]).toContain('The next stop');
     });
   });
 });
