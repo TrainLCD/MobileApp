@@ -211,43 +211,57 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     },
   };
 
-  const [jaRes, enRes] = await Promise.all([
-    fetch(ttsUrl, {
-      headers: {
-        'content-type': 'application/json; charset=UTF-8',
-      },
-      body: JSON.stringify(reqBodyJa),
-      method: 'POST',
-    }),
-    fetch(ttsUrl, {
-      headers: {
-        'content-type': 'application/json; charset=UTF-8',
-      },
-      body: JSON.stringify(reqBodyEn),
-      method: 'POST',
-    }),
-  ]);
+  try {
+    const [jaRes, enRes] = await Promise.all([
+      fetch(ttsUrl, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify(reqBodyJa),
+        method: 'POST',
+        signal: AbortSignal.timeout(30000), // 30秒のタイムアウト
+      }),
+      fetch(ttsUrl, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify(reqBodyEn),
+        method: 'POST',
+        signal: AbortSignal.timeout(30000), // 30秒のタイムアウト
+      }),
+    ]);
 
-  const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
-    await Promise.all([jaRes.json(), enRes.json()]);
+    if (!jaRes.ok || !enRes.ok) {
+      throw new HttpsError(
+        'internal',
+        `TTS API error: ja=${jaRes.status}, en=${enRes.status}`
+      );
+    }
 
-  const cacheTopic = pubsub.topic('tts-cache');
-  cacheTopic
-    .publishMessage({
-      json: {
-        id,
-        jaAudioContent,
-        enAudioContent,
-        ssmlJa,
-        ssmlEn,
-        voiceJa: jaVoiceName,
-        voiceEn: enVoiceName,
-      },
-    })
-    .catch((err) => {
-      console.error('Failed to publish cache message:', err);
-      // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
-    });
+    const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
+      await Promise.all([jaRes.json(), enRes.json()]);
 
-  return { id, jaAudioContent, enAudioContent };
+    const cacheTopic = pubsub.topic('tts-cache');
+    cacheTopic
+      .publishMessage({
+        json: {
+          id,
+          jaAudioContent,
+          enAudioContent,
+          ssmlJa,
+          ssmlEn,
+          voiceJa: jaVoiceName,
+          voiceEn: enVoiceName,
+        },
+      })
+      .catch((err) => {
+        console.error('Failed to publish cache message:', err);
+        // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
+      });
+
+    return { id, jaAudioContent, enAudioContent };
+  } catch (error) {
+    console.error('TTS API call failed:', error);
+    throw new HttpsError('internal', 'TTS synthesis failed');
+  }
 });
