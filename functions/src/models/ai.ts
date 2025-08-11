@@ -1,7 +1,7 @@
 export type AIReport = {
   title: string;
   summary: string;
-  is_spam: boolean;
+  isSpam: boolean;
   labels: string[];
   confidence: number;
   reason: string;

@@ -159,7 +159,7 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
 
   let title = getStr('title');
   let summary = getStr('summary');
-  const is_spam = getBool('is_spam', 'isspam');
+  const isSpam = getBool('isSpam', 'isspam');
   const labels = Array.isArray(map.get('labels')) ? map.get('labels') : [];
   const confidence = getNum('confidence', 0.5);
   const reason = getStr('reason');
@@ -168,7 +168,7 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
   if (title.length > titleMax) title = title.slice(0, titleMax - 1) + '…';
   if (!summary) summary = '';
 
-  return { title, summary, is_spam, labels, confidence, reason };
+  return { title, summary, isSpam, labels, confidence, reason };
 }
 
 // ---- Few-shot loader ----
@@ -198,7 +198,7 @@ Rules:
   ["bug","improvement","feature","localization","location","ui","performance","network","settings"]
 
 Output JSON only:
-{"title": "...", "summary": "...", "is_spam": true|false, "labels": [], "confidence": 0..1, "reason": "..."}
+{"title": "...", "summary": "...", "isSpam": true|false, "labels": [], "confidence": 0..1, "reason": "..."}
 
 Return ONLY that JSON. No prose, no markdown.
 `.trim();
@@ -299,11 +299,11 @@ export const feedbackTriageWorker = onMessagePublished(
       }
     })();
     let aiReport = coerceReport(raw, 72);
-    if (!aiReport.is_spam && looksLikeSpam(report.description)) {
+    if (!aiReport.isSpam && looksLikeSpam(report.description)) {
       aiReport = {
         ...aiReport,
         title: '内容未分類（改善要望なし）',
-        is_spam: true,
+        isSpam: true,
         labels: [],
         reason: 'non-actionable',
       };
@@ -411,13 +411,13 @@ ${reporterUid}
             milestone: null,
             labels: [
               reportType === 'feedback' &&
-                !aiReport.is_spam &&
+                !aiReport.isSpam &&
                 GITHUB_LABELS.FEEDBACK_TYPE,
               reportType === 'crash' && GITHUB_LABELS.CRASH_TYPE,
               appEdition === 'production' && GITHUB_LABELS.PRODUCTION_APP,
               appEdition === 'canary' && GITHUB_LABELS.CANARY_APP,
               appClip && GITHUB_LABELS.PLATFORM_APPCLIP,
-              (isSpamUser || aiReport.is_spam) && GITHUB_LABELS.SPAM_TYPE,
+              (isSpamUser || aiReport.isSpam) && GITHUB_LABELS.SPAM_TYPE,
               osNameLabel,
               autoModeLabel,
             ].filter(Boolean),
