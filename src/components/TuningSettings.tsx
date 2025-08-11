@@ -209,17 +209,23 @@ const TuningSettings: React.FC = () => {
             <LEDThemeSwitch
               value={!settings.devOverlayEnabled}
               onValueChange={toggleDevOverlayEnabled}
+              accessibilityLabel={translate('tuningItemDisableDevOverlay')}
             />
           ) : (
             <Switch
               value={!settings.devOverlayEnabled}
               onValueChange={toggleDevOverlayEnabled}
               ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('tuningItemDisableDevOverlay')}
             />
           )}
 
-          <Typography style={styles.switchSettingItemText}>
-            開発者オーバレイを無効化する
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleDevOverlayEnabled}
+            accessibilityRole="button"
+          >
+            {translate('disableDevOverlay')}
           </Typography>
         </View>
       </ScrollView>
