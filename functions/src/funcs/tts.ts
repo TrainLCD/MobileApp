@@ -169,19 +169,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
   const id = createHash(hashAlgorithm).update(hashData).digest('hex');
 
-  const snapshot = await voicesCollection.where('id', '==', id).get();
+  const snapshot = await voicesCollection.doc(id).get();
 
-  if (!snapshot.empty) {
+  if (!snapshot.exists) {
     const jaAudioData =
-      (await storage
-        .bucket()
-        .file(snapshot.docs[0]?.data().pathJa)
-        .download()) || null;
+      (await storage.bucket().file(snapshot.data()?.pathJa).download()) || null;
     const enAudioData =
-      (await storage
-        .bucket()
-        .file(snapshot.docs[0]?.data().pathEn)
-        .download()) || null;
+      (await storage.bucket().file(snapshot.data()?.pathEn).download()) || null;
 
     const jaAudioContent = jaAudioData?.[0]?.toString('base64') || null;
     const enAudioContent = enAudioData?.[0]?.toString('base64') || null;
