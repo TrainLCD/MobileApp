@@ -559,7 +559,7 @@ ${reporterUid}
             );
           }
 
-          await fetch(csWHUrl, {
+          const whRes = await fetch(csWHUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -570,6 +570,11 @@ ${reporterUid}
               })),
             }),
           });
+          if (!whRes.ok) {
+            const msg = await whRes.text().catch(() => '');
+            console.error('Discord CS webhook failed', whRes.status, msg);
+          }
+
           break;
         }
         case 'crash': {
@@ -578,7 +583,7 @@ ${reporterUid}
               'process.env.DISCORD_CRASH_WEBHOOK_URL is not set!'
             );
           }
-          await fetch(crashWHUrl, {
+          const whRes = await fetch(crashWHUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -586,6 +591,10 @@ ${reporterUid}
               embeds,
             }),
           });
+          if (!whRes.ok) {
+            const msg = await whRes.text().catch(() => '');
+            console.error('Discord Crash webhook failed', whRes.status, msg);
+          }
           break;
         }
         default:
