@@ -451,7 +451,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.root}>
-          {isDevApp && !devOverlayEnabled && <DevOverlay />}
+          {isDevApp && devOverlayEnabled && <DevOverlay />}
           <Header />
           {children}
           <NullableWarningPanel />
