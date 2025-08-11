@@ -171,7 +171,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
 
   const snapshot = await voicesCollection.doc(id).get();
 
-  if (!snapshot.exists) {
+  if (snapshot.exists) {
     const jaAudioData =
       (await storage.bucket().file(snapshot.data()?.pathJa).download()) || null;
     const enAudioData =
