@@ -89,22 +89,27 @@ async function generateWithRetry(
   userText: string
 ) {
   const run = async (few: string, maxTokens: number, note: string) => {
-    const model = vertexAi.getGenerativeModel({
-      model: baseModel,
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: maxTokens,
-        responseMimeType: 'application/json',
-      },
-      // Use systemInstruction to shrink user prompt size a bit
-      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
-    });
-    const prompt = `${few}\n\nNow process this message:\n\n<<FEEDBACK>>\n${userText}\n\n<!-- ${note} -->`;
-    const res = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    });
-    const finish = res?.response?.candidates?.[0]?.finishReason;
-    return { res, finish };
+    try {
+      const model = vertexAi.getGenerativeModel({
+        model: baseModel,
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: maxTokens,
+          responseMimeType: 'application/json',
+        },
+        // Use systemInstruction to shrink user prompt size a bit
+        systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
+      });
+      const prompt = `${few}\n\nNow process this message:\n\n<<FEEDBACK>>\n${userText}\n\n<!-- ${note} -->`;
+      const res = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      const finish = res?.response?.candidates?.[0]?.finishReason;
+      return { res, finish };
+    } catch (err) {
+      console.error(`Vertex AI generation failed (${note}):`, err);
+      throw err;
+    }
   };
 
   // 1st try: current few-shot as-is
@@ -427,7 +432,7 @@ ${reporterUid}
 
       if (res.status !== 201) {
         console.error(await res.json());
-        return;
+        throw new Error(`GitHub API failed with status ${res.status}`);
       }
 
       const issuesRes = (await res.json()) as { html_url: string };
