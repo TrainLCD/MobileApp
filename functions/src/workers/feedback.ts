@@ -1,9 +1,10 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import * as dayjs from 'dayjs';
+import { onMessagePublished } from 'firebase-functions/v2/pubsub';
+import { VertexAI } from '@google-cloud/vertexai';
+import type { FeedbackMessage } from '../models/feedback';
+import type { AIReport, FewShotItem } from '../models/ai';
+import dayjs from 'dayjs';
 import { SPAM_USER_IDS } from '../constants/spam';
 import type { DiscordEmbed } from '../models/common';
-import type { Report } from '../models/feedback';
-import { VertexAI } from '@google-cloud/vertexai';
 import { Storage } from '@google-cloud/storage';
 
 const GITHUB_LABELS = {
@@ -22,106 +23,6 @@ const GITHUB_LABELS = {
   AUTOMODE_V2: '🤖 Auto Mode 2.0',
 } as const;
 
-// ---- Few-shot loader ----
-const FEW_SHOT_URI = process.env.FEW_SHOT_GCS_URI; // e.g. gs://trainlcd-triage-data/fewshot.jsonl
-const FEW_SHOT_MAX_BYTES = Number(process.env.FEW_SHOT_MAX_BYTES ?? 512 * 1024); // 512KB default
-const FEW_SHOT_LIMIT = Number(process.env.FEW_SHOT_LIMIT ?? 12); // cap number of examples concatenated
-const storage = new Storage();
-let fewShotCache: { text: string; loadedAt: number } | null = null;
-const FEW_SHOT_TTL_MS = Number(process.env.FEW_SHOT_TTL_MS ?? 10 * 60 * 1000); // 10 min
-
-type FewShotItem = {
-  input: string;
-  output: string;
-  disabled?: boolean;
-  weight?: number;
-};
-
-async function loadFewShotFromGCS(): Promise<string | null> {
-  if (!FEW_SHOT_URI) return null;
-  const m = FEW_SHOT_URI.match(/^gs:\/\/([^/]+)\/(.+)$/);
-  if (!m) return null;
-  const [, bucket, file] = m;
-  const buf = await storage
-    .bucket(bucket)
-    .file(file)
-    .download({ start: 0, end: FEW_SHOT_MAX_BYTES - 1 });
-  const raw = buf[0].toString('utf8');
-  // Support JSONL, lines like: {"input":"...","output":"..."}
-  const lines = raw.split(/\r?\n/).filter(Boolean);
-  const items: FewShotItem[] = [];
-  for (const line of lines) {
-    try {
-      const obj = JSON.parse(line);
-      if (obj?.input && obj?.output && !obj.disabled)
-        items.push(obj as FewShotItem);
-    } catch {
-      // ignore non-JSON lines (allow comments or headers)
-    }
-  }
-  // Weighted shuffle (simple): sort by random/weight
-  const shuffled = items
-    .map((it) => ({
-      it,
-      r: Math.random() / (it.weight && it.weight > 0 ? it.weight : 1),
-    }))
-    .sort((a, b) => a.r - b.r)
-    .slice(0, FEW_SHOT_LIMIT)
-    .map(({ it }) => it);
-
-  // Build few-shot block with per-example truncation to control prompt size
-  const blocks = shuffled.map((it) => {
-    const block = `Input:\n${String(it.input)}\nOutput:\n${String(it.output)}`;
-    return block.length > FEW_SHOT_PER_EX_MAX
-      ? block.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
-      : block;
-  });
-  return blocks.join('\n\n');
-}
-
-// Few-shot compaction controls
-const FEW_SHOT_PER_EX_MAX = Number(process.env.FEW_SHOT_PER_EX_MAX ?? 800); // chars per example (Input+Output assembled)
-
-async function getFewShotText(): Promise<string> {
-  const now = Date.now();
-  if (fewShotCache && now - fewShotCache.loadedAt < FEW_SHOT_TTL_MS) {
-    return fewShotCache.text;
-  }
-  const gcs = await loadFewShotFromGCS();
-  if (!gcs) {
-    // フェイルハード：few-shot未設定での誤学習や漏洩を防ぐ
-    throw new Error('FEW_SHOT_NOT_AVAILABLE');
-  }
-  fewShotCache = { text: gcs, loadedAt: now };
-  return gcs;
-}
-
-const SYSTEM_PROMPT = `
-You are a precise issue triager for TrainLCD.
-Task: 
-1. Summarize the user's message into a ONE-LINE issue title in Japanese (≤72 chars).
-2. Also create a 1–3 sentence summary in Japanese that concisely describes the feedback content.
-3. Classify spam.
-
-Rules:
-- Newspaper-style headline: [症状/論点]+[対象]（助詞は最小限）
-- No device/OS/version/URL/stack unless essential
-- Prefer Japanese if input has Japanese
-- If no actionable content (announcement transcript, chit-chat, praise-only), mark spam
-- If not spam, pick labels from:
-  ["bug","improvement","feature","localization","location","ui","performance","network","settings"]
-
-Output JSON only:
-{"title": "...", "summary": "...", "is_spam": true|false, "labels": [], "confidence": 0..1, "reason": "..."}
-
-Return ONLY that JSON. No prose, no markdown.
-`.trim();
-
-/**
- * Detects "non-actionable" messages that read like public transport announcements or
- * generic informational text, without explicit request or problem.
- * This avoids sensitive wording and is safe for OSS.
- */
 function looksLikeSpam(text: string) {
   if (!text) return false;
   const t = String(text).replace(/\s+/g, ' ').trim();
@@ -182,7 +83,7 @@ function looksLikeSpam(text: string) {
 async function generateWithRetry(
   vertexAi: VertexAI,
   baseModel: string,
-  location: string,
+  _location: string,
   fewshot: string,
   systemPrompt: string,
   userText: string
@@ -214,7 +115,11 @@ async function generateWithRetry(
   const blocks = fewshot.split(/\n\n(?=Input:)/);
   const half = blocks.slice(0, Math.max(1, Math.ceil(blocks.length / 2)));
   const compactFew = half
-    .map((b) => (b.length > FEW_SHOT_PER_EX_MAX ? b.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…' : b))
+    .map((b) =>
+      b.length > FEW_SHOT_PER_EX_MAX
+        ? b.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
+        : b
+    )
     .join('\n\n');
   ({ res, finish } = await run(compactFew, 768, 'retry-compact'));
   if (finish !== 'MAX_TOKENS') return res;
@@ -224,16 +129,6 @@ async function generateWithRetry(
   ({ res } = await run(minimal, 1024, 'final-minimal'));
   return res;
 }
-
-// ---- AI report types & helpers ----
-export type AIReport = {
-  title: string;
-  summary: string;
-  is_spam: boolean;
-  labels: string[];
-  confidence: number;
-  reason: string;
-};
 
 function extractTextFromVertex(result: any): string {
   // Vertex返却の差分に強い安全抽出
@@ -276,66 +171,143 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
   return { title, summary, is_spam, labels, confidence, reason };
 }
 
-/**
- * モデル実行→JSONパース→正規化→スパム/長さガードまで一発で返す。
- * @param model VertexAI.getGenerativeModel(...) の戻り
- * @param prompt 組み立て済みプロンプト（Output JSON only ... を含む）
- * @param originalText ユーザーのフィードバック本文（spamガード用）
- */
-export async function makeAIReport(
-  model: any,
-  prompt: string,
-  originalText: string,
-  opts?: { titleMax?: number }
-): Promise<AIReport> {
-  const titleMax = opts?.titleMax ?? 72;
+// ---- Few-shot loader ----
+const FEW_SHOT_URI = process.env.FEW_SHOT_GCS_URI; // e.g. gs://trainlcd-triage-data/fewshot.jsonl
+const FEW_SHOT_MAX_BYTES = Number(process.env.FEW_SHOT_MAX_BYTES ?? 512 * 1024); // 512KB default
+const FEW_SHOT_LIMIT = Number(process.env.FEW_SHOT_LIMIT ?? 12); // cap number of examples concatenated
+const storage = new Storage();
+let fewShotCache: { text: string; loadedAt: number } | null = null;
+const FEW_SHOT_TTL_MS = Number(process.env.FEW_SHOT_TTL_MS ?? 10 * 60 * 1000); // 10 min
 
-  const result = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+// Few-shot compaction controls
+const FEW_SHOT_PER_EX_MAX = Number(process.env.FEW_SHOT_PER_EX_MAX ?? 800); // chars per example (Input+Output assembled)
+
+const SYSTEM_PROMPT = `
+You are a precise issue triager for TrainLCD.
+Task: 
+1. Summarize the user's message into a ONE-LINE issue title in Japanese (≤72 chars).
+2. Also create a 1–3 sentence summary in Japanese that concisely describes the feedback content.
+3. Classify spam.
+
+Rules:
+- Newspaper-style headline: [症状/論点]+[対象]（助詞は最小限）
+- No device/OS/version/URL/stack unless essential
+- Prefer Japanese if input has Japanese
+- If no actionable content (announcement transcript, chit-chat, praise-only), mark spam
+- If not spam, pick labels from:
+  ["bug","improvement","feature","localization","location","ui","performance","network","settings"]
+
+Output JSON only:
+{"title": "...", "summary": "...", "is_spam": true|false, "labels": [], "confidence": 0..1, "reason": "..."}
+
+Return ONLY that JSON. No prose, no markdown.
+`.trim();
+
+async function loadFewShotFromGCS(): Promise<string | null> {
+  if (!FEW_SHOT_URI) return null;
+  const m = FEW_SHOT_URI.match(/^gs:\/\/([^/]+)\/(.+)$/);
+  if (!m) return null;
+  const [, bucket, file] = m;
+  const buf = await storage
+    .bucket(bucket)
+    .file(file)
+    .download({ start: 0, end: FEW_SHOT_MAX_BYTES - 1 });
+  const raw = buf[0].toString('utf8');
+  // Support JSONL, lines like: {"input":"...","output":"..."}
+  const lines = raw.split(/\r?\n/).filter(Boolean);
+  const items: FewShotItem[] = [];
+  for (const line of lines) {
+    try {
+      const obj = JSON.parse(line);
+      if (obj?.input && obj?.output && !obj.disabled)
+        items.push(obj as FewShotItem);
+    } catch {
+      // ignore non-JSON lines (allow comments or headers)
+    }
+  }
+  // Weighted shuffle (simple): sort by random/weight
+  const shuffled = items
+    .map((it) => ({
+      it,
+      r: Math.random() / (it.weight && it.weight > 0 ? it.weight : 1),
+    }))
+    .sort((a, b) => a.r - b.r)
+    .slice(0, FEW_SHOT_LIMIT)
+    .map(({ it }) => it);
+
+  // Build few-shot block with per-example truncation to control prompt size
+  const blocks = shuffled.map((it) => {
+    const block = `Input:\n${String(it.input)}\nOutput:\n${String(it.output)}`;
+    return block.length > FEW_SHOT_PER_EX_MAX
+      ? block.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
+      : block;
   });
-
-  // 1) 生テキスト抽出
-  const text = extractTextFromVertex(result);
-
-  // 2) JSONパース（混入対策：最初の {..} ブロックを拾う）
-  let raw: any = {};
-  try {
-    const m = text.match(/\{[\s\S]*\}/);
-    raw = JSON.parse(m ? m[0] : text);
-  } catch {
-    raw = {};
-  }
-
-  // 3) 正規化
-  let report = coerceReport(raw, titleMax);
-
-  // 4) 追加ガード（定型句っぽい→Spam上書き）
-  if (!report.is_spam && looksLikeSpam(originalText)) {
-    report = {
-      title: '内容未分類（改善要望なし）',
-      summary: '',
-      is_spam: true,
-      labels: [],
-      confidence: Math.max(0.8, report.confidence),
-      reason: 'non-actionable',
-    };
-  }
-
-  return report;
+  return blocks.join('\n\n');
 }
 
-export const postFeedback = onCall(
-  { region: 'asia-northeast1' },
-  async (req) => {
-    // NOTE: Do not log raw user 'description' to avoid data leakage.
-    if (!req.auth) {
-      throw new HttpsError(
-        'failed-precondition',
-        'The function must be called while authenticated.'
-      );
-    }
+async function getFewShotText(): Promise<string> {
+  const now = Date.now();
+  if (fewShotCache && now - fewShotCache.loadedAt < FEW_SHOT_TTL_MS) {
+    return fewShotCache.text;
+  }
+  const gcs = await loadFewShotFromGCS();
+  if (!gcs) {
+    // フェイルハード：few-shot未設定での誤学習や漏洩を防ぐ
+    throw new Error('FEW_SHOT_NOT_AVAILABLE');
+  }
+  fewShotCache = { text: gcs, loadedAt: now };
+  return gcs;
+}
 
-    const report = req.data.report as Report;
+export const feedbackTriageWorker = onMessagePublished(
+  {
+    topic: 'feedback-triage',
+    region: 'asia-northeast1',
+    maxInstances: 5,
+  },
+  async (event) => {
+    const data = event.data?.message?.json as FeedbackMessage | undefined;
+    if (!data?.report) return;
+
+    const { report } = data;
+
+    const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+    const vertexAi = new VertexAI({
+      project: projectId,
+      location: 'asia-northeast1',
+    });
+
+    const FEW_SHOT = await getFewShotText();
+    const baseModel = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
+
+    const vertexRes = await generateWithRetry(
+      vertexAi,
+      baseModel,
+      'asia-northeast1',
+      FEW_SHOT,
+      SYSTEM_PROMPT,
+      report.description
+    );
+
+    const text = extractTextFromVertex(vertexRes as any);
+    const raw = (() => {
+      try {
+        const m = text.match(/\{[\s\S]*\}/);
+        return JSON.parse(m ? m[0] : text);
+      } catch {
+        return {};
+      }
+    })();
+    let aiReport = coerceReport(raw, 72);
+    if (!aiReport.is_spam && looksLikeSpam(report.description)) {
+      aiReport = {
+        ...aiReport,
+        title: '内容未分類（改善要望なし）',
+        is_spam: true,
+        labels: [],
+        reason: 'non-actionable',
+      };
+    }
 
     const {
       id,
@@ -354,55 +326,8 @@ export const postFeedback = onCall(
       enableLegacyAutoMode,
       sentryEventId,
     } = report;
+
     const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
-
-    if (!process.env.OCTOKIT_PAT) {
-      console.error('process.env.OCTOKIT_PAT is not found!');
-      return;
-    }
-
-    const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-    if (!projectId) {
-      throw new Error('GCP_PROJECT or GCLOUD_PROJECT is not set!');
-    }
-
-    const vertexAi = new VertexAI({
-      project: projectId,
-      location: 'asia-northeast1',
-    });
-
-    const baseModel = (process.env.GEMINI_MODEL ?? 'gemini-2.5-flash');
-    const FEW_SHOT = await getFewShotText();
-    const vertexRes = await generateWithRetry(
-      vertexAi,
-      baseModel,
-      'asia-northeast1',
-      FEW_SHOT,
-      SYSTEM_PROMPT,
-      description
-    );
-    // Extract → parse → normalize
-    const text = extractTextFromVertex(vertexRes as any);
-    const raw = (() => {
-      try {
-        const m = text.match(/\{[\s\S]*\}/);
-        return JSON.parse(m ? m[0] : text);
-      } catch {
-        return {};
-      }
-    })();
-    let aiReport = coerceReport(raw, 72);
-    if (!aiReport.is_spam && looksLikeSpam(description)) {
-      aiReport = {
-        title: '内容未分類（改善要望なし）',
-        summary: '',
-        is_spam: true,
-        labels: [],
-        confidence: Math.max(0.8, aiReport.confidence),
-        reason: 'non-actionable',
-      };
-    }
-
     const createdAtText = dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss');
     const osNameLabel = (() => {
       if (deviceInfo?.osName === 'iOS') {
