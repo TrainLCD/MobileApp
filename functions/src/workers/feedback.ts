@@ -18,7 +18,7 @@ const GITHUB_LABELS = {
   FEEDBACK_TYPE: '🙏 Feedback',
   CRASH_TYPE: '💣 Crash',
   SPAM_TYPE: '💩 Spam',
-  UNKNONW_TYPE: '❓ Unknown Type',
+  UNKNOWN_TYPE: '❓ Unknown Type',
   AUTOMODE_V1: '🤖 Auto Mode 1.0',
   AUTOMODE_V2: '🤖 Auto Mode 2.0',
 } as const;
