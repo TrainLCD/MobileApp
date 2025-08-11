@@ -3,7 +3,6 @@ import { VertexAI } from '@google-cloud/vertexai';
 import type { FeedbackMessage } from '../models/feedback';
 import type { AIReport, FewShotItem } from '../models/ai';
 import dayjs from 'dayjs';
-import { SPAM_USER_IDS } from '../constants/spam';
 import type { DiscordEmbed } from '../models/common';
 import { Storage } from '@google-cloud/storage';
 
@@ -164,7 +163,7 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
 
   let title = getStr('title');
   let summary = getStr('summary');
-  const isSpam = getBool('isSpam', 'isspam');
+  const isSpam = getBool('isSpam');
   const labels = Array.isArray(map.get('labels')) ? map.get('labels') : [];
   const confidence = getNum('confidence', 0.5);
   const reason = getStr('reason');
@@ -338,7 +337,6 @@ export const feedbackTriageWorker = onMessagePublished(
       sentryEventId,
     } = report;
 
-    const isSpamUser = SPAM_USER_IDS.includes(reporterUid);
     const createdAtText = dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss');
     const osNameLabel = (() => {
       if (deviceInfo?.osName === 'iOS') {
@@ -428,7 +426,7 @@ ${reporterUid}
               appEdition === 'production' && GITHUB_LABELS.PRODUCTION_APP,
               appEdition === 'canary' && GITHUB_LABELS.CANARY_APP,
               appClip && GITHUB_LABELS.PLATFORM_APPCLIP,
-              (isSpamUser || aiReport.isSpam) && GITHUB_LABELS.SPAM_TYPE,
+              aiReport.isSpam && GITHUB_LABELS.SPAM_TYPE,
               osNameLabel,
               autoModeLabel,
             ].filter(Boolean),
@@ -444,7 +442,6 @@ ${reporterUid}
       const issuesRes = (await res.json()) as { html_url: string };
 
       const csWHUrl = process.env.DISCORD_CS_WEBHOOK_URL;
-      const spamCSWHUrl = process.env.DISCORD_SPAM_CS_WEBHOOK_URL;
       const crashWHUrl = process.env.DISCORD_CRASH_WEBHOOK_URL;
       const embeds: DiscordEmbed[] = deviceInfo
         ? [
@@ -556,15 +553,13 @@ ${reporterUid}
 
       switch (reportType) {
         case 'feedback': {
-          const whUrl = isSpamUser ? spamCSWHUrl : csWHUrl;
-
-          if (!whUrl) {
+          if (!csWHUrl) {
             throw new Error(
-              `${isSpamUser ? 'process.env.DISCORD_SPAM_CS_WEBHOOK_URL' : 'process.env.DISCORD_CS_WEBHOOK_URL'} is not set!`
+              `${'process.env.DISCORD_CS_WEBHOOK_URL'} is not set!`
             );
           }
 
-          await fetch(whUrl, {
+          const whRes = await fetch(csWHUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -575,6 +570,11 @@ ${reporterUid}
               })),
             }),
           });
+          if (!whRes.ok) {
+            const msg = await whRes.text().catch(() => '');
+            console.error('Discord CS webhook failed', whRes.status, msg);
+          }
+
           break;
         }
         case 'crash': {
@@ -583,7 +583,7 @@ ${reporterUid}
               'process.env.DISCORD_CRASH_WEBHOOK_URL is not set!'
             );
           }
-          await fetch(crashWHUrl, {
+          const whRes = await fetch(crashWHUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -591,6 +591,10 @@ ${reporterUid}
               embeds,
             }),
           });
+          if (!whRes.ok) {
+            const msg = await whRes.text().catch(() => '');
+            console.error('Discord Crash webhook failed', whRes.status, msg);
+          }
           break;
         }
         default:
