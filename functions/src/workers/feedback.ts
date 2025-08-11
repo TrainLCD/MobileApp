@@ -163,7 +163,7 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
 
   let title = getStr('title');
   let summary = getStr('summary');
-  const isSpam = getBool('isSpam', 'isspam');
+  const isSpam = getBool('isSpam');
   const labels = Array.isArray(map.get('labels')) ? map.get('labels') : [];
   const confidence = getNum('confidence', 0.5);
   const reason = getStr('reason');
