@@ -5,7 +5,11 @@ import * as admin from 'firebase-admin';
 import { PubSub } from '@google-cloud/pubsub';
 
 process.env.TZ = 'Asia/Tokyo';
-admin.initializeApp();
+
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
+
 const firestore = admin.firestore();
 const storage = admin.storage();
 const pubsub = new PubSub();
