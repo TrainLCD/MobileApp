@@ -232,17 +232,22 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     await Promise.all([jaRes.json(), enRes.json()]);
 
   const cacheTopic = pubsub.topic('tts-cache');
-  cacheTopic.publishMessage({
-    json: {
-      id,
-      jaAudioContent,
-      enAudioContent,
-      ssmlJa,
-      ssmlEn,
-      voiceJa: jaVoiceName,
-      voiceEn: enVoiceName,
-    },
-  });
+  cacheTopic
+    .publishMessage({
+      json: {
+        id,
+        jaAudioContent,
+        enAudioContent,
+        ssmlJa,
+        ssmlEn,
+        voiceJa: jaVoiceName,
+        voiceEn: enVoiceName,
+      },
+    })
+    .catch((err) => {
+      console.error('Failed to publish cache message:', err);
+      // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
+    });
 
   return { id, jaAudioContent, enAudioContent };
 });
