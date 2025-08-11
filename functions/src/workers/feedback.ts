@@ -421,9 +421,6 @@ ${reporterUid}
               osNameLabel,
               autoModeLabel,
             ].filter(Boolean),
-            headers: {
-              'X-GitHub-Api-Version': '2022-11-28',
-            },
           }),
         }
       );
