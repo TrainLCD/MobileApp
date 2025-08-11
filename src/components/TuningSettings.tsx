@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  radioSettingItem: {
+  switchSettingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 12,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     paddingHorizontal: 10,
   },
-  radioSettingItemText: {
+  switchSettingItemText: {
     marginLeft: 8,
     fontWeight: 'bold',
   },
@@ -203,14 +203,14 @@ const TuningSettings: React.FC = () => {
           <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
-        <View style={styles.radioSettingItem}>
+        <View style={styles.switchSettingItem}>
           <Switch
             value={!settings.devOverlayEnabled}
             onValueChange={toggleDevOverlayEnabled}
             ios_backgroundColor={'#fff'}
           />
 
-          <Typography style={styles.radioSettingItemText}>
+          <Typography style={styles.switchSettingItemText}>
             開発者オーバレイを無効化する
           </Typography>
         </View>
