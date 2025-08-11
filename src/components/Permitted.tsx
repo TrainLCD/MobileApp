@@ -62,7 +62,7 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
-  const { toggleDevOverlayEnabled } = useAtomValue(tuningState);
+  const { devOverlayEnabled } = useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
@@ -451,7 +451,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.root}>
-          {isDevApp && !toggleDevOverlayEnabled && <DevOverlay />}
+          {isDevApp && !devOverlayEnabled && <DevOverlay />}
           <Header />
           {children}
           <NullableWarningPanel />
