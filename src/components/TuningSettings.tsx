@@ -21,8 +21,8 @@ import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import FAB from './FAB';
 import { Heading } from './Heading';
-import Typography from './Typography';
 import LEDThemeSwitch from './LEDThemeSwitch';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
