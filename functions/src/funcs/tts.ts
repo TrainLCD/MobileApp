@@ -2,10 +2,13 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { createHash } from 'node:crypto';
 import { normalizeRomanText } from '../utils/normalize';
 import * as admin from 'firebase-admin';
+import { PubSub } from '@google-cloud/pubsub';
 
 process.env.TZ = 'Asia/Tokyo';
 admin.initializeApp();
 const firestore = admin.firestore();
+const storage = admin.storage();
+const pubsub = new PubSub();
 
 export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (!req.auth) {
@@ -165,13 +168,83 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   const snapshot = await voicesCollection.where('id', '==', id).get();
 
   if (!snapshot.empty) {
-    const jaAudioData = snapshot.docs[0].get('pathJa');
-    const enAudioData = snapshot.docs[0].get('pathEn');
-    return { jaAudioData, enAudioData, id };
+    const jaAudioData =
+      (await storage
+        .bucket()
+        .file(snapshot.docs[0]?.data().pathJa)
+        .download()) || null;
+    const enAudioData =
+      (await storage
+        .bucket()
+        .file(snapshot.docs[0]?.data().pathEn)
+        .download()) || null;
+
+    const jaAudioContent = jaAudioData?.[0]?.toString('base64') || null;
+    const enAudioContent = enAudioData?.[0]?.toString('base64') || null;
+
+    return { id, jaAudioContent, enAudioContent };
   }
 
-  // ここで音声合成API呼び出しやキャッシュ保存などの処理を追加
-  // ...必要に応じて実装...
+  const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
-  return { id };
+  const reqBodyJa = {
+    input: {
+      ssml: ssmlJa,
+    },
+    voice: {
+      languageCode: 'ja-JP',
+      name: jaVoiceName,
+    },
+    audioConfig: {
+      audioEncoding: 'MP3',
+    },
+  };
+
+  const reqBodyEn = {
+    input: {
+      ssml: ssmlEn,
+    },
+    voice: {
+      languageCode: 'en-US',
+      name: enVoiceName,
+    },
+    audioConfig: {
+      audioEncoding: 'MP3',
+    },
+  };
+
+  const [jaRes, enRes] = await Promise.all([
+    fetch(ttsUrl, {
+      headers: {
+        'content-type': 'application/json; charset=UTF-8',
+      },
+      body: JSON.stringify(reqBodyJa),
+      method: 'POST',
+    }),
+    fetch(ttsUrl, {
+      headers: {
+        'content-type': 'application/json; charset=UTF-8',
+      },
+      body: JSON.stringify(reqBodyEn),
+      method: 'POST',
+    }),
+  ]);
+
+  const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
+    await Promise.all([jaRes.json(), enRes.json()]);
+
+  const cacheTopic = pubsub.topic('tts-cache');
+  cacheTopic.publishMessage({
+    json: {
+      id,
+      jaAudioContent,
+      enAudioContent,
+      ssmlJa,
+      ssmlEn,
+      voiceJa: jaVoiceName,
+      voiceEn: enVoiceName,
+    },
+  });
+
+  return { id, jaAudioContent, enAudioContent };
 });
