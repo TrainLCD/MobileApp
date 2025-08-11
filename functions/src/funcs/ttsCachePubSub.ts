@@ -15,6 +15,16 @@ export const ttsCachePubSub = onMessagePublished('tts-cache', async (event) => {
     voiceJa,
     voiceEn,
   } = event.data.message.json;
+
+  if (!id || !jaAudioContent || !enAudioContent) {
+    console.error('Invalid payload for tts-cache', {
+      hasId: !!id,
+      hasJa: !!jaAudioContent,
+      hasEn: !!enAudioContent,
+    });
+    return;
+  }
+
   const jaTtsCachePathBase = 'caches/tts/ja';
   const jaTtsBuf = Buffer.from(jaAudioContent, 'base64');
   const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
@@ -23,8 +33,17 @@ export const ttsCachePubSub = onMessagePublished('tts-cache', async (event) => {
   const enTtsBuf = Buffer.from(enAudioContent, 'base64');
   const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
 
-  await storage.bucket().file(jaTtsCachePath).save(jaTtsBuf);
-  await storage.bucket().file(enTtsCachePath).save(enTtsBuf);
+  await Promise.all([
+    storage
+      .bucket()
+      .file(jaTtsCachePath)
+      .save(jaTtsBuf, { contentType: 'audio/mpeg', resumable: false }),
+    storage
+      .bucket()
+      .file(enTtsCachePath)
+      .save(enTtsBuf, { contentType: 'audio/mpeg', resumable: false }),
+  ]);
+
   await firestore
     .collection('caches')
     .doc('tts')
