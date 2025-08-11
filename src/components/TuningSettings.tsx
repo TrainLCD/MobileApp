@@ -126,10 +126,10 @@ const TuningSettings: React.FC = () => {
       ),
     }));
 
-  const toggleDevOverlayDisabled = () =>
+  const toggleDevOverlayEnabled = () =>
     setSettings((prev) => ({
       ...prev,
-      disableDevOverlay: !prev.disableDevOverlay,
+      devOverlayEnabled: !prev.devOverlayEnabled,
     }));
 
   return (
@@ -205,8 +205,8 @@ const TuningSettings: React.FC = () => {
 
         <View style={styles.radioSettingItem}>
           <Switch
-            value={settings.disableDevOverlay}
-            onValueChange={toggleDevOverlayDisabled}
+            value={!settings.devOverlayEnabled}
+            onValueChange={toggleDevOverlayEnabled}
             ios_backgroundColor={'#fff'}
           />
 
