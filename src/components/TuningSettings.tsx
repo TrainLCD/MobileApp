@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   TextInput,
   View,
 } from 'react-native';
@@ -31,6 +32,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
+  radioSettingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
   settingItemGroupTitle: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
@@ -49,6 +55,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aaa',
     paddingHorizontal: 10,
+  },
+  radioSettingItemText: {
+    marginLeft: 8,
+    fontWeight: 'bold',
   },
 });
 
@@ -114,6 +124,12 @@ const TuningSettings: React.FC = () => {
         prev.bottomTransitionInterval,
         text
       ),
+    }));
+
+  const toggleDevOverlayDisabled = () =>
+    setSettings((prev) => ({
+      ...prev,
+      disableDevOverlay: !prev.disableDevOverlay,
     }));
 
   return (
@@ -185,6 +201,18 @@ const TuningSettings: React.FC = () => {
             keyboardType="number-pad"
           />
           <Typography style={styles.settingItemUnit}>ms</Typography>
+        </View>
+
+        <View style={styles.radioSettingItem}>
+          <Switch
+            value={settings.disableDevOverlay}
+            onValueChange={toggleDevOverlayDisabled}
+            ios_backgroundColor={'#fff'}
+          />
+
+          <Typography style={styles.radioSettingItemText}>
+            開発者オーバレイを無効化する
+          </Typography>
         </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />
