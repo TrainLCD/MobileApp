@@ -282,7 +282,13 @@ export const feedbackTriageWorker = onMessagePublished(
       location: 'asia-northeast1',
     });
 
-    const FEW_SHOT = await getFewShotText();
+    let FEW_SHOT = '';
+    try {
+      FEW_SHOT = await getFewShotText();
+    } catch (_err) {
+      throw new Error('FEW_SHOT_NOT_AVAILABLE');
+    }
+
     const baseModel = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
 
     const vertexRes = await generateWithRetry(
