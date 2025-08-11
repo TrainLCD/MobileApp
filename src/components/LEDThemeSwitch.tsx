@@ -9,7 +9,7 @@ import {
 import Typography from './Typography';
 
 type Props = {
-  style: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
   value: boolean;
   onValueChange: (value: boolean) => void;
 };

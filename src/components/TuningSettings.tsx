@@ -22,6 +22,7 @@ import { RFValue } from '~/utils/rfValue';
 import FAB from './FAB';
 import { Heading } from './Heading';
 import Typography from './Typography';
+import LEDThemeSwitch from './LEDThemeSwitch';
 
 const styles = StyleSheet.create({
   root: {
@@ -204,11 +205,18 @@ const TuningSettings: React.FC = () => {
         </View>
 
         <View style={styles.switchSettingItem}>
-          <Switch
-            value={!settings.devOverlayEnabled}
-            onValueChange={toggleDevOverlayEnabled}
-            ios_backgroundColor={'#fff'}
-          />
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={!settings.devOverlayEnabled}
+              onValueChange={toggleDevOverlayEnabled}
+            />
+          ) : (
+            <Switch
+              value={!settings.devOverlayEnabled}
+              onValueChange={toggleDevOverlayEnabled}
+              ios_backgroundColor={'#fff'}
+            />
+          )}
 
           <Typography style={styles.switchSettingItemText}>
             開発者オーバレイを無効化する
