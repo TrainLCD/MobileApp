@@ -38,3 +38,10 @@ export type Report = {
   enableLegacyAutoMode: boolean;
   sentryEventId?: string;
 };
+
+export type FeedbackMessage = {
+  id: string;
+  receivedAt: string;
+  report: Report;
+  version: number;
+};
