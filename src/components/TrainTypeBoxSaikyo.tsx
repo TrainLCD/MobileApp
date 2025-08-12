@@ -188,9 +188,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   // 電車種別が変更されたときのみfadeOutFinishedをリセット
+  // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
   useEffect(() => {
     setFadeOutFinished(false);
-    // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
   }, [trainTypeName, prevTrainTypeName]);
 
   useEffect(() => {
