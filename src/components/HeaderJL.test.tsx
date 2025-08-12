@@ -58,10 +58,6 @@ jest.mock('~/hooks/useStationList', () => ({
   useStationList: jest.fn(() => []),
 }));
 
-jest.mock('~/hooks/useCurrentPosition', () => ({
-  useCurrentPosition: jest.fn(() => null),
-}));
-
 jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
   default: false,
