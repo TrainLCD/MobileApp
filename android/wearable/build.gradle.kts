@@ -39,7 +39,7 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 90003031
+      versionCode = 90003041
       versionName = "9.0.3"
     }
     create("prod") {
