@@ -157,9 +157,8 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   useEffect(() => {
-    setFadeOutFinished(false);
-
     if (prevTrainTypeName !== trainTypeName) {
+      setFadeOutFinished(false);
       updateOpacity();
     } else {
       resetValue();
@@ -174,11 +173,13 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
   }));
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeName.split('\n').length === 1 ? 1 : 2),
+    // prevTrainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (prevTrainTypeName?.split('\n').length === 1 ? 1 : 2),
     [prevTrainTypeName]
   );
 

@@ -188,9 +188,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   useEffect(() => {
-    setFadeOutFinished(false);
-
     if (prevTrainTypeName !== trainTypeName) {
+      setFadeOutFinished(false);
       updateOpacity();
     } else {
       resetValue();
@@ -205,11 +204,13 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }));
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeText.split('\n').length === 1 ? 1 : 2),
+    // prevTrainTypeTextがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (prevTrainTypeText?.split('\n').length === 1 ? 1 : 2),
     [prevTrainTypeText]
   );
 
