@@ -207,12 +207,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   );
 
   const numberOfLines = useMemo(
-    // Optional chaining prevents crashes when trainTypeName is undefined/null
+    // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
     () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    // Optional chaining prevents crashes when prevTrainTypeName is undefined/null
+    // prevTrainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
     () => (prevTrainTypeName?.split('\n').length === 1 ? 1 : 2),
     [prevTrainTypeName]
   );
