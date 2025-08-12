@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { TrainType } from '~/gen/proto/stationapi_pb';
 import TrainTypeBoxSaikyo from './TrainTypeBoxSaikyo';
 
 // Mock dependencies
@@ -19,15 +20,6 @@ jest.mock('react-native-reanimated', () => {
 
 jest.mock('~/hooks/useLazyPrevious', () => ({
   useLazyPrevious: jest.fn((value) => value),
-}));
-
-jest.mock('~/hooks/usePrevious', () => ({
-  usePrevious: jest.fn((value) => value),
-}));
-
-jest.mock('~/store/atoms/headerTransitionDelay', () => ({
-  __esModule: true,
-  default: { value: 100 },
 }));
 
 // Create a minimal test component to test the split function crash fix
@@ -52,20 +44,7 @@ const TestSplitFunction = ({
 };
 
 describe('TrainTypeBoxSaikyo', () => {
-  const mockTrainType = {
-    id: 1,
-    groupId: 1,
-    nameShort: 'Test',
-    nameMedium: 'Test Type',
-    nameFull: 'Test Train Type',
-    nameRoman: 'Test',
-    nameKatakana: 'テスト',
-    nameKorean: '테스트',
-    nameChinese: '测试',
-    color: '#FF0000',
-    lines: [],
-    kind: 0,
-  };
+  const mockTrainType = new TrainType({});
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -123,13 +102,15 @@ describe('TrainTypeBoxSaikyo', () => {
   describe('Component rendering', () => {
     it('should render without crashing with valid train type', () => {
       expect(() => {
-        render(<TrainTypeBoxSaikyo trainType={mockTrainType} />);
+        render(
+          <TrainTypeBoxSaikyo lineColor="#000" trainType={mockTrainType} />
+        );
       }).not.toThrow();
     });
 
     it('should render without crashing with null train type', () => {
       expect(() => {
-        render(<TrainTypeBoxSaikyo trainType={null} />);
+        render(<TrainTypeBoxSaikyo lineColor="#000" trainType={null} />);
       }).not.toThrow();
     });
   });

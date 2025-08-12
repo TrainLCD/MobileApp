@@ -1,10 +1,14 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { TrainType } from '~/gen/proto/stationapi_pb';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
-  useAtomValue: jest.fn(() => 'JA'),
+  useAtomValue: jest.fn(() => ({
+    headerLangState: 'JA',
+    headerState: 'CURRENT',
+  })),
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({
@@ -40,7 +44,7 @@ const TestSplitFunction = ({
 }) => {
   // This mimics the exact logic from TrainTypeBoxJL that was causing crashes
   const trainTypeName = React.useMemo(() => {
-    const headerLangState = 'JA';
+    const headerLangState = 'JA' as 'JA' | 'EN' | 'ZH' | 'KO';
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR?.split('\n')[0]?.trim();
@@ -62,20 +66,7 @@ const TestSplitFunction = ({
 };
 
 describe('TrainTypeBoxJL', () => {
-  const mockTrainType = {
-    id: 1,
-    groupId: 1,
-    nameShort: 'Test',
-    nameMedium: 'Test Type',
-    nameFull: 'Test Train Type',
-    nameRoman: 'Test',
-    nameKatakana: 'テスト',
-    nameKorean: '테스트',
-    nameChinese: '测试',
-    color: '#FF0000',
-    lines: [],
-    kind: 0,
-  };
+  const mockTrainType = new TrainType({});
 
   beforeEach(() => {
     jest.clearAllMocks();

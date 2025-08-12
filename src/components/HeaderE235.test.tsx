@@ -4,7 +4,10 @@ import HeaderE235 from './HeaderE235';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
-  useAtomValue: jest.fn(() => 'JA'),
+  useAtomValue: jest.fn(() => ({
+    headerLangState: 'JA',
+    headerState: 'CURRENT',
+  })),
 }));
 
 jest.mock('react-native-reanimated', () => {
@@ -46,20 +49,12 @@ jest.mock('~/translation', () => ({
   }),
 }));
 
-jest.mock('~/hooks/usePrevious', () => ({
-  usePrevious: jest.fn((value) => value),
-}));
-
 jest.mock('~/hooks/useTransferLines', () => ({
   useTransferLines: jest.fn(() => []),
 }));
 
 jest.mock('~/hooks/useStationList', () => ({
   useStationList: jest.fn(() => []),
-}));
-
-jest.mock('~/hooks/useCurrentPosition', () => ({
-  useCurrentPosition: jest.fn(() => null),
 }));
 
 jest.mock('~/utils/isTablet', () => ({

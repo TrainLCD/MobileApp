@@ -4,9 +4,11 @@ import HeaderJL from './HeaderJL';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
-  useAtomValue: jest.fn(() => 'JA'),
+  useAtomValue: jest.fn(() => ({
+    headerLangState: 'JA',
+    headerState: 'CURRENT',
+  })),
 }));
-
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
   return {
@@ -46,20 +48,12 @@ jest.mock('~/translation', () => ({
   }),
 }));
 
-jest.mock('~/hooks/usePrevious', () => ({
-  usePrevious: jest.fn((value) => value),
-}));
-
 jest.mock('~/hooks/useTransferLines', () => ({
   useTransferLines: jest.fn(() => []),
 }));
 
 jest.mock('~/hooks/useStationList', () => ({
   useStationList: jest.fn(() => []),
-}));
-
-jest.mock('~/hooks/useCurrentPosition', () => ({
-  useCurrentPosition: jest.fn(() => null),
 }));
 
 jest.mock('~/utils/isTablet', () => ({
