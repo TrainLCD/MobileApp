@@ -43,12 +43,12 @@ These Cloud Functions provide server-side functionality including:
 
 3. Set up environment variables:
    ```bash
-   # Create your local environment configuration
-   cp .env.example .env.local
-   # Edit .env.local with your Firebase project configuration
+   # Create your local environment configuration file (see .env.example)
+   cp .env.example <your-env-file>
+   # Edit your environment file with your Firebase project configuration
    ```
 
-   Note: You'll need to configure your Firebase project credentials and other environment-specific settings.
+   Note: You'll need to configure your Firebase project credentials and other environment-specific settings. Do not commit environment files containing sensitive credentials.
 
 ### Development
 
@@ -108,17 +108,17 @@ npm run shell
 
 ```text
 src/
-├── constants/      # Application constants
 ├── domain/         # Business logic and domain models
+├── funcs/          # Main function handlers
 ├── models/         # Type definitions and interfaces
 ├── utils/          # Utility functions
+├── workers/        # Background workers
 └── index.ts        # Main function exports
 
 lib/                # Compiled JavaScript output
 ```
 
 ## Functions
-
 The Cloud Functions in this project handle various backend operations:
 
 ### HTTP Functions
@@ -135,12 +135,11 @@ The Cloud Functions in this project handle various backend operations:
 - Database change reactions
 - Data validation
 - Automated workflows
-
 ## Environment Configuration
 
 The functions use environment variables for configuration. You'll need to set up your own environment files based on your Firebase project settings:
 
-- Create `.env.local` for local development
+- Create an environment file for local development (see `.env.example`)
 - Configure production environment variables in your Firebase project settings
 
 Make sure to never commit environment files containing sensitive credentials to version control.
@@ -151,7 +150,7 @@ Make sure to never commit environment files containing sensitive credentials to 
 
 ```bash
 # Make sure you're using the correct Firebase project
-firebase use your-dev-project
+firebase use <your-dev-project>
 npm run deploy
 ```
 
@@ -159,7 +158,7 @@ npm run deploy
 
 ```bash
 # Switch to production project
-firebase use your-prod-project
+firebase use <your-prod-project>
 npm run deploy
 ```
 
@@ -212,26 +211,27 @@ Functions are integrated with error tracking and monitoring systems to help iden
 
 ## Contributing
 
+
 When contributing to the Cloud Functions:
 
 1. Follow the existing TypeScript coding standards
-2. Add tests for new functions
-3. Update this README if adding new functionality
+2. Add tests for new functions and workers
+3. Update this README if adding new functionality or changing structure
 4. Ensure all tests pass before submitting
 5. Use meaningful commit messages
 
 ### Development Guidelines
 
 - Use TypeScript for all function code
-- Follow the established project structure
+- Follow the established project structure (see above)
 - Add proper error handling and logging
-- Write unit tests for business logic
+- Write unit tests for business logic and workers
 - Document complex functions and algorithms
 
 ## Security
 
 - Environment variables contain sensitive configuration
-- Never commit `.env` files with real credentials
+- Never commit environment files with real credentials
 - Follow Firebase security best practices
 - Validate all inputs in HTTP functions
 - Use proper authentication and authorization
