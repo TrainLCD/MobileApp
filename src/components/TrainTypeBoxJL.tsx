@@ -86,13 +86,13 @@ const TrainTypeBoxJL: React.FC<Props> = ({
   const trainTypeName = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return trainTypeNameR.split('\n')[0]?.trim();
+        return trainTypeNameR?.split('\n')[0]?.trim();
       case 'ZH':
-        return trainTypeNameZh.split('\n')[0]?.trim();
+        return trainTypeNameZh?.split('\n')[0]?.trim();
       case 'KO':
-        return trainTypeNameKo.split('\n')[0]?.trim();
+        return trainTypeNameKo?.split('\n')[0]?.trim();
       default:
-        return trainTypeNameJa.split('\n')[0]?.trim();
+        return trainTypeNameJa?.split('\n')[0]?.trim();
     }
   }, [
     headerLangState,
@@ -103,7 +103,8 @@ const TrainTypeBoxJL: React.FC<Props> = ({
   ]);
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
 
