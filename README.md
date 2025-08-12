@@ -32,11 +32,11 @@ This app recreates the authentic experience of Japanese train travel by displayi
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 - [Architecture](#architecture)
-- [License](#license)
 - [Support](#support)
 - [Join our Community](#join-our-community)
 - [Contributors](#contributors-)
 - [Related Projects](#related-projects)
+- [License](#license)
 
 ## Screenshots
 
