@@ -188,7 +188,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   // 電車種別が変更されたときのみfadeOutFinishedをリセット
   useEffect(() => {
     setFadeOutFinished(false);
-  }, [trainTypeName]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
+  }, [trainTypeName, prevTrainTypeName]);
 
   useEffect(() => {
     if (prevTrainTypeName !== trainTypeName) {
