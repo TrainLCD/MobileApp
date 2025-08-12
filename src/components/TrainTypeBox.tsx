@@ -208,11 +208,11 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   );
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeName.split('\n').length === 1 ? 1 : 2),
+    () => (prevTrainTypeName?.split('\n').length === 1 ? 1 : 2),
     [prevTrainTypeName]
   );
 
