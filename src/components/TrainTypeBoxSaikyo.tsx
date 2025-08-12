@@ -187,9 +187,13 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     );
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
+  // 電車種別が変更されたときのみfadeOutFinishedをリセット
+  useEffect(() => {
+    setFadeOutFinished(false);
+  }, [trainTypeName]);
+
   useEffect(() => {
     if (prevTrainTypeName !== trainTypeName) {
-      setFadeOutFinished(false);
       updateOpacity();
     } else {
       resetValue();
