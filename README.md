@@ -236,10 +236,6 @@ TrainLCD is built with:
 - **Sentry** - Error tracking and performance monitoring
 - **Protocol Buffers** - Efficient data serialization
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Support
 
 ### Community Support
@@ -287,3 +283,8 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 ## Related Projects
 
 - [StationAPI](https://github.com/TinyKitten/StationAPI) - Backend API for station data
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
