@@ -61,6 +61,17 @@ describe('TrainTypeBoxJRKyushu', () => {
     color: '#FF0000',
     lines: [],
     kind: 0,
+    typeId: 1,
+    name: 'Test',
+    direction: 0,
+    equals: jest.fn(() => false),
+    clone: jest.fn(),
+    toBinary: jest.fn(() => new Uint8Array()),
+    toJson: jest.fn(() => ({})),
+    toJsonString: jest.fn(() => '{}'),
+    fromBinary: jest.fn(),
+    fromJson: jest.fn(),
+    fromJsonString: jest.fn(),
   };
 
   beforeEach(() => {

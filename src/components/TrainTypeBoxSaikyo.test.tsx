@@ -65,6 +65,17 @@ describe('TrainTypeBoxSaikyo', () => {
     color: '#FF0000',
     lines: [],
     kind: 0,
+    typeId: 1,
+    name: 'Test',
+    direction: 0,
+    equals: jest.fn(() => false),
+    clone: jest.fn(),
+    toBinary: jest.fn(() => new Uint8Array()),
+    toJson: jest.fn(() => ({})),
+    toJsonString: jest.fn(() => '{}'),
+    fromBinary: jest.fn(),
+    fromJson: jest.fn(),
+    fromJsonString: jest.fn(),
   };
 
   beforeEach(() => {
@@ -123,13 +134,13 @@ describe('TrainTypeBoxSaikyo', () => {
   describe('Component rendering', () => {
     it('should render without crashing with valid train type', () => {
       expect(() => {
-        render(<TrainTypeBoxSaikyo trainType={mockTrainType} />);
+        render(<TrainTypeBoxSaikyo trainType={mockTrainType} lineColor="#FF0000" />);
       }).not.toThrow();
     });
 
     it('should render without crashing with null train type', () => {
       expect(() => {
-        render(<TrainTypeBoxSaikyo trainType={null} />);
+        render(<TrainTypeBoxSaikyo trainType={null} lineColor="#FF0000" />);
       }).not.toThrow();
     });
   });

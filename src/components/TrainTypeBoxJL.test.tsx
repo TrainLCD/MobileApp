@@ -4,6 +4,7 @@ import TrainTypeBoxJL from './TrainTypeBoxJL';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
+  atom: jest.fn((initialValue) => ({ value: initialValue })),
   useAtomValue: jest.fn(() => 'JA'),
 }));
 
@@ -40,7 +41,9 @@ const TestSplitFunction = ({
 }) => {
   // This mimics the exact logic from TrainTypeBoxJL that was causing crashes
   const trainTypeName = React.useMemo(() => {
-    const headerLangState = 'JA';
+    // Use type assertion to allow switch statement with all possible values
+    const headerLangState = 'JA' as 'JA' | 'EN' | 'ZH' | 'KO';
+    
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR?.split('\n')[0]?.trim();
@@ -75,6 +78,17 @@ describe('TrainTypeBoxJL', () => {
     color: '#FF0000',
     lines: [],
     kind: 0,
+    typeId: 1,
+    name: 'Test',
+    direction: 0,
+    equals: jest.fn(() => false),
+    clone: jest.fn(),
+    toBinary: jest.fn(() => new Uint8Array()),
+    toJson: jest.fn(() => ({})),
+    toJsonString: jest.fn(() => '{}'),
+    fromBinary: jest.fn(),
+    fromJson: jest.fn(),
+    fromJsonString: jest.fn(),
   };
 
   beforeEach(() => {
