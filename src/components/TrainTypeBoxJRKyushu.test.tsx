@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { TrainType } from '~/gen/proto/stationapi_pb';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 
 // Mock dependencies
@@ -19,11 +20,6 @@ jest.mock('react-native-reanimated', () => {
 
 jest.mock('~/hooks/useLazyPrevious', () => ({
   useLazyPrevious: jest.fn((value) => value),
-}));
-
-jest.mock('~/store/atoms/headerTransitionDelay', () => ({
-  __esModule: true,
-  default: { value: 100 },
 }));
 
 // Create a minimal test component to test the split function crash fix
@@ -48,20 +44,7 @@ const TestSplitFunction = ({
 };
 
 describe('TrainTypeBoxJRKyushu', () => {
-  const mockTrainType = {
-    id: 1,
-    groupId: 1,
-    nameShort: 'Test',
-    nameMedium: 'Test Type',
-    nameFull: 'Test Train Type',
-    nameRoman: 'Test',
-    nameKatakana: 'テスト',
-    nameKorean: '테스트',
-    nameChinese: '测试',
-    color: '#FF0000',
-    lines: [],
-    kind: 0,
-  };
+  const mockTrainType = new TrainType({});
 
   beforeEach(() => {
     jest.clearAllMocks();

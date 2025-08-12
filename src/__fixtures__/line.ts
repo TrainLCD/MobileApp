@@ -4,7 +4,7 @@ import {
   LineType,
   OperationStatus,
   StopCondition,
-} from '~/gen/proto/stationapi_pb'
+} from '~/gen/proto/stationapi_pb';
 
 export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
   lineSymbols: [
@@ -65,7 +65,7 @@ export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
     name: '東京都交通局',
     url: 'http://www.kotsu.metro.tokyo.jp/',
   },
-})
+});
 
 export const RYOMO_LINE = new Line({
   lineSymbols: [],
@@ -113,4 +113,4 @@ export const RYOMO_LINE = new Line({
     name: 'JR東日本',
     url: 'http://www.jreast.co.jp/',
   },
-})
+});
