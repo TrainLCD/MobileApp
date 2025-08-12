@@ -186,9 +186,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   useEffect(() => {
-    setFadeOutFinished(false);
-
     if (prevTrainTypeName !== trainTypeName) {
+      setFadeOutFinished(false);
       updateOpacity();
     } else {
       resetValue();
