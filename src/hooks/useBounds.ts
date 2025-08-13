@@ -72,14 +72,7 @@ export const useBounds = (): {
       }
     }
 
-    if (
-      inboundStation?.groupId !== currentStation?.groupId ||
-      outboundStation?.groupId !== currentStation?.groupId
-    ) {
-      return [[inboundStation], [outboundStation]];
-    }
-
-    return [[], []];
+    return [[inboundStation], [outboundStation]];
   }, [
     currentLine?.id,
     currentStation,

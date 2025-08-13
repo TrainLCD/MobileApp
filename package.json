@@ -25,6 +25,7 @@
     "@expo-google-fonts/roboto": "^0.2.3",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^14.1.0",
+    "@holiday-jp/holiday_jp": "^2.5.1",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/cli": "^15.1.2",
     "@react-native-firebase/analytics": "^21.6.0",
@@ -117,7 +118,13 @@
     "preset": "jest-expo",
     "transformIgnorePatterns": [
       "node_modules/.pnpm/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
-    ]
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "moduleNameMapper": {
+      "^~/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "expo": {
     "doctor": {

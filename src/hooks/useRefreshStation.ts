@@ -38,7 +38,7 @@ export const useRefreshStation = (): void => {
   const setNavigation = useSetAtom(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
-  const speed = useLocationStore((state) => state?.coords.speed);
+  const speed = useLocationStore((state) => state?.coords.speed) ?? -1;
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
 
   const nextStation = useNextStation();
@@ -71,9 +71,13 @@ export const useRefreshStation = (): void => {
       );
     }
 
+    // NOTE: 速度か位置情報の取得誤差が無効値 or 位置情報の取得誤差が一定以上ある場合は走行速度を停車判定に使用しない
+    const isSpeedInvalid = speed < 0;
+    const isAccuracyInvalid =
+      !accuracy || (accuracy ?? 0) >= BAD_ACCURACY_THRESHOLD;
+
     const arrived =
-      // NOTE: 位置情報が取得できない or 位置情報の取得誤差が200m以上ある場合は走行速度を停車判定に使用しない
-      !speed || !accuracy || (accuracy && accuracy >= BAD_ACCURACY_THRESHOLD)
+      isSpeedInvalid || isAccuracyInvalid
         ? isPointWithinRadius(
             { latitude, longitude },
             {
@@ -89,7 +93,9 @@ export const useRefreshStation = (): void => {
               longitude: nearestStation.longitude,
             },
             arrivedThreshold
-          ) && (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED; // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
+          ) &&
+          // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
+          (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED;
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();

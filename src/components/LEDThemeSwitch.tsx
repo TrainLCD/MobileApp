@@ -1,7 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { type ComponentProps, useCallback } from 'react';
 import {
   type StyleProp,
   StyleSheet,
+  type Switch,
   TouchableOpacity,
   View,
   type ViewStyle,
@@ -9,10 +10,10 @@ import {
 import Typography from './Typography';
 
 type Props = {
-  style: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
   value: boolean;
   onValueChange: (value: boolean) => void;
-};
+} & ComponentProps<typeof Switch>;
 
 const styles = StyleSheet.create({
   container: {
@@ -34,7 +35,12 @@ const styles = StyleSheet.create({
   },
 });
 
-const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
+const LEDThemeSwitch = ({
+  style,
+  value,
+  onValueChange,
+  accessibilityLabel,
+}: Props) => {
   const handleContainerPress = useCallback(
     () => onValueChange(!value),
     [onValueChange, value]
@@ -44,9 +50,13 @@ const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
       activeOpacity={1}
       onPress={handleContainerPress}
       style={[
-        { ...styles.container, borderColor: value ? '#fff' : '#555' },
+        styles.container,
+        { borderColor: value ? '#fff' : '#555' },
         style,
       ]}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={accessibilityLabel}
     >
       <View
         style={[
@@ -57,7 +67,11 @@ const LEDThemeSwitch = ({ style, value, onValueChange }: Props) => {
           },
         ]}
       >
-        <Typography style={styles.label}>{value ? 'ON' : 'OFF'}</Typography>
+        <Typography
+          style={[styles.label, { color: value ? '#212121' : '#fff' }]}
+        >
+          {value ? 'ON' : 'OFF'}
+        </Typography>
       </View>
     </TouchableOpacity>
   );

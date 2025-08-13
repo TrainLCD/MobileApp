@@ -11,8 +11,7 @@ import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { type ErrorInfo, useCallback, useEffect, useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -22,9 +21,8 @@ import {
 } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ErrorFallback from './components/ErrorBoundary';
+import CustomErrorBoundary from './components/CustomErrorBoundary';
 import TuningSettings from './components/TuningSettings';
-import { useAnonymousUser, useFeedback } from './hooks';
 import { queryClient, transport } from './lib/grpc';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen';
@@ -76,26 +74,7 @@ const App: React.FC = () => {
     (Text as unknown as TextProps).defaultProps.allowFontScaling = false;
   }, []);
 
-  const user = useAnonymousUser();
-  const { sendReport } = useFeedback(user ?? null);
   const [permStatus] = Location.useForegroundPermissions();
-
-  const handleBoundaryError = useCallback(
-    async (error: Error, info: ErrorInfo) => {
-      if (!__DEV__) {
-        await sendReport({
-          reportType: 'crash',
-          description: error.message,
-          stacktrace: info.componentStack
-            ?.split('\n')
-            ?.filter((c) => c.length !== 0)
-            ?.map((c) => c.trim())
-            .join('\n'),
-        });
-      }
-    },
-    [sendReport]
-  );
 
   const [fontsLoaded, fontsLoadError] = useFonts({
     Roboto_400Regular,
@@ -120,10 +99,7 @@ const App: React.FC = () => {
         <SystemBars hidden style="auto" />
       )}
 
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onError={handleBoundaryError}
-      >
+      <CustomErrorBoundary>
         <GestureHandlerRootView>
           <TransportProvider transport={transport}>
             <QueryClientProvider client={queryClient}>
@@ -177,7 +153,7 @@ const App: React.FC = () => {
             </QueryClientProvider>
           </TransportProvider>
         </GestureHandlerRootView>
-      </ErrorBoundary>
+      </CustomErrorBoundary>
     </>
   );
 };

@@ -1,13 +1,15 @@
+import holiday_jp from '@holiday-jp/holiday_jp';
 import dayjs from 'dayjs';
-import nationalHolidays from './assets/nationalHolidays.json';
+import memoize from 'lodash/memoize';
 
-export const getIsHoliday = (): boolean => {
-  const now = dayjs();
-  const isNationalHoliday = nationalHolidays.some((ev) => {
-    const eventDay = dayjs(ev.date);
-    return now.isSame(eventDay, 'month') && now.isSame(eventDay, 'date');
-  });
+const formatDate = (date: Date) =>
+  [date.getFullYear(), date.getMonth(), date.getDate()].join('-');
+
+export const getIsHoliday = memoize((date: Date): boolean => {
+  const now = dayjs(date);
+
+  const isNationalHoliday = holiday_jp.isHoliday(date);
   const isWeekend = now.day() === 0 || now.day() === 6;
 
   return isWeekend || isNationalHoliday;
-};
+}, formatDate);

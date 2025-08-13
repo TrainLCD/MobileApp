@@ -1,7 +1,7 @@
 import {
   AMAGASAKI_STATIONS_FROM_SEARCH,
   OCHIAI_STATIONS_FROM_SEARCH,
-} from '../../__mocks__/fixture/search';
+} from './__fixtures__/search';
 import { groupStations } from './groupStations';
 
 describe('useStationGrouping', () => {

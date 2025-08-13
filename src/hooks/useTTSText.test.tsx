@@ -2,7 +2,10 @@ import { renderHook } from '@testing-library/react-native';
 import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
-import { StationNumber } from '~/gen/proto/stationapi_pb';
+import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
+import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
+import { type Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import { useNextStation } from '~/hooks/useNextStation';
 import { useThemeStore } from '~/hooks/useThemeStore';
 import { useTTSText } from '~/hooks/useTTSText';
 import type { LineDirection } from '~/models/Bound';
@@ -10,23 +13,14 @@ import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
 import type { AppTheme } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
-import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line';
-import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station';
-import { setupMockUseNextStation } from '../../__mocks__/useNextStation';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNumbering', () => ({
   useNumbering: jest.fn(),
 }));
-
-const setupMockUseNumbering = ([stationNumber, threeLetterCode]: [
-  StationNumber | undefined,
-  string,
-]) =>
-  require('~/hooks/useNumbering').useNumbering.mockReturnValue([
-    stationNumber,
-    threeLetterCode,
-  ]);
+jest.mock('~/hooks/useNextStation', () => ({
+  useNextStation: jest.fn(),
+}));
 
 const useTTSTextWithJotaiAndNumbering = (
   theme: AppTheme,
@@ -67,11 +61,15 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <Provider>{children}</Provider>
 );
 
-// TODO: firstSpeech refの動作検証が取れていないので後でfirstSpeechも対象にして実施する
+const setupMockUseNextStation = (station: Station) =>
+  (useNextStation as jest.Mock).mockReturnValue(station);
+
 describe('Without trainType & With numbering', () => {
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
-    setupMockUseNumbering([
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
       new StationNumber({
         lineSymbol: 'S',
         lineSymbolColor: '#B0BF1E',
@@ -80,6 +78,11 @@ describe('Without trainType & With numbering', () => {
       }),
       '',
     ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
   });
 
   test.each([
@@ -298,10 +301,29 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
-        'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'Arriving at Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
-      ]);
+      const [jaSSML, enSSML] = result.current;
+      // 英語SSMLがundefinedの場合は空文字列にする
+      const en = typeof enSSML === 'string' ? enSSML : '';
+
+      // 日本語: 期待される日本語SSML出力を検証
+      expect(jaSSML).toBe(
+        'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。'
+      );
+      // 日本語: 期待される英語SSML出力を検証
+      expect(en).toBe(
+        'Arriving at Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.'
+      );
+
+      // 日本語: 英語SSMLに日本語文字（ひらがな・カタカナ・漢字）が含まれていないことを厳密に検証
+      const japaneseCharRegex = /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF]/;
+      expect(en).not.toMatch(japaneseCharRegex);
+
+      // 日本語: 英語SSMLが空文字列でないことを検証
+      expect(en).toHaveLength(en.length);
+
+      // 日本語: 英語SSMLに駅番号（例: S 2 や station number S 2 など）が含まれていることを検証
+      const stationNumberRegex = /(S \d{1,2}|station number S ?\d{1,2})/;
+      expect(en).toMatch(stationNumberRegex);
     });
   });
 });

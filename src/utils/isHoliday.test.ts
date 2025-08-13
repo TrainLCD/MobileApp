@@ -10,7 +10,7 @@ describe('Should be weekend', () => {
     new Date(2024, 0, 7),
   ])('%p must be weekend', (date) => {
     jest.setSystemTime(date);
-    expect(getIsHoliday()).toBeTruthy();
+    expect(getIsHoliday(date)).toBeTruthy();
   });
 });
 
@@ -22,7 +22,7 @@ describe('Should **not** be weekend', () => {
     new Date(2024, 0, 16, 0, 0, 0, 0),
   ])('%p must be weekday', (date) => {
     jest.setSystemTime(date);
-    expect(getIsHoliday()).toBeFalsy();
+    expect(getIsHoliday(date)).toBeFalsy();
   });
 });
 
@@ -36,6 +36,6 @@ describe('Should be national holiday', () => {
     new Date(2024, 1, 23),
   ])('%p must be national holiday', (date) => {
     jest.setSystemTime(date);
-    expect(getIsHoliday()).toBeTruthy();
+    expect(getIsHoliday(date)).toBeTruthy();
   });
 });

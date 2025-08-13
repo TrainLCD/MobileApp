@@ -18,6 +18,7 @@ import {
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
+import tuningState from '~/store/atoms/tuning';
 import {
   useAndroidWearable,
   useAppleWatch,
@@ -62,6 +63,8 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
+  const { devOverlayEnabled, untouchableModeEnabled } =
+    useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
@@ -205,7 +208,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         state: State;
       };
     }) => {
-      if (!selectedBound || nativeEvent.state !== State.ACTIVE) {
+      if (
+        !selectedBound ||
+        nativeEvent.state !== State.ACTIVE ||
+        untouchableModeEnabled
+      ) {
         return;
       }
 
@@ -292,6 +299,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       navigation,
       selectedBound,
       showActionSheetWithOptions,
+      untouchableModeEnabled,
     ]
   );
 
@@ -452,7 +460,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.root}>
-          {isDevApp && <DevOverlay />}
+          {isDevApp && devOverlayEnabled && <DevOverlay />}
           <Header />
           {children}
           <NullableWarningPanel />

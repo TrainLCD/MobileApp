@@ -36,4 +36,12 @@ export type Report = {
   appClip: boolean;
   autoModeEnabled: boolean;
   enableLegacyAutoMode: boolean;
+  sentryEventId?: string;
+};
+
+export type FeedbackMessage = {
+  id: string;
+  receivedAt: string;
+  report: Report;
+  version: number;
 };

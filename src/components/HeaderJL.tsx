@@ -237,7 +237,7 @@ const HeaderJL = () => {
             // 2単語以降はlower caseにしたい
             // Next Last Stop -> Next last stop
             const smallCapitalizedLast = translate('nextEnLast')
-              .split('\n')
+              ?.split('\n')
               .map((letters, index) =>
                 !index ? letters : letters.toLowerCase()
               )
