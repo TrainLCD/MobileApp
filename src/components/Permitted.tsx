@@ -18,7 +18,6 @@ import {
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
-import tuningState from '~/store/atoms/tuning';
 import {
   useAndroidWearable,
   useAppleWatch,
@@ -31,6 +30,7 @@ import {
   useThemeStore,
   useWarningInfo,
 } from '~/hooks';
+import tuningState from '~/store/atoms/tuning';
 import {
   ALL_AVAILABLE_LANGUAGES,
   APP_STORE_URL,
