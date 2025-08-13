@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import navigationState from '~/store/atoms/navigation';
+import tuningState from '~/store/atoms/tuning';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
@@ -30,6 +31,7 @@ export const useWarningInfo = () => {
 
   const { selectedBound } = useAtomValue(stationState);
   const { autoModeEnabled } = useAtomValue(navigationState);
+  const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const badAccuracy = useBadAccuracy();
   const [fgPermStatus] = useForegroundPermissions();
@@ -95,6 +97,13 @@ export const useWarningInfo = () => {
       }
     }
 
+    if (untouchableModeEnabled) {
+      return {
+        level: WARNING_PANEL_LEVEL.INFO,
+        text: translate('untouchableModeEnabledNotice'),
+      };
+    }
+
     if (!longPressNoticeDismissed && selectedBound) {
       return {
         level: WARNING_PANEL_LEVEL.INFO,
@@ -141,6 +150,7 @@ export const useWarningInfo = () => {
     screenshotTaken,
     selectedBound,
     warningDismissed,
+    untouchableModeEnabled,
   ]);
 
   const clearWarningInfo = useCallback(() => {
