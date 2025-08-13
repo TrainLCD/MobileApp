@@ -62,7 +62,8 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
-  const { devOverlayEnabled } = useAtomValue(tuningState);
+  const { devOverlayEnabled, untouchableModeEnabled } =
+    useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
@@ -204,7 +205,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         state: State;
       };
     }) => {
-      if (!selectedBound || nativeEvent.state !== State.ACTIVE) {
+      if (
+        !selectedBound ||
+        nativeEvent.state !== State.ACTIVE ||
+        untouchableModeEnabled
+      ) {
         return;
       }
 
@@ -291,6 +296,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       navigation,
       selectedBound,
       showActionSheetWithOptions,
+      untouchableModeEnabled,
     ]
   );
 

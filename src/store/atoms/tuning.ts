@@ -10,6 +10,7 @@ export type TuningState = {
   headerTransitionDelay: number;
   bottomTransitionInterval: number;
   devOverlayEnabled: boolean;
+  untouchableModeEnabled: boolean;
 };
 
 const tuningState = atom<TuningState>({
@@ -17,6 +18,7 @@ const tuningState = atom<TuningState>({
   headerTransitionDelay: DEFAULT_HEADER_TRANSITION_DELAY,
   bottomTransitionInterval: DEFAULT_BOTTOM_TRANSITION_INTERVAL,
   devOverlayEnabled: true,
+  untouchableModeEnabled: false,
 });
 
 export default tuningState;

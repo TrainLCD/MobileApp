@@ -133,6 +133,12 @@ const TuningSettings: React.FC = () => {
       devOverlayEnabled: !prev.devOverlayEnabled,
     }));
 
+  const toggleUntouchableModeEnabled = () =>
+    setSettings((prev) => ({
+      ...prev,
+      untouchableModeEnabled: !prev.untouchableModeEnabled,
+    }));
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -226,6 +232,31 @@ const TuningSettings: React.FC = () => {
             accessibilityRole="button"
           >
             {translate('disableDevOverlay')}
+          </Typography>
+        </View>
+
+        <View style={styles.switchSettingItem}>
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={settings.untouchableModeEnabled}
+              onValueChange={toggleUntouchableModeEnabled}
+              accessibilityLabel={translate('enableUntouchableMode')}
+            />
+          ) : (
+            <Switch
+              value={settings.untouchableModeEnabled}
+              onValueChange={toggleUntouchableModeEnabled}
+              ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('enableUntouchableMode')}
+            />
+          )}
+
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleUntouchableModeEnabled}
+            accessibilityRole="button"
+          >
+            {translate('enableUntouchableMode')}
           </Typography>
         </View>
       </ScrollView>
