@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   TextInput,
   View,
 } from 'react-native';
@@ -20,6 +21,7 @@ import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import FAB from './FAB';
 import { Heading } from './Heading';
+import LEDThemeSwitch from './LEDThemeSwitch';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -30,6 +32,11 @@ const styles = StyleSheet.create({
   settingItem: {
     flexDirection: 'row',
     alignItems: 'baseline',
+  },
+  switchSettingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
   },
   settingItemGroupTitle: {
     fontSize: RFValue(14),
@@ -49,6 +56,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aaa',
     paddingHorizontal: 10,
+  },
+  switchSettingItemText: {
+    marginLeft: 8,
+    fontWeight: 'bold',
   },
 });
 
@@ -114,6 +125,18 @@ const TuningSettings: React.FC = () => {
         prev.bottomTransitionInterval,
         text
       ),
+    }));
+
+  const toggleDevOverlayEnabled = () =>
+    setSettings((prev) => ({
+      ...prev,
+      devOverlayEnabled: !prev.devOverlayEnabled,
+    }));
+
+  const toggleUntouchableModeEnabled = () =>
+    setSettings((prev) => ({
+      ...prev,
+      untouchableModeEnabled: !prev.untouchableModeEnabled,
     }));
 
   return (
@@ -185,6 +208,56 @@ const TuningSettings: React.FC = () => {
             keyboardType="number-pad"
           />
           <Typography style={styles.settingItemUnit}>ms</Typography>
+        </View>
+
+        <View style={styles.switchSettingItem}>
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={!settings.devOverlayEnabled}
+              onValueChange={toggleDevOverlayEnabled}
+              accessibilityLabel={translate('tuningItemDisableDevOverlay')}
+            />
+          ) : (
+            <Switch
+              value={!settings.devOverlayEnabled}
+              onValueChange={toggleDevOverlayEnabled}
+              ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('tuningItemDisableDevOverlay')}
+            />
+          )}
+
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleDevOverlayEnabled}
+            accessibilityRole="button"
+          >
+            {translate('disableDevOverlay')}
+          </Typography>
+        </View>
+
+        <View style={styles.switchSettingItem}>
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={settings.untouchableModeEnabled}
+              onValueChange={toggleUntouchableModeEnabled}
+              accessibilityLabel={translate('enableUntouchableMode')}
+            />
+          ) : (
+            <Switch
+              value={settings.untouchableModeEnabled}
+              onValueChange={toggleUntouchableModeEnabled}
+              ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('enableUntouchableMode')}
+            />
+          )}
+
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleUntouchableModeEnabled}
+            accessibilityRole="button"
+          >
+            {translate('enableUntouchableMode')}
+          </Typography>
         </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />

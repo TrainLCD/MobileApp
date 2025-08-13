@@ -4,7 +4,7 @@ import {
   OperationStatus,
   Station,
   StopCondition,
-} from '~/gen/proto/stationapi_pb'
+} from '~/gen/proto/stationapi_pb';
 
 export const TOEI_SHINJUKU_LINE_STATIONS: Station[] = [
   {
@@ -4214,7 +4214,7 @@ export const TOEI_SHINJUKU_LINE_STATIONS: Station[] = [
     },
     hasTrainTypes: true,
   },
-].map((s) => new Station(s))
+].map((s) => new Station(s));
 
 export const RYOMO_LINE_STATIONS: Station[] = [
   {
@@ -7695,4 +7695,4 @@ export const RYOMO_LINE_STATIONS: Station[] = [
     },
     hasTrainTypes: true,
   },
-].map((s) => new Station(s))
+].map((s) => new Station(s));

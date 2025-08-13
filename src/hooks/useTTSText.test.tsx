@@ -2,7 +2,10 @@ import { renderHook } from '@testing-library/react-native';
 import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
-import { StationNumber } from '~/gen/proto/stationapi_pb';
+import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
+import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
+import { type Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import { useNextStation } from '~/hooks/useNextStation';
 import { useThemeStore } from '~/hooks/useThemeStore';
 import { useTTSText } from '~/hooks/useTTSText';
 import type { LineDirection } from '~/models/Bound';
@@ -10,13 +13,13 @@ import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
 import type { AppTheme } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
-import { TOEI_SHINJUKU_LINE_LOCAL } from '../../__mocks__/fixture/line';
-import { TOEI_SHINJUKU_LINE_STATIONS } from '../../__mocks__/fixture/station';
-import { setupMockUseNextStation } from '../../__mocks__/useNextStation';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNumbering', () => ({
   useNumbering: jest.fn(),
+}));
+jest.mock('~/hooks/useNextStation', () => ({
+  useNextStation: jest.fn(),
 }));
 
 const useTTSTextWithJotaiAndNumbering = (
@@ -57,6 +60,9 @@ const useTTSTextWithJotaiAndNumbering = (
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <Provider>{children}</Provider>
 );
+
+const setupMockUseNextStation = (station: Station) =>
+  (useNextStation as jest.Mock).mockReturnValue(station);
 
 describe('Without trainType & With numbering', () => {
   beforeEach(() => {

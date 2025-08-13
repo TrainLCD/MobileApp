@@ -428,11 +428,7 @@ const HeaderTokyoMetro: React.FC = () => {
   }, [fadeIn, fadeOut]);
 
   useEffect(() => {
-    if (!selectedBound) {
-      setFadeOutFinished(true);
-    } else {
-      setFadeOutFinished(false);
-    }
+    setFadeOutFinished(!selectedBound);
     fade();
   }, [fade, selectedBound]);
 

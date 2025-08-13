@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Alert,
@@ -42,6 +42,7 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import tuningState from '~/store/atoms/tuning';
 import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
@@ -75,6 +76,7 @@ const MainScreen: React.FC = () => {
   const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
   const setLineState = useSetAtom(lineState);
+  const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
@@ -378,6 +380,10 @@ const MainScreen: React.FC = () => {
 
   const handleTransferPress = useCallback(
     (selectedStation?: Station) => {
+      if (untouchableModeEnabled) {
+        return;
+      }
+
       if (!selectedStation) {
         isTypeWillChange ? toTypeChangeState() : toLineState();
         return;
@@ -416,6 +422,7 @@ const MainScreen: React.FC = () => {
     [
       currentLine,
       isTypeWillChange,
+      untouchableModeEnabled,
       changeOperatingLine,
       toTypeChangeState,
       toLineState,

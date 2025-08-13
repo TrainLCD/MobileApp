@@ -1,4 +1,4 @@
-import { Station } from '~/gen/proto/stationapi_pb'
+import { Station } from '~/gen/proto/stationapi_pb';
 
 export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
   {
@@ -1589,7 +1589,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       kind: 0,
     },
   },
-].map((s) => new Station(s))
+].map((s) => new Station(s));
 
 export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
   {
@@ -3006,4 +3006,4 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
   },
-].map((s) => new Station(s))
+].map((s) => new Station(s));

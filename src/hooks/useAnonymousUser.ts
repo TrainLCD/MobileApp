@@ -1,5 +1,9 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import auth from '@react-native-firebase/auth';
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInAnonymously,
+} from '@react-native-firebase/auth';
 import { useEffect, useRef } from 'react';
 
 /**
@@ -8,15 +12,13 @@ import { useEffect, useRef } from 'react';
 export const useAnonymousUser = (): FirebaseAuthTypes.User | null => {
   const userRef = useRef<FirebaseAuthTypes.User | null>(null);
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged((authUser) => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       if (authUser) {
         userRef.current = authUser;
       } else {
-        auth()
-          .signInAnonymously()
-          .then((credential) => {
-            userRef.current = credential.user;
-          });
+        const credential = await signInAnonymously(auth);
+        userRef.current = credential.user;
       }
     });
     return unsubscribe;

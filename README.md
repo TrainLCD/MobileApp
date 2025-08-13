@@ -32,11 +32,11 @@ This app recreates the authentic experience of Japanese train travel by displayi
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 - [Architecture](#architecture)
-- [License](#license)
 - [Support](#support)
 - [Join our Community](#join-our-community)
 - [Contributors](#contributors-)
 - [Related Projects](#related-projects)
+- [License](#license)
 
 ## Screenshots
 
@@ -236,10 +236,6 @@ TrainLCD is built with:
 - **Sentry** - Error tracking and performance monitoring
 - **Protocol Buffers** - Efficient data serialization
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Support
 
 ### Community Support
@@ -287,3 +283,8 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 ## Related Projects
 
 - [StationAPI](https://github.com/TinyKitten/StationAPI) - Backend API for station data
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

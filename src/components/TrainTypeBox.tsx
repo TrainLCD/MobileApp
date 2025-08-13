@@ -185,9 +185,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     );
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
+  // 電車種別が変更されたときのみfadeOutFinishedをリセット
+  // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
   useEffect(() => {
     setFadeOutFinished(false);
+  }, [trainTypeName, prevTrainTypeName]);
 
+  useEffect(() => {
     if (prevTrainTypeName !== trainTypeName) {
       updateOpacity();
     } else {
@@ -208,11 +212,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   );
 
   const numberOfLines = useMemo(
-    () => (trainTypeName.split('\n').length === 1 ? 1 : 2),
+    // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
   );
   const prevNumberOfLines = useMemo(
-    () => (prevTrainTypeName.split('\n').length === 1 ? 1 : 2),
+    // prevTrainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
+    () => (prevTrainTypeName?.split('\n').length === 1 ? 1 : 2),
     [prevTrainTypeName]
   );
 

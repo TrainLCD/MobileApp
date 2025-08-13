@@ -1,5 +1,11 @@
 import { useMutation } from '@connectrpc/connect-query';
-import firestore from '@react-native-firebase/firestore';
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  orderBy,
+  query,
+} from '@react-native-firebase/firestore';
 import { useQuery } from '@tanstack/react-query';
 import { getStationByIdList } from '~/gen/proto/stationapi-StationAPI_connectquery';
 import type { SavedRoute } from '../models/SavedRoute';
@@ -15,12 +21,14 @@ export const useSavedRoutes = () => {
   } = useQuery<SavedRoute[]>({
     queryKey: ['/firestore/uploadedCommunityRoutes'],
     queryFn: async () => {
-      const routesSnapshot = await firestore()
-        .collection('uploadedCommunityRoutes')
-        .orderBy('createdAt', 'desc')
-        .get();
+      const db = getFirestore();
 
-      return routesSnapshot.docs.map((doc) => ({
+      const q = query(
+        collection(db, 'uploadedCommunityRoutes'),
+        orderBy('createdAt', 'desc')
+      );
+
+      return (await getDocs(q)).docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as SavedRoute[];

@@ -1,1 +1,0 @@
-export const setNotificationHandler = jest.fn();
