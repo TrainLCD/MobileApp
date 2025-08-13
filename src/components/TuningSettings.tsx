@@ -238,13 +238,13 @@ const TuningSettings: React.FC = () => {
         <View style={styles.switchSettingItem}>
           {isLEDTheme ? (
             <LEDThemeSwitch
-              value={!settings.devOverlayEnabled}
+              value={settings.untouchableModeEnabled}
               onValueChange={toggleUntouchableModeEnabled}
               accessibilityLabel={translate('enableUntouchableMode')}
             />
           ) : (
             <Switch
-              value={!settings.devOverlayEnabled}
+              value={settings.untouchableModeEnabled}
               onValueChange={toggleUntouchableModeEnabled}
               ios_backgroundColor={'#fff'}
               accessibilityLabel={translate('enableUntouchableMode')}
