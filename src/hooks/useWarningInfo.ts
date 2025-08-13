@@ -97,13 +97,6 @@ export const useWarningInfo = () => {
       }
     }
 
-    if (untouchableModeEnabled) {
-      return {
-        level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('untouchableModeEnabledNotice'),
-      };
-    }
-
     if (!longPressNoticeDismissed && selectedBound) {
       return {
         level: WARNING_PANEL_LEVEL.INFO,
@@ -136,6 +129,13 @@ export const useWarningInfo = () => {
       return {
         level: WARNING_PANEL_LEVEL.INFO,
         text: translate('shareNotice'),
+      };
+    }
+
+    if (untouchableModeEnabled) {
+      return {
+        level: WARNING_PANEL_LEVEL.INFO,
+        text: translate('untouchableModeEnabledNotice'),
       };
     }
     return null;
