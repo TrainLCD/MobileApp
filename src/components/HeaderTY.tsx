@@ -420,11 +420,8 @@ const HeaderTY: React.FC = () => {
 
   useEffect(() => {
     setFadeOutFinished(!selectedBound);
-  }, [selectedBound]);
-
-  useEffect(() => {
     fade();
-  }, [fade]);
+  }, [fade, selectedBound]);
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
     opacity: 1 - stateOpacityAnim.value,
