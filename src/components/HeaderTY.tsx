@@ -419,12 +419,13 @@ const HeaderTY: React.FC = () => {
   }, [fadeIn, fadeOut]);
 
   useEffect(() => {
-    setFadeOutFinished(!selectedBound);
-  }, [selectedBound]);
-
-  useEffect(() => {
+    if (!selectedBound) {
+      setFadeOutFinished(true);
+    } else {
+      setFadeOutFinished(false);
+    }
     fade();
-  }, [fade]);
+  }, [fade, selectedBound]);
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
     opacity: 1 - stateOpacityAnim.value,
