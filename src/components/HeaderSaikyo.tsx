@@ -392,13 +392,12 @@ const HeaderSaikyo: React.FC = () => {
   }, [fadeIn, fadeOut]);
 
   useEffect(() => {
-    if (!selectedBound) {
-      setFadeOutFinished(true);
-    } else {
-      setFadeOutFinished(false);
-    }
+    setFadeOutFinished(!selectedBound);
+  }, [selectedBound]);
+
+  useEffect(() => {
     fade();
-  }, [fade, selectedBound]);
+  }, [fade]);
 
   const stateTopAnimatedStyles = useAnimatedStyle(() => ({
     opacity: 1 - stateOpacityAnim.value,
