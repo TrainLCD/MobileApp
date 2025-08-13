@@ -42,6 +42,7 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import tuningState from '~/store/atoms/tuning';
 import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
@@ -57,7 +58,6 @@ import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
-import tuningState from '~/store/atoms/tuning';
 
 const { height: screenHeight } = Dimensions.get('screen');
 
