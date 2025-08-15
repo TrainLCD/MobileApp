@@ -7,7 +7,7 @@ import androidx.core.app.ActivityCompat
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import android.Manifest;
+import android.Manifest
 import android.location.GnssStatus
 import android.os.Handler
 import android.os.Looper
@@ -46,11 +46,10 @@ object GnssStatusCompat {
   }
 
   // --- 取得関数（null=取得不可） ---
-  fun cn0DbHz(status: GnssStatus, i: Int): Float? =
-    (mCn0?.invoke(status, i) as? Float)
-      ?: run { // ごく一部機種で double を返すケースの保険
-        (mCn0?.invoke(status, i) as? Number)?.toFloat()
-      }
+   fun cn0DbHz(status: GnssStatus, i: Int): Float? { 
+     val v = mCn0?.invoke(status, i) ?: return null
+    return (v as? Number)?.toFloat() 
+   }
 
   fun constellationType(status: GnssStatus, i: Int): Int? =
     (mConstellation?.invoke(status, i) as? Int)
@@ -61,6 +60,16 @@ class GnssModule(reactContext: ReactApplicationContext) :
   private var statusCallback: GnssStatus.Callback? = null
 
   override fun getName() = "GnssModule"
+
+  init {
+    GnssStatusCompat.warmup()
+  }
+
+  override fun onCatalystInstanceDestroy() {
+    @Suppress("DEPRECATION")
+    super.onCatalystInstanceDestroy()
+    stopGnssUpdates()
+  }
 
   @ReactMethod
   fun startGnssUpdates() {
@@ -115,14 +124,29 @@ class GnssModule(reactContext: ReactApplicationContext) :
           putInt("usedInFix", used)
           putDouble("meanCn0DbHz", meanCn0)
           putDouble("maxCn0DbHz", maxCn0)
-          putArray("constellations", Arguments.fromList(constellations.toList()))
+          putArray("constellations", Arguments.fromList(constellations.sorted()))
         }
         reactApplicationContext
           .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
           .emit("GnssStatus", params)
       }
     }
-    lm.registerGnssStatusCallback(statusCallback!!, Handler(Looper.getMainLooper()))
+    val registered = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+      lm.registerGnssStatusCallback(reactApplicationContext.mainExecutor, statusCallback!!)
+    } else {
+      lm.registerGnssStatusCallback(statusCallback!!, Handler(Looper.getMainLooper()))
+    }
+    if (!registered) {
+      // 失敗時は後始末してエラー通知
+      statusCallback?.let { lm.unregisterGnssStatusCallback(it) }
+      statusCallback = null
+      val params = Arguments.createMap().apply {
+        putString("error", "Failed to register GnssStatus callback")
+      }
+      reactApplicationContext
+        .getJSModule(com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        .emit("GnssError", params)
+    }
   }
 
   @ReactMethod
@@ -134,11 +158,13 @@ class GnssModule(reactContext: ReactApplicationContext) :
 
   // RNのwarning対策
   @ReactMethod
+  @Suppress("EmptyFunctionBlock", "UnusedParameter")
   fun addListener(eventName: String) {
   }
 
   // RNのwarning対策
   @ReactMethod
+  @Suppress("EmptyFunctionBlock", "UnusedParameter")
   fun removeListeners(count: Int) {
   }
 }
