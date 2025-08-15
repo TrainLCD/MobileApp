@@ -9,7 +9,10 @@ import {
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 } from '~/constants/telemetry';
-import { type GnssState, subscribeGnss } from '~/utils/native/ios/gnssModule';
+import {
+  type GnssState,
+  subscribeGnss,
+} from '~/utils/native/android/gnssModule';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import { useIsPassing } from './useIsPassing';
