@@ -28,7 +28,8 @@ object GnssStatusCompat {
 
   /** 起動時に温めたい場合に呼ぶ */
   fun warmup() {
-    mCn0; mConstellation;
+    mCn0
+    mConstellation
   }
 
   // 反射で新名→旧名の順に解決
@@ -46,9 +47,8 @@ object GnssStatusCompat {
   }
 
   // --- 取得関数（null=取得不可） ---
-   fun cn0DbHz(status: GnssStatus, i: Int): Float? { 
-     return (mCn0?.invoke(status, i) as? Number)?.toFloat()
-   }
+  fun cn0DbHz(status: GnssStatus, i: Int): Float? =
+    (mCn0?.invoke(status, i) as? Number)?.toFloat()
 
   fun constellationType(status: GnssStatus, i: Int): Int? =
     (mConstellation?.invoke(status, i) as? Int)
@@ -73,7 +73,11 @@ class GnssModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun startGnssUpdates() {
     val lm = reactApplicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    if (ActivityCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+    if (ActivityCompat.checkSelfPermission(
+        reactApplicationContext,
+        Manifest.permission.ACCESS_FINE_LOCATION
+      ) != PackageManager.PERMISSION_GRANTED
+    ) {
       val params = Arguments.createMap().apply {
         putString("error", "ACCESS_FINE_LOCATION permission not granted")
       }
@@ -92,7 +96,7 @@ class GnssModule(reactContext: ReactApplicationContext) :
         var used = 0
         var sumCn0 = 0.0
         var validCn0Count = 0
-        
+
         var maxCn0 = 0.0
         val constellations = mutableSetOf<String>()
 
@@ -114,6 +118,7 @@ class GnssModule(reactContext: ReactApplicationContext) :
             GnssStatus.CONSTELLATION_IRNSS -> constellations.add("IRNSS")
             GnssStatus.CONSTELLATION_SBAS -> constellations.add("SBAS")
             GnssStatus.CONSTELLATION_UNKNOWN -> constellations.add("UNKNOWN")
+            else -> constellations.add("UNKNOWN_${constel}")
           }
         }
 
@@ -151,9 +156,11 @@ class GnssModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun stopGnssUpdates() {
-    val lm = reactApplicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    statusCallback?.let { lm.unregisterGnssStatusCallback(it) }
-    statusCallback = null
+    statusCallback?.let { callback ->
+      val lm = reactApplicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+      lm.unregisterGnssStatusCallback(callback)
+      statusCallback = null
+    }
   }
 
   // RNのwarning対策
