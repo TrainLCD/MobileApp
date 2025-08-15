@@ -8,6 +8,10 @@ const TELEMETRY_MAX_QUEUE_SIZE = 1000;
 const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
+jest.mock('expo-network', () => ({
+  useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
+  NetworkStateType: { WIFI: 'WIFI' },
+}));
 jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn(),
