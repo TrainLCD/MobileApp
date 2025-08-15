@@ -62,7 +62,18 @@ class GnssModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun startGnssUpdates() {
     val lm = reactApplicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    if (ActivityCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+    if (ActivityCompat.checkSelfPermission(reactApplicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+      val params = Arguments.createMap().apply {
+        putString("error", "ACCESS_FINE_LOCATION permission not granted")
+      }
+      reactApplicationContext
+        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        .emit("GnssError", params)
+      return
+    }
+
+    // 既存のコールバックがあれば解除
+    statusCallback?.let { lm.unregisterGnssStatusCallback(it) }
 
     statusCallback = object : GnssStatus.Callback() {
       override fun onSatelliteStatusChanged(status: GnssStatus) {
