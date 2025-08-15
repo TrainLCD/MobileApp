@@ -18,7 +18,8 @@ class TrainLCDPackage : ReactPackage {
     reactContext: ReactApplicationContext
   ): MutableList<NativeModule> = listOf(
     WearableModule(reactContext),
-    IgnoreBatteryOptimizationsModule(reactContext)
+    IgnoreBatteryOptimizationsModule(reactContext),
+    GnssModule(reactContext)
   ).toMutableList()
 }
 

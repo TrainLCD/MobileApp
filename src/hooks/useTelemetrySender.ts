@@ -8,20 +8,26 @@ import {
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 } from '~/constants/telemetry';
+import { type GnssState, subscribeGnss } from '~/utils/native/ios/gnssModule';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { NetworkStateType, useNetworkState } from 'expo-network';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
 
 const TelemetryPayload = z.object({
+  schemaVersion: z.number(),
   coords: z
     .object({
-      latitude: z.number().nullable(),
-      longitude: z.number().nullable(),
       accuracy: z.number().nullable(),
+      altitude: z.number().nullable(),
+      altitudeAccuracy: z.number().nullable(),
+      heading: z.number().nullable(),
+      latitude: z.number(),
+      longitude: z.number(),
       speed: z.number().nullable(),
     })
     .optional(),
@@ -33,6 +39,23 @@ const TelemetryPayload = z.object({
     .optional(),
   state: MovingState.optional(),
   device: z.string(),
+  // Androidのみ対応
+  gnss: z
+    .object({
+      usedInFix: z.number().optional(), // 位置解(=fix)に使われた衛星数
+      total: z.number().optional(), // 観測衛星総数
+      meanCn0DbHz: z.number().optional(), // C/N0 平均
+      maxCn0DbHz: z.number().optional(), // C/N0 最大
+      constellations: z.array(z.string()).optional(), // ["GPS","GLONASS","GALILEO",...]
+    })
+    .nullable()
+    .optional(),
+  radio: z
+    .object({
+      isWifiConnected: z.boolean().optional(), // 参考フラグ（iOSは取得制限あり）
+    })
+    .nullable()
+    .optional(),
   timestamp: z.number(),
 });
 
@@ -42,8 +65,17 @@ export const useTelemetrySender = (
 ) => {
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
+  const gnssRef = useRef<GnssState | null>(null);
   const telemetryQueue = useRef<string[]>([]).current;
   const messageQueue = useRef<string[]>([]).current;
+
+  useEffect(
+    () =>
+      subscribeGnss((gnss) => {
+        gnssRef.current = gnss;
+      }),
+    []
+  );
 
   // キューにメッセージを追加し、サイズ超過時は古いものを削除
   const enqueueMessage = useCallback((queue: string[], message: string) => {
@@ -53,15 +85,18 @@ export const useTelemetrySender = (
     }
   }, []);
 
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
-  const accuracy = useLocationStore((state) => state?.coords.accuracy);
-  const speed = useLocationStore((state) => state?.coords.speed);
+  const coords = useLocationStore((state) => state?.coords);
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
     useAtomValue(stationState);
 
   const passing = useIsPassing();
+
+  const { type: networkType } = useNetworkState();
+  const isWifiConnected = useMemo(
+    () => networkType === NetworkStateType.WIFI,
+    [networkType]
+  );
 
   const state = useMemo<MovingState>(() => {
     if (passing) {
@@ -84,6 +119,7 @@ export const useTelemetrySender = (
       }
 
       const payload = TelemetryPayload.safeParse({
+        schemaVersion: 2,
         log: {
           level,
           message,
@@ -121,14 +157,14 @@ export const useTelemetrySender = (
     }
 
     const payload = TelemetryPayload.safeParse({
-      coords: {
-        latitude: latitude ?? null,
-        longitude: longitude ?? null,
-        accuracy: accuracy ?? null,
-        speed: speed ?? null,
-      },
+      schemaVersion: 2,
+      coords,
       device: Device.modelName ?? 'unknown',
       state,
+      gnss: gnssRef.current ?? null,
+      radio: {
+        isWifiConnected,
+      },
       timestamp: now,
     });
 
@@ -155,15 +191,7 @@ export const useTelemetrySender = (
     } else if (isPayloadValid) {
       enqueueMessage(telemetryQueue, strigifiedData);
     }
-  }, [
-    accuracy,
-    latitude,
-    longitude,
-    speed,
-    state,
-    enqueueMessage,
-    telemetryQueue,
-  ]);
+  }, [coords, state, enqueueMessage, telemetryQueue, isWifiConnected]);
 
   useEffect(() => {
     let reconnectAttempts = 0;
