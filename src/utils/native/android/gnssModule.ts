@@ -13,10 +13,14 @@ export type GnssState = {
 export function subscribeGnss(onUpdate: (g: GnssState) => void) {
   if (Platform.OS !== 'android' || !GnssModule) return () => {};
   const emitter = new NativeEventEmitter(GnssModule);
-  GnssModule.startGnssUpdates();
+  const errSub = emitter.addListener('GnssError', (e: { error?: string }) => {
+    console.warn('[GNSS] Error event received:', e?.error);
+  });
   const sub = emitter.addListener('GnssStatus', onUpdate);
+  GnssModule.startGnssUpdates();
   return () => {
     sub.remove();
+    errSub.remove();
     GnssModule.stopGnssUpdates();
   };
 }
