@@ -1,4 +1,5 @@
 import * as Device from 'expo-device';
+import { NetworkStateType, useNetworkState } from 'expo-network';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
@@ -13,7 +14,6 @@ import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
-import { NetworkStateType, useNetworkState } from 'expo-network';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
