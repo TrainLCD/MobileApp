@@ -99,11 +99,11 @@ class GnssModule(reactContext: ReactApplicationContext) :
 
         for (i in 0 until total) {
           if (status.usedInFix(i)) used++
-          val cn0 = GnssStatusCompat.cn0DbHz(status, i)    
+          val cn0 = GnssStatusCompat.cn0DbHz(status, i)?.toDouble()  
           if (cn0 != null && !cn0.isNaN()) {
             sumCn0 += cn0
             validCn0Count += 1
-            if (cn0 > maxCn0) maxCn0 = cn0.toDouble()
+            if (cn0 > maxCn0) maxCn0 = cn0
           }
           val constel = GnssStatusCompat.constellationType(status, i)
           when (constel) {
@@ -114,6 +114,7 @@ class GnssModule(reactContext: ReactApplicationContext) :
             GnssStatus.CONSTELLATION_QZSS -> constellations.add("QZSS")
             GnssStatus.CONSTELLATION_IRNSS -> constellations.add("IRNSS")
             GnssStatus.CONSTELLATION_SBAS -> constellations.add("SBAS")
+            null, GnssStatus.CONSTELLATION_UNKNOWN -> constellations.add("UNKNOWN")
           }
         }
 
@@ -144,7 +145,7 @@ class GnssModule(reactContext: ReactApplicationContext) :
         putString("error", "Failed to register GnssStatus callback")
       }
       reactApplicationContext
-        .getJSModule(com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
         .emit("GnssError", params)
     }
   }
