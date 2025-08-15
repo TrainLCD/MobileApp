@@ -47,8 +47,7 @@ object GnssStatusCompat {
 
   // --- 取得関数（null=取得不可） ---
    fun cn0DbHz(status: GnssStatus, i: Int): Float? { 
-     val v = mCn0?.invoke(status, i) ?: return null
-    return (v as? Number)?.toFloat() 
+     return (mCn0?.invoke(status, i) as? Number)?.toFloat()
    }
 
   fun constellationType(status: GnssStatus, i: Int): Int? =
@@ -99,11 +98,11 @@ class GnssModule(reactContext: ReactApplicationContext) :
 
         for (i in 0 until total) {
           if (status.usedInFix(i)) used++
-          val cn0 = GnssStatusCompat.cn0DbHz(status, i)?.toDouble()  
+          val cn0 = GnssStatusCompat.cn0DbHz(status, i)
           if (cn0 != null && !cn0.isNaN()) {
-            sumCn0 += cn0
+            sumCn0 += cn0.toDouble()
             validCn0Count += 1
-            if (cn0 > maxCn0) maxCn0 = cn0
+            if (cn0 > maxCn0) maxCn0 = cn0.toDouble()
           }
           val constel = GnssStatusCompat.constellationType(status, i)
           when (constel) {
@@ -114,7 +113,7 @@ class GnssModule(reactContext: ReactApplicationContext) :
             GnssStatus.CONSTELLATION_QZSS -> constellations.add("QZSS")
             GnssStatus.CONSTELLATION_IRNSS -> constellations.add("IRNSS")
             GnssStatus.CONSTELLATION_SBAS -> constellations.add("SBAS")
-            null, GnssStatus.CONSTELLATION_UNKNOWN -> constellations.add("UNKNOWN")
+            GnssStatus.CONSTELLATION_UNKNOWN -> constellations.add("UNKNOWN")
           }
         }
 
