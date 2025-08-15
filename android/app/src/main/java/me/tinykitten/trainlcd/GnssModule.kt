@@ -18,13 +18,8 @@ import java.lang.reflect.Method
 // GnssStatus の新旧API差分を吸収して、高速に呼べるユーティリティ
 object GnssStatusCompat {
   // --- Methodキャッシュ（初回アクセス時に一度だけ解決） ---
-  private val mCn0: Method? by lazy { resolve("cn0DbHz", "getCn0DbHz") }
-  private val mConstellation: Method? by lazy {
-    resolve(
-      "constellationType",
-      "getConstellationType"
-    )
-  }
+  private val mCn0: Method? by lazy { resolve("getCn0DbHz") }
+  private val mConstellation: Method? by lazy { resolve("getConstellationType") }
 
   /** 起動時に温めたい場合に呼ぶ */
   fun warmup() {
@@ -32,19 +27,12 @@ object GnssStatusCompat {
     mConstellation
   }
 
-  // 反射で新名→旧名の順に解決
-  private fun resolve(nameNew: String, nameOld: String): Method? {
-    val c = GnssStatus::class.java
-    return try {
-      c.getMethod(nameNew, Int::class.javaPrimitiveType)
+  private fun resolve(methodName: String): Method? =
+    try {
+      GnssStatus::class.java.getMethod(methodName, Int::class.javaPrimitiveType)
     } catch (_: NoSuchMethodException) {
-      try {
-        c.getMethod(nameOld, Int::class.javaPrimitiveType)
-      } catch (_: NoSuchMethodException) {
-        null
-      }
+      null
     }
-  }
 
   // --- 取得関数（null=取得不可） ---
   fun cn0DbHz(status: GnssStatus, i: Int): Float? =
