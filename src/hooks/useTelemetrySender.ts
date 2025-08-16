@@ -22,7 +22,8 @@ const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
 
 const TelemetryPayload = z.object({
-  schemaVersion: z.number(),
+  schemaVersion: z.literal(2),
+  type: z.enum(['log', 'location_update']),
   coords: z
     .object({
       accuracy: z.number().nullable(),
@@ -36,6 +37,7 @@ const TelemetryPayload = z.object({
     .optional(),
   log: z
     .object({
+      type: z.literal('app'),
       level: z.enum(['debug', 'info', 'warn', 'error']),
       message: z.string(),
     })
@@ -123,7 +125,9 @@ export const useTelemetrySender = (
 
       const payload = TelemetryPayload.safeParse({
         schemaVersion: 2,
+        type: 'log',
         log: {
+          type: 'app',
           level,
           message,
         },
@@ -137,7 +141,6 @@ export const useTelemetrySender = (
       }
 
       const strigifiedMessage = JSON.stringify({
-        type: 'log',
         ...payload.data,
       });
 
@@ -161,6 +164,7 @@ export const useTelemetrySender = (
 
     const payload = TelemetryPayload.safeParse({
       schemaVersion: 2,
+      type: 'location_update',
       coords,
       device: Device.modelName ?? 'unknown',
       state,
@@ -177,7 +181,6 @@ export const useTelemetrySender = (
     }
 
     const strigifiedData = JSON.stringify({
-      type: 'location_update',
       ...payload.data,
     });
 
