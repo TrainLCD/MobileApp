@@ -186,9 +186,6 @@ export const useTelemetrySender = (
 
     if (isPayloadValid) {
       if (socketRef.current?.readyState === WebSocket.OPEN) {
-        if (now - lastSentRef.current < TELEMETRY_THROTTLE_MS) {
-          return;
-        }
         socketRef.current.send(stringifiedData);
         lastSentRef.current = now;
       } else {
@@ -201,6 +198,7 @@ export const useTelemetrySender = (
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     let reconnectTimeout: number;
+    let shouldReconnect = true;
 
     if (!isTelemetryEnabled) {
       return;
@@ -270,7 +268,7 @@ export const useTelemetrySender = (
             msgQueue.shift();
           }
 
-          if (reconnectAttempts < maxReconnectAttempts) {
+          if (shouldReconnect && reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
             const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
             reconnectTimeout = setTimeout(connectWebSocket, delay);
@@ -284,6 +282,7 @@ export const useTelemetrySender = (
     connectWebSocket();
 
     return () => {
+      shouldReconnect = false;
       socketRef.current?.close();
       clearTimeout(reconnectTimeout);
     };
