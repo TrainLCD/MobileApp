@@ -144,11 +144,9 @@ export const useTelemetrySender = (
         ...payload.data,
       });
 
-      if (socketRef.current?.readyState === WebSocket.OPEN && payload.success) {
-        if (payload.data.log) {
-          socketRef.current.send(stringifiedMessage);
-          lastSentRef.current = now;
-        }
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socketRef.current.send(stringifiedMessage);
+        lastSentRef.current = now;
       } else {
         enqueueMessage(messageQueueRef.current, stringifiedMessage);
       }
