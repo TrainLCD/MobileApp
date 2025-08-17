@@ -209,7 +209,7 @@ export const useTelemetrySender = (
     }
 
     const connectWebSocket = () => {
-      if (!wsUrl.match(webSocketUrlRegexp)) {
+      if (!wsUrl || !webSocketUrlRegexp.test(wsUrl)) {
         console.warn('Invalid WebSocket URL');
         return;
       }
@@ -278,16 +278,15 @@ export const useTelemetrySender = (
             reconnectTimeout = setTimeout(connectWebSocket, delay);
           }
         };
-        return socket;
       } catch (error) {
         console.error('WebSocket connection error:', error);
       }
     };
 
-    const socket = connectWebSocket();
+    connectWebSocket();
 
     return () => {
-      socket?.close();
+      socketRef.current?.close();
       clearTimeout(reconnectTimeout);
     };
   }, [wsUrl, sendTelemetryAutomatically]);
