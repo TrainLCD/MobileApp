@@ -202,6 +202,12 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     return { id, jaAudioContent, enAudioContent };
   }
 
+  if (!process.env.GOOGLE_TTS_API_KEY) {
+    throw new HttpsError(
+      'failed-precondition',
+      'GOOGLE_TTS_API_KEY is not set'
+    );
+  }
   const ttsUrl = `https://texttospeech.googleapis.com/${apiVersion}/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
   const reqBodyJa = {
