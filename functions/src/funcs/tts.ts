@@ -36,7 +36,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     // Otsuka・Teikyo-Daigakuなど
     .replace(/・/g, ' ')
     // 環状運転の場合に & が含まれる可能性があるため置換
-    .replace(/&(?!\w+;)/g, 'and')
+    .replace(/&(?!#\d+;|#x[0-9A-Fa-f]+;|\w+;)/g, 'and')
     // 全角記号
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
