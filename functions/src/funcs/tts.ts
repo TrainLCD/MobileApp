@@ -30,7 +30,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const ssmlEn: string | undefined = normalizeRomanText(req.data.ssmlEn)
+  const ssmlEn = normalizeRomanText(req.data.ssmlEn)
     // Airport Terminal 1･2等
     .replace(/･/g, ' ')
     // Otsuka・Teikyo-Daigakuなど
@@ -172,9 +172,19 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
 
   const hashAlgorithm = 'md5';
   const version = 1;
-  const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
+  const hashPayload = JSON.stringify({
+    ssmlJa,
+    ssmlEn,
+    jaVoiceName,
+    enVoiceName,
+    audioEncoding,
+    volumeGainDb,
+    effectsProfileId,
+    apiVersion: 'v1',
+  });
+
   const id = createHash(hashAlgorithm)
-    .update(`${hashData}_v${version}`)
+    .update(`${hashPayload}_v${version}`)
     .digest('hex');
 
   const snapshot = await voicesCollection.doc(id).get();
