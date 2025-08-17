@@ -28,14 +28,20 @@ export const useTTS = (): void => {
   const soundEnRef = useRef<AudioPlayer | null>(null);
 
   useEffect(() => {
-    setAudioModeAsync({
-      allowsRecording: false,
-      shouldPlayInBackground: backgroundEnabled,
-      interruptionMode: 'duckOthers',
-      playsInSilentMode: backgroundEnabled,
-      interruptionModeAndroid: 'duckOthers',
-      shouldRouteThroughEarpiece: false,
-    });
+    (async () => {
+      try {
+        await setAudioModeAsync({
+          allowsRecording: false,
+          shouldPlayInBackground: backgroundEnabled,
+          interruptionMode: 'duckOthers',
+          playsInSilentMode: true,
+          interruptionModeAndroid: 'duckOthers',
+          shouldRouteThroughEarpiece: false,
+        });
+      } catch (e) {
+        console.warn('[useTTS] setAudioModeAsync failed:', e);
+      }
+    })();
   }, [backgroundEnabled]);
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
@@ -119,7 +125,7 @@ export const useTTS = (): void => {
 
     const baseDir = FileSystem.cacheDirectory;
 
-    const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`;
+    const pathJa = `${baseDir}/${ttsJson.result.id}_ja.mp3`;
     if (ttsJson?.result?.jaAudioContent) {
       await FileSystem.writeAsStringAsync(
         pathJa,
@@ -193,6 +199,8 @@ export const useTTS = (): void => {
       isLoadableRef.current = false;
       soundJaRef.current?.remove();
       soundEnRef.current?.remove();
+      soundJaRef.current = null;
+      soundEnRef.current = null;
     };
   }, []);
 };
