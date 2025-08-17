@@ -2,6 +2,11 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "plugins": [
+      "expo-font",
+      "expo-localization",
+      "expo-web-browser"
+    ]
   }
 }
