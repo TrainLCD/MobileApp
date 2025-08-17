@@ -69,7 +69,7 @@ export const useTelemetrySender = (
   wsUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL
 ) => {
   const socketRef = useRef<WebSocket | null>(null);
-  const lastSentRef = useRef<number>(0);
+  const lastSentTelemetryRef = useRef<number>(0);
   const gnssRef = useRef<GnssState | null>(null);
   const telemetryQueueRef = useRef<string[]>([]);
   const messageQueueRef = useRef<string[]>([]);
@@ -117,7 +117,7 @@ export const useTelemetrySender = (
   }, [arrivedFromState, approachingFromState, passing]);
 
   const sendLog = useCallback(
-    (message: string, level = 'debug') => {
+    (message: string, level: 'debug' | 'info' | 'warn' | 'error' = 'debug') => {
       const now = Date.now();
 
       const payload = TelemetryPayload.safeParse({
@@ -143,7 +143,6 @@ export const useTelemetrySender = (
 
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(stringifiedMessage);
-        lastSentRef.current = now;
       } else {
         enqueueMessage(messageQueueRef.current, stringifiedMessage);
       }
@@ -153,7 +152,7 @@ export const useTelemetrySender = (
 
   const sendTelemetry = useCallback(() => {
     const now = Date.now();
-    if (now - lastSentRef.current < TELEMETRY_THROTTLE_MS) {
+    if (now - lastSentTelemetryRef.current < TELEMETRY_THROTTLE_MS) {
       return;
     }
 
@@ -187,7 +186,7 @@ export const useTelemetrySender = (
     if (isPayloadValid) {
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(stringifiedData);
-        lastSentRef.current = now;
+        lastSentTelemetryRef.current = now;
       } else {
         enqueueMessage(telemetryQueueRef.current, stringifiedData);
       }
