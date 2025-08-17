@@ -162,7 +162,12 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   const enVoiceName =
     process.env.GOOGLE_TTS_EN_VOICE_NAME || 'en-US-Standard-G';
   const audioEncoding = 'MP3';
-  const volumeGainDb = Number(process.env.GOOGLE_TTS_VOLUME_GAIN_DB ?? '6');
+  const volumeGainEnv = process.env.GOOGLE_TTS_VOLUME_GAIN_DB;
+  const volumeGainParsed =
+    volumeGainEnv === undefined ? 6 : Number(volumeGainEnv);
+  const volumeGainDb = Number.isFinite(volumeGainParsed)
+    ? Math.max(-96, Math.min(16, volumeGainParsed))
+    : 6;
   const effectsProfileId = ['handset-class-device'];
   const apiVersion = 'v1';
 
