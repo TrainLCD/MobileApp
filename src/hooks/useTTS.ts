@@ -1,4 +1,5 @@
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+import type { AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -23,19 +24,24 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
-  const soundJaRef = useRef<Audio.Sound | null>(null);
-  const soundEnRef = useRef<Audio.Sound | null>(null);
+  const soundJaRef = useRef<AudioPlayer | null>(null);
+  const soundEnRef = useRef<AudioPlayer | null>(null);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      staysActiveInBackground: backgroundEnabled,
-      interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-      playsInSilentModeIOS: backgroundEnabled,
-      shouldDuckAndroid: true,
-      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-      playThroughEarpieceAndroid: false,
-    });
+    (async () => {
+      try {
+        await setAudioModeAsync({
+          allowsRecording: false,
+          shouldPlayInBackground: backgroundEnabled,
+          interruptionMode: 'duckOthers',
+          playsInSilentMode: true,
+          interruptionModeAndroid: 'duckOthers',
+          shouldRouteThroughEarpiece: false,
+        });
+      } catch (e) {
+        console.warn('[useTTS] setAudioModeAsync failed:', e);
+      }
+    })();
   }, [backgroundEnabled]);
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
@@ -46,38 +52,46 @@ export const useTTS = (): void => {
     firstSpeechRef.current = false;
 
     if (!soundJaRef.current) {
-      const { sound: soundJa } = await Audio.Sound.createAsync({
+      soundJaRef.current = createAudioPlayer({
         uri: pathJa,
       });
-      soundJaRef.current = soundJa;
     } else {
-      await soundJaRef.current?.loadAsync({ uri: pathJa });
+      soundJaRef.current.replace({
+        uri: pathJa,
+      });
     }
     if (!soundEnRef.current) {
-      const { sound: soundEn } = await Audio.Sound.createAsync({
+      soundEnRef.current = createAudioPlayer({
         uri: pathEn,
       });
-      soundEnRef.current = soundEn;
     } else {
-      await soundEnRef.current?.loadAsync({ uri: pathEn });
+      soundEnRef.current.replace({
+        uri: pathEn,
+      });
     }
 
-    await soundJaRef.current?.playAsync();
+    soundJaRef.current.play();
     playingRef.current = true;
 
-    soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
-      if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundJaRef.current?.unloadAsync();
-        await soundEnRef.current?.playAsync();
+    const jaRemoveListener = soundJaRef.current.addListener(
+      'playbackStatusUpdate',
+      (jaStatus) => {
+        if (jaStatus.isLoaded && jaStatus.didJustFinish) {
+          jaRemoveListener?.remove();
+          soundEnRef.current?.play();
+        }
       }
-    };
+    );
 
-    soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
-      if (enStatus.isLoaded && enStatus.didJustFinish) {
-        await soundEnRef.current?.unloadAsync();
-        playingRef.current = false;
+    const enRemoveListener = soundEnRef.current.addListener(
+      'playbackStatusUpdate',
+      (enStatus) => {
+        if (enStatus.isLoaded && enStatus.didJustFinish) {
+          enRemoveListener?.remove();
+          playingRef.current = false;
+        }
       }
-    };
+    );
   }, []);
 
   const ttsApiUrl = useMemo(() => {
@@ -111,7 +125,7 @@ export const useTTS = (): void => {
 
     const baseDir = FileSystem.cacheDirectory;
 
-    const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`;
+    const pathJa = `${baseDir}/${ttsJson.result.id}_ja.mp3`;
     if (ttsJson?.result?.jaAudioContent) {
       await FileSystem.writeAsStringAsync(
         pathJa,
@@ -183,8 +197,10 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
-      soundJaRef.current?.unloadAsync();
-      soundEnRef.current?.unloadAsync();
+      soundJaRef.current?.remove();
+      soundEnRef.current?.remove();
+      soundJaRef.current = null;
+      soundEnRef.current = null;
     };
   }, []);
 };
