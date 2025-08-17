@@ -119,9 +119,6 @@ export const useTelemetrySender = (
   const sendLog = useCallback(
     (message: string, level = 'debug') => {
       const now = Date.now();
-      if (now - lastSentRef.current < TELEMETRY_THROTTLE_MS) {
-        return;
-      }
 
       const payload = TelemetryPayload.safeParse({
         schemaVersion: 2,
@@ -178,7 +175,7 @@ export const useTelemetrySender = (
       return;
     }
 
-    const strigifiedData = JSON.stringify({
+    const stringifiedData = JSON.stringify({
       ...payload.data,
     });
 
@@ -187,13 +184,16 @@ export const useTelemetrySender = (
       payload.data.coords.latitude != null &&
       payload.data.coords.longitude != null;
 
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      if (isPayloadValid) {
-        socketRef.current.send(strigifiedData);
+    if (isPayloadValid) {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        if (now - lastSentRef.current < TELEMETRY_THROTTLE_MS) {
+          return;
+        }
+        socketRef.current.send(stringifiedData);
         lastSentRef.current = now;
+      } else {
+        enqueueMessage(telemetryQueueRef.current, stringifiedData);
       }
-    } else if (isPayloadValid) {
-      enqueueMessage(telemetryQueueRef.current, strigifiedData);
     }
   }, [coords, state, enqueueMessage, isWifiConnected]);
 
