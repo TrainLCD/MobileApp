@@ -26,7 +26,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
     throw new HttpsError(
       'invalid-argument',
-      `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`
+      `The function must be called with one argument "ssmlJa" containing the message to add.`
     );
   }
 
@@ -36,7 +36,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     // Otsuka・Teikyo-Daigakuなど
     .replace(/・/g, ' ')
     // 環状運転の場合に & が含まれる可能性があるため置換
-    .replace(/&/g, 'and')
+    .replace(/&(?!\w+;)/g, 'and')
     // 全角記号
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
@@ -153,7 +153,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (ssmlEn.trim().length === 0) {
     throw new HttpsError(
       'invalid-argument',
-      `The function must be called with one arguments "ssmlEn" containing the message ssmlEn to add.`
+      `The function must be called with one argument "ssmlEn" containing the message to add.`
     );
   }
 
@@ -176,7 +176,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .doc('tts')
     .collection('voices');
 
-  const hashAlgorithm = 'md5';
+  const hashAlgorithm = 'sha256';
   const version = 1;
   const hashPayload = JSON.stringify({
     ssmlJa,
@@ -187,11 +187,10 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     volumeGainDb,
     effectsProfileId,
     apiVersion,
+    version,
   });
 
-  const id = createHash(hashAlgorithm)
-    .update(`${hashPayload}_v${version}`)
-    .digest('hex');
+  const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
 
   const snapshot = await voicesCollection.doc(id).get();
 
@@ -266,6 +265,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     ]);
 
     if (!jaRes.ok || !enRes.ok) {
+      const [jaText, enText] = await Promise.all([
+        jaRes.text().catch(() => ''),
+        enRes.text().catch(() => ''),
+      ]);
+      console.error(
+        `TTS API error detail: ja=${jaRes.status} ${jaText}; en=${enRes.status} ${enText}`
+      );
       throw new HttpsError(
         'internal',
         `TTS API error: ja=${jaRes.status}, en=${enRes.status}`
@@ -286,6 +292,10 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
           ssmlEn,
           voiceJa: jaVoiceName,
           voiceEn: enVoiceName,
+          audioEncoding,
+          volumeGainDb,
+          effectsProfileId,
+          apiVersion,
         },
       })
       .catch((err) => {
