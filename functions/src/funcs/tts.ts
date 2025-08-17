@@ -157,8 +157,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const jaVoiceName = 'ja-JP-Standard-B';
-  const enVoiceName = 'en-US-Standard-G';
+  const jaVoiceName =
+    process.env.GOOGLE_TTS_JA_VOICE_NAME || 'ja-JP-Standard-B';
+  const enVoiceName =
+    process.env.GOOGLE_TTS_EN_VOICE_NAME || 'en-US-Standard-G';
+  const audioEncoding = 'MP3';
+  const volumeGainDb = 6.0;
+  const effectsProfileId = ['handset-class-device'];
 
   const voicesCollection = firestore
     .collection('caches')
@@ -166,8 +171,11 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .collection('voices');
 
   const hashAlgorithm = 'md5';
+  const version = 1;
   const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
-  const id = createHash(hashAlgorithm).update(hashData).digest('hex');
+  const id = createHash(hashAlgorithm)
+    .update(`${hashData}_v${version}`)
+    .digest('hex');
 
   const snapshot = await voicesCollection.doc(id).get();
 
@@ -183,7 +191,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     return { id, jaAudioContent, enAudioContent };
   }
 
-  const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
+  const ttsUrl = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
   const reqBodyJa = {
     input: {
@@ -194,7 +202,9 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       name: jaVoiceName,
     },
     audioConfig: {
-      audioEncoding: 'MP3',
+      audioEncoding,
+      volumeGainDb,
+      effectsProfileId,
     },
   };
 
@@ -207,7 +217,9 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       name: enVoiceName,
     },
     audioConfig: {
-      audioEncoding: 'MP3',
+      audioEncoding,
+      volumeGainDb,
+      effectsProfileId,
     },
   };
 
