@@ -199,15 +199,31 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   const snapshot = await voicesCollection.doc(id).get();
 
   if (snapshot.exists) {
-    const jaAudioData =
-      (await storage.bucket().file(snapshot.data()?.pathJa).download()) || null;
-    const enAudioData =
-      (await storage.bucket().file(snapshot.data()?.pathEn).download()) || null;
-
-    const jaAudioContent = jaAudioData?.[0]?.toString('base64') || null;
-    const enAudioContent = enAudioData?.[0]?.toString('base64') || null;
-
-    return { id, jaAudioContent, enAudioContent };
+    const data = snapshot.data() ?? {};
+    const pathJa = data?.pathJa;
+    const pathEn = data?.pathEn;
+    if (typeof pathJa === 'string' && typeof pathEn === 'string') {
+      try {
+        const [jaAudioData, enAudioData] = await Promise.all([
+          storage.bucket().file(pathJa).download(),
+          storage.bucket().file(pathEn).download(),
+        ]);
+        const jaAudioContent = jaAudioData?.[0]?.toString('base64') ?? null;
+        const enAudioContent = enAudioData?.[0]?.toString('base64') ?? null;
+        if (jaAudioContent && enAudioContent) {
+          return { id, jaAudioContent, enAudioContent };
+        }
+      } catch (e) {
+        console.warn(
+          'Cache hit but download failed. Falling back to synthesis.',
+          e
+        );
+      }
+    } else {
+      console.warn(
+        'Cache doc missing pathJa/pathEn. Falling back to synthesis.'
+      );
+    }
   }
 
   if (!process.env.GOOGLE_TTS_API_KEY) {
