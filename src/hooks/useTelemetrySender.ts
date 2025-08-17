@@ -71,8 +71,8 @@ export const useTelemetrySender = (
   const socketRef = useRef<WebSocket | null>(null);
   const lastSentRef = useRef<number>(0);
   const gnssRef = useRef<GnssState | null>(null);
-  const telemetryQueue = useRef<string[]>([]).current;
-  const messageQueue = useRef<string[]>([]).current;
+  const telemetryQueueRef = useRef<string[]>([]);
+  const messageQueueRef = useRef<string[]>([]);
 
   useEffect(
     () =>
@@ -150,10 +150,10 @@ export const useTelemetrySender = (
           lastSentRef.current = now;
         }
       } else {
-        enqueueMessage(messageQueue, strigifiedMessage);
+        enqueueMessage(messageQueueRef.current, strigifiedMessage);
       }
     },
-    [messageQueue, enqueueMessage]
+    [enqueueMessage]
   );
 
   const sendTelemetry = useCallback(() => {
@@ -195,9 +195,9 @@ export const useTelemetrySender = (
         lastSentRef.current = now;
       }
     } else if (isPayloadValid) {
-      enqueueMessage(telemetryQueue, strigifiedData);
+      enqueueMessage(telemetryQueueRef.current, strigifiedData);
     }
-  }, [coords, state, enqueueMessage, telemetryQueue, isWifiConnected]);
+  }, [coords, state, enqueueMessage, isWifiConnected]);
 
   useEffect(() => {
     let reconnectAttempts = 0;
@@ -222,15 +222,30 @@ export const useTelemetrySender = (
           reconnectAttempts = 0;
 
           if (sendTelemetryAutomatically) {
-            sendLog('Connected to the telemetry server as a client', 'info');
+            const logPayload = {
+              schemaVersion: 2 as const,
+              type: 'log' as const,
+              log: {
+                type: 'app' as const,
+                level: 'info' as const,
+                message: 'Connected to the telemetry server as a client',
+              },
+              device: Device.modelName ?? 'unknown',
+              timestamp: Date.now(),
+            };
+            socket.send(JSON.stringify(logPayload));
           }
 
-          while (messageQueue.length > 0) {
-            const msg = messageQueue.shift();
+          // キューの内容を送信（refを使ってアクセス）
+          const msgQueue = messageQueueRef.current;
+          const telQueue = telemetryQueueRef.current;
+
+          while (msgQueue.length > 0) {
+            const msg = msgQueue.shift();
             if (msg) socket.send(msg);
           }
-          while (telemetryQueue.length > 0) {
-            const msg = telemetryQueue.shift();
+          while (telQueue.length > 0) {
+            const msg = telQueue.shift();
             if (msg) socket.send(msg);
           }
         };
@@ -239,7 +254,24 @@ export const useTelemetrySender = (
         };
         socket.onclose = () => {
           console.log('WebSocket closed');
-          sendLog('Disconnected from the telemetry server as a client', 'info');
+          const logPayload = {
+            schemaVersion: 2 as const,
+            type: 'log' as const,
+            log: {
+              type: 'app' as const,
+              level: 'info' as const,
+              message: 'Disconnected from the telemetry server as a client',
+            },
+            device: Device.modelName ?? 'unknown',
+            timestamp: Date.now(),
+          };
+          // キューへの追加もrefを使って実行
+          const msgQueue = messageQueueRef.current;
+          msgQueue.push(JSON.stringify(logPayload));
+          if (msgQueue.length > TELEMETRY_MAX_QUEUE_SIZE) {
+            msgQueue.shift();
+          }
+
           if (reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
             const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
@@ -258,15 +290,7 @@ export const useTelemetrySender = (
       socket?.close();
       clearTimeout(reconnectTimeout);
     };
-  }, [
-    wsUrl,
-    sendTelemetryAutomatically,
-    messageQueue.length,
-    messageQueue.shift,
-    telemetryQueue.length,
-    telemetryQueue.shift,
-    sendLog,
-  ]);
+  }, [wsUrl, sendTelemetryAutomatically]);
 
   useEffect(() => {
     if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
