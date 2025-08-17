@@ -178,17 +178,21 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
 
   const hashAlgorithm = 'sha256';
   const version = 1;
-  const hashPayload = JSON.stringify({
-    ssmlJa,
-    ssmlEn,
-    jaVoiceName,
-    enVoiceName,
-    audioEncoding,
-    volumeGainDb,
-    effectsProfileId,
+  const hashPayloadObj = {
     apiVersion,
+    audioEncoding,
+    effectsProfileId,
+    enVoiceName,
+    jaVoiceName,
+    ssmlEn,
+    ssmlJa,
+    volumeGainDb,
     version,
-  });
+  } as const;
+  const hashPayload = JSON.stringify(
+    hashPayloadObj,
+    Object.keys(hashPayloadObj).sort()
+  );
 
   const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
 
