@@ -93,6 +93,7 @@
     "@bufbuild/buf": "^1.40.1",
     "@bufbuild/protobuf": "^1.10.0",
     "@bufbuild/protoc-gen-es": "^1.7.2",
+    "@react-native/js-polyfills": "^0.81.0",
     "@testing-library/jest-native": "^4.0.11",
     "@testing-library/react-native": "^13.2.0",
     "@types/i18n-js": "^3.0.1",
