@@ -150,7 +150,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     )
     .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');
 
-  if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
+  if (ssmlEn.trim().length === 0) {
     throw new HttpsError(
       'invalid-argument',
       `The function must be called with one arguments "ssmlEn" containing the message ssmlEn to add.`
@@ -162,8 +162,9 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   const enVoiceName =
     process.env.GOOGLE_TTS_EN_VOICE_NAME || 'en-US-Standard-G';
   const audioEncoding = 'MP3';
-  const volumeGainDb = 6.0;
+  const volumeGainDb = Number(process.env.GOOGLE_TTS_VOLUME_GAIN_DB ?? '6');
   const effectsProfileId = ['handset-class-device'];
+  const apiVersion = 'v1';
 
   const voicesCollection = firestore
     .collection('caches')
@@ -180,7 +181,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     audioEncoding,
     volumeGainDb,
     effectsProfileId,
-    apiVersion: 'v1',
+    apiVersion,
   });
 
   const id = createHash(hashAlgorithm)
@@ -201,7 +202,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     return { id, jaAudioContent, enAudioContent };
   }
 
-  const ttsUrl = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
+  const ttsUrl = `https://texttospeech.googleapis.com/${apiVersion}/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
   const reqBodyJa = {
     input: {
