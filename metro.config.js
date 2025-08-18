@@ -1,9 +1,6 @@
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
-const {
-  getSentryExpoConfig
-} = require("@sentry/react-native/metro");
+const { getDefaultConfig } = require('expo/metro-config');
+const { withSentryConfig } = require('@sentry/react-native/metro');
 
-/** @type {import('expo/metro-config').MetroConfig} */
-const config = getSentryExpoConfig(__dirname);
-
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+const baseConfig = getDefaultConfig(__dirname);
+const useSentry = process.env.NODE_ENV === 'production';
+module.exports = useSentry ? withSentryConfig(baseConfig) : baseConfig;
