@@ -4,7 +4,6 @@ import getCenter from 'geolib/es/getCenter';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import navigationState from '~/store/atoms/navigation';
-import { isDevApp } from '~/utils/isDevApp';
 import {
   AUTO_MODE_RUNNING_DURATION,
   AUTO_MODE_WHOLE_DURATION,
@@ -73,7 +72,6 @@ export const useAutoMode = (): void => {
   const startApproachingTimer = useCallback(() => {
     if (
       !enabled ||
-      isDevApp ||
       autoModeApproachingTimerRef.current ||
       !selectedDirection ||
       !selectedLine
@@ -205,7 +203,6 @@ export const useAutoMode = (): void => {
 
     if (
       !enabled ||
-      isDevApp ||
       autoModeArriveTimerRef.current ||
       !direction ||
       !selectedLine
