@@ -61,6 +61,7 @@ export const useTTS = (): void => {
     soundJaRef.current = soundJa;
     soundEnRef.current = soundEn;
     playingRef.current = true;
+
     soundJa.play();
 
     const enRemoveListener = soundEn.addListener(
