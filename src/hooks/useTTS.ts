@@ -167,11 +167,7 @@ export const useTTS = (): void => {
 
     const { id, pathJa, pathEn } = fetched;
 
-    store(
-      id,
-      { text: textJa, path: fetched.pathJa },
-      { text: textEn, path: fetched.pathEn }
-    );
+    store(id, { text: textJa, path: pathJa }, { text: textEn, path: pathEn });
 
     await speakFromPath(pathJa, pathEn);
   }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
