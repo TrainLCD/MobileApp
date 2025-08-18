@@ -65,6 +65,10 @@ export const useTTS = (): void => {
           jaRemoveListener?.remove();
           soundJa.remove();
           soundEn.play();
+        } else if ('error' in jaStatus && jaStatus.error) {
+          jaRemoveListener?.remove();
+          soundJa.remove();
+          playingRef.current = false;
         }
       }
     );
@@ -76,12 +80,21 @@ export const useTTS = (): void => {
           enRemoveListener?.remove();
           soundEn.remove();
           playingRef.current = false;
+        } else if ('error' in enStatus && enStatus.error) {
+          enRemoveListener?.remove();
+          soundEn.remove();
+          playingRef.current = false;
         }
       }
     );
 
     return () => {
+      jaRemoveListener.remove();
+      enRemoveListener.remove();
+
+      soundJa.pause();
       soundJa.remove();
+      soundEn.pause();
       soundEn.remove();
     };
   }, []);
