@@ -58,21 +58,6 @@ export const useTTS = (): void => {
     soundJa.play();
     playingRef.current = true;
 
-    const jaRemoveListener = soundJa.addListener(
-      'playbackStatusUpdate',
-      (jaStatus) => {
-        if (jaStatus.didJustFinish) {
-          jaRemoveListener?.remove();
-          soundJa.remove();
-          soundEn.play();
-        } else if ('error' in jaStatus && jaStatus.error) {
-          jaRemoveListener?.remove();
-          soundJa.remove();
-          playingRef.current = false;
-        }
-      }
-    );
-
     const enRemoveListener = soundEn.addListener(
       'playbackStatusUpdate',
       (enStatus) => {
@@ -83,6 +68,25 @@ export const useTTS = (): void => {
         } else if ('error' in enStatus && enStatus.error) {
           enRemoveListener?.remove();
           soundEn.remove();
+          playingRef.current = false;
+        }
+      }
+    );
+
+    const jaRemoveListener = soundJa.addListener(
+      'playbackStatusUpdate',
+      (jaStatus) => {
+        if (jaStatus.didJustFinish) {
+          jaRemoveListener?.remove();
+          soundJa.remove();
+          soundEn.play();
+        } else if ('error' in jaStatus && jaStatus.error) {
+          jaRemoveListener?.remove();
+          soundJa.remove();
+
+          enRemoveListener?.remove();
+          soundEn.remove();
+
           playingRef.current = false;
         }
       }
