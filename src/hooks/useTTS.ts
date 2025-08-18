@@ -24,6 +24,9 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
+  const soundJaRef = useRef<AudioPlayer | null>(null);
+  const soundEnRef = useRef<AudioPlayer | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
@@ -48,59 +51,47 @@ export const useTTS = (): void => {
 
     firstSpeechRef.current = false;
 
-    const soundJa = createAudioPlayer({
-      uri: pathJa,
-    });
-    const soundEn = createAudioPlayer({
-      uri: pathEn,
-    });
+    if (!soundJaRef.current) {
+      soundJaRef.current = createAudioPlayer({
+        uri: pathJa,
+      });
+    } else {
+      soundJaRef.current.replace({
+        uri: pathJa,
+      });
+    }
+    if (!soundEnRef.current) {
+      soundEnRef.current = createAudioPlayer({
+        uri: pathEn,
+      });
+    } else {
+      soundEnRef.current.replace({
+        uri: pathEn,
+      });
+    }
 
-    soundJa.play();
+    soundJaRef.current.play();
     playingRef.current = true;
 
-    const enRemoveListener = soundEn.addListener(
-      'playbackStatusUpdate',
-      (enStatus) => {
-        if (enStatus.didJustFinish) {
-          enRemoveListener?.remove();
-          soundEn.remove();
-          playingRef.current = false;
-        } else if ('error' in enStatus && enStatus.error) {
-          enRemoveListener?.remove();
-          soundEn.remove();
-          playingRef.current = false;
-        }
-      }
-    );
-
-    const jaRemoveListener = soundJa.addListener(
+    const jaRemoveListener = soundJaRef.current.addListener(
       'playbackStatusUpdate',
       (jaStatus) => {
-        if (jaStatus.didJustFinish) {
+        if (jaStatus.isLoaded && jaStatus.didJustFinish) {
           jaRemoveListener?.remove();
-          soundJa.remove();
-          soundEn.play();
-        } else if ('error' in jaStatus && jaStatus.error) {
-          jaRemoveListener?.remove();
-          soundJa.remove();
-
-          enRemoveListener?.remove();
-          soundEn.remove();
-
-          playingRef.current = false;
+          soundEnRef.current?.play();
         }
       }
     );
 
-    return () => {
-      jaRemoveListener.remove();
-      enRemoveListener.remove();
-
-      soundJa.pause();
-      soundJa.remove();
-      soundEn.pause();
-      soundEn.remove();
-    };
+    const enRemoveListener = soundEnRef.current.addListener(
+      'playbackStatusUpdate',
+      (enStatus) => {
+        if (enStatus.isLoaded && enStatus.didJustFinish) {
+          enRemoveListener?.remove();
+          playingRef.current = false;
+        }
+      }
+    );
   }, []);
 
   const ttsApiUrl = useMemo(() => {
@@ -165,8 +156,8 @@ export const useTTS = (): void => {
     const cache = getByText(textJa);
 
     if (cache) {
-      const cleanup = await speakFromPath(cache.ja.path, cache.en.path);
-      return cleanup;
+      await speakFromPath(cache.ja.path, cache.en.path);
+      return;
     }
 
     const fetched = await fetchSpeech();
@@ -182,9 +173,7 @@ export const useTTS = (): void => {
       { text: textEn, path: fetched.pathEn }
     );
 
-    const cleanup = await speakFromPath(pathJa, pathEn);
-
-    return cleanup;
+    await speakFromPath(pathJa, pathEn);
   }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
 
   useEffect(() => {
@@ -208,6 +197,10 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
+      soundJaRef.current?.remove();
+      soundEnRef.current?.remove();
+      soundJaRef.current = null;
+      soundEnRef.current = null;
     };
   }, []);
 };
