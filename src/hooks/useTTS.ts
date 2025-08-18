@@ -165,8 +165,8 @@ export const useTTS = (): void => {
     const cache = getByText(textJa);
 
     if (cache) {
-      await speakFromPath(cache.ja.path, cache.en.path);
-      return;
+      const cleanup = await speakFromPath(cache.ja.path, cache.en.path);
+      return cleanup;
     }
 
     const fetched = await fetchSpeech();
@@ -182,7 +182,9 @@ export const useTTS = (): void => {
       { text: textEn, path: fetched.pathEn }
     );
 
-    await speakFromPath(pathJa, pathEn);
+    const cleanup = await speakFromPath(pathJa, pathEn);
+
+    return cleanup;
   }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
 
   useEffect(() => {
