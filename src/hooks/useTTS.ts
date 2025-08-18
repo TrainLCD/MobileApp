@@ -67,6 +67,7 @@ export const useTTS = (): void => {
         if (enStatus.didJustFinish) {
           enRemoveListener?.remove();
           soundEn.remove();
+          soundEnRef.current = null;
           playingRef.current = false;
         } else if ('error' in enStatus && enStatus.error) {
           // 英語側エラー時も確実に終了
@@ -74,6 +75,7 @@ export const useTTS = (): void => {
           try {
             soundEn.remove();
           } catch {}
+          soundEnRef.current = null;
           playingRef.current = false;
         }
       }
@@ -85,6 +87,7 @@ export const useTTS = (): void => {
         if (jaStatus.didJustFinish) {
           jaRemoveListener?.remove();
           soundJa.remove();
+          soundJaRef.current = null;
           if (isLoadableRef.current) {
             soundEn.play();
           } else {
@@ -93,6 +96,7 @@ export const useTTS = (): void => {
             try {
               soundEn.remove();
             } catch {}
+            soundEnRef.current = null;
             playingRef.current = false;
           }
         } else if ('error' in jaStatus && jaStatus.error) {
@@ -101,10 +105,12 @@ export const useTTS = (): void => {
           try {
             soundJa.remove();
           } catch {}
+          soundJaRef.current = null;
           enRemoveListener?.remove();
           try {
             soundEn.remove();
           } catch {}
+          soundEnRef.current = null;
           playingRef.current = false;
         }
       }
@@ -215,10 +221,18 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
-      soundJaRef.current?.pause();
-      soundEnRef.current?.pause();
-      soundJaRef.current?.remove();
-      soundEnRef.current?.remove();
+      try {
+        soundJaRef.current?.pause();
+      } catch {}
+      try {
+        soundEnRef.current?.pause();
+      } catch {}
+      try {
+        soundJaRef.current?.remove();
+      } catch {}
+      try {
+        soundEnRef.current?.remove();
+      } catch {}
       soundJaRef.current = null;
       soundEnRef.current = null;
     };
