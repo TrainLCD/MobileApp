@@ -24,9 +24,6 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
-  const soundJaRef = useRef<AudioPlayer | null>(null);
-  const soundEnRef = useRef<AudioPlayer | null>(null);
-
   useEffect(() => {
     (async () => {
       try {
@@ -51,37 +48,42 @@ export const useTTS = (): void => {
 
     firstSpeechRef.current = false;
 
-    soundJaRef.current = createAudioPlayer({
+    const soundJa = createAudioPlayer({
       uri: pathJa,
     });
-    soundEnRef.current = createAudioPlayer({
+    const soundEn = createAudioPlayer({
       uri: pathEn,
     });
 
-    soundJaRef.current.play();
+    soundJa.play();
     playingRef.current = true;
 
-    const jaRemoveListener = soundJaRef.current.addListener(
+    const jaRemoveListener = soundJa.addListener(
       'playbackStatusUpdate',
       (jaStatus) => {
         if (jaStatus.didJustFinish) {
           jaRemoveListener?.remove();
-          soundJaRef.current = null;
-          soundEnRef.current?.play();
+          soundJa.remove();
+          soundEn.play();
         }
       }
     );
 
-    const enRemoveListener = soundEnRef.current.addListener(
+    const enRemoveListener = soundEn.addListener(
       'playbackStatusUpdate',
       (enStatus) => {
         if (enStatus.didJustFinish) {
           enRemoveListener?.remove();
-          soundEnRef.current = null;
+          soundEn.remove();
           playingRef.current = false;
         }
       }
     );
+
+    return () => {
+      soundJa.remove();
+      soundEn.remove();
+    };
   }, []);
 
   const ttsApiUrl = useMemo(() => {
@@ -187,10 +189,6 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
-      soundJaRef.current?.remove();
-      soundEnRef.current?.remove();
-      soundJaRef.current = null;
-      soundEnRef.current = null;
     };
   }, []);
 };
