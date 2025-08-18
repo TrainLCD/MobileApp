@@ -51,24 +51,12 @@ export const useTTS = (): void => {
 
     firstSpeechRef.current = false;
 
-    if (!soundJaRef.current) {
-      soundJaRef.current = createAudioPlayer({
-        uri: pathJa,
-      });
-    } else {
-      soundJaRef.current.replace({
-        uri: pathJa,
-      });
-    }
-    if (!soundEnRef.current) {
-      soundEnRef.current = createAudioPlayer({
-        uri: pathEn,
-      });
-    } else {
-      soundEnRef.current.replace({
-        uri: pathEn,
-      });
-    }
+    soundJaRef.current = createAudioPlayer({
+      uri: pathJa,
+    });
+    soundEnRef.current = createAudioPlayer({
+      uri: pathEn,
+    });
 
     soundJaRef.current.play();
     playingRef.current = true;
@@ -76,8 +64,9 @@ export const useTTS = (): void => {
     const jaRemoveListener = soundJaRef.current.addListener(
       'playbackStatusUpdate',
       (jaStatus) => {
-        if (jaStatus.isLoaded && jaStatus.didJustFinish) {
+        if (jaStatus.didJustFinish) {
           jaRemoveListener?.remove();
+          soundJaRef.current = null;
           soundEnRef.current?.play();
         }
       }
@@ -86,8 +75,9 @@ export const useTTS = (): void => {
     const enRemoveListener = soundEnRef.current.addListener(
       'playbackStatusUpdate',
       (enStatus) => {
-        if (enStatus.isLoaded && enStatus.didJustFinish) {
+        if (enStatus.didJustFinish) {
           enRemoveListener?.remove();
+          soundEnRef.current = null;
           playingRef.current = false;
         }
       }
