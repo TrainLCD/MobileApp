@@ -51,47 +51,69 @@ export const useTTS = (): void => {
 
     firstSpeechRef.current = false;
 
-    if (!soundJaRef.current) {
-      soundJaRef.current = createAudioPlayer({
-        uri: pathJa,
-      });
-    } else {
-      soundJaRef.current.replace({
-        uri: pathJa,
-      });
-    }
-    if (!soundEnRef.current) {
-      soundEnRef.current = createAudioPlayer({
-        uri: pathEn,
-      });
-    } else {
-      soundEnRef.current.replace({
-        uri: pathEn,
-      });
-    }
+    const soundJa = createAudioPlayer({
+      uri: pathJa,
+    });
+    const soundEn = createAudioPlayer({
+      uri: pathEn,
+    });
 
-    soundJaRef.current.play();
+    soundJa.play();
     playingRef.current = true;
 
-    const jaRemoveListener = soundJaRef.current.addListener(
-      'playbackStatusUpdate',
-      (jaStatus) => {
-        if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-          jaRemoveListener?.remove();
-          soundEnRef.current?.play();
-        }
-      }
-    );
-
-    const enRemoveListener = soundEnRef.current.addListener(
+    const enRemoveListener = soundEn.addListener(
       'playbackStatusUpdate',
       (enStatus) => {
-        if (enStatus.isLoaded && enStatus.didJustFinish) {
+        if (enStatus.didJustFinish) {
           enRemoveListener?.remove();
+          soundEn.remove();
+          playingRef.current = false;
+        } else if ('error' in enStatus && enStatus.error) {
+          // 英語側エラー時も確実に終了
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch {}
           playingRef.current = false;
         }
       }
     );
+
+    const jaRemoveListener = soundJa.addListener(
+      'playbackStatusUpdate',
+      (jaStatus) => {
+        if (jaStatus.didJustFinish) {
+          jaRemoveListener?.remove();
+          soundJa.remove();
+          if (isLoadableRef.current) {
+            soundEn.play();
+          } else {
+            // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
+            enRemoveListener?.remove();
+            try {
+              soundEn.remove();
+            } catch {}
+            playingRef.current = false;
+          }
+        } else if ('error' in jaStatus && jaStatus.error) {
+          // 日本語側エラー時は両者解放して停止
+          jaRemoveListener?.remove();
+          try {
+            soundJa.remove();
+          } catch {}
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch {}
+          playingRef.current = false;
+        }
+      }
+    );
+
+    soundJa.play();
+
+    soundJaRef.current = soundJa;
+    soundEnRef.current = soundEn;
   }, []);
 
   const ttsApiUrl = useMemo(() => {
@@ -193,6 +215,8 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
+      soundJaRef.current?.pause();
+      soundEnRef.current?.pause();
       soundJaRef.current?.remove();
       soundEnRef.current?.remove();
       soundJaRef.current = null;
