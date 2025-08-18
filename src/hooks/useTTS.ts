@@ -58,8 +58,10 @@ export const useTTS = (): void => {
       uri: pathEn,
     });
 
-    soundJa.play();
+    soundJaRef.current = soundJa;
+    soundEnRef.current = soundEn;
     playingRef.current = true;
+    soundJa.play();
 
     const enRemoveListener = soundEn.addListener(
       'playbackStatusUpdate',
@@ -115,11 +117,6 @@ export const useTTS = (): void => {
         }
       }
     );
-
-    soundJa.play();
-
-    soundJaRef.current = soundJa;
-    soundEnRef.current = soundEn;
   }, []);
 
   const ttsApiUrl = useMemo(() => {
