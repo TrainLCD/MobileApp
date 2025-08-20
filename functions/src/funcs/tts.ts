@@ -26,17 +26,17 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
   if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
     throw new HttpsError(
       'invalid-argument',
-      `The function must be called with one arguments "ssmlJa" containing the message ssmlJa to add.`
+      `The function must be called with one argument "ssmlJa" containing the message to add.`
     );
   }
 
-  const ssmlEn: string | undefined = normalizeRomanText(req.data.ssmlEn)
+  const ssmlEn = normalizeRomanText(req.data.ssmlEn)
     // Airport Terminal 1･2等
     .replace(/･/g, ' ')
     // Otsuka・Teikyo-Daigakuなど
     .replace(/・/g, ' ')
     // 環状運転の場合に & が含まれる可能性があるため置換
-    .replace(/&/g, 'and')
+    .replace(/&(?!#\d+;|#x[0-9A-Fa-f]+;|\w+;)/g, 'and')
     // 全角記号
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
@@ -150,40 +150,89 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     )
     .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');
 
-  if (typeof ssmlEn !== 'string' || ssmlEn.length === 0) {
+  if (ssmlEn.trim().length === 0) {
     throw new HttpsError(
       'invalid-argument',
-      `The function must be called with one arguments "ssmlEn" containing the message ssmlEn to add.`
+      `The function must be called with one argument "ssmlEn" containing the message to add.`
     );
   }
 
-  const jaVoiceName = 'ja-JP-Standard-B';
-  const enVoiceName = 'en-US-Standard-G';
+  const jaVoiceName =
+    process.env.GOOGLE_TTS_JA_VOICE_NAME || 'ja-JP-Standard-B';
+  const enVoiceName =
+    process.env.GOOGLE_TTS_EN_VOICE_NAME || 'en-US-Standard-G';
+  const audioEncoding = 'MP3';
+  const volumeGainEnv = process.env.GOOGLE_TTS_VOLUME_GAIN_DB;
+  const volumeGainParsed =
+    volumeGainEnv === undefined ? 6 : Number(volumeGainEnv);
+  const volumeGainDb = Number.isFinite(volumeGainParsed)
+    ? Math.max(-96, Math.min(16, volumeGainParsed))
+    : 6;
+  const effectsProfileId = ['handset-class-device'];
+  const apiVersion = 'v1';
 
   const voicesCollection = firestore
     .collection('caches')
     .doc('tts')
     .collection('voices');
 
-  const hashAlgorithm = 'md5';
-  const hashData = ssmlJa + ssmlEn + jaVoiceName + enVoiceName;
-  const id = createHash(hashAlgorithm).update(hashData).digest('hex');
+  const hashAlgorithm = 'sha256';
+  const version = 1;
+  const hashPayloadObj = {
+    apiVersion,
+    audioEncoding,
+    effectsProfileId,
+    enVoiceName,
+    jaVoiceName,
+    ssmlEn,
+    ssmlJa,
+    volumeGainDb,
+    version,
+  } as const;
+  const hashPayload = JSON.stringify(
+    hashPayloadObj,
+    Object.keys(hashPayloadObj).sort()
+  );
+
+  const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
 
   const snapshot = await voicesCollection.doc(id).get();
 
   if (snapshot.exists) {
-    const jaAudioData =
-      (await storage.bucket().file(snapshot.data()?.pathJa).download()) || null;
-    const enAudioData =
-      (await storage.bucket().file(snapshot.data()?.pathEn).download()) || null;
-
-    const jaAudioContent = jaAudioData?.[0]?.toString('base64') || null;
-    const enAudioContent = enAudioData?.[0]?.toString('base64') || null;
-
-    return { id, jaAudioContent, enAudioContent };
+    const data = snapshot.data() ?? {};
+    const pathJa = data?.pathJa;
+    const pathEn = data?.pathEn;
+    if (typeof pathJa === 'string' && typeof pathEn === 'string') {
+      try {
+        const [jaAudioData, enAudioData] = await Promise.all([
+          storage.bucket().file(pathJa).download(),
+          storage.bucket().file(pathEn).download(),
+        ]);
+        const jaAudioContent = jaAudioData?.[0]?.toString('base64') ?? null;
+        const enAudioContent = enAudioData?.[0]?.toString('base64') ?? null;
+        if (jaAudioContent && enAudioContent) {
+          return { id, jaAudioContent, enAudioContent };
+        }
+      } catch (e) {
+        console.warn(
+          'Cache hit but download failed. Falling back to synthesis.',
+          e
+        );
+      }
+    } else {
+      console.warn(
+        'Cache doc missing pathJa/pathEn. Falling back to synthesis.'
+      );
+    }
   }
 
-  const ttsUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
+  if (!process.env.GOOGLE_TTS_API_KEY) {
+    throw new HttpsError(
+      'failed-precondition',
+      'GOOGLE_TTS_API_KEY is not set'
+    );
+  }
+  const ttsUrl = `https://texttospeech.googleapis.com/${apiVersion}/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
   const reqBodyJa = {
     input: {
@@ -194,7 +243,9 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       name: jaVoiceName,
     },
     audioConfig: {
-      audioEncoding: 'MP3',
+      audioEncoding,
+      volumeGainDb,
+      effectsProfileId,
     },
   };
 
@@ -207,7 +258,9 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       name: enVoiceName,
     },
     audioConfig: {
-      audioEncoding: 'MP3',
+      audioEncoding,
+      volumeGainDb,
+      effectsProfileId,
     },
   };
 
@@ -232,6 +285,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     ]);
 
     if (!jaRes.ok || !enRes.ok) {
+      const [jaText, enText] = await Promise.all([
+        jaRes.text().catch(() => ''),
+        enRes.text().catch(() => ''),
+      ]);
+      console.error(
+        `TTS API error detail: ja=${jaRes.status} ${jaText}; en=${enRes.status} ${enText}`
+      );
       throw new HttpsError(
         'internal',
         `TTS API error: ja=${jaRes.status}, en=${enRes.status}`
@@ -252,6 +312,10 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
           ssmlEn,
           voiceJa: jaVoiceName,
           voiceEn: enVoiceName,
+          audioEncoding,
+          volumeGainDb,
+          effectsProfileId,
+          apiVersion,
         },
       })
       .catch((err) => {

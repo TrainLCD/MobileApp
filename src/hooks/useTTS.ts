@@ -1,4 +1,5 @@
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+import type { AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -23,19 +24,24 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
-  const soundJaRef = useRef<Audio.Sound | null>(null);
-  const soundEnRef = useRef<Audio.Sound | null>(null);
+  const soundJaRef = useRef<AudioPlayer | null>(null);
+  const soundEnRef = useRef<AudioPlayer | null>(null);
 
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      staysActiveInBackground: backgroundEnabled,
-      interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-      playsInSilentModeIOS: backgroundEnabled,
-      shouldDuckAndroid: true,
-      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-      playThroughEarpieceAndroid: false,
-    });
+    (async () => {
+      try {
+        await setAudioModeAsync({
+          allowsRecording: false,
+          shouldPlayInBackground: backgroundEnabled,
+          interruptionMode: 'duckOthers',
+          playsInSilentMode: true,
+          interruptionModeAndroid: 'duckOthers',
+          shouldRouteThroughEarpiece: false,
+        });
+      } catch (e) {
+        console.warn('[useTTS] setAudioModeAsync failed:', e);
+      }
+    })();
   }, [backgroundEnabled]);
 
   const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
@@ -45,39 +51,73 @@ export const useTTS = (): void => {
 
     firstSpeechRef.current = false;
 
-    if (!soundJaRef.current) {
-      const { sound: soundJa } = await Audio.Sound.createAsync({
-        uri: pathJa,
-      });
-      soundJaRef.current = soundJa;
-    } else {
-      await soundJaRef.current?.loadAsync({ uri: pathJa });
-    }
-    if (!soundEnRef.current) {
-      const { sound: soundEn } = await Audio.Sound.createAsync({
-        uri: pathEn,
-      });
-      soundEnRef.current = soundEn;
-    } else {
-      await soundEnRef.current?.loadAsync({ uri: pathEn });
-    }
+    const soundJa = createAudioPlayer({
+      uri: pathJa,
+    });
+    const soundEn = createAudioPlayer({
+      uri: pathEn,
+    });
 
-    await soundJaRef.current?.playAsync();
+    soundJaRef.current = soundJa;
+    soundEnRef.current = soundEn;
     playingRef.current = true;
 
-    soundJaRef.current._onPlaybackStatusUpdate = async (jaStatus) => {
-      if (jaStatus.isLoaded && jaStatus.didJustFinish) {
-        await soundJaRef.current?.unloadAsync();
-        await soundEnRef.current?.playAsync();
+    const enRemoveListener = soundEn.addListener(
+      'playbackStatusUpdate',
+      (enStatus) => {
+        if (enStatus.didJustFinish) {
+          enRemoveListener?.remove();
+          soundEn.remove();
+          soundEnRef.current = null;
+          playingRef.current = false;
+        } else if ('error' in enStatus && enStatus.error) {
+          // 英語側エラー時も確実に終了
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch {}
+          soundEnRef.current = null;
+          playingRef.current = false;
+        }
       }
-    };
+    );
 
-    soundEnRef.current._onPlaybackStatusUpdate = async (enStatus) => {
-      if (enStatus.isLoaded && enStatus.didJustFinish) {
-        await soundEnRef.current?.unloadAsync();
-        playingRef.current = false;
+    const jaRemoveListener = soundJa.addListener(
+      'playbackStatusUpdate',
+      (jaStatus) => {
+        if (jaStatus.didJustFinish) {
+          jaRemoveListener?.remove();
+          soundJa.remove();
+          soundJaRef.current = null;
+          if (isLoadableRef.current) {
+            soundEn.play();
+          } else {
+            // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
+            enRemoveListener?.remove();
+            try {
+              soundEn.remove();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+          }
+        } else if ('error' in jaStatus && jaStatus.error) {
+          // 日本語側エラー時は両者解放して停止
+          jaRemoveListener?.remove();
+          try {
+            soundJa.remove();
+          } catch {}
+          soundJaRef.current = null;
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch {}
+          soundEnRef.current = null;
+          playingRef.current = false;
+        }
       }
-    };
+    );
+
+    soundJa.play();
   }, []);
 
   const ttsApiUrl = useMemo(() => {
@@ -111,7 +151,7 @@ export const useTTS = (): void => {
 
     const baseDir = FileSystem.cacheDirectory;
 
-    const pathJa = `${baseDir}${ttsJson.result.id}_ja.mp3`;
+    const pathJa = `${baseDir}/${ttsJson.result.id}_ja.mp3`;
     if (ttsJson?.result?.jaAudioContent) {
       await FileSystem.writeAsStringAsync(
         pathJa,
@@ -153,11 +193,7 @@ export const useTTS = (): void => {
 
     const { id, pathJa, pathEn } = fetched;
 
-    store(
-      id,
-      { text: textJa, path: fetched.pathJa },
-      { text: textEn, path: fetched.pathEn }
-    );
+    store(id, { text: textJa, path: pathJa }, { text: textEn, path: pathEn });
 
     await speakFromPath(pathJa, pathEn);
   }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
@@ -183,8 +219,21 @@ export const useTTS = (): void => {
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
-      soundJaRef.current?.unloadAsync();
-      soundEnRef.current?.unloadAsync();
+      try {
+        soundJaRef.current?.pause();
+      } catch {}
+      try {
+        soundEnRef.current?.pause();
+      } catch {}
+      try {
+        soundJaRef.current?.remove();
+      } catch {}
+      try {
+        soundEnRef.current?.remove();
+      } catch {}
+      soundJaRef.current = null;
+      soundEnRef.current = null;
+      playingRef.current = false;
     };
   }, []);
 };

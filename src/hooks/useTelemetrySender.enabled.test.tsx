@@ -8,6 +8,10 @@ const TELEMETRY_MAX_QUEUE_SIZE = 1000;
 const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
+jest.mock('expo-network', () => ({
+  useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
+  NetworkStateType: { WIFI: 'WIFI' },
+}));
 jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn(),
@@ -60,7 +64,7 @@ describe('useTelemetrySender', () => {
     const { result } = renderHook(() => useTelemetrySender(), { wrapper });
 
     await act(async () => {
-      result.current.sendLog('Test log', 'info');
+      result.current.sendLog('Test log from the app', 'info');
       await Promise.resolve(); // イベントループ1回分回す
     });
 
@@ -68,8 +72,8 @@ describe('useTelemetrySender', () => {
       () => {
         expect(mockWebSocketSend).toHaveBeenCalled();
         const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-        expect(message.type).toBe('log');
-        expect(message.log.message).toBe('Test log');
+        expect(message.type).toBe('app');
+        expect(message.log.message).toBe('Test log from the app');
       },
       { timeout: 2000 }
     );

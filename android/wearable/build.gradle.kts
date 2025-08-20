@@ -23,12 +23,12 @@ android {
     }
     release {
       signingConfig = signingConfigs.getByName("debug")
-      isMinifyEnabled = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(
         getDefaultProguardFile("proguard-android-optimize.txt"),
         "proguard-rules.pro"
       )
-      signingConfig = signingConfigs.getByName("debug")
     }
   }
 
@@ -39,13 +39,13 @@ android {
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
       // 10203011 <- 10203(v1.2.3 version name)+01(build number)+1(Wearable app)
-      versionCode = 90003081
-      versionName = "9.0.3"
+      versionCode = 90006001
+      versionName = "9.0.6"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 90003001
-      versionName = "9.0.3"
+      versionCode = 90006001
+      versionName = "9.0.6"
     }
   }
 
