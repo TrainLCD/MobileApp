@@ -284,20 +284,6 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       }),
     ]);
 
-    if (!jaRes.ok || !enRes.ok) {
-      const [jaText, enText] = await Promise.all([
-        jaRes.text().catch(() => ''),
-        enRes.text().catch(() => ''),
-      ]);
-      console.error(
-        `TTS API error detail: ja=${jaRes.status} ${jaText}; en=${enRes.status} ${enText}`
-      );
-      throw new HttpsError(
-        'internal',
-        `TTS API error: ja=${jaRes.status}, en=${enRes.status}`
-      );
-    }
-
     const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
       await Promise.all([jaRes.json(), enRes.json()]);
 
