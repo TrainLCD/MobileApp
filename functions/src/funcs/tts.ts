@@ -41,6 +41,8 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
     .replace(/`/g, '')
+    // 日本語はjoを「ホ」と読まない
+    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     // 一丁目で終わる駅
     .replace(
       /\-itchome/gi,
@@ -141,8 +143,6 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Tsurumi/gi,
       '<phoneme alphabet="ipa" ph="t͡sɯɾɯmi">つるみ</phoneme>'
     )
-    // 日本語はjoを「ホ」と読まない
-    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     .replace(/JR/gi, 'J-R')
     .replace(
       /Ryogoku/gi,
@@ -283,20 +283,6 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
         signal: AbortSignal.timeout(30000), // 30秒のタイムアウト
       }),
     ]);
-
-    if (!jaRes.ok || !enRes.ok) {
-      const [jaText, enText] = await Promise.all([
-        jaRes.text().catch(() => ''),
-        enRes.text().catch(() => ''),
-      ]);
-      console.error(
-        `TTS API error detail: ja=${jaRes.status} ${jaText}; en=${enRes.status} ${enText}`
-      );
-      throw new HttpsError(
-        'internal',
-        `TTS API error: ja=${jaRes.status}, en=${enRes.status}`
-      );
-    }
 
     const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
       await Promise.all([jaRes.json(), enRes.json()]);
