@@ -41,6 +41,8 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
     .replace(/`/g, '')
+    // 日本語はjoを「ホ」と読まない
+    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     // 一丁目で終わる駅
     .replace(
       /\-itchome/gi,
@@ -141,8 +143,6 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Tsurumi/gi,
       '<phoneme alphabet="ipa" ph="t͡sɯɾɯmi">つるみ</phoneme>'
     )
-    // 日本語はjoを「ホ」と読まない
-    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     .replace(/JR/gi, 'J-R')
     .replace(
       /Ryogoku/gi,
