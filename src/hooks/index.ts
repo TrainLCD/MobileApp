@@ -48,6 +48,7 @@ export { usePreviousStation } from './usePreviousStation';
 export { useRefreshLeftStations } from './useRefreshLeftStations';
 export { useRefreshStation } from './useRefreshStation';
 export { useResetMainState } from './useResetMainState';
+export { useSavedRoutes } from './useSavedRoutes';
 export { useShouldHideTypeChange } from './useShouldHideTypeChange';
 export { useSimulationMode } from './useSimulationMode';
 export { useSlicedStations } from './useSlicedStations';
