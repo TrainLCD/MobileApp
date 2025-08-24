@@ -17,6 +17,8 @@ import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { useCurrentStation } from './useCurrentStation';
+import { useNextStation } from './useNextStation';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
@@ -61,6 +63,7 @@ const TelemetryPayload = z.object({
     })
     .nullable()
     .optional(),
+  note: z.string().optional(),
   timestamp: z.number(),
 });
 
@@ -73,6 +76,9 @@ export const useTelemetrySender = (
   const gnssRef = useRef<GnssState | null>(null);
   const telemetryQueueRef = useRef<string[]>([]);
   const messageQueueRef = useRef<string[]>([]);
+
+  const currentStation = useCurrentStation(false);
+  const nextStation = useNextStation(false);
 
   useEffect(
     () =>
@@ -166,6 +172,7 @@ export const useTelemetrySender = (
       radio: {
         isWifiConnected,
       },
+      note: `${currentStation?.name} - ${nextStation?.name}`,
       timestamp: now,
     });
 
@@ -191,7 +198,14 @@ export const useTelemetrySender = (
         enqueueMessage(telemetryQueueRef.current, stringifiedData);
       }
     }
-  }, [coords, state, enqueueMessage, isWifiConnected]);
+  }, [
+    coords,
+    state,
+    enqueueMessage,
+    isWifiConnected,
+    currentStation?.name,
+    nextStation?.name,
+  ]);
 
   useEffect(() => {
     let reconnectAttempts = 0;
