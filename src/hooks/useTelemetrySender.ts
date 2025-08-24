@@ -15,9 +15,9 @@ import {
 } from '~/utils/native/android/gnssModule';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
-import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
