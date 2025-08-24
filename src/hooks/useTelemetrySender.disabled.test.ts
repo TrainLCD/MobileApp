@@ -10,16 +10,59 @@ jest.mock('expo-device', () => ({
   modelName: 'TestDevice',
 }));
 
+jest.mock('expo-network', () => ({
+  NetworkStateType: {
+    WIFI: 'WIFI',
+    CELLULAR: 'CELLULAR',
+    NONE: 'NONE',
+  },
+  useNetworkState: jest.fn(() => ({
+    type: 'WIFI',
+    isConnected: true,
+    isInternetReachable: true,
+  })),
+}));
+
 jest.mock('jotai', () => ({
   atom: jest.fn(),
-  useAtomValue: jest.fn(() => ({
-    arrived: false,
-    approaching: true,
-  })),
+  useAtomValue: jest.fn((atom) => {
+    // stationState の場合は完全なステート構造を返す
+    if (
+      atom?.toString?.().includes('station') ||
+      atom === require('~/store/atoms/station').default
+    ) {
+      return {
+        arrived: false,
+        approaching: true,
+        station: null,
+        stations: [],
+        selectedDirection: null,
+        selectedBound: null,
+        wantedDestination: null,
+      };
+    }
+    // その他の atom の場合はデフォルト値を返す
+    return {
+      arrived: false,
+      approaching: true,
+    };
+  }),
 }));
 
 jest.mock('~/hooks/useIsPassing', () => ({
   useIsPassing: jest.fn(() => false),
+}));
+
+jest.mock('~/hooks/useCurrentStation', () => ({
+  useCurrentStation: jest.fn(() => null),
+}));
+
+jest.mock('~/hooks/useNextStation', () => ({
+  useNextStation: jest.fn(() => null),
+}));
+
+jest.mock('~/utils/native/android/gnssModule', () => ({
+  subscribeGnss: jest.fn(() => () => {}),
 }));
 
 jest.mock('~/hooks/useLocationStore', () => ({
