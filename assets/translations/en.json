@@ -150,6 +150,8 @@
   "openStatusText": "Service status",
   "savedRoutes": "Saved routes",
   "savedRoutesEmpty": "No saved routes",
+  "saveCurrentRoute": "Save current route",
+  "removeFromSavedRoutes": "Remove from saved routes",
   "selectFirstStationTitle": "Please select the first station",
   "longPressNotice": "Press and hold the screen to open the menu.",
   "autoAnnounceBackgroundTitle": "Enable background voice announcement",

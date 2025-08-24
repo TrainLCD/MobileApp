@@ -1,6 +1,6 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,12 +14,23 @@ import {
   StopCondition,
   TrainType,
 } from '~/gen/proto/stationapi_pb';
+import type {
+  SavedRoute,
+  SavedRouteWithoutTrainTypeInput,
+  SavedRouteWithTrainTypeInput,
+} from '~/models/SavedRoute';
+import { isDevApp } from '~/utils/isDevApp';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
 import { Heading } from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
-import { useBounds, useLoopLine, useStationList } from '../hooks';
+import {
+  useBounds,
+  useLoopLine,
+  useSavedRoutes,
+  useStationList,
+} from '../hooks';
 import { directionToDirectionName, type LineDirection } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -65,6 +76,9 @@ type RenderButtonProps = {
 };
 
 const SelectBoundScreen: React.FC = () => {
+  const [savedRouteLoaded, setSavedRouteLoaded] = useState(false);
+  const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
+
   const navigation = useNavigation();
   const [{ station, stations, wantedDestination }, setStationState] =
     useAtom(stationState);
@@ -79,6 +93,24 @@ const SelectBoundScreen: React.FC = () => {
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds();
+
+  const {
+    find: findSavedRoute,
+    save: saveCurrentRoute,
+    remove: removeCurrentRoute,
+  } = useSavedRoutes();
+
+  useEffect(() => {
+    const fetchSavedRoute = async () => {
+      const route = await findSavedRoute({
+        lineId: selectedLine?.id,
+        trainTypeId: trainType?.id,
+      });
+      if (route) setSavedRoute(route);
+      setSavedRouteLoaded(true);
+    };
+    fetchSavedRoute();
+  }, [findSavedRoute, selectedLine?.id, trainType?.id]);
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -289,6 +321,52 @@ const SelectBoundScreen: React.FC = () => {
     }));
   }, [setNavigationState]);
 
+  const handleSaveRoutePress = useCallback(async () => {
+    if (savedRoute) {
+      await removeCurrentRoute(savedRoute.id);
+    }
+
+    if (!selectedLine) {
+      return;
+    }
+
+    const lineName = isJapanese
+      ? selectedLine.nameShort
+      : (selectedLine.nameRoman ?? selectedLine.nameShort);
+
+    if (station?.hasTrainTypes && trainType?.groupId) {
+      const trainTypeName = isJapanese
+        ? trainType.name
+        : (trainType.nameRoman ?? '');
+      const newRoute: SavedRouteWithTrainTypeInput = {
+        hasTrainType: true,
+        name: `${lineName} ${trainTypeName}`.trim(),
+        trainTypeId: trainType?.groupId,
+        departureStationId: station.id,
+        createdAt: new Date(),
+      };
+      return saveCurrentRoute(newRoute);
+    }
+
+    const newRoute: SavedRouteWithoutTrainTypeInput = {
+      hasTrainType: false,
+      name: lineName,
+      lineId: selectedLine.id,
+      departureStationId: station?.id,
+      createdAt: new Date(),
+    };
+
+    saveCurrentRoute(newRoute);
+  }, [
+    savedRoute,
+    removeCurrentRoute,
+    saveCurrentRoute,
+    station?.id,
+    station?.hasTrainTypes,
+    selectedLine,
+    trainType,
+  ]);
+
   if (error) {
     return (
       <ErrorScreen
@@ -372,6 +450,13 @@ const SelectBoundScreen: React.FC = () => {
           <Button onPress={toggleAutoModeEnabled}>
             {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
           </Button>
+          {isDevApp && savedRouteLoaded && (
+            <Button onPress={handleSaveRoutePress}>
+              {translate(
+                savedRoute ? 'removeCurrentRoute' : 'saveCurrentRoute'
+              )}
+            </Button>
+          )}
         </View>
       </View>
     </ScrollView>
