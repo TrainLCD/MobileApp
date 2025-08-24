@@ -1,15 +1,15 @@
 import type { StopCondition, TrainType } from '~/gen/proto/stationapi_pb';
 
-type SavedRouteStation = {
+type CommunityRouteStation = {
   id: number;
   stopCondition: StopCondition;
 };
 
-export type SavedRoute = {
+export type CommunityRoute = {
   id: string;
   userId: number;
   name: string;
-  stations: SavedRouteStation[];
+  stations: CommunityRouteStation[];
   createdAt: Date;
   trainType: TrainType;
 };

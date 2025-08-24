@@ -8,17 +8,17 @@ import {
 } from '@react-native-firebase/firestore';
 import { useQuery } from '@tanstack/react-query';
 import { getStationByIdList } from '~/gen/proto/stationapi-StationAPI_connectquery';
-import type { SavedRoute } from '../models/SavedRoute';
+import type { CommunityRoute } from '../models/CommunityRoute';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 
-export const useSavedRoutes = () => {
+export const useCommunityRoutes = () => {
   useCachedInitAnonymousUser();
 
   const {
     data: routes,
     isLoading: isRoutesLoading,
     error: fetchRoutesError,
-  } = useQuery<SavedRoute[]>({
+  } = useQuery<CommunityRoute[]>({
     queryKey: ['/firestore/uploadedCommunityRoutes'],
     queryFn: async () => {
       const db = getFirestore();
@@ -31,7 +31,7 @@ export const useSavedRoutes = () => {
       return (await getDocs(q)).docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as SavedRoute[];
+      })) as CommunityRoute[];
     },
   });
 
