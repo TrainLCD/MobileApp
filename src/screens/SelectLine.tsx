@@ -324,7 +324,7 @@ const SelectLineScreen: React.FC = () => {
               </Button>
               {isInternetAvailable && isDevApp && (
                 <Button onPress={navigateToSavedRoutesScreen}>
-                  {translate('savedRoutes')}
+                  {translate('communityRoutes')}
                 </Button>
               )}
               <Button onPress={navigateToRouteSearchScreen}>

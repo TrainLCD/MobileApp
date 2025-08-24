@@ -181,5 +181,6 @@
   "jrKyushuLike": "JR Kyushu",
   "disableDevOverlay": "Disable developer overlay",
   "enableUntouchableMode": "Enable untouchable mode",
-  "untouchableModeEnabledNotice": "Untouchable mode is enabled. The app will not respond to taps. To disable this mode, please restart the app."
+  "untouchableModeEnabledNotice": "Untouchable mode is enabled. The app will not respond to taps. To disable this mode, please restart the app.",
+  "communityRoutes": "Community routes"
 }
