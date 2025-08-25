@@ -80,6 +80,7 @@ describe('useSavedRoutes', () => {
   describe('save', () => {
     const mockRouteWithTrainType: SavedRouteWithTrainTypeInput = {
       hasTrainType: true,
+      lineId: 200,
       trainTypeId: 1,
       departureStationId: 100,
       name: 'Test Route with Train Type',
@@ -89,6 +90,7 @@ describe('useSavedRoutes', () => {
     const mockRouteWithoutTrainType: SavedRouteWithoutTrainTypeInput = {
       hasTrainType: false,
       lineId: 200,
+      trainTypeId: null,
       departureStationId: 300,
       name: 'Test Route without Train Type',
       createdAt: new Date('2025-08-24T12:00:00Z'),
@@ -153,6 +155,7 @@ describe('useSavedRoutes', () => {
     it('完全なフロー（保存、存在確認、全取得、削除）が動作するべき', async () => {
       const mockRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
+        lineId: 200,
         trainTypeId: 1,
         departureStationId: 100,
         name: 'Integration Test Route',
@@ -193,6 +196,11 @@ describe('useSavedRoutes', () => {
       if (savedRoute.hasTrainType && mockRoute.hasTrainType) {
         // TypeScriptの型ガードにより、ここでは両方ともtrainTypeIdを持つ型になる
         expect(savedRoute.trainTypeId).toBe(mockRoute.trainTypeId);
+        expect(savedRoute.lineId).toBe(mockRoute.lineId);
+      } else if (!savedRoute.hasTrainType && !mockRoute.hasTrainType) {
+        // hasTrainType: falseの場合はtrainTypeIdがnullであることを確認
+        expect(savedRoute.trainTypeId).toBeNull();
+        expect(savedRoute.lineId).toBe(mockRoute.lineId);
       }
       expect(savedRoute.departureStationId).toBe(mockRoute.departureStationId);
 
@@ -211,6 +219,7 @@ describe('useSavedRoutes', () => {
     it('複数経路を正しく処理するべき', async () => {
       const mockRoute1: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
+        lineId: 200,
         trainTypeId: 1,
         departureStationId: 100,
         name: 'Test Route 1',
@@ -220,6 +229,7 @@ describe('useSavedRoutes', () => {
       const mockRoute2: SavedRouteWithoutTrainTypeInput = {
         hasTrainType: false,
         lineId: 200,
+        trainTypeId: null,
         departureStationId: 300,
         name: 'Test Route 2',
         createdAt: new Date('2025-08-24T12:01:00Z'),

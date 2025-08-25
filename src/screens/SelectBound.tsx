@@ -341,6 +341,7 @@ const SelectBoundScreen: React.FC = () => {
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
         name: `${lineName} ${trainTypeName}`.trim(),
+        lineId: selectedLine.id,
         trainTypeId: trainType?.groupId,
         departureStationId: station.id,
         createdAt: new Date(),
@@ -352,6 +353,7 @@ const SelectBoundScreen: React.FC = () => {
       hasTrainType: false,
       name: lineName,
       lineId: selectedLine.id,
+      trainTypeId: null,
       departureStationId: station?.id,
       createdAt: new Date(),
     };

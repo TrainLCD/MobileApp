@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const SavedRouteWithTrainTypeSchema = z.object({
   id: z.string().uuid(),
   hasTrainType: z.literal(true),
+  lineId: z.number().int().nonnegative(),
   trainTypeId: z.number().int().nonnegative(),
   departureStationId: z.number().int().nonnegative().nullish(),
   name: z.string().min(1).max(100),
@@ -17,6 +18,7 @@ export const SavedRouteWithoutTrainTypeSchema = z.object({
   id: z.string().uuid(),
   hasTrainType: z.literal(false),
   lineId: z.number().int().nonnegative(),
+  trainTypeId: z.null(),
   departureStationId: z.number().int().nonnegative().nullish(),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
