@@ -348,8 +348,7 @@ const SelectBoundScreen: React.FC = () => {
         departureStationId: station.id,
         createdAt: new Date(),
       };
-      const savedRoute = await saveCurrentRoute(newRoute);
-      setSavedRoute(savedRoute);
+      setSavedRoute(await saveCurrentRoute(newRoute));
       return;
     }
 
@@ -362,7 +361,7 @@ const SelectBoundScreen: React.FC = () => {
       createdAt: new Date(),
     };
 
-    saveCurrentRoute(newRoute);
+    setSavedRoute(await saveCurrentRoute(newRoute));
   }, [
     savedRoute,
     removeCurrentRoute,
