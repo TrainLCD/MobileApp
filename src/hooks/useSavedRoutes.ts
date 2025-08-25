@@ -9,6 +9,7 @@ const MOCK_DB: SavedRoute[] = [
     lineId: 11302, // 山手線
     trainTypeId: null,
     departureStationId: 1130224, // 山手線東京駅
+    destinationStationId: null,
     hasTrainType: false,
     createdAt: new Date(),
   },
@@ -18,6 +19,7 @@ const MOCK_DB: SavedRoute[] = [
     lineId: 11603, // JR神戸線
     trainTypeId: 48, // 新快速
     departureStationId: 1160301, // JR神戸線大阪駅
+    destinationStationId: null,
     hasTrainType: true,
     createdAt: new Date(),
   },
@@ -32,25 +34,26 @@ export const useSavedRoutes = () => {
     async ({
       lineId,
       trainTypeId,
+      destinationStationId,
     }: {
-      lineId?: number;
-      trainTypeId?: number;
+      lineId: number;
+      destinationStationId: number | null;
+      trainTypeId: number | null;
     }): Promise<SavedRoute | undefined> =>
       Promise.resolve(
         MOCK_DB.find((route) => {
-          if (lineId && trainTypeId) {
-            return route.lineId === lineId && route.trainTypeId === trainTypeId;
-          }
-
-          if (lineId) {
-            return route.lineId === lineId;
-          }
-
           if (trainTypeId) {
-            return route.trainTypeId === trainTypeId;
+            return (
+              route.lineId === lineId &&
+              route.trainTypeId === trainTypeId &&
+              route.destinationStationId === destinationStationId
+            );
           }
 
-          return false;
+          return (
+            route.lineId === lineId &&
+            route.destinationStationId === destinationStationId
+          );
         })
       ),
     []

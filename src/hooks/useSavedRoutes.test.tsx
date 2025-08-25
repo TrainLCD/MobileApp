@@ -41,51 +41,43 @@ describe('useSavedRoutes', () => {
   });
 
   describe('find', () => {
-    it('lineIdが指定された場合、lineIdで経路を検索してSavedRoute | undefinedを返すべき', async () => {
-      const result = await hook.find({ lineId: 100 });
-      // 現在の実装では常にundefinedを返す
+    it('必須パラメータが指定された場合、条件に合致する経路を検索してSavedRoute | undefinedを返すべき', async () => {
+      const result = await hook.find({
+        lineId: 11302,
+        destinationStationId: null,
+        trainTypeId: null,
+      });
+      // モックデータの山手線が該当する可能性がある
+      expect(result).toBeDefined();
+    });
+
+    it('trainTypeIdが指定された場合、lineId, destinationStationId, trainTypeIdで経路を検索するべき', async () => {
+      const result = await hook.find({
+        lineId: 11603,
+        destinationStationId: null,
+        trainTypeId: 48,
+      });
+      // モックデータの新快速が該当する可能性がある
+      expect(result).toBeDefined();
+    });
+
+    it('該当しない条件の場合、undefinedを返すべき', async () => {
+      const result = await hook.find({
+        lineId: 999,
+        destinationStationId: null,
+        trainTypeId: null,
+      });
       expect(result).toBeUndefined();
     });
 
-    it('trainTypeIdが指定された場合、trainTypeIdで経路を検索してSavedRoute | undefinedを返すべき', async () => {
-      const result = await hook.find({ trainTypeId: 1 });
-      // 現在の実装では常にundefinedを返す
+    it('destinationStationIdが指定された場合も正しく検索するべき', async () => {
+      const result = await hook.find({
+        lineId: 11302,
+        destinationStationId: 1130225,
+        trainTypeId: null,
+      });
+      // destinationStationIdが一致しないため見つからない
       expect(result).toBeUndefined();
-    });
-
-    it('lineIdとtrainTypeIdの両方が指定された場合、両方の値で経路を検索してSavedRoute | undefinedを返すべき', async () => {
-      const result = await hook.find({ lineId: 100, trainTypeId: 1 });
-      // 現在の実装では常にundefinedを返す
-      expect(result).toBeUndefined();
-    });
-
-    it('経路が存在しない場合はundefinedをresolveで返すべき', async () => {
-      const result = await hook.find({ lineId: 999 });
-      expect(result).toBeUndefined();
-    });
-
-    it('引数が空の場合も適切に処理するべき', async () => {
-      const result = await hook.find({});
-      // 現在の実装では常にundefinedを返す
-      expect(result).toBeUndefined();
-    });
-
-    it('lineIdのみで検索した場合、hasTrainType: falseの経路を想定', async () => {
-      const result = await hook.find({ lineId: 200 });
-      // 実装後は、lineIdを持つ経路（hasTrainType: false）が返される
-      expect(result).toBeUndefined();
-    });
-
-    it('trainTypeIdのみで検索した場合、hasTrainType: trueの経路を想定', async () => {
-      const result = await hook.find({ trainTypeId: 1 });
-      // 実装後は、trainTypeIdを持つ経路（hasTrainType: true）が返される
-      expect(result).toBeUndefined();
-    });
-
-    it('なんらかのエラーが発生した場合はrejectを返すべき', async () => {
-      // 実装後は実際のエラーケースをテスト
-      // 現在の実装では常にresolveするため、実装後に更新が必要
-      await expect(hook.find({ lineId: 100 })).resolves.toBeUndefined();
     });
   });
 
@@ -95,6 +87,7 @@ describe('useSavedRoutes', () => {
       lineId: 200,
       trainTypeId: 1,
       departureStationId: 100,
+      destinationStationId: 200,
       name: 'Test Route with Train Type',
       createdAt: new Date('2025-08-24T12:00:00Z'),
     };
@@ -104,6 +97,7 @@ describe('useSavedRoutes', () => {
       lineId: 200,
       trainTypeId: null,
       departureStationId: 300,
+      destinationStationId: 400,
       name: 'Test Route without Train Type',
       createdAt: new Date('2025-08-24T12:00:00Z'),
     };
@@ -121,6 +115,9 @@ describe('useSavedRoutes', () => {
       expect(result.departureStationId).toBe(
         mockRouteWithTrainType.departureStationId
       );
+      expect(result.destinationStationId).toBe(
+        mockRouteWithTrainType.destinationStationId
+      );
       expect(result.createdAt).toBeInstanceOf(Date);
     });
 
@@ -137,6 +134,9 @@ describe('useSavedRoutes', () => {
       expect(result.departureStationId).toBe(
         mockRouteWithoutTrainType.departureStationId
       );
+      expect(result.destinationStationId).toBe(
+        mockRouteWithoutTrainType.destinationStationId
+      );
       expect(result.createdAt).toBeInstanceOf(Date);
     });
 
@@ -148,6 +148,16 @@ describe('useSavedRoutes', () => {
       const result = await hook.save(routeWithNullDeparture);
       expect(result).toBeDefined();
       expect(result.departureStationId).toBeNull();
+    });
+
+    it('destinationStationIdがnullの経路を保存するべき', async () => {
+      const routeWithNullDestination: SavedRouteWithTrainTypeInput = {
+        ...mockRouteWithTrainType,
+        destinationStationId: null,
+      };
+      const result = await hook.save(routeWithNullDestination);
+      expect(result).toBeDefined();
+      expect(result.destinationStationId).toBeNull();
     });
 
     it('IDにUUIDを生成してDBに保存するべき', async () => {
