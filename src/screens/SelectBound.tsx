@@ -104,13 +104,13 @@ const SelectBoundScreen: React.FC = () => {
     const fetchSavedRoute = async () => {
       const route = await findSavedRoute({
         lineId: selectedLine?.id,
-        trainTypeId: trainType?.id,
+        trainTypeId: trainType?.groupId,
       });
       if (route) setSavedRoute(route);
       setSavedRouteLoaded(true);
     };
     fetchSavedRoute();
-  }, [findSavedRoute, selectedLine?.id, trainType?.id]);
+  }, [findSavedRoute, selectedLine?.id, trainType?.groupId]);
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -324,6 +324,8 @@ const SelectBoundScreen: React.FC = () => {
   const handleSaveRoutePress = useCallback(async () => {
     if (savedRoute) {
       await removeCurrentRoute(savedRoute.id);
+      setSavedRoute(null);
+      return;
     }
 
     if (!selectedLine) {
@@ -346,7 +348,9 @@ const SelectBoundScreen: React.FC = () => {
         departureStationId: station.id,
         createdAt: new Date(),
       };
-      return saveCurrentRoute(newRoute);
+      const savedRoute = await saveCurrentRoute(newRoute);
+      setSavedRoute(savedRoute);
+      return;
     }
 
     const newRoute: SavedRouteWithoutTrainTypeInput = {
@@ -455,7 +459,7 @@ const SelectBoundScreen: React.FC = () => {
           {isDevApp && savedRouteLoaded && (
             <Button onPress={handleSaveRoutePress}>
               {translate(
-                savedRoute ? 'removeCurrentRoute' : 'saveCurrentRoute'
+                savedRoute ? 'removeFromSavedRoutes' : 'saveCurrentRoute'
               )}
             </Button>
           )}
