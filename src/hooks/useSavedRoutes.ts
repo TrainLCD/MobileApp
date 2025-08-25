@@ -8,7 +8,6 @@ const MOCK_DB: SavedRoute[] = [
     name: '山手線',
     lineId: 11302, // 山手線
     trainTypeId: null,
-    departureStationId: 1130101, // 東京駅
     destinationStationId: null,
     hasTrainType: false,
     createdAt: new Date(),
@@ -18,7 +17,6 @@ const MOCK_DB: SavedRoute[] = [
     name: '新快速',
     lineId: 11603, // JR神戸線
     trainTypeId: 48, // 新快速
-    departureStationId: 1160214, // 大阪駅
     destinationStationId: null,
     hasTrainType: true,
     createdAt: new Date(),

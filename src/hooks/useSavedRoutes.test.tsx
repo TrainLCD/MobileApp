@@ -86,7 +86,6 @@ describe('useSavedRoutes', () => {
       hasTrainType: true,
       lineId: 200,
       trainTypeId: 1,
-      departureStationId: 100,
       destinationStationId: 200,
       name: 'Test Route with Train Type',
       createdAt: new Date('2025-08-24T12:00:00Z'),
@@ -96,7 +95,6 @@ describe('useSavedRoutes', () => {
       hasTrainType: false,
       lineId: 200,
       trainTypeId: null,
-      departureStationId: 300,
       destinationStationId: 400,
       name: 'Test Route without Train Type',
       createdAt: new Date('2025-08-24T12:00:00Z'),
@@ -112,9 +110,6 @@ describe('useSavedRoutes', () => {
         expect(result.lineId).toBe(mockRouteWithTrainType.lineId);
         expect(result.trainTypeId).toBe(mockRouteWithTrainType.trainTypeId);
       }
-      expect(result.departureStationId).toBe(
-        mockRouteWithTrainType.departureStationId
-      );
       expect(result.destinationStationId).toBe(
         mockRouteWithTrainType.destinationStationId
       );
@@ -131,23 +126,10 @@ describe('useSavedRoutes', () => {
         expect(result.lineId).toBe(mockRouteWithoutTrainType.lineId);
         expect(result.trainTypeId).toBeNull();
       }
-      expect(result.departureStationId).toBe(
-        mockRouteWithoutTrainType.departureStationId
-      );
       expect(result.destinationStationId).toBe(
         mockRouteWithoutTrainType.destinationStationId
       );
       expect(result.createdAt).toBeInstanceOf(Date);
-    });
-
-    it('departureStationIdがnullの経路を保存するべき', async () => {
-      const routeWithNullDeparture: SavedRouteWithTrainTypeInput = {
-        ...mockRouteWithTrainType,
-        departureStationId: null,
-      };
-      const result = await hook.save(routeWithNullDeparture);
-      expect(result).toBeDefined();
-      expect(result.departureStationId).toBeNull();
     });
 
     it('destinationStationIdがnullの経路を保存するべき', async () => {

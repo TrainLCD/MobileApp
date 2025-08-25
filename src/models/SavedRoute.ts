@@ -5,7 +5,6 @@ export const SavedRouteWithTrainTypeSchema = z.object({
   hasTrainType: z.literal(true),
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.number().int().nonnegative(),
-  departureStationId: z.number().int().nonnegative().nullish(),
   destinationStationId: z.number().int().nonnegative().nullish(),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
@@ -20,7 +19,6 @@ export const SavedRouteWithoutTrainTypeSchema = z.object({
   hasTrainType: z.literal(false),
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.null(),
-  departureStationId: z.number().int().nonnegative().nullish(),
   destinationStationId: z.number().int().nonnegative().nullish(),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
@@ -30,7 +28,6 @@ export type SavedRouteWithoutTrainType = z.infer<
   typeof SavedRouteWithoutTrainTypeSchema
 >;
 
-// departureStationIdがnullishの場合、現在位置との距離が最も近い駅を出発駅とする（ただし、位置情報が取得できない場合は先頭駅）
 export const SavedRouteSchema = z.discriminatedUnion('hasTrainType', [
   SavedRouteWithTrainTypeSchema,
   SavedRouteWithoutTrainTypeSchema,
