@@ -6,7 +6,6 @@ import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
 import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';
 import { StationList } from '../components/StationList';
-import { useGetStationsWithTermination } from '../hooks';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -26,7 +25,6 @@ const styles = StyleSheet.create({
 
 const SpecifyDestinationSettingsScreen: React.FC = () => {
   const [{ stations }, setStationState] = useAtom(stationState);
-  const getTerminatedStations = useGetStationsWithTermination();
 
   const stopStations = useMemo(
     () =>
@@ -43,13 +41,12 @@ const SpecifyDestinationSettingsScreen: React.FC = () => {
       setStationState((prev) => ({
         ...prev,
         wantedDestination: destination,
-        stations: getTerminatedStations(destination, stations),
       }));
       if (navigation.canGoBack()) {
         navigation.goBack();
       }
     },
-    [getTerminatedStations, navigation, setStationState, stations]
+    [navigation, setStationState]
   );
 
   const handlePressFAB = useCallback(() => {

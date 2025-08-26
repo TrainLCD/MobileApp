@@ -27,6 +27,7 @@ import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import {
   useBounds,
+  useGetStationsWithTermination,
   useLoopLine,
   useSavedRoutes,
   useStationList,
@@ -93,6 +94,7 @@ const SelectBoundScreen: React.FC = () => {
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds();
+  const getTerminatedStations = useGetStationsWithTermination();
 
   const {
     find: findSavedRoute,
@@ -102,15 +104,25 @@ const SelectBoundScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchSavedRoute = async () => {
+      if (!selectedLine?.id) {
+        return;
+      }
+
       const route = await findSavedRoute({
         lineId: selectedLine?.id,
-        trainTypeId: trainType?.groupId,
+        trainTypeId: trainType?.groupId ?? null,
+        destinationStationId: wantedDestination?.groupId ?? null,
       });
-      if (route) setSavedRoute(route);
+      setSavedRoute(route ?? null);
       setSavedRouteLoaded(true);
     };
     fetchSavedRoute();
-  }, [findSavedRoute, selectedLine?.id, trainType?.groupId]);
+  }, [
+    findSavedRoute,
+    selectedLine?.id,
+    trainType?.groupId,
+    wantedDestination?.groupId,
+  ]);
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -198,11 +210,19 @@ const SelectBoundScreen: React.FC = () => {
         ...prev,
         selectedBound: destination,
         selectedDirection: direction,
+        stations: getTerminatedStations(destination, stations),
       }));
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }));
       navigation.navigate('Main' as never);
     },
-    [navigation, setNavigationState, setStationState, stations, trainType]
+    [
+      navigation,
+      setNavigationState,
+      setStationState,
+      stations,
+      trainType,
+      getTerminatedStations,
+    ]
   );
 
   const normalLineDirectionText = useCallback((boundStations: Station[]) => {
@@ -335,29 +355,40 @@ const SelectBoundScreen: React.FC = () => {
     const lineName = isJapanese
       ? selectedLine.nameShort
       : (selectedLine.nameRoman ?? selectedLine.nameShort);
+    const edgeStationNames = isJapanese
+      ? `${stations[0]?.name ?? ''}〜${stations[stations.length - 1]?.name ?? ''}`
+      : `${stations[0]?.nameRoman ?? ''} - ${stations[stations.length - 1]?.nameRoman ?? ''}`;
 
-    if (station?.hasTrainTypes && trainType?.groupId) {
+    if (trainType?.groupId) {
       const trainTypeName = isJapanese
         ? trainType.name
         : (trainType.nameRoman ?? '');
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
-        name: `${lineName} ${trainTypeName}`.trim(),
+        name: wantedDestination
+          ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
+          : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
         lineId: selectedLine.id,
         trainTypeId: trainType?.groupId,
-        departureStationId: station.id,
+        destinationStationId: wantedDestination?.groupId ?? null,
         createdAt: new Date(),
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
       return;
     }
 
+    const destinationName = isJapanese
+      ? wantedDestination?.name
+      : wantedDestination?.nameRoman;
     const newRoute: SavedRouteWithoutTrainTypeInput = {
       hasTrainType: false,
-      name: lineName,
+
+      name: isJapanese
+        ? `${lineName} 各駅停車 ${edgeStationNames} ${destinationName ? `${destinationName}行き` : ''}`.trim()
+        : `${lineName} Local ${edgeStationNames} for ${destinationName}`.trim(),
       lineId: selectedLine.id,
       trainTypeId: null,
-      departureStationId: station?.id,
+      destinationStationId: wantedDestination?.groupId ?? null,
       createdAt: new Date(),
     };
 
@@ -366,10 +397,10 @@ const SelectBoundScreen: React.FC = () => {
     savedRoute,
     removeCurrentRoute,
     saveCurrentRoute,
-    station?.id,
-    station?.hasTrainTypes,
+    wantedDestination,
     selectedLine,
     trainType,
+    stations,
   ]);
 
   if (error) {
