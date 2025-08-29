@@ -121,4 +121,44 @@ describe('TrainTypeBox crash fix', () => {
       render(<TestInfiniteLoopFix trainTypeName="Test" />);
     }).not.toThrow();
   });
+
+  it('should handle the specific infinite loop scenario that was causing "Maximum update depth exceeded"', () => {
+    // This test specifically replicates the scenario that was causing the issue
+    const TestInfiniteLoopScenario = ({ initialValue }: { initialValue: string }) => {
+      const [fadeOutFinished, setFadeOutFinished] = React.useState(false);
+      const [trainTypeName, setTrainTypeName] = React.useState(initialValue);
+      const [renderCount, setRenderCount] = React.useState(0);
+
+      // Mock useLazyPrevious behavior that updates when fadeOutFinished changes
+      const [prevTrainTypeName, setPrevTrainTypeName] = React.useState(initialValue);
+      React.useEffect(() => {
+        if (fadeOutFinished) {
+          setPrevTrainTypeName(trainTypeName);
+        }
+      }, [fadeOutFinished, trainTypeName]);
+
+      // The FIXED useEffect pattern (what we implemented)
+      React.useEffect(() => {
+        setRenderCount(prev => prev + 1);
+        
+        // Only reset fadeOutFinished when there's an actual change
+        if (prevTrainTypeName !== trainTypeName) {
+          setFadeOutFinished(false);
+          // Simulate animation completion
+          setTimeout(() => setFadeOutFinished(true), 5);
+        }
+      }, [prevTrainTypeName, trainTypeName]);
+
+      // Test that infinite loops don't occur
+      if (renderCount > 10) {
+        throw new Error('Infinite loop detected - Maximum update depth exceeded!');
+      }
+
+      return React.createElement('div', null, `Renders: ${renderCount}`);
+    };
+
+    expect(() => {
+      render(React.createElement(TestInfiniteLoopScenario, { initialValue: 'Express' }));
+    }).not.toThrow();
+  });
 });
