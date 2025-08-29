@@ -98,33 +98,84 @@ async function callGooglePlayDeveloperAPI(config: {
   // 実際の実装では google-auth-library と googleapis を使用します
 
   try {
-    // サービスアカウント認証の設定
-    // const auth = new GoogleAuth({
-    //   keyFile: config.serviceAccountKeyFile,
-    //   scopes: ['https://www.googleapis.com/auth/androidpublisher']
-    // });
+    // まず環境変数から認証情報を確認
+    const serviceAccountJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    
+    if (!serviceAccountJson) {
+      console.log('Google Play Developer API認証情報が設定されていません');
+      return [];
+    }
 
-    // const androidpublisher = google.androidpublisher({
-    //   version: 'v3',
-    //   auth
-    // });
+    // googleapis パッケージがインストールされていない場合の対応
+    try {
+      // 動的インポートを試行 - パッケージが存在しない場合はcatchブロックに移動
+      // TypeScriptの型チェックを回避するため、requireを使用
+      const googleAuth = require('google-auth-library');
+      const googleapis = require('googleapis');
 
-    // レビューの取得
-    // const response = await androidpublisher.reviews.list({
-    //   packageName: config.packageName,
-    //   maxResults: config.maxResults,
-    //   token: undefined // 初回取得時はundefined
-    // });
+      const { GoogleAuth } = googleAuth;
+      const { google } = googleapis;
 
-    // 模擬データを返す（実際の実装時には上記のコメントアウトされたコードを使用）
-    console.log(`Google Play APIを呼び出しています: ${config.packageName}`);
+      // サービスアカウント認証の設定
+      const credentials = JSON.parse(serviceAccountJson);
+      const auth = new GoogleAuth({
+        credentials: credentials,
+        scopes: ['https://www.googleapis.com/auth/androidpublisher']
+      });
 
-    // API呼び出しの結果を解析してGooglePlayReview形式に変換
-    return [];
+      const androidpublisher = google.androidpublisher({
+        version: 'v3',
+        auth
+      });
+
+      // レビューの取得
+      console.log(`Google Play APIを呼び出しています: ${config.packageName}`);
+      const response = await androidpublisher.reviews.list({
+        packageName: config.packageName,
+        maxResults: config.maxResults,
+        token: undefined // 初回取得時はundefined
+      });
+
+      // API呼び出しの結果を解析してGooglePlayReview形式に変換
+      if (response.data && response.data.reviews) {
+        return parseGooglePlayAPIResponse(response.data);
+      }
+      
+      return [];
+    } catch (importError) {
+      console.log('googleapis パッケージがインストールされていません。実際のAPI呼び出しはスキップします。');
+      console.log('Google Play Developer APIを使用するには、googleapis と google-auth-library パッケージをインストールしてください:');
+      console.log('npm install googleapis google-auth-library');
+      
+      // 模擬データを返す（開発/テスト用）
+      if (process.env.NODE_ENV === 'development') {
+        return generateMockGooglePlayReviews(config.maxResults);
+      }
+      
+      return [];
+    }
   } catch (error) {
     console.error('Google Play Developer API呼び出しエラー:', error);
     throw error;
   }
+}
+
+// 開発用の模擬データ生成関数
+function generateMockGooglePlayReviews(maxResults: number): GooglePlayReview[] {
+  const mockReviews: GooglePlayReview[] = [];
+  
+  for (let i = 0; i < Math.min(maxResults, 3); i++) {
+    mockReviews.push({
+      reviewId: `mock_review_${Date.now()}_${i}`,
+      authorName: `テストユーザー${i + 1}`,
+      content: `これは開発用の模擬レビュー${i + 1}です。実際のAPIが設定されると、本物のレビューが表示されます。`,
+      starRating: Math.floor(Math.random() * 5) + 1,
+      lastModified: new Date(Date.now() - i * 1000 * 60 * 60).toISOString(),
+      appVersion: '1.0.0'
+    });
+  }
+  
+  return mockReviews;
 }
 
 // Google Play Developer APIレスポンスを解析する関数
