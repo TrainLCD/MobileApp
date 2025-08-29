@@ -1,6 +1,6 @@
 import { parseAppStoreRSSXML } from './appStoreParser';
 
-describe('App Store RSS Parser', () => {
+describe('App Store RSSパーサー', () => {
   const sampleXML = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns:im="http://itunes.apple.com/rss" xmlns="http://www.w3.org/2005/Atom" xml:lang="ja">
   <entry>
@@ -17,7 +17,7 @@ describe('App Store RSS Parser', () => {
   </entry>
 </feed>`;
 
-  it('should parse App Store RSS XML correctly', () => {
+  it('App Store RSS XMLを正しく解析すること', () => {
     const reviews = parseAppStoreRSSXML(sampleXML);
 
     expect(reviews).toHaveLength(1);
@@ -33,12 +33,12 @@ describe('App Store RSS Parser', () => {
     });
   });
 
-  it('should handle empty XML', () => {
+  it('空のXMLを処理できること', () => {
     const reviews = parseAppStoreRSSXML('<feed></feed>');
     expect(reviews).toHaveLength(0);
   });
 
-  it('should decode HTML entities', () => {
+  it('HTMLエンティティをデコードできること', () => {
     const xmlWithEntities = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns:im="http://itunes.apple.com/rss" xmlns="http://www.w3.org/2005/Atom">
   <entry>

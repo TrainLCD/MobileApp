@@ -56,7 +56,7 @@ function extractValue(content: string, regex: RegExp): string {
 }
 
 function extractRating(content: string): number {
-  // App Store RSSはしばしばim:rating要素に評価を含みます
+  // App Store RSSは通常im:rating要素に評価を含みます
   const ratingMatch = content.match(/<im:rating>([^<]+)<\/im:rating>/);
   if (ratingMatch) {
     return Number.parseInt(ratingMatch[1], 10) || 0;
