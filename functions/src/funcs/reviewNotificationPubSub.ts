@@ -22,13 +22,19 @@ export const reviewNotificationPubSub = onMessagePublished(
   async (event) => {
     console.log('Review notification PubSub triggered');
 
-    try {
-      // App StoreとGoogle Playの両方のレビューをチェック
-      await checkAppStoreReviews();
-      await checkGooglePlayReviews();
-    } catch (error) {
-      console.error('Error in review notification:', error);
-    }
+    // App StoreとGoogle Playの両方のレビューをチェック（エラーが発生しても両方実行）
+    const results = await Promise.allSettled([
+      checkAppStoreReviews(),
+      checkGooglePlayReviews(),
+    ]);
+
+    // 各結果をチェックしてエラーがあればログ出力
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const source = index === 0 ? 'App Store' : 'Google Play';
+        console.error(`Error checking ${source} reviews:`, result.reason);
+      }
+    });
   }
 );
 
