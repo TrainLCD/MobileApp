@@ -65,6 +65,8 @@ function extractRating(content: string): number {
 }
 
 function decodeHTMLEntities(text: string): string {
+  // Note: This function decodes common HTML entities in text content.
+  // It does not decode entities in XML attributes, which is handled separately by XML parsers.
   return text
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
