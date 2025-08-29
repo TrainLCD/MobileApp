@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
 
-// Create a minimal component that tests the specific crash fix
+// 特定のクラッシュ修正をテストする最小限のコンポーネントを作成
 const TestSplitFunction = ({
   trainTypeName,
   prevTrainTypeName,
@@ -9,7 +9,7 @@ const TestSplitFunction = ({
   trainTypeName: string | null | undefined;
   prevTrainTypeName: string | null | undefined;
 }) => {
-  // This mimics the exact logic from TrainTypeBox that was causing crashes
+  // TrainTypeBoxでクラッシュを引き起こしていた正確なロジックを模倣
   const _numberOfLines = React.useMemo(
     () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
     [trainTypeName]
@@ -19,10 +19,10 @@ const TestSplitFunction = ({
     [prevTrainTypeName]
   );
 
-  return null; // We just care that the component doesn't crash
+  return null; // コンポーネントがクラッシュしないことだけを確認
 };
 
-// Test component that mimics the infinite loop fix
+// 無限ループ修正を模倣するテストコンポーネント
 const TestInfiniteLoopFix = ({
   trainTypeName,
 }: {
@@ -31,7 +31,7 @@ const TestInfiniteLoopFix = ({
   const [fadeOutFinished, setFadeOutFinished] = React.useState(false);
   const [renderCount, setRenderCount] = React.useState(0);
 
-  // Mock useLazyPrevious behavior
+  // useLazyPreviousの動作を模擬
   const [prevTrainTypeName, setPrevTrainTypeName] =
     React.useState(trainTypeName);
   React.useEffect(() => {
@@ -40,28 +40,28 @@ const TestInfiniteLoopFix = ({
     }
   }, [fadeOutFinished, prevTrainTypeName, trainTypeName]);
 
-  // Test the fixed useEffect logic
+  // 修正されたuseEffectロジックをテスト
   React.useEffect(() => {
     setRenderCount((prev) => prev + 1);
 
-    // Fixed logic: only setFadeOutFinished(false) when there's an actual change
+    // 修正されたロジック: 実際に変更があった場合のみsetFadeOutFinished(false)を実行
     if (prevTrainTypeName !== trainTypeName) {
       setFadeOutFinished(false);
-      // Simulate animation completion
+      // アニメーション完了をシミュレート
       setTimeout(() => setFadeOutFinished(true), 10);
     }
   }, [prevTrainTypeName, trainTypeName]);
 
-  // Prevent infinite loops in tests
+  // テストでの無限ループを防止
   if (renderCount > 10) {
-    throw new Error('Infinite loop detected');
+    throw new Error('無限ループが検出されました');
   }
 
   return null;
 };
 
-describe('TrainTypeBox crash fix', () => {
-  it('should not crash when trainTypeName is undefined', () => {
+describe('TrainTypeBoxクラッシュ修正', () => {
+  it('trainTypeNameがundefinedの場合にクラッシュしない', () => {
     expect(() => {
       render(
         <TestSplitFunction
@@ -72,7 +72,7 @@ describe('TrainTypeBox crash fix', () => {
     }).not.toThrow();
   });
 
-  it('should not crash when trainTypeName is null', () => {
+  it('trainTypeNameがnullの場合にクラッシュしない', () => {
     expect(() => {
       render(
         <TestSplitFunction trainTypeName={null} prevTrainTypeName={null} />
@@ -80,13 +80,13 @@ describe('TrainTypeBox crash fix', () => {
     }).not.toThrow();
   });
 
-  it('should not crash when trainTypeName is empty string', () => {
+  it('trainTypeNameが空文字列の場合にクラッシュしない', () => {
     expect(() => {
       render(<TestSplitFunction trainTypeName="" prevTrainTypeName="" />);
     }).not.toThrow();
   });
 
-  it('should work correctly with valid strings', () => {
+  it('有効な文字列で正常に動作する', () => {
     expect(() => {
       render(
         <TestSplitFunction
@@ -97,7 +97,7 @@ describe('TrainTypeBox crash fix', () => {
     }).not.toThrow();
   });
 
-  it('should work correctly when one is undefined and other is valid', () => {
+  it('一方がundefinedで他方が有効な場合に正常に動作する', () => {
     expect(() => {
       render(
         <TestSplitFunction
@@ -108,57 +108,68 @@ describe('TrainTypeBox crash fix', () => {
     }).not.toThrow();
   });
 
-  it('should not cause infinite loops when values change', () => {
+  it('値が変更された場合に無限ループを引き起こさない', () => {
     expect(() => {
       render(<TestInfiniteLoopFix trainTypeName="Test" />);
     }).not.toThrow();
   });
 
-  it('should not cause infinite loops when values stay the same', () => {
+  it('値が同じままの場合に無限ループを引き起こさない', () => {
     expect(() => {
       render(<TestInfiniteLoopFix trainTypeName="Test" />);
-      // Render again with same value
+      // 同じ値で再度レンダリング
       render(<TestInfiniteLoopFix trainTypeName="Test" />);
     }).not.toThrow();
   });
 
-  it('should handle the specific infinite loop scenario that was causing "Maximum update depth exceeded"', () => {
-    // This test specifically replicates the scenario that was causing the issue
-    const TestInfiniteLoopScenario = ({ initialValue }: { initialValue: string }) => {
+  it('「Maximum update depth exceeded」を引き起こしていた特定の無限ループシナリオを処理する', () => {
+    // このテストは問題を引き起こしていたシナリオを具体的に再現します
+    const TestInfiniteLoopScenario = ({
+      initialValue,
+    }: {
+      initialValue: string;
+    }) => {
       const [fadeOutFinished, setFadeOutFinished] = React.useState(false);
-      const [trainTypeName, setTrainTypeName] = React.useState(initialValue);
+      const [trainTypeName, _setTrainTypeName] = React.useState(initialValue);
       const [renderCount, setRenderCount] = React.useState(0);
 
-      // Mock useLazyPrevious behavior that updates when fadeOutFinished changes
-      const [prevTrainTypeName, setPrevTrainTypeName] = React.useState(initialValue);
+      // fadeOutFinishedが変更されたときに更新されるuseLazyPreviousの動作を模擬
+      const [prevTrainTypeName, setPrevTrainTypeName] =
+        React.useState(initialValue);
       React.useEffect(() => {
         if (fadeOutFinished) {
           setPrevTrainTypeName(trainTypeName);
         }
       }, [fadeOutFinished, trainTypeName]);
 
-      // The FIXED useEffect pattern (what we implemented)
+      // 修正されたuseEffectパターン（実装したもの）
       React.useEffect(() => {
-        setRenderCount(prev => prev + 1);
-        
-        // Only reset fadeOutFinished when there's an actual change
+        setRenderCount((prev) => prev + 1);
+
+        // 実際に変更があった場合のみfadeOutFinishedをリセット
         if (prevTrainTypeName !== trainTypeName) {
           setFadeOutFinished(false);
-          // Simulate animation completion
+          // アニメーション完了をシミュレート
           setTimeout(() => setFadeOutFinished(true), 5);
         }
       }, [prevTrainTypeName, trainTypeName]);
 
-      // Test that infinite loops don't occur
+      // 無限ループが発生しないことをテスト
       if (renderCount > 10) {
-        throw new Error('Infinite loop detected - Maximum update depth exceeded!');
+        throw new Error(
+          '無限ループが検出されました - Maximum update depth exceeded!'
+        );
       }
 
       return React.createElement('div', null, `Renders: ${renderCount}`);
     };
 
     expect(() => {
-      render(React.createElement(TestInfiniteLoopScenario, { initialValue: 'Express' }));
+      render(
+        React.createElement(TestInfiniteLoopScenario, {
+          initialValue: 'Express',
+        })
+      );
     }).not.toThrow();
   });
 });
