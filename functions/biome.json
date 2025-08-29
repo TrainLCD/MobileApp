@@ -1,8 +1,7 @@
 {
-  "root": false,
   "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
   "files": {
-    "includes": ["**", "!**/node_modules/**", "!**/jest.config.js"]
+    "ignore": ["node_modules/**", "lib/**", "jest.config.js"]
   },
   "formatter": {
     "enabled": true,
