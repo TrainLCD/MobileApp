@@ -13,7 +13,7 @@ import { fetchGooglePlayReviews } from '../utils/googlePlayParser';
 
 const firestore = admin.firestore();
 
-// App Store RSS feed URL for TrainLCD app (ID: 1486355943)
+// TrainLCDアプリのApp Store RSSフィードURL (ID: 1486355943)
 const APPSTORE_RSS_URL =
   'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/xml';
 
@@ -23,7 +23,7 @@ export const reviewNotificationPubSub = onMessagePublished(
     console.log('Review notification PubSub triggered');
 
     try {
-      // Check both App Store and Google Play reviews
+      // App StoreとGoogle Playの両方のレビューをチェック
       await checkAppStoreReviews();
       await checkGooglePlayReviews();
     } catch (error) {
@@ -36,7 +36,7 @@ async function checkAppStoreReviews() {
   console.log('Checking App Store reviews...');
 
   try {
-    // Fetch RSS feed
+    // RSSフィードを取得
     const response = await fetch(APPSTORE_RSS_URL);
     if (!response.ok) {
       throw new Error(`Failed to fetch App Store RSS: ${response.status}`);
@@ -50,7 +50,7 @@ async function checkAppStoreReviews() {
       return;
     }
 
-    // Get last processed review state
+    // 最後に処理されたレビューの状態を取得
     const stateDoc = await firestore
       .collection('reviewNotificationState')
       .doc('appstore')
@@ -61,12 +61,12 @@ async function checkAppStoreReviews() {
       : null;
     const lastProcessedId = lastState?.lastProcessedId;
 
-    // Find new reviews (reviews that haven't been processed yet)
+    // 新しいレビューを検索（まだ処理されていないレビュー）
     const newReviews: AppStoreReview[] = [];
 
     for (const review of reviews) {
       if (lastProcessedId && review.id === lastProcessedId) {
-        // Found the last processed review, stop here
+        // 最後に処理されたレビューを見つけたので、ここで停止
         break;
       }
       newReviews.push(review);
@@ -79,13 +79,13 @@ async function checkAppStoreReviews() {
 
     console.log(`Found ${newReviews.length} new reviews`);
 
-    // Send Discord notifications for new reviews (in reverse order to send oldest first)
+    // 新しいレビューのDiscord通知を送信（古いものから送信するために逆順で）
     for (const review of newReviews.reverse()) {
       await sendAppStoreReviewToDiscord(review);
     }
 
-    // Update the last processed state
-    const latestReview = reviews[0]; // Most recent review
+    // 最後に処理された状態を更新
+    const latestReview = reviews[0]; // 最新のレビュー
     if (latestReview) {
       await firestore
         .collection('reviewNotificationState')
@@ -106,7 +106,7 @@ async function checkGooglePlayReviews() {
   console.log('Checking Google Play reviews...');
 
   try {
-    // Fetch Google Play reviews
+    // Google Playのレビューを取得
     const reviews = await fetchGooglePlayReviews();
 
     if (reviews.length === 0) {
@@ -114,7 +114,7 @@ async function checkGooglePlayReviews() {
       return;
     }
 
-    // Get last processed review state
+    // 最後に処理されたレビューの状態を取得
     const stateDoc = await firestore
       .collection('reviewNotificationState')
       .doc('googleplay')
@@ -125,12 +125,12 @@ async function checkGooglePlayReviews() {
       : null;
     const lastProcessedId = lastState?.lastProcessedId;
 
-    // Find new reviews (reviews that haven't been processed yet)
+    // 新しいレビューを検索（まだ処理されていないレビュー）
     const newReviews: GooglePlayReview[] = [];
 
     for (const review of reviews) {
       if (lastProcessedId && review.reviewId === lastProcessedId) {
-        // Found the last processed review, stop here
+        // 最後に処理されたレビューを見つけたので、ここで停止
         break;
       }
       newReviews.push(review);
@@ -143,13 +143,13 @@ async function checkGooglePlayReviews() {
 
     console.log(`Found ${newReviews.length} new Google Play reviews`);
 
-    // Send Discord notifications for new reviews (in reverse order to send oldest first)
+    // 新しいレビューのDiscord通知を送信（古いものから送信するために逆順で）
     for (const review of newReviews.reverse()) {
       await sendGooglePlayReviewToDiscord(review);
     }
 
-    // Update the last processed state
-    const latestReview = reviews[0]; // Most recent review
+    // 最後に処理された状態を更新
+    const latestReview = reviews[0]; // 最新のレビュー
     if (latestReview) {
       await firestore
         .collection('reviewNotificationState')
@@ -174,7 +174,7 @@ async function sendAppStoreReviewToDiscord(review: AppStoreReview) {
     return;
   }
 
-  // Create Discord embed
+  // Discord埋め込みメッセージを作成
   const embed: DiscordEmbed = {
     fields: [
       {
@@ -210,7 +210,7 @@ async function sendAppStoreReviewToDiscord(review: AppStoreReview) {
     ],
   };
 
-  // Add link if available
+  // リンクが利用可能な場合は追加
   if (review.link) {
     embed.fields.push({
       name: 'レビューリンク',
@@ -254,7 +254,7 @@ async function sendGooglePlayReviewToDiscord(review: GooglePlayReview) {
     return;
   }
 
-  // Create Discord embed
+  // Discord埋め込みメッセージを作成
   const embed: DiscordEmbed = {
     fields: [
       {

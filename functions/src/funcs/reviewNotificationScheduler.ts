@@ -13,7 +13,7 @@ export const reviewNotificationScheduler = onSchedule(
     console.log('Review notification scheduler triggered');
 
     try {
-      // Publish message to trigger the review notification PubSub function
+      // レビュー通知PubSub関数をトリガーするメッセージを発行
       const messageId = await pubsub
         .topic('review-notification')
         .publishMessage({

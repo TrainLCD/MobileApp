@@ -1,18 +1,18 @@
 import type { GooglePlayReview } from '../models/review';
 
-// Google Play Store review parsing utility
-// Note: Google Play Store doesn't have a public RSS feed like App Store
-// We would need to use the Google Play Developer API or scraping methods
-// For now, implementing a basic structure that can be extended
+// Google Play Storeレビュー解析ユーティリティ
+// 注意: Google Play StoreはApp Storeのような公開RSSフィードを持ちません
+// Google Play Developer APIまたはスクレイピング手法を使用する必要があります
+// 現在は拡張可能な基本構造を実装しています
 
 export function parseGooglePlayReviews(reviewsData: unknown[]): GooglePlayReview[] {
   const reviews: GooglePlayReview[] = [];
 
   try {
     for (const reviewData of reviewsData) {
-      // Parse Google Play review data structure
-      // This would need to be adapted based on the actual data source
-      // (Google Play Developer API response structure)
+      // Google Playレビューデータ構造を解析
+      // これは実際のデータソースに基づいて適応する必要があります
+      // （Google Play Developer APIレスポンス構造）
 
       if ((reviewData as any)?.reviewId) {
         reviews.push({
@@ -35,12 +35,12 @@ export function parseGooglePlayReviews(reviewsData: unknown[]): GooglePlayReview
 }
 
 export async function fetchGooglePlayReviews(): Promise<GooglePlayReview[]> {
-  // TODO: Implement Google Play Developer API integration
-  // This would require:
-  // 1. Setting up Google Play Developer API credentials
-  // 2. Implementing authentication
-  // 3. Making API calls to fetch reviews
-  // 4. Parsing the response data
+  // TODO: Google Play Developer API統合を実装
+  // これには以下が必要です:
+  // 1. Google Play Developer API認証情報の設定
+  // 2. 認証の実装
+  // 3. レビューを取得するためのAPI呼び出し
+  // 4. レスポンスデータの解析
 
   console.log(
     'Google Play review fetching not yet implemented - requires Google Play Developer API setup'

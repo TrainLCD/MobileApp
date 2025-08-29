@@ -4,15 +4,15 @@ export function parseAppStoreRSSXML(xmlContent: string): AppStoreReview[] {
   const reviews: AppStoreReview[] = [];
 
   try {
-    // Simple XML parsing for App Store RSS format
-    // App Store RSS typically has <entry> elements for each review
+    // App Store RSS形式のシンプルなXMLパース
+    // App Store RSSは通常、各レビューに<entry>要素を持ちます
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
     let match: RegExpExecArray | null = entryRegex.exec(xmlContent);
 
     while (match !== null) {
       const entryContent = match[1];
 
-      // Extract review data using regex patterns
+      // 正規表現パターンを使用してレビューデータを抽出
       const id = extractValue(entryContent, /<id>([^<]+)<\/id>/);
       const title = extractValue(entryContent, /<title>([^<]+)<\/title>/);
       const content = extractValue(
@@ -56,7 +56,7 @@ function extractValue(content: string, regex: RegExp): string {
 }
 
 function extractRating(content: string): number {
-  // App Store RSS often includes rating in im:rating element
+  // App Store RSSはしばしばim:rating要素に評価を含みます
   const ratingMatch = content.match(/<im:rating>([^<]+)<\/im:rating>/);
   if (ratingMatch) {
     return Number.parseInt(ratingMatch[1], 10) || 0;
@@ -65,8 +65,8 @@ function extractRating(content: string): number {
 }
 
 function decodeHTMLEntities(text: string): string {
-  // Note: This function decodes common HTML entities in text content.
-  // It does not decode entities in XML attributes, which is handled separately by XML parsers.
+  // 注意: この関数はテキストコンテンツ内の一般的なHTMLエンティティをデコードします。
+  // XML属性内のエンティティはデコードしません。それはXMLパーサーによって別途処理されます。
   return text
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
