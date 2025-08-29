@@ -19,9 +19,10 @@ try {
 
 const firestore = getFirestore();
 
-// App Store RSS URL
+// 定数
 const APPSTORE_RSS_URL =
   'https://itunes.apple.com/jp/rss/customerreviews/id=1222897270/sortBy=mostRecent/xml';
+const RATE_LIMIT_DELAY_MS = 1000; // Discord通知間の待機時間（ミリ秒）
 
 export const reviewNotificationScheduler = onSchedule(
   {
@@ -40,9 +41,14 @@ export const reviewNotificationScheduler = onSchedule(
 
     // 各結果をチェックしてエラーがあればログ出力
     results.forEach((result, index) => {
+      const source = index === 0 ? 'App Store' : 'Google Play';
       if (result.status === 'rejected') {
-        const source = index === 0 ? 'App Store' : 'Google Play';
-        console.error(`Error checking ${source} reviews:`, result.reason);
+        const errorMessage = result.reason instanceof Error 
+          ? result.reason.message 
+          : String(result.reason);
+        console.error(`Error checking ${source} reviews: ${errorMessage}`);
+      } else {
+        console.log(`Successfully checked ${source} reviews`);
       }
     });
   }
@@ -114,9 +120,10 @@ async function checkAppStoreReviews() {
         console.log(`App Store review notification sent: ${review.id}`);
 
         // 少し待機してレート制限を避ける
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
       } catch (error) {
-        console.error(`Error sending App Store review notification: ${error}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Error sending App Store review notification for review ${review.id}: ${errorMessage}`);
       }
     }
 
@@ -204,10 +211,11 @@ async function checkGooglePlayReviews() {
         console.log(`Google Play review notification sent: ${review.reviewId}`);
 
         // 少し待機してレート制限を避ける
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(
-          `Error sending Google Play review notification: ${error}`
+          `Error sending Google Play review notification for review ${review.reviewId}: ${errorMessage}`
         );
       }
     }
