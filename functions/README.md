@@ -130,7 +130,6 @@ The Cloud Functions in this project handle various backend operations:
 - **TTS Cache Management** - Background audio file caching and optimization
 - **Content Moderation** - Automated content review and filtering
 - **Data Processing** - Asynchronous data transformation tasks
-- **Review Notifications** - App Store and Google Play review monitoring and Discord notifications
 
 ### Firestore Triggers
 - Database change reactions

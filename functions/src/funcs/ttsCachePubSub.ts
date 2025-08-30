@@ -1,6 +1,6 @@
+import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
-import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 
 const firestore = admin.firestore();
 const storage = admin.storage();

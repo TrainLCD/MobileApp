@@ -1,10 +1,10 @@
-import { Storage } from '@google-cloud/storage';
-import { VertexAI } from '@google-cloud/vertexai';
-import dayjs from 'dayjs';
 import { onMessagePublished } from 'firebase-functions/v2/pubsub';
-import type { AIReport, FewShotItem } from '../models/ai';
-import type { DiscordEmbed } from '../models/common';
+import { VertexAI } from '@google-cloud/vertexai';
 import type { FeedbackMessage } from '../models/feedback';
+import type { AIReport, FewShotItem } from '../models/ai';
+import dayjs from 'dayjs';
+import type { DiscordEmbed } from '../models/common';
+import { Storage } from '@google-cloud/storage';
 
 const GITHUB_LABELS = {
   PLATFORM_IOS: '🍎 iOS',
