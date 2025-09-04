@@ -34,6 +34,7 @@ jest.mock('@google-cloud/storage', () => {
 
 // Global fetch mock (JSON feed and Discord)
 const fetchMock = jest.fn();
+const origFetch = global.fetch;
 global.fetch = fetchMock as unknown as typeof fetch;
 
 describe('appStoreReviewNotifier (JSON only)', () => {
@@ -41,10 +42,18 @@ describe('appStoreReviewNotifier (JSON only)', () => {
     jest.resetModules();
     gcsStore.clear();
     fetchMock.mockReset();
+    prevEnv = { ...process.env };
     process.env.REVIEWS_DEBUG = '1';
     process.env.DISCORD_REVIEW_WEBHOOK_URL = 'https://discord.test/webhook';
     process.env.APPSTORE_REVIEW_RSS_URL = 'https://example.test/rss.json';
     process.env.APPSTORE_REVIEW_STATE_GCS_URI = 'gs://test-bucket/states/appstore.json';
+  });
+  let prevEnv: NodeJS.ProcessEnv;
+  afterEach(() => {
+    process.env = prevEnv;
+  });
+  afterAll(() => {
+    global.fetch = origFetch;
   });
 
   test('新着レビューのみ通知し、stateを更新する', async () => {
@@ -83,8 +92,8 @@ describe('appStoreReviewNotifier (JSON only)', () => {
     const { runAppStoreReviewJob } = await import('../appStoreReviewNotifier');
     await runAppStoreReviewJob();
 
-    // 1 (JSON) + 2 (Discord) = 3 calls
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    // 1 (JSON) + 1 (Discord batched) = 2 calls
+    expect(fetchMock).toHaveBeenCalledTimes(2);
 
     // state saved
     const saved = gcsStore.get('test-bucket/states/appstore.json');

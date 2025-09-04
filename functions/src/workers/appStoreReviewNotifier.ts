@@ -117,22 +117,28 @@ export const __test_parseAppStoreJson = parseAppStoreJson;
 
 async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
   if (!reviews.length) return;
-  for (const r of reviews) {
-    const embeds: DiscordEmbed[] = [
-      {
+  // 10件ずつバッチ送信
+  const chunk = <T,>(arr: T[], size: number) => arr.reduce<T[][]>((a, _, i) => (i % size ? a : [...a, arr.slice(i, i + size)]), []);
+  const batches = chunk(reviews, 10);
+  for (const group of batches) {
+    const embeds: DiscordEmbed[] = group.map((r) => {
+      const r5 = Math.max(0, Math.min(5, Math.floor(r.rating)));
+      const stars = '★'.repeat(r5) + '☆'.repeat(5 - r5);
+      const ratingText = r5 === 0 ? '評価なし (0/5)' : `${stars} (${r5}/5)`;
+      const contentVal = (r.content || '(本文なし)').slice(0, 1000);
+      return {
         fields: [
           { name: 'プラットフォーム', value: 'App Store' },
-          { name: '評価', value: `${'★'.repeat(Math.max(1, r.rating))}${'☆'.repeat(Math.max(0, 5 - r.rating))} (${r.rating}/5)` },
+          { name: '評価', value: ratingText },
           { name: 'タイトル', value: r.title || '(タイトルなし)' },
-          { name: '本文', value: r.content || '(本文なし)' },
+          { name: '本文', value: contentVal },
           { name: 'バージョン', value: r.version || '不明' },
           { name: '投稿者', value: r.author || '不明' },
           { name: '投稿日', value: dayjs(r.updated).format('YYYY/MM/DD HH:mm:ss') },
           { name: 'リンク', value: r.url || r.id },
         ],
-      },
-    ];
-
+      };
+    });
     const content = '**📝 App Storeに新しいレビューが投稿されました**';
     const res = await fetch(webhookUrl, {
       method: 'POST',
@@ -148,7 +154,7 @@ async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
 
 export async function runAppStoreReviewJob() {
   const debug = process.env.REVIEWS_DEBUG === '1';
-  const forceCount = Number(process.env.REVIEW_FORCE_LATEST_COUNT ?? 0);
+  const forceCount = Number(process.env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
   const defaultUrl = 'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
   const appStoreUrl = process.env.APPSTORE_REVIEW_RSS_URL || defaultUrl;
   const stateUri = process.env.APPSTORE_REVIEW_STATE_GCS_URI; // e.g. gs://<bucket>/states/appstore-reviews.json
@@ -156,6 +162,9 @@ export async function runAppStoreReviewJob() {
 
   if (!discordWebhook) {
     throw new Error('process.env.DISCORD_REVIEW_WEBHOOK_URL is not set');
+  }
+  if (!stateUri) {
+    throw new Error('process.env.APPSTORE_REVIEW_STATE_GCS_URI is not set');
   }
 
   if (debug) {
@@ -170,14 +179,18 @@ export async function runAppStoreReviewJob() {
     console.log('[AppStoreJob] loaded state', { lastUpdated: state.lastUpdated ?? null, lastIdsSize: lastIds.size });
   }
 
-  // 2) JSONフィードを取得（UA付与）
+  // 2) JSONフィードを取得（UA付与 + タイムアウト）
+  const ac = new AbortController();
+  const tmo = setTimeout(() => ac.abort(), 15_000);
   const r = await fetch(appStoreUrl, {
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
       Accept: 'application/json',
     },
+    signal: ac.signal,
   });
+  clearTimeout(tmo);
   if (!r.ok) throw new Error(`App Store Reviews fetch failed: ${r.status}`);
   const t = await r.text();
   if (debug) {

@@ -95,14 +95,16 @@ function toPlayReviews(rs?: androidpublisher_v3.Schema$ReviewsListResponse | nul
 
 async function postToDiscord(webhookUrl: string, items: PlayReview[], packageName: string) {
   for (const r of items) {
-    const star = `${'★'.repeat(Math.max(1, Math.min(5, r.rating)))}` +
-      `${'☆'.repeat(Math.max(0, 5 - Math.max(1, Math.min(5, r.rating))))}`;
+    const r5 = Math.max(0, Math.min(5, Math.floor(r.rating)));
+    const stars = '★'.repeat(r5) + '☆'.repeat(5 - r5);
+    const ratingText = r5 === 0 ? '評価なし (0/5)' : `${stars} (${r5}/5)`;
+    const contentVal = (r.content || '(本文なし)').slice(0, 1000);
     const embeds: DiscordEmbed[] = [
       {
         fields: [
           { name: 'プラットフォーム', value: 'Google Play' },
-          { name: '評価', value: `${star} (${r.rating}/5)` },
-          { name: '本文', value: r.content || '(本文なし)' },
+          { name: '評価', value: ratingText },
+          { name: '本文', value: contentVal },
           { name: 'バージョン', value: r.versionName || '不明' },
           { name: '言語', value: r.language || '不明' },
           { name: '投稿者', value: r.author || '不明' },
@@ -129,7 +131,7 @@ async function postToDiscord(webhookUrl: string, items: PlayReview[], packageNam
 export async function runGooglePlayReviewJob() {
   const debug = process.env.REVIEWS_DEBUG === '1';
   const dryRun = process.env.REVIEWS_DRY_RUN === '1';
-  const forceCount = Number(process.env.REVIEW_FORCE_LATEST_COUNT ?? 0);
+  const forceCount = Number(process.env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
   const packageName = process.env.GOOGLE_PLAY_PACKAGE_NAME || 'me.tinykitten.trainlcd';
   const discordWebhook = process.env.DISCORD_REVIEW_WEBHOOK_URL;
   const stateUri = process.env.GOOGLEPLAY_REVIEW_STATE_GCS_URI; // gs://<bucket>/states/googleplay-reviews.json
