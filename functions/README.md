@@ -137,7 +137,6 @@ The Cloud Functions in this project handle various backend operations:
     - `DISCORD_REVIEW_WEBHOOK_URL`: DiscordのWebhook URL（必須）
     - `APPSTORE_REVIEW_FEED_URL`: App StoreレビューのJSONフィードURL（任意）。未設定時は既定のJSONエンドポイント（日本向け `/jp/`）。国・言語を変更したい場合はこのURLの地域コードを差し替えてください。必ず末尾が `/json` のURLを指定してください（`/xml` は非対応）。
       - 既定値: `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json`
-      - 旧 `APPSTORE_REVIEW_RSS_URL` は非対応になりました（使用しないでください）。
     - `APPSTORE_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/appstore-reviews.json`）[本番必須]。必要最小の権限は該当オブジェクトへの読取/作成（例: `roles/storage.objectViewer` + `roles/storage.objectCreator`）。運用上の都合であれば `roles/storage.objectAdmin` でも可。
     - `REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
     - `REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC
