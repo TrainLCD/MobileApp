@@ -139,24 +139,26 @@ The Cloud Functions in this project handle various backend operations:
       - 既定値: `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json`
     - `APPSTORE_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/appstore-reviews.json`）[本番必須]。必要最小の権限は該当オブジェクトへの読取/作成（例: `roles/storage.objectViewer` + `roles/storage.objectCreator`）。運用上の都合であれば `roles/storage.objectAdmin` でも可。
     - `REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
-    - `REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC
+    - `REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC（注: `every N minutes` のような相対指定ではタイムゾーンの影響は事実上ありません。特定時刻運用時は cron 式を推奨）
   - デバッグ用（任意）:
     - `REVIEWS_DEBUG=1`: 取得内容などの詳細ログを出力
     - `REVIEWS_FORCE_LATEST_COUNT`: 整数N。既読に関わらず最新N件を強制送信（検証用途）
     - `REVIEWS_DRY_RUN=1`: Discord送信をスキップし、送信予定の項目をログ表示
+    - 注意: 大量送信時は Discord Webhook のレート制限（HTTP 429）が発生し得ます。必要に応じてバッチ処理や送信間隔の調整を行ってください。
 
 - **Google Play Review Notifier (`googlePlayReviewNotifier`)** - Google Playの最新レビューをAndroid Publisher APIから取得し、Discordへ通知します（既定: 毎時）。
   - 環境変数:
     - `DISCORD_REVIEW_WEBHOOK_URL`: DiscordのWebhook URL（必須）
     - `GOOGLE_PLAY_PACKAGE_NAME`: パッケージ名（既定: `me.tinykitten.trainlcd`）
-    - `GOOGLEPLAY_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/googleplay-reviews.json`）
+    - `GOOGLEPLAY_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/googleplay-reviews.json`）。必要最小の権限は該当オブジェクトへの読取/作成（例: `roles/storage.objectViewer` + `roles/storage.objectCreator`）。運用都合であれば `roles/storage.objectAdmin` でも可。
     - `PLAY_REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
-    - `PLAY_REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC
+    - `PLAY_REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC（注: `every N minutes` のような相対指定ではタイムゾーンの影響は事実上ありません。特定時刻運用時は cron 式を推奨）
   - 認証: Cloud Functionsのサービスアカウントに「Android Publisher API」へのアクセス権を付与し、ADC（Application Default Credentials）で認証します。
   - デバッグ用（任意）:
     - `REVIEWS_DEBUG=1`: 取得/ページング/保存の詳細ログを出力
     - `REVIEWS_FORCE_LATEST_COUNT`: 整数N。既読に関わらず最新N件を強制送信（検証用途）
     - `REVIEWS_DRY_RUN=1`: Discord送信をスキップし、送信予定の項目をログ表示
+    - 注意: 大量送信時は Discord Webhook のレート制限（HTTP 429）が発生し得ます。必要に応じてバッチ処理や送信間隔の調整を行ってください。
 
 
 ### Firestore Triggers
