@@ -45,7 +45,7 @@ describe('appStoreReviewNotifier (JSON only)', () => {
     prevEnv = { ...process.env };
     process.env.REVIEWS_DEBUG = '1';
     process.env.DISCORD_REVIEW_WEBHOOK_URL = 'https://discord.test/webhook';
-    process.env.APPSTORE_REVIEW_RSS_URL = 'https://example.test/rss.json';
+    process.env.APPSTORE_REVIEW_FEED_URL = 'https://example.test/rss.json';
     process.env.APPSTORE_REVIEW_STATE_GCS_URI = 'gs://test-bucket/states/appstore.json';
   });
   let prevEnv: NodeJS.ProcessEnv;

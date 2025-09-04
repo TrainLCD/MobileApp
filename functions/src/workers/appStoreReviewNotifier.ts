@@ -157,7 +157,7 @@ export async function runAppStoreReviewJob() {
   const dryRun = process.env.REVIEWS_DRY_RUN === '1';
   const forceCount = Number(process.env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
   const defaultUrl = 'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
-  const appStoreUrl = process.env.APPSTORE_REVIEW_RSS_URL || defaultUrl;
+  const appStoreUrl = process.env.APPSTORE_REVIEW_FEED_URL || defaultUrl;
   const stateUri = process.env.APPSTORE_REVIEW_STATE_GCS_URI; // e.g. gs://<bucket>/states/appstore-reviews.json
   const discordWebhook = process.env.DISCORD_REVIEW_WEBHOOK_URL;
 
