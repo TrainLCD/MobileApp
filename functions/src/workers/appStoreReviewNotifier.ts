@@ -154,6 +154,7 @@ async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
 
 export async function runAppStoreReviewJob() {
   const debug = process.env.REVIEWS_DEBUG === '1';
+  const dryRun = process.env.REVIEWS_DRY_RUN === '1';
   const forceCount = Number(process.env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
   const defaultUrl = 'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
   const appStoreUrl = process.env.APPSTORE_REVIEW_RSS_URL || defaultUrl;
@@ -227,7 +228,11 @@ export async function runAppStoreReviewJob() {
   }
 
   // 4) Post to Discord
-  await postToDiscord(discordWebhook, postTargets);
+  if (dryRun) {
+    console.log('[AppStoreJob] DRY_RUN on. Will post (skipped):', postTargets.map((r) => ({ id: r.id, rating: r.rating, updated: r.updated })).slice(0, 5));
+  } else {
+    await postToDiscord(discordWebhook, postTargets);
+  }
 
   // 5) Update state
   if (items.length) {
@@ -245,7 +250,7 @@ export async function runAppStoreReviewJob() {
 export const appStoreReviewNotifier = onSchedule(
   {
     schedule: process.env.REVIEWS_CRON_SCHEDULE || 'every 60 minutes',
-    timeZone: 'Asia/Tokyo',
+    timeZone: process.env.REVIEWS_TIMEZONE || 'UTC',
     region: 'asia-northeast1',
     maxInstances: 1,
   },

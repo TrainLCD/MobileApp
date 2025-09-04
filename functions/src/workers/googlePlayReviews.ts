@@ -219,7 +219,7 @@ export async function runGooglePlayReviewJob() {
 export const googlePlayReviewNotifier = onSchedule(
   {
     schedule: process.env.PLAY_REVIEWS_CRON_SCHEDULE || 'every 60 minutes',
-    timeZone: 'Asia/Tokyo',
+    timeZone: process.env.PLAY_REVIEWS_TIMEZONE || 'UTC',
     region: 'asia-northeast1',
     maxInstances: 1,
   },
