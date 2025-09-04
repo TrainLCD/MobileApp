@@ -131,6 +131,32 @@ The Cloud Functions in this project handle various backend operations:
 - **Content Moderation** - Automated content review and filtering
 - **Data Processing** - Asynchronous data transformation tasks
 
+### Scheduled Jobs
+- **App Store Review Notifier (`appStoreReviewNotifier`)** - App Storeの最新レビューをJSONフィードから取得し、Discordへ通知します（既定: 毎時）。
+  - 環境変数:
+    - `DISCORD_REVIEW_WEBHOOK_URL`: DiscordのWebhook URL（必須）
+    - `APPSTORE_REVIEW_RSS_URL`: App StoreレビューのJSONフィードURL（任意）。未設定時は既定のJSONエンドポイント
+      - 既定値: `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json`
+      - 互換性のため環境変数名は`...RSS_URL`のままですが、JSON URLを指定してください
+    - `APPSTORE_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/appstore-reviews.json`）
+    - `REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
+  - デバッグ用（任意）:
+    - `REVIEWS_DEBUG=1`: 取得内容などの詳細ログを出力
+    - `REVIEW_FORCE_LATEST_COUNT=1`: 既読に関わらず最新N件を強制送信（検証用途）
+
+- **Google Play Review Notifier (`googlePlayReviewNotifier`)** - Google Playの最新レビューをAndroid Publisher APIから取得し、Discordへ通知します（既定: 毎時）。
+  - 環境変数:
+    - `DISCORD_REVIEW_WEBHOOK_URL`: DiscordのWebhook URL（必須）
+    - `GOOGLE_PLAY_PACKAGE_NAME`: パッケージ名（既定: `me.tinykitten.trainlcd`）
+    - `GOOGLEPLAY_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/googleplay-reviews.json`）
+    - `PLAY_REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
+  - 認証: Cloud Functionsのサービスアカウントに「Android Publisher API」へのアクセス権を付与し、ADC（Application Default Credentials）で認証します。
+  - デバッグ用（任意）:
+    - `REVIEWS_DEBUG=1`: 取得/ページング/保存の詳細ログを出力
+    - `REVIEW_FORCE_LATEST_COUNT=1`: 既読に関わらず最新N件を強制送信（検証用途）
+    - `REVIEWS_DRY_RUN=1`: Discord送信をスキップし、送信予定の項目をログ表示
+
+
 ### Firestore Triggers
 - Database change reactions
 - Data validation
