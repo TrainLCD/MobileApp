@@ -178,8 +178,8 @@ describe('useSavedRoutes', () => {
       expect(route?.trainTypeId).toBe(48);
       expect(route?.hasTrainType).toBe(true);
       expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-        'SELECT * FROM saved_routes WHERE lineId = ? AND trainTypeId = ? AND destinationStationId IS NULL LIMIT 1',
-        [11603, 48]
+        'SELECT * FROM saved_routes WHERE trainTypeId = ? AND destinationStationId IS NULL LIMIT 1',
+        [48]
       );
     });
 
