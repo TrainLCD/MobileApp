@@ -1,4 +1,5 @@
 import { useMutation } from '@connectrpc/connect-query';
+import { Ionicons } from '@expo/vector-icons';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import findNearest from 'geolib/es/findNearest';
 import { useAtom, useSetAtom } from 'jotai';
@@ -28,7 +29,6 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
-import { Ionicons } from '@expo/vector-icons';
 
 const styles = StyleSheet.create({
   root: {
