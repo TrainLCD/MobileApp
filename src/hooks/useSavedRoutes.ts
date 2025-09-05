@@ -1,33 +1,76 @@
 import { randomUUID } from 'expo-crypto';
-import { useCallback } from 'react';
+import * as SQLite from 'expo-sqlite';
+import { useCallback, useEffect, useState } from 'react';
 import type { SavedRoute, SavedRouteInput } from '~/models/SavedRoute';
 
-const MOCK_DB: SavedRoute[] = [
-  {
-    id: randomUUID(),
-    name: '山手線',
-    lineId: 11302, // 山手線
+// SQLiteの行データ型を定義
+interface SavedRouteRow {
+  id: string;
+  name: string;
+  lineId: number;
+  trainTypeId: number | null;
+  destinationStationId: number | null;
+  hasTrainType: number; // SQLiteではBOOLEANが数値として保存される
+  createdAt: string; // SQLiteでは日時が文字列として保存される
+}
+
+const db = SQLite.openDatabaseSync('savedRoutes.db');
+
+// SQLiteの行データを SavedRoute に変換するヘルパー関数
+const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute => {
+  const hasTrainType = Boolean(row.hasTrainType);
+
+  if (hasTrainType) {
+    if (row.trainTypeId === null) {
+      throw new Error('trainTypeId cannot be null when hasTrainType is true');
+    }
+    return {
+      id: row.id,
+      name: row.name,
+      lineId: row.lineId,
+      trainTypeId: row.trainTypeId,
+      destinationStationId: row.destinationStationId,
+      hasTrainType: true,
+      createdAt: new Date(row.createdAt),
+    };
+  }
+  return {
+    id: row.id,
+    name: row.name,
+    lineId: row.lineId,
     trainTypeId: null,
-    destinationStationId: null,
+    destinationStationId: row.destinationStationId,
     hasTrainType: false,
-    createdAt: new Date(),
-  },
-  {
-    id: randomUUID(),
-    name: '新快速',
-    lineId: 11603, // JR神戸線
-    trainTypeId: 48, // 新快速
-    destinationStationId: null,
-    hasTrainType: true,
-    createdAt: new Date(),
-  },
-];
+    createdAt: new Date(row.createdAt),
+  };
+};
 
 export const useSavedRoutes = () => {
-  const getAll = useCallback(
-    async (): Promise<SavedRoute[]> => Promise.resolve(MOCK_DB),
-    []
-  );
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    db.execSync(
+      `CREATE TABLE IF NOT EXISTS saved_routes (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        lineId INTEGER NOT NULL,
+        trainTypeId INTEGER,
+        destinationStationId INTEGER,
+        hasTrainType BOOLEAN NOT NULL,
+        createdAt TEXT NOT NULL
+      );`
+    );
+    setIsInitialized(true);
+  }, []);
+
+  const getAll = useCallback(async (): Promise<SavedRoute[]> => {
+    const rows = (await db.getAllAsync(
+      'SELECT * FROM saved_routes ORDER BY createdAt DESC'
+    )) as SavedRouteRow[];
+
+    return rows.map(convertRowToSavedRoute);
+  }, []);
+
   const find = useCallback(
     async ({
       lineId,
@@ -37,40 +80,69 @@ export const useSavedRoutes = () => {
       lineId: number;
       destinationStationId: number | null;
       trainTypeId: number | null;
-    }): Promise<SavedRoute | undefined> =>
-      Promise.resolve(
-        MOCK_DB.find((route) => {
-          if (trainTypeId) {
-            return (
-              route.lineId === lineId &&
-              route.trainTypeId === trainTypeId &&
-              route.destinationStationId === destinationStationId
-            );
-          }
+    }): Promise<SavedRoute | undefined> => {
+      let whereClause: string;
+      let params: (number | null)[];
 
-          return (
-            route.lineId === lineId &&
-            route.destinationStationId === destinationStationId
-          );
-        })
-      ),
-    []
-  );
-  const save = useCallback(
-    async (route: SavedRouteInput): Promise<SavedRoute> => {
-      const newRoute = { ...route, id: randomUUID(), createdAt: new Date() };
-      MOCK_DB.push(newRoute);
-      return Promise.resolve(newRoute);
+      if (trainTypeId !== null) {
+        // trainTypeIdが指定されている場合
+        if (destinationStationId !== null) {
+          whereClause =
+            'lineId = ? AND trainTypeId = ? AND destinationStationId = ?';
+          params = [lineId, trainTypeId, destinationStationId];
+        } else {
+          whereClause =
+            'lineId = ? AND trainTypeId = ? AND destinationStationId IS NULL';
+          params = [lineId, trainTypeId];
+        }
+      } else {
+        // trainTypeIdが指定されていない場合
+        if (destinationStationId !== null) {
+          whereClause = 'lineId = ? AND destinationStationId = ?';
+          params = [lineId, destinationStationId];
+        } else {
+          whereClause = 'lineId = ? AND destinationStationId IS NULL';
+          params = [lineId];
+        }
+      }
+
+      const row = (await db.getFirstAsync(
+        `SELECT * FROM saved_routes WHERE ${whereClause} LIMIT 1`,
+        params
+      )) as SavedRouteRow | null;
+
+      return row ? convertRowToSavedRoute(row) : undefined;
     },
     []
   );
+
+  const save = useCallback(
+    async (route: SavedRouteInput): Promise<SavedRoute> => {
+      const newRoute = { ...route, id: randomUUID(), createdAt: new Date() };
+
+      await db.runAsync(
+        `INSERT INTO saved_routes 
+         (id, name, lineId, trainTypeId, destinationStationId, hasTrainType, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          newRoute.id,
+          newRoute.name,
+          newRoute.lineId,
+          newRoute.trainTypeId,
+          newRoute.destinationStationId ?? null,
+          newRoute.hasTrainType ? 1 : 0,
+          newRoute.createdAt.toISOString(),
+        ]
+      );
+
+      return newRoute;
+    },
+    []
+  );
+
   const remove = useCallback(async (id: string): Promise<void> => {
-    const index = MOCK_DB.findIndex((route) => route.id === id);
-    if (index !== -1) {
-      MOCK_DB.splice(index, 1);
-    }
-    return Promise.resolve();
+    await db.runAsync('DELETE FROM saved_routes WHERE id = ?', [id]);
   }, []);
 
-  return { getAll, find, save, remove };
+  return { getAll, find, save, remove, isInitialized };
 };

@@ -1,83 +1,201 @@
-import { renderHook } from '@testing-library/react-native';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import type {
   SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
-import { useSavedRoutes } from './useSavedRoutes';
 
 // randomUUIDをモック
 let mockIdCounter = 0;
 jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => {
     mockIdCounter++;
-    return `550e8400-e29b-41d4-a716-44665544000${mockIdCounter}`;
+    return `550e8400-e29b-41d4-a716-446655440000${mockIdCounter}`;
   }),
 }));
 
-describe('useSavedRoutes', () => {
-  let hook: ReturnType<typeof useSavedRoutes>;
+// SQLiteをモック
+const mockDb = {
+  execSync: jest.fn(),
+  getAllAsync: jest.fn(),
+  getFirstAsync: jest.fn(),
+  runAsync: jest.fn(),
+};
 
+jest.mock('expo-sqlite', () => ({
+  openDatabaseSync: jest.fn(() => mockDb),
+}));
+
+// useSavedRoutesをインポートする前にモックを設定する必要があるため、動的インポートを使用
+const useSavedRoutes = () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('./useSavedRoutes').useSavedRoutes();
+};
+
+describe('useSavedRoutes', () => {
   beforeEach(() => {
     // 各テスト前にモック関数をリセット
     jest.clearAllMocks();
     mockIdCounter = 0;
-    const { result } = renderHook(() => useSavedRoutes());
-    hook = result.current;
+
+    // デフォルトのモック実装を設定
+    mockDb.execSync.mockImplementation(() => {});
+    mockDb.getAllAsync.mockResolvedValue([]);
+    mockDb.getFirstAsync.mockResolvedValue(null);
+    mockDb.runAsync.mockResolvedValue(undefined);
+  });
+
+  describe('initialization', () => {
+    it('データベースのテーブルを作成し、isInitializedをtrueにするべき', async () => {
+      const { result } = renderHook(() => useSavedRoutes());
+
+      await waitFor(() => {
+        expect(result.current.isInitialized).toBe(true);
+      });
+
+      expect(mockDb.execSync).toHaveBeenCalledWith(
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
+      );
+    });
   });
 
   describe('getAll', () => {
     it('SavedRouteの配列を返すPromiseを返すべき', async () => {
-      const result = await hook.getAll();
-      expect(Array.isArray(result)).toBe(true);
-      // モックデータが含まれているため、配列が空でないことを確認
-      expect(result.length).toBeGreaterThanOrEqual(0);
+      const mockRows = [
+        {
+          id: '1',
+          name: 'Test Route',
+          lineId: 123,
+          trainTypeId: 456,
+          destinationStationId: 789,
+          hasTrainType: 1,
+          createdAt: '2025-08-24T12:00:00.000Z',
+        },
+      ];
+      mockDb.getAllAsync.mockResolvedValue(mockRows);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const routes = await result.current.getAll();
+
+      expect(Array.isArray(routes)).toBe(true);
+      expect(routes.length).toBe(1);
+      expect(routes[0].hasTrainType).toBe(true);
+      expect(routes[0].createdAt).toBeInstanceOf(Date);
+      expect(routes[0].trainTypeId).toBe(456);
+      expect(mockDb.getAllAsync).toHaveBeenCalledWith(
+        'SELECT * FROM saved_routes ORDER BY createdAt DESC'
+      );
     });
 
-    it('DBからすべての保存済み経路を返すべき', async () => {
-      const routes = await hook.getAll();
-      expect(routes).toBeDefined();
-      expect(typeof routes).toBe('object');
+    it('空の配列を返すべき', async () => {
+      mockDb.getAllAsync.mockResolvedValue([]);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const routes = await result.current.getAll();
+      expect(routes).toEqual([]);
+    });
+
+    it('hasTrainTypeがfalseの場合、trainTypeIdをnullに変換するべき', async () => {
+      const mockRows = [
+        {
+          id: '1',
+          name: 'Test Route',
+          lineId: 123,
+          trainTypeId: 456,
+          destinationStationId: 789,
+          hasTrainType: 0, // false
+          createdAt: '2025-08-24T12:00:00.000Z',
+        },
+      ];
+      mockDb.getAllAsync.mockResolvedValue(mockRows);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const routes = await result.current.getAll();
+
+      expect(routes[0].hasTrainType).toBe(false);
+      expect(routes[0].trainTypeId).toBeNull();
     });
   });
 
   describe('find', () => {
-    it('必須パラメータが指定された場合、条件に合致する経路を検索してSavedRoute | undefinedを返すべき', async () => {
-      const result = await hook.find({
+    it('trainTypeIdがnullの場合、適切なクエリで検索するべき', async () => {
+      const mockRow = {
+        id: '1',
+        name: 'Test Route',
+        lineId: 11302,
+        trainTypeId: null,
+        destinationStationId: null,
+        hasTrainType: 0,
+        createdAt: '2025-08-24T12:00:00.000Z',
+      };
+      mockDb.getFirstAsync.mockResolvedValue(mockRow);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const route = await result.current.find({
         lineId: 11302,
         destinationStationId: null,
         trainTypeId: null,
       });
-      // モックデータの山手線が該当する可能性がある
-      expect(result).toBeDefined();
+
+      expect(route).toBeDefined();
+      expect(route?.lineId).toBe(11302);
+      expect(route?.hasTrainType).toBe(false);
+      expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
+        'SELECT * FROM saved_routes WHERE lineId = ? AND destinationStationId IS NULL LIMIT 1',
+        [11302]
+      );
     });
 
-    it('trainTypeIdが指定された場合、lineId, destinationStationId, trainTypeIdで経路を検索するべき', async () => {
-      const result = await hook.find({
+    it('trainTypeIdが指定された場合、3つのパラメータで検索するべき', async () => {
+      const mockRow = {
+        id: '1',
+        name: 'Test Route',
+        lineId: 11603,
+        trainTypeId: 48,
+        destinationStationId: null,
+        hasTrainType: 1,
+        createdAt: '2025-08-24T12:00:00.000Z',
+      };
+      mockDb.getFirstAsync.mockResolvedValue(mockRow);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const route = await result.current.find({
         lineId: 11603,
         destinationStationId: null,
         trainTypeId: 48,
       });
-      // モックデータの新快速が該当する可能性がある
-      expect(result).toBeDefined();
+
+      expect(route).toBeDefined();
+      expect(route?.trainTypeId).toBe(48);
+      expect(route?.hasTrainType).toBe(true);
+      expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
+        'SELECT * FROM saved_routes WHERE lineId = ? AND trainTypeId = ? AND destinationStationId IS NULL LIMIT 1',
+        [11603, 48]
+      );
     });
 
     it('該当しない条件の場合、undefinedを返すべき', async () => {
-      const result = await hook.find({
+      mockDb.getFirstAsync.mockResolvedValue(null);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const route = await result.current.find({
         lineId: 999,
         destinationStationId: null,
         trainTypeId: null,
       });
-      expect(result).toBeUndefined();
-    });
 
-    it('destinationStationIdが指定された場合も正しく検索するべき', async () => {
-      const result = await hook.find({
-        lineId: 11302,
-        destinationStationId: 1130225,
-        trainTypeId: null,
-      });
-      // destinationStationIdが一致しないため見つからない
-      expect(result).toBeUndefined();
+      expect(route).toBeUndefined();
     });
   });
 
@@ -88,7 +206,7 @@ describe('useSavedRoutes', () => {
       trainTypeId: 1,
       destinationStationId: 200,
       name: 'Test Route with Train Type',
-      createdAt: new Date('2025-08-24T12:00:00Z'),
+      createdAt: new Date('2025-08-24T12:00:00.000Z'),
     };
 
     const mockRouteWithoutTrainType: SavedRouteWithoutTrainTypeInput = {
@@ -97,91 +215,115 @@ describe('useSavedRoutes', () => {
       trainTypeId: null,
       destinationStationId: 400,
       name: 'Test Route without Train Type',
-      createdAt: new Date('2025-08-24T12:00:00Z'),
+      createdAt: new Date('2025-08-24T12:00:00.000Z'),
     };
 
-    it('電車種別ありの経路を保存し、成功時に保存された経路を返すべき', async () => {
-      const result = await hook.save(mockRouteWithTrainType);
-      expect(result).toBeDefined();
-      expect(result.id).toBeDefined();
-      expect(result.name).toBe(mockRouteWithTrainType.name);
-      expect(result.hasTrainType).toBe(mockRouteWithTrainType.hasTrainType);
-      if (result.hasTrainType && mockRouteWithTrainType.hasTrainType) {
-        expect(result.lineId).toBe(mockRouteWithTrainType.lineId);
-        expect(result.trainTypeId).toBe(mockRouteWithTrainType.trainTypeId);
-      }
-      expect(result.destinationStationId).toBe(
-        mockRouteWithTrainType.destinationStationId
-      );
-      expect(result.createdAt).toBeInstanceOf(Date);
-    });
+    it('電車種別ありの経路を保存し、正しいパラメータでDBに挿入するべき', async () => {
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-    it('電車種別なしの経路を保存し、成功時に保存された経路を返すべき', async () => {
-      const result = await hook.save(mockRouteWithoutTrainType);
-      expect(result).toBeDefined();
-      expect(result.id).toBeDefined();
-      expect(result.name).toBe(mockRouteWithoutTrainType.name);
-      expect(result.hasTrainType).toBe(mockRouteWithoutTrainType.hasTrainType);
-      if (!result.hasTrainType && !mockRouteWithoutTrainType.hasTrainType) {
-        expect(result.lineId).toBe(mockRouteWithoutTrainType.lineId);
-        expect(result.trainTypeId).toBeNull();
-      }
-      expect(result.destinationStationId).toBe(
-        mockRouteWithoutTrainType.destinationStationId
-      );
-      expect(result.createdAt).toBeInstanceOf(Date);
-    });
+      const savedRoute = await result.current.save(mockRouteWithTrainType);
 
-    it('destinationStationIdがnullの経路を保存するべき', async () => {
-      const routeWithNullDestination: SavedRouteWithTrainTypeInput = {
-        ...mockRouteWithTrainType,
-        destinationStationId: null,
-      };
-      const result = await hook.save(routeWithNullDestination);
-      expect(result).toBeDefined();
-      expect(result.destinationStationId).toBeNull();
-    });
+      expect(savedRoute).toBeDefined();
+      expect(savedRoute.id).toMatch(/^550e8400-e29b-41d4-a716-4466554400001$/);
+      expect(savedRoute.name).toBe(mockRouteWithTrainType.name);
+      expect(savedRoute.hasTrainType).toBe(true);
+      expect(savedRoute.trainTypeId).toBe(mockRouteWithTrainType.trainTypeId);
+      expect(savedRoute.createdAt).toBeInstanceOf(Date);
 
-    it('IDにUUIDを生成してDBに保存するべき', async () => {
-      const result = await hook.save(mockRouteWithTrainType);
-      expect(result.id).toBeDefined();
-      expect(typeof result.id).toBe('string');
-      expect(result.id.length).toBeGreaterThan(0);
-      // UUIDの形式をチェック（簡易的）
-      expect(result.id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO saved_routes'),
+        [
+          savedRoute.id,
+          mockRouteWithTrainType.name,
+          mockRouteWithTrainType.lineId,
+          mockRouteWithTrainType.trainTypeId,
+          mockRouteWithTrainType.destinationStationId,
+          1, // hasTrainType: true
+          savedRoute.createdAt.toISOString(),
+        ]
       );
     });
 
-    it('保存が失敗した場合rejectするべき', async () => {
-      // 現在のモック実装では常に成功するため、実装後に更新が必要
-      const result = await hook.save(mockRouteWithTrainType);
-      expect(result).toBeDefined();
+    it('電車種別なしの経路を保存し、trainTypeIdをnullで挿入するべき', async () => {
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const savedRoute = await result.current.save(mockRouteWithoutTrainType);
+
+      expect(savedRoute.hasTrainType).toBe(false);
+      expect(savedRoute.trainTypeId).toBeNull();
+
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO saved_routes'),
+        expect.arrayContaining([
+          expect.any(String), // id
+          mockRouteWithoutTrainType.name,
+          mockRouteWithoutTrainType.lineId,
+          null, // trainTypeId
+          mockRouteWithoutTrainType.destinationStationId,
+          0, // hasTrainType: false
+          expect.any(String), // createdAt
+        ])
+      );
+    });
+
+    it('UUIDを生成してIDとして使用するべき', async () => {
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      const savedRoute = await result.current.save(mockRouteWithTrainType);
+
+      expect(savedRoute.id).toMatch(
+        /^550e8400-e29b-41d4-a716-446655440000\d+$/
+      );
     });
   });
 
   describe('remove', () => {
-    const testId = '550e8400-e29b-41d4-a716-446655440000';
+    it('指定されたIDで経路を削除するべき', async () => {
+      const testId = '550e8400-e29b-41d4-a716-446655440000';
 
-    it('IDで経路を削除し、成功時にresolveするべき', async () => {
-      await expect(hook.remove(testId)).resolves.toBeUndefined();
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      await result.current.remove(testId);
+
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        'DELETE FROM saved_routes WHERE id = ?',
+        [testId]
+      );
     });
 
-    it('DBから経路を物理削除するべき', async () => {
-      // 実装後は実際にDBから物理削除されることをテスト
-      await expect(hook.remove(testId)).resolves.toBeUndefined();
-    });
+    it('削除操作が完了するまで待機するべき', async () => {
+      const testId = '550e8400-e29b-41d4-a716-446655440000';
 
-    it('削除が失敗した場合rejectするべき', async () => {
-      // 実装後は実際のエラーケースをテスト
-      // 現在の実装では常にresolveするため、実装後に更新が必要
-      await expect(hook.remove(testId)).resolves.toBeUndefined();
-    });
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-    it('存在しないIDの削除を適切に処理するべき', async () => {
-      const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
-      // 実装に応じて、存在しないIDの削除時の動作を定義
-      await expect(hook.remove(nonExistentId)).resolves.toBeUndefined();
+      await expect(result.current.remove(testId)).resolves.toBeUndefined();
+    });
+  });
+
+  describe('エラーハンドリング', () => {
+    it('convertRowToSavedRouteでhasTrainType=trueだがtrainTypeId=nullの場合エラーを投げるべき', async () => {
+      const invalidRow = {
+        id: '1',
+        name: 'Invalid Route',
+        lineId: 123,
+        trainTypeId: null,
+        destinationStationId: 789,
+        hasTrainType: 1, // true but trainTypeId is null
+        createdAt: '2025-08-24T12:00:00.000Z',
+      };
+      mockDb.getAllAsync.mockResolvedValue([invalidRow]);
+
+      const { result } = renderHook(() => useSavedRoutes());
+      await waitFor(() => expect(result.current.isInitialized).toBe(true));
+
+      await expect(result.current.getAll()).rejects.toThrow(
+        'trainTypeId cannot be null when hasTrainType is true'
+      );
     });
   });
 });
