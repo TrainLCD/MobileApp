@@ -77,7 +77,7 @@ export const useSavedRoutes = () => {
       trainTypeId,
       destinationStationId,
     }: {
-      lineId: number;
+      lineId: number | null;
       destinationStationId: number | null;
       trainTypeId: number | null;
     }): Promise<SavedRoute | undefined> => {
@@ -87,13 +87,11 @@ export const useSavedRoutes = () => {
       if (trainTypeId !== null) {
         // trainTypeIdが指定されている場合
         if (destinationStationId !== null) {
-          whereClause =
-            'lineId = ? AND trainTypeId = ? AND destinationStationId = ?';
-          params = [lineId, trainTypeId, destinationStationId];
+          whereClause = 'trainTypeId = ? AND destinationStationId = ?';
+          params = [trainTypeId, destinationStationId];
         } else {
-          whereClause =
-            'lineId = ? AND trainTypeId = ? AND destinationStationId IS NULL';
-          params = [lineId, trainTypeId];
+          whereClause = 'trainTypeId = ? AND destinationStationId IS NULL';
+          params = [trainTypeId];
         }
       } else {
         // trainTypeIdが指定されていない場合

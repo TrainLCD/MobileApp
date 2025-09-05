@@ -109,7 +109,7 @@ const SelectBoundScreen: React.FC = () => {
       }
 
       const route = await findSavedRoute({
-        lineId: selectedLine?.id,
+        lineId: selectedLine.id,
         trainTypeId: trainType?.groupId ?? null,
         destinationStationId: wantedDestination?.groupId ?? null,
       });
@@ -343,8 +343,24 @@ const SelectBoundScreen: React.FC = () => {
 
   const handleSaveRoutePress = useCallback(async () => {
     if (savedRoute) {
-      await removeCurrentRoute(savedRoute.id);
-      setSavedRoute(null);
+      Alert.alert(
+        translate('removeFromSavedRoutes'),
+        translate('confirmDeleteRouteText', { routeName: savedRoute.name }),
+        [
+          {
+            text: 'OK',
+            style: 'destructive',
+            onPress: async () => {
+              await removeCurrentRoute(savedRoute.id);
+              setSavedRoute(null);
+            },
+          },
+          {
+            text: translate('cancel'),
+            style: 'cancel',
+          },
+        ]
+      );
       return;
     }
 
