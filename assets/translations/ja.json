@@ -185,5 +185,6 @@
   "disableDevOverlay": "開発者オーバレイを無効化する",
   "enableUntouchableMode": "タッチ不可モードを有効化する",
   "untouchableModeEnabledNotice": "タッチ不可モードが有効化されました。アプリはタップに反応しません。このモードを無効にするには、アプリを再起動してください。",
-  "communityRoutes": "コミュニティルート"
+  "communityRoutes": "コミュニティルート",
+  "confirmDeleteRouteText": "本当に保存済み経路から「%{routeName}」を削除しますか？"
 }

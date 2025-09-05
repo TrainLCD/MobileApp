@@ -3,7 +3,13 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import findNearest from 'geolib/es/findNearest';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
 import {
@@ -22,6 +28,7 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
+import { Ionicons } from '@expo/vector-icons';
 
 const styles = StyleSheet.create({
   root: {
@@ -55,6 +62,17 @@ const styles = StyleSheet.create({
   item: {
     flex: 1,
     padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  deleteContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: 'crimson',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
@@ -76,7 +94,7 @@ const SavedRoutesScreen: React.FC = () => {
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
-  const { getAll } = useSavedRoutes();
+  const { getAll, remove } = useSavedRoutes();
 
   const {
     mutateAsync: fetchStationsByLineId,
@@ -222,7 +240,7 @@ const SavedRoutesScreen: React.FC = () => {
       }));
       setLineState((prev) => ({
         ...prev,
-        selectedLine: station.line ?? null,
+        selectedLine: trainType?.line ?? null,
       }));
     },
     [
@@ -252,19 +270,50 @@ const SavedRoutesScreen: React.FC = () => {
     [openModalByLineId, openModalByTrainTypeId]
   );
 
+  const handleDeletePress = useCallback(
+    async (route: SavedRoute) => {
+      Alert.alert(
+        translate('removeFromSavedRoutes'),
+        translate('confirmDeleteRouteText', { routeName: route.name }),
+        [
+          {
+            text: 'OK',
+            style: 'destructive',
+            onPress: async () => {
+              await remove(route.id);
+              setRoutes((prev) => prev.filter((r) => r.id !== route.id));
+            },
+          },
+          {
+            text: translate('cancel'),
+            style: 'cancel',
+          },
+        ]
+      );
+    },
+    [remove]
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: SavedRoute }) => {
       const handlePress = () => handleItemPress(item);
+      const handleDelete = () => handleDeletePress(item);
       return (
         <>
           <TouchableOpacity style={styles.item} onPress={handlePress}>
             <Typography style={styles.routeNameText}>{item.name}</Typography>
+            <TouchableOpacity
+              style={styles.deleteContainer}
+              onPress={handleDelete}
+            >
+              <Ionicons name="trash" color="white" size={16} />
+            </TouchableOpacity>
           </TouchableOpacity>
           <View style={styles.divider} />
         </>
       );
     },
-    [handleItemPress]
+    [handleItemPress, handleDeletePress]
   );
 
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, []);
