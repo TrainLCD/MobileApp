@@ -7,10 +7,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Pressable,
   StyleSheet,
   TouchableOpacity,
   View,
-  Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
