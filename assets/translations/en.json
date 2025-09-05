@@ -185,5 +185,7 @@
   "enableUntouchableMode": "Enable untouchable mode",
   "untouchableModeEnabledNotice": "Untouchable mode is enabled. The app will not respond to taps. To disable this mode, please restart the app.",
   "communityRoutes": "Community routes",
-  "confirmDeleteRouteText": "Are you sure you want to remove \"%{routeName}\" from your saved routes?"
+  "confirmDeleteRouteText": "Are you sure you want to remove \"%{routeName}\" from your saved routes?",
+  "routeSavedText": "Saved the route \"%{routeName}\".",
+  "routeDeletedText": "Deleted the \"%{routeName}\"."
 }

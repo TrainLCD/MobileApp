@@ -282,6 +282,12 @@ const SavedRoutesScreen: React.FC = () => {
             onPress: async () => {
               await remove(route.id);
               setRoutes((prev) => prev.filter((r) => r.id !== route.id));
+              Alert.alert(
+                translate('announcementTitle'),
+                translate('routeDeletedText', {
+                  routeName: route.name,
+                })
+              );
             },
           },
           {

@@ -186,5 +186,7 @@
   "enableUntouchableMode": "タッチ不可モードを有効化する",
   "untouchableModeEnabledNotice": "タッチ不可モードが有効化されました。アプリはタップに反応しません。このモードを無効にするには、アプリを再起動してください。",
   "communityRoutes": "コミュニティルート",
-  "confirmDeleteRouteText": "本当に保存済み経路から「%{routeName}」を削除しますか？"
+  "confirmDeleteRouteText": "本当に保存済み経路から「%{routeName}」を削除しますか？",
+  "routeSavedText": "経路「%{routeName}」を保存しました。",
+  "routeDeletedText": "経路「%{routeName}」を削除しました。"
 }

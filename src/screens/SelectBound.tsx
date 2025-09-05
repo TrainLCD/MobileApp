@@ -353,6 +353,12 @@ const SelectBoundScreen: React.FC = () => {
             onPress: async () => {
               await removeCurrentRoute(savedRoute.id);
               setSavedRoute(null);
+              Alert.alert(
+                translate('announcementTitle'),
+                translate('routeDeletedText', {
+                  routeName: savedRoute.name,
+                })
+              );
             },
           },
           {
@@ -390,6 +396,12 @@ const SelectBoundScreen: React.FC = () => {
         createdAt: new Date(),
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
+      Alert.alert(
+        translate('announcementTitle'),
+        translate('routeSavedText', {
+          routeName: newRoute.name,
+        })
+      );
       return;
     }
 
