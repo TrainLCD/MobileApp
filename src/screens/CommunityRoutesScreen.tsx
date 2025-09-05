@@ -1,5 +1,4 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
-import findNearest from 'geolib/es/findNearest';
 import { useSetAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -119,19 +118,19 @@ const CommunityRoutesScreen: React.FC = () => {
         trainType: route.trainType,
       }));
 
-      const nearestCoordinates = findNearest(
-        { latitude, longitude },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
-        }))
-      ) as { latitude: number; longitude: number };
-
-      const nearestStation = stations.find(
-        (sta) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
-      );
+      // 近傍駅は距離最小のインデックスで決定（浮動小数一致に依存しない）
+      let nearestIndex = 0;
+      let best = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < stations.length; i++) {
+        const dLat = stations[i].latitude - latitude;
+        const dLon = stations[i].longitude - longitude;
+        const dist2 = dLat * dLat + dLon * dLon;
+        if (dist2 < best) {
+          best = dist2;
+          nearestIndex = i;
+        }
+      }
+      const nearestStation = stations[nearestIndex];
 
       if (!nearestStation) {
         return;

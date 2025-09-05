@@ -149,6 +149,7 @@ export const SavedRouteInfo: React.FC<Props> = ({
   stations,
   loading,
   disabled,
+  error,
   routeName,
   onClose,
   onConfirmed,
@@ -177,6 +178,10 @@ export const SavedRouteInfo: React.FC<Props> = ({
     const finalIndex = stops.findIndex(
       (s) => s.groupId === finalStation?.groupId
     );
+
+    if (curIndex === -1 || finalIndex === -1) {
+      return uniqBy(stops, 'id');
+    }
 
     if (curIndex > finalIndex) {
       const reversedStops = stops.slice().reverse();
@@ -208,7 +213,7 @@ export const SavedRouteInfo: React.FC<Props> = ({
             (s) => s.line?.id === finalStation.line?.id
           );
 
-          if (!sta.line || idx < finalIndex) {
+          if (finalIndex === -1 || !sta.line || idx < finalIndex) {
             return acc;
           }
 
@@ -227,29 +232,30 @@ export const SavedRouteInfo: React.FC<Props> = ({
       (s) => s.groupId === finalStation.groupId
     );
 
+    if (finalIndex === -1) {
+      return [];
+    }
     return stopStations.slice(finalIndex + 1, stopStations.length);
   }, [stopStations, finalStation]);
 
-  const trainTypeLines = useMemo(
-    () =>
-      trainType?.lines.length
-        ? uniqBy(
-            stopStations.map(
-              (s) =>
-                new Line({
-                  ...s.line,
-                  trainType: trainType.lines.find((l) => l.id === s.line?.id)
-                    ?.trainType,
-                })
-            ),
-            'id'
-          )
-        : uniqBy(
-            stations.map((s) => s.line ?? null),
-            'id'
-          ).filter((l) => l !== null),
-    [stations, stopStations, trainType?.lines]
-  );
+  const trainTypeLines = useMemo(() => {
+    if (trainType?.lines.length) {
+      const mapped = stopStations
+        .map((s) => {
+          if (!s.line) return null;
+          const tt = trainType.lines.find(
+            (l) => l.id === s.line?.id
+          )?.trainType;
+          return new Line({ ...s.line, trainType: tt });
+        })
+        .filter((l): l is Line => l !== null);
+      return uniqBy(mapped, 'id');
+    }
+    return uniqBy(
+      stations.map((s) => s.line ?? null),
+      'id'
+    ).filter((l): l is Line => l !== null);
+  }, [stations, stopStations, trainType?.lines]);
 
   return (
     <View style={styles.root}>
@@ -277,6 +283,14 @@ export const SavedRouteInfo: React.FC<Props> = ({
       >
         <ScrollView contentContainerStyle={styles.scrollView}>
           <Heading>{routeName}</Heading>
+          {error && (
+            <Typography
+              style={{ color: '#d00', marginTop: 8 }}
+              numberOfLines={2}
+            >
+              {error.message}
+            </Typography>
+          )}
 
           <View
             style={{

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
+import type { TrainType } from '~/gen/proto/stationapi_pb';
 import {
   getStationsByLineGroupId,
   getStationsByLineId,
@@ -94,7 +95,7 @@ const SavedRoutesScreen: React.FC = () => {
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
-  const { getAll, remove } = useSavedRoutes();
+  const { getAll, remove, isInitialized } = useSavedRoutes();
 
   const {
     mutateAsync: fetchStationsByLineId,
@@ -115,11 +116,12 @@ const SavedRoutesScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchRoutes = async () => {
+      if (!isInitialized) return;
       const savedRoutes = await getAll();
       setRoutes(savedRoutes);
     };
     fetchRoutes();
-  }, [getAll]);
+  }, [getAll, isInitialized]);
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -170,6 +172,7 @@ const SavedRoutesScreen: React.FC = () => {
         ...prev,
         stationForHeader: station,
         leftStations: [],
+        trainType: null,
       }));
       setLineState((prev) => ({
         ...prev,
@@ -328,7 +331,7 @@ const SavedRoutesScreen: React.FC = () => {
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleRouteConfirmed = useCallback(
-    () =>
+    (_trainType?: TrainType, _asTerminus?: boolean) =>
       navigation.dispatch(
         StackActions.replace('MainStack', { screen: 'SelectBound' })
       ),

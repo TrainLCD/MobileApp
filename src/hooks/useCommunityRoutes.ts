@@ -1,6 +1,7 @@
 import { useMutation } from '@connectrpc/connect-query';
 import {
   collection,
+  type FirebaseFirestoreTypes,
   getDocs,
   getFirestore,
   orderBy,
@@ -28,10 +29,21 @@ export const useCommunityRoutes = () => {
         orderBy('createdAt', 'desc')
       );
 
-      return (await getDocs(q)).docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as CommunityRoute[];
+      return (await getDocs(q)).docs.map((doc) => {
+        const data = doc.data() as FirebaseFirestoreTypes.DocumentData;
+        const createdAt: Date =
+          typeof data?.createdAt?.toDate === 'function'
+            ? data.createdAt.toDate()
+            : new Date();
+        return {
+          id: doc.id,
+          userId: data.userId,
+          name: data.name,
+          stations: data.stations,
+          createdAt,
+          trainType: data.trainType,
+        } as CommunityRoute;
+      });
     },
   });
 

@@ -123,7 +123,7 @@ describe('useSavedRoutes', () => {
   });
 
   describe('find', () => {
-    it('trainTypeIdがnullの場合、適切なクエリで検索するべき', async () => {
+    it('trainTypeIdがnullの場合、hasTrainType=0を明示し最新を検索するべき', async () => {
       const mockRow = {
         id: '1',
         name: 'Test Route',
@@ -148,12 +148,12 @@ describe('useSavedRoutes', () => {
       expect(route?.lineId).toBe(11302);
       expect(route?.hasTrainType).toBe(false);
       expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-        'SELECT * FROM saved_routes WHERE lineId = ? AND destinationStationId IS NULL LIMIT 1',
+        'SELECT * FROM saved_routes WHERE hasTrainType = 0 AND lineId = ? AND destinationStationId IS NULL ORDER BY createdAt DESC LIMIT 1',
         [11302]
       );
     });
 
-    it('trainTypeIdが指定された場合、3つのパラメータで検索するべき', async () => {
+    it('trainTypeIdが指定された場合、hasTrainType=1を明示し最新を検索するべき', async () => {
       const mockRow = {
         id: '1',
         name: 'Test Route',
@@ -178,7 +178,7 @@ describe('useSavedRoutes', () => {
       expect(route?.trainTypeId).toBe(48);
       expect(route?.hasTrainType).toBe(true);
       expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-        'SELECT * FROM saved_routes WHERE trainTypeId = ? AND destinationStationId IS NULL LIMIT 1',
+        'SELECT * FROM saved_routes WHERE hasTrainType = 1 AND trainTypeId = ? AND destinationStationId IS NULL ORDER BY createdAt DESC LIMIT 1',
         [48]
       );
     });
@@ -306,7 +306,7 @@ describe('useSavedRoutes', () => {
   });
 
   describe('エラーハンドリング', () => {
-    it('convertRowToSavedRouteでhasTrainType=trueだがtrainTypeId=nullの場合エラーを投げるべき', async () => {
+    it('hasTrainType=trueだがtrainTypeId=nullの破損レコードは読み飛ばすべき', async () => {
       const invalidRow = {
         id: '1',
         name: 'Invalid Route',
@@ -321,9 +321,7 @@ describe('useSavedRoutes', () => {
       const { result } = renderHook(() => useSavedRoutes());
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
-      await expect(result.current.getAll()).rejects.toThrow(
-        'trainTypeId cannot be null when hasTrainType is true'
-      );
+      await expect(result.current.getAll()).resolves.toEqual([]);
     });
   });
 });

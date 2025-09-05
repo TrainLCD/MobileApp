@@ -104,17 +104,20 @@ const SelectBoundScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchSavedRoute = async () => {
-      if (!selectedLine?.id) {
-        return;
-      }
+      try {
+        if (!selectedLine?.id) {
+          return;
+        }
 
-      const route = await findSavedRoute({
-        lineId: selectedLine.id,
-        trainTypeId: trainType?.groupId ?? null,
-        destinationStationId: wantedDestination?.groupId ?? null,
-      });
-      setSavedRoute(route ?? null);
-      setSavedRouteLoaded(true);
+        const route = await findSavedRoute({
+          lineId: selectedLine.id,
+          trainTypeId: trainType?.groupId ?? null,
+          destinationStationId: wantedDestination?.groupId ?? null,
+        });
+        setSavedRoute(route ?? null);
+      } finally {
+        setSavedRouteLoaded(true);
+      }
     };
     fetchSavedRoute();
   }, [
@@ -201,8 +204,8 @@ const SelectBoundScreen: React.FC = () => {
       const updatedTrainType: TrainType | null = trainType
         ? new TrainType({
             ...trainType,
-            lines: trainType?.lines
-              .filter((l, i) => l.id === stationLineIds[i])
+            lines: (trainType.lines || [])
+              .filter((l) => stationLineIds.includes(l.id))
               .map((l) => new Line(l)),
           })
         : null;
@@ -232,10 +235,11 @@ const SelectBoundScreen: React.FC = () => {
         .slice(0, 2)
         .join('・')}方面`;
     }
-    return `for ${boundStations
+    const names = boundStations
       .slice(0, 2)
       .map((s) => s.nameRoman)
-      .join(' and ')}`;
+      .filter(Boolean);
+    return names.length ? `for ${names.join(' and ')}` : '';
   }, []);
 
   const loopLineDirectionText = useCallback(
@@ -413,7 +417,7 @@ const SelectBoundScreen: React.FC = () => {
 
       name: isJapanese
         ? `${lineName} 各駅停車 ${edgeStationNames} ${destinationName ? `${destinationName}行き` : ''}`.trim()
-        : `${lineName} Local ${edgeStationNames} for ${destinationName}`.trim(),
+        : `${lineName} Local ${edgeStationNames}${destinationName ? ` for ${destinationName}` : ''}`.trim(),
       lineId: selectedLine.id,
       trainTypeId: null,
       destinationStationId: wantedDestination?.groupId ?? null,

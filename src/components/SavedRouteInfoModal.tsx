@@ -13,7 +13,7 @@ type Props = {
   error: ConnectError | null;
   routeName: string;
   onClose: () => void;
-  onConfirmed: (trainType: TrainType | undefined) => void;
+  onConfirmed: (trainType: TrainType | undefined, asTerminus?: boolean) => void;
 };
 
 export const SavedRouteInfoModal: React.FC<Props> = (props: Props) => {
@@ -27,7 +27,7 @@ export const SavedRouteInfoModal: React.FC<Props> = (props: Props) => {
       onRequestClose={onClose}
       supportedOrientations={['landscape']}
     >
-      <SavedRouteInfo {...props} />
+      <SavedRouteInfo {...props} fromRouteListModal={false} />
     </Modal>
   );
 };
