@@ -1291,6 +1291,8 @@ PODS:
     - ExpoModulesCore
   - ExpoSplashScreen (0.30.10):
     - ExpoModulesCore
+  - ExpoSQLite (15.2.14):
+    - ExpoModulesCore
   - ExpoWebBrowser (14.2.0):
     - ExpoModulesCore
   - EXTaskManager (13.1.6):
@@ -3712,6 +3714,7 @@ DEPENDENCIES:
   - "ExpoNetwork (from `../node_modules/.pnpm/expo-network@7.1.5_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0.79.5_@_1ac313916fbfb1e4a67c540060a681b2/node_modules/expo-network/ios`)"
   - "ExpoScreenCapture (from `../node_modules/.pnpm/expo-screen-capture@7.2.0_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0_2e17a3eea69ce37742d07cd74c6d6bbf/node_modules/expo-screen-capture/ios`)"
   - "ExpoSplashScreen (from `../node_modules/.pnpm/expo-splash-screen@0.30.10_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@_b11843020f38a5d16f48599a45f26118/node_modules/expo-splash-screen/ios`)"
+  - "ExpoSQLite (from `../node_modules/.pnpm/expo-sqlite@15.2.14_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0.79.5__3a7f4143567213c07f093f9bb211c6c9/node_modules/expo-sqlite/ios`)"
   - "ExpoWebBrowser (from `../node_modules/.pnpm/expo-web-browser@14.2.0_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0.7_05bdd56db079f78c144aefc763709139/node_modules/expo-web-browser/ios`)"
   - "EXTaskManager (from `../node_modules/.pnpm/expo-task-manager@13.1.6_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0._4f8d9bdd8e820eb38cd7d9052faa2158/node_modules/expo-task-manager/ios`)"
   - "fast_float (from `../node_modules/.pnpm/react-native@0.79.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._27c6aaf8eace69061a98d926110509f3/node_modules/react-native/third-party-podspecs/fast_float.podspec`)"
@@ -3888,6 +3891,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo-screen-capture@7.2.0_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0_2e17a3eea69ce37742d07cd74c6d6bbf/node_modules/expo-screen-capture/ios"
   ExpoSplashScreen:
     :path: "../node_modules/.pnpm/expo-splash-screen@0.30.10_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@_b11843020f38a5d16f48599a45f26118/node_modules/expo-splash-screen/ios"
+  ExpoSQLite:
+    :path: "../node_modules/.pnpm/expo-sqlite@15.2.14_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0.79.5__3a7f4143567213c07f093f9bb211c6c9/node_modules/expo-sqlite/ios"
   ExpoWebBrowser:
     :path: "../node_modules/.pnpm/expo-web-browser@14.2.0_expo@53.0.20_@babel+core@7.27.1_graphql@16.8.1_react-native@0.7_05bdd56db079f78c144aefc763709139/node_modules/expo-web-browser/ios"
   EXTaskManager:
@@ -4096,9 +4101,10 @@ SPEC CHECKSUMS:
   ExpoNetwork: 92cac43c13a2d9e9c1470ec8804836574ff34068
   ExpoScreenCapture: 0b09135db7ef785489cb6fe77b683e6b96c50730
   ExpoSplashScreen: 0ad5acac1b5d2953c6e00d4319f16d616f70d4dd
+  ExpoSQLite: 14c1c8aa6cf5b30b33759f14307b4eb84e806277
   ExpoWebBrowser: dc39a88485f007e61a3dff05d6a75f22ab4a2e92
   EXTaskManager: 280143f6d8e596f28739d74bf34910300dcbd4ea
-  fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
+  fast_float: 23278fd30b349f976d2014f4aec9e2d7bc1c3806
   FBLazyVector: d2a9cd223302b6c9aa4aa34c1a775e9db609eb52
   Firebase: 6a8f201c61eda24e98f1ce2b44b1b9c2caf525cc
   FirebaseAnalytics: acfa848bf81e1a4dbf60ef1f0eddd7328fe6673e
@@ -4113,8 +4119,8 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 781e0e37aa0e1c92b44d00e739aba79ad31b2dba
   FirebaseSharedSwift: aca73668bc95e8efccb618e0167eab05d19d3a75
   FirebaseStorage: 1c04b0ac8126b6fada8c9a09458f59c31868f2df
-  fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
-  glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
+  fmt: b85d977e8fe789fd71c77123f9f4920d88c4d170
+  glog: 682871fb30f4a65f657bf357581110656ea90b08
   GoogleAppMeasurement: 8a82b93a6400c8e6551c0bcd66a9177f2e067aed
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   "gRPC-C++": cc207623316fb041a7a3e774c252cf68a058b9e8
@@ -4127,7 +4133,7 @@ SPEC CHECKSUMS:
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
+  RCT-Folly: 031db300533e2dfa954cdc5a859b792d5c14ed7b
   RCTDeprecation: 5f638f65935e273753b1f31a365db6a8d6dc53b5
   RCTRequired: 8b46a520ea9071e2bc47d474aa9ca31b4a935bd8
   RCTTypeSafety: cc4740278c2a52cbf740592b0a0a40df1587c9ab

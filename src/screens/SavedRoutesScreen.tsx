@@ -1,16 +1,30 @@
+import { useMutation } from '@connectrpc/connect-query';
+import { Ionicons } from '@expo/vector-icons';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import findNearest from 'geolib/es/findNearest';
-import { useSetAtom } from 'jotai';
-import React, { useCallback } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useAtom, useSetAtom } from 'jotai';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Station } from '~/gen/proto/stationapi_pb';
+import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
+import type { TrainType } from '~/gen/proto/stationapi_pb';
+import {
+  getStationsByLineGroupId,
+  getStationsByLineId,
+  getTrainTypesByStationId,
+} from '~/gen/proto/stationapi-StationAPI_connectquery';
+import type { SavedRoute } from '~/models/SavedRoute';
 import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';
-import Loading from '../components/Loading';
 import Typography from '../components/Typography';
 import { useLocationStore, useSavedRoutes, useThemeStore } from '../hooks';
-import type { SavedRoute } from '../models/SavedRoute';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -50,6 +64,17 @@ const styles = StyleSheet.create({
   item: {
     flex: 1,
     padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  deleteContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: 'crimson',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
@@ -60,14 +85,44 @@ const ListEmptyComponent: React.FC = () => (
 );
 
 const SavedRoutesScreen: React.FC = () => {
+  const [routes, setRoutes] = useState<SavedRoute[]>([]);
+  const [selectedRoute, setSelectedRoute] = useState<SavedRoute | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const setLineState = useSetAtom(lineState);
-  const setNavigationState = useSetAtom(navigationState);
-  const setStationState = useSetAtom(stationState);
+  const [{ trainType }, setNavigationState] = useAtom(navigationState);
+  const [{ stations }, setStationState] = useAtom(stationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
-  const { routes, loading, fetchStationsByRoute } = useSavedRoutes();
+  const { getAll, remove, isInitialized } = useSavedRoutes();
+
+  const {
+    mutateAsync: fetchStationsByLineId,
+    status: fetchStationsByLineIdStatus,
+    error: fetchStationsByLineIdError,
+  } = useMutation(getStationsByLineId);
+  const {
+    mutateAsync: fetchStationsByLineGroupId,
+    status: fetchStationsByLineGroupIdStatus,
+    error: fetchStationsByLineGroupIdError,
+  } = useMutation(getStationsByLineGroupId);
+
+  const {
+    mutateAsync: fetchTrainTypes,
+    status: fetchTrainTypesStatus,
+    error: fetchTrainTypesError,
+  } = useMutation(getTrainTypesByStationId);
+
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      if (!isInitialized) return;
+      const savedRoutes = await getAll();
+      setRoutes(savedRoutes);
+    };
+    fetchRoutes();
+  }, [getAll, isInitialized]);
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -75,98 +130,217 @@ const SavedRoutesScreen: React.FC = () => {
     }
   }, [navigation]);
 
-  const updateStateAndNavigate = useCallback(
-    (stations: Station[], selectedStation: Station) => {
-      const selectedLine = selectedStation.line;
-      if (!selectedLine) {
-        return;
-      }
-      setStationState((prev) => ({
-        ...prev,
-        stations,
-        station: selectedStation,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: selectedStation.trainType ?? null,
-        leftStations: [],
-        stationForHeader: selectedStation,
-      }));
-      setLineState((prev) => ({
-        ...prev,
-        selectedLine,
-      }));
-      navigation.dispatch(
-        StackActions.replace('MainStack', { screen: 'SelectBound' })
-      );
-    },
-    [navigation, setLineState, setNavigationState, setStationState]
-  );
-
-  const handleItemPress = useCallback(
-    async (route: SavedRoute) => {
-      const { stations: fetchedStations } = await fetchStationsByRoute({
-        ids: route.stations.map((s) => s.id),
+  const openModalByLineId = useCallback(
+    async (lineId: number, destinationStationId: number | null) => {
+      const { stations } = await fetchStationsByLineId({
+        lineId,
       });
-
-      if (!fetchedStations?.length || !latitude || !longitude) {
+      if (!stations.length) {
         return;
       }
-      const stations = fetchedStations.map((sta) => ({
-        ...sta,
-        stopCondition: route.stations.find((rs) => rs.id === sta.id)
-          ?.stopCondition,
-        trainType: route.trainType,
-      }));
+
+      const wantedDestination =
+        stations.find((sta) => sta.groupId === destinationStationId) ?? null;
 
       const nearestCoordinates = findNearest(
-        { latitude, longitude },
+        {
+          latitude: latitude ?? stations[0].latitude,
+          longitude: longitude ?? stations[0].longitude,
+        },
         stations.map((sta) => ({
           latitude: sta.latitude,
           longitude: sta.longitude,
         }))
       ) as { latitude: number; longitude: number };
 
-      const nearestStation = stations.find(
+      const station = stations.find(
         (sta) =>
           sta.latitude === nearestCoordinates.latitude &&
           sta.longitude === nearestCoordinates.longitude
       );
 
-      if (!nearestStation) {
+      if (!station) {
         return;
       }
-      updateStateAndNavigate(
-        stations.map((s) => new Station(s)),
-        new Station(nearestStation)
+
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        stations,
+        wantedDestination,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        stationForHeader: station,
+        leftStations: [],
+        trainType: null,
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine: station.line ?? null,
+      }));
+    },
+    [
+      latitude,
+      longitude,
+      fetchStationsByLineId,
+      setNavigationState,
+      setLineState,
+      setStationState,
+    ]
+  );
+
+  const openModalByTrainTypeId = useCallback(
+    async (lineGroupId: number, destinationStationId: number | null) => {
+      const { stations } = await fetchStationsByLineGroupId({
+        lineGroupId,
+      });
+
+      if (!stations.length) {
+        return;
+      }
+
+      const wantedDestination =
+        stations.find((sta) => sta.groupId === destinationStationId) ?? null;
+
+      const nearestCoordinates = findNearest(
+        {
+          latitude: latitude ?? stations[0].latitude,
+          longitude: longitude ?? stations[0].longitude,
+        },
+        stations.map((sta) => ({
+          latitude: sta.latitude,
+          longitude: sta.longitude,
+        }))
+      ) as { latitude: number; longitude: number };
+
+      const station = stations.find(
+        (sta) =>
+          sta.latitude === nearestCoordinates.latitude &&
+          sta.longitude === nearestCoordinates.longitude
+      );
+
+      if (!station) {
+        return;
+      }
+
+      setIsModalOpen(true);
+
+      const { trainTypes } = await fetchTrainTypes({ stationId: station.id });
+      const trainType =
+        trainTypes.find((tt) => tt.groupId === lineGroupId) ?? null;
+
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        stations,
+        wantedDestination,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        stationForHeader: station,
+        leftStations: [],
+        trainType,
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine: trainType?.line ?? null,
+      }));
+    },
+    [
+      latitude,
+      longitude,
+      fetchStationsByLineGroupId,
+      setNavigationState,
+      setLineState,
+      setStationState,
+      fetchTrainTypes,
+    ]
+  );
+
+  const handleItemPress = useCallback(
+    async (route: SavedRoute) => {
+      setSelectedRoute(route);
+      setIsModalOpen(true);
+      if (route.hasTrainType) {
+        openModalByTrainTypeId(
+          route.trainTypeId,
+          route.destinationStationId ?? null
+        );
+      } else {
+        openModalByLineId(route.lineId, route.destinationStationId ?? null);
+      }
+    },
+    [openModalByLineId, openModalByTrainTypeId]
+  );
+
+  const handleDeletePress = useCallback(
+    async (route: SavedRoute) => {
+      Alert.alert(
+        translate('removeFromSavedRoutes'),
+        translate('confirmDeleteRouteText', { routeName: route.name }),
+        [
+          {
+            text: 'OK',
+            style: 'destructive',
+            onPress: async () => {
+              await remove(route.id);
+              setRoutes((prev) => prev.filter((r) => r.id !== route.id));
+              Alert.alert(
+                translate('announcementTitle'),
+                translate('routeDeletedText', {
+                  routeName: route.name,
+                })
+              );
+            },
+          },
+          {
+            text: translate('cancel'),
+            style: 'cancel',
+          },
+        ]
       );
     },
-    [fetchStationsByRoute, latitude, longitude, updateStateAndNavigate]
+    [remove]
   );
 
   const renderItem = useCallback(
     ({ item }: { item: SavedRoute }) => {
       const handlePress = () => handleItemPress(item);
+      const handleDelete = () => handleDeletePress(item);
       return (
         <>
           <TouchableOpacity style={styles.item} onPress={handlePress}>
             <Typography style={styles.routeNameText}>{item.name}</Typography>
+            <Pressable
+              style={styles.deleteContainer}
+              onPress={(event) => {
+                event.stopPropagation();
+                handleDelete();
+              }}
+            >
+              <Ionicons name="trash" color="white" size={16} />
+            </Pressable>
           </TouchableOpacity>
           <View style={styles.divider} />
         </>
       );
     },
-    [handleItemPress]
+    [handleItemPress, handleDeletePress]
   );
 
   const keyExtractor = useCallback(({ id }: SavedRoute) => id, []);
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
-  if (loading) {
-    return (
-      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-    );
-  }
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleRouteConfirmed = useCallback(
+    (_trainType?: TrainType, _asTerminus?: boolean) =>
+      navigation.dispatch(
+        StackActions.replace('MainStack', { screen: 'SelectBound' })
+      ),
+    [navigation]
+  );
 
   return (
     <View
@@ -193,6 +367,25 @@ const SavedRoutesScreen: React.FC = () => {
       />
 
       <FAB onPress={onPressBack} icon="close" />
+
+      <SavedRouteInfoModal
+        visible={isModalOpen}
+        trainType={trainType}
+        stations={stations}
+        loading={
+          fetchStationsByLineIdStatus === 'pending' ||
+          fetchTrainTypesStatus === 'pending' ||
+          fetchStationsByLineGroupIdStatus === 'pending'
+        }
+        error={
+          fetchStationsByLineIdError ||
+          fetchTrainTypesError ||
+          fetchStationsByLineGroupIdError
+        }
+        routeName={selectedRoute?.name ?? ''}
+        onClose={handleCloseModal}
+        onConfirmed={handleRouteConfirmed}
+      />
     </View>
   );
 };

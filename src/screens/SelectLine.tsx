@@ -259,6 +259,10 @@ const SelectLineScreen: React.FC = () => {
     navigation.navigate('SavedRoutes' as never);
   }, [navigation]);
 
+  const navigateToCommunityRoutesScreen = useCallback(() => {
+    navigation.navigate('CommunityRoutes' as never);
+  }, [navigation]);
+
   const navigateToRouteSearchScreen = useCallback(() => {
     navigation.navigate('RouteSearch' as never);
   }, [navigation]);
@@ -325,6 +329,11 @@ const SelectLineScreen: React.FC = () => {
               {isInternetAvailable && isDevApp && (
                 <Button onPress={navigateToSavedRoutesScreen}>
                   {translate('savedRoutes')}
+                </Button>
+              )}
+              {isInternetAvailable && isDevApp && (
+                <Button onPress={navigateToCommunityRoutesScreen}>
+                  {translate('communityRoutes')}
                 </Button>
               )}
               <Button onPress={navigateToRouteSearchScreen}>

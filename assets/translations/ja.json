@@ -149,8 +149,10 @@
   "maintenanceTitle": "現在メンテナンス中です",
   "maintenanceText": "ご不便をお掛けして申し訳ございませんが、現在TrainLCDサービスはメンテナンス中です。\nメンテナンスの詳細はTrainLCD障害情報ページまたはX(旧Twitter)アカウント@TrainLCDをご確認ください。",
   "openStatusText": "障害情報",
-  "savedRoutes": "保存されたルート",
-  "savedRoutesEmpty": "保存されたルートはありません",
+  "savedRoutes": "保存済み経路",
+  "savedRoutesEmpty": "保存済みの経路はありません",
+  "saveCurrentRoute": "現在の経路を保存",
+  "removeFromSavedRoutes": "保存済み経路から削除",
   "selectFirstStationTitle": "始発駅を選択してください",
   "longPressNotice": "画面を長押しするとメニューが開けます",
   "autoAnnounceBackgroundTitle": "バックグラウンド音声を有効にする",
@@ -182,5 +184,9 @@
   "jrKyushuLike": "JR九州風",
   "disableDevOverlay": "開発者オーバレイを無効化する",
   "enableUntouchableMode": "タッチ不可モードを有効化する",
-  "untouchableModeEnabledNotice": "タッチ不可モードが有効化されました。アプリはタップに反応しません。このモードを無効にするには、アプリを再起動してください。"
+  "untouchableModeEnabledNotice": "タッチ不可モードが有効化されました。アプリはタップに反応しません。このモードを無効にするには、アプリを再起動してください。",
+  "communityRoutes": "コミュニティルート",
+  "confirmDeleteRouteText": "本当に保存済み経路から「%{routeName}」を削除しますか？",
+  "routeSavedText": "経路「%{routeName}」を保存しました。",
+  "routeDeletedText": "経路「%{routeName}」を削除しました。"
 }
