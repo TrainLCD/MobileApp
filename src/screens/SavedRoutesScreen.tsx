@@ -10,6 +10,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
@@ -311,12 +312,15 @@ const SavedRoutesScreen: React.FC = () => {
         <>
           <TouchableOpacity style={styles.item} onPress={handlePress}>
             <Typography style={styles.routeNameText}>{item.name}</Typography>
-            <TouchableOpacity
+            <Pressable
               style={styles.deleteContainer}
-              onPress={handleDelete}
+              onPress={(event) => {
+                event.stopPropagation();
+                handleDelete();
+              }}
             >
               <Ionicons name="trash" color="white" size={16} />
-            </TouchableOpacity>
+            </Pressable>
           </TouchableOpacity>
           <View style={styles.divider} />
         </>
