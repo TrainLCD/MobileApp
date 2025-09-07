@@ -20,7 +20,7 @@ import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
 type NumberingInfo = {
   stationNumber: string;
@@ -52,14 +52,14 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
-    width: screenWidth / 4,
+    width: windowWidth / 4,
     flexDirection: 'row',
     alignItems: 'center',
   },
   stationName: {
     fontSize: 32,
     fontWeight: 'bold',
-    width: screenWidth / 4,
+    width: windowWidth / 4,
   },
   circle: {
     position: 'absolute',
@@ -83,33 +83,33 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'absolute',
     bottom: 0,
-    width: screenWidth,
+    width: windowWidth,
   },
   chevron: {
     position: 'absolute',
     width: 60,
     height: 45,
-    right: screenWidth / 3.1,
+    right: windowWidth / 3.1,
     transform: [{ rotate: '-20deg' }],
     zIndex: 1,
   },
   chevronArrived: {
     width: 72,
     height: 54,
-    top: (4 * screenHeight) / 7,
-    right: screenWidth / 2.985,
+    top: (4 * windowHeight) / 7,
+    right: windowWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
   transfers: {
-    width: screenWidth / 2,
+    width: windowWidth / 2,
     position: 'absolute',
-    top: screenHeight / 4,
+    top: windowHeight / 4,
     left: 24,
   },
   transfersMany: {
     position: 'absolute',
-    top: screenHeight / 6,
+    top: windowHeight / 6,
     left: 24,
   },
   transfersCurrentStationName: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   transferLines: {
-    width: screenWidth / 3,
+    width: windowWidth / 3,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
@@ -318,7 +318,7 @@ class PadArch extends React.PureComponent<Props, State> {
     const { fillHeight } = this.state;
     fillHeight.setValue(0);
     Animated.timing(fillHeight, {
-      toValue: screenHeight,
+      toValue: windowHeight,
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
       useNativeDriver: false,
     }).start();
@@ -327,15 +327,15 @@ class PadArch extends React.PureComponent<Props, State> {
   getDotLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return screenWidth / 3;
+        return windowWidth / 3;
       case 1:
-        return screenWidth / 2.35;
+        return windowWidth / 2.35;
       case 2:
-        return screenWidth / 1.975;
+        return windowWidth / 1.975;
       case 3:
-        return screenWidth / 1.785;
+        return windowWidth / 1.785;
       case 4:
-        return screenWidth / 1.655 - 3.5; // 普通のiPadとiPad Pro用の微調整
+        return windowWidth / 1.655 - 3.5; // 普通のiPadとiPad Pro用の微調整
       default:
         return 0;
     }
@@ -344,15 +344,15 @@ class PadArch extends React.PureComponent<Props, State> {
   getStationNameLeft = (i: number): number => {
     switch (i) {
       case 0:
-        return screenWidth / 2.2;
+        return windowWidth / 2.2;
       case 1:
-        return screenWidth / 1.925;
+        return windowWidth / 1.925;
       case 2:
-        return screenWidth / 1.7;
+        return windowWidth / 1.7;
       case 3:
-        return screenWidth / 1.55;
+        return windowWidth / 1.55;
       case 4:
-        return screenWidth / 1.47;
+        return windowWidth / 1.47;
       default:
         return 0;
     }
@@ -363,13 +363,13 @@ class PadArch extends React.PureComponent<Props, State> {
       case 0:
         return -8;
       case 1:
-        return screenHeight / 11.5;
+        return windowHeight / 11.5;
       case 2:
-        return screenHeight / 4.5;
+        return windowHeight / 4.5;
       case 3:
-        return screenHeight / 2.75;
+        return windowHeight / 2.75;
       case 4:
-        return screenHeight / 1.9;
+        return windowHeight / 1.9;
       default:
         return 0;
     }
@@ -390,7 +390,7 @@ class PadArch extends React.PureComponent<Props, State> {
 
     return {
       left: this.getDotLeft(i),
-      top: !i ? screenHeight / 30 : (i * screenHeight) / 7,
+      top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
       backgroundColor: dotColor,
     };
   };
@@ -414,15 +414,15 @@ class PadArch extends React.PureComponent<Props, State> {
     const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
     const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
 
-    const pathD1 = `M -4 -60 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-      screenWidth / 1.5 - 4
-    } ${screenHeight}`;
-    const pathD2 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-      screenWidth / 1.5
-    } ${screenHeight}`;
-    const pathD3 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-      screenWidth / 1.5
-    } ${screenHeight}`;
+    const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+      windowWidth / 1.5 - 4
+    } ${windowHeight}`;
+    const pathD2 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+      windowWidth / 1.5
+    } ${windowHeight}`;
+    const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+      windowWidth / 1.5
+    } ${windowHeight}`;
     const hexLineColor = line.color ?? '#000';
 
     return (
@@ -434,7 +434,7 @@ class PadArch extends React.PureComponent<Props, State> {
           isEn={isEn}
         />
 
-        <Svg width={screenWidth} height={screenHeight} fill="transparent">
+        <Svg width={windowWidth} height={windowHeight} fill="transparent">
           <Path d={pathD1} stroke="#333" strokeWidth={128} />
           <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
         </Svg>
@@ -442,8 +442,8 @@ class PadArch extends React.PureComponent<Props, State> {
         <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
           <Svg
             style={styles.animatedSurface}
-            width={screenWidth}
-            height={screenHeight}
+            width={windowWidth}
+            height={windowHeight}
             fill="transparent"
           >
             <Path
@@ -456,8 +456,8 @@ class PadArch extends React.PureComponent<Props, State> {
         <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
           <Svg
             style={styles.animatedSurface}
-            width={screenWidth}
-            height={screenHeight}
+            width={windowWidth}
+            height={windowHeight}
             fill="transparent"
           >
             <Path d={pathD3} stroke={hexLineColor} strokeWidth={128} />

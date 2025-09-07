@@ -1,5 +1,10 @@
 import React, { cloneElement, useCallback, useMemo, useRef } from 'react';
-import { Dimensions, ScrollView, StyleSheet, type View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  type View,
+} from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -18,15 +23,15 @@ const styles = StyleSheet.create({
 
 const PIXELS_PER_SECOND = 400;
 
-const screenWidth = Dimensions.get('screen').width;
-
 const Marquee = ({ children }: Props) => {
+  const dim = useWindowDimensions();
+
   const wrapperViewRef = useRef<View>(null);
-  const offsetX = useSharedValue(screenWidth);
+  const offsetX = useSharedValue(dim.width);
 
   const startScroll = useCallback(
     (width: number) => {
-      const totalDistance = screenWidth + width;
+      const totalDistance = dim.width + width;
       const duration = (totalDistance / PIXELS_PER_SECOND) * 1000;
 
       offsetX.value = withRepeat(
@@ -34,7 +39,7 @@ const Marquee = ({ children }: Props) => {
         -1
       );
     },
-    [offsetX]
+    [offsetX, dim.width]
   );
 
   const childrenCloned = useMemo(

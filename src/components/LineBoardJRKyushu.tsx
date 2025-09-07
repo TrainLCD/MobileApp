@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
   useCurrentLine,
@@ -15,7 +16,6 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { heightScale, widthScale } from '../utils/scale';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChervronTY';
 import NumberingIcon from './NumberingIcon';
@@ -23,19 +23,19 @@ import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-
 const useBarStyles = ({
   index,
 }: {
   index?: number;
 }): { left: number; width: number } => {
+  const { widthScale } = useScale();
+
   const left = useMemo(() => {
     if (index === 0) {
       return widthScale(-32);
     }
     return widthScale(-20);
-  }, [index]);
+  }, [index, widthScale]);
 
   const width = useMemo(() => {
     if (isTablet) {
@@ -47,7 +47,7 @@ const useBarStyles = ({
       }
     }
     return widthScale(62);
-  }, [index]);
+  }, [index, widthScale]);
   return { left, width };
 };
 
@@ -81,7 +81,6 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   root: {
     height: '100%',
-    paddingBottom: isTablet ? screenHeight / 2.5 : undefined,
     flexDirection: 'row',
     justifyContent: isTablet ? 'flex-start' : undefined,
     marginLeft: 32,
@@ -100,7 +99,6 @@ const styles = StyleSheet.create({
     bottom: barTerminalBottom,
   },
   stationNameContainer: {
-    width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
@@ -130,8 +128,6 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? screenHeight / 2.5 + 32 : 32,
-    marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
   },
@@ -142,7 +138,6 @@ const styles = StyleSheet.create({
   chevronAreaPass: {
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
-    marginLeft: isTablet ? 0 : widthScale(5),
   },
   marksContainer: { top: 38, position: 'absolute' },
   numberingIconContainer: {
@@ -179,6 +174,7 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+  const { heightScale } = useScale();
 
   const nameEnExtraStyle = useMemo(() => {
     if (!isTablet) {
@@ -191,7 +187,7 @@ const StationName: React.FC<StationNameProps> = ({
       width: 250,
       marginBottom: 96,
     };
-  }, []);
+  }, [heightScale]);
 
   if (en) {
     return (
@@ -250,10 +246,19 @@ const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
 }) => {
+  const { widthScale } = useScale();
+
   if (getIsPass(station)) {
     return (
       <View style={styles.stationArea}>
-        <View style={styles.chevronAreaPass}>
+        <View
+          style={[
+            styles.chevronAreaPass,
+            {
+              marginLeft: isTablet ? 0 : widthScale(5),
+            },
+          ]}
+        >
           <PassChevronTY />
         </View>
         <View style={styles.marksContainer}>
@@ -322,6 +327,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
+  const { widthScale } = useScale();
+  const dim = useWindowDimensions();
 
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
@@ -347,7 +354,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return {
       left: widthScale(42 * index),
     };
-  }, [arrived, index, passed]);
+  }, [arrived, index, passed, widthScale]);
 
   const includesLongStationName = useMemo(
     () =>
@@ -372,10 +379,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     <>
       <View
         key={station.id}
-        style={{
-          ...styles.stationNameContainer,
-          paddingBottom,
-        }}
+        style={[
+          styles.stationNameContainer,
+          { paddingBottom, width: dim.width / 9 },
+        ]}
       >
         <View
           style={
@@ -500,7 +507,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         ) : null}
       </View>
-      <View style={[styles.chevron, additionalChevronStyle]}>
+      <View
+        style={[
+          styles.chevron,
+          additionalChevronStyle,
+          {
+            marginLeft: widthScale(14),
+            bottom: isTablet ? dim.height / 2.5 + 32 : 32,
+          },
+        ]}
+      >
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
           <ChevronTY color={chevronColor} />
@@ -568,6 +584,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const [chevronColor, setChevronColor] = useState<'BLUE' | 'BLACK'>('BLACK');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
+  const dim = useWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -632,7 +649,14 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   );
 
   return (
-    <View style={styles.root}>
+    <View
+      style={[
+        styles.root,
+        {
+          paddingBottom: isTablet ? dim.height / 2.5 : undefined,
+        },
+      ]}
+    >
       {stationsWithEmpty.map(stationNameCellForMap)}
     </View>
   );

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@connectrpc/connect-query';
+import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Effect, pipe } from 'effect';
@@ -47,6 +47,7 @@ import {
   useLocationStore,
   useThemeStore,
 } from '../hooks';
+import { useLineStationsCache } from '../hooks/useLineStationsCache';
 import { useSavedRoutes } from '../hooks/useSavedRoutes';
 import { useStationsCache } from '../hooks/useStationsCache';
 import { APP_THEME } from '../models/Theme';
@@ -122,25 +123,21 @@ type LineCardItemProps = {
   line: Line;
   disabled: boolean;
   onPress: (line: Line) => void;
+  stations?: Station[];
 };
 
 const LineCardItem: React.FC<LineCardItemProps> = ({
   line,
   disabled,
   onPress,
+  stations,
 }) => {
-  const { data } = useQuery(
-    getStationsByLineId,
-    { lineId: line.id, stationId: line.station?.id },
-    { enabled: !!line?.id }
-  );
-
   return (
     <VerticalLineCard
       line={line}
       onPress={() => onPress(line)}
       disabled={disabled}
-      stations={data?.stations ?? []}
+      stations={stations ?? []}
       testID={generateLineTestId(line)}
     />
   );
@@ -184,9 +181,13 @@ const VerticalSelectLineScreen: React.FC = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = React.useState(0);
   const { getAll, isInitialized } = useSavedRoutes();
   const { getStations } = useStationsCache();
+  const lineStationsCache = useLineStationsCache();
   const [routes, setRoutes] = React.useState<
     (SavedRoute & { stations: Station[] })[]
   >([]);
+  const [lineStationsById, setLineStationsById] = React.useState<
+    Record<number, Station[]>
+  >({});
 
   // SavedRouteモーダル用の状態
   const [selectedRoute, setSelectedRoute] = useState<SavedRoute | null>(null);
@@ -200,7 +201,6 @@ const VerticalSelectLineScreen: React.FC = () => {
   const pendingLineRef = React.useRef<Line | null>(null);
   const pendingWantedDestinationRef = React.useRef<Station | null>(null);
 
-  // API 呼び出し（SavedRoutesScreenと同等）
   const {
     mutateAsync: fetchStationsByLineId,
     status: fetchStationsByLineIdStatus,
@@ -239,7 +239,7 @@ const VerticalSelectLineScreen: React.FC = () => {
     [carouselData]
   );
   const ITEM_SIZE = cardWidth + CARD_GAP;
-  const MID_BLOCK_START = carouselData.length; // 真ん中ブロック開始index
+  // const MID_BLOCK_START = carouselData.length; // 真ん中ブロック開始index
   type LoopItem = (SavedRoute & { stations: Station[] }) & { __k: string };
   const listRef = React.useRef<FlatList<LoopItem>>(null);
   const carouselOffsetRef = React.useRef(0);
@@ -252,16 +252,16 @@ const VerticalSelectLineScreen: React.FC = () => {
   const currentLogicalIndexRef = React.useRef(0);
 
   // 初期位置を「現在の論理インデックス」で真ん中ブロックへ移動（再マウント時も維持）
-  useEffect(() => {
-    if (!loopData.length) return;
-    const logical =
-      currentLogicalIndexRef.current % Math.max(carouselData.length, 1);
-    const offset = sidePadding + (MID_BLOCK_START + logical) * ITEM_SIZE;
-    carouselOffsetRef.current = offset;
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({ offset, animated: false });
-    });
-  }, [ITEM_SIZE, MID_BLOCK_START, loopData.length, carouselData.length]);
+  // useEffect(() => {
+  //   if (!loopData.length) return;
+  //   const logical =
+  //     currentLogicalIndexRef.current % Math.max(carouselData.length, 1);
+  //   const offset = sidePadding + (MID_BLOCK_START + logical) * ITEM_SIZE;
+  //   carouselOffsetRef.current = offset;
+  //   requestAnimationFrame(() => {
+  //     listRef.current?.scrollToOffset({ offset, animated: false });
+  //   });
+  // }, [ITEM_SIZE, MID_BLOCK_START, loopData.length, carouselData.length]);
 
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -298,7 +298,7 @@ const VerticalSelectLineScreen: React.FC = () => {
     });
   }, [loopData.length]);
 
-  // 通勤ルートカード用: 最新の保存ルートから目的地駅を取得（キャッシュ併用）
+  // 保存済み経路カード用: 最新の保存ルートから目的地駅を取得（キャッシュ併用）
   useEffect(() => {
     const run = async () => {
       if (!isInitialized) return;
@@ -340,6 +340,38 @@ const VerticalSelectLineScreen: React.FC = () => {
   }, [getAll, isInitialized, getStations]);
 
   useEffect(() => {
+    // Prefetch line stations with small concurrency and publish into local state for rendering
+    const lines = station?.lines ?? [];
+    if (!lines.length) return;
+    let cancelled = false;
+    const run = async () => {
+      const ids = lines.map((l) => l.id);
+      const queue = ids.filter((id) => !lineStationsById[id]);
+      let i = 0;
+      const worker = async () => {
+        while (i < queue.length && !cancelled) {
+          const idx = i++;
+          const id = queue[idx];
+          try {
+            const stations = await lineStationsCache.getStations(id);
+            if (cancelled) return;
+            setLineStationsById((prev) =>
+              prev[id] === stations ? prev : { ...prev, [id]: stations }
+            );
+          } catch {
+            // ignore
+          }
+        }
+      };
+      await Promise.all([worker(), worker()]);
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [station?.lines, lineStationsCache, lineStationsById]);
+
+  useEffect(() => {
     pipe(
       Effect.promise(() =>
         Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
@@ -359,30 +391,28 @@ const VerticalSelectLineScreen: React.FC = () => {
   useEffect(() => {
     if (station) return;
 
-    pipe(
-      Effect.promise(() => fetchCurrentLocation(true)),
-      Effect.andThen((pos) => {
-        if (!pos) return;
-        useLocationStore.setState(pos);
-        return Effect.promise(() =>
-          fetchByCoords({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            limit: 1,
-          })
-        ).pipe(
-          Effect.andThen((data) => {
-            const stationFromAPI = data.stations[0] ?? null;
-            setStationState((prev) => ({ ...prev, station: stationFromAPI }));
-            setNavigationState((prev) => ({
-              ...prev,
-              stationForHeader: stationFromAPI,
-            }));
-          })
-        );
-      }),
-      Effect.runPromise
-    );
+    const run = async () => {
+      try {
+        // Try last-known fast; then race a fresh read with a short timeout
+        const lastOrFresh = await fetchCurrentLocation(true, 3000);
+        if (!lastOrFresh) return;
+        useLocationStore.setState(lastOrFresh);
+        const data = await fetchByCoords({
+          latitude: lastOrFresh.coords.latitude,
+          longitude: lastOrFresh.coords.longitude,
+          limit: 1,
+        });
+        const stationFromAPI = data.stations[0] ?? null;
+        setStationState((prev) => ({ ...prev, station: stationFromAPI }));
+        setNavigationState((prev) => ({
+          ...prev,
+          stationForHeader: stationFromAPI,
+        }));
+      } catch {
+        // noop; ErrorScreen will handle if nothing
+      }
+    };
+    void run();
   }, []);
 
   useEffect(() => {
@@ -427,7 +457,14 @@ const VerticalSelectLineScreen: React.FC = () => {
   // PresetCard押下時のモーダル表示ロジック（SavedRoutesScreenのhandleItemPress相当）
   const openModalByLineId = useCallback(
     async (lineId: number, destinationStationId: number | null) => {
-      const { stations } = await fetchStationsByLineId({ lineId });
+      // try cache first
+      const cached = await lineStationsCache
+        .getStations(lineId)
+        .catch(() => [] as Station[]);
+      const stations =
+        (cached?.length
+          ? cached
+          : (await fetchStationsByLineId({ lineId })).stations) ?? [];
       if (!stations.length) return;
 
       const wantedDestination =
@@ -461,7 +498,7 @@ const VerticalSelectLineScreen: React.FC = () => {
       setModalStations(stations);
       setModalTrainType(null);
     },
-    [fetchStationsByLineId, latitude, longitude]
+    [fetchStationsByLineId, latitude, longitude, lineStationsCache]
   );
 
   const openModalByTrainTypeId = useCallback(
@@ -604,9 +641,10 @@ const VerticalSelectLineScreen: React.FC = () => {
         line={item}
         disabled={!isInternetAvailable}
         onPress={handleLineSelected}
+        stations={lineStationsById[item.id]}
       />
     ),
-    [handleLineSelected, isInternetAvailable]
+    [handleLineSelected, isInternetAvailable, lineStationsById]
   );
 
   const keyExtractor = useCallback((l: Line) => l.id.toString(), []);

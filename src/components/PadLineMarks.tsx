@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 /* eslint-disable react-native/no-unused-styles */
 import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
@@ -19,8 +19,6 @@ type Props = {
   station: Station;
   theme?: AppTheme;
 };
-
-const screenWidth = Dimensions.get('screen').width;
 
 const stylesNormal = StyleSheet.create({
   root: {
@@ -55,7 +53,7 @@ const stylesWest = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: screenWidth / 10,
+    width: '10%',
     flexDirection: 'row',
   },
   lineNameWrapper: {

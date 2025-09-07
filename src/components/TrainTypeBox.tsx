@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
-    width: Dimensions.get('screen').width,
+    width: '100%',
   },
 });
 

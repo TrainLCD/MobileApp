@@ -1,11 +1,11 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
-  Dimensions,
   Platform,
   type StyleProp,
   StyleSheet,
   type TextStyle,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
@@ -16,6 +16,7 @@ import {
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
+import { useScale } from '~/hooks/useScale';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isEnAtom } from '../store/selectors/isEn';
@@ -24,7 +25,6 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
-import { heightScale } from '../utils/scale';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
 import NumberingIcon from './NumberingIcon';
@@ -37,10 +37,11 @@ interface Props {
   lineColors: (string | null | undefined)[];
 }
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-const barWidth = isTablet
-  ? (screenWidth - 120) / 8
-  : (screenWidth - 96) / 7.835;
+const useBarWidth = () => {
+  const dim = useWindowDimensions();
+  return isTablet ? (dim.width - 120) / 8 : (dim.width - 96) / 7.835;
+};
+
 const barBottom = ((): number => {
   if (isTablet) {
     return 32;
@@ -58,8 +59,8 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: screenHeight,
-    bottom: isTablet ? screenHeight / 2.5 : undefined,
+    height: '100%',
+    bottom: isTablet ? '40%' : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
   stoppingChevron: {
@@ -73,7 +74,6 @@ const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
     bottom: barBottom,
-    width: barWidth,
     height: isTablet ? 64 : 40,
   },
   barDot: {
@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   barTerminal: {
-    left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
     bottom: barTerminalBottom,
     position: 'absolute',
     width: 0,
@@ -100,11 +99,9 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    marginLeft: barWidth / 2.5,
     flex: 1,
   },
   stationNameContainer: {
-    width: barWidth,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
@@ -174,6 +171,7 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+  const { heightScale } = useScale();
 
   const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
     if (!isTablet) {
@@ -186,7 +184,7 @@ const StationName: React.FC<StationNameProps> = ({
       width: 250,
       marginBottom: 120,
     };
-  }, []);
+  }, [heightScale]);
 
   if (en) {
     return (
@@ -263,6 +261,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
     [stationInLoop.stationNumbers, stationNumberIndex]
   );
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
 
   const numberingColor = useMemo(
     () =>
@@ -275,7 +275,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [arrived, numberingObj, stationInLoop]
   );
   return (
-    <View key={stationInLoop.id} style={styles.stationNameContainer}>
+    <View
+      key={stationInLoop.id}
+      style={[
+        styles.stationNameContainer,
+        {
+          width: barWidth,
+        },
+      ]}
+    >
       <View
         style={
           isEn || includesLongStationName
@@ -306,7 +314,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View
         style={{
           ...styles.padLineMarksContainer,
-          top: hasNumberedStation ? screenHeight - 7 : screenHeight - 45,
+          top: hasNumberedStation ? dim.height - 7 : dim.height - 45,
         }}
       >
         <PadLineMarks
@@ -325,6 +333,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const isPassing = useIsPassing();
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
+  const barWidth = useBarWidth();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -359,12 +368,15 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [lineColors]
   );
 
-  const getLeft = useCallback((index: number) => {
-    if (isTablet) {
-      return barWidth * (index + 1) - barWidth / 2;
-    }
-    return barWidth * (index + 1) - barWidth * 0.6;
-  }, []);
+  const getLeft = useCallback(
+    (index: number) => {
+      if (isTablet) {
+        return barWidth * (index + 1) - barWidth / 2;
+      }
+      return barWidth * (index + 1) - barWidth * 0.6;
+    },
+    [barWidth]
+  );
 
   const getBottom = useCallback(
     (index: number) => {
@@ -388,6 +400,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
             key={`${lc}${i.toString()}`}
             style={{
               ...styles.bar,
+              width: barWidth,
               left: barWidth * i,
               backgroundColor: (() => {
                 if (i <= currentStationIndex) {
@@ -474,14 +487,24 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
       )}
 
       <View
-        style={{
-          ...styles.barTerminal,
-          borderBottomColor: line.color
-            ? lineColors[lineColors.length - 1] || line.color
-            : '#000',
-        }}
+        style={[
+          styles.barTerminal,
+          {
+            borderBottomColor: line.color
+              ? lineColors[lineColors.length - 1] || line.color
+              : '#000',
+            left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
+          },
+        ]}
       />
-      <View style={styles.stationNameWrapper}>
+      <View
+        style={[
+          styles.stationNameWrapper,
+          {
+            marginLeft: barWidth / 2.5,
+          },
+        ]}
+      >
         {stations.map(stationNameCellForMap)}
       </View>
     </View>

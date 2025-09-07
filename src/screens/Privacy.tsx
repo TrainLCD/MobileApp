@@ -7,6 +7,7 @@ import {
   Alert,
   PermissionsAndroid,
   Platform,
+  SafeAreaView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -23,14 +24,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fcfcfc',
-    paddingHorizontal: 32,
   },
   text: {
     fontSize: RFValue(14),
     color: '#333',
-    textAlign: 'center',
     marginBottom: 12,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     lineHeight: Platform.select({
       ios: RFValue(18),
     }),
@@ -39,6 +38,8 @@ const styles = StyleSheet.create({
     color: '#03a9f4',
     fontSize: RFValue(21),
     fontWeight: 'bold',
+    width: '100%',
+    textAlign: 'center',
     lineHeight: Platform.select({
       ios: RFValue(24),
     }),
@@ -143,7 +144,7 @@ const PrivacyScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root}>
       <Typography style={[styles.text, styles.headingText]}>
         {translate('privacyTitle')}
       </Typography>
@@ -161,7 +162,7 @@ const PrivacyScreen: React.FC = () => {
           {translate('continue')}
         </Button>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

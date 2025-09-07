@@ -227,45 +227,39 @@ const MainScreen: React.FC = () => {
 
   const transferLines = useTransferLines();
 
-  const toTransferState = useCallback((): void => {
-    if (transferLines.length) {
-      pauseBottomTimer();
-      setNavigationState((prev) => ({
-        ...prev,
-        bottomState: 'TRANSFER',
-      }));
-    }
-  }, [pauseBottomTimer, setNavigationState, transferLines.length]);
-
-  const toLineState = useCallback((): void => {
-    pauseBottomTimer();
-    setNavigationState((prev) => ({
-      ...prev,
-      bottomState: 'LINE',
-    }));
-  }, [pauseBottomTimer, setNavigationState]);
-
   const isTypeWillChange = useTypeWillChange();
   const shouldHideTypeChange = useShouldHideTypeChange();
 
-  const toTypeChangeState = useCallback(() => {
-    if (!isTypeWillChange || shouldHideTypeChange) {
-      pauseBottomTimer();
-      setNavigationState((prev) => ({
+  const updateBottomState = useCallback((): void => {
+    pauseBottomTimer();
+    setNavigationState((prev) => {
+      if (prev.bottomState === 'LINE' && transferLines.length) {
+        return {
+          ...prev,
+          bottomState: 'TRANSFER',
+        };
+      }
+
+      if (prev.bottomState === 'TRANSFER') {
+        if (isTypeWillChange && !shouldHideTypeChange) {
+          return {
+            ...prev,
+            bottomState: 'TYPE_CHANGE',
+          };
+        }
+      }
+
+      return {
         ...prev,
         bottomState: 'LINE',
-      }));
-      return;
-    }
-    setNavigationState((prev) => ({
-      ...prev,
-      bottomState: 'TYPE_CHANGE',
-    }));
+      };
+    });
   }, [
-    isTypeWillChange,
     pauseBottomTimer,
     setNavigationState,
+    isTypeWillChange,
     shouldHideTypeChange,
+    transferLines.length,
   ]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
@@ -417,7 +411,7 @@ const MainScreen: React.FC = () => {
       }
 
       if (!selectedStation) {
-        isTypeWillChange ? toTypeChangeState() : toLineState();
+        updateBottomState();
         return;
       }
 
@@ -453,11 +447,9 @@ const MainScreen: React.FC = () => {
     },
     [
       currentLine,
-      isTypeWillChange,
       untouchableModeEnabled,
       changeOperatingLine,
-      toTypeChangeState,
-      toLineState,
+      updateBottomState,
     ]
   );
 
@@ -501,10 +493,7 @@ const MainScreen: React.FC = () => {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={transferLines.length ? toTransferState : toTypeChangeState}
-      >
+      <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
         <Header />
         {inner}
       </Pressable>

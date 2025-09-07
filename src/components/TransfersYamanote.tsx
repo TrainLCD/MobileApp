@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo } from 'react';
 import {
-  Dimensions,
   FlatList,
+  SafeAreaView,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Line, Station } from '~/gen/proto/stationapi_pb';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useGetLineMark, useTransferLines } from '../hooks';
@@ -63,11 +63,11 @@ const styles = StyleSheet.create({
 });
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const getLineMarkFunc = useGetLineMark();
   const lines = useTransferLines();
+  const dim = useWindowDimensions();
 
-  const flexBasis = useMemo(() => Dimensions.get('screen').width / 3, []);
+  const flexBasis = useMemo(() => dim.width / 3, [dim.width]);
 
   const renderTransferLine = useCallback(
     ({ item: line }: { item: Line; index: number }) => {
@@ -77,12 +77,10 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
       const lineMark = getLineMarkFunc({ line });
 
       return (
-        <View
+        <SafeAreaView
           style={[
             styles.transferLine,
             {
-              marginLeft: safeAreaLeft,
-              marginRight: safeAreaRight,
               flexBasis,
             },
           ]}
@@ -122,18 +120,10 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </SafeAreaView>
       );
     },
-    [
-      flexBasis,
-      onPress,
-      station,
-      getLineMarkFunc,
-      lines,
-      safeAreaLeft,
-      safeAreaRight,
-    ]
+    [flexBasis, onPress, station, getLineMarkFunc, lines]
   );
 
   return (

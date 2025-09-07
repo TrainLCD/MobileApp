@@ -3,6 +3,9 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useMemo } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LED_THEME_BG_COLOR } from '~/constants';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
 
 type FooterTab = 'home' | 'search' | 'settings';
 
@@ -18,7 +21,6 @@ const styles = StyleSheet.create({
   },
   bar: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     // iOS shadow
@@ -46,6 +48,7 @@ type Props = {
 const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const iconColor = useMemo(
     () => ({
@@ -61,7 +64,15 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
 
   return (
     <View pointerEvents="box-none" style={styles.container}>
-      <View style={[styles.bar, { paddingBottom: safePad }]}>
+      <View
+        style={[
+          styles.bar,
+          {
+            paddingBottom: safePad,
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ]}
+      >
         <View style={styles.content}>
           <Pressable
             accessibilityRole="button"

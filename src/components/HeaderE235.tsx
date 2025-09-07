@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   clockOverride: {
     position: 'absolute',
     top: 8,
-    right: Dimensions.get('screen').width * 0.25,
+    right: '25%',
   },
   stationNameContainer: {
     flexDirection: 'row',

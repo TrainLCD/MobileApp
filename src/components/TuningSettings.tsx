@@ -26,7 +26,7 @@ import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
-    height: Dimensions.get('screen').height,
+    height: '100%',
     paddingVertical: 24,
   },
   settingItem: {

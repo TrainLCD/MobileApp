@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  Dimensions,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -14,16 +13,14 @@ import { hasNotch } from 'react-native-device-info';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { useThemeStore } from '~/hooks';
+import { useScale } from '~/hooks/useScale';
 import { APP_THEME } from '~/models/Theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
-import { widthScale } from '~/utils/scale';
 import Button from './Button';
 import { Heading } from './Heading';
 import Typography from './Typography';
-
-const { height: screenHeight } = Dimensions.get('screen');
 
 type Props = {
   visible: boolean;
@@ -56,7 +53,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     marginVertical: 16,
     textAlignVertical: 'top',
-    minHeight: screenHeight * 0.25,
+    minHeight: '25%',
   },
   caution: {
     fontSize: RFValue(14),
@@ -74,7 +71,6 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 8,
     marginHorizontal: 8,
-    width: widthScale(64),
   },
   charCount: {
     position: 'absolute',
@@ -106,6 +102,7 @@ const NewReportModal: React.FC<Props> = ({
     () => description.trim().length - descriptionLowerLimit,
     [description, descriptionLowerLimit]
   );
+  const { widthScale } = useScale();
 
   return (
     <Modal
@@ -178,7 +175,12 @@ const NewReportModal: React.FC<Props> = ({
           </Typography>
           <View style={styles.buttonContainer}>
             <Button
-              style={styles.button}
+              style={[
+                styles.button,
+                {
+                  width: widthScale(64),
+                },
+              ]}
               disabled={
                 description.trim().length < descriptionLowerLimit || sending
               }

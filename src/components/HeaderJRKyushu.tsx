@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -34,8 +34,6 @@ import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
-
-const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
@@ -80,14 +78,14 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   firstTextWrapper: {
-    width: screenWidth * 0.14,
+    width: '14%',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
     marginBottom: isTablet ? 8 : 4,
   },
   rightPad: {
-    width: screenWidth * 0.1,
+    width: '10%',
   },
   firstText: {
     position: 'absolute',
@@ -96,7 +94,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   stateWrapper: {
-    width: screenWidth * 0.14,
+    width: '14%',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,

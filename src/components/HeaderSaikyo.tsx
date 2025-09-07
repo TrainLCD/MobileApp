@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -35,8 +35,6 @@ import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
-
-const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   gradientRoot: {
@@ -72,7 +70,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   stateWrapper: {
-    width: screenWidth * 0.14,
+    width: '14%',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,

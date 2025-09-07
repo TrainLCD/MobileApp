@@ -1,7 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { parenthesisRegexp } from '~/constants';
 import {
   type Line,
@@ -24,10 +29,7 @@ import { BarTerminalEast } from './BarTerminalEast';
 import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import Typography from './Typography';
 
-const { width: screenWidth } = Dimensions.get('screen');
 const edgeOffset = isTablet ? 100 : 70;
-const barWidth = screenWidth / 2 - edgeOffset;
-
 const barTerminalSize = isTablet ? 64 : 40;
 
 const styles = StyleSheet.create({
@@ -61,7 +63,6 @@ const styles = StyleSheet.create({
   linesContainer: {
     position: 'relative',
     justifyContent: 'center',
-    width: screenWidth,
   },
   bar: {
     position: 'absolute',
@@ -152,6 +153,11 @@ const styles = StyleSheet.create({
   },
 });
 
+const useBarWidth = () => {
+  const dim = useWindowDimensions();
+  return dim.width / 2 - edgeOffset;
+};
+
 const MetroBars = ({
   currentLine,
   nextLine,
@@ -163,12 +169,15 @@ const MetroBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+
   if (!trainType || !nextTrainType) {
     return null;
   }
 
   return (
-    <View style={styles.linesContainer}>
+    <View style={[styles.linesContainer, { width: dim.width }]}>
       {/* Current line */}
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
@@ -363,8 +372,11 @@ const SaikyoBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+
   return (
-    <View style={styles.linesContainer}>
+    <View style={[styles.linesContainer, { width: dim.width }]}>
       {/* Current line */}
       <LinearGradient
         colors={['#fff', '#000', '#000']}
@@ -558,8 +570,11 @@ const JOBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+
   return (
-    <View style={styles.linesContainer}>
+    <View style={[styles.linesContainer, { width: dim.width }]}>
       {/* Current line */}
       <View
         style={{

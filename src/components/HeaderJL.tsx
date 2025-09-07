@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
   useBoundText,
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   clockContainer: {
     position: 'absolute',
     top: 8,
-    right: Dimensions.get('screen').width * 0.25,
+    right: '25%',
     flexDirection: 'row',
     alignItems: 'center',
   },

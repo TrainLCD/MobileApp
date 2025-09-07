@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
   useCurrentLine,
@@ -15,39 +16,37 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { widthScale } from '../utils/scale';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
 
-// FIXME: widthScale使わないようにしたい
 const useBarStyles = ({
   index,
 }: {
   index?: number;
 }): { left: number; width: number } => {
-  const dim = useWindowDimensions();
+  const { widthScale } = useScale();
 
   const left = useMemo(() => {
     if (index === 0) {
-      return widthScale(-32, dim.width);
+      return widthScale(-32);
     }
-    return widthScale(-20, dim.width);
-  }, [index, dim.width]);
+    return widthScale(-20);
+  }, [index, widthScale]);
 
   const width = useMemo(() => {
     if (isTablet) {
       if (index === 0) {
-        return widthScale(200, dim.width);
+        return widthScale(200);
       }
       if (index === 1) {
-        return widthScale(61.75, dim.width);
+        return widthScale(61.75);
       }
     }
-    return widthScale(62, dim.width);
-  }, [index, dim.width]);
+    return widthScale(62);
+  }, [index, widthScale]);
   return { left, width };
 };
 
@@ -133,7 +132,6 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
   },
@@ -144,7 +142,6 @@ const styles = StyleSheet.create({
   chevronAreaPass: {
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
-    marginLeft: isTablet ? 0 : widthScale(5),
   },
   marksContainer: { top: 38, position: 'absolute' },
 });
@@ -222,10 +219,19 @@ const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
 }) => {
+  const { widthScale } = useScale();
+
   if (getIsPass(station)) {
     return (
       <View style={styles.stationArea}>
-        <View style={styles.chevronAreaPass}>
+        <View
+          style={[
+            styles.chevronAreaPass,
+            {
+              marginLeft: isTablet ? 0 : widthScale(5),
+            },
+          ]}
+        >
           <PassChevronTY />
         </View>
         <View style={styles.marksContainer}>
@@ -294,6 +300,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
+  const { widthScale } = useScale();
 
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
@@ -319,7 +326,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return {
       left: widthScale(42 * index),
     };
-  }, [arrived, index, passed]);
+  }, [arrived, index, passed, widthScale]);
 
   const includesLongStationName = useMemo(
     () =>
@@ -457,8 +464,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </View>
       <View
         style={[
-          { ...styles.chevron, bottom: isTablet ? dim.height / 2.5 + 32 : 32 },
+          styles.chevron,
           additionalChevronStyle,
+          {
+            bottom: isTablet ? dim.height / 2.5 + 32 : 32,
+            marginLeft: widthScale(14),
+          },
         ]}
       >
         {(currentStationIndex < 1 && index === 0) ||
