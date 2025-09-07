@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Line,
   type Station,
@@ -22,6 +23,7 @@ import type {
 import { isDevApp } from '~/utils/isDevApp';
 import Button from '../components/Button';
 import ErrorScreen from '../components/ErrorScreen';
+import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import Typography from '../components/Typography';
 import { TOEI_OEDO_LINE_ID } from '../constants';
@@ -77,6 +79,8 @@ type RenderButtonProps = {
 };
 
 const SelectBoundScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
   const [savedRouteLoaded, setSavedRouteLoaded] = useState(false);
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
@@ -155,7 +159,7 @@ const SelectBoundScreen: React.FC = () => {
   }, [navigation, setNavigationState, setStationState]);
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station, direction: LineDirection): void => {
+    (selectedStation: Station, direction: LineDirection) => {
       const oedoLineTerminus =
         direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
 
@@ -306,7 +310,7 @@ const SelectBoundScreen: React.FC = () => {
         ? loopLineDirectionText(direction)
         : normalLineDirectionText(boundStations);
 
-      const boundSelectOnPress = (): void =>
+      const boundSelectOnPress = () =>
         handleBoundSelected(boundStations[0], direction);
       return (
         <Button
@@ -449,85 +453,101 @@ const SelectBoundScreen: React.FC = () => {
 
   if (!stations.length || loading) {
     return (
-      <ScrollView contentContainerStyle={styles.bottom}>
-        <View style={styles.container}>
-          <Heading>{translate('selectBoundTitle')}</Heading>
-          <ActivityIndicator style={styles.boundLoading} size="large" />
-          <View style={styles.buttons}>
-            <Button onPress={handleSelectBoundBackButtonPress}>
-              {translate('back')}
-            </Button>
-          </View>
+      <>
+        <ScrollView
+          contentContainerStyle={[
+            styles.bottom,
+            { paddingBottom: styles.bottom.padding + footerHeight },
+          ]}
+        >
+          <View style={styles.container}>
+            <Heading>{translate('selectBoundTitle')}</Heading>
+            <ActivityIndicator style={styles.boundLoading} size="large" />
+            <View style={styles.buttons}>
+              <Button onPress={handleSelectBoundBackButtonPress}>
+                {translate('back')}
+              </Button>
+            </View>
 
-          <Typography style={styles.menuNotice}>
-            {translate('menuNotice')}
-          </Typography>
-        </View>
-      </ScrollView>
+            <Typography style={styles.menuNotice}>
+              {translate('menuNotice')}
+            </Typography>
+          </View>
+        </ScrollView>
+        <FooterTabBar active="home" />
+      </>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.bottom}>
-      <View style={styles.container}>
-        <Heading>{translate('selectBoundTitle')}</Heading>
+    <>
+      <ScrollView
+        contentContainerStyle={[
+          styles.bottom,
+          { paddingBottom: styles.bottom.padding + footerHeight },
+        ]}
+      >
+        <View style={styles.container}>
+          <Heading>{translate('selectBoundTitle')}</Heading>
 
-        <View style={styles.horizontalButtons}>
-          {renderButton({
-            boundStations: inboundStations,
-            direction: 'INBOUND',
-          })}
-          {renderButton({
-            boundStations: outboundStations,
-            direction: 'OUTBOUND',
-          })}
-        </View>
+          <View style={styles.horizontalButtons}>
+            {renderButton({
+              boundStations: inboundStations,
+              direction: 'INBOUND',
+            })}
+            {renderButton({
+              boundStations: outboundStations,
+              direction: 'OUTBOUND',
+            })}
+          </View>
 
-        <Button onPress={handleSelectBoundBackButtonPress}>
-          {translate('back')}
-        </Button>
-        <Typography style={styles.menuNotice}>
-          {translate('menuNotice')}
-        </Typography>
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 16,
-            marginTop: 12,
-            justifyContent: 'center',
-          }}
-        >
-          <Button onPress={handleNotificationButtonPress}>
-            {translate('notifySettings')}
+          <Button onPress={handleSelectBoundBackButtonPress}>
+            {translate('back')}
           </Button>
-          {withTrainTypes ? (
-            <Button onPress={handleTrainTypeButtonPress}>
-              {translate('trainTypeSettings')}
+          <Typography style={styles.menuNotice}>
+            {translate('menuNotice')}
+          </Typography>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: 16,
+              marginTop: 12,
+              justifyContent: 'center',
+            }}
+          >
+            <Button onPress={handleNotificationButtonPress}>
+              {translate('notifySettings')}
             </Button>
-          ) : null}
-          <Button onPress={handleAllStopsButtonPress}>
-            {translate('viewStopStations')}
-          </Button>
-          {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
-          {!isLoopLine ? (
-            <Button onPress={handleSpecifyDestinationButtonPress}>
-              {translate('selectBoundSettings')}
+            {withTrainTypes ? (
+              <Button onPress={handleTrainTypeButtonPress}>
+                {translate('trainTypeSettings')}
+              </Button>
+            ) : null}
+            <Button onPress={handleAllStopsButtonPress}>
+              {translate('viewStopStations')}
             </Button>
-          ) : null}
-          <Button onPress={toggleAutoModeEnabled}>
-            {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
-          </Button>
-          {isDevApp && savedRouteLoaded && (
-            <Button onPress={handleSaveRoutePress}>
-              {translate(
-                savedRoute ? 'removeFromSavedRoutes' : 'saveCurrentRoute'
-              )}
+            {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
+            {!isLoopLine ? (
+              <Button onPress={handleSpecifyDestinationButtonPress}>
+                {translate('selectBoundSettings')}
+              </Button>
+            ) : null}
+            <Button onPress={toggleAutoModeEnabled}>
+              {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
             </Button>
-          )}
+            {isDevApp && savedRouteLoaded && (
+              <Button onPress={handleSaveRoutePress}>
+                {translate(
+                  savedRoute ? 'removeFromSavedRoutes' : 'saveCurrentRoute'
+                )}
+              </Button>
+            )}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+      <FooterTabBar active="home" />
+    </>
   );
 };
 

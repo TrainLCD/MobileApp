@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { isEnAtom } from '~/store/selectors/isEn';
 import {
@@ -15,38 +15,39 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { heightScale, widthScale } from '../utils/scale';
+import { widthScale } from '../utils/scale';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChervronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-
+// FIXME: widthScale使わないようにしたい
 const useBarStyles = ({
   index,
 }: {
   index?: number;
 }): { left: number; width: number } => {
+  const dim = useWindowDimensions();
+
   const left = useMemo(() => {
     if (index === 0) {
-      return widthScale(-32);
+      return widthScale(-32, dim.width);
     }
-    return widthScale(-20);
-  }, [index]);
+    return widthScale(-20, dim.width);
+  }, [index, dim.width]);
 
   const width = useMemo(() => {
     if (isTablet) {
       if (index === 0) {
-        return widthScale(200);
+        return widthScale(200, dim.width);
       }
       if (index === 1) {
-        return widthScale(61.75);
+        return widthScale(61.75, dim.width);
       }
     }
-    return widthScale(62);
-  }, [index]);
+    return widthScale(62, dim.width);
+  }, [index, dim.width]);
   return { left, width };
 };
 
@@ -80,7 +81,6 @@ const barTerminalBottom = ((): number => {
 const styles = StyleSheet.create({
   root: {
     height: '100%',
-    paddingBottom: isTablet ? screenHeight / 2.5 : undefined,
     flexDirection: 'row',
     justifyContent: isTablet ? 'flex-start' : undefined,
     marginLeft: 32,
@@ -99,11 +99,14 @@ const styles = StyleSheet.create({
     bottom: barTerminalBottom,
   },
   stationNameContainer: {
-    width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: isTablet ? 6 : 84,
+  },
+  stationNameMapContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    marginBottom: 16,
   },
   stationName: {
     fontSize: RFValue(18),
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
   stationNameHorizontal: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    paddingBottom: 16,
+    marginBottom: 32,
   },
   grayColor: {
     color: '#ccc',
@@ -130,7 +133,6 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? screenHeight / 2.5 + 32 : 32,
     marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
@@ -143,12 +145,6 @@ const styles = StyleSheet.create({
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
     marginLeft: isTablet ? 0 : widthScale(5),
-  },
-  stationNumber: {
-    width: screenWidth / 9,
-    fontSize: RFValue(12),
-    fontWeight: 'bold',
-    bottom: 0,
   },
   marksContainer: { top: 38, position: 'absolute' },
 });
@@ -177,27 +173,10 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
 
-  const nameEnExtraStyle = useMemo(() => {
-    if (!isTablet) {
-      return {
-        width: heightScale(320),
-        marginBottom: 58,
-      };
-    }
-    return {
-      width: 250,
-      marginBottom: 96,
-    };
-  }, []);
-
   if (en) {
     return (
       <Typography
-        style={[
-          styles.stationNameHorizontal,
-          nameEnExtraStyle,
-          passed ? styles.grayColor : null,
-        ]}
+        style={[styles.stationNameHorizontal, passed ? styles.grayColor : null]}
       >
         {stationNameR}
       </Typography>
@@ -207,11 +186,7 @@ const StationName: React.FC<StationNameProps> = ({
   if (horizontal) {
     return (
       <Typography
-        style={[
-          styles.stationNameHorizontal,
-          nameEnExtraStyle,
-          passed ? styles.grayColor : null,
-        ]}
+        style={[styles.stationNameHorizontal, passed ? styles.grayColor : null]}
       >
         {station.name}
       </Typography>
@@ -219,7 +194,7 @@ const StationName: React.FC<StationNameProps> = ({
   }
 
   return (
-    <>
+    <View style={styles.stationNameMapContainer}>
       {station.name.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
@@ -228,7 +203,7 @@ const StationName: React.FC<StationNameProps> = ({
           {c}
         </Typography>
       ))}
-    </>
+    </View>
   );
 };
 
@@ -353,16 +328,29 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
+  const dim = useWindowDimensions();
+
   return (
     <>
-      <View key={station.id} style={styles.stationNameContainer}>
+      <View
+        style={{
+          width: dim.width / 9,
+        }}
+      >
         <View
           style={
             isEn || includesLongStationName
               ? {
+                  flex: 1,
                   transform: [{ rotate: '-55deg' }],
+                  width: dim.height / 3,
+                  justifyContent: 'center',
+                  marginLeft: -16,
                 }
-              : {}
+              : {
+                  height: dim.height / 2,
+                  justifyContent: 'flex-end',
+                }
           }
         >
           <StationName
@@ -467,7 +455,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         ) : null}
       </View>
-      <View style={[styles.chevron, additionalChevronStyle]}>
+      <View
+        style={[
+          { ...styles.chevron, bottom: isTablet ? dim.height / 2.5 + 32 : 32 },
+          additionalChevronStyle,
+        ]}
+      >
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
           <ChevronTY color={chevronColor} />
@@ -490,9 +483,10 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
 }: EmptyStationNameCellProps) => {
   const lastLineColor = lastLineColorOriginal;
   const { left: barLeft, width: barWidth } = useBarStyles({});
+  const dim = useWindowDimensions();
 
   return (
-    <View style={styles.stationNameContainer}>
+    <View style={{ ...styles.stationNameContainer, width: dim.width / 9 }}>
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
@@ -535,6 +529,8 @@ const LineBoardEast: React.FC<Props> = ({
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
+
+  const dim = useWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -599,7 +595,12 @@ const LineBoardEast: React.FC<Props> = ({
   );
 
   return (
-    <View style={styles.root}>
+    <View
+      style={{
+        ...styles.root,
+        paddingBottom: isTablet ? dim.height / 2.5 : undefined,
+      }}
+    >
       {stationsWithEmpty.map(stationNameCellForMap)}
     </View>
   );

@@ -6,13 +6,18 @@ import * as FileSystem from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
-  Dimensions,
   Linking,
   Platform,
-  StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
@@ -43,18 +48,8 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
-import DevOverlay from './DevOverlay';
-import Header from './Header';
 import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';
-
-const styles = StyleSheet.create({
-  root: {
-    overflow: 'hidden',
-    height: Dimensions.get('screen').height,
-  },
-});
 
 type Props = {
   children: React.ReactNode;
@@ -62,8 +57,7 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
-  const { devOverlayEnabled, untouchableModeEnabled } =
-    useAtomValue(tuningState);
+  const { untouchableModeEnabled } = useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
@@ -450,15 +444,21 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   // TODO: 適当なタイミングで消す
   useAutoModeAlert();
 
+  const dim = useWindowDimensions();
+
+  const containerStyle = useMemo(
+    () => ({ width: dim.width, height: dim.height }),
+    [dim.width, dim.height]
+  );
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
         minDurationMs={LONG_PRESS_DURATION}
       >
-        <View style={styles.root}>
-          {isDevApp && devOverlayEnabled && <DevOverlay />}
-          <Header />
+        <View style={containerStyle}>
+          {/* <Header /> */}
           {children}
           <NullableWarningPanel />
         </View>

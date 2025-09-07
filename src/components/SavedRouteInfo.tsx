@@ -1,18 +1,11 @@
 import type { ConnectError } from '@connectrpc/connect';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
-import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LED_THEME_BG_COLOR } from '~/constants';
+import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
-import { useCurrentStation, useThemeStore } from '~/hooks';
+import { useCurrentStation, useGetLineMark, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
@@ -22,6 +15,7 @@ import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { Heading } from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';
+import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 type Props = {
@@ -37,22 +31,19 @@ type Props = {
   fromRouteListModal?: boolean;
 };
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
   root: {
-    position: 'absolute',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    width: '100%',
-    height: '100%',
+    padding: 24,
   },
-  scrollView: {
+  contentView: {
+    width: '100%',
     paddingVertical: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: isTablet ? 'auto' : '100%',
+    borderRadius: 8,
+    minHeight: 256,
   },
   buttons: {
     flexDirection: 'row',
@@ -61,6 +52,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     gap: 16,
+    marginTop: 24,
   },
   switchContainer: {
     flexDirection: 'row',
@@ -72,6 +64,7 @@ const styles = StyleSheet.create({
   },
   trainTypeList: {
     marginTop: 8,
+    marginHorizontal: 24,
     maxHeight: '35%',
   },
   trainTypeListContent: {
@@ -81,14 +74,21 @@ const styles = StyleSheet.create({
     columnGap: 48,
   },
   trainTypeItemContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
+  },
+  routeName: {
+    textAlign: 'left',
+  },
+  contentContainer: {
+    marginHorizontal: 24,
   },
   colorIndicator: {
-    width: 10,
-    height: 10,
+    width: 16,
+    height: 16,
     borderRadius: 8,
-    marginRight: 2,
+    marginLeft: 2,
+    marginRight: 6,
   },
   trainTypeLineName: {
     fontSize: RFValue(11),
@@ -112,35 +112,59 @@ const SavedItem = React.memo(
   }: {
     line: Line | null;
     outOfLineRange: boolean;
-  }) => (
-    <View
-      style={[
-        styles.trainTypeItemContainer,
-        outOfLineRange && { opacity: 0.5 },
-      ]}
-      key={line?.id}
-    >
+  }) => {
+    const isLEDTheme = useThemeStore((st) => st === APP_THEME.LED);
+    const getLineMark = useGetLineMark();
+
+    const lineMark = useMemo(
+      () => line && getLineMark({ line }),
+      [getLineMark, line]
+    );
+
+    if (!line) {
+      return null;
+    }
+
+    return (
       <View
-        style={{
-          ...styles.colorIndicator,
-          backgroundColor: line?.color ?? '#000000',
-        }}
-      />
-      <Typography style={styles.trainTypeLineName}>
-        {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
-      </Typography>
-      <Typography
-        style={{
-          ...styles.lineTrainTypeName,
-          color: line?.trainType?.color ?? '#000000',
-        }}
+        style={[
+          styles.trainTypeItemContainer,
+          outOfLineRange && { opacity: 0.5 },
+        ]}
+        key={line.id}
       >
-        {isJapanese
-          ? (line?.trainType?.name ?? '普通/各駅停車')
-          : (line?.trainType?.nameRoman ?? 'Local')}
-      </Typography>
-    </View>
-  )
+        {lineMark ? (
+          <TransferLineMark
+            line={line}
+            mark={lineMark}
+            size={NUMBERING_ICON_SIZE.SMALL}
+            withDarkTheme={isLEDTheme}
+          />
+        ) : (
+          <View
+            style={{
+              ...styles.colorIndicator,
+              backgroundColor: line?.color ?? '#000000',
+            }}
+          />
+        )}
+
+        <Typography style={styles.trainTypeLineName}>
+          {(isJapanese ? line.nameShort : line.nameRoman) ?? ''}:{' '}
+        </Typography>
+        <Typography
+          style={{
+            ...styles.lineTrainTypeName,
+            color: line.trainType?.color ?? '#000000',
+          }}
+        >
+          {isJapanese
+            ? (line.trainType?.name ?? '普通/各駅停車')
+            : (line.trainType?.nameRoman ?? 'Local')}
+        </Typography>
+      </View>
+    );
+  }
 );
 
 export const SavedRouteInfo: React.FC<Props> = ({
@@ -258,31 +282,91 @@ export const SavedRouteInfo: React.FC<Props> = ({
   }, [stations, stopStations, trainType?.lines]);
 
   return (
-    <View style={styles.root}>
-      <View
+    <Pressable style={styles.root} onPress={onClose}>
+      <Pressable
         style={[
+          styles.contentView,
           {
             backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           },
-          isTablet
-            ? {
-                width: '80%',
-                maxHeight: '90%',
-                shadowOpacity: 0.25,
-                shadowColor: '#000',
-                borderRadius: 16,
-              }
-            : {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: screenWidth,
-                height: screenHeight,
-              },
+          isTablet && {
+            width: '80%',
+            maxHeight: '90%',
+            shadowOpacity: 0.25,
+            shadowColor: '#000',
+            borderRadius: 16,
+          },
         ]}
       >
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <Heading>{routeName}</Heading>
+        <View style={styles.contentContainer}>
+          <Heading style={styles.routeName}>{routeName}</Heading>
+
+          <Typography
+            style={{
+              fontSize: RFValue(14),
+              fontWeight: 'bold',
+              marginTop: 8,
+            }}
+          >
+            {translate('allStops')}:
+          </Typography>
+          <Typography
+            style={{
+              fontSize: RFValue(11),
+              marginTop: 8,
+              lineHeight: RFValue(14),
+            }}
+          >
+            {!loading && stopStations.length
+              ? stopStations.map((s, i, a) =>
+                  isJapanese ? (
+                    <React.Fragment key={s.id}>
+                      <Typography
+                        style={[
+                          afterFinalStations
+                            .map((s) => s.groupId)
+                            .includes(s.groupId)
+                            ? {
+                                opacity: 0.5,
+                              }
+                            : { fontWeight: 'bold' },
+                        ]}
+                      >
+                        {s.name}
+                      </Typography>
+                      {a.length - 1 !== i ? ' ' : ''}
+                    </React.Fragment>
+                  ) : (
+                    <React.Fragment key={s.id}>
+                      <Typography
+                        style={[
+                          afterFinalStations
+                            .map((s) => s.groupId)
+                            .includes(s.groupId)
+                            ? {
+                                opacity: 0.5,
+                              }
+                            : { fontWeight: 'bold' },
+                        ]}
+                      >
+                        {s.nameRoman}
+                      </Typography>
+                      {a.length - 1 !== i ? '  ' : ''}
+                    </React.Fragment>
+                  )
+                )
+              : `${translate('loadingAPI')}...`}
+          </Typography>
+          <Typography
+            style={{
+              fontSize: RFValue(14),
+              fontWeight: 'bold',
+              marginTop: 16,
+            }}
+          >
+            {translate('eachTrainTypes')}:
+          </Typography>
+
           {error && (
             <Typography
               style={{ color: '#d00', marginTop: 8 }}
@@ -291,154 +375,70 @@ export const SavedRouteInfo: React.FC<Props> = ({
               {error.message}
             </Typography>
           )}
+        </View>
+        <FlatList
+          horizontal
+          style={styles.trainTypeList}
+          contentContainerStyle={styles.trainTypeListContent}
+          data={trainTypeLines}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <SavedItem
+              outOfLineRange={afterFinalLines
+                .map((l) => l.id)
+                .includes(item.id)}
+              line={item}
+            />
+          )}
+        />
 
+        {fromRouteListModal && (
           <View
             style={{
-              width: '100%',
+              ...styles.switchContainer,
+              marginTop: 16,
+              paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+              paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
             }}
           >
-            <View
-              style={{
-                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-              }}
-            >
-              <Typography
-                style={{
-                  fontSize: RFValue(14),
-                  fontWeight: 'bold',
-                  marginTop: 8,
-                }}
-              >
-                {translate('allStops')}:
-              </Typography>
-              <Typography
-                style={{
-                  fontSize: RFValue(11),
-                  marginTop: 8,
-                  lineHeight: RFValue(14),
-                }}
-              >
-                {!loading && stopStations.length
-                  ? stopStations.map((s, i, a) =>
-                      isJapanese ? (
-                        <React.Fragment key={s.id}>
-                          <Typography
-                            style={[
-                              afterFinalStations
-                                .map((s) => s.groupId)
-                                .includes(s.groupId)
-                                ? {
-                                    opacity: 0.5,
-                                  }
-                                : { fontWeight: 'bold' },
-                            ]}
-                          >
-                            {s.name}
-                          </Typography>
-                          {a.length - 1 !== i ? ' ' : ''}
-                        </React.Fragment>
-                      ) : (
-                        <React.Fragment key={s.id}>
-                          <Typography
-                            style={[
-                              afterFinalStations
-                                .map((s) => s.groupId)
-                                .includes(s.groupId)
-                                ? {
-                                    opacity: 0.5,
-                                  }
-                                : { fontWeight: 'bold' },
-                            ]}
-                          >
-                            {s.nameRoman}
-                          </Typography>
-                          {a.length - 1 !== i ? '  ' : ''}
-                        </React.Fragment>
-                      )
-                    )
-                  : `${translate('loadingAPI')}...`}
-              </Typography>
-              <Typography
-                style={{
-                  fontSize: RFValue(14),
-                  fontWeight: 'bold',
-                  marginTop: 16,
-                }}
-              >
-                {translate('eachTrainTypes')}:
-              </Typography>
-            </View>
-            <FlatList
-              horizontal
-              style={styles.trainTypeList}
-              contentContainerStyle={{
-                ...styles.trainTypeListContent,
-                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-              }}
-              data={trainTypeLines}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <SavedItem
-                  outOfLineRange={afterFinalLines
-                    .map((l) => l.id)
-                    .includes(item.id)}
-                  line={item}
-                />
-              )}
-            />
-
-            {fromRouteListModal && (
-              <View
-                style={{
-                  ...styles.switchContainer,
-                  marginTop: 16,
-                  paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                  paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-                }}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={asTerminus}
-                    onValueChange={() => setAsTerminus((prev) => !prev)}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={asTerminus}
-                    onValueChange={() => setAsTerminus((prev) => !prev)}
-                    ios_backgroundColor={'#fff'}
-                  />
-                )}
-
-                <Typography style={styles.enableTerminusText}>
-                  {translate('setTerminusText', {
-                    stationName:
-                      (isJapanese
-                        ? finalStation?.name
-                        : finalStation?.nameRoman) ?? '',
-                  })}
-                </Typography>
-              </View>
+            {isLEDTheme ? (
+              <LEDThemeSwitch
+                style={{ marginRight: 8 }}
+                value={asTerminus}
+                onValueChange={() => setAsTerminus((prev) => !prev)}
+              />
+            ) : (
+              <Switch
+                style={{ marginRight: 8 }}
+                value={asTerminus}
+                onValueChange={() => setAsTerminus((prev) => !prev)}
+                ios_backgroundColor={'#fff'}
+              />
             )}
 
-            <View style={styles.buttons}>
-              <Button
-                color={isLEDTheme ? undefined : '#008ffe'}
-                onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
-                disabled={loading || disabled}
-              >
-                {translate('submit')}
-              </Button>
-              <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-                {translate('cancel')}
-              </Button>
-            </View>
+            <Typography style={styles.enableTerminusText}>
+              {translate('setTerminusText', {
+                stationName:
+                  (isJapanese ? finalStation?.name : finalStation?.nameRoman) ??
+                  '',
+              })}
+            </Typography>
           </View>
-        </ScrollView>
-      </View>
-    </View>
+        )}
+
+        <View style={styles.buttons}>
+          <Button
+            color={isLEDTheme ? undefined : '#008ffe'}
+            onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
+            disabled={loading || disabled}
+          >
+            {translate('submit')}
+          </Button>
+          <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
+            {translate('cancel')}
+          </Button>
+        </View>
+      </Pressable>
+    </Pressable>
   );
 };

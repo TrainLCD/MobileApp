@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -38,8 +38,6 @@ import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
-
-const { width: screenWidth } = Dimensions.get('screen');
 
 const styles = StyleSheet.create({
   root: {
@@ -84,7 +82,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   firstTextWrapper: {
-    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -97,7 +94,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   stateWrapper: {
-    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -500,6 +496,8 @@ const HeaderTokyoMetro: React.FC = () => {
     [arrived, currentStationNumber, currentLine, nextStation]
   );
 
+  const dim = useWindowDimensions();
+
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -543,7 +541,7 @@ const HeaderTokyoMetro: React.FC = () => {
           ) : null}
         </View>
         <View style={styles.bottom}>
-          <View style={styles.stateWrapper}>
+          <View style={{ ...styles.stateWrapper, width: dim.width * 0.14 }}>
             <Animated.Text
               style={[
                 stateTopAnimatedStyles,
@@ -618,7 +616,9 @@ const HeaderTokyoMetro: React.FC = () => {
           </View>
 
           {selectedBound && firstStop ? (
-            <View style={styles.firstTextWrapper}>
+            <View
+              style={{ ...styles.firstTextWrapper, width: dim.width * 0.14 }}
+            >
               <Animated.Text style={[stateTopAnimatedStyles, styles.firstText]}>
                 {stateTextRight}
               </Animated.Text>

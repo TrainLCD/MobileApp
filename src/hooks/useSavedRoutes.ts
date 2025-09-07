@@ -16,6 +16,11 @@ interface SavedRouteRow {
 
 const db = SQLite.openDatabaseSync('savedRoutes.db');
 
+// 軽量キャッシュ
+let savedRoutesCache: SavedRoute[] | null = null;
+let savedRoutesVersion = 0; // save/remove 時に更新
+let savedRoutesCacheStamp = -1; // 直近のversion
+
 // SQLiteの行データを SavedRoute に変換（不正データは null を返す）
 const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
   const hasTrainType = Boolean(row.hasTrainType);
@@ -76,13 +81,19 @@ export const useSavedRoutes = () => {
   }, []);
 
   const getAll = useCallback(async (): Promise<SavedRoute[]> => {
+    if (savedRoutesCache && savedRoutesCacheStamp === savedRoutesVersion) {
+      return savedRoutesCache;
+    }
     const rows = (await db.getAllAsync(
       'SELECT * FROM saved_routes ORDER BY createdAt DESC'
     )) as SavedRouteRow[];
 
-    return rows
+    const list = rows
       .map(convertRowToSavedRoute)
       .filter((r): r is SavedRoute => r !== null);
+    savedRoutesCache = list;
+    savedRoutesCacheStamp = savedRoutesVersion;
+    return list;
   }, []);
 
   const find = useCallback(
@@ -158,7 +169,9 @@ export const useSavedRoutes = () => {
           newRoute.createdAt.toISOString(),
         ]
       );
-
+      // invalidate cache
+      savedRoutesVersion += 1;
+      savedRoutesCache = null;
       return newRoute;
     },
     []
@@ -166,7 +179,10 @@ export const useSavedRoutes = () => {
 
   const remove = useCallback(async (id: string): Promise<void> => {
     await db.runAsync('DELETE FROM saved_routes WHERE id = ?', [id]);
+    savedRoutesVersion += 1;
+    savedRoutesCache = null;
   }, []);
 
-  return { getAll, find, save, remove, isInitialized };
+  const getVersion = useCallback(() => savedRoutesVersion, []);
+  return { getAll, find, save, remove, isInitialized, getVersion };
 };

@@ -1,0 +1,114 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import React, { useMemo } from 'react';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+type FooterTab = 'home' | 'search' | 'settings';
+
+export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+  },
+  bar: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOpacity: 0.16,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
+    // Android shadow fallback
+    elevation: 4,
+  },
+  content: {
+    height: FOOTER_BASE_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 24,
+  },
+});
+
+type Props = {
+  active?: FooterTab;
+  visible?: boolean;
+};
+
+const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+
+  const iconColor = useMemo(
+    () => ({
+      active: '#0A84FF',
+      inactive: '#6B7280', // gray-500 相当
+    }),
+    []
+  );
+
+  if (!visible) return null;
+
+  const safePad = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
+
+  return (
+    <View pointerEvents="box-none" style={styles.container}>
+      <View style={[styles.bar, { paddingBottom: safePad }]}>
+        <View style={styles.content}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              // ホーム: 縦レイアウトの路線選択へ
+              // この画面群(スタック)内で解決される
+              // @ts-ignore 画面名文字列での遷移を許容
+              navigation.navigate('SelectLine' as never);
+            }}
+          >
+            <Ionicons
+              name={active === 'home' ? 'home' : 'home-outline'}
+              size={28}
+              color={active === 'home' ? iconColor.active : iconColor.inactive}
+            />
+          </Pressable>
+
+          <Pressable accessibilityRole="button" disabled>
+            <Ionicons
+              name={active === 'search' ? 'search' : 'search-outline'}
+              size={26}
+              color={
+                active === 'search' ? iconColor.active : iconColor.inactive
+              }
+            />
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              // 設定: スタック内の画面
+              // @ts-ignore 画面名文字列での遷移を許容
+              navigation.navigate('AppSettings' as never);
+            }}
+          >
+            <Ionicons
+              name={active === 'settings' ? 'settings' : 'settings-outline'}
+              size={26}
+              color={
+                active === 'settings' ? iconColor.active : iconColor.inactive
+              }
+            />
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+export default React.memo(FooterTabBar);

@@ -19,18 +19,30 @@ interface Props {
   shouldGrayscale?: boolean;
   color?: string;
   withDarkTheme?: boolean;
+  // 明示的に白いアウトラインを付けるか
+  withOutline?: boolean;
+  // 角丸の半径を上書き（ラウンド系は自動で円形）
+  outlineRadius?: number;
 }
 
 const styles = StyleSheet.create({
-  lineMarkImageOrigin: {
+  container: {
     marginRight: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   signPathWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  numberingIconContainerOrigin: {
-    marginRight: 4,
+  outline: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderColor: '#fff',
+    borderWidth: 1,
   },
 });
 
@@ -41,24 +53,51 @@ const TransferLineMark: React.FC<Props> = ({
   shouldGrayscale,
   color,
   withDarkTheme,
+  withOutline,
+  outlineRadius,
 }: Props) => {
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
-  const lineMarkImageStyle = useMemo(
-    () => ({
-      ...styles.lineMarkImageOrigin,
-      width: size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize,
-      height: size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize,
-      opacity: shouldGrayscale ? 0.5 : 1,
-    }),
-    [notTinyImageSize, shouldGrayscale, size]
+  const dim = useMemo(
+    () => (size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize),
+    [notTinyImageSize, size]
   );
-  const numberingIconContainerStyle = useMemo(
+  const containerStyle = useMemo(
     () => ({
-      ...styles.numberingIconContainerOrigin,
+      ...styles.container,
+      width: dim,
+      height: dim,
       opacity: shouldGrayscale ? 0.5 : 1,
     }),
+    [dim, shouldGrayscale]
+  );
+  const imageStyle = useMemo(() => ({ width: dim, height: dim }), [dim]);
+  const numberingIconContainerStyle = useMemo(
+    () => ({ opacity: shouldGrayscale ? 0.5 : 1 }),
     [shouldGrayscale]
   );
+
+  const outlineRadiusValue = useMemo(() => {
+    const roundShapes = new Set<string>([
+      MARK_SHAPE.ROUND,
+      MARK_SHAPE.REVERSED_ROUND,
+      MARK_SHAPE.MONOCHROME_ROUND,
+      MARK_SHAPE.ROUND_HORIZONTAL,
+      MARK_SHAPE.REVERSED_ROUND_HORIZONTAL,
+      MARK_SHAPE.KEIO,
+    ]);
+    if (mark.signShape && roundShapes.has(mark.signShape)) {
+      return dim / 2;
+    }
+
+    const odakyuShapes = new Set<string>([MARK_SHAPE.ODAKYU]);
+
+    if (mark.signShape && odakyuShapes.has(mark.signShape)) {
+      return 14;
+    }
+
+    // 角丸シンボルの見た目に近い半径のデフォルト
+    return outlineRadius ?? 4;
+  }, [dim, mark.signShape, outlineRadius]);
 
   const fadedLineColor = useMemo(
     () => grayscale(color || line?.color || '#ccc'),
@@ -67,28 +106,60 @@ const TransferLineMark: React.FC<Props> = ({
 
   if (mark.btUnionSignPaths) {
     return (
-      <View style={styles.signPathWrapper}>
+      <View
+        style={[
+          containerStyle,
+          withOutline && { borderRadius: outlineRadiusValue },
+        ]}
+      >
         <Image
-          style={lineMarkImageStyle}
+          style={imageStyle}
           source={mark.btUnionSignPaths[0]}
           cachePolicy="memory-disk"
+          contentFit="cover"
         />
+        {withOutline ? (
+          <View
+            pointerEvents="none"
+            style={[styles.outline, { borderRadius: outlineRadiusValue }]}
+          />
+        ) : null}
       </View>
     );
   }
 
   if (mark.signPath) {
     return (
-      <Image
-        style={lineMarkImageStyle}
-        source={mark.signPath}
-        cachePolicy="memory-disk"
-      />
+      <View
+        style={[
+          containerStyle,
+          withOutline && { borderRadius: outlineRadiusValue },
+        ]}
+      >
+        <Image
+          style={imageStyle}
+          source={mark.signPath}
+          cachePolicy="memory-disk"
+          contentFit="cover"
+        />
+        {withOutline ? (
+          <View
+            pointerEvents="none"
+            style={[styles.outline, { borderRadius: outlineRadiusValue }]}
+          />
+        ) : null}
+      </View>
     );
   }
 
   return (
-    <View style={numberingIconContainerStyle}>
+    <View
+      style={[
+        containerStyle,
+        numberingIconContainerStyle,
+        withOutline && { borderRadius: outlineRadiusValue },
+      ]}
+    >
       {mark.signShape && (
         <NumberingIcon
           shape={mark.signShape}
@@ -102,6 +173,12 @@ const TransferLineMark: React.FC<Props> = ({
           withDarkTheme={withDarkTheme}
         />
       )}
+      {withOutline ? (
+        <View
+          pointerEvents="none"
+          style={[styles.outline, { borderRadius: outlineRadiusValue }]}
+        />
+      ) : null}
     </View>
   );
 };

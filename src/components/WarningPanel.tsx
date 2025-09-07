@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  Dimensions,
   type GestureResponderEvent,
   StyleSheet,
   TouchableWithoutFeedback,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { translate } from '../translation';
@@ -36,7 +36,6 @@ const WarningPanel: React.FC<Props> = ({
 
   const styles = StyleSheet.create({
     root: {
-      width: Dimensions.get('screen').width / 2,
       backgroundColor: '#333',
       borderColor,
       borderLeftWidth: 16,
@@ -60,11 +59,14 @@ const WarningPanel: React.FC<Props> = ({
     },
   });
 
+  const dim = useWindowDimensions();
+
   return (
     <TouchableWithoutFeedback onPress={onPress}>
       <View
         style={{
           ...styles.root,
+          width: dim.width / 2,
         }}
       >
         <Typography style={styles.message}>{text}</Typography>

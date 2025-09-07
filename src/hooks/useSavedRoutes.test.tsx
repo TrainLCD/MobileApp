@@ -32,7 +32,7 @@ const useSavedRoutes = () => {
 };
 
 describe('useSavedRoutes', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // 各テスト前にモック関数をリセット
     jest.clearAllMocks();
     mockIdCounter = 0;
@@ -42,6 +42,12 @@ describe('useSavedRoutes', () => {
     mockDb.getAllAsync.mockResolvedValue([]);
     mockDb.getFirstAsync.mockResolvedValue(null);
     mockDb.runAsync.mockResolvedValue(undefined);
+
+    // モジュールスコープのキャッシュを毎テスト前に無効化
+    const { result, unmount } = renderHook(() => useSavedRoutes());
+    await waitFor(() => expect(result.current.isInitialized).toBe(true));
+    await result.current.remove('__flush__');
+    unmount();
   });
 
   describe('initialization', () => {

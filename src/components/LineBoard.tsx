@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StopCondition } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useThemeStore } from '../hooks';
@@ -146,7 +146,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { left: safeAreaLeft } = useSafeAreaInsets();
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Inner />
       {passStations.length && !isLEDTheme ? (
         <Typography
@@ -165,7 +165,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           })}
         </Typography>
       ) : null}
-    </>
+    </View>
   );
 };
 

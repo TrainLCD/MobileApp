@@ -4,9 +4,12 @@ import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import navigationState from '~/store/atoms/navigation';
 import Button from '../../components/Button';
-import FAB from '../../components/FAB';
+import FooterTabBar, {
+  FOOTER_BASE_HEIGHT,
+} from '../../components/FooterTabBar';
 import { Heading } from '../../components/Heading';
 import LEDThemeSwitch from '../../components/LEDThemeSwitch';
 import Typography from '../../components/Typography';
@@ -64,11 +67,7 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
 
-  const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
+  const insets = useSafeAreaInsets();
 
   const onSpeechEnabledValueChange = useCallback(
     async (flag: boolean) => {
@@ -158,9 +157,16 @@ const AppSettingsScreen: React.FC = () => {
     }));
   }, [setNavigationState, enableLegacyAutoMode]);
 
+  const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
+
   return (
     <>
-      <ScrollView contentContainerStyle={styles.rootPadding}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.rootPadding,
+          { paddingBottom: styles.rootPadding.paddingVertical + footerHeight },
+        ]}
+      >
         <Heading>{translate('settings')}</Heading>
 
         <View style={styles.settingItems}>
@@ -281,7 +287,7 @@ const AppSettingsScreen: React.FC = () => {
           ) : null}
         </View>
       </ScrollView>
-      <FAB onPress={onPressBack} icon="close" />
+      <FooterTabBar active="settings" />
     </>
   );
 };
