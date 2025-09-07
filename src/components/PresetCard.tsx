@@ -232,7 +232,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             style={styles.arrowShift}
           >
             <Path
-              d="M4 12h12M15 8l4 4-4 4"
+              d="M3 12h18M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"
               fill="none"
               stroke={metaFg}
               strokeWidth={2}
