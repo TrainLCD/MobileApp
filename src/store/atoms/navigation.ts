@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { SavedRoute } from '~/models/SavedRoute';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,
@@ -7,7 +8,6 @@ import {
 import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { isJapanese } from '../../translation';
-import { SavedRoute } from '~/models/SavedRoute';
 
 export interface NavigationState {
   leftStations: Station[];
