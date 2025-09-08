@@ -1,4 +1,3 @@
-import { getLuminance } from 'polished';
 import type React from 'react';
 import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -40,7 +39,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 8,
-    // 色は動的に決める（明色背景では薄いダーク、暗色背景では白）
+    borderColor: '#fff',
     borderWidth: 1,
   },
   mark: {
@@ -93,22 +92,6 @@ export const LineCard: React.FC<Props> = ({
   const mark = useMemo(() => getLineMark({ line }), [getLineMark, line]);
   const { bounds } = useBounds(stations);
 
-  const borderColor = useMemo(() => {
-    const base = line.color || '#333';
-    const lum = getLuminance(base);
-    // LEDテーマは常に白の方が見やすい
-    if (isLEDTheme) return '#fff';
-    // 背景が明るい場合は薄いダークのボーダー
-    return lum > 0.7 ? 'rgba(0,0,0,0.18)' : '#fff';
-  }, [isLEDTheme, line.color]);
-
-  const fgColor = useMemo(() => {
-    const base = line.color || '#333';
-    const lum = getLuminance(base);
-    if (isLEDTheme) return '#fff';
-    return lum > 0.7 ? '#000' : '#fff';
-  }, [isLEDTheme, line.color]);
-
   const [inboundText, outboundText] = useMemo(() => {
     if (!stations || !stations.length) {
       // フォールバックは何も表示しない
@@ -153,10 +136,7 @@ export const LineCard: React.FC<Props> = ({
         },
       ]}
     >
-      <View
-        style={[styles.insetBorder, { borderColor }]}
-        pointerEvents="none"
-      />
+      <View style={[styles.insetBorder]} pointerEvents="none" />
       {mark ? (
         <View style={styles.mark}>
           <TransferLineMark
@@ -169,10 +149,7 @@ export const LineCard: React.FC<Props> = ({
         </View>
       ) : null}
       <View style={styles.texts}>
-        <Typography
-          style={[styles.title, { color: fgColor }]}
-          numberOfLines={1}
-        >
+        <Typography style={styles.title} numberOfLines={1}>
           {lineName}
         </Typography>
 
@@ -185,10 +162,7 @@ export const LineCard: React.FC<Props> = ({
             ]}
           >
             {inboundText ? (
-              <Typography
-                style={[styles.subtitle, { color: fgColor }]}
-                numberOfLines={1}
-              >
+              <Typography style={styles.subtitle} numberOfLines={1}>
                 {inboundText}
               </Typography>
             ) : null}
@@ -202,7 +176,7 @@ export const LineCard: React.FC<Props> = ({
                 <Path
                   d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
                   fill="none"
-                  stroke={fgColor}
+                  stroke="#fff"
                   strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -210,10 +184,7 @@ export const LineCard: React.FC<Props> = ({
               </Svg>
             ) : null}
             {outboundText ? (
-              <Typography
-                style={[styles.subtitle, { color: fgColor }]}
-                numberOfLines={1}
-              >
+              <Typography style={styles.subtitle} numberOfLines={1}>
                 {outboundText}
               </Typography>
             ) : null}
@@ -237,7 +208,7 @@ export const LineCard: React.FC<Props> = ({
           <Path
             d="M8 5l8 7-8 7"
             fill="none"
-            stroke={fgColor}
+            stroke="#fff"
             strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
