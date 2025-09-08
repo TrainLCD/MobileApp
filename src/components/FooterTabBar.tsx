@@ -74,6 +74,16 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
         ]}
       >
         <View style={styles.content}>
+          <Pressable accessibilityRole="button" disabled>
+            <Ionicons
+              name={active === 'search' ? 'search' : 'search-outline'}
+              size={26}
+              color={
+                active === 'search' ? iconColor.active : iconColor.inactive
+              }
+            />
+          </Pressable>
+
           <Pressable
             accessibilityRole="button"
             onPress={() => {
@@ -84,19 +94,9 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
             }}
           >
             <Ionicons
-              name={active === 'home' ? 'home' : 'home-outline'}
+              name={active === 'home' ? 'navigate' : 'navigate-outline'}
               size={28}
               color={active === 'home' ? iconColor.active : iconColor.inactive}
-            />
-          </Pressable>
-
-          <Pressable accessibilityRole="button" disabled>
-            <Ionicons
-              name={active === 'search' ? 'search' : 'search-outline'}
-              size={26}
-              color={
-                active === 'search' ? iconColor.active : iconColor.inactive
-              }
             />
           </Pressable>
 

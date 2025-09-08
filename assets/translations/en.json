@@ -187,5 +187,6 @@
   "communityRoutes": "Community routes",
   "confirmDeleteRouteText": "Are you sure you want to remove \"%{routeName}\" from your saved routes?",
   "routeSavedText": "Saved the route \"%{routeName}\".",
-  "routeDeletedText": "Deleted the \"%{routeName}\"."
+  "routeDeletedText": "Deleted the \"%{routeName}\".",
+  "noPresets": "No presets available"
 }

@@ -1,7 +1,9 @@
 import { randomUUID } from 'expo-crypto';
 import * as SQLite from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
+import { useAtom } from 'jotai';
+import { useCallback, useEffect } from 'react';
 import type { SavedRoute, SavedRouteInput } from '~/models/SavedRoute';
+import navigationState from '~/store/atoms/navigation';
 
 // SQLiteの行データ型を定義
 interface SavedRouteRow {
@@ -15,11 +17,6 @@ interface SavedRouteRow {
 }
 
 const db = SQLite.openDatabaseSync('savedRoutes.db');
-
-// 軽量キャッシュ
-let savedRoutesCache: SavedRoute[] | null = null;
-let savedRoutesVersion = 0; // save/remove 時に更新
-let savedRoutesCacheStamp = -1; // 直近のversion
 
 // SQLiteの行データを SavedRoute に変換（不正データは null を返す）
 const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
@@ -52,11 +49,15 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
 };
 
 export const useSavedRoutes = () => {
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [
+    { presetRoutes: routes, presetsFetched: isInitialized },
+    setNavigationAtom,
+  ] = useAtom(navigationState);
 
   useEffect(() => {
-    db.execSync(
-      `CREATE TABLE IF NOT EXISTS saved_routes (
+    const initDb = async () => {
+      await db.execAsync(
+        `CREATE TABLE IF NOT EXISTS saved_routes (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         lineId INTEGER NOT NULL,
@@ -66,38 +67,36 @@ export const useSavedRoutes = () => {
         createdAt TEXT NOT NULL,
         CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
       );`
-    );
-    // よく使う検索条件に合わせて索引を付与
-    db.execSync(
-      'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt ON saved_routes(createdAt DESC);'
-    );
-    db.execSync(
-      'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, destinationStationId, hasTrainType, createdAt DESC);'
-    );
-    db.execSync(
-      'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, destinationStationId, hasTrainType, createdAt DESC);'
-    );
-    setIsInitialized(true);
-  }, []);
+      );
+      // よく使う検索条件に合わせて索引を付与
+      await db.execAsync(
+        'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt ON saved_routes(createdAt DESC);'
+      );
+      await db.execAsync(
+        'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, destinationStationId, hasTrainType, createdAt DESC);'
+      );
+      await db.execAsync(
+        'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, destinationStationId, hasTrainType, createdAt DESC);'
+      );
+      setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
+    };
+    initDb();
+  }, [setNavigationAtom]);
 
-  const getAll = useCallback(async (): Promise<SavedRoute[]> => {
-    if (savedRoutesCache && savedRoutesCacheStamp === savedRoutesVersion) {
-      return savedRoutesCache;
-    }
+  const updateRoutes = useCallback(async (): Promise<void> => {
     const rows = (await db.getAllAsync(
       'SELECT * FROM saved_routes ORDER BY createdAt DESC'
     )) as SavedRouteRow[];
 
-    const list = rows
+    const presetRoutes = rows
       .map(convertRowToSavedRoute)
       .filter((r): r is SavedRoute => r !== null);
-    savedRoutesCache = list;
-    savedRoutesCacheStamp = savedRoutesVersion;
-    return list;
-  }, []);
+
+    setNavigationAtom((prev) => ({ ...prev, presetRoutes }));
+  }, [setNavigationAtom]);
 
   const find = useCallback(
-    async ({
+    ({
       lineId,
       trainTypeId,
       destinationStationId,
@@ -105,42 +104,26 @@ export const useSavedRoutes = () => {
       lineId: number | null;
       destinationStationId: number | null;
       trainTypeId: number | null;
-    }): Promise<SavedRoute | undefined> => {
-      let sql = '';
-      let params: (number | null)[] = [];
-
-      if (trainTypeId !== null) {
-        // 種別ベース: hasTrainType=1 を明示し最新から
-        if (destinationStationId !== null) {
-          sql =
-            'SELECT * FROM saved_routes WHERE hasTrainType = 1 AND trainTypeId = ? AND destinationStationId = ? ORDER BY createdAt DESC LIMIT 1';
-          params = [trainTypeId, destinationStationId];
-        } else {
-          sql =
-            'SELECT * FROM saved_routes WHERE hasTrainType = 1 AND trainTypeId = ? AND destinationStationId IS NULL ORDER BY createdAt DESC LIMIT 1';
-          params = [trainTypeId];
-        }
-      } else {
-        // 線ベース: hasTrainType=0 を明示。lineIdは必須
-        if (lineId == null) {
-          return undefined;
-        }
-        if (destinationStationId !== null) {
-          sql =
-            'SELECT * FROM saved_routes WHERE hasTrainType = 0 AND lineId = ? AND destinationStationId = ? ORDER BY createdAt DESC LIMIT 1';
-          params = [lineId, destinationStationId];
-        } else {
-          sql =
-            'SELECT * FROM saved_routes WHERE hasTrainType = 0 AND lineId = ? AND destinationStationId IS NULL ORDER BY createdAt DESC LIMIT 1';
-          params = [lineId];
-        }
+    }): SavedRoute | null => {
+      if (!destinationStationId) {
+        return (
+          routes.find(
+            (r) => r.trainTypeId === trainTypeId || r.lineId === lineId
+          ) ?? null
+        );
       }
 
-      const row = (await db.getFirstAsync(sql, params)) as SavedRouteRow | null;
-      const converted = row ? convertRowToSavedRoute(row) : null;
-      return converted ?? undefined;
+      return (
+        routes.find(
+          (r) =>
+            (r.trainTypeId === trainTypeId &&
+              r.destinationStationId === destinationStationId) ||
+            (r.lineId === lineId &&
+              r.destinationStationId === destinationStationId)
+        ) ?? null
+      );
     },
-    []
+    [routes]
   );
 
   const save = useCallback(
@@ -169,20 +152,26 @@ export const useSavedRoutes = () => {
           newRoute.createdAt.toISOString(),
         ]
       );
-      // invalidate cache
-      savedRoutesVersion += 1;
-      savedRoutesCache = null;
+
+      setNavigationAtom((prev) => ({
+        ...prev,
+        presetRoutes: [newRoute, ...prev.presetRoutes],
+      }));
       return newRoute;
     },
-    []
+    [setNavigationAtom]
   );
 
-  const remove = useCallback(async (id: string): Promise<void> => {
-    await db.runAsync('DELETE FROM saved_routes WHERE id = ?', [id]);
-    savedRoutesVersion += 1;
-    savedRoutesCache = null;
-  }, []);
+  const remove = useCallback(
+    async (id: string): Promise<void> => {
+      await db.runAsync('DELETE FROM saved_routes WHERE id = ?', [id]);
+      setNavigationAtom((prev) => ({
+        ...prev,
+        presetRoutes: prev.presetRoutes.filter((r) => r.id !== id),
+      }));
+    },
+    [setNavigationAtom]
+  );
 
-  const getVersion = useCallback(() => savedRoutesVersion, []);
-  return { getAll, find, save, remove, isInitialized, getVersion };
+  return { isInitialized, routes, updateRoutes, find, save, remove };
 };

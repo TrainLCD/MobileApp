@@ -188,5 +188,6 @@
   "communityRoutes": "コミュニティルート",
   "confirmDeleteRouteText": "本当に保存済み経路から「%{routeName}」を削除しますか？",
   "routeSavedText": "経路「%{routeName}」を保存しました。",
-  "routeDeletedText": "経路「%{routeName}」を削除しました。"
+  "routeDeletedText": "経路「%{routeName}」を削除しました。",
+  "noPresets": "プリセットがありません"
 }

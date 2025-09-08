@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 14,
+    justifyContent: 'center',
     // iOS shadow
     shadowColor: '#333',
     shadowOpacity: 0.16,

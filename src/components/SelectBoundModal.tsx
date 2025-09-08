@@ -96,7 +96,6 @@ export const SelectBoundModal: React.FC<Props> = ({
   loading,
   error,
 }) => {
-  const [savedRouteLoaded, setSavedRouteLoaded] = useState(false);
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
   const navigation = useNavigation();
@@ -112,28 +111,28 @@ export const SelectBoundModal: React.FC<Props> = ({
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const {
+    isInitialized: isRoutesDBInitialized,
     find: findSavedRoute,
     save: saveCurrentRoute,
     remove: removeCurrentRoute,
   } = useSavedRoutes();
 
   useEffect(() => {
-    const fetchSavedRoute = async () => {
-      if (!line) return;
+    if (!line || !isRoutesDBInitialized) return;
 
-      try {
-        const route = await findSavedRoute({
-          lineId: line.id,
-          trainTypeId: trainType?.groupId ?? null,
-          destinationStationId: wantedDestination?.groupId ?? null,
-        });
-        setSavedRoute(route ?? null);
-      } finally {
-        setSavedRouteLoaded(true);
-      }
-    };
-    fetchSavedRoute();
-  }, [findSavedRoute, line, trainType?.groupId, wantedDestination?.groupId]);
+    const route = findSavedRoute({
+      lineId: line.id,
+      trainTypeId: trainType?.groupId ?? null,
+      destinationStationId: wantedDestination?.groupId ?? null,
+    });
+    setSavedRoute(route ?? null);
+  }, [
+    findSavedRoute,
+    line,
+    trainType?.groupId,
+    wantedDestination?.groupId,
+    isRoutesDBInitialized,
+  ]);
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -536,10 +535,13 @@ export const SelectBoundModal: React.FC<Props> = ({
                   {translate('autoModeSettings')}:{' '}
                   {autoModeEnabled ? 'ON' : 'OFF'}
                 </Button>
-                {isDevApp && savedRouteLoaded && (
-                  <Button onPress={handleSaveRoutePress}>
+                {isDevApp && (
+                  <Button
+                    onPress={handleSaveRoutePress}
+                    disabled={!line || !isRoutesDBInitialized}
+                  >
                     {translate(
-                      savedRoute ? 'removeFromSavedRoutes' : 'saveCurrentRoute'
+                      !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
                     )}
                   </Button>
                 )}

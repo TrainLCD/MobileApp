@@ -24,6 +24,7 @@ import {
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import Loading from '~/components/Loading';
+import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
@@ -114,9 +115,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// ルートIDごとの駅配列をキャッシュ
-// キャッシュは useStationsCache 内に集約
-
 type LineCardItemProps = {
   line: Line;
   disabled: boolean;
@@ -178,13 +176,15 @@ const SelectLineScreen: React.FC = () => {
     error: fetchLocationError,
   } = useFetchCurrentLocationOnce();
   const [nowHeaderHeight, setNowHeaderHeight] = React.useState(0);
-  const { getAll, isInitialized } = useSavedRoutes();
-  const [routes, setRoutes] = React.useState<
-    (SavedRoute & { stations: Station[] })[]
-  >([]);
+  const {
+    routes,
+    updateRoutes,
+    isInitialized: isRoutesDBInitialized,
+  } = useSavedRoutes();
   const [lineStationsById, setLineStationsById] = React.useState<
     Record<number, Station[]>
   >({});
+  const [carouselData, setCarouselData] = React.useState<LoopItem[]>([]);
 
   // SavedRouteモーダル用の状態
   const [selectedRoute, setSelectedRoute] = useState<SavedRoute | null>(null);
@@ -219,10 +219,6 @@ const SelectLineScreen: React.FC = () => {
   const cardWidth = screenWidth; // アイテム幅は画面幅いっぱい
   const sidePadding = 0; // カルーセルの左右余白なし
 
-  const carouselData = useMemo<(SavedRoute & { stations: Station[] })[]>(
-    () => routes.filter((r) => (r.stations?.length ?? 0) > 0),
-    [routes]
-  );
   const loopData = useMemo(
     () =>
       carouselData.length
@@ -273,23 +269,16 @@ const SelectLineScreen: React.FC = () => {
     [ITEM_SIZE, carouselData.length]
   );
 
-  // PresetCard押下でも現在のインデックスを維持（押下でレイアウトが変わっても戻せるように）
-  const preserveCarouselPosition = useCallback(() => {
-    if (!loopData.length) return;
-    const offset = carouselOffsetRef.current;
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({ offset, animated: false });
-    });
-  }, [loopData.length]);
-
-  // 保存済み経路カード用: 最新の保存ルートから目的地駅を取得（キャッシュ併用）
   useEffect(() => {
-    const run = async () => {
-      if (!isInitialized) return;
-      try {
-        const routes = await getAll();
+    if (!isRoutesDBInitialized) return;
+    updateRoutes();
+  }, [isRoutesDBInitialized, updateRoutes]);
 
-        const next = await Promise.all(
+  useEffect(() => {
+    if (!routes.length) return;
+    const fetchAsync = async () => {
+      try {
+        const routeStations = await Promise.all(
           routes.map(async (route) => {
             const { stations } = route.hasTrainType
               ? await fetchStationsByLineGroupId({
@@ -302,37 +291,20 @@ const SelectLineScreen: React.FC = () => {
           })
         );
 
-        setRoutes((prev) => {
-          const equal =
-            prev.length === next.length &&
-            prev.every((p, i) => {
-              const n = next[i];
-              if (p.id !== n.id) return false;
-              if (p.name !== n.name) return false;
-              if (p.lineId !== n.lineId) return false;
-              if (p.trainTypeId !== n.trainTypeId) return false;
-              if (p.destinationStationId !== n.destinationStationId)
-                return false;
-              if (p.hasTrainType !== n.hasTrainType) return false;
-              const pFirst = p.stations[0]?.id;
-              const pLast = p.stations[p.stations.length - 1]?.id;
-              const nFirst = n.stations[0]?.id;
-              const nLast = n.stations[n.stations.length - 1]?.id;
-              return pFirst === nFirst && pLast === nLast;
-            });
-          return equal ? prev : next;
-        });
+        setCarouselData(
+          routes.map((r) => ({
+            ...r,
+            __k: '', // loop用のキー（実際にはloopDataで付与されるのでここでは空文字でよい）
+            stations:
+              routeStations.find((rs) => rs.id === r.id)?.stations ?? [],
+          }))
+        );
       } catch (err) {
         console.error(err);
       }
     };
-    run();
-  }, [
-    getAll,
-    isInitialized,
-    fetchStationsByLineId,
-    fetchStationsByLineGroupId,
-  ]);
+    fetchAsync();
+  }, [routes, fetchStationsByLineId, fetchStationsByLineGroupId]);
 
   useEffect(() => {
     const lines = station?.lines ?? [];
@@ -439,7 +411,9 @@ const SelectLineScreen: React.FC = () => {
         });
         const trainType =
           trainTypes.find(
-            (tt) => tt.groupId === line.station?.trainType?.groupId
+            (tt) =>
+              tt.groupId ===
+              stations.find((s) => s.line?.id === line.id)?.trainType?.groupId
           ) ?? null;
         pendingTrainTypeRef.current = trainType;
         setNavigationState((prev) => ({
@@ -549,8 +523,6 @@ const SelectLineScreen: React.FC = () => {
 
   const handlePresetPress = useCallback(
     async (route: SavedRoute) => {
-      // 押下直後に現在位置を記録・維持
-      preserveCarouselPosition();
       setSelectedRoute(route);
       setIsPresetModalOpen(true);
       if (route.hasTrainType) {
@@ -564,10 +536,8 @@ const SelectLineScreen: React.FC = () => {
           route.destinationStationId ?? null
         );
       }
-      // 状態更新後にも再度位置を復元
-      preserveCarouselPosition();
     },
-    [openModalByLineId, openModalByTrainTypeId, preserveCarouselPosition]
+    [openModalByLineId, openModalByTrainTypeId]
   );
 
   const handleCloseModal = useCallback(() => {
@@ -577,9 +547,7 @@ const SelectLineScreen: React.FC = () => {
     pendingStationsRef.current = null;
     pendingTrainTypeRef.current = null;
     pendingLineRef.current = null;
-    // 表示位置を即時復元（モーダル開閉による再レイアウトに備える）
-    requestAnimationFrame(() => preserveCarouselPosition());
-  }, [preserveCarouselPosition]);
+  }, []);
 
   const handleRouteConfirmed = useCallback(() => {
     // ここでのみグローバル状態を更新
@@ -692,6 +660,18 @@ const SelectLineScreen: React.FC = () => {
     []
   );
 
+  const isPresetsLoading = useMemo(
+    () =>
+      !isRoutesDBInitialized ||
+      fetchStationsByLineIdStatus === 'pending' ||
+      fetchStationsByLineGroupIdStatus === 'pending',
+    [
+      isRoutesDBInitialized,
+      fetchStationsByLineIdStatus,
+      fetchStationsByLineGroupIdStatus,
+    ]
+  );
+
   // Errors / Loading
   if (nearbyStationFetchError) {
     return (
@@ -734,63 +714,73 @@ const SelectLineScreen: React.FC = () => {
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           ListHeaderComponent={() => (
             <>
-              {loopData.length ? (
-                <View style={{ marginHorizontal: -24 }}>
-                  <FlatList<LoopItem>
-                    ref={listRef}
-                    horizontal
-                    data={loopData}
-                    keyExtractor={(item) => item.__k}
-                    renderItem={({ item }) => (
-                      <View style={{ width: cardWidth }}>
+              <View style={{ marginHorizontal: -24 }}>
+                <FlatList<LoopItem>
+                  ref={listRef}
+                  horizontal
+                  data={loopData}
+                  keyExtractor={(item) => item.__k}
+                  ListEmptyComponent={() =>
+                    isPresetsLoading ? (
+                      <SkeletonPlaceholder borderRadius={4} speed={1500}>
+                        <SkeletonPlaceholder.Item
+                          width={cardWidth - 48}
+                          height={160}
+                          style={{ marginHorizontal: 24 }}
+                        />
+                      </SkeletonPlaceholder>
+                    ) : (
+                      <View
+                        style={{
+                          width: cardWidth,
+                          height: 160,
+                          justifyContent: 'center',
+                        }}
+                      >
                         <View style={{ marginHorizontal: 24 }}>
-                          <Pressable onPress={() => handlePresetPress(item)}>
-                            <PresetCard
-                              title={item.name}
-                              from={item.stations[0]}
-                              to={item.stations[item.stations.length - 1]}
-                            />
-                          </Pressable>
+                          <NoPresetsCard />
                         </View>
                       </View>
-                    )}
-                    ItemSeparatorComponent={() => (
-                      <View style={{ width: CARD_GAP }} />
-                    )}
-                    showsHorizontalScrollIndicator={false}
-                    snapToOffsets={snapOffsets}
-                    onScroll={(e) => {
-                      if (!carouselData.length) return;
-                      const x = e.nativeEvent.contentOffset.x;
-                      carouselOffsetRef.current = x;
-                      const rawIndex = Math.round(
-                        (x - sidePadding) / ITEM_SIZE
-                      );
-                      const logicalIndex =
-                        ((rawIndex % carouselData.length) +
-                          carouselData.length) %
-                        carouselData.length;
-                      currentLogicalIndexRef.current = logicalIndex;
-                    }}
-                    onMomentumScrollEnd={handleMomentumEnd}
-                    decelerationRate="fast"
-                    snapToAlignment="start"
-                    disableIntervalMomentum
-                    contentContainerStyle={{
-                      paddingHorizontal: 0,
-                      marginBottom: 48,
-                    }}
-                  />
-                </View>
-              ) : (
-                <SkeletonPlaceholder borderRadius={4} speed={1500}>
-                  <SkeletonPlaceholder.Item
-                    width="100%"
-                    height={160}
-                    style={{ marginBottom: 48 }}
-                  />
-                </SkeletonPlaceholder>
-              )}
+                    )
+                  }
+                  renderItem={({ item }) => (
+                    <View style={{ width: cardWidth }}>
+                      <View style={{ marginHorizontal: 24 }}>
+                        <Pressable onPress={() => handlePresetPress(item)}>
+                          <PresetCard
+                            title={item.name}
+                            from={item.stations[0]}
+                            to={item.stations[item.stations.length - 1]}
+                          />
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                  ItemSeparatorComponent={() => (
+                    <View style={{ width: CARD_GAP }} />
+                  )}
+                  showsHorizontalScrollIndicator={false}
+                  snapToOffsets={snapOffsets}
+                  onScroll={(e) => {
+                    if (!carouselData.length) return;
+                    const x = e.nativeEvent.contentOffset.x;
+                    carouselOffsetRef.current = x;
+                    const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
+                    const logicalIndex =
+                      ((rawIndex % carouselData.length) + carouselData.length) %
+                      carouselData.length;
+                    currentLogicalIndexRef.current = logicalIndex;
+                  }}
+                  onMomentumScrollEnd={handleMomentumEnd}
+                  decelerationRate="fast"
+                  snapToAlignment="start"
+                  disableIntervalMomentum
+                  contentContainerStyle={{
+                    paddingHorizontal: 0,
+                    marginBottom: 48,
+                  }}
+                />
+              </View>
 
               <Heading
                 style={[
@@ -895,7 +885,7 @@ const SelectLineScreen: React.FC = () => {
         stations={pendingStationsRef.current ?? []}
         trainType={pendingTrainTypeRef.current}
         line={pendingLineRef.current}
-        destination={pendingWantedDestinationRef.current ?? null}
+        destination={pendingWantedDestinationRef.current}
         loading={fetchTrainTypesStatus === 'pending'}
         error={fetchTrainTypesError}
       />

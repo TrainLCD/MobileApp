@@ -7,6 +7,7 @@ import {
 import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { isJapanese } from '../../translation';
+import { SavedRoute } from '~/models/SavedRoute';
 
 export interface NavigationState {
   leftStations: Station[];
@@ -22,6 +23,8 @@ export interface NavigationState {
   enableLegacyAutoMode: boolean;
   isAppLatest: boolean;
   firstStop: boolean;
+  presetsFetched: boolean;
+  presetRoutes: SavedRoute[];
 }
 
 export const initialNavigationState: NavigationState = {
@@ -36,6 +39,8 @@ export const initialNavigationState: NavigationState = {
   enableLegacyAutoMode: false,
   isAppLatest: false,
   firstStop: true,
+  presetsFetched: false,
+  presetRoutes: [],
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);
