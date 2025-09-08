@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -74,12 +74,12 @@ const MainScreen: React.FC = () => {
   const theme = useThemeStore();
   const isLEDTheme = theme === APP_THEME.LED;
 
-  const [{ stations, selectedDirection, arrived }, setStationState] =
+  const [{ stations, selectedDirection, arrived }, _setStationState] =
     useAtom(stationState);
   const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
-  const setLineState = useSetAtom(lineState);
+  const _setLineState = useSetAtom(lineState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const currentLine = useCurrentLine();
@@ -128,7 +128,7 @@ const MainScreen: React.FC = () => {
     trainType,
   ]);
 
-  const navigation = useNavigation();
+  const _navigation = useNavigation();
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
@@ -163,10 +163,16 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     const lockOrientationAsync = async () => {
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE_LEFT
-      );
-      setIsRotated(true);
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE_LEFT
+        );
+      } catch (_e) {
+        // ignore and proceed
+      } finally {
+        // fail-open to avoid blocking UI even if locking fails
+        setIsRotated(true);
+      }
     };
     lockOrientationAsync();
     return () => {
@@ -373,36 +379,16 @@ const MainScreen: React.FC = () => {
     f();
   }, [isRotated]);
 
-  const changeOperatingLine = useCallback(
-    async (selectedStation: Station) => {
-      const selectedLine = selectedStation.line;
-      if (!selectedLine) {
-        return;
-      }
-
-      setLineState((prev) => ({ ...prev, selectedLine }));
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: selectedStation.trainType ?? null,
-        stationForHeader: selectedStation,
-        headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-        bottomState: 'LINE',
-        leftStations: [],
-      }));
-      setStationState((prev) => ({
-        ...prev,
-        station: selectedStation,
-        selectedDirection: null,
-        selectedBound: null,
-        arrived: true,
-        approaching: false,
-        stations: [],
-        wantedDestination: null,
-      }));
-      navigation.dispatch(StackActions.replace('SelectBound'));
-    },
-    [navigation, setLineState, setNavigationState, setStationState]
-  );
+  const changeOperatingLine = useCallback(async (selectedStation: Station) => {
+    const selectedLine = selectedStation.line;
+    if (!selectedLine) {
+      return;
+    }
+    // TODO: 実装し直す
+    if (isDevApp) {
+      Alert.alert('Unimplemented', 'This feature is not implemented yet.');
+    }
+  }, []);
 
   const handleTransferPress = useCallback(
     (selectedStation?: Station) => {
@@ -486,7 +472,7 @@ const MainScreen: React.FC = () => {
     return (
       <>
         <Header />
-        <LineBoard />
+        <LineBoard hasTerminus={hasTerminus} />
       </>
     );
   }

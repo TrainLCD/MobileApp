@@ -318,7 +318,7 @@ class PadArch extends React.PureComponent<Props, State> {
     const { fillHeight } = this.state;
     fillHeight.setValue(0);
     Animated.timing(fillHeight, {
-      toValue: windowHeight,
+      toValue: Dimensions.get('window').height,
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
       useNativeDriver: false,
     }).start();

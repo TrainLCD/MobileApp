@@ -138,7 +138,6 @@ export const RouteListModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
     >
       <View style={styles.modalContainer}>
         <SafeAreaView

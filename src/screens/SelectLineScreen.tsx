@@ -1,11 +1,11 @@
 import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
 import { Effect, pipe } from 'effect';
 import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
 import findNearest from 'geolib/es/findNearest';
 import { useAtomValue, useSetAtom } from 'jotai';
+import isEqual from 'lodash/isEqual';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -25,6 +25,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import Loading from '~/components/Loading';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
+import { SelectBoundModal } from '~/components/SelectBoundModal';
 import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
   getStationsByLineGroupId,
@@ -35,21 +36,18 @@ import type { SavedRoute } from '~/models/SavedRoute';
 import ErrorScreen from '../components/ErrorScreen';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
+import { LineCard } from '../components/LineCard';
 import { PresetCard } from '../components/PresetCard';
 import Typography from '../components/Typography';
-import VerticalLineCard from '../components/VerticalLineCard';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import {
   useConnectivity,
-  useCurrentStation,
   useFetchCurrentLocationOnce,
   useFetchNearbyStation,
   useLocationStore,
   useThemeStore,
 } from '../hooks';
-import { useLineStationsCache } from '../hooks/useLineStationsCache';
 import { useSavedRoutes } from '../hooks/useSavedRoutes';
-import { useStationsCache } from '../hooks/useStationsCache';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -133,7 +131,7 @@ const LineCardItem: React.FC<LineCardItemProps> = ({
   stations,
 }) => {
   return (
-    <VerticalLineCard
+    <LineCard
       line={line}
       onPress={() => onPress(line)}
       disabled={disabled}
@@ -146,12 +144,11 @@ const LineCardItem: React.FC<LineCardItemProps> = ({
 // 無駄な再描画を回避（同一props時にはレンダリングしない）
 const LineCardItemMemo = React.memo(LineCardItem);
 
-const VerticalSelectLineScreen: React.FC = () => {
+const SelectLineScreen: React.FC = () => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
   const { stationForHeader } = useAtomValue(navigationState);
-  const { stations: globalStations } = useAtomValue(stationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const insets = useSafeAreaInsets();
@@ -167,21 +164,21 @@ const VerticalSelectLineScreen: React.FC = () => {
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
 
   const {
+    stations: nearbyStations,
     fetchByCoords,
     isLoading: nearbyStationLoading,
     error: nearbyStationFetchError,
   } = useFetchNearbyStation();
+  const station = useMemo(() => nearbyStations[0] ?? null, [nearbyStations]);
+
   const isInternetAvailable = useConnectivity();
   const {
     fetchCurrentLocation,
     loading: locationLoading,
     error: fetchLocationError,
   } = useFetchCurrentLocationOnce();
-  const station = useCurrentStation();
   const [nowHeaderHeight, setNowHeaderHeight] = React.useState(0);
   const { getAll, isInitialized } = useSavedRoutes();
-  const { getStations } = useStationsCache();
-  const lineStationsCache = useLineStationsCache();
   const [routes, setRoutes] = React.useState<
     (SavedRoute & { stations: Station[] })[]
   >([]);
@@ -191,9 +188,8 @@ const VerticalSelectLineScreen: React.FC = () => {
 
   // SavedRouteモーダル用の状態
   const [selectedRoute, setSelectedRoute] = useState<SavedRoute | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalStations, setModalStations] = useState<Station[]>([]);
-  const [modalTrainType, setModalTrainType] = useState<TrainType | null>(null);
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+  const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
   // 確定時にのみ反映するための一時保存データ
   const pendingStationRef = React.useRef<Station | null>(null);
   const pendingStationsRef = React.useRef<Station[] | null>(null);
@@ -251,18 +247,6 @@ const VerticalSelectLineScreen: React.FC = () => {
   // 現在の“論理インデックス”（carouselData基準）を保持して、再描画でも位置を維持
   const currentLogicalIndexRef = React.useRef(0);
 
-  // 初期位置を「現在の論理インデックス」で真ん中ブロックへ移動（再マウント時も維持）
-  // useEffect(() => {
-  //   if (!loopData.length) return;
-  //   const logical =
-  //     currentLogicalIndexRef.current % Math.max(carouselData.length, 1);
-  //   const offset = sidePadding + (MID_BLOCK_START + logical) * ITEM_SIZE;
-  //   carouselOffsetRef.current = offset;
-  //   requestAnimationFrame(() => {
-  //     listRef.current?.scrollToOffset({ offset, animated: false });
-  //   });
-  // }, [ITEM_SIZE, MID_BLOCK_START, loopData.length, carouselData.length]);
-
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!carouselData.length) return;
@@ -307,7 +291,13 @@ const VerticalSelectLineScreen: React.FC = () => {
 
         const next = await Promise.all(
           routes.map(async (route) => {
-            const stations = await getStations(route);
+            const { stations } = route.hasTrainType
+              ? await fetchStationsByLineGroupId({
+                  lineGroupId: route.trainTypeId,
+                })
+              : await fetchStationsByLineId({
+                  lineId: route.lineId,
+                });
             return { ...route, stations };
           })
         );
@@ -337,39 +327,35 @@ const VerticalSelectLineScreen: React.FC = () => {
       }
     };
     run();
-  }, [getAll, isInitialized, getStations]);
+  }, [
+    getAll,
+    isInitialized,
+    fetchStationsByLineId,
+    fetchStationsByLineGroupId,
+  ]);
 
   useEffect(() => {
-    // Prefetch line stations with small concurrency and publish into local state for rendering
     const lines = station?.lines ?? [];
     if (!lines.length) return;
-    let cancelled = false;
-    const run = async () => {
-      const ids = lines.map((l) => l.id);
-      const queue = ids.filter((id) => !lineStationsById[id]);
-      let i = 0;
-      const worker = async () => {
-        while (i < queue.length && !cancelled) {
-          const idx = i++;
-          const id = queue[idx];
-          try {
-            const stations = await lineStationsCache.getStations(id);
-            if (cancelled) return;
-            setLineStationsById((prev) =>
-              prev[id] === stations ? prev : { ...prev, [id]: stations }
-            );
-          } catch {
-            // ignore
-          }
-        }
-      };
-      await Promise.all([worker(), worker()]);
+
+    const fetchStationsAsync = async () => {
+      for (const line of lines) {
+        if (lineStationsById[line.id]) continue;
+
+        const { stations } = await fetchStationsByLineId({
+          lineId: line.id,
+          stationId: line.station?.id,
+        });
+
+        setLineStationsById((prev) => {
+          if (isEqual(prev[line.id], stations)) return prev;
+          return { ...prev, [line.id]: stations };
+        });
+      }
     };
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [station?.lines, lineStationsCache, lineStationsById]);
+
+    fetchStationsAsync();
+  }, [station?.lines, fetchStationsByLineId, lineStationsById]);
 
   useEffect(() => {
     pipe(
@@ -439,32 +425,37 @@ const VerticalSelectLineScreen: React.FC = () => {
     );
   }, []);
 
-  const navigation = useNavigation();
-
   const handleLineSelected = useCallback(
-    (line: Line): void => {
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: line.station?.trainType ?? null,
-        leftStations: [],
-      }));
-      setLineState((prev) => ({ ...prev, selectedLine: line }));
-      navigation.navigate('SelectBound' as never);
+    async (line: Line) => {
+      const stations = lineStationsById[line.id] ?? [];
+      pendingLineRef.current = line ?? null;
+      pendingStationRef.current = line.station ?? null;
+      pendingStationsRef.current = stations;
+      setIsSelectBoundModalOpen(true);
+
+      if (line.station?.hasTrainTypes) {
+        const { trainTypes } = await fetchTrainTypes({
+          stationId: line.station?.id,
+        });
+        const trainType =
+          trainTypes.find(
+            (tt) => tt.groupId === line.station?.trainType?.groupId
+          ) ?? null;
+        pendingTrainTypeRef.current = trainType;
+        setNavigationState((prev) => ({
+          ...prev,
+          fetchedTrainTypes: trainTypes,
+        }));
+      }
     },
-    [navigation, setLineState, setNavigationState]
+    [lineStationsById, fetchTrainTypes, setNavigationState]
   );
 
   // PresetCard押下時のモーダル表示ロジック（SavedRoutesScreenのhandleItemPress相当）
   const openModalByLineId = useCallback(
     async (lineId: number, destinationStationId: number | null) => {
       // try cache first
-      const cached = await lineStationsCache
-        .getStations(lineId)
-        .catch(() => [] as Station[]);
-      const stations =
-        (cached?.length
-          ? cached
-          : (await fetchStationsByLineId({ lineId })).stations) ?? [];
+      const { stations } = await fetchStationsByLineId({ lineId });
       if (!stations.length) return;
 
       const wantedDestination =
@@ -495,10 +486,8 @@ const VerticalSelectLineScreen: React.FC = () => {
       pendingTrainTypeRef.current = null;
       pendingLineRef.current = (station.line as Line) ?? null;
       pendingWantedDestinationRef.current = wantedDestination;
-      setModalStations(stations);
-      setModalTrainType(null);
     },
-    [fetchStationsByLineId, latitude, longitude, lineStationsCache]
+    [fetchStationsByLineId, latitude, longitude]
   );
 
   const openModalByTrainTypeId = useCallback(
@@ -528,20 +517,34 @@ const VerticalSelectLineScreen: React.FC = () => {
 
       if (!station) return;
 
-      const { trainTypes } = await fetchTrainTypes({ stationId: station.id });
-      const trainType =
-        trainTypes.find((tt) => tt.groupId === lineGroupId) ?? null;
-
       // モーダル表示用のローカル状態のみ更新（グローバルは確定時に反映）
       pendingStationRef.current = station;
       pendingStationsRef.current = stations;
-      pendingTrainTypeRef.current = trainType;
-      pendingLineRef.current = (trainType?.line as Line) ?? null;
+      pendingLineRef.current = station?.line ?? null;
       pendingWantedDestinationRef.current = wantedDestination;
-      setModalStations(stations);
-      setModalTrainType(trainType);
+
+      if (station?.hasTrainTypes) {
+        const { trainTypes } = await fetchTrainTypes({
+          stationId: station?.id,
+        });
+
+        const trainType =
+          trainTypes.find((tt) => tt.groupId === station.trainType?.groupId) ??
+          null;
+        pendingTrainTypeRef.current = trainType;
+        setNavigationState((prev) => ({
+          ...prev,
+          fetchedTrainTypes: trainTypes,
+        }));
+      }
     },
-    [fetchStationsByLineGroupId, fetchTrainTypes, latitude, longitude]
+    [
+      fetchStationsByLineGroupId,
+      fetchTrainTypes,
+      setNavigationState,
+      latitude,
+      longitude,
+    ]
   );
 
   const handlePresetPress = useCallback(
@@ -549,7 +552,7 @@ const VerticalSelectLineScreen: React.FC = () => {
       // 押下直後に現在位置を記録・維持
       preserveCarouselPosition();
       setSelectedRoute(route);
-      setIsModalOpen(true);
+      setIsPresetModalOpen(true);
       if (route.hasTrainType) {
         await openModalByTrainTypeId(
           route.trainTypeId,
@@ -568,10 +571,8 @@ const VerticalSelectLineScreen: React.FC = () => {
   );
 
   const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
+    setIsPresetModalOpen(false);
     // ローカル状態のみクリア（グローバルは未変更）
-    setModalStations([]);
-    setModalTrainType(null);
     pendingStationRef.current = null;
     pendingStationsRef.current = null;
     pendingTrainTypeRef.current = null;
@@ -580,32 +581,29 @@ const VerticalSelectLineScreen: React.FC = () => {
     requestAnimationFrame(() => preserveCarouselPosition());
   }, [preserveCarouselPosition]);
 
-  const handleRouteConfirmed = useCallback(
-    (_trainType?: TrainType, _asTerminus?: boolean) => {
-      // ここでのみグローバル状態を更新
-      const st = pendingStationRef.current;
-      const sts = pendingStationsRef.current ?? [];
-      const tt = pendingTrainTypeRef.current;
-      const line = pendingLineRef.current;
-      if (st) {
-        setStationState((prev) => ({ ...prev, station: st, stations: sts }));
-        setNavigationState((prev) => ({
-          ...prev,
-          stationForHeader: st,
-          leftStations: [],
-          trainType: tt ?? null,
-        }));
-        setLineState((prev) => ({ ...prev, selectedLine: line ?? null }));
-        setStationState((prev) => ({
-          ...prev,
-          wantedDestination: pendingWantedDestinationRef.current ?? null,
-        }));
-      }
-      setIsModalOpen(false);
-      navigation.navigate('SelectBound' as never);
-    },
-    [navigation, setLineState, setNavigationState, setStationState]
-  );
+  const handleRouteConfirmed = useCallback(() => {
+    // ここでのみグローバル状態を更新
+    const st = pendingStationRef.current;
+    const sts = pendingStationsRef.current ?? [];
+    const tt = pendingTrainTypeRef.current;
+    const line = pendingLineRef.current;
+    if (st) {
+      setStationState((prev) => ({ ...prev, station: st, stations: sts }));
+      setNavigationState((prev) => ({
+        ...prev,
+        stationForHeader: st,
+        leftStations: [],
+        trainType: tt ?? null,
+      }));
+      setLineState((prev) => ({ ...prev, selectedLine: line ?? null }));
+      setStationState((prev) => ({
+        ...prev,
+        wantedDestination: pendingWantedDestinationRef.current ?? null,
+      }));
+    }
+    setIsPresetModalOpen(false);
+    setIsSelectBoundModalOpen(true);
+  }, [setLineState, setNavigationState, setStationState]);
 
   const handleUpdateStation = useCallback(async () => {
     const pos = await fetchCurrentLocation();
@@ -693,8 +691,6 @@ const VerticalSelectLineScreen: React.FC = () => {
     () => Animated.createAnimatedComponent(Typography),
     []
   );
-
-  // NOTE: ブラー効果を効かせるため、リストはヘッダー直下から開始（余白で押し下げない）
 
   // Errors / Loading
   if (nearbyStationFetchError) {
@@ -883,25 +879,28 @@ const VerticalSelectLineScreen: React.FC = () => {
       <FooterTabBar active="home" />
       {/* SavedRoute モーダル */}
       <SavedRouteInfoModal
-        visible={isModalOpen}
-        trainType={modalTrainType}
-        stations={modalStations.length ? modalStations : globalStations}
-        loading={
-          fetchStationsByLineIdStatus === 'pending' ||
-          fetchTrainTypesStatus === 'pending' ||
-          fetchStationsByLineGroupIdStatus === 'pending'
-        }
-        error={
-          fetchStationsByLineIdError ||
-          fetchTrainTypesError ||
-          fetchStationsByLineGroupIdError
-        }
+        visible={isPresetModalOpen}
+        trainType={pendingTrainTypeRef.current}
+        stations={pendingStationsRef.current ?? []}
         routeName={selectedRoute?.name ?? ''}
         onClose={handleCloseModal}
         onConfirmed={handleRouteConfirmed}
+        loading={fetchTrainTypesStatus === 'pending'}
+        error={fetchTrainTypesError}
+      />
+      <SelectBoundModal
+        visible={isSelectBoundModalOpen}
+        onClose={() => setIsSelectBoundModalOpen(false)}
+        station={pendingStationRef.current}
+        stations={pendingStationsRef.current ?? []}
+        trainType={pendingTrainTypeRef.current}
+        line={pendingLineRef.current}
+        destination={pendingWantedDestinationRef.current ?? null}
+        loading={fetchTrainTypesStatus === 'pending'}
+        error={fetchTrainTypesError}
       />
     </>
   );
 };
 
-export default React.memo(VerticalSelectLineScreen);
+export default React.memo(SelectLineScreen);

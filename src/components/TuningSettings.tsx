@@ -3,7 +3,6 @@ import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import {
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,

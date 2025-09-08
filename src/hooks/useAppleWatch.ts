@@ -29,7 +29,7 @@ export const useAppleWatch = (): void => {
   const nextStation = useNextStation();
   const stoppingState = useStoppingState();
   const { isLoopLine: isFullLoopLine, isPartiallyLoopLine } = useLoopLine();
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
 
   const switchedStation = useMemo<Station | null>(
     () => (arrived && !getIsPass(station) ? station : (nextStation ?? null)),

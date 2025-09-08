@@ -1,12 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Dimensions,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';

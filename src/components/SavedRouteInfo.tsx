@@ -3,6 +3,7 @@ import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useGetLineMark, useThemeStore } from '~/hooks';
@@ -64,7 +65,6 @@ const styles = StyleSheet.create({
   },
   trainTypeList: {
     marginTop: 8,
-    marginHorizontal: 24,
     maxHeight: '35%',
   },
   trainTypeListContent: {
@@ -184,6 +184,8 @@ export const SavedRouteInfo: React.FC<Props> = ({
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [asTerminus, setAsTerminus] = useState(false);
+
+  const toggleAsTerminus = () => setAsTerminus((prev) => !prev);
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
 
@@ -310,53 +312,73 @@ export const SavedRouteInfo: React.FC<Props> = ({
           >
             {translate('allStops')}:
           </Typography>
-          <Typography
-            style={{
-              fontSize: RFValue(11),
-              marginTop: 8,
-              lineHeight: RFValue(14),
-            }}
-          >
-            {!loading && stopStations.length
-              ? stopStations.map((s, i, a) =>
-                  isJapanese ? (
-                    <React.Fragment key={s.id}>
-                      <Typography
-                        style={[
-                          afterFinalStations
-                            .map((s) => s.groupId)
-                            .includes(s.groupId)
-                            ? {
-                                opacity: 0.5,
-                              }
-                            : { fontWeight: 'bold' },
-                        ]}
-                      >
-                        {s.name}
-                      </Typography>
-                      {a.length - 1 !== i ? ' ' : ''}
-                    </React.Fragment>
-                  ) : (
-                    <React.Fragment key={s.id}>
-                      <Typography
-                        style={[
-                          afterFinalStations
-                            .map((s) => s.groupId)
-                            .includes(s.groupId)
-                            ? {
-                                opacity: 0.5,
-                              }
-                            : { fontWeight: 'bold' },
-                        ]}
-                      >
-                        {s.nameRoman}
-                      </Typography>
-                      {a.length - 1 !== i ? '  ' : ''}
-                    </React.Fragment>
-                  )
+
+          {loading ? (
+            <SkeletonPlaceholder borderRadius={4} speed={1500}>
+              <SkeletonPlaceholder.Item
+                width="100%"
+                height={64}
+                style={{
+                  marginTop: 8,
+                }}
+              />
+            </SkeletonPlaceholder>
+          ) : (
+            <Typography
+              style={{
+                fontSize: RFValue(11),
+                marginTop: 8,
+                lineHeight: RFValue(14),
+              }}
+            >
+              {stopStations.map((s, i, a) =>
+                isJapanese ? (
+                  <React.Fragment key={s.id}>
+                    <Typography
+                      style={[
+                        afterFinalStations
+                          .map((s) => s.groupId)
+                          .includes(s.groupId)
+                          ? {
+                              opacity: 0.5,
+                            }
+                          : { fontWeight: 'bold' },
+                      ]}
+                    >
+                      {s.name}
+                    </Typography>
+                    {a.length - 1 !== i ? ' ' : ''}
+                  </React.Fragment>
+                ) : (
+                  <React.Fragment key={s.id}>
+                    <Typography
+                      style={[
+                        afterFinalStations
+                          .map((s) => s.groupId)
+                          .includes(s.groupId)
+                          ? {
+                              opacity: 0.5,
+                            }
+                          : { fontWeight: 'bold' },
+                      ]}
+                    >
+                      {s.nameRoman}
+                    </Typography>
+                    {a.length - 1 !== i ? '  ' : ''}
+                  </React.Fragment>
                 )
-              : `${translate('loadingAPI')}...`}
-          </Typography>
+              )}
+            </Typography>
+          )}
+          {error && (
+            <Typography
+              style={{ color: '#d00', marginTop: 8 }}
+              numberOfLines={2}
+            >
+              {error.message}
+            </Typography>
+          )}
+
           <Typography
             style={{
               fontSize: RFValue(14),
@@ -367,30 +389,34 @@ export const SavedRouteInfo: React.FC<Props> = ({
             {translate('eachTrainTypes')}:
           </Typography>
 
-          {error && (
-            <Typography
-              style={{ color: '#d00', marginTop: 8 }}
-              numberOfLines={2}
-            >
-              {error.message}
-            </Typography>
-          )}
-        </View>
-        <FlatList
-          horizontal
-          style={styles.trainTypeList}
-          contentContainerStyle={styles.trainTypeListContent}
-          data={trainTypeLines}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <SavedItem
-              outOfLineRange={afterFinalLines
-                .map((l) => l.id)
-                .includes(item.id)}
-              line={item}
+          {loading ? (
+            <SkeletonPlaceholder borderRadius={4} speed={1500}>
+              <SkeletonPlaceholder.Item
+                width="100%"
+                height={48}
+                style={{
+                  marginTop: 8,
+                }}
+              />
+            </SkeletonPlaceholder>
+          ) : (
+            <FlatList
+              horizontal
+              style={styles.trainTypeList}
+              contentContainerStyle={styles.trainTypeListContent}
+              data={trainTypeLines}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <SavedItem
+                  outOfLineRange={afterFinalLines
+                    .map((l) => l.id)
+                    .includes(item.id)}
+                  line={item}
+                />
+              )}
             />
           )}
-        />
+        </View>
 
         {fromRouteListModal && (
           <View
@@ -405,13 +431,13 @@ export const SavedRouteInfo: React.FC<Props> = ({
               <LEDThemeSwitch
                 style={{ marginRight: 8 }}
                 value={asTerminus}
-                onValueChange={() => setAsTerminus((prev) => !prev)}
+                onValueChange={toggleAsTerminus}
               />
             ) : (
               <Switch
                 style={{ marginRight: 8 }}
                 value={asTerminus}
-                onValueChange={() => setAsTerminus((prev) => !prev)}
+                onValueChange={toggleAsTerminus}
                 ios_backgroundColor={'#fff'}
               />
             )}

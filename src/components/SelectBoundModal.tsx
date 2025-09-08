@@ -1,14 +1,9 @@
-import { StackActions, useNavigation } from '@react-navigation/native';
-import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useAtom, useSetAtom } from 'jotai';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import {
   Line,
   type Station,
@@ -20,19 +15,18 @@ import type {
   SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
+import { APP_THEME } from '~/models/Theme';
 import { isDevApp } from '~/utils/isDevApp';
+import isTablet from '~/utils/isTablet';
 import Button from '../components/Button';
-import ErrorScreen from '../components/ErrorScreen';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
-import Typography from '../components/Typography';
-import { TOEI_OEDO_LINE_ID } from '../constants';
+import { LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID } from '../constants';
 import {
   useBounds,
   useGetStationsWithTermination,
   useLoopLine,
   useSavedRoutes,
-  useStationList,
+  useThemeStore,
 } from '../hooks';
 import { directionToDirectionName, type LineDirection } from '../models/Bound';
 import lineState from '../store/atoms/line';
@@ -40,13 +34,21 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
+import ErrorScreen from './ErrorScreen';
 
 const styles = StyleSheet.create({
-  boundLoading: {
-    marginTop: 16,
+  root: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 24,
   },
-  bottom: {
-    padding: 16,
+  contentView: {
+    width: '100%',
+    paddingVertical: 24,
+    borderRadius: 8,
+    minHeight: 256,
   },
   buttons: {
     marginTop: 12,
@@ -56,14 +58,6 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  button: {
-    marginLeft: 8,
-    marginRight: 8,
-  },
-  horizontalButtons: {
-    flexDirection: 'row',
-    marginVertical: 12,
   },
   menuNotice: {
     fontWeight: 'bold',
@@ -76,29 +70,46 @@ const styles = StyleSheet.create({
 type RenderButtonProps = {
   boundStations: Station[];
   direction: LineDirection;
+  loading: boolean;
 };
 
-const SelectBoundScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
-  const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
+type Props = {
+  visible: boolean;
+  onClose: () => void;
+  station: Station | null;
+  line: Line | null;
+  stations: Station[];
+  trainType: TrainType | null;
+  destination: Station | null;
+  loading: boolean;
+  error: Error | null;
+};
+
+export const SelectBoundModal: React.FC<Props> = ({
+  visible,
+  onClose,
+  line,
+  station,
+  stations,
+  trainType,
+  destination: wantedDestination,
+  loading,
+  error,
+}) => {
   const [savedRouteLoaded, setSavedRouteLoaded] = useState(false);
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
   const navigation = useNavigation();
-  const [{ station, stations, wantedDestination }, setStationState] =
-    useAtom(stationState);
-  const [
-    { trainType, fetchedTrainTypes, autoModeEnabled },
-    setNavigationState,
-  ] = useAtom(navigationState);
-  const { selectedLine } = useAtomValue(lineState);
-
-  const { loading, error, refetchStations } = useStationList();
-  const { isLoopLine } = useLoopLine();
+  const setStationState = useSetAtom(stationState);
+  const [{ fetchedTrainTypes, autoModeEnabled }, setNavigationState] =
+    useAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
+  const { isLoopLine } = useLoopLine(stations);
   const {
     bounds: [inboundStations, outboundStations],
-  } = useBounds();
+  } = useBounds(stations);
   const getTerminatedStations = useGetStationsWithTermination();
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const {
     find: findSavedRoute,
@@ -108,13 +119,11 @@ const SelectBoundScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchSavedRoute = async () => {
-      try {
-        if (!selectedLine?.id) {
-          return;
-        }
+      if (!line) return;
 
+      try {
         const route = await findSavedRoute({
-          lineId: selectedLine.id,
+          lineId: line.id,
           trainTypeId: trainType?.groupId ?? null,
           destinationStationId: wantedDestination?.groupId ?? null,
         });
@@ -124,12 +133,7 @@ const SelectBoundScreen: React.FC = () => {
       }
     };
     fetchSavedRoute();
-  }, [
-    findSavedRoute,
-    selectedLine?.id,
-    trainType?.groupId,
-    wantedDestination?.groupId,
-  ]);
+  }, [findSavedRoute, line, trainType?.groupId, wantedDestination?.groupId]);
 
   // 種別選択ボタンを表示するかのフラグ
   const withTrainTypes = useMemo(
@@ -155,25 +159,37 @@ const SelectBoundScreen: React.FC = () => {
       leftStations: [],
       fetchedTrainTypes: [],
     }));
-    navigation.dispatch(StackActions.replace('SelectLine'));
-  }, [navigation, setNavigationState, setStationState]);
+    onClose();
+  }, [setNavigationState, setStationState, onClose]);
 
   const handleBoundSelected = useCallback(
     (selectedStation: Station, direction: LineDirection) => {
       const oedoLineTerminus =
         direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
 
+      setLineState((prev) => ({ ...prev, selectedLine: line }));
       setStationState((prev) => ({
         ...prev,
+        station,
+        stations,
         selectedBound:
-          selectedLine?.id === TOEI_OEDO_LINE_ID
-            ? oedoLineTerminus
-            : selectedStation,
+          line?.id === TOEI_OEDO_LINE_ID ? oedoLineTerminus : selectedStation,
         selectedDirection: direction,
       }));
-      navigation.navigate('Main' as never);
+      onClose();
+      requestAnimationFrame(() => {
+        navigation.navigate('Main' as never);
+      });
     },
-    [navigation, selectedLine, setStationState, stations]
+    [
+      navigation,
+      station,
+      line,
+      setLineState,
+      setStationState,
+      stations,
+      onClose,
+    ]
   );
   const handleNotificationButtonPress = (): void => {
     navigation.navigate('Notification' as never);
@@ -220,7 +236,9 @@ const SelectBoundScreen: React.FC = () => {
         stations: getTerminatedStations(destination, stations),
       }));
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }));
-      navigation.navigate('Main' as never);
+      requestAnimationFrame(() => {
+        navigation.navigate('Main' as never);
+      });
     },
     [
       navigation,
@@ -248,7 +266,7 @@ const SelectBoundScreen: React.FC = () => {
 
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {
-      const directionName = directionToDirectionName(selectedLine, direction);
+      const directionName = directionToDirectionName(line, direction);
 
       if (isJapanese) {
         if (direction === 'INBOUND') {
@@ -265,11 +283,19 @@ const SelectBoundScreen: React.FC = () => {
       }
       return `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`;
     },
-    [inboundStations, outboundStations, selectedLine]
+    [inboundStations, outboundStations, line]
   );
 
   const renderButton = useCallback(
-    ({ boundStations, direction }: RenderButtonProps) => {
+    ({ boundStations, direction, loading }: RenderButtonProps) => {
+      if (loading) {
+        return (
+          <SkeletonPlaceholder borderRadius={4} speed={1500}>
+            <SkeletonPlaceholder.Item width="100%" height={34} />
+          </SkeletonPlaceholder>
+        );
+      }
+
       if (wantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
@@ -282,7 +308,7 @@ const SelectBoundScreen: React.FC = () => {
         if (direction === dir) {
           return (
             <Button
-              style={styles.button}
+              color="#008ffe"
               onPress={() =>
                 handleWantedDestinationPress(wantedDestination, dir)
               }
@@ -313,11 +339,7 @@ const SelectBoundScreen: React.FC = () => {
       const boundSelectOnPress = () =>
         handleBoundSelected(boundStations[0], direction);
       return (
-        <Button
-          style={styles.button}
-          key={boundStations[0]?.id}
-          onPress={boundSelectOnPress}
-        >
+        <Button color="#008ffe" onPress={boundSelectOnPress}>
           {directionText}
         </Button>
       );
@@ -350,6 +372,8 @@ const SelectBoundScreen: React.FC = () => {
   }, [setNavigationState]);
 
   const handleSaveRoutePress = useCallback(async () => {
+    if (!line) return;
+
     if (savedRoute) {
       Alert.alert(
         translate('removeFromSavedRoutes'),
@@ -378,13 +402,9 @@ const SelectBoundScreen: React.FC = () => {
       return;
     }
 
-    if (!selectedLine) {
-      return;
-    }
-
     const lineName = isJapanese
-      ? selectedLine.nameShort
-      : (selectedLine.nameRoman ?? selectedLine.nameShort);
+      ? line.nameShort
+      : (line.nameRoman ?? line.nameShort);
     const edgeStationNames = isJapanese
       ? `${stations[0]?.name ?? ''}〜${stations[stations.length - 1]?.name ?? ''}`
       : `${stations[0]?.nameRoman ?? ''} - ${stations[stations.length - 1]?.nameRoman ?? ''}`;
@@ -398,7 +418,7 @@ const SelectBoundScreen: React.FC = () => {
         name: wantedDestination
           ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
           : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
-        lineId: selectedLine.id,
+        lineId: line.id,
         trainTypeId: trainType?.groupId,
         destinationStationId: wantedDestination?.groupId ?? null,
         createdAt: new Date(),
@@ -422,19 +442,25 @@ const SelectBoundScreen: React.FC = () => {
       name: isJapanese
         ? `${lineName} 各駅停車 ${edgeStationNames} ${destinationName ? `${destinationName}行き` : ''}`.trim()
         : `${lineName} Local ${edgeStationNames}${destinationName ? ` for ${destinationName}` : ''}`.trim(),
-      lineId: selectedLine.id,
+      lineId: line.id,
       trainTypeId: null,
       destinationStationId: wantedDestination?.groupId ?? null,
       createdAt: new Date(),
     };
 
     setSavedRoute(await saveCurrentRoute(newRoute));
+    Alert.alert(
+      translate('announcementTitle'),
+      translate('routeSavedText', {
+        routeName: newRoute.name,
+      })
+    );
   }, [
     savedRoute,
     removeCurrentRoute,
     saveCurrentRoute,
     wantedDestination,
-    selectedLine,
+    line,
     trainType,
     stations,
   ]);
@@ -445,110 +471,83 @@ const SelectBoundScreen: React.FC = () => {
         showStatus
         title={translate('errorTitle')}
         text={translate('apiErrorText')}
-        onRetryPress={refetchStations}
         isFetching={loading}
       />
     );
   }
 
-  if (!stations.length || loading) {
-    return (
-      <>
-        <ScrollView
-          contentContainerStyle={[
-            styles.bottom,
-            { paddingBottom: styles.bottom.padding + footerHeight },
+  return (
+    <Modal
+      animationType="fade"
+      transparent
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.root} onPress={onClose}>
+        <Pressable
+          style={[
+            styles.contentView,
+            {
+              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+            },
+            isTablet && {
+              width: '80%',
+              maxHeight: '90%',
+              shadowOpacity: 0.25,
+              shadowColor: '#000',
+              borderRadius: 16,
+            },
           ]}
         >
           <View style={styles.container}>
             <Heading>{translate('selectBoundTitle')}</Heading>
-            <ActivityIndicator style={styles.boundLoading} size="large" />
-            <View style={styles.buttons}>
-              <Button onPress={handleSelectBoundBackButtonPress}>
-                {translate('back')}
-              </Button>
-            </View>
 
-            <Typography style={styles.menuNotice}>
-              {translate('menuNotice')}
-            </Typography>
-          </View>
-        </ScrollView>
-        <FooterTabBar active="home" />
-      </>
-    );
-  }
+            <View style={{ gap: 8, marginTop: 24 }}>
+              {renderButton({
+                boundStations: inboundStations,
+                direction: 'INBOUND',
+                loading,
+              })}
+              {renderButton({
+                boundStations: outboundStations,
+                direction: 'OUTBOUND',
+                loading,
+              })}
 
-  return (
-    <>
-      <ScrollView
-        contentContainerStyle={[
-          styles.bottom,
-          { paddingBottom: styles.bottom.padding + footerHeight },
-        ]}
-      >
-        <View style={styles.container}>
-          <Heading>{translate('selectBoundTitle')}</Heading>
-
-          <View style={styles.horizontalButtons}>
-            {renderButton({
-              boundStations: inboundStations,
-              direction: 'INBOUND',
-            })}
-            {renderButton({
-              boundStations: outboundStations,
-              direction: 'OUTBOUND',
-            })}
-          </View>
-
-          <Button onPress={handleSelectBoundBackButtonPress}>
-            {translate('back')}
-          </Button>
-          <Typography style={styles.menuNotice}>
-            {translate('menuNotice')}
-          </Typography>
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              gap: 16,
-              marginTop: 12,
-              justifyContent: 'center',
-            }}
-          >
-            <Button onPress={handleNotificationButtonPress}>
-              {translate('notifySettings')}
-            </Button>
-            {withTrainTypes ? (
-              <Button onPress={handleTrainTypeButtonPress}>
-                {translate('trainTypeSettings')}
-              </Button>
-            ) : null}
-            <Button onPress={handleAllStopsButtonPress}>
-              {translate('viewStopStations')}
-            </Button>
-            {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
-            {!isLoopLine ? (
-              <Button onPress={handleSpecifyDestinationButtonPress}>
-                {translate('selectBoundSettings')}
-              </Button>
-            ) : null}
-            <Button onPress={toggleAutoModeEnabled}>
-              {translate('autoModeSettings')}: {autoModeEnabled ? 'ON' : 'OFF'}
-            </Button>
-            {isDevApp && savedRouteLoaded && (
-              <Button onPress={handleSaveRoutePress}>
-                {translate(
-                  savedRoute ? 'removeFromSavedRoutes' : 'saveCurrentRoute'
+              <View style={{ gap: 8, marginTop: 12 }}>
+                <Button onPress={handleNotificationButtonPress}>
+                  {translate('notifySettings')}
+                </Button>
+                {withTrainTypes ? (
+                  <Button onPress={handleTrainTypeButtonPress}>
+                    {translate('trainTypeSettings')}
+                  </Button>
+                ) : null}
+                <Button onPress={handleAllStopsButtonPress}>
+                  {translate('viewStopStations')}
+                </Button>
+                {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
+                {!isLoopLine ? (
+                  <Button onPress={handleSpecifyDestinationButtonPress}>
+                    {translate('selectBoundSettings')}
+                  </Button>
+                ) : null}
+                <Button onPress={toggleAutoModeEnabled}>
+                  {translate('autoModeSettings')}:{' '}
+                  {autoModeEnabled ? 'ON' : 'OFF'}
+                </Button>
+                {isDevApp && savedRouteLoaded && (
+                  <Button onPress={handleSaveRoutePress}>
+                    {translate(
+                      savedRoute ? 'removeFromSavedRoutes' : 'saveCurrentRoute'
+                    )}
+                  </Button>
                 )}
-              </Button>
-            )}
+              </View>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-      <FooterTabBar active="home" />
-    </>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 };
-
-export default React.memo(SelectBoundScreen);

@@ -340,11 +340,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <View
-      style={{
-        ...styles.stationNameContainer,
-        width: dim.width / 9,
-        paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
-      }}
+      style={[
+        styles.stationNameContainer,
+        {
+          width: dim.width / 9,
+          paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
+        },
+      ]}
     >
       <View
         style={
@@ -365,11 +367,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </View>
       {numberingObj ? (
         <View
-          style={{
-            ...styles.numberingContainer,
-            backgroundColor: stationNumberBGColor,
-            marginBottom: passed && isTablet ? -4 : -6,
-          }}
+          style={[
+            styles.numberingContainer,
+            {
+              backgroundColor: stationNumberBGColor,
+              marginBottom: passed && isTablet ? -4 : -6,
+            },
+          ]}
         >
           <Typography
             style={{ ...styles.numberingText, color: stationNumberTextColor }}
@@ -380,10 +384,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       ) : null}
 
       <View
-        style={{
-          ...styles.lineDot,
-          backgroundColor: passed ? '#aaa' : '#fff',
-        }}
+        style={[styles.lineDot, { backgroundColor: passed ? '#aaa' : '#fff' }]}
       >
         {isTablet && lineMarks.length && !passed ? (
           <View style={styles.topBar} />
@@ -475,12 +476,14 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       {stationsWithEmpty.map((lc, i) => (
         <View
           key={`${lc}${i.toString()}`}
-          style={{
-            ...styles.bar,
-            left: barWidth * i,
-            backgroundColor: lc ? lc : (line?.color ?? '#000'),
-            width: barWidth,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barWidth * i,
+              backgroundColor: lc ?? line?.color ?? '#000',
+              width: barWidth,
+            },
+          ]}
         />
       ))}
 

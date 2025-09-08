@@ -4,7 +4,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useScale } from '~/hooks/useScale';
-import { isEnAtom } from '~/store/selectors/isEn';
 import {
   useCurrentLine,
   useInterval,
@@ -12,6 +11,7 @@ import {
 } from '../hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
+import { isEnAtom } from '../store/selectors/isEn';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -370,35 +370,41 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
-          style={{
-            ...styles.bar,
-            left: barLeft,
-            width: barWidth,
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barLeft,
+              width: barWidth,
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+            },
+          ]}
         />
         <LinearGradient
           colors={
             line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
           }
-          style={{
-            ...styles.bar,
-            left: barLeft,
-            width: barWidth,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barLeft,
+              width: barWidth,
+            },
+          ]}
         />
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={['#fff', '#000', '#000', '#fff']}
             locations={[0.5, 0.5, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barWidth,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
+            style={[
+              styles.bar,
+              {
+                left: barLeft,
+                width: barWidth,
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0,
+              },
+            ]}
           />
         ) : null}
         {arrived &&
@@ -409,11 +415,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             colors={
               line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
             }
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barWidth / 2.5,
-            }}
+            style={[
+              styles.bar,
+              {
+                left: barLeft,
+                width: barWidth / 2.5,
+              },
+            ]}
           />
         ) : null}
         {(arrived && currentStationIndex < index + 1) || !passed ? (
@@ -426,21 +434,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   ]
                 : ['#000000ff', '#000000bb']
             }
-            style={{
-              ...styles.bar,
-              left:
-                currentStationIndex !== 0 &&
-                currentStationIndex === index &&
-                currentStationIndex !== stations.length - 1
-                  ? barLeft + barWidth / 2.5
-                  : barLeft,
-              width:
-                currentStationIndex !== 0 &&
-                currentStationIndex === index &&
-                currentStationIndex !== stations.length - 1
-                  ? barWidth / 2.5
-                  : barWidth,
-            }}
+            style={[
+              styles.bar,
+              {
+                left:
+                  currentStationIndex !== 0 &&
+                  currentStationIndex === index &&
+                  currentStationIndex !== stations.length - 1
+                    ? barLeft + barWidth / 2.5
+                    : barLeft,
+                width:
+                  currentStationIndex !== 0 &&
+                  currentStationIndex === index &&
+                  currentStationIndex !== stations.length - 1
+                    ? barWidth / 2.5
+                    : barWidth,
+              },
+            ]}
           />
         ) : null}
         <LineDot
@@ -497,17 +507,19 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   const dim = useWindowDimensions();
 
   return (
-    <View style={{ ...styles.stationNameContainer, width: dim.width / 9 }}>
+    <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: barLeft,
+            width: barWidth,
+            borderTopLeftRadius: 0,
+            borderBottomLeftRadius: 0,
+          },
+        ]}
       />
       <LinearGradient
         colors={
@@ -515,11 +527,13 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
             ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
             : ['#000000ff', '#000000bb']
         }
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: barLeft,
+            width: barWidth,
+          },
+        ]}
       />
       {isLast ? (
         <BarTerminalEast
@@ -607,10 +621,10 @@ const LineBoardEast: React.FC<Props> = ({
 
   return (
     <View
-      style={{
-        ...styles.root,
-        paddingBottom: isTablet ? dim.height / 2.5 : undefined,
-      }}
+      style={[
+        styles.root,
+        { paddingBottom: isTablet ? dim.height / 2.5 : undefined },
+      ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
     </View>

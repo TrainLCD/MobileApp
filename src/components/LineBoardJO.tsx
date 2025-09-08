@@ -42,17 +42,13 @@ const useBarWidth = () => {
   return isTablet ? (dim.width - 120) / 8 : (dim.width - 96) / 7.835;
 };
 
-const barBottom = ((): number => {
-  if (isTablet) {
-    return 32;
-  }
+const barBottom = (() => {
+  if (isTablet) return 32;
   return 48;
 })();
 
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return 48;
-  }
+const barTerminalBottom = (() => {
+  if (isTablet) return 48;
   return 58;
 })();
 
@@ -261,7 +257,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
     [stationInLoop.stationNumbers, stationNumberIndex]
   );
-  const dim = useWindowDimensions();
   const barWidth = useBarWidth();
 
   const numberingColor = useMemo(
@@ -312,10 +307,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </View>
 
       <View
-        style={{
-          ...styles.padLineMarksContainer,
-          top: hasNumberedStation ? dim.height - 7 : dim.height - 45,
-        }}
+        style={[
+          styles.padLineMarksContainer,
+          { bottom: hasNumberedStation ? 7 : 45 },
+        ]}
       >
         <PadLineMarks
           shouldGrayscale={isPass}
@@ -398,66 +393,75 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         <React.Fragment key={`${lc}${i.toString()}`}>
           <View
             key={`${lc}${i.toString()}`}
-            style={{
-              ...styles.bar,
-              width: barWidth,
-              left: barWidth * i,
-              backgroundColor: (() => {
-                if (i <= currentStationIndex) {
-                  if (!arrived) {
+            style={[
+              styles.bar,
+              {
+                width: barWidth,
+                left: barWidth * i,
+                backgroundColor: (() => {
+                  if (i <= currentStationIndex) {
+                    if (!arrived) {
+                      return '#888';
+                    }
+                    if (i === currentStationIndex) {
+                      return '#dc143c';
+                    }
                     return '#888';
                   }
-                  if (i === currentStationIndex) {
-                    return '#dc143c';
-                  }
-                  return '#888';
-                }
 
-                return lc ?? '#888';
-              })(),
-            }}
+                  return lc ?? '#888';
+                })(),
+              },
+            ]}
           />
           <View
-            style={{
-              ...styles.bar,
-              left: barWidth * i,
-              backgroundColor: (() => {
-                if (i <= currentStationIndex) {
-                  if (!arrived) {
+            style={[
+              styles.bar,
+              {
+                left: barWidth * i,
+                backgroundColor: (() => {
+                  if (i <= currentStationIndex) {
+                    if (!arrived) {
+                      return '#888';
+                    }
+                    if (i === currentStationIndex) {
+                      return '#dc143c';
+                    }
                     return '#888';
                   }
-                  if (i === currentStationIndex) {
-                    return '#dc143c';
-                  }
-                  return '#888';
-                }
 
-                return lc ?? '#888';
-              })(),
-            }}
+                  return lc ?? '#888';
+                })(),
+              },
+            ]}
           />
           {getIsPass(stations[i]) ? (
             <View
-              style={{
-                ...styles.barDot,
-                left: getLeft(i),
-                bottom: getBottom(i),
-                width: i <= currentStationIndex ? 16 : 32,
-                height: i <= currentStationIndex ? 16 : 32,
-              }}
+              style={[
+                styles.barDot,
+                {
+                  left: getLeft(i),
+                  bottom: getBottom(i),
+                  width: i <= currentStationIndex ? 16 : 32,
+                  height: i <= currentStationIndex ? 16 : 32,
+                },
+              ]}
             >
               <PassChevronTY />
             </View>
           ) : (
             <View
-              style={{
-                ...styles.barDot,
-                backgroundColor: stations.length <= i ? 'transparent' : 'white',
-                left: getLeft(i),
-                bottom: getBottom(i),
-                width: i <= currentStationIndex ? 16 : 32,
-                height: i <= currentStationIndex ? 16 : 32,
-              }}
+              style={[
+                styles.barDot,
+                {
+                  backgroundColor:
+                    stations.length <= i ? 'transparent' : 'white',
+                  left: getLeft(i),
+                  bottom: getBottom(i),
+                  width: i <= currentStationIndex ? 16 : 32,
+                  height: i <= currentStationIndex ? 16 : 32,
+                },
+              ]}
             />
           )}
         </React.Fragment>

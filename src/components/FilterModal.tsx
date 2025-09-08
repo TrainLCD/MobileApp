@@ -114,7 +114,6 @@ export const FilterModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
     >
       <View style={styles.root}>
         <View

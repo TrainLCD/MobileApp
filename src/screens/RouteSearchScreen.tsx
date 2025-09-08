@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@connectrpc/connect-query';
-import { StackActions, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -228,9 +228,7 @@ const RouteSearchScreen = () => {
               ? (stations[stations.length - 1] ?? null)
               : (stations[0] ?? null),
         }));
-        navigation.dispatch(
-          StackActions.replace('MainStack', { screen: 'Main' })
-        );
+        navigation.navigate('Main' as never);
         return;
       }
 
@@ -281,9 +279,9 @@ const RouteSearchScreen = () => {
             ? stations[stations.length - 1]
             : stations[0],
       }));
-      navigation.dispatch(
-        StackActions.replace('MainStack', { screen: 'Main' })
-      );
+      // navigation.dispatch(
+      //   StackActions.replace('MainStack', { screen: 'Main' })
+      // );
     },
     [
       currentStation?.groupId,

@@ -247,7 +247,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                   if (Platform.OS === 'ios') {
                     navigation.dispatch(
                       StackActions.replace('MainStack', {
-                        screen: 'SelectBound',
+                        screen: 'SelectLine',
                       })
                     );
                     break;
@@ -287,10 +287,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     [
       handleReport,
       handleShare,
-      navigation,
       selectedBound,
       showActionSheetWithOptions,
       untouchableModeEnabled,
+      navigation.dispatch,
     ]
   );
 

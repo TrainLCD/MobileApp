@@ -1,5 +1,6 @@
 import { getLuminance } from 'polished';
-import React, { useMemo } from 'react';
+import type React from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const VerticalLineCard: React.FC<Props> = ({
+export const LineCard: React.FC<Props> = ({
   line,
   onPress,
   disabled,
@@ -99,6 +100,13 @@ const VerticalLineCard: React.FC<Props> = ({
     if (isLEDTheme) return '#fff';
     // 背景が明るい場合は薄いダークのボーダー
     return lum > 0.7 ? 'rgba(0,0,0,0.18)' : '#fff';
+  }, [isLEDTheme, line.color]);
+
+  const fgColor = useMemo(() => {
+    const base = line.color || '#333';
+    const lum = getLuminance(base);
+    if (isLEDTheme) return '#fff';
+    return lum > 0.7 ? '#000' : '#fff';
   }, [isLEDTheme, line.color]);
 
   const [inboundText, outboundText] = useMemo(() => {
@@ -161,7 +169,10 @@ const VerticalLineCard: React.FC<Props> = ({
         </View>
       ) : null}
       <View style={styles.texts}>
-        <Typography style={styles.title} numberOfLines={1}>
+        <Typography
+          style={[styles.title, { color: fgColor }]}
+          numberOfLines={1}
+        >
           {lineName}
         </Typography>
 
@@ -174,7 +185,10 @@ const VerticalLineCard: React.FC<Props> = ({
             ]}
           >
             {inboundText ? (
-              <Typography style={styles.subtitle} numberOfLines={1}>
+              <Typography
+                style={[styles.subtitle, { color: fgColor }]}
+                numberOfLines={1}
+              >
                 {inboundText}
               </Typography>
             ) : null}
@@ -188,7 +202,7 @@ const VerticalLineCard: React.FC<Props> = ({
                 <Path
                   d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
                   fill="none"
-                  stroke="#fff"
+                  stroke={fgColor}
                   strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -196,7 +210,10 @@ const VerticalLineCard: React.FC<Props> = ({
               </Svg>
             ) : null}
             {outboundText ? (
-              <Typography style={styles.subtitle} numberOfLines={1}>
+              <Typography
+                style={[styles.subtitle, { color: fgColor }]}
+                numberOfLines={1}
+              >
                 {outboundText}
               </Typography>
             ) : null}
@@ -220,7 +237,7 @@ const VerticalLineCard: React.FC<Props> = ({
           <Path
             d="M8 5l8 7-8 7"
             fill="none"
-            stroke="#fff"
+            stroke={fgColor}
             strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -230,5 +247,3 @@ const VerticalLineCard: React.FC<Props> = ({
     </TouchableOpacity>
   );
 };
-
-export default React.memo(VerticalLineCard);

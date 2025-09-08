@@ -46,7 +46,7 @@ const DevOverlay: React.FC = () => {
   const dim = useWindowDimensions();
 
   return (
-    <View style={{ ...styles.root, width: dim.width / 4 }}>
+    <View style={[styles.root, { width: dim.width / 4 }]}>
       <Typography style={styles.textHeading}>
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}

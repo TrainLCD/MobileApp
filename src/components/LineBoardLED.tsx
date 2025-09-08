@@ -45,7 +45,7 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
 );
 
 const LineBoardLED = () => {
-  const { selectedDirection } = useAtomValue(stationState);
+  const { selectedDirection, stations } = useAtomValue(stationState);
   const { headerState } = useAtomValue(navigationState);
   const line = useCurrentLine();
 
@@ -56,7 +56,7 @@ const LineBoardLED = () => {
 
   const nextStation = useNextStation();
   const trainType = useCurrentTrainType();
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
   const transferLines = useTransferLines();
   const [nextStationNumber] = useNumbering();
   const afterNextStation = useAfterNextStation();

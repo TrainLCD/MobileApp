@@ -16,10 +16,11 @@ import { useLoopLine } from './useLoopLine';
 export const useBoundText = (
   excludePrefixAndSuffix?: boolean
 ): Record<HeaderLangState, string> => {
-  const { selectedBound, selectedDirection } = useAtomValue(stationState);
+  const { selectedBound, selectedDirection, stations } =
+    useAtomValue(stationState);
 
   const { isLoopLine } = useLoopLine();
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
 

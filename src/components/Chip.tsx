@@ -66,7 +66,7 @@ const Chip: React.FC<Props> = ({
     >
       <Typography
         numberOfLines={1}
-        style={{ ...styles.text, color: active ? '#fff' : color }}
+        style={[styles.text, { color: active ? '#fff' : color }]}
       >
         {children}
       </Typography>

@@ -1,18 +1,30 @@
 import * as Location from 'expo-location';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocationStore } from './useLocationStore';
+
+type FetchFn = (
+  useLastKnown?: boolean,
+  timeoutMs?: number
+) => Promise<Location.LocationObject>;
 
 export const useFetchCurrentLocationOnce = () => {
   const lastKnownLocation = useLocationStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const isMountedRef = useRef(true);
 
-  const fetchCurrentLocation = useCallback(
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const fetchCurrentLocation: FetchFn = useCallback(
     async (useLastKnown = false, timeoutMs = 3500) => {
       if (useLastKnown && lastKnownLocation) {
         return lastKnownLocation;
       }
-      setLoading(true);
+      if (isMountedRef.current) setLoading(true);
       const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
         new Promise((resolve, reject) => {
           const t = setTimeout(() => reject(new Error('Location timeout')), ms);
@@ -32,16 +44,16 @@ export const useFetchCurrentLocationOnce = () => {
           }),
           timeoutMs
         );
-        setLoading(false);
+        if (isMountedRef.current) setLoading(false);
         return pos;
       } catch (err) {
         // Fallback to last known if available
         if (lastKnownLocation) {
-          setLoading(false);
+          if (isMountedRef.current) setLoading(false);
           return lastKnownLocation;
         }
-        setLoading(false);
-        setError(err as Error);
+        if (isMountedRef.current) setLoading(false);
+        if (isMountedRef.current) setError(err as Error);
         return Promise.reject(err);
       }
     },

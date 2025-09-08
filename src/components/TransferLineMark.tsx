@@ -62,12 +62,10 @@ const TransferLineMark: React.FC<Props> = ({
     [notTinyImageSize, size]
   );
   const containerStyle = useMemo(
-    () => ({
-      ...styles.container,
-      width: dim,
-      height: dim,
-      opacity: shouldGrayscale ? 0.5 : 1,
-    }),
+    () => [
+      styles.container,
+      { width: dim, height: dim, opacity: shouldGrayscale ? 0.5 : 1 },
+    ],
     [dim, shouldGrayscale]
   );
   const imageStyle = useMemo(() => ({ width: dim, height: dim }), [dim]);
@@ -108,7 +106,7 @@ const TransferLineMark: React.FC<Props> = ({
     return (
       <View
         style={[
-          containerStyle,
+          ...containerStyle,
           withOutline && { borderRadius: outlineRadiusValue },
         ]}
       >
@@ -132,7 +130,7 @@ const TransferLineMark: React.FC<Props> = ({
     return (
       <View
         style={[
-          containerStyle,
+          ...containerStyle,
           withOutline && { borderRadius: outlineRadiusValue },
         ]}
       >
@@ -155,7 +153,7 @@ const TransferLineMark: React.FC<Props> = ({
   return (
     <View
       style={[
-        containerStyle,
+        ...containerStyle,
         numberingIconContainerStyle,
         withOutline && { borderRadius: outlineRadiusValue },
       ]}

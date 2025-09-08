@@ -1,5 +1,4 @@
 import type { ConnectError } from '@connectrpc/connect';
-import type React from 'react';
 import { Modal } from 'react-native';
 import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { SavedRouteInfo } from './SavedRouteInfo';
@@ -21,11 +20,10 @@ export const SavedRouteInfoModal: React.FC<Props> = (props: Props) => {
 
   return (
     <Modal
-      animationType="slide"
+      animationType="none"
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
     >
       <SavedRouteInfo {...props} fromRouteListModal={false} />
     </Modal>

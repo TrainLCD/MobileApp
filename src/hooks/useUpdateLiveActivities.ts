@@ -27,13 +27,14 @@ export const useUpdateLiveActivities = (): void => {
     approaching: approachingFromState,
     selectedBound,
     selectedDirection,
+    stations,
   } = useAtomValue(stationState);
 
   const currentLine = useCurrentLine();
   const previousStation = useCurrentStation(true);
   const currentStation = useCurrentStation(false, true);
   const nextStation = useNextStation();
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
   const isNextLastStop = useIsNextLastStop();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const trainType = useCurrentTrainType();
