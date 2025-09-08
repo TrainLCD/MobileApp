@@ -4,6 +4,9 @@ import type {
   SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
+import navigationState, {
+  initialNavigationState,
+} from '~/store/atoms/navigation';
 
 // randomUUID をモック（安定した ID を生成）
 let mockIdCounter = 0;
@@ -48,6 +51,10 @@ describe('useSavedRoutes', () => {
   describe('initialization', () => {
     it('DB 初期化を行い isInitialized を true にする', async () => {
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
@@ -55,11 +62,10 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
-
       expect(mockDb.execAsync).toHaveBeenCalledWith(
         expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
       );
+      expect(result.current.isInitialized).toBe(true);
     });
   });
 
@@ -88,13 +94,16 @@ describe('useSavedRoutes', () => {
       mockDb.getAllAsync.mockResolvedValue(rows as unknown[]);
 
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
           wrapper: withJotaiProvider(store),
         }
       );
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
       await result.current.updateRoutes();
 
@@ -126,13 +135,16 @@ describe('useSavedRoutes', () => {
       ] as unknown[]);
 
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
           wrapper: withJotaiProvider(store),
         }
       );
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
       await result.current.updateRoutes();
 
@@ -164,13 +176,16 @@ describe('useSavedRoutes', () => {
       ] as unknown[]);
 
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
           wrapper: withJotaiProvider(store),
         }
       );
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
       await result.current.updateRoutes();
 
       // trainTypeId でマッチ
@@ -218,13 +233,16 @@ describe('useSavedRoutes', () => {
       ] as unknown[]);
 
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
           wrapper: withJotaiProvider(store),
         }
       );
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
       await result.current.updateRoutes();
 
       // (trainTypeId, destinationStationId) で一致
@@ -280,13 +298,16 @@ describe('useSavedRoutes', () => {
 
     it('save: 正しく INSERT され、routes が更新される', async () => {
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
           wrapper: withJotaiProvider(store),
         }
       );
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
       const saved1 = await result.current.save(withType);
 
@@ -327,13 +348,16 @@ describe('useSavedRoutes', () => {
 
     it('remove: 指定 ID を削除し routes からも取り除く', async () => {
       const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
       const { result } = renderHook(
         () => require('./useSavedRoutes').useSavedRoutes(),
         {
           wrapper: withJotaiProvider(store),
         }
       );
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
 
       const saved = await result.current.save(withType);
       await waitFor(() => expect(result.current.routes.length).toBe(1));
