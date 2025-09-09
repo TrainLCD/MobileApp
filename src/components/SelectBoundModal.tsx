@@ -481,6 +481,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
+      supportedOrientations={['portrait', 'landscape']}
     >
       <Pressable style={styles.root} onPress={onClose}>
         <Pressable

@@ -24,6 +24,7 @@ export const SavedRouteInfoModal: React.FC<Props> = (props: Props) => {
       transparent
       visible={visible}
       onRequestClose={onClose}
+      supportedOrientations={['portrait', 'landscape']}
     >
       <SavedRouteInfo {...props} fromRouteListModal={false} />
     </Modal>
