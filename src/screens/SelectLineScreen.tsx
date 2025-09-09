@@ -23,7 +23,6 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import Loading from '~/components/Loading';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
@@ -697,18 +696,12 @@ const SelectLineScreen: React.FC = () => {
     );
   }
 
-  if (!station) {
-    return (
-      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-    );
-  }
-
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.FlatList
           style={StyleSheet.absoluteFill}
-          data={station.lines}
+          data={station?.lines ?? []}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
