@@ -165,7 +165,7 @@ const MainScreen: React.FC = () => {
     const lockOrientationAsync = async () => {
       try {
         await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE_LEFT
+          ScreenOrientation.OrientationLock.LANDSCAPE
         );
       } catch (_e) {
         // ignore and proceed
