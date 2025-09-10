@@ -4,7 +4,6 @@ import Svg, { Path } from 'react-native-svg';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { translate } from '~/translation';
-import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -28,7 +27,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: RFValue(21),
+    fontSize: 32,
     fontWeight: 'bold',
   },
 });

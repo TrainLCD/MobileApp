@@ -10,7 +10,7 @@ import isEqual from 'lodash/isEqual';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Animated,
+  // Animated removed (migrated to reanimated)
   Dimensions,
   FlatList,
   type NativeScrollEvent,
@@ -19,6 +19,12 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import Animated, {
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -55,16 +61,18 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
-import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, paddingTop: 0, flex: 1 },
   listContainerStyle: { paddingBottom: 24, paddingHorizontal: 24 },
   lineName: {
-    fontSize: RFValue(14),
+    fontSize: 14,
     fontWeight: 'bold',
   },
   heading: {
+    fontSize: 24,
+    textAlign: 'left',
+    fontWeight: 'bold',
     marginBottom: 16,
   },
   screenBg: {
@@ -74,14 +82,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   nowLabel: {
-    fontSize: RFValue(12),
+    fontSize: 24,
     textAlign: 'left',
   },
   nowStation: {
-    fontSize: RFValue(24),
+    fontSize: 32,
     fontWeight: 'bold',
-    textAlign: 'left',
-    lineHeight: RFValue(32),
   },
   nowHeaderContainer: {
     position: 'absolute',
@@ -139,9 +145,6 @@ const LineCardItem: React.FC<LineCardItemProps> = ({
   );
 };
 
-// 無駄な再描画を回避（同一props時にはレンダリングしない）
-const LineCardItemMemo = React.memo(LineCardItem);
-
 const SelectLineScreen: React.FC = () => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
@@ -151,7 +154,7 @@ const SelectLineScreen: React.FC = () => {
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const insets = useSafeAreaInsets();
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
-  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const scrollY = useSharedValue(0);
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
       paddingBottom?: number;
@@ -603,7 +606,7 @@ const SelectLineScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item }: { item: Line }) => (
-      <LineCardItemMemo
+      <LineCardItem
         line={item}
         disabled={!isInternetAvailable}
         onPress={handleLineSelected}
@@ -639,26 +642,41 @@ const SelectLineScreen: React.FC = () => {
 
   // Animate header: station name shrinks 24 -> 16, stacked -> inline
   const COLLAPSE_RANGE = 64;
-  const stackedOpacity = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_RANGE * 0.5],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-  const inlineOpacity = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
-    outputRange: [0, 0, 1],
-    extrapolate: 'clamp',
-  });
-  const animatedStationFont = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_RANGE],
-    outputRange: [RFValue(24), RFValue(16)],
-    extrapolate: 'clamp',
-  });
+  const stackedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE * 0.5],
+      [1, 0],
+      'clamp'
+    ),
+  }));
+  const inlineStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+      [0, 0, 1],
+      'clamp'
+    ),
+  }));
+  const animatedStationFont = useAnimatedStyle(() => ({
+    fontSize: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE],
+      [32, 21],
+      'clamp'
+    ),
+  }));
 
   const AnimatedTypography = React.useMemo(
     () => Animated.createAnimatedComponent(Typography),
     []
   );
+
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
 
   const isPresetsLoading = useMemo(
     () =>
@@ -764,25 +782,11 @@ const SelectLineScreen: React.FC = () => {
                 />
               </View>
 
-              <Heading
-                style={[
-                  styles.heading,
-                  {
-                    fontSize: 24,
-                    textAlign: 'left',
-                    fontWeight: 'bold',
-                  },
-                ]}
-              >
-                {headingTitle}
-              </Heading>
+              <Heading style={styles.heading}>{headingTitle}</Heading>
             </>
           )}
           ListFooterComponent={() => <View style={{ height: 12 }} />}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
+          onScroll={onScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.listContainerStyle,
@@ -808,38 +812,35 @@ const SelectLineScreen: React.FC = () => {
             />
             <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
               {/* Stacked layout (fades out) */}
-              <Animated.View style={{ opacity: stackedOpacity }}>
+              <Animated.View style={stackedStyle}>
                 <Typography style={styles.nowLabel}>
                   {nowHeader.label}
                 </Typography>
                 <AnimatedTypography
-                  style={{
-                    ...styles.nowStation,
-                    fontSize: animatedStationFont as unknown as number,
-                  }}
+                  style={[styles.nowStation, animatedStationFont]}
                 >
                   {nowHeader.name}
                 </AnimatedTypography>
               </Animated.View>
               {/* Inline layout (fades in) */}
               <Animated.View
-                style={{
-                  opacity: inlineOpacity,
-                  flexDirection: 'row',
-                  alignItems: 'flex-end',
-                  gap: 6,
-                  position: 'absolute',
-                  left: 24,
-                  right: 24,
-                  bottom: 10,
-                }}
+                style={[
+                  inlineStyle,
+                  {
+                    flexDirection: 'row',
+                    alignItems: 'flex-end',
+                    gap: 6,
+                    position: 'absolute',
+                    left: 24,
+                    right: 24,
+                    bottom: 10,
+                  },
+                ]}
               >
                 <Typography style={styles.nowLabel}>
                   {nowHeader.label}
                 </Typography>
-                <Typography
-                  style={{ fontSize: RFValue(16), fontWeight: 'bold' }}
-                >
+                <Typography style={styles.nowStation}>
                   {isJapanese ? `${nowHeader.name}` : nowHeader.name}
                 </Typography>
               </Animated.View>
