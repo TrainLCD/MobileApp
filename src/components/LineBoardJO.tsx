@@ -112,6 +112,7 @@ const styles = StyleSheet.create({
   stationNameEn: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    transform: [{ rotate: '-55deg' }],
   },
   verticalStationName: {
     marginBottom: 0,
@@ -148,8 +149,6 @@ const styles = StyleSheet.create({
   },
   padLineMarksContainer: {
     position: 'absolute',
-    flex: 1,
-    width: '100%',
   },
 });
 
@@ -257,7 +256,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
     [stationInLoop.stationNumbers, stationNumberIndex]
   );
-  const barWidth = useBarWidth();
+  const dim = useWindowDimensions();
 
   const numberingColor = useMemo(
     () =>
@@ -271,30 +270,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
   return (
     <View
-      key={stationInLoop.id}
       style={[
         styles.stationNameContainer,
         {
-          width: barWidth,
+          width: dim.width / 9,
         },
       ]}
     >
-      <View
-        style={
-          isEn || includesLongStationName
-            ? {
-                transform: [{ rotate: '-55deg' }],
-              }
-            : {}
-        }
-      >
-        <StationName
-          station={stationInLoop}
-          en={isEn}
-          horizontal={includesLongStationName}
-          passed={isPass}
-        />
-      </View>
+      <StationName
+        station={stationInLoop}
+        en={isEn}
+        horizontal={includesLongStationName}
+        passed={isPass}
+      />
+
       <View style={styles.numberingIconContainer}>
         {numberingObj && isTablet && hasNumberedStation ? (
           <NumberingIcon
@@ -306,12 +295,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
 
-      <View
-        style={[
-          styles.padLineMarksContainer,
-          { bottom: hasNumberedStation ? 7 : 45 },
-        ]}
-      >
+      <View style={[styles.padLineMarksContainer, { top: dim.height - 80 }]}>
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={transferLines}
