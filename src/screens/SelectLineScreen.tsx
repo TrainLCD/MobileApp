@@ -1,9 +1,9 @@
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect, pipe } from 'effect';
 import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
 import { useAtomValue, useSetAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
