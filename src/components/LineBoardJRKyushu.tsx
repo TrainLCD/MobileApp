@@ -133,14 +133,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  nameCommon: {
-    marginBottom: isTablet ? undefined : 64,
-  },
   longOrEnName: {
     flex: 1,
     justifyContent: 'flex-end',
+    marginBottom: isTablet ? 0 : 90,
   },
-  jaName: { flex: 1, marginBottom: 50 },
+  jaName: { flex: 1, marginBottom: isTablet ? 50 : 90 },
 });
 
 interface StationNameProps {
@@ -361,7 +359,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
         <View
           style={[
-            styles.nameCommon,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
