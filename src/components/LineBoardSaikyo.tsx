@@ -55,27 +55,6 @@ interface Props {
   hasTerminus: boolean;
 }
 
-const getBarTerminalRight = (): number => {
-  if (isTablet) {
-    return -42;
-  }
-  return -31;
-};
-
-const barBottom = ((): number => {
-  if (isTablet) {
-    return -52;
-  }
-  return 32;
-})();
-
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return -54;
-  }
-  return 32;
-})();
-
 const styles = StyleSheet.create({
   root: {
     height: '100%',
@@ -86,21 +65,25 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    bottom: barBottom,
+    bottom: isTablet ? -52 : 32,
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
     width: isTablet ? 42 : 33.7,
     height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: getBarTerminalRight(),
-    bottom: barTerminalBottom,
+    right: isTablet ? -42 : 31,
+    bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: isTablet ? 6 : 84,
+  },
+  stationNameMapContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    marginBottom: 8,
   },
   stationName: {
     fontSize: RFValue(18),
@@ -112,8 +95,8 @@ const styles = StyleSheet.create({
   stationNameHorizontal: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    transform: [{ rotate: '-55deg' }],
     color: '#3a3a3a',
-    paddingBottom: 16,
   },
   grayColor: {
     color: '#ccc',
@@ -142,6 +125,19 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
   },
   marksContainer: { top: 38, position: 'absolute' },
+  nameCommon: {
+    marginBottom: isTablet ? undefined : 64,
+  },
+  longOrEnName: {
+    flex: 1,
+    width: '100%',
+    marginLeft: -16,
+    justifyContent: 'flex-end',
+  },
+  jaName: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
 });
 interface StationNameProps {
   station: Station;
@@ -231,28 +227,23 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const { heightScale } = useScale();
+  const dim = useWindowDimensions();
 
-  const nameEnExtraStyle = useMemo(() => {
-    if (!isTablet) {
-      return {
-        width: heightScale(320),
-        marginBottom: 58,
-      };
-    }
-    return {
-      width: 250,
-      marginBottom: 96,
-    };
-  }, [heightScale]);
+  const horizontalAditionalStyle = useMemo(
+    () => ({
+      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
+    }),
+    [dim.height]
+  );
 
   if (en) {
     return (
       <Typography
         style={[
           styles.stationNameHorizontal,
-          nameEnExtraStyle,
           passed ? styles.grayColor : null,
+          horizontalAditionalStyle,
         ]}
       >
         {stationNameR}
@@ -264,8 +255,8 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameHorizontal,
-          nameEnExtraStyle,
           passed ? styles.grayColor : null,
+          horizontalAditionalStyle,
         ]}
       >
         {station.name}
@@ -273,7 +264,7 @@ const StationName: React.FC<StationNameProps> = ({
     );
   }
   return (
-    <>
+    <View style={styles.stationNameMapContainer}>
       {station.name.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
@@ -282,7 +273,7 @@ const StationName: React.FC<StationNameProps> = ({
           {c}
         </Typography>
       ))}
-    </>
+    </View>
   );
 };
 
@@ -362,7 +353,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   return (
     <>
       <View
-        key={station.id}
         style={[
           styles.stationNameContainer,
           {
@@ -371,13 +361,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ]}
       >
         <View
-          style={
+          style={[
+            styles.nameCommon,
             isEn || includesLongStationName
-              ? {
-                  transform: [{ rotate: '-55deg' }],
-                }
-              : {}
-          }
+              ? styles.longOrEnName
+              : styles.jaName,
+          ]}
         >
           <StationName
             station={station}
@@ -389,35 +378,37 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LinearGradient
           colors={['#fff', '#000', '#000']}
           locations={[0.1, 0.5, 0.9]}
-          style={{
-            ...styles.bar,
-            left: barLeft,
-            width: barWidth,
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barLeft,
+              width: barWidth,
+            },
+          ]}
         />
         <LinearGradient
           colors={
             line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
           }
-          style={{
-            ...styles.bar,
-            left: barLeft,
-            width: barWidth,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barLeft,
+              width: barWidth,
+            },
+          ]}
         />
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={['#fff', '#000', '#000']}
             locations={[0.1, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barWidth,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
+            style={[
+              styles.bar,
+              {
+                left: barLeft,
+                width: barWidth,
+              },
+            ]}
           />
         ) : null}
         {arrived &&
@@ -428,11 +419,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             colors={
               line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
             }
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barWidth / 2.5,
-            }}
+            style={[
+              styles.bar,
+              {
+                left: barLeft,
+                width: barWidth / 2.5,
+              },
+            ]}
           />
         ) : null}
         {(arrived && currentStationIndex < index + 1) || !passed ? (
@@ -445,21 +438,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   ]
                 : ['#000000ff', '#000000bb']
             }
-            style={{
-              ...styles.bar,
-              left:
-                currentStationIndex !== 0 &&
-                currentStationIndex === index &&
-                currentStationIndex !== stations.length - 1
-                  ? barLeft + barWidth / 2.5
-                  : barLeft,
-              width:
-                currentStationIndex !== 0 &&
-                currentStationIndex === index &&
-                currentStationIndex !== stations.length - 1
-                  ? barWidth / 2.5
-                  : barWidth,
-            }}
+            style={[
+              styles.bar,
+              {
+                left:
+                  currentStationIndex !== 0 &&
+                  currentStationIndex === index &&
+                  currentStationIndex !== stations.length - 1
+                    ? barLeft + barWidth / 2.5
+                    : barLeft,
+                width:
+                  currentStationIndex !== 0 &&
+                  currentStationIndex === index &&
+                  currentStationIndex !== stations.length - 1
+                    ? barWidth / 2.5
+                    : barWidth,
+              },
+            ]}
           />
         ) : null}
         <LineDot
@@ -489,7 +484,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             marginLeft: widthScale(14),
-            bottom: isTablet ? dim.height / 2.5 + 32 : 32,
+            bottom: isTablet ? dim.height / 3.5 + 32 : 32,
           },
         ]}
       >
@@ -561,7 +556,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 2.5 : undefined,
+          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
         },
       ]}
     >
