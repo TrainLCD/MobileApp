@@ -1,9 +1,9 @@
 import { useId } from 'react';
-import { G, LinearGradient, Path, Polygon, Stop, Svg } from 'react-native-svg';
 import Animated, {
   type SharedValue,
   useAnimatedProps,
 } from 'react-native-reanimated';
+import { G, LinearGradient, Path, Polygon, Stop, Svg } from 'react-native-svg';
 
 type Props = {
   backgroundScaleSV?: SharedValue<number>;
