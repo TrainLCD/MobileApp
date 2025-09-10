@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     },
     shadowRadius: 1,
     paddingBottom: 4,
+    zIndex: 9999,
   },
   gradientRoot: {
     paddingTop: 14,
