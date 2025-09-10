@@ -53,7 +53,6 @@ const stylesWest = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: '10%',
     flexDirection: 'row',
   },
   lineNameWrapper: {
