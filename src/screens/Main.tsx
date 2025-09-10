@@ -11,14 +11,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  Alert,
-  Linking,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Linking, Platform, Pressable, StyleSheet } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
@@ -478,14 +471,14 @@ const MainScreen: React.FC = () => {
   }
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <>
       <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
         <Header />
         {inner}
       </Pressable>
 
       {isDevApp && devOverlayEnabled && <DevOverlay />}
-    </View>
+    </>
   );
 };
 

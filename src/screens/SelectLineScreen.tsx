@@ -1,3 +1,4 @@
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect, pipe } from 'effect';
@@ -169,11 +170,7 @@ const SelectLineScreen: React.FC = () => {
   const station = useMemo(() => nearbyStations[0] ?? null, [nearbyStations]);
 
   const isInternetAvailable = useConnectivity();
-  const {
-    fetchCurrentLocation,
-    loading: locationLoading,
-    error: fetchLocationError,
-  } = useFetchCurrentLocationOnce();
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
   const [nowHeaderHeight, setNowHeaderHeight] = React.useState(0);
   const {
     routes,
@@ -199,12 +196,12 @@ const SelectLineScreen: React.FC = () => {
   const {
     mutateAsync: fetchStationsByLineId,
     status: fetchStationsByLineIdStatus,
-    error: fetchStationsByLineIdError,
+    error: _fetchStationsByLineIdError,
   } = useMutation(getStationsByLineId);
   const {
     mutateAsync: fetchStationsByLineGroupId,
     status: fetchStationsByLineGroupIdStatus,
-    error: fetchStationsByLineGroupIdError,
+    error: _fetchStationsByLineGroupIdError,
   } = useMutation(getStationsByLineGroupId);
   const {
     mutateAsync: fetchTrainTypes,
@@ -267,6 +264,10 @@ const SelectLineScreen: React.FC = () => {
     },
     [ITEM_SIZE, carouselData.length]
   );
+
+  useEffect(() => {
+    ScreenOrientation.unlockAsync().catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!isRoutesDBInitialized) return;
@@ -680,18 +681,6 @@ const SelectLineScreen: React.FC = () => {
         text={translate('apiErrorText')}
         onRetryPress={handleUpdateStation}
         isFetching={nearbyStationLoading}
-      />
-    );
-  }
-
-  if (fetchLocationError && !station) {
-    return (
-      <ErrorScreen
-        showSearchStation
-        title={translate('errorTitle')}
-        text={translate('couldNotGetLocation')}
-        onRetryPress={handleUpdateStation}
-        isFetching={locationLoading}
       />
     );
   }

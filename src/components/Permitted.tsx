@@ -6,20 +6,8 @@ import * as FileSystem from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import {
-  Alert,
-  Linking,
-  Platform,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
@@ -77,6 +65,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const { isAppLatest } = useAtomValue(navigationState);
   const viewShotRef = useRef<ViewShot>(null);
+
+  const styles = StyleSheet.create({
+    container: { width: '100%', height: '100%' },
+  });
 
   const handleReport = useCallback(() => {
     const captureError = (err: unknown) =>
@@ -444,21 +436,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   // TODO: 適当なタイミングで消す
   useAutoModeAlert();
 
-  const dim = useWindowDimensions();
-
-  const containerStyle = useMemo(
-    () => ({ width: dim.width, height: dim.height }),
-    [dim.width, dim.height]
-  );
-
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
         minDurationMs={LONG_PRESS_DURATION}
       >
-        <View style={containerStyle}>
-          {/* <Header /> */}
+        <View style={styles.container}>
           {children}
           <NullableWarningPanel />
         </View>

@@ -56,27 +56,6 @@ type Props = {
   hasTerminus: boolean;
 };
 
-const getBarTerminalRight = (): number => {
-  if (isTablet) {
-    return -42;
-  }
-  return -31;
-};
-
-const barBottom = ((): number => {
-  if (isTablet) {
-    return -52;
-  }
-  return 32;
-})();
-
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return -54;
-  }
-  return 32;
-})();
-
 const styles = StyleSheet.create({
   root: {
     height: '100%',
@@ -87,15 +66,15 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    bottom: barBottom,
+    bottom: isTablet ? -52 : 32,
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
     width: isTablet ? 42 : 33.7,
     height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: getBarTerminalRight(),
-    bottom: barTerminalBottom,
+    right: isTablet ? -42 : -31,
+    bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
     flexWrap: 'wrap',
@@ -116,7 +95,7 @@ const styles = StyleSheet.create({
   stationNameHorizontal: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginBottom: 32,
+    transform: [{ rotate: '-55deg' }],
   },
   grayColor: {
     color: '#ccc',
@@ -134,6 +113,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
+    bottom: isTablet ? 198 : 32,
   },
   chevronArea: {
     width: isTablet ? 48 : 16,
@@ -144,6 +124,19 @@ const styles = StyleSheet.create({
     height: isTablet ? 32 : 24,
   },
   marksContainer: { top: 38, position: 'absolute' },
+  nameCommon: {
+    marginBottom: isTablet ? undefined : 64,
+  },
+  longOrEnName: {
+    flex: 1,
+    width: '100%',
+    marginLeft: -16,
+    justifyContent: 'flex-end',
+  },
+  jaName: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
 });
 interface StationNameProps {
   station: Station;
@@ -169,11 +162,24 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+  const dim = useWindowDimensions();
+
+  const horizontalAditionalStyle = useMemo(
+    () => ({
+      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
+    }),
+    [dim.height]
+  );
 
   if (en) {
     return (
       <Typography
-        style={[styles.stationNameHorizontal, passed ? styles.grayColor : null]}
+        style={[
+          styles.stationNameHorizontal,
+          passed ? styles.grayColor : null,
+          horizontalAditionalStyle,
+        ]}
       >
         {stationNameR}
       </Typography>
@@ -183,7 +189,11 @@ const StationName: React.FC<StationNameProps> = ({
   if (horizontal) {
     return (
       <Typography
-        style={[styles.stationNameHorizontal, passed ? styles.grayColor : null]}
+        style={[
+          styles.stationNameHorizontal,
+          passed ? styles.grayColor : null,
+          horizontalAditionalStyle,
+        ]}
       >
         {station.name}
       </Typography>
@@ -345,20 +355,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         }}
       >
         <View
-          style={
+          style={[
+            styles.nameCommon,
             isEn || includesLongStationName
-              ? {
-                  flex: 1,
-                  transform: [{ rotate: '-55deg' }],
-                  width: dim.height / 3,
-                  justifyContent: 'center',
-                  marginLeft: -16,
-                }
-              : {
-                  height: dim.height / 2,
-                  justifyContent: 'flex-end',
-                }
-          }
+              ? styles.longOrEnName
+              : styles.jaName,
+          ]}
         >
           <StationName
             station={station}
@@ -375,8 +377,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             {
               left: barLeft,
               width: barWidth,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
             },
           ]}
         />
@@ -401,8 +401,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               {
                 left: barLeft,
                 width: barWidth,
-                borderTopLeftRadius: 0,
-                borderBottomLeftRadius: 0,
               },
             ]}
           />
@@ -477,7 +475,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           styles.chevron,
           additionalChevronStyle,
           {
-            bottom: isTablet ? dim.height / 2.5 + 32 : 32,
+            bottom: isTablet ? dim.height / 2.5 - 52 : 32,
             marginLeft: widthScale(14),
           },
         ]}
@@ -515,9 +513,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
           styles.bar,
           {
             left: barLeft,
-            width: barWidth,
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
           },
         ]}
       />
@@ -623,7 +618,9 @@ const LineBoardEast: React.FC<Props> = ({
     <View
       style={[
         styles.root,
-        { paddingBottom: isTablet ? dim.height / 2.5 : undefined },
+        {
+          paddingBottom: isTablet ? dim.height / 2.5 : undefined,
+        },
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
