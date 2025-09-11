@@ -4,13 +4,13 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import isTablet from '~/utils/isTablet';
 import { NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
-import isTablet from '~/utils/isTablet';
 
 type Props = {
   line: Line;
