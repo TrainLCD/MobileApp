@@ -33,6 +33,7 @@ import { RFValue } from '../utils/rfValue';
 import ErrorScreen from './ErrorScreen';
 import { LineCard } from './LineCard';
 import { RouteInfoModal } from './RouteInfoModal';
+import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -64,15 +65,11 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     textAlign: 'center',
   },
-
-  outlinedButton: {
-    borderColor: '#008ffe',
-    borderWidth: 1,
-    backgroundColor: '#fff',
+  redOutlinedButton: {
+    borderColor: '#ff3b30',
   },
-  outlinedButtonText: {
-    fontWeight: 'bold',
-    color: '#008ffe',
+  redOutlinedButtonText: {
+    color: '#ff3b30',
   },
   closeButton: { marginTop: 24 },
   closeButtonText: { fontWeight: 'bold' },
@@ -110,6 +107,10 @@ export const SelectBoundModal: React.FC<Props> = ({
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
   const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
+  const [
+    selectBoundSettingListModalVisible,
+    setSelectBoundSettingListModalVisible,
+  ] = useState(false);
 
   const navigation = useNavigation();
   const setStationState = useSetAtom(stationState);
@@ -545,16 +546,13 @@ export const SelectBoundModal: React.FC<Props> = ({
                 })}
 
               <View style={{ gap: 14, marginTop: 24 }}>
-                <Button
-                  style={styles.outlinedButton}
-                  textStyle={styles.outlinedButtonText}
-                  onPress={() => setRouteInfoModalVisible(true)}
-                >
+                <Button outline onPress={() => setRouteInfoModalVisible(true)}>
                   {translate('viewStopStations')}
                 </Button>
                 <Button
-                  style={styles.outlinedButton}
-                  textStyle={styles.outlinedButtonText}
+                  outline
+                  style={savedRoute ? styles.redOutlinedButton : null}
+                  textStyle={savedRoute ? styles.redOutlinedButtonText : null}
                   onPress={handleSaveRoutePress}
                   disabled={!line || !isRoutesDBInitialized}
                 >
@@ -563,11 +561,10 @@ export const SelectBoundModal: React.FC<Props> = ({
                   )}
                 </Button>
                 <Button
-                  style={styles.outlinedButton}
-                  textStyle={styles.outlinedButtonText}
-                  onPress={() => {}}
+                  outline
+                  onPress={() => setSelectBoundSettingListModalVisible(true)}
                 >
-                  設定
+                  {translate('settings')}
                 </Button>
               </View>
 
@@ -576,7 +573,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                 textStyle={styles.closeButtonText}
                 onPress={onClose}
               >
-                閉じる
+                {translate('close')}
               </Button>
 
               {/* TODO: 整理する(現状非表示) */}
@@ -625,6 +622,14 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setRouteInfoModalVisible(false)}
         loading={loading}
         error={error}
+      />
+      <SelectBoundSettingListModal
+        visible={selectBoundSettingListModalVisible}
+        onClose={() => setSelectBoundSettingListModalVisible(false)}
+        hasTrainTypes={withTrainTypes}
+        isLoopLine={isLoopLine}
+        autoModeEnabled={autoModeEnabled}
+        toggleAutoModeEnabled={toggleAutoModeEnabled}
       />
     </Modal>
   );

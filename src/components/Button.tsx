@@ -17,6 +17,7 @@ import Typography from './Typography';
 type Props = {
   children: React.ReactNode;
   onPress: (event: GestureResponderEvent) => void;
+  outline?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   disabled?: boolean;
@@ -50,11 +51,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#fff',
   },
+  outlinedButton: {
+    borderColor: '#008ffe',
+    borderWidth: 1,
+    backgroundColor: '#fff',
+  },
+  outlinedButtonText: {
+    fontWeight: 'bold',
+    color: '#008ffe',
+  },
 });
 
 const Button: React.FC<Props> = ({
   children,
   onPress,
+  outline,
   style,
   textStyle,
   disabled,
@@ -72,11 +83,15 @@ const Button: React.FC<Props> = ({
           backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
           opacity: disabled ? 0.5 : 1,
         },
+        outline && styles.outlinedButton,
         style,
       ]}
       testID={testID}
     >
-      <Typography numberOfLines={1} style={[styles.text, textStyle]}>
+      <Typography
+        numberOfLines={1}
+        style={[styles.text, outline && styles.outlinedButtonText, textStyle]}
+      >
         {children}
       </Typography>
     </TouchableOpacity>
