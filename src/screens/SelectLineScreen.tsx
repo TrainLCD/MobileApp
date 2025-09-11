@@ -562,6 +562,16 @@ const SelectLineScreen: React.FC = () => {
     setStationState,
   ]);
 
+  const handleCloseSelectBoundModal = useCallback(() => {
+    setIsSelectBoundModalOpen(false);
+    // 決定せず閉じた場合はpendingをクリア
+    pendingStationRef.current = null;
+    pendingStationsRef.current = null;
+    pendingTrainTypeRef.current = null;
+    pendingLineRef.current = null;
+    pendingWantedDestinationRef.current = null;
+  }, []);
+
   const renderItem = useCallback(
     ({ item }: { item: Line }) => (
       <LineCardItem
@@ -811,7 +821,7 @@ const SelectLineScreen: React.FC = () => {
       {/* モーダル */}
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
-        onClose={() => setIsSelectBoundModalOpen(false)}
+        onClose={handleCloseSelectBoundModal}
         station={pendingStationRef.current}
         stations={pendingStationsRef.current ?? []}
         trainType={pendingTrainTypeRef.current}

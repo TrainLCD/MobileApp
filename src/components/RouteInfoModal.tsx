@@ -21,8 +21,8 @@ export const RouteInfoModal: React.FC<Props> = (props: Props) => {
   const { station } = useAtomValue(stationState);
   const { visible, routeName, trainType, onClose } = props;
   const lineName = isJapanese
-    ? (station?.line?.nameShort ?? trainType?.line?.nameShort ?? '')
-    : (station?.line?.nameRoman ?? trainType?.line?.nameRoman ?? '');
+    ? (trainType?.line?.nameShort ?? station?.line?.nameShort ?? '')
+    : (trainType?.line?.nameRoman ?? station?.line?.nameRoman ?? '');
   const trainTypeName = isJapanese ? trainType?.name : trainType?.nameRoman;
   const displayRouteName = routeName
     ? routeName

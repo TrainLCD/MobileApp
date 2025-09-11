@@ -532,18 +532,20 @@ export const SelectBoundModal: React.FC<Props> = ({
             <Heading>{translate('selectBoundTitle')}</Heading>
 
             <View style={styles.buttonsContainer}>
-              {inboundStations.length &&
-                renderButton({
-                  boundStations: inboundStations,
-                  direction: 'INBOUND',
-                  loading,
-                })}
-              {outboundStations.length &&
-                renderButton({
-                  boundStations: outboundStations,
-                  direction: 'OUTBOUND',
-                  loading,
-                })}
+              {inboundStations.length
+                ? renderButton({
+                    boundStations: inboundStations,
+                    direction: 'INBOUND',
+                    loading,
+                  })
+                : null}
+              {outboundStations.length
+                ? renderButton({
+                    boundStations: outboundStations,
+                    direction: 'OUTBOUND',
+                    loading,
+                  })
+                : null}
 
               <View style={{ gap: 14, marginTop: 24 }}>
                 <Button outline onPress={() => setRouteInfoModalVisible(true)}>
@@ -599,7 +601,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                   {translate('autoModeSettings')}:{' '}
                   {autoModeEnabled ? 'ON' : 'OFF'}
                 </Button>
-                {isDevApp && (
+                {isDevApp ? (
                   <Button
                     onPress={handleSaveRoutePress}
                     disabled={!line || !isRoutesDBInitialized}
@@ -608,7 +610,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                       !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
                     )}
                   </Button>
-                )}
+                ) : null}
               </View>
             </View>
           </View>
