@@ -1,5 +1,5 @@
 import type { ConnectError } from '@connectrpc/connect';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
@@ -8,7 +8,6 @@ import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useGetLineMark, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
-import lineState from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
@@ -180,7 +179,6 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
 
   const [asTerminus, setAsTerminus] = useState(false);
 
-  const { selectedLine } = useAtomValue(lineState);
   const [{ autoModeEnabled }, setNavigationState] = useAtom(navigationState);
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
@@ -293,8 +291,8 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       >
         <Heading>
           {isJapanese
-            ? `${selectedLine?.nameShort} ${trainType?.name ?? ''}`
-            : `${selectedLine?.nameRoman} ${trainType?.nameRoman ?? ''}`}
+            ? `${trainType?.line?.nameShort ?? ''} ${trainType?.name ?? ''}`
+            : `${trainType?.line?.nameRoman ?? ''} ${trainType?.nameRoman ?? ''}`}
         </Heading>
 
         <View
@@ -455,15 +453,12 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
 
           <View style={styles.buttons}>
             <Button
-              color={isLEDTheme ? undefined : '#008ffe'}
               onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
               disabled={loading || disabled}
             >
               {translate('submit')}
             </Button>
-            <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-              {translate('cancel')}
-            </Button>
+            <Button onPress={onClose}>{translate('cancel')}</Button>
           </View>
         </View>
       </Pressable>

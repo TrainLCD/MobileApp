@@ -1,15 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useSetAtom } from 'jotai';
+import { uniqBy } from 'lodash';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import {
-  Line,
-  type Station,
-  StopCondition,
-  TrainType,
-} from '~/gen/proto/stationapi_pb';
+import { Line, type Station, TrainType } from '~/gen/proto/stationapi_pb';
 import type {
   SavedRoute,
   SavedRouteWithoutTrainTypeInput,
@@ -35,6 +31,8 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 import ErrorScreen from './ErrorScreen';
+import { LineCard } from './LineCard';
+import { RouteInfoModal } from './RouteInfoModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -50,10 +48,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minHeight: 256,
   },
-  buttons: {
-    marginTop: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+  buttonsContainer: {
+    gap: 8,
+    marginTop: 24,
+    width: '100%',
+    paddingHorizontal: 24,
   },
   container: {
     justifyContent: 'center',
@@ -65,6 +64,18 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     textAlign: 'center',
   },
+
+  outlinedButton: {
+    borderColor: '#008ffe',
+    borderWidth: 1,
+    backgroundColor: '#fff',
+  },
+  outlinedButtonText: {
+    fontWeight: 'bold',
+    color: '#008ffe',
+  },
+  closeButton: { marginTop: 24 },
+  closeButtonText: { fontWeight: 'bold' },
 });
 
 type RenderButtonProps = {
@@ -97,6 +108,8 @@ export const SelectBoundModal: React.FC<Props> = ({
   error,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
+
+  const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
 
   const navigation = useNavigation();
   const setStationState = useSetAtom(stationState);
@@ -198,18 +211,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     navigation.navigate('TrainType' as never);
   };
 
-  const handleAllStopsButtonPress = useCallback(() => {
-    const stopStations = stations.filter(
-      (s) => s.stopCondition !== StopCondition.Not
-    );
-    Alert.alert(
-      translate('viewStopStations'),
-      Array.from(
-        new Set(stopStations.map((s) => (isJapanese ? s.name : s.nameRoman)))
-      ).join(isJapanese ? '、' : ', ')
-    );
-  }, [stations]);
-
   const handleSpecifyDestinationButtonPress = useCallback(() => {
     navigation.navigate('SpecifyDestinationSettings' as never);
   }, [navigation]);
@@ -290,7 +291,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       if (loading) {
         return (
           <SkeletonPlaceholder borderRadius={4} speed={1500}>
-            <SkeletonPlaceholder.Item width="100%" height={34} />
+            <SkeletonPlaceholder.Item width="100%" height={72} />
           </SkeletonPlaceholder>
         );
       }
@@ -304,21 +305,30 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
         const dir =
           currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
-        if (direction === dir) {
+        if (direction === dir && wantedDestination.line) {
           return (
-            <Button
-              color="#008ffe"
+            <LineCard
+              line={wantedDestination.line}
               onPress={() =>
                 handleWantedDestinationPress(wantedDestination, dir)
               }
-            >
-              {isJapanese
-                ? `${wantedDestination.name}方面`
-                : `for ${wantedDestination.nameRoman}`}
-            </Button>
+              title={
+                isLoopLine
+                  ? loopLineDirectionText(direction)
+                  : normalLineDirectionText(boundStations)
+              }
+              subtitle={
+                uniqBy(trainType?.lines, 'id')
+                  .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
+                  .join('・') ??
+                (isJapanese
+                  ? wantedDestination.line.nameShort
+                  : wantedDestination.line.nameRoman)
+              }
+            />
           );
         }
-        return null;
+        return <></>;
       }
 
       if (
@@ -331,16 +341,32 @@ export const SelectBoundModal: React.FC<Props> = ({
         return <></>;
       }
 
-      const directionText = isLoopLine
-        ? loopLineDirectionText(direction)
-        : normalLineDirectionText(boundStations);
+      const lineForCard =
+        direction === 'INBOUND'
+          ? (boundStations[0]?.line ?? line)
+          : boundStations[boundStations.length - 1]?.line;
+
+      if (!lineForCard) {
+        return <></>;
+      }
 
       const boundSelectOnPress = () =>
         handleBoundSelected(boundStations[0], direction);
+
+      const title = isLoopLine
+        ? loopLineDirectionText(direction)
+        : normalLineDirectionText(boundStations);
+      const subtitle = isJapanese
+        ? lineForCard.nameShort
+        : lineForCard.nameRoman;
+
       return (
-        <Button color="#008ffe" onPress={boundSelectOnPress}>
-          {directionText}
-        </Button>
+        <LineCard
+          onPress={boundSelectOnPress}
+          line={lineForCard}
+          title={title}
+          subtitle={subtitle}
+        />
       );
     },
     [
@@ -348,11 +374,13 @@ export const SelectBoundModal: React.FC<Props> = ({
       handleBoundSelected,
       handleWantedDestinationPress,
       isLoopLine,
-      loopLineDirectionText,
-      normalLineDirectionText,
       station?.groupId,
       stations,
       wantedDestination,
+      line,
+      loopLineDirectionText,
+      normalLineDirectionText,
+      trainType?.lines,
     ]
   );
 
@@ -502,19 +530,57 @@ export const SelectBoundModal: React.FC<Props> = ({
           <View style={styles.container}>
             <Heading>{translate('selectBoundTitle')}</Heading>
 
-            <View style={{ gap: 8, marginTop: 24 }}>
-              {renderButton({
-                boundStations: inboundStations,
-                direction: 'INBOUND',
-                loading,
-              })}
-              {renderButton({
-                boundStations: outboundStations,
-                direction: 'OUTBOUND',
-                loading,
-              })}
+            <View style={styles.buttonsContainer}>
+              {inboundStations.length &&
+                renderButton({
+                  boundStations: inboundStations,
+                  direction: 'INBOUND',
+                  loading,
+                })}
+              {outboundStations.length &&
+                renderButton({
+                  boundStations: outboundStations,
+                  direction: 'OUTBOUND',
+                  loading,
+                })}
 
-              <View style={{ gap: 8, marginTop: 12 }}>
+              <View style={{ gap: 14, marginTop: 24 }}>
+                <Button
+                  style={styles.outlinedButton}
+                  textStyle={styles.outlinedButtonText}
+                  onPress={() => setRouteInfoModalVisible(true)}
+                >
+                  {translate('viewStopStations')}
+                </Button>
+                <Button
+                  style={styles.outlinedButton}
+                  textStyle={styles.outlinedButtonText}
+                  onPress={handleSaveRoutePress}
+                  disabled={!line || !isRoutesDBInitialized}
+                >
+                  {translate(
+                    !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
+                  )}
+                </Button>
+                <Button
+                  style={styles.outlinedButton}
+                  textStyle={styles.outlinedButtonText}
+                  onPress={() => {}}
+                >
+                  設定
+                </Button>
+              </View>
+
+              <Button
+                style={styles.closeButton}
+                textStyle={styles.closeButtonText}
+                onPress={onClose}
+              >
+                閉じる
+              </Button>
+
+              {/* TODO: 整理する(現状非表示) */}
+              <View style={{ gap: 8, marginTop: 12, display: 'none' }}>
                 <Button onPress={handleNotificationButtonPress}>
                   {translate('notifySettings')}
                 </Button>
@@ -523,7 +589,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                     {translate('trainTypeSettings')}
                   </Button>
                 ) : null}
-                <Button onPress={handleAllStopsButtonPress}>
+                <Button onPress={() => setRouteInfoModalVisible(true)}>
                   {translate('viewStopStations')}
                 </Button>
                 {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
@@ -551,6 +617,15 @@ export const SelectBoundModal: React.FC<Props> = ({
           </View>
         </Pressable>
       </Pressable>
+
+      <RouteInfoModal
+        visible={routeInfoModalVisible}
+        trainType={trainType}
+        stations={stations}
+        onClose={() => setRouteInfoModalVisible(false)}
+        loading={loading}
+        error={error}
+      />
     </Modal>
   );
 };

@@ -13,10 +13,12 @@ import Typography from './Typography';
 
 type Props = {
   line: Line;
-  onPress?: () => void;
+  stations?: Station[];
+  title?: string;
+  subtitle?: string;
   disabled?: boolean;
   testID?: string;
-  stations: Station[];
+  onPress?: () => void;
 };
 
 const styles = StyleSheet.create({
@@ -43,6 +45,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   mark: {
+    width: 35,
+    height: 35,
+    marginRight: 12,
+  },
+  markPlaceholder: {
+    width: 35,
+    height: 35,
     marginRight: 12,
   },
   texts: {
@@ -66,8 +75,6 @@ const styles = StyleSheet.create({
     height: 16,
     // 横方向は左揃え（縦は subtitleRow の alignItems で中央揃え）
     justifyContent: 'flex-start',
-  },
-  subtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -80,12 +87,64 @@ const styles = StyleSheet.create({
   },
 });
 
+type SubtitleProps = {
+  inboundText: string;
+  outboundText: string;
+  loading?: boolean;
+};
+
+const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
+  if (loading) {
+    return (
+      <View style={[styles.subtitleContainer, { marginTop: 6 }]}>
+        <SkeletonPlaceholder borderRadius={1} speed={1500}>
+          <SkeletonPlaceholder.Item width={60} height={12} />
+        </SkeletonPlaceholder>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.subtitleContainer, { marginTop: 6 }]}>
+      {inboundText ? (
+        <Typography style={styles.subtitle} numberOfLines={1}>
+          {inboundText}
+        </Typography>
+      ) : null}
+      {inboundText && outboundText ? (
+        <Svg
+          width={16}
+          height={16}
+          viewBox="0 0 24 24"
+          style={{ marginHorizontal: 6, alignSelf: 'center' }}
+        >
+          <Path
+            d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
+            fill="none"
+            stroke="#fff"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      ) : null}
+      {outboundText ? (
+        <Typography style={styles.subtitle} numberOfLines={1}>
+          {outboundText}
+        </Typography>
+      ) : null}
+    </View>
+  );
+};
+
 export const LineCard: React.FC<Props> = ({
   line,
-  onPress,
+  stations = [],
+  title,
+  subtitle,
   disabled,
   testID,
-  stations,
+  onPress,
 }) => {
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
   const getLineMark = useGetLineMark();
@@ -116,9 +175,9 @@ export const LineCard: React.FC<Props> = ({
     return [format(inbound), format(outbound)];
   }, [bounds, stations]);
 
-  const lineName = useMemo(
-    () => line.nameShort || line.nameRoman || '',
-    [line.nameShort, line.nameRoman]
+  const titleOrLineName = useMemo(
+    () => title ?? line.nameShort ?? line.nameRoman ?? '',
+    [title, line.nameShort, line.nameRoman]
   );
 
   return (
@@ -136,7 +195,7 @@ export const LineCard: React.FC<Props> = ({
         },
       ]}
     >
-      <View style={[styles.insetBorder]} pointerEvents="none" />
+      <View style={styles.insetBorder} pointerEvents="none" />
       {mark ? (
         <View style={styles.mark}>
           <TransferLineMark
@@ -147,60 +206,17 @@ export const LineCard: React.FC<Props> = ({
             withDarkTheme={isLEDTheme}
           />
         </View>
-      ) : null}
+      ) : (
+        <View style={styles.markPlaceholder} />
+      )}
       <View style={styles.texts}>
         <Typography style={styles.title} numberOfLines={1}>
-          {lineName}
+          {titleOrLineName}
         </Typography>
-
-        {inboundText || outboundText ? (
-          <View
-            style={[
-              styles.subtitleContainer,
-              styles.subtitleRow,
-              { marginTop: 6 },
-            ]}
-          >
-            {inboundText ? (
-              <Typography style={styles.subtitle} numberOfLines={1}>
-                {inboundText}
-              </Typography>
-            ) : null}
-            {inboundText && outboundText ? (
-              <Svg
-                width={16}
-                height={16}
-                viewBox="0 0 24 24"
-                style={{ marginHorizontal: 6, alignSelf: 'center' }}
-              >
-                <Path
-                  d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
-            ) : null}
-            {outboundText ? (
-              <Typography style={styles.subtitle} numberOfLines={1}>
-                {outboundText}
-              </Typography>
-            ) : null}
-          </View>
+        {subtitle ? (
+          <Subtitle inboundText={subtitle} outboundText="" />
         ) : (
-          <View
-            style={[
-              styles.subtitleContainer,
-              styles.subtitleRow,
-              { marginTop: 6 },
-            ]}
-          >
-            <SkeletonPlaceholder borderRadius={1} speed={1500}>
-              <SkeletonPlaceholder.Item width={60} height={12} />
-            </SkeletonPlaceholder>
-          </View>
+          <Subtitle inboundText={inboundText} outboundText={outboundText} />
         )}
       </View>
       <View style={styles.chevron}>

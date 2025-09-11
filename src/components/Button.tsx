@@ -3,6 +3,7 @@ import {
   type GestureResponderEvent,
   type StyleProp,
   StyleSheet,
+  type TextStyle,
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
@@ -15,43 +16,47 @@ import Typography from './Typography';
 
 type Props = {
   children: React.ReactNode;
-  color?: string;
   onPress: (event: GestureResponderEvent) => void;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   disabled?: boolean;
   testID?: ButtonTestId | string | undefined;
 };
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: isTablet ? 12 : 8,
-    paddingHorizontal: isTablet ? 16 : 12,
-    elevation: 2,
-    borderRadius: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 1,
     shadowColor: '#000',
     shadowOpacity: 0.16,
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 0,
     },
-    shadowRadius: 2,
+    shadowRadius: 1,
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 8,
   },
   buttonLED: {
     paddingVertical: 8,
     paddingHorizontal: isTablet ? 18 : 12,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   text: {
-    color: '#fff',
     fontSize: RFValue(14),
     textAlign: 'center',
+    color: '#fff',
   },
 });
 
 const Button: React.FC<Props> = ({
   children,
-  color,
   onPress,
   style,
+  textStyle,
   disabled,
   testID,
 }: Props) => {
@@ -62,18 +67,16 @@ const Button: React.FC<Props> = ({
       disabled={disabled}
       onPress={disabled ? undefined : onPress}
       style={[
+        isLEDTheme ? styles.buttonLED : styles.button,
         {
-          ...(isLEDTheme ? styles.buttonLED : styles.button),
-          backgroundColor: isLEDTheme ? color : (color ?? '#333'),
-          borderWidth: isLEDTheme && !color ? 2 : 0,
-          borderColor: isLEDTheme ? 'white' : undefined,
+          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
           opacity: disabled ? 0.5 : 1,
         },
         style,
       ]}
       testID={testID}
     >
-      <Typography numberOfLines={1} style={styles.text}>
+      <Typography numberOfLines={1} style={[styles.text, textStyle]}>
         {children}
       </Typography>
     </TouchableOpacity>

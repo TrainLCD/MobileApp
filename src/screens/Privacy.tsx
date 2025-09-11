@@ -158,9 +158,7 @@ const PrivacyScreen: React.FC = () => {
         </Typography>
       </TouchableOpacity>
       <View style={styles.buttons}>
-        <Button color="#008ffe" onPress={handleApprovePress}>
-          {translate('continue')}
-        </Button>
+        <Button onPress={handleApprovePress}>{translate('continue')}</Button>
       </View>
     </SafeAreaView>
   );

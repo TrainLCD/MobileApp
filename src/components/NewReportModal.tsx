@@ -184,7 +184,6 @@ const NewReportModal: React.FC<Props> = ({
               disabled={
                 description.trim().length < descriptionLowerLimit || sending
               }
-              color={isLEDTheme ? undefined : '#008ffe'}
               onPress={onSubmit}
             >
               {sending

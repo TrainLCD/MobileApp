@@ -31,7 +31,6 @@ import {
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
-import { SavedRouteInfoModal } from '~/components/SavedRouteInfoModal';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
@@ -56,7 +55,6 @@ import {
 } from '../hooks';
 import { useSavedRoutes } from '../hooks/useSavedRoutes';
 import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
@@ -148,7 +146,6 @@ const LineCardItem: React.FC<LineCardItemProps> = ({
 const SelectLineScreen: React.FC = () => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
-  const setLineState = useSetAtom(lineState);
   const { stationForHeader } = useAtomValue(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
@@ -186,8 +183,6 @@ const SelectLineScreen: React.FC = () => {
   const [carouselData, setCarouselData] = React.useState<LoopItem[]>([]);
 
   // SavedRouteモーダル用の状態
-  const [selectedRoute, setSelectedRoute] = useState<SavedRoute | null>(null);
-  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
   // 確定時にのみ反映するための一時保存データ
   const pendingStationRef = React.useRef<Station | null>(null);
@@ -525,8 +520,7 @@ const SelectLineScreen: React.FC = () => {
 
   const handlePresetPress = useCallback(
     async (route: SavedRoute) => {
-      setSelectedRoute(route);
-      setIsPresetModalOpen(true);
+      setIsSelectBoundModalOpen(true);
       if (route.hasTrainType) {
         await openModalByTrainTypeId(
           route.trainTypeId,
@@ -541,39 +535,6 @@ const SelectLineScreen: React.FC = () => {
     },
     [openModalByLineId, openModalByTrainTypeId]
   );
-
-  const handleCloseModal = useCallback(() => {
-    setIsPresetModalOpen(false);
-    // ローカル状態のみクリア（グローバルは未変更）
-    pendingStationRef.current = null;
-    pendingStationsRef.current = null;
-    pendingTrainTypeRef.current = null;
-    pendingLineRef.current = null;
-  }, []);
-
-  const handleRouteConfirmed = useCallback(() => {
-    // ここでのみグローバル状態を更新
-    const st = pendingStationRef.current;
-    const sts = pendingStationsRef.current ?? [];
-    const tt = pendingTrainTypeRef.current;
-    const line = pendingLineRef.current;
-    if (st) {
-      setStationState((prev) => ({ ...prev, station: st, stations: sts }));
-      setNavigationState((prev) => ({
-        ...prev,
-        stationForHeader: st,
-        leftStations: [],
-        trainType: tt ?? null,
-      }));
-      setLineState((prev) => ({ ...prev, selectedLine: line ?? null }));
-      setStationState((prev) => ({
-        ...prev,
-        wantedDestination: pendingWantedDestinationRef.current ?? null,
-      }));
-    }
-    setIsPresetModalOpen(false);
-    setIsSelectBoundModalOpen(true);
-  }, [setLineState, setNavigationState, setStationState]);
 
   const handleUpdateStation = useCallback(async () => {
     const pos = await fetchCurrentLocation();
@@ -847,19 +808,9 @@ const SelectLineScreen: React.FC = () => {
           </View>
         </View>
       ) : null}
-      {/* Footer */}
+      {/* フッター */}
       <FooterTabBar active="home" />
-      {/* SavedRoute モーダル */}
-      <SavedRouteInfoModal
-        visible={isPresetModalOpen}
-        trainType={pendingTrainTypeRef.current}
-        stations={pendingStationsRef.current ?? []}
-        routeName={selectedRoute?.name ?? ''}
-        onClose={handleCloseModal}
-        onConfirmed={handleRouteConfirmed}
-        loading={fetchTrainTypesStatus === 'pending'}
-        error={fetchTrainTypesError}
-      />
+      {/* モーダル */}
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
         onClose={() => setIsSelectBoundModalOpen(false)}

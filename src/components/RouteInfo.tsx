@@ -1,8 +1,7 @@
 import type { ConnectError } from '@connectrpc/connect';
 import uniqBy from 'lodash/uniqBy';
-import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useMemo } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
@@ -15,7 +14,6 @@ import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { Heading } from './Heading';
-import LEDThemeSwitch from './LEDThemeSwitch';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
@@ -24,12 +22,9 @@ type Props = {
   finalStation?: Station;
   stations: Station[];
   loading: boolean;
-  disabled?: boolean;
   error: ConnectError | null;
   routeName: string;
   onClose: () => void;
-  onConfirmed: (trainType: TrainType | undefined, asTerminus?: boolean) => void;
-  fromRouteListModal?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -40,20 +35,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
+  heading: {
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+    marginTop: 24,
+  },
   contentView: {
     width: '100%',
     paddingVertical: 24,
     borderRadius: 8,
     minHeight: 256,
   },
+  stops: {
+    fontSize: RFValue(11),
+    marginTop: 8,
+    lineHeight: RFValue(16),
+  },
   buttons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    alignItems: 'center',
+    marginTop: 32,
     alignSelf: 'center',
-    gap: 16,
-    marginTop: 24,
   },
   switchContainer: {
     flexDirection: 'row',
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   trainTypeListContent: {
     flexWrap: 'wrap',
     flexDirection: 'column',
-    rowGap: 4,
+    rowGap: 8,
     columnGap: 48,
   },
   trainTypeItemContainer: {
@@ -102,8 +102,6 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(14),
   },
 });
-
-const SAFE_AREA_FALLBACK = 32;
 
 const SavedItem = React.memo(
   ({
@@ -167,36 +165,23 @@ const SavedItem = React.memo(
   }
 );
 
-export const SavedRouteInfo: React.FC<Props> = ({
+export const RouteInfo: React.FC<Props> = ({
   trainType,
   finalStation,
   stations,
   loading,
-  disabled,
-  error,
+  error: _error,
   routeName,
   onClose,
-  onConfirmed,
-  fromRouteListModal,
 }: Props) => {
   const currentStation = useCurrentStation();
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const [asTerminus, setAsTerminus] = useState(false);
-
-  const toggleAsTerminus = () => setAsTerminus((prev) => !prev);
-
-  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
-
   const stopStations = useMemo(() => {
     const stops = dropEitherJunctionStation(stations)
       .filter((s) => !getIsPass(s))
       .filter((s) => s !== undefined);
-
-    if (!fromRouteListModal) {
-      return stops;
-    }
 
     const curIndex = stops.findIndex(
       (s) => s.groupId === currentStation?.groupId
@@ -220,12 +205,7 @@ export const SavedRouteInfo: React.FC<Props> = ({
     }
 
     return uniqBy(stops.slice(curIndex), 'id');
-  }, [
-    stations,
-    currentStation?.groupId,
-    finalStation?.groupId,
-    fromRouteListModal,
-  ]);
+  }, [stations, currentStation?.groupId, finalStation?.groupId]);
 
   const afterFinalLines = useMemo(
     () =>
@@ -303,13 +283,7 @@ export const SavedRouteInfo: React.FC<Props> = ({
         <View style={styles.contentContainer}>
           <Heading style={styles.routeName}>{routeName}</Heading>
 
-          <Typography
-            style={{
-              fontSize: RFValue(14),
-              fontWeight: 'bold',
-              marginTop: 8,
-            }}
-          >
+          <Typography style={styles.heading}>
             {translate('allStops')}:
           </Typography>
 
@@ -318,19 +292,11 @@ export const SavedRouteInfo: React.FC<Props> = ({
               <SkeletonPlaceholder.Item
                 width="100%"
                 height={64}
-                style={{
-                  marginTop: 8,
-                }}
+                style={styles.stops}
               />
             </SkeletonPlaceholder>
           ) : (
-            <Typography
-              style={{
-                fontSize: RFValue(11),
-                marginTop: 8,
-                lineHeight: RFValue(14),
-              }}
-            >
+            <Typography style={styles.stops}>
               {stopStations.map((s, i, a) =>
                 isJapanese ? (
                   <React.Fragment key={s.id}>
@@ -370,22 +336,8 @@ export const SavedRouteInfo: React.FC<Props> = ({
               )}
             </Typography>
           )}
-          {error && (
-            <Typography
-              style={{ color: '#d00', marginTop: 8 }}
-              numberOfLines={2}
-            >
-              {error.message}
-            </Typography>
-          )}
 
-          <Typography
-            style={{
-              fontSize: RFValue(14),
-              fontWeight: 'bold',
-              marginTop: 16,
-            }}
-          >
+          <Typography style={styles.heading}>
             {translate('eachTrainTypes')}:
           </Typography>
 
@@ -394,9 +346,7 @@ export const SavedRouteInfo: React.FC<Props> = ({
               <SkeletonPlaceholder.Item
                 width="100%"
                 height={48}
-                style={{
-                  marginTop: 8,
-                }}
+                style={styles.trainTypeList}
               />
             </SkeletonPlaceholder>
           ) : (
@@ -418,51 +368,8 @@ export const SavedRouteInfo: React.FC<Props> = ({
           )}
         </View>
 
-        {fromRouteListModal && (
-          <View
-            style={{
-              ...styles.switchContainer,
-              marginTop: 16,
-              paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-              paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-            }}
-          >
-            {isLEDTheme ? (
-              <LEDThemeSwitch
-                style={{ marginRight: 8 }}
-                value={asTerminus}
-                onValueChange={toggleAsTerminus}
-              />
-            ) : (
-              <Switch
-                style={{ marginRight: 8 }}
-                value={asTerminus}
-                onValueChange={toggleAsTerminus}
-                ios_backgroundColor={'#fff'}
-              />
-            )}
-
-            <Typography style={styles.enableTerminusText}>
-              {translate('setTerminusText', {
-                stationName:
-                  (isJapanese ? finalStation?.name : finalStation?.nameRoman) ??
-                  '',
-              })}
-            </Typography>
-          </View>
-        )}
-
         <View style={styles.buttons}>
-          <Button
-            color={isLEDTheme ? undefined : '#008ffe'}
-            onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
-            disabled={loading || disabled}
-          >
-            {translate('submit')}
-          </Button>
-          <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-            {translate('cancel')}
-          </Button>
+          <Button onPress={onClose}>OK</Button>
         </View>
       </Pressable>
     </Pressable>
