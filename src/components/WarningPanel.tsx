@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   type GestureResponderEvent,
+  Pressable,
   StyleSheet,
   TouchableWithoutFeedback,
   useWindowDimensions,
@@ -9,6 +10,8 @@ import {
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { Orientation } from 'expo-screen-orientation';
 
 interface Props {
   onPress: (event: GestureResponderEvent) => void;
@@ -60,21 +63,28 @@ const WarningPanel: React.FC<Props> = ({
   });
 
   const dim = useWindowDimensions();
+  const orientation = useDeviceOrientation();
 
   return (
-    <TouchableWithoutFeedback onPress={onPress}>
-      <View
-        style={{
-          ...styles.root,
-          width: dim.width / 2,
-        }}
-      >
-        <Typography style={styles.message}>{text}</Typography>
-        <Typography style={styles.dismissMessage}>
-          {translate('tapToClose')}
-        </Typography>
-      </View>
-    </TouchableWithoutFeedback>
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.root,
+        {
+          width:
+            orientation &&
+            (orientation === Orientation.LANDSCAPE_LEFT ||
+              orientation === Orientation.LANDSCAPE_RIGHT)
+              ? dim.width / 2
+              : dim.width - 48,
+        },
+      ]}
+    >
+      <Typography style={styles.message}>{text}</Typography>
+      <Typography style={styles.dismissMessage}>
+        {translate('tapToClose')}
+      </Typography>
+    </Pressable>
   );
 };
 
