@@ -1,17 +1,15 @@
+import { Orientation } from 'expo-screen-orientation';
 import React from 'react';
 import {
   type GestureResponderEvent,
   Pressable,
   StyleSheet,
-  TouchableWithoutFeedback,
   useWindowDimensions,
-  View,
 } from 'react-native';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
-import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
-import { Orientation } from 'expo-screen-orientation';
 
 interface Props {
   onPress: (event: GestureResponderEvent) => void;

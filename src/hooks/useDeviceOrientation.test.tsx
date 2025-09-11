@@ -1,6 +1,6 @@
-import { Text } from 'react-native';
-import { render, act } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Text } from 'react-native';
 import { useDeviceOrientation } from './useDeviceOrientation';
 
 jest.mock('expo-screen-orientation', () => ({
