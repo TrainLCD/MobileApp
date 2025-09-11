@@ -177,7 +177,10 @@ export const LineCard: React.FC<Props> = ({
   }, [bounds, stations]);
 
   const titleOrLineName = useMemo(
-    () => title ?? line.nameShort ?? line.nameRoman ?? '',
+    () =>
+      isJapanese
+        ? (title ?? line.nameShort ?? '')
+        : (title ?? line.nameRoman ?? ''),
     [title, line.nameShort, line.nameRoman]
   );
 
