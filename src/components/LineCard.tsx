@@ -10,6 +10,7 @@ import { APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
+import isTablet from '~/utils/isTablet';
 
 type Props = {
   line: Line;
@@ -45,13 +46,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   mark: {
-    width: 35,
-    height: 35,
+    width: isTablet ? 52.5 : 35,
+    height: isTablet ? 52.5 : 35,
     marginRight: 12,
   },
   markPlaceholder: {
-    width: 35,
-    height: 35,
+    width: isTablet ? 52.5 : 35,
+    height: isTablet ? 52.5 : 35,
     marginRight: 12,
   },
   texts: {
