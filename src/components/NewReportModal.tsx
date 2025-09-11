@@ -126,7 +126,7 @@ const NewReportModal: React.FC<Props> = ({
               ? {
                   width: '80%',
                   shadowOpacity: 0.25,
-                  shadowColor: '#000',
+                  shadowColor: '#333',
                   borderRadius: 16,
                 }
               : {

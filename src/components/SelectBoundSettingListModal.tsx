@@ -82,7 +82,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
               width: '80%',
               maxHeight: '90%',
               shadowOpacity: 0.25,
-              shadowColor: '#000',
+              shadowColor: '#333',
               borderRadius: 16,
             },
           ]}

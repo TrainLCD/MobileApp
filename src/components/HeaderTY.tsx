@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowOpacity: 1,
     shadowRadius: 1,
   },

@@ -106,12 +106,10 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 16,
     overflow: 'hidden',
     // iOS shadow
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowOpacity: 0.12,
-    shadowRadius: 24,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 8 },
-    // Android fallback
-    elevation: 4,
   },
   nowHeaderContent: {
     paddingHorizontal: 24,

@@ -41,7 +41,7 @@ import TrainTypeBox from './TrainTypeBox';
 
 const styles = StyleSheet.create({
   root: {
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowOpacity: 0.25,
     shadowOffset: {
       width: 0,
