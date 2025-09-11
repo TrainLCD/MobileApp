@@ -1,10 +1,10 @@
 import type { ConnectError } from '@connectrpc/connect';
+import { useAtomValue } from 'jotai';
 import { Modal } from 'react-native';
 import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
 import { RouteInfo } from './RouteInfo';
-import { useAtomValue } from 'jotai';
-import stationState from '~/store/atoms/station';
 
 type Props = {
   visible: boolean;
