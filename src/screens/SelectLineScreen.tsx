@@ -278,7 +278,6 @@ const SelectLineScreen: React.FC = () => {
   }, [isRoutesDBInitialized, updateRoutes]);
 
   useEffect(() => {
-    if (!routes.length) return;
     const fetchAsync = async () => {
       try {
         const routeStations = await Promise.all(
