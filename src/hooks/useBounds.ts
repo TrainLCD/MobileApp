@@ -28,7 +28,7 @@ export const useBounds = (
     isOedoLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
-  } = useLoopLine(stations);
+  } = useLoopLine(stations, false);
 
   const bounds = useMemo((): [Station[], Station[]] => {
     if (!stations.length) return [[], []];

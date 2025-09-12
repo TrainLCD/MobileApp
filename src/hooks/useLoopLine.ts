@@ -16,7 +16,10 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 
-export const useLoopLine = (overrideStations?: Station[]) => {
+export const useLoopLine = (
+  overrideStations?: Station[],
+  checkCurrentLine = true
+) => {
   const { stations: stationsFromAtom } = useAtomValue(stationState);
 
   const stations = useMemo(
@@ -25,7 +28,9 @@ export const useLoopLine = (overrideStations?: Station[]) => {
   );
 
   const station = useCurrentStation();
-  const line = useCurrentLine();
+  const currentLine = useCurrentLine();
+
+  const line = checkCurrentLine ? currentLine : null;
 
   const trainType = useCurrentTrainType();
 

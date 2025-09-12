@@ -1,24 +1,20 @@
 import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { Effect, pipe } from 'effect';
 import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
-import { useAtomValue, useSetAtom } from 'jotai';
-import isEqual from 'lodash/isEqual';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  // Animated removed (migrated to reanimated)
-  Dimensions,
-  FlatList,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { useAtom } from 'jotai';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -29,8 +25,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
@@ -43,11 +37,9 @@ import ErrorScreen from '../components/ErrorScreen';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { LineCard } from '../components/LineCard';
-import { PresetCard } from '../components/PresetCard';
 import Typography from '../components/Typography';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import {
-  useConnectivity,
   useFetchCurrentLocationOnce,
   useFetchNearbyStation,
   useLocationStore,
@@ -59,6 +51,11 @@ import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
+import { SelectLineScreenPresets } from './SelectLineScreenPresets';
+
+export type LoopItem = (SavedRoute & { stations: Station[] }) & {
+  __k: string;
+};
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, paddingTop: 0, flex: 1 },
@@ -115,36 +112,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 10,
   },
+  nowHeaderInline: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 10,
+  },
+  separator: { height: 12 },
 });
 
-type LineCardItemProps = {
-  line: Line;
-  disabled: boolean;
-  onPress: (line: Line) => void;
-  stations?: Station[];
+const EmptySeparator = React.memo(() => <View style={styles.separator} />);
+
+type ListHeaderProps = {
+  headingTitle: string;
+  carouselData: LoopItem[];
+  isPresetsLoading: boolean;
+  onPress: (route: SavedRoute) => void;
 };
 
-const LineCardItem: React.FC<LineCardItemProps> = ({
-  line,
-  disabled,
-  onPress,
-  stations,
-}) => {
-  return (
-    <LineCard
-      line={line}
-      onPress={() => onPress(line)}
-      disabled={disabled}
-      stations={stations ?? []}
-      testID={generateLineTestId(line)}
-    />
-  );
-};
+const ListHeader = React.memo(
+  ({
+    headingTitle,
+    carouselData,
+    isPresetsLoading,
+    onPress,
+  }: ListHeaderProps) => (
+    <>
+      <SelectLineScreenPresets
+        carouselData={carouselData}
+        isPresetsLoading={isPresetsLoading}
+        onPress={onPress}
+      />
+      <Heading style={styles.heading}>{headingTitle}</Heading>
+    </>
+  )
+);
 
-const SelectLineScreen: React.FC = () => {
-  const setStationState = useSetAtom(stationState);
-  const setNavigationState = useSetAtom(navigationState);
-  const { stationForHeader } = useAtomValue(navigationState);
+const SelectLineScreen = () => {
+  const [{ station: stationFromAtom }, setStationState] = useAtom(stationState);
+  const [{ stationForHeader }, setNavigationState] = useAtom(navigationState);
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const insets = useSafeAreaInsets();
@@ -165,29 +174,31 @@ const SelectLineScreen: React.FC = () => {
     isLoading: nearbyStationLoading,
     error: nearbyStationFetchError,
   } = useFetchNearbyStation();
-  const station = useMemo(() => nearbyStations[0] ?? null, [nearbyStations]);
+  const station = useMemo(
+    () => stationFromAtom ?? nearbyStations[0] ?? null,
+    [stationFromAtom, nearbyStations[0]]
+  );
 
-  const isInternetAvailable = useConnectivity();
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
-  const [nowHeaderHeight, setNowHeaderHeight] = React.useState(0);
+  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const {
     routes,
     updateRoutes,
     isInitialized: isRoutesDBInitialized,
   } = useSavedRoutes();
-  const [lineStationsById, setLineStationsById] = React.useState<
+  const [lineStationsById, setLineStationsById] = useState<
     Record<number, Station[]>
   >({});
-  const [carouselData, setCarouselData] = React.useState<LoopItem[]>([]);
+  const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
 
   // SavedRouteモーダル用の状態
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
   // 確定時にのみ反映するための一時保存データ
-  const pendingStationRef = React.useRef<Station | null>(null);
-  const pendingStationsRef = React.useRef<Station[] | null>(null);
-  const pendingTrainTypeRef = React.useRef<TrainType | null>(null);
-  const pendingLineRef = React.useRef<Line | null>(null);
-  const pendingWantedDestinationRef = React.useRef<Station | null>(null);
+  const pendingStationRef = useRef<Station | null>(null);
+  const pendingStationsRef = useRef<Station[] | null>(null);
+  const pendingTrainTypeRef = useRef<TrainType | null>(null);
+  const pendingLineRef = useRef<Line | null>(null);
+  const pendingWantedDestinationRef = useRef<Station | null>(null);
 
   const {
     mutateAsync: fetchStationsByLineId,
@@ -204,62 +215,6 @@ const SelectLineScreen: React.FC = () => {
     status: fetchTrainTypesStatus,
     error: fetchTrainTypesError,
   } = useMutation(getTrainTypesByStationId);
-
-  // Carousel layout metrics
-  const CARD_GAP = 12;
-  const screenWidth = Dimensions.get('window').width;
-  const cardWidth = screenWidth; // アイテム幅は画面幅いっぱい
-  const sidePadding = 0; // カルーセルの左右余白なし
-
-  const loopData = useMemo(
-    () =>
-      carouselData.length
-        ? [
-            ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-a-${i}` })),
-            ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-b-${i}` })),
-            ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-c-${i}` })),
-          ]
-        : [],
-    [carouselData]
-  );
-  const ITEM_SIZE = cardWidth + CARD_GAP;
-  // const MID_BLOCK_START = carouselData.length; // 真ん中ブロック開始index
-  type LoopItem = (SavedRoute & { stations: Station[] }) & { __k: string };
-  const listRef = React.useRef<FlatList<LoopItem>>(null);
-  const carouselOffsetRef = React.useRef(0);
-  const snapOffsets = useMemo(
-    () => loopData.map((_, i) => sidePadding + i * ITEM_SIZE),
-    [loopData, ITEM_SIZE]
-  );
-
-  // 現在の“論理インデックス”（carouselData基準）を保持して、再描画でも位置を維持
-  const currentLogicalIndexRef = React.useRef(0);
-
-  const handleMomentumEnd = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (!carouselData.length) return;
-      const x = e.nativeEvent.contentOffset.x;
-      const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
-      // 論理インデックス（0..length-1）を保存しておく
-      const logicalIndex =
-        ((rawIndex % carouselData.length) + carouselData.length) %
-        carouselData.length;
-      currentLogicalIndexRef.current = logicalIndex;
-      // ループのため、先頭ブロックに来たら1ブロック先へ、末尾ブロックなら1ブロック戻す
-      if (rawIndex < carouselData.length) {
-        const newOffset =
-          sidePadding + (rawIndex + carouselData.length) * ITEM_SIZE;
-        carouselOffsetRef.current = newOffset;
-        listRef.current?.scrollToOffset({ offset: newOffset, animated: false });
-      } else if (rawIndex >= carouselData.length * 2) {
-        const newOffset =
-          sidePadding + (rawIndex - carouselData.length) * ITEM_SIZE;
-        carouselOffsetRef.current = newOffset;
-        listRef.current?.scrollToOffset({ offset: newOffset, animated: false });
-      }
-    },
-    [ITEM_SIZE, carouselData.length]
-  );
 
   useEffect(() => {
     ScreenOrientation.unlockAsync().catch(console.error);
@@ -301,28 +256,28 @@ const SelectLineScreen: React.FC = () => {
     fetchAsync();
   }, [routes, fetchStationsByLineId, fetchStationsByLineGroupId]);
 
-  useEffect(() => {
-    const lines = station?.lines ?? [];
-    if (!lines.length) return;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchStationsAsync = async () => {
+        const lines = station?.lines ?? [];
 
-    const fetchStationsAsync = async () => {
-      for (const line of lines) {
-        if (lineStationsById[line.id]) continue;
+        for (const line of lines) {
+          if (lineStationsById[line.id]) continue;
 
-        const { stations } = await fetchStationsByLineId({
-          lineId: line.id,
-          stationId: line.station?.id,
-        });
+          const { stations } = await fetchStationsByLineId({
+            lineId: line.id,
+            stationId: line.station?.id,
+          });
 
-        setLineStationsById((prev) => {
-          if (isEqual(prev[line.id], stations)) return prev;
-          return { ...prev, [line.id]: stations };
-        });
-      }
-    };
-
-    fetchStationsAsync();
-  }, [station?.lines, fetchStationsByLineId, lineStationsById]);
+          setLineStationsById((prev) => ({
+            ...prev,
+            [line.id]: stations,
+          }));
+        }
+      };
+      fetchStationsAsync();
+    }, [station?.lines, fetchStationsByLineId, lineStationsById])
+  );
 
   useEffect(() => {
     pipe(
@@ -342,30 +297,23 @@ const SelectLineScreen: React.FC = () => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: 初回のみ
   useEffect(() => {
-    if (station) return;
-
-    const run = async () => {
-      try {
-        // Try last-known fast; then race a fresh read with a short timeout
-        const lastOrFresh = await fetchCurrentLocation(true, 3000);
-        if (!lastOrFresh) return;
-        useLocationStore.setState(lastOrFresh);
-        const data = await fetchByCoords({
-          latitude: lastOrFresh.coords.latitude,
-          longitude: lastOrFresh.coords.longitude,
-          limit: 1,
-        });
-        const stationFromAPI = data.stations[0] ?? null;
-        setStationState((prev) => ({ ...prev, station: stationFromAPI }));
-        setNavigationState((prev) => ({
-          ...prev,
-          stationForHeader: stationFromAPI,
-        }));
-      } catch {
-        // noop; ErrorScreen will handle if nothing
-      }
+    const fetchInitialNearbyStationAsync = async () => {
+      const location = await fetchCurrentLocation(true);
+      if (!location) return;
+      useLocationStore.setState(location);
+      const data = await fetchByCoords({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        limit: 1,
+      });
+      const stationFromAPI = data.stations[0] ?? null;
+      setStationState((prev) => ({ ...prev, station: stationFromAPI }));
+      setNavigationState((prev) => ({
+        ...prev,
+        stationForHeader: stationFromAPI,
+      }));
     };
-    void run();
+    fetchInitialNearbyStationAsync();
   }, []);
 
   useEffect(() => {
@@ -564,7 +512,6 @@ const SelectLineScreen: React.FC = () => {
 
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
-    // 決定せず閉じた場合はpendingをクリア
     pendingStationRef.current = null;
     pendingStationsRef.current = null;
     pendingTrainTypeRef.current = null;
@@ -574,14 +521,14 @@ const SelectLineScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item }: { item: Line }) => (
-      <LineCardItem
+      <LineCard
         line={item}
-        disabled={!isInternetAvailable}
-        onPress={handleLineSelected}
+        onPress={() => handleLineSelected(item)}
         stations={lineStationsById[item.id]}
+        testID={generateLineTestId(item)}
       />
     ),
-    [handleLineSelected, isInternetAvailable, lineStationsById]
+    [handleLineSelected, lineStationsById]
   );
 
   const keyExtractor = useCallback((l: Line) => l.id.toString(), []);
@@ -635,7 +582,7 @@ const SelectLineScreen: React.FC = () => {
     ),
   }));
 
-  const AnimatedTypography = React.useMemo(
+  const AnimatedTypography = useMemo(
     () => Animated.createAnimatedComponent(Typography),
     []
   );
@@ -679,81 +626,16 @@ const SelectLineScreen: React.FC = () => {
           data={station?.lines ?? []}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          ListHeaderComponent={() => (
-            <>
-              <View style={{ marginHorizontal: -24 }}>
-                <FlatList<LoopItem>
-                  ref={listRef}
-                  horizontal
-                  data={loopData}
-                  keyExtractor={(item) => item.__k}
-                  ListEmptyComponent={() =>
-                    isPresetsLoading ? (
-                      <SkeletonPlaceholder borderRadius={4} speed={1500}>
-                        <SkeletonPlaceholder.Item
-                          width={cardWidth - 48}
-                          height={160}
-                          style={{ marginHorizontal: 24 }}
-                        />
-                      </SkeletonPlaceholder>
-                    ) : (
-                      <View
-                        style={{
-                          width: cardWidth,
-                          height: 160,
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <View style={{ marginHorizontal: 24 }}>
-                          <NoPresetsCard />
-                        </View>
-                      </View>
-                    )
-                  }
-                  renderItem={({ item }) => (
-                    <View style={{ width: cardWidth }}>
-                      <View style={{ marginHorizontal: 24 }}>
-                        <Pressable onPress={() => handlePresetPress(item)}>
-                          <PresetCard
-                            title={item.name}
-                            from={item.stations[0]}
-                            to={item.stations[item.stations.length - 1]}
-                          />
-                        </Pressable>
-                      </View>
-                    </View>
-                  )}
-                  ItemSeparatorComponent={() => (
-                    <View style={{ width: CARD_GAP }} />
-                  )}
-                  showsHorizontalScrollIndicator={false}
-                  snapToOffsets={snapOffsets}
-                  onScroll={(e) => {
-                    if (!carouselData.length) return;
-                    const x = e.nativeEvent.contentOffset.x;
-                    carouselOffsetRef.current = x;
-                    const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
-                    const logicalIndex =
-                      ((rawIndex % carouselData.length) + carouselData.length) %
-                      carouselData.length;
-                    currentLogicalIndexRef.current = logicalIndex;
-                  }}
-                  onMomentumScrollEnd={handleMomentumEnd}
-                  decelerationRate="fast"
-                  snapToAlignment="start"
-                  disableIntervalMomentum
-                  contentContainerStyle={{
-                    paddingHorizontal: 0,
-                    marginBottom: 48,
-                  }}
-                />
-              </View>
-
-              <Heading style={styles.heading}>{headingTitle}</Heading>
-            </>
-          )}
-          ListFooterComponent={() => <View style={{ height: 12 }} />}
+          ItemSeparatorComponent={EmptySeparator}
+          ListHeaderComponent={
+            <ListHeader
+              headingTitle={headingTitle}
+              carouselData={carouselData}
+              isPresetsLoading={isPresetsLoading}
+              onPress={handlePresetPress}
+            />
+          }
+          ListFooterComponent={EmptySeparator}
           onScroll={onScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
@@ -791,20 +673,7 @@ const SelectLineScreen: React.FC = () => {
                 </AnimatedTypography>
               </Animated.View>
               {/* Inline layout (fades in) */}
-              <Animated.View
-                style={[
-                  inlineStyle,
-                  {
-                    flexDirection: 'row',
-                    alignItems: 'flex-end',
-                    gap: 6,
-                    position: 'absolute',
-                    left: 24,
-                    right: 24,
-                    bottom: 10,
-                  },
-                ]}
-              >
+              <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
                 <Typography style={styles.nowLabel}>
                   {nowHeader.label}
                 </Typography>

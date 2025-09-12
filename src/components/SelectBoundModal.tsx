@@ -237,6 +237,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         stations: getTerminatedStations(destination, stations),
       }));
       setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }));
+      onClose();
       requestAnimationFrame(() => {
         navigation.navigate('Main' as never);
       });
@@ -248,6 +249,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       stations,
       trainType,
       getTerminatedStations,
+      onClose,
     ]
   );
 
