@@ -145,7 +145,9 @@ const RouteSearchScreen = () => {
         'line.id'
       ) ?? [];
     const hasTrainTypeRoutes = uniqBy(
-      stations.filter((s) => s.hasTrainTypes),
+      stations
+        .filter((s) => s.hasTrainTypes)
+        .filter((s) => station?.lines.some((l) => l.id === s.line?.id)),
       'id'
     );
 

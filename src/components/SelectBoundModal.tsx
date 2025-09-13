@@ -89,6 +89,7 @@ type Props = {
   destination: Station | null;
   loading: boolean;
   error: Error | null;
+  terminateByDdestination?: boolean;
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
@@ -101,6 +102,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   destination: wantedDestination,
   loading,
   error,
+  terminateByDdestination,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
@@ -190,7 +192,9 @@ export const SelectBoundModal: React.FC<Props> = ({
           ? getTerminatedStations(selectedStation, stations)
           : stations,
         selectedBound:
-          line?.id === TOEI_OEDO_LINE_ID ? oedoLineTerminus : selectedStation,
+          line?.id === TOEI_OEDO_LINE_ID && !terminateBySelectedStation
+            ? oedoLineTerminus
+            : selectedStation,
         selectedDirection: direction,
       }));
       onClose();
@@ -265,7 +269,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         return <></>;
       }
 
-      if (wantedDestination) {
+      if (wantedDestination && terminateByDdestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
         );
@@ -332,6 +336,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       stations,
       wantedDestination,
       line,
+      terminateByDdestination,
       loopLineDirectionText,
       normalLineDirectionText,
     ]
