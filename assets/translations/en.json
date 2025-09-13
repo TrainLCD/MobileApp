@@ -189,5 +189,7 @@
   "routeSavedText": "Saved the route \"%{routeName}\".",
   "routeDeletedText": "Deleted the \"%{routeName}\".",
   "noPresets": "No presets available",
-  "close": "Close"
+  "close": "Close",
+  "searchResult": "Search Results",
+  "emptySearchResult": "No matching routes were found."
 }

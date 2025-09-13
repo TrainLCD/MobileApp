@@ -1,18 +1,16 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useSetAtom } from 'jotai';
-import { uniqBy } from 'lodash';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import { Line, type Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import type {
   SavedRoute,
   SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
 import { APP_THEME } from '~/models/Theme';
-import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
@@ -176,7 +174,11 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [setNavigationState, setStationState, onClose]);
 
   const handleBoundSelected = useCallback(
-    (selectedStation: Station, direction: LineDirection) => {
+    (
+      selectedStation: Station,
+      direction: LineDirection,
+      terminateBySelectedStation = false
+    ) => {
       const oedoLineTerminus =
         direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
 
@@ -184,7 +186,9 @@ export const SelectBoundModal: React.FC<Props> = ({
       setStationState((prev) => ({
         ...prev,
         station,
-        stations,
+        stations: terminateBySelectedStation
+          ? getTerminatedStations(selectedStation, stations)
+          : stations,
         selectedBound:
           line?.id === TOEI_OEDO_LINE_ID ? oedoLineTerminus : selectedStation,
         selectedDirection: direction,
@@ -202,54 +206,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       setStationState,
       stations,
       onClose,
-    ]
-  );
-  const handleNotificationButtonPress = (): void => {
-    navigation.navigate('Notification' as never);
-  };
-
-  const handleTrainTypeButtonPress = (): void => {
-    navigation.navigate('TrainType' as never);
-  };
-
-  const handleSpecifyDestinationButtonPress = useCallback(() => {
-    navigation.navigate('SpecifyDestinationSettings' as never);
-  }, [navigation]);
-
-  const handleWantedDestinationPress = useCallback(
-    (destination: Station, direction: LineDirection) => {
-      const stationLineIds = Array.from(
-        new Set(stations.map((s) => s.line?.id).filter((id) => id))
-      );
-
-      const updatedTrainType: TrainType | null = trainType
-        ? new TrainType({
-            ...trainType,
-            lines: (trainType.lines || [])
-              .filter((l) => stationLineIds.includes(l.id))
-              .map((l) => new Line(l)),
-          })
-        : null;
-      setStationState((prev) => ({
-        ...prev,
-        selectedBound: destination,
-        selectedDirection: direction,
-        stations: getTerminatedStations(destination, stations),
-      }));
-      setNavigationState((prev) => ({ ...prev, trainType: updatedTrainType }));
-      onClose();
-      requestAnimationFrame(() => {
-        navigation.navigate('Main' as never);
-      });
-    },
-    [
-      navigation,
-      setNavigationState,
-      setStationState,
-      stations,
-      trainType,
       getTerminatedStations,
-      onClose,
     ]
   );
 
@@ -299,6 +256,15 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
       }
 
+      const lineForCard =
+        direction === 'INBOUND'
+          ? (boundStations[0]?.line ?? line)
+          : boundStations[boundStations.length - 1]?.line;
+
+      if (!lineForCard) {
+        return <></>;
+      }
+
       if (wantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
@@ -308,26 +274,21 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
         const dir =
           currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
-        if (direction === dir && wantedDestination.line) {
+
+        if (direction === dir && line) {
+          const title = isLoopLine
+            ? loopLineDirectionText(direction)
+            : normalLineDirectionText(boundStations);
+          const subtitle = isJapanese
+            ? lineForCard.nameShort
+            : lineForCard.nameRoman;
+
           return (
             <LineCard
-              line={wantedDestination.line}
-              onPress={() =>
-                handleWantedDestinationPress(wantedDestination, dir)
-              }
-              title={
-                isLoopLine
-                  ? loopLineDirectionText(direction)
-                  : normalLineDirectionText(boundStations)
-              }
-              subtitle={
-                uniqBy(trainType?.lines, 'id')
-                  .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
-                  .join('・') ??
-                (isJapanese
-                  ? wantedDestination.line.nameShort
-                  : wantedDestination.line.nameRoman)
-              }
+              line={line}
+              onPress={() => handleBoundSelected(wantedDestination, dir, true)}
+              title={title}
+              subtitle={subtitle}
             />
           );
         }
@@ -341,15 +302,6 @@ export const SelectBoundModal: React.FC<Props> = ({
           currentIndex === stations.length - 1) ||
         (direction === 'OUTBOUND' && !isLoopLine && !currentIndex)
       ) {
-        return <></>;
-      }
-
-      const lineForCard =
-        direction === 'INBOUND'
-          ? (boundStations[0]?.line ?? line)
-          : boundStations[boundStations.length - 1]?.line;
-
-      if (!lineForCard) {
         return <></>;
       }
 
@@ -375,7 +327,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     [
       currentIndex,
       handleBoundSelected,
-      handleWantedDestinationPress,
       isLoopLine,
       station?.groupId,
       stations,
@@ -383,7 +334,6 @@ export const SelectBoundModal: React.FC<Props> = ({
       line,
       loopLineDirectionText,
       normalLineDirectionText,
-      trainType?.lines,
     ]
   );
 
@@ -579,41 +529,6 @@ export const SelectBoundModal: React.FC<Props> = ({
               >
                 {translate('close')}
               </Button>
-
-              {/* TODO: 整理する(現状非表示) */}
-              <View style={{ gap: 8, marginTop: 12, display: 'none' }}>
-                <Button onPress={handleNotificationButtonPress}>
-                  {translate('notifySettings')}
-                </Button>
-                {withTrainTypes ? (
-                  <Button onPress={handleTrainTypeButtonPress}>
-                    {translate('trainTypeSettings')}
-                  </Button>
-                ) : null}
-                <Button onPress={() => setRouteInfoModalVisible(true)}>
-                  {translate('viewStopStations')}
-                </Button>
-                {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
-                {!isLoopLine ? (
-                  <Button onPress={handleSpecifyDestinationButtonPress}>
-                    {translate('selectBoundSettings')}
-                  </Button>
-                ) : null}
-                <Button onPress={toggleAutoModeEnabled}>
-                  {translate('autoModeSettings')}:{' '}
-                  {autoModeEnabled ? 'ON' : 'OFF'}
-                </Button>
-                {isDevApp ? (
-                  <Button
-                    onPress={handleSaveRoutePress}
-                    disabled={!line || !isRoutesDBInitialized}
-                  >
-                    {translate(
-                      !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
-                    )}
-                  </Button>
-                ) : null}
-              </View>
             </View>
           </View>
         </Pressable>

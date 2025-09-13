@@ -190,5 +190,7 @@
   "routeSavedText": "経路「%{routeName}」を保存しました。",
   "routeDeletedText": "経路「%{routeName}」を削除しました。",
   "noPresets": "プリセットがありません",
-  "close": "閉じる"
+  "close": "閉じる",
+  "searchResult": "検索結果",
+  "emptySearchResult": "該当する経路が見つかりませんでした。"
 }

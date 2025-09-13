@@ -1,0 +1,149 @@
+import { BlurView } from 'expo-blur';
+import { useMemo } from 'react';
+import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import Animated, {
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Station } from '~/gen/proto/stationapi_pb';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese } from '~/translation';
+import Typography from './Typography';
+
+const styles = StyleSheet.create({
+  nowHeaderContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    // SafeAreaView内のpaddingと見た目を合わせる
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    zIndex: 10,
+  },
+  nowHeaderCard: {
+    width: '100%',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    overflow: 'hidden',
+    // iOS shadow
+    shadowColor: '#333',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  nowHeaderContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 10,
+  },
+  nowHeaderInline: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 10,
+  },
+  nowBar: {
+    marginBottom: 12,
+  },
+  nowLabel: {
+    fontSize: 24,
+    textAlign: 'left',
+  },
+  nowStation: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+});
+
+type Props = {
+  station: Station;
+  onLayout?: (event: LayoutChangeEvent) => void;
+  scrollY: SharedValue<number>;
+};
+
+export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
+  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const insets = useSafeAreaInsets();
+
+  const AnimatedTypography = useMemo(
+    () => Animated.createAnimatedComponent(Typography),
+    []
+  );
+
+  const nowHeader = useMemo(() => {
+    if (!station) return null;
+    const re = /\([^()]*\)/g;
+    const label = isJapanese ? 'ただいま' : 'Now at';
+    const name = isJapanese
+      ? (station.name ?? '').replace(re, '')
+      : (station.nameRoman ?? station.name ?? '').replace(re, '');
+    return { label, name };
+  }, [station]);
+
+  const COLLAPSE_RANGE = 64;
+  const stackedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE * 0.5],
+      [1, 0],
+      'clamp'
+    ),
+  }));
+  const inlineStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+      [0, 0, 1],
+      'clamp'
+    ),
+  }));
+  const animatedStationFont = useAnimatedStyle(() => ({
+    fontSize: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE],
+      [32, 21],
+      'clamp'
+    ),
+  }));
+
+  if (!nowHeader) return null;
+
+  return (
+    <View pointerEvents="none" style={styles.nowHeaderContainer}>
+      <View style={styles.nowHeaderCard} onLayout={onLayout}>
+        <BlurView
+          intensity={40}
+          tint={isLEDTheme ? 'dark' : 'light'}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
+          {/* Stacked layout (fades out) */}
+          <Animated.View style={stackedStyle}>
+            <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
+            <AnimatedTypography
+              style={[styles.nowStation, animatedStationFont]}
+            >
+              {nowHeader.name}
+            </AnimatedTypography>
+          </Animated.View>
+          {/* Inline layout (fades in) */}
+          <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
+            <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
+            <Typography style={styles.nowStation}>
+              {isJapanese ? `${nowHeader.name}` : nowHeader.name}
+            </Typography>
+          </Animated.View>
+        </View>
+      </View>
+    </View>
+  );
+};

@@ -38,6 +38,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     paddingHorizontal: 24,
   },
+  button: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 type Props = {
@@ -74,7 +80,13 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
         ]}
       >
         <View style={styles.content}>
-          <Pressable accessibilityRole="button" disabled>
+          <Pressable
+            style={styles.button}
+            accessibilityRole="button"
+            onPress={() => {
+              navigation.navigate('RouteSearch' as never);
+            }}
+          >
             <Ionicons
               name={active === 'search' ? 'search' : 'search-outline'}
               size={26}
@@ -85,11 +97,9 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
           </Pressable>
 
           <Pressable
+            style={styles.button}
             accessibilityRole="button"
             onPress={() => {
-              // ホーム: 縦レイアウトの路線選択へ
-              // この画面群(スタック)内で解決される
-              // @ts-ignore 画面名文字列での遷移を許容
               navigation.navigate('SelectLine' as never);
             }}
           >
@@ -101,10 +111,9 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
           </Pressable>
 
           <Pressable
+            style={styles.button}
             accessibilityRole="button"
             onPress={() => {
-              // 設定: スタック内の画面
-              // @ts-ignore 画面名文字列での遷移を許容
               navigation.navigate('AppSettings' as never);
             }}
           >

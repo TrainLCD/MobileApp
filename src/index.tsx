@@ -25,10 +25,7 @@ import CustomErrorBoundary from './components/CustomErrorBoundary';
 import TuningSettings from './components/TuningSettings';
 import { queryClient, transport } from './lib/grpc';
 import DeepLinkProvider from './providers/DeepLinkProvider';
-import CommunityRoutesScreen from './screens/CommunityRoutesScreen';
-import FakeStationSettingsScreen from './screens/FakeStationSettingsScreen';
 import PrivacyScreen from './screens/Privacy';
-import RouteSearchScreen from './screens/RouteSearchScreen';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
 
@@ -124,26 +121,8 @@ const App: React.FC = () => {
 
                         <Stack.Screen
                           options={options}
-                          name="FakeStation"
-                          component={FakeStationSettingsScreen}
-                        />
-
-                        <Stack.Screen
-                          options={options}
                           name="TuningSettings"
                           component={TuningSettings}
-                        />
-
-                        <Stack.Screen
-                          options={options}
-                          name="CommunityRoutes"
-                          component={CommunityRoutesScreen}
-                        />
-
-                        <Stack.Screen
-                          options={options}
-                          name="RouteSearch"
-                          component={RouteSearchScreen}
                         />
                       </Stack.Navigator>
                     </DeepLinkProvider>

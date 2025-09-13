@@ -4,6 +4,7 @@ import {
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
 import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
@@ -12,10 +13,7 @@ import AppSettings from '../screens/AppSettings';
 import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
-import NotificationSettings from '../screens/NotificationSettingsScreen';
 import SelectLine from '../screens/SelectLineScreen';
-import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen';
-import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
 
@@ -96,18 +94,8 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
-          name="Notification"
-          component={NotificationSettings}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="TrainType"
-          component={TrainTypeSettings}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="SpecifyDestinationSettings"
-          component={SpecifyDestinationSettingsScreen}
+          name="RouteSearch"
+          component={RouteSearchScreen}
         />
       </Stack.Navigator>
     </Permitted>

@@ -2,11 +2,10 @@ import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { Effect, pipe } from 'effect';
-import { BlurView } from 'expo-blur';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -14,17 +13,17 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import Animated, {
-  interpolate,
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
+import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import {
@@ -37,7 +36,6 @@ import ErrorScreen from '../components/ErrorScreen';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { LineCard } from '../components/LineCard';
-import Typography from '../components/Typography';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import {
   useFetchCurrentLocationOnce,
@@ -58,7 +56,7 @@ export type LoopItem = (SavedRoute & { stations: Station[] }) & {
 };
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: 24, paddingTop: 0, flex: 1 },
+  root: { paddingHorizontal: 24, flex: 1 },
   listContainerStyle: { paddingBottom: 24, paddingHorizontal: 24 },
   lineName: {
     fontSize: 14,
@@ -73,58 +71,7 @@ const styles = StyleSheet.create({
   screenBg: {
     backgroundColor: '#FAFAFA',
   },
-  nowBar: {
-    marginBottom: 12,
-  },
-  nowLabel: {
-    fontSize: 24,
-    textAlign: 'left',
-  },
-  nowStation: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  nowHeaderContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    // SafeAreaView内のpaddingと見た目を合わせる
-    paddingHorizontal: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
-    zIndex: 10,
-  },
-  nowHeaderCard: {
-    width: '100%',
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    overflow: 'hidden',
-    // iOS shadow
-    shadowColor: '#333',
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 8 },
-  },
-  nowHeaderContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 10,
-  },
-  nowHeaderInline: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 6,
-    position: 'absolute',
-    left: 24,
-    right: 24,
-    bottom: 10,
-  },
-  separator: { height: 12 },
 });
-
-const EmptySeparator = React.memo(() => <View style={styles.separator} />);
 
 type ListHeaderProps = {
   headingTitle: string;
@@ -153,12 +100,13 @@ const ListHeader = React.memo(
 
 const SelectLineScreen = () => {
   const [{ station: stationFromAtom }, setStationState] = useAtom(stationState);
-  const [{ stationForHeader }, setNavigationState] = useAtom(navigationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const insets = useSafeAreaInsets();
+  const scrollY = useSharedValue(0);
+
   const latitude = useLocationStore((state) => state?.coords.latitude);
   const longitude = useLocationStore((state) => state?.coords.longitude);
-  const insets = useSafeAreaInsets();
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
-  const scrollY = useSharedValue(0);
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
       paddingBottom?: number;
@@ -180,17 +128,14 @@ const SelectLineScreen = () => {
   );
 
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
-  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const {
     routes,
     updateRoutes,
     isInitialized: isRoutesDBInitialized,
   } = useSavedRoutes();
-  const [lineStationsById, setLineStationsById] = useState<
-    Record<number, Station[]>
-  >({});
+  const lineStationsByIdMap = useRef<Map<number, Station[]>>(new Map()).current;
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
-
+  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   // SavedRouteモーダル用の状態
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
   // 確定時にのみ反映するための一時保存データ
@@ -262,21 +207,18 @@ const SelectLineScreen = () => {
         const lines = station?.lines ?? [];
 
         for (const line of lines) {
-          if (lineStationsById[line.id]) continue;
+          if (lineStationsByIdMap.has(line.id)) continue;
 
           const { stations } = await fetchStationsByLineId({
             lineId: line.id,
             stationId: line.station?.id,
           });
 
-          setLineStationsById((prev) => ({
-            ...prev,
-            [line.id]: stations,
-          }));
+          lineStationsByIdMap.set(line.id, stations);
         }
       };
       fetchStationsAsync();
-    }, [station?.lines, fetchStationsByLineId, lineStationsById])
+    }, [station?.lines, fetchStationsByLineId, lineStationsByIdMap])
   );
 
   useEffect(() => {
@@ -342,7 +284,7 @@ const SelectLineScreen = () => {
 
   const handleLineSelected = useCallback(
     async (line: Line) => {
-      const stations = lineStationsById[line.id] ?? [];
+      const stations = lineStationsByIdMap.get(line.id) ?? [];
       pendingLineRef.current = line ?? null;
       pendingStationRef.current = line.station ?? null;
       pendingStationsRef.current = stations;
@@ -365,7 +307,7 @@ const SelectLineScreen = () => {
         }));
       }
     },
-    [lineStationsById, fetchTrainTypes, setNavigationState]
+    [lineStationsByIdMap, fetchTrainTypes, setNavigationState]
   );
 
   // PresetCard押下時のモーダル表示ロジック（SavedRoutesScreenのhandleItemPress相当）
@@ -524,11 +466,11 @@ const SelectLineScreen = () => {
       <LineCard
         line={item}
         onPress={() => handleLineSelected(item)}
-        stations={lineStationsById[item.id]}
+        stations={lineStationsByIdMap.get(item.id) ?? []}
         testID={generateLineTestId(item)}
       />
     ),
-    [handleLineSelected, lineStationsById]
+    [handleLineSelected, lineStationsByIdMap]
   );
 
   const keyExtractor = useCallback((l: Line) => l.id.toString(), []);
@@ -544,50 +486,7 @@ const SelectLineScreen = () => {
     return isJapanese ? `${baseNameJa}駅の路線` : baseNameEn;
   }, [station]);
 
-  const nowHeader = useMemo(() => {
-    const target = stationForHeader ?? station;
-    if (!target) return null;
-    const re = /\([^()]*\)/g;
-    const label = isJapanese ? 'ただいま' : 'Now at';
-    const name = isJapanese
-      ? (target.name ?? '').replace(re, '')
-      : (target.nameRoman ?? target.name ?? '').replace(re, '');
-    return { label, name };
-  }, [stationForHeader, station]);
-
-  // Animate header: station name shrinks 24 -> 16, stacked -> inline
-  const COLLAPSE_RANGE = 64;
-  const stackedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5],
-      [1, 0],
-      'clamp'
-    ),
-  }));
-  const inlineStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
-      [0, 0, 1],
-      'clamp'
-    ),
-  }));
-  const animatedStationFont = useAnimatedStyle(() => ({
-    fontSize: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE],
-      [32, 21],
-      'clamp'
-    ),
-  }));
-
-  const AnimatedTypography = useMemo(
-    () => Animated.createAnimatedComponent(Typography),
-    []
-  );
-
-  const onScroll = useAnimatedScrollHandler({
+  const handleScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollY.value = e.contentOffset.y;
     },
@@ -626,7 +525,7 @@ const SelectLineScreen = () => {
           data={station?.lines ?? []}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          ItemSeparatorComponent={EmptySeparator}
+          ItemSeparatorComponent={EmptyLineSeparator}
           ListHeaderComponent={
             <ListHeader
               headingTitle={headingTitle}
@@ -635,8 +534,8 @@ const SelectLineScreen = () => {
               onPress={handlePresetPress}
             />
           }
-          ListFooterComponent={EmptySeparator}
-          onScroll={onScroll}
+          ListFooterComponent={EmptyLineSeparator}
+          onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.listContainerStyle,
@@ -644,47 +543,14 @@ const SelectLineScreen = () => {
             { paddingBottom: listPaddingBottom },
           ]}
         />
-        {/* Auto mode display removed on this screen */}
       </SafeAreaView>
-      {/* 固定ヘッダー: ただいま / Now at (背景ブラー) - SafeAreaViewの外に出して上左右の余白をなくす */}
-      {nowHeader ? (
-        <View pointerEvents="none" style={styles.nowHeaderContainer}>
-          <View
-            style={styles.nowHeaderCard}
-            onLayout={(e) =>
-              setNowHeaderHeight(e.nativeEvent.layout.height + 32)
-            }
-          >
-            <BlurView
-              intensity={40}
-              tint={isLEDTheme ? 'dark' : 'light'}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
-              {/* Stacked layout (fades out) */}
-              <Animated.View style={stackedStyle}>
-                <Typography style={styles.nowLabel}>
-                  {nowHeader.label}
-                </Typography>
-                <AnimatedTypography
-                  style={[styles.nowStation, animatedStationFont]}
-                >
-                  {nowHeader.name}
-                </AnimatedTypography>
-              </Animated.View>
-              {/* Inline layout (fades in) */}
-              <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
-                <Typography style={styles.nowLabel}>
-                  {nowHeader.label}
-                </Typography>
-                <Typography style={styles.nowStation}>
-                  {isJapanese ? `${nowHeader.name}` : nowHeader.name}
-                </Typography>
-              </Animated.View>
-            </View>
-          </View>
-        </View>
-      ) : null}
+      {/* 固定ヘッダー */}
+      <NowHeader
+        station={stationFromAtom ?? station}
+        onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height + 32)}
+        scrollY={scrollY}
+      />
+
       {/* フッター */}
       <FooterTabBar active="home" />
       {/* モーダル */}
