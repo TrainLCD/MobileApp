@@ -1,15 +1,8 @@
 import { useMutation } from '@connectrpc/connect-query';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useSetAtom } from 'jotai';
-import uniqBy from 'lodash/uniqBy';
 import uniqWith from 'lodash/uniqWith';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import Animated, {
@@ -28,10 +21,10 @@ import { TrainTypeListModal } from '~/components/TrainTypeListModal';
 import Typography from '~/components/Typography';
 import { type Line, Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import {
+  getRoutes,
   getStationsByLineGroupId,
   getStationsByLineId,
   getStationsByName,
-  getTrainTypesByStationId,
 } from '~/gen/proto/stationapi-StationAPI_connectquery';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
@@ -99,8 +92,6 @@ const RouteSearchScreen = () => {
   const [selectedLine, setSelectedLine] = useState<Line | null>(null);
   const [searchResults, setSearchResults] = useState<Station[]>([]);
 
-  const trainTypesMap = useRef<Map<number, TrainType[]>>(new Map()).current;
-
   const navigation = useNavigation();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
@@ -111,10 +102,11 @@ const RouteSearchScreen = () => {
   const scrollY = useSharedValue(0);
 
   const {
-    mutateAsync: fetchTrainTypes,
-    status: fetchTrainTypesStatus,
-    error: _fetchTrainTypesError,
-  } = useMutation(getTrainTypesByStationId);
+    data: routesData,
+    mutate: mutateRoutes,
+    status: fetchRoutesStatus,
+    error: _fetchRoutesError,
+  } = useMutation(getRoutes);
   const {
     status: byNameLoadingStatus,
     mutateAsync: fetchByName,
@@ -129,33 +121,16 @@ const RouteSearchScreen = () => {
 
   const {
     mutateAsync: fetchStationsByLineGroupId,
-    status: fetchStationsByLineGroupIdStatus,
+    status: _fetchStationsByLineGroupIdStatus,
     error: _fetchStationsByLineGroupIdError,
   } = useMutation(getStationsByLineGroupId);
 
   const matchedStations = useMemo<Station[]>(() => {
-    const stations = searchResults.filter(
-      (s) => s.groupId !== station?.groupId
-    );
-    const noTrainTypeRoutes =
-      uniqBy(
-        stations
-          ?.filter((s) => !s.hasTrainTypes)
-          .filter((s) => station?.lines.some((l) => l.id === s.line?.id)),
-        'line.id'
-      ) ?? [];
-    const hasTrainTypeRoutes = uniqBy(
-      stations
-        .filter((s) => s.hasTrainTypes)
-        .filter((s) => station?.lines.some((l) => l.id === s.line?.id)),
-      'id'
-    );
-
     return uniqWith(
-      [...noTrainTypeRoutes, ...hasTrainTypeRoutes],
+      searchResults,
       (s1, s2) => s1.line?.id === s2.line?.id && s1.groupId === s2.groupId
     ).map((s) => new Station(s));
-  }, [searchResults, station?.groupId, station?.lines]);
+  }, [searchResults]);
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -169,33 +144,9 @@ const RouteSearchScreen = () => {
         fromStationGroupId: station?.groupId,
       });
 
-      const stationsWithTrainTypes = await Promise.all(
-        stations.map(async (s) => {
-          const { trainTypes } = await fetchTrainTypes({ stationId: s.id });
-
-          if (s.line) {
-            trainTypesMap.set(s.line.id, trainTypes);
-          }
-
-          const trainType = trainTypes.find((tt) =>
-            tt.lines.some((tl) => station?.lines.some((l) => l.id === tl.id))
-          );
-          return new Station({
-            ...s,
-            hasTrainTypes: trainTypes.length > 0,
-            trainType,
-          });
-        })
-      );
-      setSearchResults(stationsWithTrainTypes);
+      setSearchResults(stations);
     },
-    [
-      station?.groupId,
-      station?.lines,
-      fetchByName,
-      fetchTrainTypes,
-      trainTypesMap.set,
-    ]
+    [station?.groupId, fetchByName]
   );
 
   useEffect(() => {
@@ -205,21 +156,25 @@ const RouteSearchScreen = () => {
   }, [byNameError]);
 
   const handleLineSelected = useCallback(
-    async (station: Station) => {
-      setSelectedLine(station.line ?? null);
+    async (selectedStation: Station) => {
+      setSelectedLine(selectedStation.line ?? null);
 
-      if (!station.hasTrainTypes) {
-        setSelectBoundModalVisible(true);
-        await fetchStationsByLineId({
-          lineId: station.line?.id,
-          stationId: station.id,
+      if (selectedStation.hasTrainTypes) {
+        setTrainTypeListModalVisible(true);
+        mutateRoutes({
+          fromStationGroupId: station?.groupId,
+          toStationGroupId: selectedStation.groupId,
         });
         return;
       }
 
-      setTrainTypeListModalVisible(true);
+      setSelectBoundModalVisible(true);
+      await fetchStationsByLineId({
+        lineId: selectedStation.line?.id,
+        stationId: station?.id,
+      });
     },
-    [fetchStationsByLineId]
+    [mutateRoutes, fetchStationsByLineId, station?.id, station?.groupId]
   );
 
   const renderItem = useCallback(
@@ -257,24 +212,29 @@ const RouteSearchScreen = () => {
       );
       const direction =
         currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
-      console.log('stations:', stations);
 
-      setStationState((prev) => ({
-        ...prev,
-        station,
-        selectedBound: selectedLine?.station ?? null,
-        selectedDirection: direction,
-        stations,
-      }));
       setLineState((prev) => ({
         ...prev,
         selectedLine: trainType.line ?? null,
       }));
-      setNavigationState((prev) => ({ ...prev, trainType }));
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        stations,
+        selectedBound:
+          direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],
+        selectedDirection: direction,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType,
+      }));
 
       setTrainTypeListModalVisible(false);
 
-      navigation.navigate('Main' as never);
+      requestAnimationFrame(() => {
+        navigation.navigate('Main' as never);
+      });
     },
     [
       setStationState,
@@ -293,6 +253,18 @@ const RouteSearchScreen = () => {
       scrollY.value = e.contentOffset.y;
     },
   });
+
+  const trainTypes = useMemo(
+    () =>
+      routesData?.routes
+        .map(
+          (r) =>
+            r.stops.find((rs) => rs.line?.id === selectedLine?.id)?.trainType
+        )
+        .filter((tt): tt is TrainType => !!tt) ?? [],
+    [routesData, selectedLine?.id]
+  );
+
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
@@ -303,9 +275,7 @@ const RouteSearchScreen = () => {
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={EmptyLineSeparator}
           ListEmptyComponent={
-            <EmptyResult
-              statuses={[byNameLoadingStatus, fetchTrainTypesStatus]}
-            />
+            <EmptyResult statuses={[byNameLoadingStatus, fetchRoutesStatus]} />
           }
           ListHeaderComponent={
             <View style={styles.listHeaderContainer}>
@@ -355,16 +325,14 @@ const RouteSearchScreen = () => {
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
         line={selectedLine}
-        trainTypes={
-          selectedLine ? (trainTypesMap.get(selectedLine?.id) ?? []) : []
-        }
+        trainTypes={trainTypes}
         destination={selectedLine?.station}
         onClose={() => {
           setSelectedLine(null);
           setTrainTypeListModalVisible(false);
         }}
         onSelect={handleTrainTypeSelected}
-        loading={fetchStationsByLineGroupIdStatus === 'pending'}
+        loading={fetchRoutesStatus === 'pending'}
       />
     </>
   );

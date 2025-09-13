@@ -1,4 +1,3 @@
-import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
@@ -102,7 +101,7 @@ export const TrainTypeListModal = ({
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
       const line = item.line;
-      const lines = uniqBy(item.lines, 'id');
+      const lines = item.lines;
 
       if (!line) return null;
 
@@ -123,7 +122,10 @@ export const TrainTypeListModal = ({
     [destination, onSelect]
   );
 
-  const keyExtractor = useCallback((tt: TrainType) => tt.id.toString(), []);
+  const keyExtractor = useCallback(
+    (tt: TrainType) => tt.groupId.toString(),
+    []
+  );
 
   return (
     <Modal
