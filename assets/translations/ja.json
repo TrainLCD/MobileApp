@@ -192,5 +192,6 @@
   "noPresets": "プリセットがありません",
   "close": "閉じる",
   "searchResult": "検索結果",
-  "emptySearchResult": "該当する経路が見つかりませんでした。"
+  "emptySearchResult": "一致する経路が見つかりませんでした。",
+  "routeSearchPlaceholder": "どこへ行きますか？"
 }

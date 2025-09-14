@@ -4,6 +4,7 @@ import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { FONTS } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
+import { translate } from '~/translation';
 
 const styles = StyleSheet.create({
   root: {
@@ -64,6 +65,7 @@ export const SearchBar = ({ onSearch }: Props) => {
         ]}
         onChange={(e) => setSearchText(e.nativeEvent.text)}
         onSubmitEditing={() => onSearch?.(searchText)}
+        placeholder={translate('routeSearchPlaceholder')}
       />
       <TouchableOpacity
         style={styles.button}

@@ -101,7 +101,9 @@ export const TrainTypeListModal = ({
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
       const line = item.line;
-      const lines = item.lines;
+      const currentLineIndex = item.lines.findIndex((l) => l.id === line?.id);
+      if (currentLineIndex === -1) return null;
+      const lines = item.lines.slice(currentLineIndex, item.lines.length);
 
       if (!line) return null;
 

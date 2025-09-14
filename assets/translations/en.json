@@ -191,5 +191,6 @@
   "noPresets": "No presets available",
   "close": "Close",
   "searchResult": "Search Results",
-  "emptySearchResult": "No matching routes were found."
+  "emptySearchResult": "No matching routes were found.",
+  "routeSearchPlaceholder": "Where to?"
 }
