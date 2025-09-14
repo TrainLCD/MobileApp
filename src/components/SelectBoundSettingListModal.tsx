@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   },
   closeButton: { marginTop: 24 },
   closeButtonText: { fontWeight: 'bold' },
+  heading: { width: '100%', textAlign: 'left' },
 });
 
 type Props = {
@@ -88,7 +89,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           ]}
         >
           <View style={styles.container}>
-            <Heading>{translate('settings')}</Heading>
+            <Heading style={styles.heading}>{translate('settings')}</Heading>
 
             <View style={styles.buttonsContainer}>
               <Button outline onPress={showUnimplementedAlert}>

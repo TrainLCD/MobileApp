@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
   },
   closeButton: { marginTop: 24 },
   closeButtonText: { fontWeight: 'bold' },
+  heading: { width: '100%', textAlign: 'left', marginLeft: 48 },
 });
 
 type RenderButtonProps = {
@@ -486,7 +487,9 @@ export const SelectBoundModal: React.FC<Props> = ({
           ]}
         >
           <View style={styles.container}>
-            <Heading>{translate('selectBoundTitle')}</Heading>
+            <Heading style={styles.heading}>
+              {translate('selectBoundTitle')}
+            </Heading>
 
             <View style={styles.buttonsContainer}>
               {inboundStations.length
