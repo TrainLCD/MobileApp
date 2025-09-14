@@ -8,8 +8,8 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
+import { EmptyResult } from '~/components/EmptyResult';
 import FooterTabBar from '~/components/FooterTabBar';
 import { Heading } from '~/components/Heading';
 import { LineCard } from '~/components/LineCard';
@@ -17,7 +17,6 @@ import { NowHeader } from '~/components/NowHeader';
 import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
-import Typography from '~/components/Typography';
 import { type Line, Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import {
   getRoutes,
@@ -54,32 +53,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
-  bold: { fontWeight: 'bold' },
 });
-
-type EmptyResultProps = {
-  statuses: ('error' | 'idle' | 'pending' | 'success')[];
-};
-
-const EmptyResult = ({ statuses }: EmptyResultProps) => {
-  if (statuses.every((s) => s === 'success')) {
-    return (
-      <Typography style={styles.bold}>
-        {translate('emptySearchResult')}
-      </Typography>
-    );
-  }
-
-  if (statuses.includes('pending')) {
-    return (
-      <SkeletonPlaceholder borderRadius={4} speed={1500}>
-        <SkeletonPlaceholder.Item width="100%" height={72} />
-      </SkeletonPlaceholder>
-    );
-  }
-
-  return null;
-};
 
 const RouteSearchScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);

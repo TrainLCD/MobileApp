@@ -1,8 +1,14 @@
 import { useMutation } from '@connectrpc/connect-query';
 import uniqBy from 'lodash/uniqBy';
-import { useCallback, useMemo } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import { useCallback, useEffect, useMemo } from 'react';
+import {
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { getStationsByName } from '~/gen/proto/stationapi-StationAPI_connectquery';
@@ -12,10 +18,10 @@ import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
+import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
 import { LineCard } from './LineCard';
 import { SearchBar } from './SearchBar';
-import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
@@ -49,23 +55,22 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     width: '100%',
-    height: 72,
     zIndex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingVertical: 21,
     backgroundColor: '#fff',
   },
   subtitle: { width: '100%', textAlign: 'left', fontSize: 16 },
   title: {
     width: '100%',
     textAlign: 'left',
+    marginBottom: 24,
   },
   flatListContentContainer: {
     paddingHorizontal: 24,
-    paddingVertical: 72,
-  },
-  searchBarContainer: {
-    marginBottom: 24,
+    paddingTop: 150,
+    paddingBottom: 72,
   },
   noSearchResulText: {
     fontWeight: 'bold',
@@ -85,9 +90,15 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     data: stationsData,
     mutate: mutateStations,
     status: mutateStationsStatus,
-    error: _mutateStationsError,
+    error: mutateStationsError,
     reset: resetStations,
   } = useMutation(getStationsByName);
+
+  useEffect(() => {
+    if (mutateStationsError) {
+      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
+    }
+  }, [mutateStationsError]);
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
@@ -104,11 +115,14 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           line={line}
           title={title}
           subtitle={subtitle}
-          onPress={() => onSelect(item)}
+          onPress={() => {
+            onSelect(item);
+            resetStations();
+          }}
         />
       );
     },
-    [onSelect]
+    [onSelect, resetStations]
   );
 
   const keyExtractor = useCallback((s: Station) => s.groupId.toString(), []);
@@ -130,15 +144,20 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     [stationsData?.stations]
   );
 
+  const handleClose = useCallback(() => {
+    onClose();
+    resetStations();
+  }, [onClose, resetStations]);
+
   return (
     <Modal
       animationType="fade"
       transparent
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       supportedOrientations={['portrait', 'landscape']}
     >
-      <Pressable style={styles.root} onPress={onClose}>
+      <Pressable style={styles.root} onPress={handleClose}>
         <Pressable
           style={[
             styles.contentView,
@@ -156,6 +175,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             <Heading style={styles.title}>
               {translate('searchFirstStationTitle')}
             </Heading>
+            <SearchBar onSearch={handleSearchStations} />
           </View>
 
           <FlatList<Station>
@@ -166,28 +186,15 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             ItemSeparatorComponent={EmptyLineSeparator}
             scrollEventThrottle={16}
             contentContainerStyle={styles.flatListContentContainer}
-            ListHeaderComponent={
-              <View style={styles.searchBarContainer}>
-                <SearchBar onSearch={handleSearchStations} />
-              </View>
-            }
             ListEmptyComponent={
-              mutateStationsStatus === 'pending' ? (
-                <SkeletonPlaceholder borderRadius={4} speed={1500}>
-                  <SkeletonPlaceholder.Item width="100%" height={72} />
-                </SkeletonPlaceholder>
-              ) : (
-                <Typography style={styles.noSearchResulText}>
-                  {translate('emptySearchResult')}
-                </Typography>
-              )
+              <EmptyResult statuses={[mutateStationsStatus]} />
             }
           />
           <View style={styles.closeButtonContainer}>
             <Button
               style={styles.closeButton}
               textStyle={styles.closeButtonText}
-              onPress={onClose}
+              onPress={handleClose}
             >
               {translate('close')}
             </Button>
