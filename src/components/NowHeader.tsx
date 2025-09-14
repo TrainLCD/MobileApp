@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
   },
   nowLabel: {
     fontSize: 24,
-    textAlign: 'left',
   },
   nowStation: {
     fontSize: 32,

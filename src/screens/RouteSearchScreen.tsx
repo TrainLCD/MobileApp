@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
   },
   searchResultHeading: {
     fontSize: 24,
-    textAlign: 'left',
     fontWeight: 'bold',
     marginBottom: 16,
   },

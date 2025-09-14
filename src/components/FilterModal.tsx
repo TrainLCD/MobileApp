@@ -49,13 +49,12 @@ const styles = StyleSheet.create({
   formGroup: {
     width: '100%',
   },
-  formHeading: { textAlign: 'left', fontSize: RFValue(16) },
+  formHeading: { fontSize: RFValue(16) },
   formItem: {
     padding: 8,
   },
   subHeading: {
     fontSize: RFValue(14),
-    textAlign: 'left',
     fontWeight: 'bold',
   },
 });

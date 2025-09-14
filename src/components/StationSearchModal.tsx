@@ -61,10 +61,9 @@ const styles = StyleSheet.create({
     paddingVertical: 21,
     backgroundColor: '#fff',
   },
-  subtitle: { width: '100%', textAlign: 'left', fontSize: 16 },
+  subtitle: { width: '100%', fontSize: 16 },
   title: {
     width: '100%',
-    textAlign: 'left',
     marginBottom: 24,
   },
   flatListContentContainer: {

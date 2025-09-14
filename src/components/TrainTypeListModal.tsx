@@ -50,10 +50,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: '#fff',
   },
-  subtitle: { width: '100%', textAlign: 'left', fontSize: 16 },
+  subtitle: { width: '100%', fontSize: 16 },
   title: {
     width: '100%',
-    textAlign: 'left',
   },
   flatListContentContainer: {
     paddingHorizontal: 24,

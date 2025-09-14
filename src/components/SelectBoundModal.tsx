@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   closeButton: { marginTop: 24 },
   closeButtonText: { fontWeight: 'bold' },
-  heading: { width: '100%', textAlign: 'left', marginLeft: 48 },
+  heading: { width: '100%', marginLeft: 48 },
 });
 
 type RenderButtonProps = {

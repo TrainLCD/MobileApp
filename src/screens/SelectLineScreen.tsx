@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 24,
-    textAlign: 'left',
     fontWeight: 'bold',
     marginBottom: 16,
   },

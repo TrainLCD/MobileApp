@@ -77,9 +77,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
-  routeName: {
-    textAlign: 'left',
-  },
   contentContainer: {
     marginHorizontal: 24,
   },
@@ -278,7 +275,7 @@ export const RouteInfo: React.FC<Props> = ({
         ]}
       >
         <View style={styles.contentContainer}>
-          <Heading style={styles.routeName}>{routeName}</Heading>
+          <Heading>{routeName}</Heading>
 
           <Typography style={styles.heading}>
             {translate('allStops')}:

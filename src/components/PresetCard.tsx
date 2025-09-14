@@ -82,13 +82,11 @@ const styles = StyleSheet.create({
   stationName: {
     fontSize: RFValue(21),
     fontWeight: 'bold',
-    textAlign: 'left',
     textAlignVertical: 'auto',
   },
   stationCode: {
     fontSize: RFValue(11),
     fontWeight: 'bold',
-    textAlign: 'left',
     textAlignVertical: 'auto',
   },
   lineDot: {

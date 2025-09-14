@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   },
   closeButton: { marginTop: 24 },
   closeButtonText: { fontWeight: 'bold' },
-  heading: { width: '100%', textAlign: 'left' },
+  heading: { width: '100%' },
 });
 
 type Props = {
