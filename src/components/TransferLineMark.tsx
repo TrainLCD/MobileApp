@@ -83,6 +83,7 @@ const TransferLineMark: React.FC<Props> = ({
       MARK_SHAPE.REVERSED_ROUND_HORIZONTAL,
       MARK_SHAPE.KEIO,
       MARK_SHAPE.TWR,
+      MARK_SHAPE.KEISEI,
     ]);
     if (mark.signShape && roundShapes.has(mark.signShape)) {
       return dim / 2;

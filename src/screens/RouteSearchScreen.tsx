@@ -132,10 +132,11 @@ const RouteSearchScreen = () => {
 
   const handleSearch = useCallback(
     async (query: string) => {
+      setSearchResults([]);
+
       if (!query.trim().length) {
         return [] as Station[];
       }
-      setSearchResults([]);
       const { stations } = await fetchByName({
         stationName: query.trim(),
         limit: Number(SEARCH_STATION_RESULT_LIMIT),

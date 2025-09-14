@@ -1,6 +1,12 @@
 import { BlurView } from 'expo-blur';
-import { useMemo } from 'react';
-import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { useSetAtom } from 'jotai';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  type LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Animated, {
   interpolate,
   type SharedValue,
@@ -10,7 +16,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
+import navigationState from '~/store/atoms/navigation';
+import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
+import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -71,6 +80,11 @@ type Props = {
 };
 
 export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
+  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+
+  const setStationAtom = useSetAtom(stationState);
+  const setNavigationAtom = useSetAtom(navigationState);
+
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
   const insets = useSafeAreaInsets();
 
@@ -115,35 +129,60 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     ),
   }));
 
+  const handlePress = useCallback(() => {
+    setIsSearchModalVisible(true);
+  }, []);
+
+  const handleSelectStation = useCallback(
+    (station: Station) => {
+      setStationAtom((prev) => ({
+        ...prev,
+        station,
+      }));
+      setNavigationAtom((prev) => ({ ...prev, stationForHeader: station }));
+      setIsSearchModalVisible(false);
+    },
+    [setStationAtom, setNavigationAtom]
+  );
+
   if (!nowHeader) return null;
 
   return (
-    <View pointerEvents="none" style={styles.nowHeaderContainer}>
-      <View style={styles.nowHeaderCard} onLayout={onLayout}>
-        <BlurView
-          intensity={40}
-          tint={isLEDTheme ? 'dark' : 'light'}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
-          {/* Stacked layout (fades out) */}
-          <Animated.View style={stackedStyle}>
-            <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
-            <AnimatedTypography
-              style={[styles.nowStation, animatedStationFont]}
-            >
-              {nowHeader.name}
-            </AnimatedTypography>
-          </Animated.View>
-          {/* Inline layout (fades in) */}
-          <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
-            <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
-            <Typography style={styles.nowStation}>
-              {isJapanese ? `${nowHeader.name}` : nowHeader.name}
-            </Typography>
-          </Animated.View>
+    <>
+      <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
+        <View style={styles.nowHeaderCard} onLayout={onLayout}>
+          <BlurView
+            intensity={40}
+            tint={isLEDTheme ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
+            {/* Stacked layout (fades out) */}
+            <Animated.View style={stackedStyle}>
+              <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
+              <AnimatedTypography
+                style={[styles.nowStation, animatedStationFont]}
+              >
+                {nowHeader.name}
+              </AnimatedTypography>
+            </Animated.View>
+            {/* Inline layout (fades in) */}
+            <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
+              <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
+              <Typography style={styles.nowStation}>
+                {isJapanese ? `${nowHeader.name}` : nowHeader.name}
+              </Typography>
+            </Animated.View>
+          </View>
         </View>
-      </View>
-    </View>
+      </Pressable>
+      <StationSearchModal
+        visible={isSearchModalVisible}
+        onClose={() => {
+          setIsSearchModalVisible(false);
+        }}
+        onSelect={handleSelectStation}
+      />
+    </>
   );
 };
