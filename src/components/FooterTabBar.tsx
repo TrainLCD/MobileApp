@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     // iOS shadow
     shadowColor: '#333',
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 0 },
     // Android shadow fallback
