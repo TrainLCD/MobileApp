@@ -90,7 +90,7 @@ type Props = {
   destination: Station | null;
   loading: boolean;
   error: Error | null;
-  terminateByDdestination?: boolean;
+  terminateByDestination?: boolean;
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
@@ -103,7 +103,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   destination: wantedDestination,
   loading,
   error,
-  terminateByDdestination,
+  terminateByDestination,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
@@ -270,7 +270,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         return <></>;
       }
 
-      if (wantedDestination && terminateByDdestination) {
+      if (wantedDestination && !isLoopLine) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
         );
@@ -291,7 +291,13 @@ export const SelectBoundModal: React.FC<Props> = ({
           return (
             <LineCard
               line={line}
-              onPress={() => handleBoundSelected(wantedDestination, dir, true)}
+              onPress={() =>
+                handleBoundSelected(
+                  wantedDestination,
+                  dir,
+                  terminateByDestination
+                )
+              }
               title={title}
               subtitle={subtitle}
             />
@@ -337,7 +343,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       stations,
       wantedDestination,
       line,
-      terminateByDdestination,
+      terminateByDestination,
       loopLineDirectionText,
       normalLineDirectionText,
     ]

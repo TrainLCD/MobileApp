@@ -101,8 +101,8 @@ const RouteSearchScreen = () => {
   const {
     data: routesData,
     mutate: mutateRoutes,
-    status: fetchRoutesStatus,
-    error: fetchRoutesError,
+    status: mutateRoutesStatus,
+    error: mutateRoutesError,
   } = useMutation(getRoutes);
   const {
     status: byNameLoadingStatus,
@@ -111,16 +111,16 @@ const RouteSearchScreen = () => {
   } = useMutation(getStationsByName);
   const {
     data: stationsByLineIdData,
-    mutateAsync: fetchStationsByLineId,
-    status: fetchStationsByLineIdStatus,
-    error: fetchStationsByLineIdError,
+    mutate: mutateStationsByLineId,
+    status: mutateStationsByLineIdStatus,
+    error: mutateStationsByLineIdError,
   } = useMutation(getStationsByLineId);
 
   const {
     data: stationsByLineGroupIdData,
     mutate: mutateStationsByLineGroupId,
-    status: fetchStationsByLineGroupIdStatus,
-    error: fetchStationsByLineGroupIdError,
+    status: mutateStationsByLineGroupIdStatus,
+    error: mutateStationsByLineGroupIdError,
   } = useMutation(getStationsByLineGroupId);
 
   const matchedStations = useMemo<Station[]>(() => {
@@ -169,12 +169,12 @@ const RouteSearchScreen = () => {
 
       setSelectBoundModalVisible(true);
 
-      await fetchStationsByLineId({
+      mutateStationsByLineId({
         lineId: selectedStation.line?.id,
-        stationId: station?.id,
+        stationId: selectedStation?.id,
       });
     },
-    [mutateRoutes, fetchStationsByLineId, station?.id, station?.groupId]
+    [mutateRoutes, mutateStationsByLineId, station?.groupId]
   );
 
   const renderItem = useCallback(
@@ -236,7 +236,7 @@ const RouteSearchScreen = () => {
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={EmptyLineSeparator}
           ListEmptyComponent={
-            <EmptyResult statuses={[byNameLoadingStatus, fetchRoutesStatus]} />
+            <EmptyResult statuses={[byNameLoadingStatus, mutateRoutesStatus]} />
           }
           ListHeaderComponent={
             <View style={styles.listHeaderContainer}>
@@ -271,13 +271,7 @@ const RouteSearchScreen = () => {
       <SelectBoundModal
         visible={selectBoundModalVisible}
         onClose={() => setSelectBoundModalVisible(false)}
-        station={
-          (
-            stationsByLineGroupIdData?.stations ??
-            stationsByLineIdData?.stations ??
-            []
-          ).find((s) => s.groupId === station?.groupId) ?? null
-        }
+        station={station}
         line={selectedLine}
         stations={
           stationsByLineGroupIdData?.stations ??
@@ -287,14 +281,14 @@ const RouteSearchScreen = () => {
         trainType={selectedTrainType}
         destination={selectedLine?.station ?? null}
         loading={
-          fetchStationsByLineIdStatus === 'pending' ||
-          fetchStationsByLineGroupIdStatus === 'pending' ||
-          fetchRoutesStatus === 'pending'
+          mutateStationsByLineIdStatus === 'pending' ||
+          mutateStationsByLineGroupIdStatus === 'pending' ||
+          mutateRoutesStatus === 'pending'
         }
         error={
-          fetchStationsByLineIdError ??
-          fetchStationsByLineGroupIdError ??
-          fetchRoutesError ??
+          mutateStationsByLineIdError ??
+          mutateStationsByLineGroupIdError ??
+          mutateRoutesError ??
           null
         }
       />
@@ -308,7 +302,7 @@ const RouteSearchScreen = () => {
           setTrainTypeListModalVisible(false);
         }}
         onSelect={handleTrainTypeSelected}
-        loading={fetchRoutesStatus === 'pending'}
+        loading={mutateRoutesStatus === 'pending'}
       />
     </>
   );
