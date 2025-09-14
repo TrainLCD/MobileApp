@@ -249,10 +249,7 @@ export const RouteInfo: React.FC<Props> = ({
       const mapped = stopStations
         .map((s) => {
           if (!s.line) return null;
-          const tt = trainType.lines.find(
-            (l) => l.id === s.line?.id
-          )?.trainType;
-          return new Line({ ...s.line, trainType: tt });
+          return new Line({ ...s.line, trainType: s.trainType });
         })
         .filter((l): l is Line => l !== null);
       return uniqBy(mapped, 'id');
