@@ -238,6 +238,7 @@ const SelectLineScreen = () => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: 初回のみ
   useEffect(() => {
+    if (station) return;
     const fetchInitialNearbyStationAsync = async () => {
       const location = await fetchCurrentLocation(true);
       if (!location) return;
