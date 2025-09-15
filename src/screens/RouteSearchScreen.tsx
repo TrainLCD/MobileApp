@@ -264,6 +264,7 @@ const RouteSearchScreen = () => {
           mutateRoutesError ??
           null
         }
+        onTrainTypeSelect={handleTrainTypeSelected}
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}

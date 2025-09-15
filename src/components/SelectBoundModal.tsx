@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useSetAtom } from 'jotai';
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
@@ -91,6 +91,7 @@ type Props = {
   loading: boolean;
   error: Error | null;
   terminateByDestination?: boolean;
+  onTrainTypeSelect: (trainType: TrainType) => void;
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
@@ -104,6 +105,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   loading,
   error,
   terminateByDestination,
+  onTrainTypeSelect,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
@@ -148,12 +150,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     wantedDestination?.groupId,
     isRoutesDBInitialized,
   ]);
-
-  // 種別選択ボタンを表示するかのフラグ
-  const withTrainTypes = useMemo(
-    (): boolean => fetchedTrainTypes.length > 1,
-    [fetchedTrainTypes]
-  );
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === station?.groupId
@@ -559,10 +555,12 @@ export const SelectBoundModal: React.FC<Props> = ({
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}
         onClose={() => setSelectBoundSettingListModalVisible(false)}
-        hasTrainTypes={withTrainTypes}
+        trainTypes={fetchedTrainTypes ?? []}
         isLoopLine={isLoopLine}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
+        line={line}
+        onTrainTypeSelect={onTrainTypeSelect}
       />
     </Modal>
   );

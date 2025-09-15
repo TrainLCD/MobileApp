@@ -1,6 +1,7 @@
 import type React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
+import type { Line, TrainType } from '~/gen/proto/stationapi_pb';
 import { APP_THEME } from '~/models/Theme';
 import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
@@ -9,6 +10,7 @@ import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks';
 import { translate } from '../translation';
+import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -42,21 +44,27 @@ const styles = StyleSheet.create({
 type Props = {
   visible: boolean;
   onClose: () => void;
-  hasTrainTypes: boolean;
+  trainTypes: TrainType[];
   isLoopLine: boolean;
   autoModeEnabled: boolean;
+  line: Line | null;
   toggleAutoModeEnabled: () => void;
+  onTrainTypeSelect: (trainType: TrainType) => void;
 };
 
 export const SelectBoundSettingListModal: React.FC<Props> = ({
   visible,
   onClose,
-  hasTrainTypes,
+  trainTypes,
   isLoopLine,
   autoModeEnabled,
+  line,
   toggleAutoModeEnabled,
+  onTrainTypeSelect,
 }) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
 
   const showUnimplementedAlert = useCallback(() => {
     if (isDevApp) {
@@ -95,8 +103,11 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
               <Button outline onPress={showUnimplementedAlert}>
                 {translate('notifySettings')}
               </Button>
-              {hasTrainTypes ? (
-                <Button outline onPress={showUnimplementedAlert}>
+              {trainTypes.length ? (
+                <Button
+                  outline
+                  onPress={() => setIsTrainTypeModalVisible(true)}
+                >
                   {translate('trainTypeSettings')}
                 </Button>
               ) : null}
@@ -121,6 +132,16 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           </View>
         </Pressable>
       </Pressable>
+      <TrainTypeListModal
+        visible={isTrainTypeModalVisible}
+        line={line}
+        trainTypes={trainTypes}
+        onClose={() => setIsTrainTypeModalVisible(false)}
+        onSelect={(trainType) => {
+          setIsTrainTypeModalVisible(false);
+          onTrainTypeSelect(trainType);
+        }}
+      />
     </Modal>
   );
 };

@@ -139,10 +139,13 @@ const SelectLineScreen = () => {
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
   // 確定時にのみ反映するための一時保存データ
   const pendingStationRef = useRef<Station | null>(null);
-  const pendingStationsRef = useRef<Station[] | null>(null);
-  const pendingTrainTypeRef = useRef<TrainType | null>(null);
   const pendingLineRef = useRef<Line | null>(null);
   const pendingWantedDestinationRef = useRef<Station | null>(null);
+
+  const [pendingStations, setPendingStations] = useState<Station[]>([]);
+  const [pendingTrainType, setPendingTrainType] = useState<TrainType | null>(
+    null
+  );
 
   const {
     mutateAsync: fetchStationsByLineId,
@@ -286,7 +289,7 @@ const SelectLineScreen = () => {
       const stations = lineStationsByIdMap.get(line.id) ?? [];
       pendingLineRef.current = line ?? null;
       pendingStationRef.current = line.station ?? null;
-      pendingStationsRef.current = stations;
+      setPendingStations(stations);
       setIsSelectBoundModalOpen(true);
 
       if (line.station?.hasTrainTypes) {
@@ -299,7 +302,7 @@ const SelectLineScreen = () => {
               tt.groupId ===
               stations.find((s) => s.line?.id === line.id)?.trainType?.groupId
           ) ?? null;
-        pendingTrainTypeRef.current = trainType;
+        setPendingTrainType(trainType);
         setNavigationState((prev) => ({
           ...prev,
           fetchedTrainTypes: trainTypes,
@@ -307,6 +310,17 @@ const SelectLineScreen = () => {
       }
     },
     [lineStationsByIdMap, fetchTrainTypes, setNavigationState]
+  );
+
+  const handleTrainTypeSelect = useCallback(
+    async (trainType: TrainType) => {
+      const res = await fetchStationsByLineGroupId({
+        lineGroupId: trainType.groupId,
+      });
+      setPendingTrainType(trainType);
+      setPendingStations(res.stations);
+    },
+    [fetchStationsByLineGroupId]
   );
 
   // PresetCard押下時のモーダル表示ロジック（SavedRoutesScreenのhandleItemPress相当）
@@ -340,8 +354,8 @@ const SelectLineScreen = () => {
 
       // モーダル表示用のローカル状態のみ更新（グローバルは確定時に反映）
       pendingStationRef.current = station;
-      pendingStationsRef.current = stations;
-      pendingTrainTypeRef.current = null;
+      setPendingStations(stations);
+      setPendingTrainType(null);
       pendingLineRef.current = (station.line as Line) ?? null;
       pendingWantedDestinationRef.current = wantedDestination;
     },
@@ -377,7 +391,7 @@ const SelectLineScreen = () => {
 
       // モーダル表示用のローカル状態のみ更新（グローバルは確定時に反映）
       pendingStationRef.current = station;
-      pendingStationsRef.current = stations;
+      setPendingStations(stations);
       pendingLineRef.current = station?.line ?? null;
       pendingWantedDestinationRef.current = wantedDestination;
 
@@ -389,7 +403,7 @@ const SelectLineScreen = () => {
         const trainType =
           trainTypes.find((tt) => tt.groupId === station.trainType?.groupId) ??
           null;
-        pendingTrainTypeRef.current = trainType;
+        setPendingTrainType(trainType);
         setNavigationState((prev) => ({
           ...prev,
           fetchedTrainTypes: trainTypes,
@@ -454,8 +468,8 @@ const SelectLineScreen = () => {
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
     pendingStationRef.current = null;
-    pendingStationsRef.current = null;
-    pendingTrainTypeRef.current = null;
+    setPendingStations([]);
+    setPendingTrainType(null);
     pendingLineRef.current = null;
     pendingWantedDestinationRef.current = null;
   }, []);
@@ -557,12 +571,13 @@ const SelectLineScreen = () => {
         visible={isSelectBoundModalOpen}
         onClose={handleCloseSelectBoundModal}
         station={pendingStationRef.current}
-        stations={pendingStationsRef.current ?? []}
-        trainType={pendingTrainTypeRef.current}
+        stations={pendingStations}
+        trainType={pendingTrainType}
         line={pendingLineRef.current}
         destination={pendingWantedDestinationRef.current}
         loading={fetchTrainTypesStatus === 'pending'}
         error={fetchTrainTypesError}
+        onTrainTypeSelect={handleTrainTypeSelect}
       />
     </>
   );
