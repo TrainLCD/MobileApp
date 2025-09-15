@@ -12,12 +12,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
+  headingMetro: {
+    textAlign: 'center',
+  },
   headingContainerSaikyo: {
     marginTop: 24,
     width: '75%',
     alignSelf: 'center',
     zIndex: 1,
   },
+  headingSaikyo: { color: '#212121', fontWeight: '600', textAlign: 'center' },
 });
 
 export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
@@ -31,7 +35,7 @@ export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
           locations={[0, 0.95, 1]}
           style={styles.headingContainerMetro}
         >
-          <Heading>{translate('transfer')}</Heading>
+          <Heading style={styles.headingMetro}>{translate('transfer')}</Heading>
         </LinearGradient>
       );
     case APP_THEME.SAIKYO:
@@ -43,7 +47,7 @@ export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
           locations={[0, 0.1, 0.9, 1]}
           style={styles.headingContainerSaikyo}
         >
-          <Heading style={{ color: '#212121', fontWeight: '600' }}>
+          <Heading style={styles.headingSaikyo}>
             {translate('transfer')}
           </Heading>
         </LinearGradient>

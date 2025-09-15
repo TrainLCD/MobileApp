@@ -1,6 +1,5 @@
 import { useMutation } from '@connectrpc/connect-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
 import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -203,25 +202,23 @@ const SelectLineScreen = () => {
     fetchAsync();
   }, [routes, fetchStationsByLineId, fetchStationsByLineGroupId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchStationsAsync = async () => {
-        const lines = station?.lines ?? [];
+  useEffect(() => {
+    const fetchStationsAsync = async () => {
+      const lines = station?.lines ?? [];
 
-        for (const line of lines) {
-          if (lineStationsByIdMap.has(line.id)) continue;
+      for (const line of lines) {
+        if (lineStationsByIdMap.has(line.id)) continue;
 
-          const { stations } = await fetchStationsByLineId({
-            lineId: line.id,
-            stationId: line.station?.id,
-          });
+        const { stations } = await fetchStationsByLineId({
+          lineId: line.id,
+          stationId: line.station?.id,
+        });
 
-          lineStationsByIdMap.set(line.id, stations);
-        }
-      };
-      fetchStationsAsync();
-    }, [station?.lines, fetchStationsByLineId, lineStationsByIdMap])
-  );
+        lineStationsByIdMap.set(line.id, stations);
+      }
+    };
+    fetchStationsAsync();
+  }, [station?.lines, fetchStationsByLineId, lineStationsByIdMap]);
 
   useEffect(() => {
     pipe(

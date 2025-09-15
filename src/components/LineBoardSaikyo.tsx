@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     width: isTablet ? 42 : 33.7,
     height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: isTablet ? -42 : 31,
+    right: isTablet ? -42 : -31,
     bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
