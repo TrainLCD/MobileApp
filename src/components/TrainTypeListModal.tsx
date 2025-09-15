@@ -81,6 +81,7 @@ export const TrainTypeListModal = ({
   onSelect,
 }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
   const title = useMemo(() => {
     if (!destination) {
       return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
@@ -101,19 +102,47 @@ export const TrainTypeListModal = ({
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
       const line = item.line;
-      const currentLineIndex = item.lines.findIndex((l) => l.id === line?.id);
-      if (currentLineIndex === -1) return null;
-      const lines = uniqBy(
-        item.lines.slice(currentLineIndex, item.lines.length),
-        'id'
-      );
+      const lines = uniqBy(item.lines ?? [], 'id');
 
       if (!line) return null;
 
+      const currentLineIndex = destination
+        ? lines.findIndex((l) => l.id === line?.id)
+        : 0;
+
+      if (currentLineIndex === -1) return null;
+
+      if (destination) {
+        const destinationLineIndex = lines.findIndex(
+          (l) => l.id === destination.line?.id
+        );
+
+        const slicedLines =
+          currentLineIndex > destinationLineIndex
+            ? lines.slice().reverse().slice(currentLineIndex, lines.length)
+            : lines.slice(currentLineIndex, lines.length);
+
+        const title = `${isJapanese ? item.name : item.nameRoman}`;
+        const subtitle = isJapanese
+          ? `${slicedLines.map((l) => l.nameShort).join('・')}経由`
+          : `Via ${slicedLines.map((l) => l.nameRoman).join(', ')}`;
+
+        return (
+          <LineCard
+            line={line}
+            title={title}
+            subtitle={subtitle}
+            onPress={() => onSelect(item)}
+          />
+        );
+      }
+
+      const slicedLines = lines.slice(currentLineIndex + 1, lines.length);
+
       const title = `${isJapanese ? item.name : item.nameRoman}`;
       const subtitle = isJapanese
-        ? `${lines.map((l) => l.nameShort).join('・')}${destination ? '経由' : ''}`
-        : `${destination ? 'Via ' : ''}${lines.map((l) => l.nameRoman).join(', ')}`;
+        ? slicedLines.map((l) => l.nameShort).join('・')
+        : slicedLines.map((l) => l.nameRoman).join(', ');
 
       return (
         <LineCard

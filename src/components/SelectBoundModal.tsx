@@ -261,6 +261,10 @@ export const SelectBoundModal: React.FC<Props> = ({
         direction === 'INBOUND'
           ? (boundStations[0]?.line ?? line)
           : boundStations[boundStations.length - 1]?.line;
+      const trainTypeForCard =
+        direction === 'INBOUND'
+          ? (boundStations[0]?.trainType ?? trainType)
+          : boundStations[boundStations.length - 1]?.trainType;
 
       if (!lineForCard) {
         return <></>;
@@ -273,7 +277,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         const wantedStationIndex = stations.findIndex(
           (s) => s.groupId === wantedDestination.groupId
         );
-        const dir =
+        const dir: LineDirection =
           currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
 
         if (direction === dir && line) {
@@ -281,8 +285,8 @@ export const SelectBoundModal: React.FC<Props> = ({
             ? loopLineDirectionText(direction)
             : normalLineDirectionText(boundStations);
           const subtitle = isJapanese
-            ? lineForCard.nameShort
-            : lineForCard.nameRoman;
+            ? `${lineForCard.nameShort} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.name}` : ''}`
+            : `${lineForCard.nameRoman} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.nameRoman}` : ''}`;
 
           return (
             <LineCard
@@ -319,8 +323,8 @@ export const SelectBoundModal: React.FC<Props> = ({
         ? loopLineDirectionText(direction)
         : normalLineDirectionText(boundStations);
       const subtitle = isJapanese
-        ? lineForCard.nameShort
-        : lineForCard.nameRoman;
+        ? `${lineForCard.nameShort} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.name}` : ''}`
+        : `${lineForCard.nameRoman} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.nameRoman}` : ''}`;
 
       return (
         <LineCard
@@ -340,6 +344,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       wantedDestination,
       line,
       terminateByDestination,
+      trainType,
       loopLineDirectionText,
       normalLineDirectionText,
     ]
@@ -398,9 +403,8 @@ export const SelectBoundModal: React.FC<Props> = ({
       : `${stations[0]?.nameRoman ?? ''} - ${stations[stations.length - 1]?.nameRoman ?? ''}`;
 
     if (trainType?.groupId) {
-      const trainTypeName = isJapanese
-        ? trainType.name
-        : (trainType.nameRoman ?? '');
+      const trainTypeName =
+        (isJapanese ? trainType.name : trainType.nameRoman) ?? '';
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
         name: wantedDestination

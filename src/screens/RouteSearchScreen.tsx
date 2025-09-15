@@ -1,6 +1,6 @@
 import { useMutation } from '@connectrpc/connect-query';
 import { useAtomValue } from 'jotai';
-import uniqWith from 'lodash/uniqWith';
+import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
@@ -96,13 +96,6 @@ const RouteSearchScreen = () => {
     error: mutateStationsByLineGroupIdError,
   } = useMutation(getStationsByLineGroupId);
 
-  const matchedStations = useMemo<Station[]>(() => {
-    return uniqWith(
-      searchResults,
-      (s1, s2) => s1.line?.id === s2.line?.id && s1.groupId === s2.groupId
-    ).map((s) => new Station(s));
-  }, [searchResults]);
-
   const handleSearch = useCallback(
     async (query: string) => {
       setSearchResults([]);
@@ -116,9 +109,9 @@ const RouteSearchScreen = () => {
         fromStationGroupId: station?.groupId,
       });
 
-      setSearchResults(stations);
+      setSearchResults(uniqBy(stations, 'id'));
     },
-    [station?.groupId, fetchByName]
+    [fetchByName, station?.groupId]
   );
 
   useEffect(() => {
@@ -188,15 +181,59 @@ const RouteSearchScreen = () => {
     },
   });
 
+  const currentStationInRoutes = useMemo<Station | null>(() => {
+    if (!station || !selectedLine) return null;
+
+    const notConnectedToOthersLine = station.lines.find(
+      (l) => l.id === selectedLine.id
+    );
+
+    if (notConnectedToOthersLine) {
+      return new Station({ ...station, line: notConnectedToOthersLine });
+    }
+
+    const currentIds = new Set(
+      (station.lines ?? []).map((l) => l?.id).filter(Boolean)
+    );
+    const routeIdSet = new Set(
+      (routesData?.routes ?? [])
+        .map((r) => r.stops)
+        .filter((stops) => stops.some((s) => s.line?.id === selectedLine.id))
+        .flatMap((stops) => (stops ?? []).map((s) => s.line?.id))
+        .filter(Boolean)
+    );
+
+    const commonIds = [...currentIds].filter((id) => routeIdSet.has(id));
+    const commonLine = (station.lines ?? []).find((l) =>
+      commonIds.includes(l.id)
+    );
+
+    if (!commonLine) return new Station({ ...station, line: selectedLine });
+
+    return new Station({ ...station, line: commonLine });
+  }, [station, selectedLine, routesData?.routes]);
+
+  const destinationInRoutes = useMemo<Station | null>(() => {
+    if (!selectedLine) return null;
+
+    return (
+      routesData?.routes
+        .flatMap((r) => r.stops)
+        .find((s) => s.id === selectedLine.station?.id) ?? null
+    );
+  }, [selectedLine, routesData?.routes]);
+
   const trainTypes = useMemo(
     () =>
       routesData?.routes
         .map(
           (r) =>
-            r.stops.find((rs) => rs.line?.id === selectedLine?.id)?.trainType
+            r.stops.find(
+              (rs) => rs.line?.id === currentStationInRoutes?.line?.id
+            )?.trainType
         )
         .filter((tt): tt is TrainType => !!tt) ?? [],
-    [routesData, selectedLine?.id]
+    [routesData, currentStationInRoutes?.line?.id]
   );
 
   return (
@@ -204,7 +241,7 @@ const RouteSearchScreen = () => {
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
         <Animated.FlatList<Station>
           style={StyleSheet.absoluteFill}
-          data={matchedStations}
+          data={searchResults}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={EmptyLineSeparator}
@@ -244,7 +281,7 @@ const RouteSearchScreen = () => {
       <SelectBoundModal
         visible={selectBoundModalVisible}
         onClose={() => setSelectBoundModalVisible(false)}
-        station={station}
+        station={currentStationInRoutes}
         line={selectedLine}
         stations={
           stationsByLineGroupIdData?.stations ??
@@ -252,7 +289,7 @@ const RouteSearchScreen = () => {
           []
         }
         trainType={selectedTrainType}
-        destination={selectedLine?.station ?? null}
+        destination={destinationInRoutes}
         loading={
           mutateStationsByLineIdStatus === 'pending' ||
           mutateStationsByLineGroupIdStatus === 'pending' ||
@@ -268,15 +305,18 @@ const RouteSearchScreen = () => {
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
-        line={selectedLine}
+        line={currentStationInRoutes?.line ?? null}
         trainTypes={trainTypes}
-        destination={selectedLine?.station}
+        destination={destinationInRoutes}
         onClose={() => {
           setSelectedLine(null);
           setTrainTypeListModalVisible(false);
         }}
         onSelect={handleTrainTypeSelected}
-        loading={mutateRoutesStatus === 'pending'}
+        loading={
+          mutateStationsByLineIdStatus === 'pending' ||
+          mutateRoutesStatus === 'pending'
+        }
       />
     </>
   );
