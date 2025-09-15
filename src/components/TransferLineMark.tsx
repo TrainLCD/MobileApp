@@ -84,6 +84,8 @@ const TransferLineMark: React.FC<Props> = ({
       MARK_SHAPE.KEIO,
       MARK_SHAPE.TWR,
       MARK_SHAPE.KEISEI,
+      MARK_SHAPE.HANKYU,
+      MARK_SHAPE.HANSHIN,
     ]);
     if (mark.signShape && roundShapes.has(mark.signShape)) {
       return dim / 2;
