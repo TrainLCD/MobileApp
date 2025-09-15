@@ -1,3 +1,4 @@
+import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
@@ -102,7 +103,10 @@ export const TrainTypeListModal = ({
       const line = item.line;
       const currentLineIndex = item.lines.findIndex((l) => l.id === line?.id);
       if (currentLineIndex === -1) return null;
-      const lines = item.lines.slice(currentLineIndex, item.lines.length);
+      const lines = uniqBy(
+        item.lines.slice(currentLineIndex, item.lines.length),
+        'id'
+      );
 
       if (!line) return null;
 
