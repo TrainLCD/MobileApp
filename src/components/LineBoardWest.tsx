@@ -21,7 +21,6 @@ import {
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
-import { useScale } from '~/hooks/useScale';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
@@ -101,6 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
     paddingBottom: 0,
+    width: `${100 / 9}%`,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -189,12 +189,11 @@ const StationName: React.FC<StationNameProps> = ({
   hasNumbering,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const { heightScale } = useScale();
 
   const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
     if (!isTablet) {
       return {
-        width: heightScale(300),
+        width: 300,
         marginBottom: 80,
       };
     }
@@ -202,7 +201,7 @@ const StationName: React.FC<StationNameProps> = ({
       width: 250,
       marginBottom: hasNumbering ? 150 : 120,
     };
-  }, [hasNumbering, heightScale]);
+  }, [hasNumbering]);
 
   if (en) {
     return (
@@ -260,7 +259,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { leftStations } = useAtomValue(navigationState);
   const { stations: allStations } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
-  const dim = useWindowDimensions();
+  const _dim = useWindowDimensions();
 
   const station = useCurrentStation();
   const transferLines = useTransferLinesFromStation(stationInLoop, {
@@ -343,7 +342,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       style={[
         styles.stationNameContainer,
         {
-          width: dim.width / 9,
           paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
         },
       ]}
@@ -376,7 +374,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           ]}
         >
           <Typography
-            style={{ ...styles.numberingText, color: stationNumberTextColor }}
+            style={[styles.numberingText, { color: stationNumberTextColor }]}
           >
             {stationNumberString}
           </Typography>
@@ -407,11 +405,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         </View>
         {hasPassStationInRegion && index !== stations.length - 1 ? (
           <View
-            style={{
-              ...styles.passMark,
-              backgroundColor:
-                passed && index !== currentStationIndex ? '#aaa' : '#fff',
-            }}
+            style={[
+              styles.passMark,
+              {
+                backgroundColor:
+                  passed && index !== currentStationIndex ? '#aaa' : '#fff',
+              },
+            ]}
           />
         ) : null}
         {!passed ? (

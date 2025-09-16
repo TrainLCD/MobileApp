@@ -110,11 +110,13 @@ const ListItem: React.FC<ListItemProps> = ({
       <TouchableWithoutFeedback onPress={item === 'JA' ? noop : onPress}>
         <View style={styles.item}>
           <View
-            style={{
-              ...styles.checkbox,
-              borderColor: getCheckboxBorderColor(item),
-              backgroundColor: isLEDTheme ? '#212121' : 'white',
-            }}
+            style={[
+              styles.checkbox,
+              {
+                borderColor: getCheckboxBorderColor(item),
+                backgroundColor: isLEDTheme ? '#212121' : 'white',
+              },
+            ]}
           >
             {active && (
               <Svg height="100%" width="100%" viewBox="0 0 24 24">
@@ -126,10 +128,12 @@ const ListItem: React.FC<ListItemProps> = ({
             )}
           </View>
           <Typography
-            style={{
-              ...styles.languageName,
-              color: getCheckboxBorderColor(item),
-            }}
+            style={[
+              styles.languageName,
+              {
+                color: getCheckboxBorderColor(item),
+              },
+            ]}
           >
             {localizedAvailableLanguage}
           </Typography>

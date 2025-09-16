@@ -40,6 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
+  fullWidth: { width: '100%' },
   contentView: {
     width: '100%',
     paddingVertical: 24,
@@ -64,6 +65,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     alignSelf: 'center',
     fontSize: RFValue(11),
+  },
+  allStopsText: {
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+    marginTop: 8,
   },
   trainTypeList: {
     marginTop: 8,
@@ -97,6 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: RFValue(14),
   },
+  mr8: { marginRight: 8 },
 });
 
 const SAFE_AREA_FALLBACK = 32;
@@ -138,10 +145,12 @@ const TrainTypeItem = React.memo(
           />
         ) : (
           <View
-            style={{
-              ...styles.colorIndicator,
-              backgroundColor: line?.color ?? '#000000',
-            }}
+            style={[
+              styles.colorIndicator,
+              {
+                backgroundColor: line?.color ?? '#000000',
+              },
+            ]}
           />
         )}
 
@@ -149,10 +158,12 @@ const TrainTypeItem = React.memo(
           {(isJapanese ? line.nameShort : line.nameRoman) ?? ''}:{' '}
         </Typography>
         <Typography
-          style={{
-            ...styles.lineTrainTypeName,
-            color: line.trainType?.color ?? '#000000',
-          }}
+          style={[
+            styles.lineTrainTypeName,
+            {
+              color: line.trainType?.color ?? '#000000',
+            },
+          ]}
         >
           {isJapanese
             ? (line.trainType?.name ?? '普通/各駅停車')
@@ -295,33 +306,17 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             : `${trainType?.line?.nameRoman ?? ''} ${trainType?.nameRoman ?? ''}`}
         </Heading>
 
-        <View
-          style={{
-            width: '100%',
-          }}
-        >
+        <View style={styles.fullWidth}>
           <View
             style={{
               paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
               paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
             }}
           >
-            <Typography
-              style={{
-                fontSize: RFValue(14),
-                fontWeight: 'bold',
-                marginTop: 8,
-              }}
-            >
+            <Typography style={styles.allStopsText}>
               {translate('allStops')}:
             </Typography>
-            <Typography
-              style={{
-                fontSize: RFValue(11),
-                marginTop: 8,
-                lineHeight: RFValue(14),
-              }}
-            >
+            <Typography style={styles.allStopsText}>
               {!loading && stopStations.length
                 ? stopStations.map((s, i, a) =>
                     isJapanese ? (
@@ -362,24 +357,20 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                   )
                 : `${translate('loadingAPI')}...`}
             </Typography>
-            <Typography
-              style={{
-                fontSize: RFValue(14),
-                fontWeight: 'bold',
-                marginTop: 16,
-              }}
-            >
+            <Typography style={styles.allStopsText}>
               {translate('eachTrainTypes')}:
             </Typography>
           </View>
           <FlatList
             horizontal
             style={styles.trainTypeList}
-            contentContainerStyle={{
-              ...styles.trainTypeListContent,
-              paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-              paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-            }}
+            contentContainerStyle={[
+              styles.trainTypeListContent,
+              {
+                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
+              },
+            ]}
             data={trainTypeLines}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
@@ -396,13 +387,13 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             <View style={styles.switchContainer}>
               {isLEDTheme ? (
                 <LEDThemeSwitch
-                  style={{ marginRight: 8 }}
+                  style={styles.mr8}
                   value={asTerminus}
                   onValueChange={() => setAsTerminus((prev) => !prev)}
                 />
               ) : (
                 <Switch
-                  style={{ marginRight: 8 }}
+                  style={styles.mr8}
                   value={asTerminus}
                   onValueChange={() => setAsTerminus((prev) => !prev)}
                   ios_backgroundColor={'#fff'}
@@ -423,7 +414,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
           <View style={styles.switchContainer}>
             {isLEDTheme ? (
               <LEDThemeSwitch
-                style={{ marginRight: 8 }}
+                style={styles.mr8}
                 value={autoModeEnabled}
                 onValueChange={() =>
                   setNavigationState((prev) => ({
@@ -434,7 +425,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
               />
             ) : (
               <Switch
-                style={{ marginRight: 8 }}
+                style={styles.mr8}
                 value={autoModeEnabled}
                 onValueChange={() =>
                   setNavigationState((prev) => ({

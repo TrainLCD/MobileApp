@@ -165,10 +165,12 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                   />
                 ) : (
                   <View
-                    style={{
-                      ...styles.lineDot,
-                      backgroundColor: leftLine.color,
-                    }}
+                    style={[
+                      styles.lineDot,
+                      {
+                        backgroundColor: leftLine.color,
+                      },
+                    ]}
                   />
                 )}
                 <Typography
@@ -194,10 +196,12 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                   />
                 ) : (
                   <View
-                    style={{
-                      ...styles.lineDot,
-                      backgroundColor: rightLine.color,
-                    }}
+                    style={[
+                      styles.lineDot,
+                      {
+                        backgroundColor: rightLine.color,
+                      },
+                    ]}
                   />
                 )}
                 <Typography

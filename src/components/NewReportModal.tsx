@@ -154,22 +154,26 @@ const NewReportModal: React.FC<Props> = ({
               value={description}
               onChangeText={onDescriptionChange}
               multiline
-              style={{
-                ...styles.textInput,
-                color: isLEDTheme ? '#fff' : '#000',
-                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-              }}
+              style={[
+                styles.textInput,
+                {
+                  color: isLEDTheme ? '#fff' : '#000',
+                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                },
+              ]}
               placeholder={translate('reportPlaceholder', {
                 lowerLimit: descriptionLowerLimit,
               })}
             />
           </KeyboardAvoidingView>
           <Typography
-            style={{
-              ...styles.caution,
-              color: isLEDTheme ? '#fff' : '#555',
-              lineHeight: Platform.select({ ios: RFValue(18) }),
-            }}
+            style={[
+              styles.caution,
+              {
+                color: isLEDTheme ? '#fff' : '#555',
+                lineHeight: Platform.select({ ios: RFValue(18) }),
+              },
+            ]}
           >
             {translate('reportCaution')}
           </Typography>

@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     opacity: 0.9,
-    lineHeight: 16,
     // Android のベースライン差異を吸収
     includeFontPadding: false,
   },
@@ -78,6 +77,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 4,
   },
   chevron: {
     width: 24,
@@ -85,6 +85,10 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  arrow: {
+    marginHorizontal: 6,
+    alignSelf: 'center',
   },
 });
 
@@ -97,7 +101,7 @@ type SubtitleProps = {
 const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
   if (loading) {
     return (
-      <View style={[styles.subtitleContainer, { marginTop: 6 }]}>
+      <View style={styles.subtitleContainer}>
         <SkeletonPlaceholder borderRadius={1} speed={1500}>
           <SkeletonPlaceholder.Item width={60} height={12} />
         </SkeletonPlaceholder>
@@ -106,19 +110,12 @@ const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
   }
 
   return (
-    <View style={[styles.subtitleContainer, { marginTop: 6 }]}>
+    <View style={styles.subtitleContainer}>
       {inboundText ? (
-        <Typography style={styles.subtitle} numberOfLines={1}>
-          {inboundText}
-        </Typography>
+        <Typography style={styles.subtitle}>{inboundText}</Typography>
       ) : null}
       {inboundText && outboundText ? (
-        <Svg
-          width={16}
-          height={16}
-          viewBox="0 0 24 24"
-          style={{ marginHorizontal: 6, alignSelf: 'center' }}
-        >
+        <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.arrow}>
           <Path
             d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
             fill="none"
@@ -130,9 +127,7 @@ const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
         </Svg>
       ) : null}
       {outboundText ? (
-        <Typography style={styles.subtitle} numberOfLines={1}>
-          {outboundText}
-        </Typography>
+        <Typography style={styles.subtitle}>{outboundText}</Typography>
       ) : null}
     </View>
   );

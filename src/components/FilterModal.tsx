@@ -57,6 +57,13 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
+  chipsContainer: {
+    flexDirection: 'row',
+    paddingVertical: 4,
+    marginVertical: 8,
+    gap: 8,
+    flexWrap: 'wrap',
+  },
 });
 
 export const FilterModal: React.FC<Props> = ({
@@ -72,22 +79,16 @@ export const FilterModal: React.FC<Props> = ({
     ({ item }: { item: SearchQuery; index: number }) => {
       return (
         <View
-          style={{
-            ...styles.formItem,
-            paddingLeft: safeAreaLeft || 24,
-            paddingRight: safeAreaRight || 24,
-          }}
+          style={[
+            styles.formItem,
+            {
+              paddingLeft: safeAreaLeft || 24,
+              paddingRight: safeAreaRight || 24,
+            },
+          ]}
         >
           <Typography style={styles.subHeading}>{item.name}</Typography>
-          <View
-            style={{
-              flexDirection: 'row',
-              paddingVertical: 4,
-              marginVertical: 8,
-              gap: 8,
-              flexWrap: 'wrap',
-            }}
-          >
+          <View style={styles.chipsContainer}>
             {item.options.map((opt) => (
               <Chip
                 active={opt.active}

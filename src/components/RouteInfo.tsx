@@ -137,10 +137,12 @@ const SavedItem = React.memo(
           />
         ) : (
           <View
-            style={{
-              ...styles.colorIndicator,
-              backgroundColor: line?.color ?? '#000000',
-            }}
+            style={[
+              styles.colorIndicator,
+              {
+                backgroundColor: line?.color ?? '#000000',
+              },
+            ]}
           />
         )}
 
@@ -148,10 +150,12 @@ const SavedItem = React.memo(
           {(isJapanese ? line.nameShort : line.nameRoman) ?? ''}:{' '}
         </Typography>
         <Typography
-          style={{
-            ...styles.lineTrainTypeName,
-            color: line.trainType?.color ?? '#000000',
-          }}
+          style={[
+            styles.lineTrainTypeName,
+            {
+              color: line.trainType?.color ?? '#000000',
+            },
+          ]}
         >
           {isJapanese
             ? (line.trainType?.name ?? '普通/各駅停車')

@@ -37,6 +37,11 @@ import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
 const styles = StyleSheet.create({
+  topBar: {
+    backgroundColor: 'white',
+    height: 2,
+    opacity: 0.5,
+  },
   gradientRoot: {
     paddingRight: 21,
     paddingLeft: 21,
@@ -461,7 +466,7 @@ const HeaderSaikyo: React.FC = () => {
   return (
     <View>
       <HeaderBar height={15} lineColor={lineColor || '#00ac9a'} />
-      <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
+      <View style={styles.topBar} />
       <LinearGradient
         colors={['#aaa', '#fcfcfc']}
         locations={[0, 0.2]}
@@ -555,7 +560,12 @@ const HeaderSaikyo: React.FC = () => {
         </View>
         <Clock
           bold
-          style={{ ...styles.clockOverride, right: 8 + safeAreaRight }}
+          style={[
+            styles.clockOverride,
+            {
+              right: 8 + safeAreaRight,
+            },
+          ]}
         />
       </LinearGradient>
       <HeaderBar height={5} lineColor={lineColor || '#00ac9a'} />

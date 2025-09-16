@@ -87,11 +87,13 @@ const ListItem: React.FC<ListItemProps> = ({
       <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.item}>
           <View
-            style={{
-              ...styles.checkbox,
-              borderColor: checkboxBorderColor,
-              backgroundColor: isLEDTheme ? '#212121' : 'white',
-            }}
+            style={[
+              styles.checkbox,
+              {
+                borderColor: checkboxBorderColor,
+                backgroundColor: isLEDTheme ? '#212121' : 'white',
+              },
+            ]}
           >
             {active && (
               <Svg height="100%" width="100%" viewBox="0 0 24 24">

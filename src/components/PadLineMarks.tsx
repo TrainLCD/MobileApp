@@ -108,10 +108,12 @@ const PadLineMarks: React.FC<Props> = ({
             />
             <View style={styles.lineNameWrapper}>
               <Typography
-                style={{
-                  ...styles.lineName,
-                  color: shouldGrayscale ? '#ccc' : 'black',
-                }}
+                style={[
+                  styles.lineName,
+                  {
+                    color: shouldGrayscale ? '#ccc' : 'black',
+                  },
+                ]}
               >
                 {`${
                   isEn
@@ -147,10 +149,12 @@ const PadLineMarks: React.FC<Props> = ({
               shouldGrayscale={shouldGrayscale}
             />
             <Typography
-              style={{
-                ...styles.lineName,
-                color: shouldGrayscale ? '#ccc' : 'black',
-              }}
+              style={[
+                styles.lineName,
+                {
+                  color: shouldGrayscale ? '#ccc' : 'black',
+                },
+              ]}
             >
               {isEn ? transferLines[i]?.nameRoman : transferLines[i]?.nameShort}
             </Typography>

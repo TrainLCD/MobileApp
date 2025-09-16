@@ -31,6 +31,21 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
+  root: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flexOne: { flex: 1 },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  innerHeader: {
+    marginVertical: 16,
+  },
   modalContainer: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -163,19 +178,8 @@ export const RouteListModal: React.FC<Props> = ({
                 },
           ]}
         >
-          <View
-            style={{
-              width: '100%',
-              height: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <View
-              style={{
-                marginVertical: 16,
-              }}
-            >
+          <View style={styles.root}>
+            <View style={styles.innerHeader}>
               <Heading>
                 {translate('routeListTitle', {
                   stationName: isJapanese
@@ -184,18 +188,15 @@ export const RouteListModal: React.FC<Props> = ({
                 })}
               </Heading>
             </View>
-            <View
-              style={{
-                flex: 1,
-                width: '100%',
-                height: '100%',
-              }}
-            >
+            <View style={styles.listContainer}>
               {isRoutesLoading ? (
                 <Loading message={translate('loadingAPI')} />
               ) : (
                 <View
-                  style={{ flex: 1, opacity: isTrainTypesLoading ? 0.5 : 1 }}
+                  style={[
+                    styles.flexOne,
+                    { opacity: isTrainTypesLoading ? 0.5 : 1 },
+                  ]}
                 >
                   <RouteList
                     routes={routes}

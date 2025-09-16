@@ -74,13 +74,14 @@ const styles = StyleSheet.create({
     width: isTablet ? 42 : 33.7,
     height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: isTablet ? -42 : -31,
+    right: isTablet ? -46 : -34,
     bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
+    width: `${100 / 9}%`,
   },
   stationNameMapContainer: {
     flex: 1,
@@ -123,6 +124,10 @@ const styles = StyleSheet.create({
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
   },
+  chevronGradient: {
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 36 : 24,
+  },
   marksContainer: { top: 38, position: 'absolute' },
   numberingIconContainer: {
     position: 'absolute',
@@ -135,10 +140,14 @@ const styles = StyleSheet.create({
   },
   longOrEnName: {
     flex: 1,
+    width: '100%',
+    marginLeft: isTablet ? -24 : -16,
     justifyContent: 'flex-end',
-    marginBottom: isTablet ? 0 : 90,
   },
-  jaName: { flex: 1, marginBottom: isTablet ? 50 : 90 },
+  jaName: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
 });
 
 interface StationNameProps {
@@ -262,7 +271,7 @@ const LineDot: React.FC<LineDotProps> = ({
     <View style={styles.stationArea}>
       <View style={styles.chevronArea}>
         <LinearGradient
-          style={{ width: isTablet ? 48 : 32, height: isTablet ? 36 : 24 }}
+          style={styles.chevronGradient}
           colors={
             passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
           }
@@ -356,7 +365,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
+      <View style={styles.stationNameContainer}>
         <View
           style={[
             isEn || includesLongStationName

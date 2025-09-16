@@ -314,28 +314,34 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
         {isJO ? <TrainTypeBoxJO trainType={trainType} /> : null}
 
         <View
-          style={{
-            ...styles.boundContainer,
-            marginTop: boundContainerMarginTop,
-          }}
+          style={[
+            styles.boundContainer,
+            {
+              marginTop: boundContainerMarginTop,
+            },
+          ]}
         >
           {selectedBound && boundPrefix.length ? (
             <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
-              style={{
-                ...styles.boundGrayText,
-                fontSize: RFValue(isJO ? 14 : 18),
-              }}
+              style={[
+                styles.boundGrayText,
+                {
+                  fontSize: RFValue(isJO ? 14 : 18),
+                },
+              ]}
             >
               {boundPrefix}
             </Typography>
           ) : null}
           <Typography
-            style={{
-              ...styles.bound,
-              fontSize: boundFontSize,
-            }}
+            style={[
+              styles.bound,
+              {
+                fontSize: boundFontSize,
+              },
+            ]}
             adjustsFontSizeToFit
             numberOfLines={1}
           >
@@ -357,10 +363,14 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
         </View>
       </View>
       <View
-        style={{
-          ...styles.colorBar,
-          backgroundColor: currentLine ? (currentLine.color ?? '#000') : '#aaa',
-        }}
+        style={[
+          styles.colorBar,
+          {
+            backgroundColor: currentLine
+              ? (currentLine.color ?? '#000')
+              : '#aaa',
+          },
+        ]}
       />
       <View style={styles.right}>
         <Typography style={styles.state}>{stateText}</Typography>

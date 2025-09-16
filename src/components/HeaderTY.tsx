@@ -531,7 +531,7 @@ const HeaderTY: React.FC = () => {
           ) : null}
         </View>
         <View style={styles.bottom}>
-          <View style={{ ...styles.stateWrapper, width: dim.width * 0.14 }}>
+          <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
             <Animated.Text
               style={[
                 stateTopAnimatedStyles,
@@ -600,7 +600,7 @@ const HeaderTY: React.FC = () => {
           </View>
           {selectedBound && firstStop ? (
             <View
-              style={{ ...styles.firstTextWrapper, width: dim.width * 0.14 }}
+              style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
             >
               <Animated.Text style={[stateTopAnimatedStyles, styles.firstText]}>
                 {stateTextRight}

@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minHeight: 256,
   },
+  stopsContainer: { gap: 14, marginTop: 24 },
   buttonsContainer: {
     gap: 8,
     marginTop: 24,
@@ -523,7 +524,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                   })
                 : null}
 
-              <View style={{ gap: 14, marginTop: 24 }}>
+              <View style={styles.stopsContainer}>
                 <Button outline onPress={() => setRouteInfoModalVisible(true)}>
                   {translate('viewStopStations')}
                 </Button>

@@ -8,6 +8,11 @@ import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
+  list: {
+    width: '100%',
+    alignSelf: 'center',
+    borderWidth: 1,
+  },
   cell: {
     paddingHorizontal: 24,
     height: 64,
@@ -79,19 +84,23 @@ const ItemCell = ({
 
   return (
     <TouchableOpacity
-      style={{
-        ...styles.cell,
-        backgroundColor: rootBackgroundColor,
-      }}
+      style={[
+        styles.cell,
+        {
+          backgroundColor: rootBackgroundColor,
+        },
+      ]}
       onPress={() => onSelect(item.value)}
     >
       <Typography style={styles.stationNameText}>{item.label}</Typography>
       {isSelected ? (
         <View
-          style={{
-            ...styles.activeContainer,
-            backgroundColor: IN_USE_COLOR_MAP[theme],
-          }}
+          style={[
+            styles.activeContainer,
+            {
+              backgroundColor: IN_USE_COLOR_MAP[theme],
+            },
+          ]}
         >
           <Typography style={styles.activeText}>
             {translate('inUse')}
@@ -132,12 +141,12 @@ export const ThemeList = ({
   return (
     <FlatList
       initialNumToRender={data.length}
-      style={{
-        width: '100%',
-        alignSelf: 'center',
-        borderColor: isLEDTheme ? '#fff' : '#aaa',
-        borderWidth: 1,
-      }}
+      style={[
+        styles.list,
+        {
+          borderColor: isLEDTheme ? '#fff' : '#aaa',
+        },
+      ]}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}

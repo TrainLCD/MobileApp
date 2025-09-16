@@ -542,7 +542,7 @@ const HeaderTokyoMetro: React.FC = () => {
           ) : null}
         </View>
         <View style={styles.bottom}>
-          <View style={{ ...styles.stateWrapper, width: dim.width * 0.14 }}>
+          <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
             <Animated.Text
               style={[
                 stateTopAnimatedStyles,
@@ -618,7 +618,7 @@ const HeaderTokyoMetro: React.FC = () => {
 
           {selectedBound && firstStop ? (
             <View
-              style={{ ...styles.firstTextWrapper, width: dim.width * 0.14 }}
+              style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
             >
               <Animated.Text style={[stateTopAnimatedStyles, styles.firstText]}>
                 {stateTextRight}
@@ -633,10 +633,12 @@ const HeaderTokyoMetro: React.FC = () => {
         </View>
       </LinearGradient>
       <View
-        style={{
-          ...styles.divider,
-          backgroundColor: currentLine?.color ?? '#b5b5ac',
-        }}
+        style={[
+          styles.divider,
+          {
+            backgroundColor: currentLine?.color ?? '#b5b5ac',
+          },
+        ]}
       />
     </View>
   );

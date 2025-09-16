@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignSelf: 'center',
   },
+  list: { width: '65%', alignSelf: 'center', borderWidth: 1, flex: 1 },
   routeNameText: {
     fontSize: RFValue(14),
   },
@@ -169,22 +170,23 @@ const CommunityRoutesScreen: React.FC = () => {
 
   return (
     <View
-      style={{
-        ...styles.root,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
+      style={[
+        styles.root,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        },
+      ]}
     >
       <Heading style={styles.heading}>{translate('communityRoutes')}</Heading>
 
       <FlatList
-        style={{
-          width: '65%',
-          alignSelf: 'center',
-          borderColor: isLEDTheme ? '#fff' : '#aaa',
-          borderWidth: 1,
-          flex: 1,
-          marginBottom: safeAreaBottom,
-        }}
+        style={[
+          styles.list,
+          {
+            borderColor: isLEDTheme ? '#fff' : '#aaa',
+            marginBottom: safeAreaBottom,
+          },
+        ]}
         data={routes}
         renderItem={renderItem}
         keyExtractor={keyExtractor}

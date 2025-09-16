@@ -35,7 +35,6 @@ const styles = StyleSheet.create({
     height: 72,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 24,
   },
   closeButton: { width: '100%' },
@@ -49,7 +48,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
   },
   subtitle: { width: '100%', fontSize: 16 },
   title: {
@@ -183,7 +181,14 @@ export const TrainTypeListModal = ({
             },
           ]}
         >
-          <View style={styles.headerContainer}>
+          <View
+            style={[
+              styles.headerContainer,
+              {
+                backgroundColor: isLEDTheme ? '#212121' : '#fff',
+              },
+            ]}
+          >
             {destination ? (
               <Heading style={styles.subtitle}>{subtitle}</Heading>
             ) : null}
@@ -206,7 +211,14 @@ export const TrainTypeListModal = ({
               ) : null
             }
           />
-          <View style={styles.closeButtonContainer}>
+          <View
+            style={[
+              styles.closeButtonContainer,
+              {
+                backgroundColor: isLEDTheme ? '#212121' : '#fff',
+              },
+            ]}
+          >
             <Button
               style={styles.closeButton}
               textStyle={styles.closeButtonText}

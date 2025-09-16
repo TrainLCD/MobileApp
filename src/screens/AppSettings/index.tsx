@@ -6,6 +6,7 @@ import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import navigationState from '~/store/atoms/navigation';
+import isTablet from '~/utils/isTablet';
 import Button from '../../components/Button';
 import FooterTabBar, {
   FOOTER_BASE_HEIGHT,
@@ -57,6 +58,7 @@ const styles = StyleSheet.create({
   halfOpacity: {
     opacity: 0.5,
   },
+  mr: { marginRight: isTablet ? 16 : 8 },
 });
 
 const AppSettingsScreen: React.FC = () => {
@@ -180,13 +182,13 @@ const AppSettingsScreen: React.FC = () => {
           >
             {isLEDTheme ? (
               <LEDThemeSwitch
-                style={{ marginRight: 8 }}
+                style={styles.mr}
                 value={speechEnabled}
                 onValueChange={onSpeechEnabledValueChange}
               />
             ) : (
               <Switch
-                style={{ marginRight: 8 }}
+                style={styles.mr}
                 value={speechEnabled}
                 onValueChange={onSpeechEnabledValueChange}
                 ios_backgroundColor={'#fff'}
@@ -210,13 +212,13 @@ const AppSettingsScreen: React.FC = () => {
             >
               {isLEDTheme ? (
                 <LEDThemeSwitch
-                  style={{ marginRight: 8 }}
+                  style={styles.mr}
                   value={backgroundEnabled}
                   onValueChange={onBackgroundAudioEnabledValueChange}
                 />
               ) : (
                 <Switch
-                  style={{ marginRight: 8 }}
+                  style={styles.mr}
                   value={backgroundEnabled}
                   onValueChange={onBackgroundAudioEnabledValueChange}
                 />
@@ -249,13 +251,13 @@ const AppSettingsScreen: React.FC = () => {
           >
             {isLEDTheme ? (
               <LEDThemeSwitch
-                style={{ marginRight: 8 }}
+                style={styles.mr}
                 value={enableLegacyAutoMode}
                 onValueChange={onToggleLegacyAutoMode}
               />
             ) : (
               <Switch
-                style={{ marginRight: 8 }}
+                style={styles.mr}
                 value={enableLegacyAutoMode}
                 onValueChange={onToggleLegacyAutoMode}
                 ios_backgroundColor={'#fff'}

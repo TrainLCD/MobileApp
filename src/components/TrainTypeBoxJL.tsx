@@ -116,12 +116,14 @@ const TrainTypeBoxJL: React.FC<Props> = ({
             <Typography
               numberOfLines={numberOfLines}
               adjustsFontSizeToFit
-              style={{
-                ...styles.text,
-                color: trainTypeColor,
-                fontFamily: undefined,
-                fontWeight: '800',
-              }}
+              style={[
+                styles.text,
+                {
+                  color: trainTypeColor,
+                  fontFamily: undefined,
+                  fontWeight: '800',
+                },
+              ]}
               key={`${char}${idx.toString()}`}
             >
               {char}
@@ -131,10 +133,12 @@ const TrainTypeBoxJL: React.FC<Props> = ({
           <Typography
             numberOfLines={1}
             adjustsFontSizeToFit
-            style={{
-              ...styles.text,
-              color: trainTypeColor,
-            }}
+            style={[
+              styles.text,
+              {
+                color: trainTypeColor,
+              },
+            ]}
           >
             {trainTypeName}
           </Typography>

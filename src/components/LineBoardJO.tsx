@@ -16,7 +16,6 @@ import {
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
-import { useScale } from '~/hooks/useScale';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isEnAtom } from '../store/selectors/isEn';
@@ -113,6 +112,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     transform: [{ rotate: '-55deg' }],
+    marginBottom: 90,
   },
   verticalStationName: {
     marginBottom: 0,
@@ -166,28 +166,25 @@ const StationName: React.FC<StationNameProps> = ({
   passed,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const { heightScale } = useScale();
 
   const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
     if (!isTablet) {
       return {
-        width: heightScale(300),
-        marginBottom: 90,
+        width: 300,
       };
     }
     return {
       width: 250,
-      marginBottom: 120,
     };
-  }, [heightScale]);
+  }, []);
 
   if (en) {
     return (
       <Typography
         style={[
           styles.stationNameEn,
-          stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
+          stationNameEnExtraStyle,
         ]}
       >
         {stationNameR}
@@ -199,8 +196,8 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameEn,
-          stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
+          stationNameEnExtraStyle,
         ]}
       >
         {station.name}
