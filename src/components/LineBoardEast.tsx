@@ -503,7 +503,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
 }: EmptyStationNameCellProps) => {
   const lastLineColor = lastLineColorOriginal;
   const { left: barLeft, width: barWidth } = useBarStyles({});
-  const _dim = useWindowDimensions();
 
   return (
     <View style={styles.stationNameContainer}>
