@@ -155,7 +155,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     (s) => s.groupId === station?.groupId
   );
 
-  const handleSelectBoundBackButtonPress = useCallback(() => {
+  const clearData = useCallback(() => {
     setStationState((prev) => ({
       ...prev,
       stations: [],
@@ -169,8 +169,18 @@ export const SelectBoundModal: React.FC<Props> = ({
       leftStations: [],
       fetchedTrainTypes: [],
     }));
+  }, [setNavigationState, setStationState]);
+
+  const handleSelectBoundBackButtonPress = useCallback(() => {
+    clearData();
     onClose();
-  }, [setNavigationState, setStationState, onClose]);
+  }, [clearData, onClose]);
+
+  useEffect(() => {
+    return () => {
+      clearData();
+    };
+  }, [clearData]);
 
   const handleBoundSelected = useCallback(
     (
