@@ -64,9 +64,6 @@ const styles = StyleSheet.create({
     marginLeft: 32,
     flex: 1,
   },
-  nameContainer: {
-    width: `${100 / 8.25}%`,
-  },
   bar: {
     position: 'absolute',
     bottom: isTablet ? -52 : 32,
@@ -83,7 +80,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    width: `${100 / 8.25}%`,
+    width: `${100 / 9}%`,
   },
   stationNameMapContainer: {
     flex: 1,
@@ -357,7 +354,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View style={styles.nameContainer}>
+      <View style={styles.stationNameContainer}>
         <View
           style={[
             styles.nameCommon,
