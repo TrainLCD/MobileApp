@@ -1,13 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import {
-  Platform,
-  type StyleProp,
-  StyleSheet,
-  type TextStyle,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
@@ -105,7 +98,7 @@ const styles = StyleSheet.create({
   stationName: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginLeft: isTablet ? 12 : 4,
+    marginLeft: 12,
     marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameEn: {
@@ -113,6 +106,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     transform: [{ rotate: '-55deg' }],
     marginBottom: 90,
+    marginLeft: -32,
+    width: 250,
   },
   verticalStationName: {
     marginBottom: 0,
@@ -167,25 +162,10 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
 
-  const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
-    if (!isTablet) {
-      return {
-        width: 300,
-      };
-    }
-    return {
-      width: 250,
-    };
-  }, []);
-
   if (en) {
     return (
       <Typography
-        style={[
-          styles.stationNameEn,
-          passed ? styles.grayColor : null,
-          stationNameEnExtraStyle,
-        ]}
+        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
       >
         {stationNameR}
       </Typography>
@@ -194,11 +174,7 @@ const StationName: React.FC<StationNameProps> = ({
   if (horizontal) {
     return (
       <Typography
-        style={[
-          styles.stationNameEn,
-          passed ? styles.grayColor : null,
-          stationNameEnExtraStyle,
-        ]}
+        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
       >
         {station.name}
       </Typography>

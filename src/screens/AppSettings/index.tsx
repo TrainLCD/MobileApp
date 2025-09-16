@@ -6,7 +6,6 @@ import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import navigationState from '~/store/atoms/navigation';
-import isTablet from '~/utils/isTablet';
 import Button from '../../components/Button';
 import FooterTabBar, {
   FOOTER_BASE_HEIGHT,
@@ -58,7 +57,7 @@ const styles = StyleSheet.create({
   halfOpacity: {
     opacity: 0.5,
   },
-  mr: { marginRight: isTablet ? 16 : 8 },
+  mr: { marginRight: 16 },
 });
 
 const AppSettingsScreen: React.FC = () => {

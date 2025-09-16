@@ -193,7 +193,7 @@ const StationName: React.FC<StationNameProps> = ({
   const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
     if (!isTablet) {
       return {
-        width: 300,
+        width: 180,
         marginBottom: 80,
       };
     }
@@ -259,7 +259,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const { leftStations } = useAtomValue(navigationState);
   const { stations: allStations } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
-  const _dim = useWindowDimensions();
 
   const station = useCurrentStation();
   const transferLines = useTransferLinesFromStation(stationInLoop, {
