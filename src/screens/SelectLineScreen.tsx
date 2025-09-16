@@ -238,7 +238,6 @@ const SelectLineScreen = () => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: 初回のみ
   useEffect(() => {
-    if (station) return;
     const fetchInitialNearbyStationAsync = async () => {
       const location = await fetchCurrentLocation(true);
       if (!location) return;
@@ -249,7 +248,10 @@ const SelectLineScreen = () => {
         limit: 1,
       });
       const stationFromAPI = data.stations[0] ?? null;
-      setStationState((prev) => ({ ...prev, station: stationFromAPI }));
+      setStationState((prev) => ({
+        ...prev,
+        station: prev.station ?? stationFromAPI,
+      }));
       setNavigationState((prev) => ({
         ...prev,
         stationForHeader: stationFromAPI,
