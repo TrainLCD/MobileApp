@@ -193,5 +193,6 @@
   "close": "閉じる",
   "searchResult": "検索結果",
   "emptySearchResult": "一致する情報が見つかりませんでした。",
+  "stationNameSearchPlaceholder": "どこにいますか？",
   "routeSearchPlaceholder": "どこへ行きますか？"
 }

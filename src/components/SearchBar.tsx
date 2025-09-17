@@ -1,6 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { FONTS } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
@@ -22,7 +28,9 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'android' ? 8 : 16,
+    includeFontPadding: false,
   },
   bg: {
     backgroundColor: '#fcfcfc',
@@ -43,9 +51,10 @@ const styles = StyleSheet.create({
 
 type Props = {
   onSearch?: (text: string) => void;
+  nameSearch?: boolean;
 };
 
-export const SearchBar = ({ onSearch }: Props) => {
+export const SearchBar = ({ onSearch, nameSearch }: Props) => {
   const [searchText, setSearchText] = useState('');
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
@@ -65,7 +74,9 @@ export const SearchBar = ({ onSearch }: Props) => {
         ]}
         onChange={(e) => setSearchText(e.nativeEvent.text)}
         onSubmitEditing={() => onSearch?.(searchText)}
-        placeholder={translate('routeSearchPlaceholder')}
+        placeholder={translate(
+          nameSearch ? 'stationNameSearchPlaceholder' : 'routeSearchPlaceholder'
+        )}
       />
       <TouchableOpacity
         style={styles.button}

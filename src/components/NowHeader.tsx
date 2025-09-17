@@ -3,6 +3,7 @@ import { useSetAtom } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
 import {
   type LayoutChangeEvent,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -32,6 +33,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: 0,
     zIndex: 10,
+    backgroundColor: Platform.OS === 'android' ? '#FAFAFA' : undefined,
   },
   nowHeaderCard: {
     width: '100%',

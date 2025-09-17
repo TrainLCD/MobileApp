@@ -192,5 +192,6 @@
   "close": "Close",
   "searchResult": "Search Results",
   "emptySearchResult": "No matching information was found.",
+  "stationNameSearchPlaceholder": "Where are you?",
   "routeSearchPlaceholder": "Where to?"
 }
