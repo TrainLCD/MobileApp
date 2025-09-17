@@ -246,9 +246,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
+              styles.text,
               textTopAnimatedStyles,
               {
-                ...styles.text,
                 paddingLeft,
                 letterSpacing,
               },
@@ -262,9 +262,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
+              styles.text,
               textBottomAnimatedStyles,
               {
-                ...styles.text,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },

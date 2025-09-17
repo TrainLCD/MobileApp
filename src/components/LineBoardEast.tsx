@@ -30,6 +30,13 @@ const useBarStyles = ({
   const { widthScale } = useScale();
 
   const left = useMemo(() => {
+    if (isTablet) {
+      if (index === 0) {
+        return widthScale(-32);
+      }
+      return widthScale(-11);
+    }
+
     if (index === 0) {
       return widthScale(-32);
     }
@@ -42,7 +49,7 @@ const useBarStyles = ({
         return widthScale(200);
       }
       if (index === 1) {
-        return widthScale(61.75);
+        return widthScale(39);
       }
     }
     return widthScale(62);
@@ -61,31 +68,26 @@ const styles = StyleSheet.create({
     height: '100%',
     flexDirection: 'row',
     justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
+    marginLeft: isTablet ? undefined : 32,
     flex: 1,
   },
   bar: {
     position: 'absolute',
-    bottom: isTablet ? -52 : 32,
-    height: isTablet ? 48 : 32,
+    bottom: isTablet ? undefined : 32,
+    height: isTablet ? undefined : 32,
   },
   barTerminal: {
-    width: isTablet ? 42 : 33.7,
-    height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: isTablet ? -46 : -34,
-    bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    bottom: isTablet ? 84 : undefined,
     width: `${100 / 9}%`,
   },
   stationNameMapContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    marginBottom: 16,
+    marginBottom: isTablet ? 0 : 16,
   },
   stationName: {
     fontSize: RFValue(18),
@@ -102,31 +104,31 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   stationArea: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
+    width: isTablet ? undefined : 32,
+    height: isTablet ? undefined : 24,
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
+    bottom: isTablet ? undefined : 36,
     overflow: 'visible',
   },
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 48 : 32,
-    bottom: isTablet ? 198 : 32,
+    width: isTablet ? undefined : 32,
+    height: isTablet ? undefined : 32,
+    bottom: isTablet ? undefined : 32,
   },
   chevronArea: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
+    width: isTablet ? undefined : 16,
+    height: isTablet ? undefined : 24,
   },
   chevronAreaPass: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
+    width: isTablet ? undefined : 16,
+    height: isTablet ? undefined : 24,
   },
   chevronGradient: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
+    width: isTablet ? undefined : 32,
+    height: isTablet ? undefined : 24,
   },
   marksContainer: { top: 38, position: 'absolute' },
   nameCommon: {
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
   longOrEnName: {
     flex: 1,
     width: '100%',
-    marginLeft: isTablet ? -24 : -16,
+    marginLeft: isTablet ? undefined : -16,
     justifyContent: 'flex-end',
   },
   jaName: {
@@ -168,13 +170,20 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
   const dim = useWindowDimensions();
+  const { widthScale, heightScale } = useScale();
 
   const horizontalAditionalStyle = useMemo(
-    () => ({
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-    }),
-    [dim.height]
+    () =>
+      isTablet
+        ? {
+            width: heightScale(dim.height / 3.5),
+            marginBottom: heightScale(Platform.OS === 'ios' ? 90 : 64),
+          }
+        : {
+            width: dim.height / 2.5,
+            marginBottom: dim.height / 6,
+          },
+    [dim.height, heightScale]
   );
 
   if (en) {
@@ -206,7 +215,17 @@ const StationName: React.FC<StationNameProps> = ({
   }
 
   return (
-    <View style={styles.stationNameMapContainer}>
+    <View
+      style={[
+        styles.stationNameMapContainer,
+        isTablet
+          ? {
+              marginBottom: heightScale(-14),
+              marginLeft: widthScale(15),
+            }
+          : {},
+      ]}
+    >
       {station.name.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
@@ -234,17 +253,33 @@ const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
 }) => {
-  const { widthScale } = useScale();
+  const { widthScale, heightScale } = useScale();
 
   if (getIsPass(station)) {
     return (
-      <View style={styles.stationArea}>
+      <View
+        style={[
+          styles.stationArea,
+          isTablet
+            ? {
+                width: widthScale(16),
+                bottom: heightScale(-46),
+              }
+            : {},
+        ]}
+      >
         <View
           style={[
             styles.chevronAreaPass,
-            {
-              marginLeft: isTablet ? 0 : widthScale(5),
-            },
+            isTablet
+              ? {
+                  width: widthScale(18),
+                  height: heightScale(36),
+                  marginLeft: 0,
+                }
+              : {
+                  marginLeft: widthScale(5),
+                },
           ]}
         >
           <PassChevronTY />
@@ -261,10 +296,38 @@ const LineDot: React.FC<LineDotProps> = ({
   }
 
   return (
-    <View style={styles.stationArea}>
-      <View style={styles.chevronArea}>
+    <View
+      style={[
+        styles.stationArea,
+        isTablet
+          ? {
+              width: widthScale(16),
+              bottom: heightScale(-46),
+            }
+          : {},
+      ]}
+    >
+      <View
+        style={[
+          styles.chevronArea,
+          isTablet
+            ? {
+                width: widthScale(isTablet ? 18 : 18),
+                height: heightScale(isTablet ? 36 : 40),
+              }
+            : {},
+        ]}
+      >
         <LinearGradient
-          style={styles.chevronGradient}
+          style={[
+            styles.chevronGradient,
+            isTablet
+              ? {
+                  width: widthScale(isTablet ? 18 : 18),
+                  height: heightScale(isTablet ? 36 : 40),
+                }
+              : {},
+          ]}
           colors={
             passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
           }
@@ -315,12 +378,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
-  const { widthScale } = useScale();
+  const { widthScale, heightScale } = useScale();
 
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
     if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
+      return isTablet
+        ? { left: widthScale(arrived ? widthScale(0) : widthScale(8)) }
+        : arrived
+          ? { left: widthScale(-14) }
+          : null;
     }
 
     // 到着済みの場合
@@ -350,8 +417,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
-  const dim = useWindowDimensions();
-
   return (
     <>
       <View style={styles.stationNameContainer}>
@@ -361,6 +426,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
+            isTablet
+              ? {
+                  marginLeft: widthScale(-12),
+                  marginBottom: 0,
+                }
+              : {},
           ]}
         >
           <StationName
@@ -379,6 +450,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               left: barLeft,
               width: barWidth,
             },
+            isTablet
+              ? {
+                  height: heightScale(48),
+                  bottom: heightScale(-52),
+                }
+              : {},
           ]}
         />
         <LinearGradient
@@ -391,6 +468,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               left: barLeft,
               width: barWidth,
             },
+            isTablet
+              ? {
+                  height: heightScale(48),
+                  bottom: heightScale(-52),
+                }
+              : {},
           ]}
         />
         {(arrived && currentStationIndex < index + 1) || !passed ? (
@@ -403,6 +486,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 left: barLeft,
                 width: barWidth,
               },
+              isTablet
+                ? {
+                    height: heightScale(48),
+                    bottom: heightScale(-52),
+                  }
+                : {},
             ]}
           />
         ) : null}
@@ -435,20 +524,37 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             }
             style={[
               styles.bar,
-              {
-                left:
-                  currentStationIndex !== 0 &&
-                  currentStationIndex === index &&
-                  currentStationIndex !== stations.length - 1
-                    ? barLeft + barWidth / 2.5
-                    : barLeft,
-                width:
-                  currentStationIndex !== 0 &&
-                  currentStationIndex === index &&
-                  currentStationIndex !== stations.length - 1
-                    ? barWidth / 2.5
-                    : barWidth,
-              },
+              isTablet
+                ? {
+                    left:
+                      currentStationIndex !== 0 &&
+                      currentStationIndex === index &&
+                      currentStationIndex !== stations.length - 1
+                        ? barLeft + barWidth / 2.5
+                        : barLeft,
+                    width:
+                      currentStationIndex !== 0 &&
+                      currentStationIndex === index &&
+                      currentStationIndex !== stations.length - 1
+                        ? barWidth / 2.5
+                        : barWidth,
+                    height: heightScale(48),
+                    bottom: heightScale(-52),
+                  }
+                : {
+                    left:
+                      currentStationIndex !== 0 &&
+                      currentStationIndex === index &&
+                      currentStationIndex !== stations.length - 1
+                        ? barLeft + barWidth / 2.5
+                        : barLeft,
+                    width:
+                      currentStationIndex !== 0 &&
+                      currentStationIndex === index &&
+                      currentStationIndex !== stations.length - 1
+                        ? barWidth / 2.5
+                        : barWidth,
+                  },
             ]}
           />
         ) : null}
@@ -461,7 +567,25 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
         {stations.length - 1 === index ? (
           <BarTerminalEast
-            style={styles.barTerminal}
+            style={[
+              styles.barTerminal,
+              isTablet
+                ? {
+                    width: widthScale(41.57),
+                    height: heightScale(48),
+                    bottom: heightScale(-52),
+                    right: widthScale(-40.65),
+                  }
+                : {
+                    width: widthScale(41.57 * 1.2),
+                    height: heightScale(
+                      48 * (Platform.OS === 'ios' ? 1.2 : 1.15)
+                    ),
+                    left:
+                      barWidth - widthScale(Platform.OS === 'ios' ? 38 : 39.75),
+                    bottom: heightScale(Platform.OS === 'ios' ? 55.75 : 54.2),
+                  },
+            ]}
             lineColor={
               line.color
                 ? lineColors[lineColors.length - 1] || line.color
@@ -474,11 +598,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View
         style={[
           styles.chevron,
+          isTablet
+            ? {
+                width: widthScale(42),
+                height: heightScale(48),
+                bottom: -heightScale(52),
+                marginLeft: widthScale(-12),
+              }
+            : {
+                bottom: 32,
+                marginLeft: arrived
+                  ? widthScale(14)
+                  : widthScale(Platform.OS === 'ios' ? 18 : 14),
+              },
           additionalChevronStyle,
-          {
-            bottom: isTablet ? dim.height / 2.5 - 52 : 32,
-            marginLeft: widthScale(14),
-          },
         ]}
       >
         {(currentStationIndex < 1 && index === 0) ||
@@ -504,8 +637,19 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   const lastLineColor = lastLineColorOriginal;
   const { left: barLeft, width: barWidth } = useBarStyles({});
 
+  const { widthScale, heightScale } = useScale();
+
   return (
-    <View style={styles.stationNameContainer}>
+    <View
+      style={[
+        styles.stationNameContainer,
+        isTablet
+          ? {
+              bottom: heightScale(84),
+            }
+          : {},
+      ]}
+    >
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
@@ -514,6 +658,12 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
           {
             left: barLeft,
           },
+          isTablet
+            ? {
+                height: heightScale(48),
+                bottom: 0,
+              }
+            : {},
         ]}
       />
       <LinearGradient
@@ -528,11 +678,27 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
             left: barLeft,
             width: barWidth,
           },
+          isTablet
+            ? {
+                height: heightScale(48),
+                bottom: 0,
+              }
+            : {},
         ]}
       />
       {isLast ? (
         <BarTerminalEast
-          style={styles.barTerminal}
+          style={[
+            styles.barTerminal,
+            isTablet
+              ? {
+                  width: widthScale(42),
+                  height: heightScale(48),
+                  bottom: heightScale(-8),
+                  right: widthScale(-29.65),
+                }
+              : {},
+          ]}
           lineColor={lastLineColor}
           hasTerminus={hasTerminus}
         />
@@ -551,6 +717,7 @@ const LineBoardEast: React.FC<Props> = ({
   const currentLine = useCurrentLine();
 
   const dim = useWindowDimensions();
+  const { widthScale, heightScale } = useScale();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -618,9 +785,14 @@ const LineBoardEast: React.FC<Props> = ({
     <View
       style={[
         styles.root,
-        {
-          paddingBottom: isTablet ? dim.height / 2.5 : undefined,
-        },
+        isTablet
+          ? {
+              marginLeft: widthScale(32),
+              bottom: heightScale(256),
+            }
+          : {
+              paddingBottom: isTablet ? dim.height / 2.5 : undefined,
+            },
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}

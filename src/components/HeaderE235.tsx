@@ -350,8 +350,8 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
           {selectedBound && boundSuffix.length ? (
             <Typography
               style={[
+                styles.boundSuffix,
                 {
-                  ...styles.boundSuffix,
                   fontSize: RFValue(isJO ? 14 : 18),
                 },
                 headerLangState === 'KO' ? styles.boundGrayText : null,

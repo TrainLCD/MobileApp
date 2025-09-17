@@ -239,11 +239,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           <AnimatedTypography
             style={[
               textTopAnimatedStyles,
-              {
-                ...styles.text,
-                letterSpacing,
-                marginLeft,
-              },
+              [
+                styles.text,
+                {
+                  letterSpacing,
+                  marginLeft,
+                },
+              ],
             ]}
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
@@ -254,9 +256,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
         <AnimatedTypography
           style={[
+            styles.text,
             textBottomAnimatedStyles,
             {
-              ...styles.text,
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
             },

@@ -327,8 +327,8 @@ const MetroBars = ({
         {nextLine && (
           <Typography
             style={[
+              styles.lineText,
               {
-                ...styles.lineText,
                 color: currentLine?.color ?? '#000000',
               },
             ]}
@@ -375,8 +375,8 @@ const MetroBars = ({
         {nextLine && (
           <Typography
             style={[
+              styles.lineText,
               {
-                ...styles.lineText,
                 color: nextLine.color ?? '#000000',
               },
             ]}
@@ -540,8 +540,8 @@ const SaikyoBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: currentLine?.color ?? '#000000',
             },
           ]}
@@ -590,8 +590,8 @@ const SaikyoBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: nextLine.color ?? '#000000',
             },
           ]}
@@ -691,8 +691,8 @@ const JOBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: currentLine?.color ?? '#000000',
               top: isTablet ? 90 : 55,
             },
@@ -741,8 +741,8 @@ const JOBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: nextLine?.color ?? '#000000',
               top: isTablet ? 90 : 55,
             },
