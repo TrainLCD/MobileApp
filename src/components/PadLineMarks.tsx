@@ -5,6 +5,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
+import { useScale } from '~/hooks/useScale';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { isEnAtom } from '~/store/selectors/isEn';
 import isTablet from '~/utils/isTablet';
@@ -12,7 +13,6 @@ import { RFValue } from '~/utils/rfValue';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
-import { useScale } from '~/hooks/useScale';
 
 type Props = {
   shouldGrayscale: boolean;
