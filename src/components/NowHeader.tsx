@@ -28,7 +28,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    // SafeAreaView内のpaddingと見た目を合わせる
     paddingHorizontal: 0,
     paddingTop: 0,
     paddingBottom: 0,
@@ -40,6 +39,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
+    paddingTop: 32,
     overflow: 'hidden',
     // iOS shadow
     shadowColor: '#333',
@@ -144,8 +144,6 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     [setStationAtom, setNavigationAtom]
   );
 
-  if (!nowHeader) return null;
-
   return (
     <>
       <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
@@ -158,18 +156,24 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
           <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
             {/* Stacked layout (fades out) */}
             <Animated.View style={stackedStyle}>
-              <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
+              <Typography style={styles.nowLabel}>
+                {nowHeader?.label ?? ''}
+              </Typography>
               <AnimatedTypography
                 style={[styles.nowStation, animatedStationFont]}
               >
-                {nowHeader.name}
+                {nowHeader?.name ?? ''}
               </AnimatedTypography>
             </Animated.View>
             {/* Inline layout (fades in) */}
             <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
-              <Typography style={styles.nowLabel}>{nowHeader.label}</Typography>
+              <Typography style={styles.nowLabel}>
+                {nowHeader?.label ?? ''}
+              </Typography>
               <Typography style={styles.nowStation}>
-                {isJapanese ? `${nowHeader.name}` : nowHeader.name}
+                {isJapanese
+                  ? `${nowHeader?.name ?? ''}`
+                  : (nowHeader?.name ?? '')}
               </Typography>
             </Animated.View>
           </View>
