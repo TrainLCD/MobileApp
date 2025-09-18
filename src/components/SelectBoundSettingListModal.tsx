@@ -64,7 +64,6 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   toggleAutoModeEnabled,
   onTrainTypeSelect,
 }) => {
-  console.log(trainType);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);

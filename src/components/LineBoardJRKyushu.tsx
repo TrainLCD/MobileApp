@@ -18,10 +18,10 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChervronTY';
+import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
-import NumberingIcon from './NumberingIcon';
 
 const useBarStyles = ({
   index,
