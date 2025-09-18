@@ -87,13 +87,16 @@ const TransferLineMark: React.FC<Props> = ({
     [dim, shouldGrayscale]
   );
   const imageStyle = useMemo(
-    () => ({
-      width: dim - 2,
-      height: dim - 2,
-      // すでに円形の場合は角丸にしない
-      borderRadius: isRadiusShape ? 0 : 5,
-    }),
-    [dim, isRadiusShape]
+    () =>
+      withOutline
+        ? {
+            width: dim - 2,
+            height: dim - 2,
+            // すでに円形の場合は角丸にしない
+            borderRadius: isRadiusShape ? 0 : 5,
+          }
+        : { width: dim, height: dim },
+    [dim, withOutline, isRadiusShape]
   );
 
   const numberingIconContainerStyle = useMemo(
@@ -154,7 +157,7 @@ const TransferLineMark: React.FC<Props> = ({
 
   if (mark.btUnionSignPaths) {
     return (
-      <View style={[containerStyle, withOutline && outlineStyle]}>
+      <View style={[containerStyle, withOutline ? outlineStyle : null]}>
         {withOutline ? (
           <View pointerEvents="none" style={[styles.outline, outlineStyle]} />
         ) : null}
@@ -171,7 +174,7 @@ const TransferLineMark: React.FC<Props> = ({
 
   if (mark.signPath) {
     return (
-      <View style={[containerStyle, withOutline && outlineStyle]}>
+      <View style={[containerStyle, withOutline ? outlineStyle : null]}>
         {withOutline ? (
           <View pointerEvents="none" style={[styles.outline, outlineStyle]} />
         ) : null}
