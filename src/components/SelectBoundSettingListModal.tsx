@@ -9,7 +9,7 @@ import Button from '../components/Button';
 import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
 type Props = {
   visible: boolean;
   onClose: () => void;
+  trainType: TrainType | null;
   trainTypes: TrainType[];
   isLoopLine: boolean;
   autoModeEnabled: boolean;
@@ -55,6 +56,7 @@ type Props = {
 export const SelectBoundSettingListModal: React.FC<Props> = ({
   visible,
   onClose,
+  trainType,
   trainTypes,
   isLoopLine,
   autoModeEnabled,
@@ -62,6 +64,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   toggleAutoModeEnabled,
   onTrainTypeSelect,
 }) => {
+  console.log(trainType);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
@@ -108,7 +111,13 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                   outline
                   onPress={() => setIsTrainTypeModalVisible(true)}
                 >
-                  {translate('trainTypeSettings')}
+                  {trainType
+                    ? translate('trainTypeIs', {
+                        trainTypeName: isJapanese
+                          ? (trainType.name ?? '')
+                          : (trainType.nameRoman ?? ''),
+                      })
+                    : translate('trainTypeSettings')}
                 </Button>
               ) : null}
               {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}

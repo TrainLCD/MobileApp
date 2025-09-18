@@ -570,6 +570,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}
         onClose={() => setSelectBoundSettingListModalVisible(false)}
+        trainType={trainType}
         trainTypes={fetchedTrainTypes ?? []}
         isLoopLine={isLoopLine}
         autoModeEnabled={autoModeEnabled}

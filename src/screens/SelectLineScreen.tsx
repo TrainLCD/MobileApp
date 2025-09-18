@@ -21,6 +21,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
@@ -31,7 +32,6 @@ import {
   getTrainTypesByStationId,
 } from '~/gen/proto/stationapi-StationAPI_connectquery';
 import type { SavedRoute } from '~/models/SavedRoute';
-import ErrorScreen from '../components/ErrorScreen';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { LineCard } from '../components/LineCard';
@@ -96,6 +96,12 @@ const ListHeader = React.memo(
   )
 );
 
+const NearbyStationLoader = () => (
+  <SkeletonPlaceholder borderRadius={4} speed={1500}>
+    <SkeletonPlaceholder.Item width="100%" height={72} />
+  </SkeletonPlaceholder>
+);
+
 const SelectLineScreen = () => {
   const [{ station: stationFromAtom }, setStationState] = useAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
@@ -131,7 +137,7 @@ const SelectLineScreen = () => {
     updateRoutes,
     isInitialized: isRoutesDBInitialized,
   } = useSavedRoutes();
-  const lineStationsByIdMap = useRef<Map<number, Station[]>>(new Map()).current;
+  const stationsRef = useRef<Station[][]>([]);
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   // SavedRouteモーダル用の状態
@@ -205,20 +211,20 @@ const SelectLineScreen = () => {
   useEffect(() => {
     const fetchStationsAsync = async () => {
       const lines = station?.lines ?? [];
+      stationsRef.current = await Promise.all(
+        lines.map(async (line) => {
+          const { stations } = await fetchStationsByLineId({
+            lineId: line.id,
+            stationId: line.station?.id,
+          });
 
-      for (const line of lines) {
-        if (lineStationsByIdMap.has(line.id)) continue;
-
-        const { stations } = await fetchStationsByLineId({
-          lineId: line.id,
-          stationId: line.station?.id,
-        });
-
-        lineStationsByIdMap.set(line.id, stations);
-      }
+          return stations;
+        })
+      );
     };
+
     fetchStationsAsync();
-  }, [station?.lines, fetchStationsByLineId, lineStationsByIdMap]);
+  }, [station?.lines, fetchStationsByLineId]);
 
   useEffect(() => {
     pipe(
@@ -284,9 +290,15 @@ const SelectLineScreen = () => {
     );
   }, []);
 
+  useEffect(() => {
+    if (nearbyStationFetchError) {
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    }
+  }, [nearbyStationFetchError]);
+
   const handleLineSelected = useCallback(
-    async (line: Line) => {
-      const stations = lineStationsByIdMap.get(line.id) ?? [];
+    async (line: Line, index: number) => {
+      const stations = stationsRef.current[index] ?? [];
       pendingLineRef.current = line ?? null;
       pendingStationRef.current = line.station ?? null;
       setPendingStations(stations);
@@ -309,7 +321,7 @@ const SelectLineScreen = () => {
         }));
       }
     },
-    [lineStationsByIdMap, fetchTrainTypes, setNavigationState]
+    [fetchTrainTypes, setNavigationState]
   );
 
   const handleTrainTypeSelect = useCallback(
@@ -437,34 +449,6 @@ const SelectLineScreen = () => {
     [openModalByLineId, openModalByTrainTypeId]
   );
 
-  const handleUpdateStation = useCallback(async () => {
-    const pos = await fetchCurrentLocation();
-    if (!pos) return;
-    const data = await fetchByCoords({
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude,
-      limit: 1,
-    });
-    const stationFromAPI = data.stations[0] ?? null;
-    setStationState((prev) => ({
-      ...prev,
-      station:
-        prev.station?.id !== stationFromAPI?.id ? stationFromAPI : prev.station,
-    }));
-    setNavigationState((prev) => ({
-      ...prev,
-      stationForHeader:
-        prev.stationForHeader?.id !== stationFromAPI?.id
-          ? stationFromAPI
-          : prev.stationForHeader,
-    }));
-  }, [
-    fetchByCoords,
-    fetchCurrentLocation,
-    setNavigationState,
-    setStationState,
-  ]);
-
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
     pendingStationRef.current = null;
@@ -475,15 +459,26 @@ const SelectLineScreen = () => {
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: Line }) => (
-      <LineCard
-        line={item}
-        onPress={() => handleLineSelected(item)}
-        stations={lineStationsByIdMap.get(item.id) ?? []}
-        testID={generateLineTestId(item)}
-      />
-    ),
-    [handleLineSelected, lineStationsByIdMap]
+    ({ item, index }: { item: Line; index: number }) => {
+      const stations = stationsRef.current[index];
+      if (!stations || fetchStationsByLineIdStatus === 'pending') {
+        return (
+          <SkeletonPlaceholder borderRadius={4} speed={1500}>
+            <SkeletonPlaceholder.Item width="100%" height={72} />
+          </SkeletonPlaceholder>
+        );
+      }
+
+      return (
+        <LineCard
+          line={item}
+          onPress={() => handleLineSelected(item, index)}
+          stations={stations}
+          testID={generateLineTestId(item)}
+        />
+      );
+    },
+    [handleLineSelected, fetchStationsByLineIdStatus]
   );
 
   const keyExtractor = useCallback((l: Line) => l.id.toString(), []);
@@ -517,19 +512,6 @@ const SelectLineScreen = () => {
     ]
   );
 
-  // Errors / Loading
-  if (nearbyStationFetchError) {
-    return (
-      <ErrorScreen
-        showStatus
-        title={translate('errorTitle')}
-        text={translate('apiErrorText')}
-        onRetryPress={handleUpdateStation}
-        isFetching={nearbyStationLoading}
-      />
-    );
-  }
-
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
@@ -539,6 +521,7 @@ const SelectLineScreen = () => {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={EmptyLineSeparator}
+          ListEmptyComponent={nearbyStationLoading ? NearbyStationLoader : null}
           ListHeaderComponent={
             <ListHeader
               headingTitle={headingTitle}

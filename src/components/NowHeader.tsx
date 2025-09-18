@@ -95,9 +95,9 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
   );
 
   const nowHeader = useMemo(() => {
-    if (!station) return null;
-    const re = /\([^()]*\)/g;
     const label = isJapanese ? 'ただいま' : 'Now at';
+    if (!station) return { label, name: '' };
+    const re = /\([^()]*\)/g;
     const name = isJapanese
       ? (station.name ?? '').replace(re, '')
       : (station.nameRoman ?? station.name ?? '').replace(re, '');
@@ -140,7 +140,12 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
         ...prev,
         station,
       }));
-      setNavigationAtom((prev) => ({ ...prev, stationForHeader: station }));
+      setNavigationAtom((prev) => ({
+        ...prev,
+        stationForHeader: station,
+        trainType: null,
+        fetchedTrainTypes: [],
+      }));
       setIsSearchModalVisible(false);
     },
     [setStationAtom, setNavigationAtom]
@@ -159,23 +164,23 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
             {/* Stacked layout (fades out) */}
             <Animated.View style={stackedStyle}>
               <Typography style={styles.nowLabel}>
-                {nowHeader?.label ?? ''}
+                {nowHeader.label ?? ''}
               </Typography>
               <AnimatedTypography
                 style={[styles.nowStation, animatedStationFont]}
               >
-                {nowHeader?.name ?? ''}
+                {nowHeader.name ?? ''}
               </AnimatedTypography>
             </Animated.View>
             {/* Inline layout (fades in) */}
             <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
               <Typography style={styles.nowLabel}>
-                {nowHeader?.label ?? ''}
+                {nowHeader.label ?? ''}
               </Typography>
               <Typography style={styles.nowStation}>
                 {isJapanese
-                  ? `${nowHeader?.name ?? ''}`
-                  : (nowHeader?.name ?? '')}
+                  ? `${nowHeader.name ?? ''}`
+                  : (nowHeader.name ?? '')}
               </Typography>
             </Animated.View>
           </View>
