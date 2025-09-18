@@ -69,11 +69,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
-    width: isTablet ? 42 : 33.7,
-    height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: isTablet ? -46 : -34,
-    bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
     flexWrap: 'wrap',
@@ -331,7 +327,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.75 * index) - widthScale(14),
+        left: widthScale(41.57 * index) - widthScale(14),
       };
     }
 
@@ -466,7 +462,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
         {stations.length - 1 === index ? (
           <BarTerminalSaikyo
-            style={styles.barTerminal}
+            width={isTablet ? 41.57 : 27.33}
+            height={isTablet ? 48 : 32}
+            style={[
+              styles.barTerminal,
+              {
+                left: barLeft + barWidth,
+                bottom: isTablet ? -52 : 32,
+              },
+            ]}
             lineColor={
               line?.color
                 ? lineColors[lineColors.length - 1] || line.color

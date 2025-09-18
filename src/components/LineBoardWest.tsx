@@ -47,19 +47,7 @@ const useBarWidth = () => {
   );
 };
 
-const barBottom = ((): number => {
-  if (isTablet) {
-    return 32;
-  }
-  return 48;
-})();
-
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return 32;
-  }
-  return 48;
-})();
+const barSize = isTablet ? 32 : 48;
 
 const styles = StyleSheet.create({
   root: {
@@ -68,14 +56,14 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    bottom: barBottom,
+    bottom: barSize,
     height: isTablet ? 64 : 32,
   },
   barTerminal: {
     position: 'absolute',
     width: 0,
     height: 0,
-    bottom: barTerminalBottom,
+    bottom: barSize,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
     borderLeftWidth: isTablet ? 32 : 16,
@@ -157,7 +145,7 @@ const styles = StyleSheet.create({
   },
   numberingContainer: {
     position: 'absolute',
-    bottom: isTablet ? 0 : barBottom + 44,
+    bottom: isTablet ? 0 : barSize + 44,
     marginLeft: isTablet ? -48 * 0.125 : -28 * 0.25,
     width: isTablet ? 50 * 1.25 : 28 * 1.75,
     height: isTablet ? 48 / 2 : 24 / 1.5,

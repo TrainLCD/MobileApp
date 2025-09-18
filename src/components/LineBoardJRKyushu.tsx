@@ -4,7 +4,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useScale } from '~/hooks/useScale';
-import { isEnAtom } from '~/store/selectors/isEn';
 import {
   useCurrentLine,
   useInterval,
@@ -12,16 +11,17 @@ import {
 } from '../hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
+import { isEnAtom } from '../store/selectors/isEn';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChervronTY';
-import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
+import NumberingIcon from './NumberingIcon';
 
 const useBarStyles = ({
   index,
@@ -71,11 +71,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
-    width: isTablet ? 42 : 33.7,
-    height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: isTablet ? -46 : -34,
-    bottom: isTablet ? -54 : 32,
   },
   stationNameContainer: {
     flexWrap: 'wrap',
@@ -115,6 +111,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
+    bottom: isTablet ? 198 : 32,
   },
   chevronArea: {
     width: isTablet ? 48 : 16,
@@ -138,6 +135,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  nameCommon: {
+    marginBottom: isTablet ? 45 : 90,
+  },
   longOrEnName: {
     flex: 1,
     width: '100%',
@@ -149,7 +149,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
 });
-
 interface StationNameProps {
   station: Station;
   en?: boolean;
@@ -179,7 +178,7 @@ const StationName: React.FC<StationNameProps> = ({
   const horizontalAditionalStyle = useMemo(
     () => ({
       width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom: isTablet ? dim.height / 6 : dim.height / 6,
+      marginBottom: isTablet ? dim.height / 9 : dim.height / 6,
     }),
     [dim.height]
   );
@@ -323,7 +322,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
   const { widthScale } = useScale();
-  const dim = useWindowDimensions();
 
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
@@ -334,7 +332,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.75 * index) - widthScale(14),
+        left: widthScale(41.57 * index) - widthScale(14),
       };
     }
 
@@ -358,6 +356,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
+  const dim = useWindowDimensions();
   const numberingObj = useMemo(
     () => station.stationNumbers?.[0],
     [station.stationNumbers]
@@ -368,6 +367,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       <View style={styles.stationNameContainer}>
         <View
           style={[
+            styles.nameCommon,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
@@ -483,7 +483,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
         {stations.length - 1 === index ? (
           <BarTerminalEast
-            style={styles.barTerminal}
+            width={isTablet ? 41 : 27}
+            height={isTablet ? 48 : 32}
+            style={[
+              styles.barTerminal,
+              {
+                left: barLeft + barWidth,
+                bottom: isTablet ? -52 : 32,
+              },
+            ]}
             lineColor={
               line.color
                 ? lineColors[lineColors.length - 1] || line.color
@@ -498,8 +506,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           styles.chevron,
           additionalChevronStyle,
           {
-            marginLeft: widthScale(14),
             bottom: isTablet ? dim.height / 3.5 + 32 : 32,
+            marginLeft: widthScale(14),
           },
         ]}
       >
@@ -535,7 +543,6 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
           styles.bar,
           {
             left: barLeft,
-            width: barWidth,
           },
         ]}
       />
@@ -546,11 +553,11 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
             : ['#000000ff', '#000000bb']
         }
         style={[
+          styles.bar,
           {
             left: barLeft,
             width: barWidth,
           },
-          styles.bar,
         ]}
       />
       {isLast ? (
