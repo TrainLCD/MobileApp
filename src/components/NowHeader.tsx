@@ -22,6 +22,7 @@ import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const styles = StyleSheet.create({
   nowHeaderContainer: {
@@ -166,11 +167,17 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
               <Typography style={styles.nowLabel}>
                 {nowHeader.label ?? ''}
               </Typography>
-              <AnimatedTypography
-                style={[styles.nowStation, animatedStationFont]}
-              >
-                {nowHeader.name ?? ''}
-              </AnimatedTypography>
+              {station ? (
+                <AnimatedTypography
+                  style={[styles.nowStation, animatedStationFont]}
+                >
+                  {nowHeader.name ?? ''}
+                </AnimatedTypography>
+              ) : (
+                <SkeletonPlaceholder borderRadius={4} speed={1500}>
+                  <SkeletonPlaceholder.Item width={128} height={32} />
+                </SkeletonPlaceholder>
+              )}
             </Animated.View>
             {/* Inline layout (fades in) */}
             <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
