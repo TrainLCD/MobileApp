@@ -11,7 +11,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet } from 'react-native';
+import {
+  Alert,
+  AppState,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+} from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
@@ -72,13 +79,11 @@ const MainScreen: React.FC = () => {
   const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
-  const _setLineState = useSetAtom(lineState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
   const trainType = useCurrentTrainType();
-
   const nextStation = useNextStation();
 
   useAutoMode();
@@ -121,7 +126,6 @@ const MainScreen: React.FC = () => {
     trainType,
   ]);
 
-  const _navigation = useNavigation();
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
@@ -268,13 +272,6 @@ const MainScreen: React.FC = () => {
     };
   }, []);
 
-  // const marginForMetroThemeStyle = useMemo(
-  //   () => ({
-  //     marginTop: theme === APP_THEME.TOKYO_METRO ? -4 : 0, // メトロのヘッダーにある下部の影を相殺する
-  //   }),
-  //   [theme]
-  // );
-
   useEffect(() => {
     // 横画面になるのを待たないと2回スクリーンロックがかかる
     if (!isRotated) {
@@ -371,6 +368,16 @@ const MainScreen: React.FC = () => {
     };
     f();
   }, [isRotated]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('focus', () => {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.LANDSCAPE
+      ).catch(console.warn);
+    });
+
+    return sub.remove;
+  }, []);
 
   const changeOperatingLine = useCallback(async (selectedStation: Station) => {
     const selectedLine = selectedStation.line;
