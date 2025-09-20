@@ -14,6 +14,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
@@ -22,7 +23,6 @@ import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 
 const styles = StyleSheet.create({
   nowHeaderContainer: {
