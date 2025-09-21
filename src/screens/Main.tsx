@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useKeepAwake} from 'expo-keep-awake';
+import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import {useAtom, useAtomValue} from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -18,10 +18,10 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import {isClip} from 'react-native-app-clip';
+import { isClip } from 'react-native-app-clip';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
-import {ASYNC_STORAGE_KEYS} from '~/constants';
+import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
   LineType,
   type Station,
@@ -50,13 +50,13 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
-import {APP_THEME} from '~/models/Theme';
+import { APP_THEME } from '~/models/Theme';
 import tuningState from '~/store/atoms/tuning';
-import {isJapanese, translate} from '~/translation';
-import {isDevApp} from '~/utils/isDevApp';
-import {getIsHoliday} from '~/utils/isHoliday';
-import {requestIgnoreBatteryOptimizationsAndroid} from '~/utils/native/android/ignoreBatteryOptimizationsModule';
-import {getIsLocal} from '~/utils/trainTypeString';
+import { isJapanese, translate } from '~/translation';
+import { isDevApp } from '~/utils/isDevApp';
+import { getIsHoliday } from '~/utils/isHoliday';
+import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
+import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
@@ -72,12 +72,12 @@ const MainScreen: React.FC = () => {
   const theme = useThemeStore();
   const isLEDTheme = theme === APP_THEME.LED;
 
-  const [{stations, selectedDirection, arrived}, _setStationState] =
+  const [{ stations, selectedDirection, arrived }, _setStationState] =
     useAtom(stationState);
-  const [{leftStations, bottomState}, setNavigationState] =
+  const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
-  const {devOverlayEnabled} = useAtomValue(tuningState);
-  const {untouchableModeEnabled} = useAtomValue(tuningState);
+  const { devOverlayEnabled } = useAtomValue(tuningState);
+  const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
@@ -90,7 +90,7 @@ const MainScreen: React.FC = () => {
 
   useTelemetrySender(true);
 
-  const {isYamanoteLine, isOsakaLoopLine, isMeijoLine} = useLoopLine();
+  const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
@@ -133,7 +133,7 @@ const MainScreen: React.FC = () => {
   useTTS();
   useUpdateLiveActivities();
 
-  const {pause: pauseBottomTimer} = useUpdateBottomState();
+  const { pause: pauseBottomTimer } = useUpdateBottomState();
 
   const transferStation = useMemo(
     () =>
@@ -187,7 +187,7 @@ const MainScreen: React.FC = () => {
       )
     ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
-        {text: 'OK'},
+        { text: 'OK' },
       ]);
     }
   }, [stationsFromCurrentStation, isRotated]);
@@ -306,7 +306,7 @@ const MainScreen: React.FC = () => {
               text: 'OK',
               onPress: async () => {
                 try {
-                  const {status} =
+                  const { status } =
                     await Location.requestBackgroundPermissionsAsync();
                   if (status === 'granted') {
                     await requestIgnoreBatteryOptimizationsAndroid();
@@ -315,7 +315,7 @@ const MainScreen: React.FC = () => {
                   Alert.alert(
                     translate('errorTitle'),
                     translate('failedToRequestPermission'),
-                    [{text: 'OK'}]
+                    [{ text: 'OK' }]
                   );
                 }
               },
@@ -325,7 +325,7 @@ const MainScreen: React.FC = () => {
       }
 
       if (Platform.OS === 'android' && bgPermStatus.granted) {
-        const {status: bgStatus} =
+        const { status: bgStatus } =
           await Location.getBackgroundPermissionsAsync();
         const dozeAlertDismissed = await AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
@@ -354,7 +354,7 @@ const MainScreen: React.FC = () => {
                     Alert.alert(
                       translate('announcementTitle'),
                       translate('failedToOpenSettings'),
-                      [{text: 'OK'}]
+                      [{ text: 'OK' }]
                     );
                   }
                 },
@@ -442,7 +442,7 @@ const MainScreen: React.FC = () => {
   const inner = useMemo(() => {
     switch (bottomState) {
       case 'LINE':
-        return <LineBoard hasTerminus={hasTerminus}/>;
+        return <LineBoard hasTerminus={hasTerminus} />;
       case 'TRANSFER':
         if (!transferStation) {
           return null;
@@ -456,9 +456,9 @@ const MainScreen: React.FC = () => {
           );
         }
 
-        return <Transfers theme={theme} onPress={handleTransferPress}/>;
+        return <Transfers theme={theme} onPress={handleTransferPress} />;
       case 'TYPE_CHANGE':
-        return <TypeChangeNotify/>;
+        return <TypeChangeNotify />;
       default:
         return <></>;
     }
@@ -471,8 +471,8 @@ const MainScreen: React.FC = () => {
   if (isLEDTheme) {
     return (
       <>
-        <Header/>
-        <LineBoard hasTerminus={hasTerminus}/>
+        <Header />
+        <LineBoard hasTerminus={hasTerminus} />
       </>
     );
   }
@@ -480,11 +480,11 @@ const MainScreen: React.FC = () => {
   return (
     <>
       <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
-        <Header/>
+        <Header />
         {inner}
       </Pressable>
 
-      {isDevApp && devOverlayEnabled && <DevOverlay/>}
+      {isDevApp && devOverlayEnabled && <DevOverlay />}
     </>
   );
 };
