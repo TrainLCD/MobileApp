@@ -1,31 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useKeepAwake } from 'expo-keep-awake';
+import {useKeepAwake} from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useAtom, useAtomValue } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import {
-  Alert,
-  AppState,
-  Linking,
-  Platform,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
-import { isClip } from 'react-native-app-clip';
+import {useAtom, useAtomValue} from 'jotai';
+import React, {useCallback, useEffect, useMemo, useRef, useState,} from 'react';
+import {Alert, AppState, Linking, Platform, Pressable, StyleSheet,} from 'react-native';
+import {isClip} from 'react-native-app-clip';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
-import {
-  LineType,
-  type Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
+import {LineType, type Station, StopCondition,} from '~/gen/proto/stationapi_pb';
 import {
   useAutoMode,
   useCurrentLine,
@@ -50,21 +33,21 @@ import {
   useUpdateLiveActivities,
 } from '~/hooks';
 import tuningState from '~/store/atoms/tuning';
-import { isDevApp } from '~/utils/isDevApp';
-import { getIsHoliday } from '~/utils/isHoliday';
-import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
+import {isDevApp} from '~/utils/isDevApp';
+import {getIsHoliday} from '~/utils/isHoliday';
+import {requestIgnoreBatteryOptimizationsAndroid} from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import { ASYNC_STORAGE_KEYS } from '../constants';
-import { APP_THEME } from '../models/Theme';
+import {ASYNC_STORAGE_KEYS} from '~/constants';
+import {APP_THEME} from '~/models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
+import {isJapanese, translate} from '~/translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
-import { getIsLocal } from '../utils/trainTypeString';
+import {getIsLocal} from '~/utils/trainTypeString';
 
 const MainScreen: React.FC = () => {
   const [isRotated, setIsRotated] = useState(false);
@@ -72,12 +55,12 @@ const MainScreen: React.FC = () => {
   const theme = useThemeStore();
   const isLEDTheme = theme === APP_THEME.LED;
 
-  const [{ stations, selectedDirection, arrived }, _setStationState] =
+  const [{stations, selectedDirection, arrived}, _setStationState] =
     useAtom(stationState);
-  const [{ leftStations, bottomState }, setNavigationState] =
+  const [{leftStations, bottomState}, setNavigationState] =
     useAtom(navigationState);
-  const { devOverlayEnabled } = useAtomValue(tuningState);
-  const { untouchableModeEnabled } = useAtomValue(tuningState);
+  const {devOverlayEnabled} = useAtomValue(tuningState);
+  const {untouchableModeEnabled} = useAtomValue(tuningState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
@@ -90,7 +73,7 @@ const MainScreen: React.FC = () => {
 
   useTelemetrySender(true);
 
-  const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
+  const {isYamanoteLine, isOsakaLoopLine, isMeijoLine} = useLoopLine();
 
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
@@ -133,7 +116,7 @@ const MainScreen: React.FC = () => {
   useTTS();
   useUpdateLiveActivities();
 
-  const { pause: pauseBottomTimer } = useUpdateBottomState();
+  const {pause: pauseBottomTimer} = useUpdateBottomState();
 
   const transferStation = useMemo(
     () =>
@@ -187,7 +170,7 @@ const MainScreen: React.FC = () => {
       )
     ) {
       Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
-        { text: 'OK' },
+        {text: 'OK'},
       ]);
     }
   }, [stationsFromCurrentStation, isRotated]);
@@ -306,7 +289,7 @@ const MainScreen: React.FC = () => {
               text: 'OK',
               onPress: async () => {
                 try {
-                  const { status } =
+                  const {status} =
                     await Location.requestBackgroundPermissionsAsync();
                   if (status === 'granted') {
                     await requestIgnoreBatteryOptimizationsAndroid();
@@ -315,7 +298,7 @@ const MainScreen: React.FC = () => {
                   Alert.alert(
                     translate('errorTitle'),
                     translate('failedToRequestPermission'),
-                    [{ text: 'OK' }]
+                    [{text: 'OK'}]
                   );
                 }
               },
@@ -325,7 +308,7 @@ const MainScreen: React.FC = () => {
       }
 
       if (Platform.OS === 'android' && bgPermStatus.granted) {
-        const { status: bgStatus } =
+        const {status: bgStatus} =
           await Location.getBackgroundPermissionsAsync();
         const dozeAlertDismissed = await AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
@@ -354,7 +337,7 @@ const MainScreen: React.FC = () => {
                     Alert.alert(
                       translate('announcementTitle'),
                       translate('failedToOpenSettings'),
-                      [{ text: 'OK' }]
+                      [{text: 'OK'}]
                     );
                   }
                 },
@@ -368,10 +351,12 @@ const MainScreen: React.FC = () => {
   }, [isRotated]);
 
   useEffect(() => {
-    const sub = AppState.addEventListener('focus', () => {
-      ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE
-      ).catch(console.warn);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        ).catch(console.warn);
+      }
     });
 
     return sub.remove;
@@ -440,7 +425,7 @@ const MainScreen: React.FC = () => {
   const inner = useMemo(() => {
     switch (bottomState) {
       case 'LINE':
-        return <LineBoard hasTerminus={hasTerminus} />;
+        return <LineBoard hasTerminus={hasTerminus}/>;
       case 'TRANSFER':
         if (!transferStation) {
           return null;
@@ -454,9 +439,9 @@ const MainScreen: React.FC = () => {
           );
         }
 
-        return <Transfers theme={theme} onPress={handleTransferPress} />;
+        return <Transfers theme={theme} onPress={handleTransferPress}/>;
       case 'TYPE_CHANGE':
-        return <TypeChangeNotify />;
+        return <TypeChangeNotify/>;
       default:
         return <></>;
     }
@@ -469,8 +454,8 @@ const MainScreen: React.FC = () => {
   if (isLEDTheme) {
     return (
       <>
-        <Header />
-        <LineBoard hasTerminus={hasTerminus} />
+        <Header/>
+        <LineBoard hasTerminus={hasTerminus}/>
       </>
     );
   }
@@ -478,11 +463,11 @@ const MainScreen: React.FC = () => {
   return (
     <>
       <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
-        <Header />
+        <Header/>
         {inner}
       </Pressable>
 
-      {isDevApp && devOverlayEnabled && <DevOverlay />}
+      {isDevApp && devOverlayEnabled && <DevOverlay/>}
     </>
   );
 };
