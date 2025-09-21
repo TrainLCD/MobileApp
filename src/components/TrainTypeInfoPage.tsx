@@ -219,10 +219,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       const curInReversed = reversedStops.findIndex(
         (s) => s.groupId === currentStation?.groupId
       );
-      return uniqBy(
-        reversedStops.slice(Math.max(curInReversed, 0)),
-        'id'
-      );
+      return uniqBy(reversedStops.slice(Math.max(curInReversed, 0)), 'id');
     }
 
     return uniqBy(stops.slice(Math.max(curIndex, 0)), 'id');
@@ -248,7 +245,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       return [];
     }
 
-    return uniqStationsByLine.slice(finalIndex + 1).map((s) => s.line!);
+    return uniqStationsByLine.slice(finalIndex + 1).map((s) => s.line) ?? null;
   }, [stopStations, finalStation]);
 
   const afterFinalStations = useMemo(() => {
@@ -272,12 +269,16 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       trainType?.lines.length
         ? uniqBy(
             stopStations
-              .filter((s): s is Station & { line: NonNullable<Station['line']> } => Boolean(s.line))
+              .filter(
+                (s): s is Station & { line: NonNullable<Station['line']> } =>
+                  Boolean(s.line)
+              )
               .map(
                 (s) =>
                   new Line({
                     ...s.line,
-                    trainType: trainType.lines.find((l) => l.id === s.line?.id)?.trainType,
+                    trainType: trainType.lines.find((l) => l.id === s.line?.id)
+                      ?.trainType,
                   })
               ),
             'id'
@@ -382,7 +383,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             renderItem={({ item }) => (
               <TrainTypeItem
                 outOfLineRange={afterFinalLines
-                  .map((l) => l.id)
+                  .map((l) => l?.id)
                   .includes(item.id)}
                 line={item}
               />
