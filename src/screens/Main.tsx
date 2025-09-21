@@ -376,7 +376,7 @@ const MainScreen: React.FC = () => {
       }
     });
 
-    return sub.remove;
+    return () => sub.remove();
   }, []);
 
   const changeOperatingLine = useCallback(async (selectedStation: Station) => {
