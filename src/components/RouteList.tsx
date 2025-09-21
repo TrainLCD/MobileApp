@@ -9,6 +9,13 @@ import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
+  list: {
+    width: '100%',
+    height: '100%',
+    alignSelf: 'center',
+    borderWidth: 1,
+    flex: 1,
+  },
   cell: { padding: 12 },
   stationNameText: {
     fontSize: RFValue(14),
@@ -152,14 +159,12 @@ export const RouteList = ({
   return (
     <FlatList
       initialNumToRender={routes.length}
-      style={{
-        width: '100%',
-        height: '100%',
-        alignSelf: 'center',
-        borderColor: isLEDTheme ? '#fff' : '#aaa',
-        borderWidth: 1,
-        flex: 1,
-      }}
+      style={[
+        styles.list,
+        {
+          borderColor: isLEDTheme ? '#fff' : '#aaa',
+        },
+      ]}
       data={routes}
       renderItem={renderItem}
       keyExtractor={keyExtractor}

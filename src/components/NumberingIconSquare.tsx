@@ -28,6 +28,9 @@ const styles = StyleSheet.create({
     borderWidth: isTablet ? 7 * 1.5 : 7,
     backgroundColor: 'white',
   },
+  tlcRoot: {
+    transform: [{ scale: 0.7 }],
+  },
   tlcContainer: {
     backgroundColor: '#231e1f',
     borderWidth: 1,
@@ -121,10 +124,12 @@ const NumberingIconSquare: React.FC<Props> = ({
   if (threeLetterCode) {
     return (
       <View
-        style={{
-          transform: [{ scale: 0.7 }],
-          transformOrigin: transformOrigin,
-        }}
+        style={[
+          styles.tlcRoot,
+          {
+            transformOrigin: transformOrigin,
+          },
+        ]}
       >
         <View style={styles.tlcContainer}>
           <Typography style={styles.tlcText}>{threeLetterCode}</Typography>

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -39,11 +39,9 @@ import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 
-const { width: screenWidth } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
   root: {
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowOpacity: 0.25,
     shadowOffset: {
       width: 0,
@@ -51,6 +49,7 @@ const styles = StyleSheet.create({
     },
     shadowRadius: 1,
     paddingBottom: 4,
+    zIndex: 9999,
   },
   gradientRoot: {
     paddingTop: 14,
@@ -84,7 +83,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   firstTextWrapper: {
-    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -97,7 +95,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   stateWrapper: {
-    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -500,6 +497,8 @@ const HeaderTokyoMetro: React.FC = () => {
     [arrived, currentStationNumber, currentLine, nextStation]
   );
 
+  const dim = useWindowDimensions();
+
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -543,7 +542,7 @@ const HeaderTokyoMetro: React.FC = () => {
           ) : null}
         </View>
         <View style={styles.bottom}>
-          <View style={styles.stateWrapper}>
+          <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
             <Animated.Text
               style={[
                 stateTopAnimatedStyles,
@@ -618,7 +617,9 @@ const HeaderTokyoMetro: React.FC = () => {
           </View>
 
           {selectedBound && firstStop ? (
-            <View style={styles.firstTextWrapper}>
+            <View
+              style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
+            >
               <Animated.Text style={[stateTopAnimatedStyles, styles.firstText]}>
                 {stateTextRight}
               </Animated.Text>
@@ -632,10 +633,12 @@ const HeaderTokyoMetro: React.FC = () => {
         </View>
       </LinearGradient>
       <View
-        style={{
-          ...styles.divider,
-          backgroundColor: currentLine?.color ?? '#b5b5ac',
-        }}
+        style={[
+          styles.divider,
+          {
+            backgroundColor: currentLine?.color ?? '#b5b5ac',
+          },
+        ]}
       />
     </View>
   );

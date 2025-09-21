@@ -49,14 +49,20 @@ const styles = StyleSheet.create({
   formGroup: {
     width: '100%',
   },
-  formHeading: { textAlign: 'left', fontSize: RFValue(16) },
+  formHeading: { fontSize: RFValue(16) },
   formItem: {
     padding: 8,
   },
   subHeading: {
     fontSize: RFValue(14),
-    textAlign: 'left',
     fontWeight: 'bold',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    paddingVertical: 4,
+    marginVertical: 8,
+    gap: 8,
+    flexWrap: 'wrap',
   },
 });
 
@@ -73,22 +79,16 @@ export const FilterModal: React.FC<Props> = ({
     ({ item }: { item: SearchQuery; index: number }) => {
       return (
         <View
-          style={{
-            ...styles.formItem,
-            paddingLeft: safeAreaLeft || 24,
-            paddingRight: safeAreaRight || 24,
-          }}
+          style={[
+            styles.formItem,
+            {
+              paddingLeft: safeAreaLeft || 24,
+              paddingRight: safeAreaRight || 24,
+            },
+          ]}
         >
           <Typography style={styles.subHeading}>{item.name}</Typography>
-          <View
-            style={{
-              flexDirection: 'row',
-              paddingVertical: 4,
-              marginVertical: 8,
-              gap: 8,
-              flexWrap: 'wrap',
-            }}
-          >
+          <View style={styles.chipsContainer}>
             {item.options.map((opt) => (
               <Chip
                 active={opt.active}
@@ -114,7 +114,7 @@ export const FilterModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
+      supportedOrientations={['portrait', 'landscape']}
     >
       <View style={styles.root}>
         <View
@@ -127,7 +127,7 @@ export const FilterModal: React.FC<Props> = ({
                   width: '80%',
                   maxHeight: '90%',
                   shadowOpacity: 0.25,
-                  shadowColor: '#000',
+                  shadowColor: '#333',
                   borderRadius: 16,
                 }
               : {

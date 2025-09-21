@@ -1,41 +1,41 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
-import { isEnAtom } from '~/store/selectors/isEn';
 import {
   useCurrentLine,
   useInterval,
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
-} from '../hooks';
+} from '~/hooks';
+import { useScale } from '~/hooks/useScale';
+import { isEnAtom } from '~/store/selectors/isEn';
+import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
-import { heightScale, widthScale } from '../utils/scale';
 import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChervronTY';
+import { ChevronTY } from './ChevronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 
 const useBarStyles = ({
   index,
 }: {
   index?: number;
 }): { left: number; width: number } => {
+  const { widthScale } = useScale();
+
   const left = useMemo(() => {
     if (index === 0) {
       return widthScale(-32);
     }
     return widthScale(-20);
-  }, [index]);
+  }, [index, widthScale]);
 
   const width = useMemo(() => {
     if (isTablet) {
@@ -47,7 +47,7 @@ const useBarStyles = ({
       }
     }
     return widthScale(62);
-  }, [index]);
+  }, [index, widthScale]);
   return { left, width };
 };
 
@@ -57,31 +57,9 @@ type Props = {
   hasTerminus: boolean;
 };
 
-const getBarTerminalRight = (): number => {
-  if (isTablet) {
-    return -42;
-  }
-  return -31;
-};
-
-const barBottom = ((): number => {
-  if (isTablet) {
-    return -52;
-  }
-  return 32;
-})();
-
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return -54;
-  }
-  return 32;
-})();
-
 const styles = StyleSheet.create({
   root: {
     height: '100%',
-    paddingBottom: isTablet ? screenHeight / 2.5 : undefined,
     flexDirection: 'row',
     justifyContent: isTablet ? 'flex-start' : undefined,
     marginLeft: 32,
@@ -89,30 +67,31 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    bottom: barBottom,
+    bottom: isTablet ? -52 : 32,
     height: isTablet ? 48 : 32,
   },
   barTerminal: {
-    width: isTablet ? 42 : 33.7,
-    height: isTablet ? 53 : 32,
     position: 'absolute',
-    right: getBarTerminalRight(),
-    bottom: barTerminalBottom,
   },
   stationNameContainer: {
-    width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    paddingBottom: isTablet ? 0 : 64,
+    width: `${100 / 9}%`,
   },
   stationName: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    marginLeft: 5,
+    marginBottom: Platform.select({ android: -6, ios: 0 }),
+  },
+  splittedStationName: {
+    marginLeft: 1,
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    transform: [{ rotate: '-55deg' }],
   },
   stationNameExtra: {
     fontSize: RFValue(10),
@@ -132,10 +111,9 @@ const styles = StyleSheet.create({
   chevron: {
     position: 'absolute',
     zIndex: 9999,
-    bottom: isTablet ? screenHeight / 2.5 + 32 : 32,
-    marginLeft: widthScale(14),
     width: isTablet ? 48 : 32,
     height: isTablet ? 48 : 32,
+    bottom: isTablet ? 198 : 32,
   },
   chevronArea: {
     width: isTablet ? 48 : 16,
@@ -144,7 +122,10 @@ const styles = StyleSheet.create({
   chevronAreaPass: {
     width: isTablet ? 48 : 16,
     height: isTablet ? 32 : 24,
-    marginLeft: isTablet ? 0 : widthScale(5),
+  },
+  chevronGradient: {
+    width: isTablet ? 48 : 32,
+    height: isTablet ? 36 : 24,
   },
   splittedStationNameWithExtraLang: {
     position: 'relative',
@@ -156,16 +137,30 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     fontWeight: 'bold',
     marginLeft: -5,
+    bottom: isTablet ? 0 : 64,
     textAlign: 'center',
   },
   marksContainer: { top: 38, position: 'absolute' },
+  nameCommon: {
+    marginBottom: isTablet ? undefined : 64,
+  },
+  longOrEnName: {
+    flex: 1,
+    width: '100%',
+    marginLeft: isTablet ? -24 : -16,
+    justifyContent: 'flex-end',
+  },
+  jaName: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
 });
+
 interface StationNameProps {
   station: Station;
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
-  hasNumbering?: boolean;
 }
 
 interface StationNameCellProps {
@@ -183,30 +178,25 @@ const StationName: React.FC<StationNameProps> = ({
   en,
   horizontal,
   passed,
-  hasNumbering,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+  const dim = useWindowDimensions();
 
-  const nameEnExtraStyle = useMemo(() => {
-    if (!isTablet) {
-      return {
-        width: heightScale(320),
-        marginBottom: 90,
-      };
-    }
-    return {
-      width: 250,
-      marginBottom: hasNumbering ? 110 : 100,
-    };
-  }, [hasNumbering]);
+  const horizontalAditionalStyle = useMemo(
+    () => ({
+      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
+    }),
+    [dim.height]
+  );
 
   if (en) {
     return (
       <Typography
         style={[
           styles.stationNameHorizontal,
-          nameEnExtraStyle,
           passed ? styles.grayColor : null,
+          horizontalAditionalStyle,
         ]}
       >
         {stationNameR}
@@ -225,8 +215,8 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameHorizontal,
-          nameEnExtraStyle,
           passed ? styles.grayColor : null,
+          horizontalAditionalStyle,
         ]}
       >
         {station.name}
@@ -252,7 +242,7 @@ const StationName: React.FC<StationNameProps> = ({
           </Typography>
         ))}
       </View>
-      <View>
+      <View style={styles.splittedStationName}>
         {station.nameKorean?.split('').map((c, j) => (
           <Typography
             style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
@@ -281,10 +271,19 @@ const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
 }) => {
+  const { widthScale } = useScale();
+
   if (getIsPass(station)) {
     return (
       <View style={styles.stationArea}>
-        <View style={styles.chevronAreaPass}>
+        <View
+          style={[
+            styles.chevronAreaPass,
+            {
+              marginLeft: isTablet ? 0 : widthScale(5),
+            },
+          ]}
+        >
           <PassChevronTY />
         </View>
         <View style={styles.marksContainer}>
@@ -302,7 +301,7 @@ const LineDot: React.FC<LineDotProps> = ({
     <View style={styles.stationArea}>
       <View style={styles.chevronArea}>
         <LinearGradient
-          style={{ width: isTablet ? 48 : 32, height: isTablet ? 36 : 24 }}
+          style={styles.chevronGradient}
           colors={
             passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
           }
@@ -353,6 +352,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   });
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
+  const { widthScale } = useScale();
 
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
@@ -363,7 +363,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.75 * index) - widthScale(14),
+        left: widthScale(41.57 * index) - widthScale(14),
       };
     }
 
@@ -378,7 +378,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return {
       left: widthScale(42 * index),
     };
-  }, [arrived, index, passed]);
+  }, [arrived, index, passed, widthScale]);
 
   const includesLongStationName = useMemo(
     () =>
@@ -387,6 +387,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
+  const dim = useWindowDimensions();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = useMemo(
     () => getStationNumberIndex(currentStation),
@@ -399,22 +400,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View key={station.id} style={styles.stationNameContainer}>
+      <View style={styles.stationNameContainer}>
         <View
-          style={
+          style={[
+            styles.nameCommon,
             isEn || includesLongStationName
-              ? {
-                  transform: [{ rotate: '-55deg' }],
-                }
-              : {}
-          }
+              ? styles.longOrEnName
+              : styles.jaName,
+          ]}
         >
           <StationName
             station={station}
             en={isEn}
             horizontal={includesLongStationName}
             passed={getIsPass(station) || shouldGrayscale}
-            hasNumbering={!!numberingObj}
           />
         </View>
         <Typography
@@ -430,35 +429,37 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         <LinearGradient
           colors={['#fff', '#000', '#000', '#fff']}
           locations={[0.5, 0.5, 0.5, 0.9]}
-          style={{
-            ...styles.bar,
-            left: barLeft,
-            width: barWidth,
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barLeft,
+              width: barWidth,
+            },
+          ]}
         />
         <LinearGradient
           colors={
             line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
           }
-          style={{
-            ...styles.bar,
-            left: barLeft,
-            width: barWidth,
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barLeft,
+              width: barWidth,
+            },
+          ]}
         />
         {(arrived && currentStationIndex < index + 1) || !passed ? (
           <LinearGradient
             colors={['#fff', '#000', '#000', '#fff']}
             locations={[0.5, 0.5, 0.5, 0.9]}
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barWidth,
-              borderTopLeftRadius: 0,
-              borderBottomLeftRadius: 0,
-            }}
+            style={[
+              styles.bar,
+              {
+                left: barLeft,
+                width: barWidth,
+              },
+            ]}
           />
         ) : null}
         {arrived &&
@@ -469,11 +470,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             colors={
               line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
             }
-            style={{
-              ...styles.bar,
-              left: barLeft,
-              width: barWidth / 2.5,
-            }}
+            style={[
+              styles.bar,
+              {
+                left: barLeft,
+                width: barWidth / 2.5,
+              },
+            ]}
           />
         ) : null}
         {(arrived && currentStationIndex < index + 1) || !passed ? (
@@ -486,21 +489,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   ]
                 : ['#000000ff', '#000000bb']
             }
-            style={{
-              ...styles.bar,
-              left:
-                currentStationIndex !== 0 &&
-                currentStationIndex === index &&
-                currentStationIndex !== stations.length - 1
-                  ? barLeft + barWidth / 2.5
-                  : barLeft,
-              width:
-                currentStationIndex !== 0 &&
-                currentStationIndex === index &&
-                currentStationIndex !== stations.length - 1
-                  ? barWidth / 2.5
-                  : barWidth,
-            }}
+            style={[
+              styles.bar,
+              {
+                left:
+                  currentStationIndex !== 0 &&
+                  currentStationIndex === index &&
+                  currentStationIndex !== stations.length - 1
+                    ? barLeft + barWidth / 2.5
+                    : barLeft,
+                width:
+                  currentStationIndex !== 0 &&
+                  currentStationIndex === index &&
+                  currentStationIndex !== stations.length - 1
+                    ? barWidth / 2.5
+                    : barWidth,
+              },
+            ]}
           />
         ) : null}
         <LineDot
@@ -512,7 +517,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         />
         {stations.length - 1 === index ? (
           <BarTerminalEast
-            style={styles.barTerminal}
+            width={isTablet ? 41 : 27}
+            height={isTablet ? 48 : 32}
+            style={[
+              styles.barTerminal,
+              {
+                left: barLeft + barWidth,
+                bottom: isTablet ? -52 : 32,
+              },
+            ]}
             lineColor={
               line.color
                 ? lineColors[lineColors.length - 1] || line.color
@@ -522,7 +535,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         ) : null}
       </View>
-      <View style={[styles.chevron, additionalChevronStyle]}>
+      <View
+        style={[
+          styles.chevron,
+          additionalChevronStyle,
+          {
+            bottom: isTablet ? dim.height / 3.5 + 32 : 32,
+            marginLeft: widthScale(14),
+          },
+        ]}
+      >
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
           <ChevronTY color={chevronColor} />
@@ -551,13 +573,12 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: barLeft,
+          },
+        ]}
       />
       <LinearGradient
         colors={
@@ -565,11 +586,13 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
             ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
             : ['#000000ff', '#000000bb']
         }
-        style={{
-          ...styles.bar,
-          left: barLeft,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: barLeft,
+            width: barWidth,
+          },
+        ]}
       />
       {isLast ? (
         <BarTerminalEast
@@ -590,6 +613,8 @@ const LineBoardToei: React.FC<Props> = ({
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
+
+  const dim = useWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -654,7 +679,14 @@ const LineBoardToei: React.FC<Props> = ({
   );
 
   return (
-    <View style={styles.root}>
+    <View
+      style={[
+        styles.root,
+        {
+          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+        },
+      ]}
+    >
       {stationsWithEmpty.map(stationNameCellForMap)}
     </View>
   );

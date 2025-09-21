@@ -591,7 +591,7 @@ const HeaderJRWest: React.FC = () => {
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}
       >
-        <View style={{ ...styles.top, left: mark ? 64 : 32 }}>
+        <View style={[styles.top, { left: mark ? 64 : 32 }]}>
           {mark ? (
             <TransferLineMark
               line={currentLine}

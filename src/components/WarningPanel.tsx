@@ -1,13 +1,15 @@
+import { Orientation } from 'expo-screen-orientation';
 import React from 'react';
 import {
-  Dimensions,
   type GestureResponderEvent,
+  Pressable,
   StyleSheet,
-  TouchableWithoutFeedback,
-  View,
+  useWindowDimensions,
 } from 'react-native';
-import { translate } from '../translation';
-import { RFValue } from '../utils/rfValue';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { translate } from '~/translation';
+import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 interface Props {
@@ -36,7 +38,6 @@ const WarningPanel: React.FC<Props> = ({
 
   const styles = StyleSheet.create({
     root: {
-      width: Dimensions.get('screen').width / 2,
       backgroundColor: '#333',
       borderColor,
       borderLeftWidth: 16,
@@ -60,19 +61,34 @@ const WarningPanel: React.FC<Props> = ({
     },
   });
 
+  const dim = useWindowDimensions();
+  const orientation = useDeviceOrientation();
+  const insets = useSafeAreaInsets();
+
   return (
-    <TouchableWithoutFeedback onPress={onPress}>
-      <View
-        style={{
-          ...styles.root,
-        }}
-      >
-        <Typography style={styles.message}>{text}</Typography>
-        <Typography style={styles.dismissMessage}>
-          {translate('tapToClose')}
-        </Typography>
-      </View>
-    </TouchableWithoutFeedback>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${text}. ${translate('tapToClose')}`}
+      style={[
+        styles.root,
+        {
+          width:
+            orientation &&
+            (orientation === Orientation.LANDSCAPE_LEFT ||
+              orientation === Orientation.LANDSCAPE_RIGHT)
+              ? dim.width / 2
+              : dim.width - 48,
+          right: insets.right,
+          bottom: insets.bottom,
+        },
+      ]}
+    >
+      <Typography style={styles.message}>{text}</Typography>
+      <Typography style={styles.dismissMessage}>
+        {translate('tapToClose')}
+      </Typography>
+    </Pressable>
   );
 };
 

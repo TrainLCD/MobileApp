@@ -63,10 +63,12 @@ const Loading = ({
 
   return (
     <View
-      style={{
-        ...styles.loading,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
+      style={[
+        styles.loading,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        },
+      ]}
     >
       <ActivityIndicator size="large" />
       {message ? (

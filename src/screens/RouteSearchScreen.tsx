@@ -1,134 +1,118 @@
-import { useMutation, useQuery } from '@connectrpc/connect-query';
-import { StackActions, useNavigation } from '@react-navigation/native';
-import { useSetAtom } from 'jotai';
+import { useMutation } from '@connectrpc/connect-query';
+import { useAtomValue } from 'jotai';
+import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  type NativeSyntheticEvent,
-  Platform,
-  StyleSheet,
-  TextInput,
-  type TextInputChangeEventData,
-  type TextInputKeyPressEventData,
-  View,
-} from 'react-native';
+import { Alert, SafeAreaView, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
-import type { Route, Station } from '~/gen/proto/stationapi_pb';
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
+import { EmptyResult } from '~/components/EmptyResult';
+import FooterTabBar from '~/components/FooterTabBar';
+import { Heading } from '~/components/Heading';
+import { LineCard } from '~/components/LineCard';
+import { NowHeader } from '~/components/NowHeader';
+import { SearchBar } from '~/components/SearchBar';
+import { SelectBoundModal } from '~/components/SelectBoundModal';
+import { TrainTypeListModal } from '~/components/TrainTypeListModal';
+import { type Line, Station, type TrainType } from '~/gen/proto/stationapi_pb';
 import {
   getRoutes,
-  getStationByIdList,
+  getStationsByLineGroupId,
+  getStationsByLineId,
   getStationsByName,
 } from '~/gen/proto/stationapi-StationAPI_connectquery';
-import FAB from '../components/FAB';
-import { Heading } from '../components/Heading';
-import { RouteListModal } from '../components/RouteListModal';
-import { StationList } from '../components/StationList';
-import { FONTS } from '../constants';
-import {
-  useCurrentStation,
-  useGetStationsWithTermination,
-  useThemeStore,
-  useTrainTypeStations,
-} from '../hooks';
-import type { LineDirection } from '../models/Bound';
+import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
-import { groupStations } from '../utils/groupStations';
-import { RFValue } from '../utils/rfValue';
+import { isJapanese, translate } from '../translation';
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 48,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
     flex: 1,
-    alignItems: 'center',
   },
-  settingItem: {
-    width: '65%',
-    height: '100%',
-    alignItems: 'center',
+  nonLEDBg: {
+    backgroundColor: '#FAFAFA',
   },
-  heading: {
-    marginBottom: 24,
+  listHeaderContainer: {
+    marginTop: 16,
   },
-  stationNameInput: {
-    borderWidth: 1,
-    padding: 12,
-    width: '100%',
-    fontSize: RFValue(14),
+  searchBarContainer: {
+    marginBottom: 48,
   },
-  emptyText: {
-    fontSize: RFValue(16),
-    textAlign: 'center',
-    marginTop: 12,
+  listContainerStyle: {
+    paddingHorizontal: 24,
+    paddingBottom: 128,
+  },
+  searchResultHeading: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 16,
   },
 });
 
 const RouteSearchScreen = () => {
-  const [query, setQuery] = useState('');
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
+  const [selectBoundModalVisible, setSelectBoundModalVisible] = useState(false);
+  const [trainTypeListModalVisible, setTrainTypeListModalVisible] =
+    useState(false);
+  const [selectedLine, setSelectedLine] = useState<Line | null>(null);
+  const [searchResults, setSearchResults] = useState<Station[]>([]);
+  const [selectedTrainType, setSelectedTrainType] = useState<TrainType | null>(
+    null
+  );
 
-  const navigation = useNavigation();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false);
-  const setStationState = useSetAtom(stationState);
-  const setLineState = useSetAtom(lineState);
-  const setNavigationState = useSetAtom(navigationState);
+  const { station } = useAtomValue(stationState);
 
-  const currentStation = useCurrentStation();
-  const getTerminatedStations = useGetStationsWithTermination();
-
-  const { mutateAsync: fetchStationByIdList } = useMutation(getStationByIdList);
-
-  const {
-    fetchStations: fetchStationsByLineGroupId,
-    isLoading: isTrainTypesLoading,
-    error: fetchTrainTypesError,
-  } = useTrainTypeStations();
-
-  const {
-    data: byNameData,
-    status: byNameLoadingStatus,
-    mutate: fetchByName,
-    error: byNameError,
-  } = useMutation(getStationsByName);
+  const scrollY = useSharedValue(0);
 
   const {
     data: routesData,
-    isLoading: isRoutesLoading,
-    error: fetchRoutesError,
-  } = useQuery(
-    getRoutes,
-    {
-      fromStationGroupId: currentStation?.groupId,
-      toStationGroupId: selectedStation?.groupId,
+    mutate: mutateRoutes,
+    status: mutateRoutesStatus,
+    error: mutateRoutesError,
+  } = useMutation(getRoutes);
+  const {
+    status: byNameLoadingStatus,
+    mutateAsync: fetchByName,
+    error: byNameError,
+  } = useMutation(getStationsByName);
+  const {
+    data: stationsByLineIdData,
+    mutate: mutateStationsByLineId,
+    status: mutateStationsByLineIdStatus,
+    error: mutateStationsByLineIdError,
+  } = useMutation(getStationsByLineId);
+
+  const {
+    data: stationsByLineGroupIdData,
+    mutate: mutateStationsByLineGroupId,
+    status: mutateStationsByLineGroupIdStatus,
+    error: mutateStationsByLineGroupIdError,
+  } = useMutation(getStationsByLineGroupId);
+
+  const handleSearch = useCallback(
+    async (query: string) => {
+      setSearchResults([]);
+
+      if (!query.trim().length) {
+        return [] as Station[];
+      }
+      const { stations } = await fetchByName({
+        stationName: query.trim(),
+        limit: Number(SEARCH_STATION_RESULT_LIMIT),
+        fromStationGroupId: station?.groupId,
+      });
+
+      setSearchResults(uniqBy(stations, 'id'));
     },
-    { enabled: !!currentStation && !!selectedStation }
+    [fetchByName, station?.groupId]
   );
-
-  const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
-
-  const handleSubmit = useCallback(() => {
-    if (!currentStation || !query.trim().length) {
-      return;
-    }
-    fetchByName({
-      stationName: query.trim(),
-      limit: Number(SEARCH_STATION_RESULT_LIMIT),
-      fromStationGroupId: currentStation?.groupId,
-    });
-  }, [currentStation, fetchByName, query]);
 
   useEffect(() => {
     if (byNameError) {
@@ -136,230 +120,204 @@ const RouteSearchScreen = () => {
     }
   }, [byNameError]);
 
-  // NOTE: 今いる駅は出なくていい
-  const groupedStations = useMemo(
-    () =>
-      groupStations(byNameData?.stations ?? []).filter(
-        (sta) => sta.groupId !== currentStation?.groupId
-      ),
-    [byNameData?.stations, currentStation?.groupId]
-  );
+  const handleLineSelected = useCallback(
+    async (selectedStation: Station) => {
+      setSelectedLine(selectedStation.line ?? null);
 
-  const handleStationPress = useCallback(
-    async (stationFromSearch: Station) => {
-      setLineState((prev) => ({
-        ...prev,
-        selectedLine: stationFromSearch.line ?? null,
-      }));
-      setSelectedStation(stationFromSearch);
-      setIsRouteListModalVisible(true);
-    },
-    [setLineState]
-  );
-
-  const onKeyPress = useCallback(
-    (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-      if (e.nativeEvent.key === 'Enter') {
-        handleSubmit();
-      }
-    },
-    [handleSubmit]
-  );
-
-  const onChange = useCallback(
-    (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-      setQuery(e.nativeEvent.text);
-    },
-    []
-  );
-
-  const handleSelect = useCallback(
-    async (route: Route | undefined, asTerminus: boolean) => {
-      const stop = route?.stops.find(
-        (s) => s.groupId === currentStation?.groupId
-      );
-      if (!stop) {
-        return;
-      }
-
-      const trainType = stop.trainType;
-
-      if (!trainType?.id) {
-        const { stations } = await fetchStationByIdList({
-          ids: route?.stops.map((r) => r.id),
+      if (selectedStation.hasTrainTypes) {
+        setTrainTypeListModalVisible(true);
+        mutateRoutes({
+          fromStationGroupId: station?.groupId,
+          toStationGroupId: selectedStation.groupId,
         });
-        const stationInRoute =
-          stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
-
-        const direction: LineDirection | null = (() => {
-          const fromIdx = (stations ?? []).findIndex(
-            (s) => s.groupId === currentStation?.groupId
-          );
-          const toIdx = (stations ?? []).findIndex(
-            (s) => s.groupId === selectedStation?.groupId
-          );
-          if (fromIdx === -1 || toIdx === -1) {
-            return null;
-          }
-          return fromIdx < toIdx ? 'INBOUND' : 'OUTBOUND';
-        })();
-
-        if (!direction) {
-          return;
-        }
-
-        setNavigationState((prev) => ({ ...prev, trainType: null }));
-
-        const terminatedStations = getTerminatedStations(
-          selectedStation,
-          stations ?? []
-        );
-
-        setStationState((prev) => ({
-          ...prev,
-          station: stationInRoute,
-          stations: asTerminus ? terminatedStations : stations,
-          selectedDirection: direction,
-          selectedBound: asTerminus
-            ? direction === 'INBOUND'
-              ? terminatedStations[terminatedStations.length - 1]
-              : terminatedStations[0]
-            : direction === 'INBOUND'
-              ? (stations[stations.length - 1] ?? null)
-              : (stations[0] ?? null),
-        }));
-        navigation.dispatch(
-          StackActions.replace('MainStack', { screen: 'Main' })
-        );
         return;
       }
 
-      const { stations } = await fetchStationsByLineGroupId({
+      setSelectBoundModalVisible(true);
+
+      mutateStationsByLineId({
+        lineId: selectedStation.line?.id,
+        stationId: selectedStation?.id,
+      });
+    },
+    [mutateRoutes, mutateStationsByLineId, station?.groupId]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Station }) => {
+      const line = item.line;
+
+      if (!line) return null;
+
+      return (
+        <LineCard
+          line={line}
+          title={isJapanese ? item.name : (item.nameRoman ?? '')}
+          subtitle={isJapanese ? line.nameShort : (line.nameRoman ?? '')}
+          onPress={() => handleLineSelected(item)}
+        />
+      );
+    },
+    [handleLineSelected]
+  );
+
+  const handleTrainTypeSelected = useCallback(
+    async (trainType: TrainType) => {
+      setSelectedTrainType(trainType);
+      mutateStationsByLineGroupId({
         lineGroupId: trainType.groupId,
       });
 
-      const station =
-        stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
-
-      const direction: LineDirection | null = (() => {
-        const fromIdx = (stations ?? []).findIndex(
-          (s) => s.groupId === currentStation?.groupId
-        );
-        const toIdx = (stations ?? []).findIndex(
-          (s) => s.groupId === selectedStation?.groupId
-        );
-        if (fromIdx === -1 || toIdx === -1) {
-          return null;
-        }
-        return fromIdx < toIdx ? 'INBOUND' : 'OUTBOUND';
-      })();
-
-      if (!direction) {
-        return;
-      }
-
-      const terminatedStations = getTerminatedStations(
-        selectedStation,
-        stations ?? []
-      );
-
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType,
-        stationForHeader: station,
-      }));
-      setStationState((prev) => ({
-        ...prev,
-        station,
-        stations: asTerminus ? terminatedStations : stations,
-        selectedDirection: direction,
-        selectedBound: asTerminus
-          ? direction === 'INBOUND'
-            ? terminatedStations[terminatedStations.length - 1]
-            : terminatedStations[0]
-          : direction === 'INBOUND'
-            ? stations[stations.length - 1]
-            : stations[0],
-      }));
-      navigation.dispatch(
-        StackActions.replace('MainStack', { screen: 'Main' })
-      );
+      setTrainTypeListModalVisible(false);
+      setSelectBoundModalVisible(true);
     },
-    [
-      currentStation?.groupId,
-      fetchStationByIdList,
-      fetchStationsByLineGroupId,
-      navigation,
-      selectedStation?.groupId,
-      setNavigationState,
-      setStationState,
-      selectedStation,
-      getTerminatedStations,
-    ]
+    [mutateStationsByLineGroupId]
+  );
+
+  const keyExtractor = useCallback((s: Station) => s.id.toString(), []);
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
+
+  const currentStationInRoutes = useMemo<Station | null>(() => {
+    if (!station || !selectedLine) return null;
+
+    const notConnectedToOthersLine = station.lines.find(
+      (l) => l.id === selectedLine.id
+    );
+
+    if (notConnectedToOthersLine) {
+      return new Station({ ...station, line: notConnectedToOthersLine });
+    }
+
+    const currentIds = new Set(
+      (station.lines ?? []).map((l) => l?.id).filter(Boolean)
+    );
+    const routeIdSet = new Set(
+      (routesData?.routes ?? [])
+        .map((r) => r.stops)
+        .filter((stops) => stops.some((s) => s.line?.id === selectedLine.id))
+        .flatMap((stops) => (stops ?? []).map((s) => s.line?.id))
+        .filter(Boolean)
+    );
+
+    const commonIds = [...currentIds].filter((id) => routeIdSet.has(id));
+    const commonLine = (station.lines ?? []).find((l) =>
+      commonIds.includes(l.id)
+    );
+
+    if (!commonLine) return new Station({ ...station, line: selectedLine });
+
+    return new Station({ ...station, line: commonLine });
+  }, [station, selectedLine, routesData?.routes]);
+
+  const destinationInRoutes = useMemo<Station | null>(() => {
+    if (!selectedLine) return null;
+
+    return (
+      routesData?.routes
+        .flatMap((r) => r.stops)
+        .find((s) => s.id === selectedLine.station?.id) ?? null
+    );
+  }, [selectedLine, routesData?.routes]);
+
+  const trainTypes = useMemo(
+    () =>
+      routesData?.routes
+        .map(
+          (r) =>
+            r.stops.find(
+              (rs) => rs.line?.id === currentStationInRoutes?.line?.id
+            )?.trainType
+        )
+        .filter((tt): tt is TrainType => !!tt) ?? [],
+    [routesData, currentStationInRoutes?.line?.id]
   );
 
   return (
     <>
-      <View
-        style={{
-          ...styles.root,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-        }}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.settingItem}
-        >
-          <Heading style={styles.heading}>
-            {translate('routeSearchTitle')}
-          </Heading>
-          <TextInput
-            placeholder={translate('searchDestinationPlaceholder')}
-            value={query}
-            style={{
-              ...styles.stationNameInput,
-              borderColor: isLEDTheme ? '#fff' : '#aaa',
-              color: isLEDTheme ? '#fff' : '#000',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
-            placeholderTextColor={isLEDTheme ? '#fff' : undefined}
-            onChange={onChange}
-            onSubmitEditing={handleSubmit}
-            onKeyPress={onKeyPress}
-          />
-          {byNameLoadingStatus === 'pending' ? (
-            <View
-              style={{
-                ...StyleSheet.absoluteFillObject,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <ActivityIndicator size="large" />
+      <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
+        <Animated.FlatList<Station>
+          style={StyleSheet.absoluteFill}
+          data={searchResults}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          ItemSeparatorComponent={EmptyLineSeparator}
+          ListEmptyComponent={
+            <EmptyResult statuses={[byNameLoadingStatus, mutateRoutesStatus]} />
+          }
+          ListHeaderComponent={
+            <View style={styles.listHeaderContainer}>
+              <View style={styles.searchBarContainer}>
+                <SearchBar onSearch={handleSearch} />
+              </View>
+              <Heading style={styles.searchResultHeading}>
+                {translate('searchResult')}
+              </Heading>
             </View>
-          ) : (
-            <StationList
-              withoutTransfer
-              fromRoutes
-              data={groupedStations}
-              onSelect={handleStationPress}
-            />
-          )}
-        </KeyboardAvoidingView>
-      </View>
-      <FAB onPress={onPressBack} icon="close" disabled={isTrainTypesLoading} />
-      {selectedStation && (
-        <RouteListModal
-          finalStation={selectedStation}
-          routes={routesData?.routes ?? []}
-          visible={isRouteListModalVisible}
-          isRoutesLoading={isRoutesLoading}
-          isTrainTypesLoading={isTrainTypesLoading}
-          error={fetchRoutesError || fetchTrainTypesError}
-          onClose={() => setIsRouteListModalVisible(false)}
-          onSelect={handleSelect}
+          }
+          ListFooterComponent={EmptyLineSeparator}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={[
+            styles.listContainerStyle,
+            nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
+          ]}
+        />
+      </SafeAreaView>
+
+      {station && (
+        <NowHeader
+          station={station}
+          onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height)}
+          scrollY={scrollY}
         />
       )}
+      {/* フッター */}
+      <FooterTabBar active="search" />
+
+      <SelectBoundModal
+        visible={selectBoundModalVisible}
+        onClose={() => setSelectBoundModalVisible(false)}
+        station={currentStationInRoutes}
+        line={selectedLine}
+        stations={
+          stationsByLineGroupIdData?.stations ??
+          stationsByLineIdData?.stations ??
+          []
+        }
+        trainType={selectedTrainType}
+        destination={destinationInRoutes}
+        loading={
+          mutateStationsByLineIdStatus === 'pending' ||
+          mutateStationsByLineGroupIdStatus === 'pending' ||
+          mutateRoutesStatus === 'pending'
+        }
+        error={
+          mutateStationsByLineIdError ??
+          mutateStationsByLineGroupIdError ??
+          mutateRoutesError ??
+          null
+        }
+        onTrainTypeSelect={handleTrainTypeSelected}
+      />
+      <TrainTypeListModal
+        visible={trainTypeListModalVisible}
+        line={currentStationInRoutes?.line ?? null}
+        trainTypes={trainTypes}
+        destination={destinationInRoutes}
+        onClose={() => {
+          setSelectedLine(null);
+          setTrainTypeListModalVisible(false);
+        }}
+        onSelect={handleTrainTypeSelected}
+        loading={
+          mutateStationsByLineIdStatus === 'pending' ||
+          mutateRoutesStatus === 'pending'
+        }
+      />
     </>
   );
 };

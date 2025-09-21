@@ -41,7 +41,8 @@ export const useTTSText = (
 ): [string, string] | undefined[] => {
   const theme = useThemeStore();
 
-  const { selectedBound: selectedBoundOrigin } = useAtomValue(stationState);
+  const { selectedBound: selectedBoundOrigin, stations } =
+    useAtomValue(stationState);
   const station = useCurrentStation();
   const currentLineOrigin = useCurrentLine();
 
@@ -50,7 +51,7 @@ export const useTTSText = (
   const currentTrainTypeOrigin = useCurrentTrainType();
   const loopLineBoundJa = useLoopLineBound(false);
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
   const nextStationOrigin = useNextStation();
   const isNextStopTerminus = useIsTerminus(nextStationOrigin);
   const { isLoopLine, isPartiallyLoopLine } = useLoopLine();

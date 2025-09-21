@@ -38,8 +38,8 @@
   "transfer": "Transfer",
   "menuNotice": "From the next screen, press and hold the screen to open the menu.",
   "back": "Back",
-  "notifySettings": "Notification",
-  "trainTypeSettings": "Select train type",
+  "notifySettings": "Arrival notification settings",
+  "trainTypeSettings": " Train type settings",
   "viewStopStations": "See all stops",
   "allStops": "All stops",
   "notifySettingsTitle": "Select the station you want to receive the arrival notification",
@@ -187,5 +187,12 @@
   "communityRoutes": "Community routes",
   "confirmDeleteRouteText": "Are you sure you want to remove \"%{routeName}\" from your saved routes?",
   "routeSavedText": "Saved the route \"%{routeName}\".",
-  "routeDeletedText": "Deleted the \"%{routeName}\"."
+  "routeDeletedText": "Deleted the \"%{routeName}\".",
+  "noPresets": "No presets available",
+  "close": "Close",
+  "searchResult": "Search Results",
+  "emptySearchResult": "No matching information was found.",
+  "stationNameSearchPlaceholder": "Where are you?",
+  "routeSearchPlaceholder": "Where to?",
+  "trainTypeIs": "Train type: %{trainTypeName}"
 }

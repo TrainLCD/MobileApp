@@ -7,14 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  Dimensions,
-  Linking,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
@@ -43,18 +36,8 @@ import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
-import DevOverlay from './DevOverlay';
-import Header from './Header';
 import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';
-
-const styles = StyleSheet.create({
-  root: {
-    overflow: 'hidden',
-    height: Dimensions.get('screen').height,
-  },
-});
 
 type Props = {
   children: React.ReactNode;
@@ -62,8 +45,7 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
-  const { devOverlayEnabled, untouchableModeEnabled } =
-    useAtomValue(tuningState);
+  const { untouchableModeEnabled } = useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const [reportModalShow, setReportModalShow] = useState(false);
@@ -83,6 +65,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const { isAppLatest } = useAtomValue(navigationState);
   const viewShotRef = useRef<ViewShot>(null);
+
+  const styles = StyleSheet.create({
+    container: { width: '100%', height: '100%' },
+  });
 
   const handleReport = useCallback(() => {
     const captureError = (err: unknown) =>
@@ -253,7 +239,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                   if (Platform.OS === 'ios') {
                     navigation.dispatch(
                       StackActions.replace('MainStack', {
-                        screen: 'SelectBound',
+                        screen: 'SelectLine',
                       })
                     );
                     break;
@@ -293,10 +279,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     [
       handleReport,
       handleShare,
-      navigation,
       selectedBound,
       showActionSheetWithOptions,
       untouchableModeEnabled,
+      navigation.dispatch,
     ]
   );
 
@@ -456,9 +442,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         onHandlerStateChange={onLongPress}
         minDurationMs={LONG_PRESS_DURATION}
       >
-        <View style={styles.root}>
-          {isDevApp && devOverlayEnabled && <DevOverlay />}
-          <Header />
+        <View style={styles.container}>
           {children}
           <NullableWarningPanel />
         </View>

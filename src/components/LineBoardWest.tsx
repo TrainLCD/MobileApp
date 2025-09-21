@@ -1,11 +1,11 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
-  Dimensions,
   Platform,
   type StyleProp,
   StyleSheet,
   type TextStyle,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { FONTS } from '~/constants';
@@ -30,7 +30,6 @@ import getStationNameR from '~/utils/getStationNameR';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
-import { heightScale } from '~/utils/scale';
 import { ChevronJRWest } from './ChevronJRWest';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
@@ -40,41 +39,31 @@ interface Props {
   lineColors: (string | null | undefined)[];
 }
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-const barWidth = isTablet ? (screenWidth - 72) / 8 : (screenWidth - 48) / 8;
+const useBarWidth = () => {
+  const dim = useWindowDimensions();
+  return useMemo(
+    () => (isTablet ? (dim.width - 72) / 8 : (dim.width - 48) / 8),
+    [dim.width]
+  );
+};
 
-const barBottom = ((): number => {
-  if (isTablet) {
-    return 32;
-  }
-  return 48;
-})();
-
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return 32;
-  }
-  return 48;
-})();
+const barSize = isTablet ? 32 : 48;
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: screenHeight,
-    bottom: isTablet ? screenHeight / 2.5 : undefined,
+    bottom: isTablet ? '40%' : undefined,
   },
   bar: {
     position: 'absolute',
-    bottom: barBottom,
-    width: barWidth,
+    bottom: barSize,
     height: isTablet ? 64 : 32,
   },
   barTerminal: {
-    left: isTablet ? screenWidth - 72 + 6 : screenWidth - 48 + 6,
     position: 'absolute',
     width: 0,
     height: 0,
-    bottom: barTerminalBottom,
+    bottom: barSize,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
     borderLeftWidth: isTablet ? 32 : 16,
@@ -95,11 +84,11 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'relative',
-    width: screenWidth / 9,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
     paddingBottom: 0,
+    width: `${100 / 9}%`,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -156,7 +145,7 @@ const styles = StyleSheet.create({
   },
   numberingContainer: {
     position: 'absolute',
-    bottom: isTablet ? 0 : barBottom + 44,
+    bottom: isTablet ? 0 : barSize + 44,
     marginLeft: isTablet ? -48 * 0.125 : -28 * 0.25,
     width: isTablet ? 50 * 1.25 : 28 * 1.75,
     height: isTablet ? 48 / 2 : 24 / 1.5,
@@ -192,7 +181,7 @@ const StationName: React.FC<StationNameProps> = ({
   const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
     if (!isTablet) {
       return {
-        width: heightScale(300),
+        width: 180,
         marginBottom: 80,
       };
     }
@@ -337,10 +326,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <View
-      style={{
-        ...styles.stationNameContainer,
-        paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
-      }}
+      style={[
+        styles.stationNameContainer,
+        {
+          paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
+        },
+      ]}
     >
       <View
         style={
@@ -361,14 +352,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       </View>
       {numberingObj ? (
         <View
-          style={{
-            ...styles.numberingContainer,
-            backgroundColor: stationNumberBGColor,
-            marginBottom: passed && isTablet ? -4 : -6,
-          }}
+          style={[
+            styles.numberingContainer,
+            {
+              backgroundColor: stationNumberBGColor,
+              marginBottom: passed && isTablet ? -4 : -6,
+            },
+          ]}
         >
           <Typography
-            style={{ ...styles.numberingText, color: stationNumberTextColor }}
+            style={[styles.numberingText, { color: stationNumberTextColor }]}
           >
             {stationNumberString}
           </Typography>
@@ -376,10 +369,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       ) : null}
 
       <View
-        style={{
-          ...styles.lineDot,
-          backgroundColor: passed ? '#aaa' : '#fff',
-        }}
+        style={[styles.lineDot, { backgroundColor: passed ? '#aaa' : '#fff' }]}
       >
         {isTablet && lineMarks.length && !passed ? (
           <View style={styles.topBar} />
@@ -402,11 +392,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         </View>
         {hasPassStationInRegion && index !== stations.length - 1 ? (
           <View
-            style={{
-              ...styles.passMark,
-              backgroundColor:
-                passed && index !== currentStationIndex ? '#aaa' : '#fff',
-            }}
+            style={[
+              styles.passMark,
+              {
+                backgroundColor:
+                  passed && index !== currentStationIndex ? '#aaa' : '#fff',
+              },
+            ]}
           />
         ) : null}
         {!passed ? (
@@ -425,6 +417,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { selectedLine } = useAtomValue(lineState);
   const { arrived, approaching } = useAtomValue(stationState);
+  const barWidth = useBarWidth();
+  const dim = useWindowDimensions();
 
   const isPassing = useIsPassing();
   const currentLine = useCurrentLine();
@@ -469,21 +463,27 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
       {stationsWithEmpty.map((lc, i) => (
         <View
           key={`${lc}${i.toString()}`}
-          style={{
-            ...styles.bar,
-            left: barWidth * i,
-            backgroundColor: lc ? lc : (line?.color ?? '#000'),
-          }}
+          style={[
+            styles.bar,
+            {
+              left: barWidth * i,
+              backgroundColor: lc ?? line?.color ?? '#000',
+              width: barWidth,
+            },
+          ]}
         />
       ))}
 
       <View
-        style={{
-          ...styles.barTerminal,
-          borderBottomColor: line.color
-            ? lineColors[lineColors.length - 1] || line.color
-            : '#000',
-        }}
+        style={[
+          styles.barTerminal,
+          {
+            borderBottomColor: line.color
+              ? lineColors[lineColors.length - 1] || line.color
+              : '#000',
+            left: isTablet ? dim.width - 72 + 6 : dim.width - 48 + 6,
+          },
+        ]}
       />
       <View style={styles.stationNameWrapper}>
         {stations.map(stationNameCellForMap)}

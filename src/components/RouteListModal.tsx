@@ -5,13 +5,13 @@ import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { getTrainTypesByStationId } from '~/gen/proto/stationapi-StationAPI_connectquery';
 import { useCurrentStation, useThemeStore } from '~/hooks';
-import { LED_THEME_BG_COLOR } from '../constants';
-import { APP_THEME } from '../models/Theme';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese, translate } from '~/translation';
 import lineState from '../store/atoms/line';
-import { isJapanese, translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import FAB from './FAB';
 import { Heading } from './Heading';
@@ -31,6 +31,21 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
+  root: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flexOne: { flex: 1 },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  innerHeader: {
+    marginVertical: 16,
+  },
   modalContainer: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -93,23 +108,20 @@ export const RouteListModal: React.FC<Props> = ({
 
   const handleSelect = useCallback(
     (route: Route | undefined) => {
+      if (!route) return;
+      const selectedStop = route.stops.find(
+        (s) => s.groupId === currentStation?.groupId
+      );
+      if (!selectedStop?.id) return;
+
       setTrainTypeInfoPageVisible(true);
       setLineState((prev) => ({
         ...prev,
-        selectedLine:
-          route?.stops?.find((s) => s.groupId === currentStation?.groupId)
-            ?.line ?? null,
+        selectedLine: selectedStop.line ?? null,
       }));
       setSelectedRoute(route);
-      setSelectedTrainType(
-        route?.stops.find((s) => s.groupId === currentStation?.groupId)
-          ?.trainType
-      );
-      fetchTrainTypes({
-        stationId: route?.stops.find(
-          (s) => s.groupId === currentStation?.groupId
-        )?.id,
-      });
+      setSelectedTrainType(selectedStop.trainType);
+      fetchTrainTypes({ stationId: selectedStop.id });
     },
     [currentStation?.groupId, fetchTrainTypes, setLineState]
   );
@@ -138,7 +150,7 @@ export const RouteListModal: React.FC<Props> = ({
       transparent
       visible={visible}
       onRequestClose={onClose}
-      supportedOrientations={['landscape']}
+      supportedOrientations={['portrait', 'landscape']}
     >
       <View style={styles.modalContainer}>
         <SafeAreaView
@@ -152,7 +164,7 @@ export const RouteListModal: React.FC<Props> = ({
                   width: '80%',
                   maxHeight: '90%',
                   shadowOpacity: 0.25,
-                  shadowColor: '#000',
+                  shadowColor: '#333',
                   borderRadius: 16,
                 }
               : {
@@ -163,19 +175,8 @@ export const RouteListModal: React.FC<Props> = ({
                 },
           ]}
         >
-          <View
-            style={{
-              width: '100%',
-              height: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <View
-              style={{
-                marginVertical: 16,
-              }}
-            >
+          <View style={styles.root}>
+            <View style={styles.innerHeader}>
               <Heading>
                 {translate('routeListTitle', {
                   stationName: isJapanese
@@ -184,18 +185,15 @@ export const RouteListModal: React.FC<Props> = ({
                 })}
               </Heading>
             </View>
-            <View
-              style={{
-                flex: 1,
-                width: '100%',
-                height: '100%',
-              }}
-            >
+            <View style={styles.listContainer}>
               {isRoutesLoading ? (
                 <Loading message={translate('loadingAPI')} />
               ) : (
                 <View
-                  style={{ flex: 1, opacity: isTrainTypesLoading ? 0.5 : 1 }}
+                  style={[
+                    styles.flexOne,
+                    { opacity: isTrainTypesLoading ? 0.5 : 1 },
+                  ]}
                 >
                   <RouteList
                     routes={routes}

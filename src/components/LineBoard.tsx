@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StopCondition } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useThemeStore } from '../hooks';
@@ -24,6 +24,7 @@ export interface Props {
 }
 
 const styles = StyleSheet.create({
+  flexOne: { flex: 1 },
   bottomNotice: {
     position: 'absolute',
     bottom: isTablet ? 96 : 12,
@@ -146,7 +147,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const { left: safeAreaLeft } = useSafeAreaInsets();
 
   return (
-    <>
+    <View style={styles.flexOne}>
       <Inner />
       {passStations.length && !isLEDTheme ? (
         <Typography
@@ -165,7 +166,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           })}
         </Typography>
       ) : null}
-    </>
+    </View>
   );
 };
 

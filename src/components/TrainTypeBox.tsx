@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     shadowOpacity: 0.25,
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowRadius: 1,
     elevation: 5,
     fontSize: isTablet ? 18 * 1.5 : 18,
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
-    width: Dimensions.get('screen').width,
+    width: '100%',
   },
 });
 
@@ -239,11 +239,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           <AnimatedTypography
             style={[
               textTopAnimatedStyles,
-              {
-                ...styles.text,
-                letterSpacing,
-                marginLeft,
-              },
+              [
+                styles.text,
+                {
+                  letterSpacing,
+                  marginLeft,
+                },
+              ],
             ]}
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
@@ -254,9 +256,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
         <AnimatedTypography
           style={[
+            styles.text,
             textBottomAnimatedStyles,
             {
-              ...styles.text,
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
             },

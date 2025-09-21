@@ -1,13 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import {
-  Dimensions,
-  Platform,
-  type StyleProp,
-  StyleSheet,
-  type TextStyle,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
@@ -24,7 +17,6 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
-import { heightScale } from '../utils/scale';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
 import NumberingIcon from './NumberingIcon';
@@ -37,29 +29,26 @@ interface Props {
   lineColors: (string | null | undefined)[];
 }
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-const barWidth = isTablet
-  ? (screenWidth - 120) / 8
-  : (screenWidth - 96) / 7.835;
-const barBottom = ((): number => {
-  if (isTablet) {
-    return 32;
-  }
+const useBarWidth = () => {
+  const dim = useWindowDimensions();
+  return isTablet ? (dim.width - 120) / 8 : (dim.width - 96) / 7.835;
+};
+
+const barBottom = (() => {
+  if (isTablet) return 32;
   return 48;
 })();
 
-const barTerminalBottom = ((): number => {
-  if (isTablet) {
-    return 48;
-  }
+const barTerminalBottom = (() => {
+  if (isTablet) return 48;
   return 58;
 })();
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    height: screenHeight,
-    bottom: isTablet ? screenHeight / 2.5 : undefined,
+    height: '100%',
+    bottom: isTablet ? '40%' : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
   stoppingChevron: {
@@ -73,7 +62,6 @@ const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
     bottom: barBottom,
-    width: barWidth,
     height: isTablet ? 64 : 40,
   },
   barDot: {
@@ -85,7 +73,6 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   barTerminal: {
-    left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
     bottom: barTerminalBottom,
     position: 'absolute',
     width: 0,
@@ -100,11 +87,9 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flexDirection: 'row',
-    marginLeft: barWidth / 2.5,
     flex: 1,
   },
   stationNameContainer: {
-    width: barWidth,
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
@@ -113,12 +98,16 @@ const styles = StyleSheet.create({
   stationName: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginLeft: isTablet ? 12 : 4,
+    marginLeft: 12,
     marginBottom: Platform.select({ android: -6, ios: 0 }),
   },
   stationNameEn: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
+    transform: [{ rotate: '-55deg' }],
+    marginBottom: 90,
+    marginLeft: -32,
+    width: 250,
   },
   verticalStationName: {
     marginBottom: 0,
@@ -155,8 +144,6 @@ const styles = StyleSheet.create({
   },
   padLineMarksContainer: {
     position: 'absolute',
-    flex: 1,
-    width: '100%',
   },
 });
 
@@ -175,27 +162,10 @@ const StationName: React.FC<StationNameProps> = ({
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
 
-  const stationNameEnExtraStyle = useMemo((): StyleProp<TextStyle> => {
-    if (!isTablet) {
-      return {
-        width: heightScale(300),
-        marginBottom: 90,
-      };
-    }
-    return {
-      width: 250,
-      marginBottom: 120,
-    };
-  }, []);
-
   if (en) {
     return (
       <Typography
-        style={[
-          styles.stationNameEn,
-          stationNameEnExtraStyle,
-          passed ? styles.grayColor : null,
-        ]}
+        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
       >
         {stationNameR}
       </Typography>
@@ -204,11 +174,7 @@ const StationName: React.FC<StationNameProps> = ({
   if (horizontal) {
     return (
       <Typography
-        style={[
-          styles.stationNameEn,
-          stationNameEnExtraStyle,
-          passed ? styles.grayColor : null,
-        ]}
+        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
       >
         {station.name}
       </Typography>
@@ -263,6 +229,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
     [stationInLoop.stationNumbers, stationNumberIndex]
   );
+  const dim = useWindowDimensions();
 
   const numberingColor = useMemo(
     () =>
@@ -275,23 +242,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [arrived, numberingObj, stationInLoop]
   );
   return (
-    <View key={stationInLoop.id} style={styles.stationNameContainer}>
-      <View
-        style={
-          isEn || includesLongStationName
-            ? {
-                transform: [{ rotate: '-55deg' }],
-              }
-            : {}
-        }
-      >
-        <StationName
-          station={stationInLoop}
-          en={isEn}
-          horizontal={includesLongStationName}
-          passed={isPass}
-        />
-      </View>
+    <View
+      style={[
+        styles.stationNameContainer,
+        {
+          width: dim.width / 9,
+        },
+      ]}
+    >
+      <StationName
+        station={stationInLoop}
+        en={isEn}
+        horizontal={includesLongStationName}
+        passed={isPass}
+      />
+
       <View style={styles.numberingIconContainer}>
         {numberingObj && isTablet && hasNumberedStation ? (
           <NumberingIcon
@@ -303,12 +268,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
 
-      <View
-        style={{
-          ...styles.padLineMarksContainer,
-          top: hasNumberedStation ? screenHeight - 7 : screenHeight - 45,
-        }}
-      >
+      <View style={[styles.padLineMarksContainer, { top: dim.height - 80 }]}>
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={transferLines}
@@ -325,6 +285,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const isPassing = useIsPassing();
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
+  const barWidth = useBarWidth();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -359,12 +320,15 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [lineColors]
   );
 
-  const getLeft = useCallback((index: number) => {
-    if (isTablet) {
-      return barWidth * (index + 1) - barWidth / 2;
-    }
-    return barWidth * (index + 1) - barWidth * 0.6;
-  }, []);
+  const getLeft = useCallback(
+    (index: number) => {
+      if (isTablet) {
+        return barWidth * (index + 1) - barWidth / 2;
+      }
+      return barWidth * (index + 1) - barWidth * 0.6;
+    },
+    [barWidth]
+  );
 
   const getBottom = useCallback(
     (index: number) => {
@@ -386,65 +350,75 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         <React.Fragment key={`${lc}${i.toString()}`}>
           <View
             key={`${lc}${i.toString()}`}
-            style={{
-              ...styles.bar,
-              left: barWidth * i,
-              backgroundColor: (() => {
-                if (i <= currentStationIndex) {
-                  if (!arrived) {
+            style={[
+              styles.bar,
+              {
+                width: barWidth,
+                left: barWidth * i,
+                backgroundColor: (() => {
+                  if (i <= currentStationIndex) {
+                    if (!arrived) {
+                      return '#888';
+                    }
+                    if (i === currentStationIndex) {
+                      return '#dc143c';
+                    }
                     return '#888';
                   }
-                  if (i === currentStationIndex) {
-                    return '#dc143c';
-                  }
-                  return '#888';
-                }
 
-                return lc ?? '#888';
-              })(),
-            }}
+                  return lc ?? '#888';
+                })(),
+              },
+            ]}
           />
           <View
-            style={{
-              ...styles.bar,
-              left: barWidth * i,
-              backgroundColor: (() => {
-                if (i <= currentStationIndex) {
-                  if (!arrived) {
+            style={[
+              styles.bar,
+              {
+                left: barWidth * i,
+                backgroundColor: (() => {
+                  if (i <= currentStationIndex) {
+                    if (!arrived) {
+                      return '#888';
+                    }
+                    if (i === currentStationIndex) {
+                      return '#dc143c';
+                    }
                     return '#888';
                   }
-                  if (i === currentStationIndex) {
-                    return '#dc143c';
-                  }
-                  return '#888';
-                }
 
-                return lc ?? '#888';
-              })(),
-            }}
+                  return lc ?? '#888';
+                })(),
+              },
+            ]}
           />
           {getIsPass(stations[i]) ? (
             <View
-              style={{
-                ...styles.barDot,
-                left: getLeft(i),
-                bottom: getBottom(i),
-                width: i <= currentStationIndex ? 16 : 32,
-                height: i <= currentStationIndex ? 16 : 32,
-              }}
+              style={[
+                styles.barDot,
+                {
+                  left: getLeft(i),
+                  bottom: getBottom(i),
+                  width: i <= currentStationIndex ? 16 : 32,
+                  height: i <= currentStationIndex ? 16 : 32,
+                },
+              ]}
             >
               <PassChevronTY />
             </View>
           ) : (
             <View
-              style={{
-                ...styles.barDot,
-                backgroundColor: stations.length <= i ? 'transparent' : 'white',
-                left: getLeft(i),
-                bottom: getBottom(i),
-                width: i <= currentStationIndex ? 16 : 32,
-                height: i <= currentStationIndex ? 16 : 32,
-              }}
+              style={[
+                styles.barDot,
+                {
+                  backgroundColor:
+                    stations.length <= i ? 'transparent' : 'white',
+                  left: getLeft(i),
+                  bottom: getBottom(i),
+                  width: i <= currentStationIndex ? 16 : 32,
+                  height: i <= currentStationIndex ? 16 : 32,
+                },
+              ]}
             />
           )}
         </React.Fragment>
@@ -474,14 +448,24 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
       )}
 
       <View
-        style={{
-          ...styles.barTerminal,
-          borderBottomColor: line.color
-            ? lineColors[lineColors.length - 1] || line.color
-            : '#000',
-        }}
+        style={[
+          styles.barTerminal,
+          {
+            borderBottomColor: line.color
+              ? lineColors[lineColors.length - 1] || line.color
+              : '#000',
+            left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
+          },
+        ]}
       />
-      <View style={styles.stationNameWrapper}>
+      <View
+        style={[
+          styles.stationNameWrapper,
+          {
+            marginLeft: barWidth / 2.5,
+          },
+        ]}
+      >
         {stations.map(stationNameCellForMap)}
       </View>
     </View>

@@ -3,6 +3,7 @@ import {
   type GestureResponderEvent,
   type StyleProp,
   StyleSheet,
+  type TextStyle,
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
@@ -15,43 +16,58 @@ import Typography from './Typography';
 
 type Props = {
   children: React.ReactNode;
-  color?: string;
   onPress: (event: GestureResponderEvent) => void;
+  outline?: boolean;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   disabled?: boolean;
   testID?: ButtonTestId | string | undefined;
 };
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: isTablet ? 12 : 8,
-    paddingHorizontal: isTablet ? 16 : 12,
-    elevation: 2,
-    borderRadius: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 1,
+    shadowColor: '#333',
+    shadowOpacity: 0.25,
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 0,
     },
-    shadowRadius: 2,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#fff',
+    borderRadius: 8,
   },
   buttonLED: {
     paddingVertical: 8,
     paddingHorizontal: isTablet ? 18 : 12,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   text: {
-    color: '#fff',
     fontSize: RFValue(14),
     textAlign: 'center',
+    color: '#fff',
+  },
+  outlinedButton: {
+    borderColor: '#008ffe',
+    borderWidth: 1,
+    backgroundColor: '#fff',
+  },
+  outlinedButtonText: {
+    fontWeight: 'bold',
+    color: '#008ffe',
   },
 });
 
 const Button: React.FC<Props> = ({
   children,
-  color,
   onPress,
+  outline,
   style,
+  textStyle,
   disabled,
   testID,
 }: Props) => {
@@ -62,18 +78,20 @@ const Button: React.FC<Props> = ({
       disabled={disabled}
       onPress={disabled ? undefined : onPress}
       style={[
+        isLEDTheme ? styles.buttonLED : styles.button,
         {
-          ...(isLEDTheme ? styles.buttonLED : styles.button),
-          backgroundColor: isLEDTheme ? color : (color ?? '#333'),
-          borderWidth: isLEDTheme && !color ? 2 : 0,
-          borderColor: isLEDTheme ? 'white' : undefined,
+          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
           opacity: disabled ? 0.5 : 1,
         },
+        outline && styles.outlinedButton,
         style,
       ]}
       testID={testID}
     >
-      <Typography numberOfLines={1} style={styles.text}>
+      <Typography
+        numberOfLines={1}
+        style={[styles.text, outline && styles.outlinedButtonText, textStyle]}
+      >
         {children}
       </Typography>
     </TouchableOpacity>

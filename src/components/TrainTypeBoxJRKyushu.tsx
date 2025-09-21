@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
-    width: Dimensions.get('screen').width,
+    width: '100%',
   },
 });
 
@@ -194,9 +194,9 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
         <View style={styles.textWrapper}>
           <AnimatedTypography
             style={[
+              styles.text,
               textTopAnimatedStyles,
               {
-                ...styles.text,
                 letterSpacing,
                 marginLeft,
               },
@@ -210,9 +210,9 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
 
         <AnimatedTypography
           style={[
+            styles.text,
             textBottomAnimatedStyles,
             {
-              ...styles.text,
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
             },

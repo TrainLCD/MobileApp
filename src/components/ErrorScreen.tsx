@@ -71,10 +71,12 @@ const ErrorScreen: React.FC<Props> = ({
 
   return (
     <SafeAreaView
-      style={{
-        ...styles.root,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
+      style={[
+        styles.root,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        },
+      ]}
     >
       <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
       <Typography style={styles.text}>{text}</Typography>

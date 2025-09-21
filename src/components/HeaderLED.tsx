@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useCurrentStation,
@@ -62,6 +62,7 @@ const HeaderLED = () => {
   const isLast = useIsNextLastStop();
   const [nextStationNumber] = useNumbering();
   const [currentStationNumber] = useNumbering(true);
+  const dim = useWindowDimensions();
 
   const { selectedBound } = useAtomValue(stationState);
   const { headerState } = useAtomValue(navigationState);
@@ -137,10 +138,10 @@ const HeaderLED = () => {
 
   const rootHeight = useMemo(() => {
     if (!selectedBound) {
-      return Dimensions.get('screen').height / 3;
+      return dim.height / 3;
     }
-    return Dimensions.get('screen').height / 1.5;
-  }, [selectedBound]);
+    return dim.height / 1.5;
+  }, [selectedBound, dim.height]);
 
   const headerLangState = useMemo(
     () =>
@@ -171,7 +172,7 @@ const HeaderLED = () => {
   }, [currentStationNumber, headerState, nextStationNumber]);
 
   return (
-    <View style={{ ...styles.root, height: rootHeight }}>
+    <View style={[styles.root, { height: rootHeight }]}>
       {stateText.length ? (
         <Typography style={styles.state}>{stateText}</Typography>
       ) : null}

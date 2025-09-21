@@ -38,9 +38,9 @@
   "transfer": "のりかえ",
   "menuNotice": "次の画面から画面を長押しするとメニューが開けます。",
   "back": "戻る",
-  "notifySettings": "通知設定",
-  "trainTypeSettings": "通過駅設定",
-  "viewStopStations": "停車駅一覧",
+  "notifySettings": "通知を受け取る駅を指定",
+  "trainTypeSettings": "列車種別を指定",
+  "viewStopStations": "停車駅を見る",
   "allStops": "停車駅",
   "notifySettingsTitle": "到着通知を受け取りたい駅を選択してください",
   "cancel": "キャンセル",
@@ -188,5 +188,12 @@
   "communityRoutes": "コミュニティルート",
   "confirmDeleteRouteText": "本当に保存済み経路から「%{routeName}」を削除しますか？",
   "routeSavedText": "経路「%{routeName}」を保存しました。",
-  "routeDeletedText": "経路「%{routeName}」を削除しました。"
+  "routeDeletedText": "経路「%{routeName}」を削除しました。",
+  "noPresets": "プリセットがありません",
+  "close": "閉じる",
+  "searchResult": "検索結果",
+  "emptySearchResult": "一致する情報が見つかりませんでした。",
+  "stationNameSearchPlaceholder": "どこにいますか？",
+  "routeSearchPlaceholder": "どこへ行きますか？",
+  "trainTypeIs": "列車種別: %{trainTypeName}"
 }

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -36,9 +36,12 @@ import Clock from './Clock';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
-const { width: screenWidth } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
+  topBar: {
+    backgroundColor: 'white',
+    height: 2,
+    opacity: 0.5,
+  },
   gradientRoot: {
     paddingRight: 21,
     paddingLeft: 21,
@@ -72,7 +75,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   stateWrapper: {
-    width: screenWidth * 0.14,
+    width: '14%',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -463,7 +466,7 @@ const HeaderSaikyo: React.FC = () => {
   return (
     <View>
       <HeaderBar height={15} lineColor={lineColor || '#00ac9a'} />
-      <View style={{ backgroundColor: 'white', height: 2, opacity: 0.5 }} />
+      <View style={styles.topBar} />
       <LinearGradient
         colors={['#aaa', '#fcfcfc']}
         locations={[0, 0.2]}
@@ -557,7 +560,12 @@ const HeaderSaikyo: React.FC = () => {
         </View>
         <Clock
           bold
-          style={{ ...styles.clockOverride, right: 8 + safeAreaRight }}
+          style={[
+            styles.clockOverride,
+            {
+              right: 8 + safeAreaRight,
+            },
+          ]}
         />
       </LinearGradient>
       <HeaderBar height={5} lineColor={lineColor || '#00ac9a'} />

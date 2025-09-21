@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
   useBoundText,
@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'right',
+    fontSize: RFValue(14),
   },
   stationName: {
     fontWeight: 'bold',
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
   clockContainer: {
     position: 'absolute',
     top: 8,
-    right: Dimensions.get('screen').width * 0.25,
+    right: '25%',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -103,6 +104,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 8,
     marginLeft: 32,
+  },
+  leftInner: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'column',
   },
 });
 
@@ -310,14 +316,14 @@ const HeaderJL = () => {
   return (
     <LinearGradient colors={['#222222', '#212121']} style={styles.gradientRoot}>
       <View
-        style={{
-          ...styles.left,
-          backgroundColor: currentLine?.color ?? 'transparent',
-        }}
+        style={[
+          styles.left,
+          {
+            backgroundColor: currentLine?.color ?? 'transparent',
+          },
+        ]}
       >
-        <View
-          style={{ width: '100%', height: '100%', flexDirection: 'column' }}
-        >
+        <View style={styles.leftInner}>
           <TrainTypeBoxJL
             trainType={trainType}
             trainTypeColor={currentLine?.color}
@@ -327,34 +333,31 @@ const HeaderJL = () => {
               <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
-                style={{
-                  ...styles.bound,
-                  fontSize: RFValue(14),
-                }}
+                style={[
+                  styles.bound,
+                  {
+                    fontSize: RFValue(14),
+                  },
+                ]}
               >
                 {boundPrefix}
               </Typography>
             ) : null}
 
             <Typography
-              style={{
-                ...styles.bound,
-                fontSize: RFValue(20),
-              }}
+              style={[
+                styles.bound,
+                {
+                  fontSize: RFValue(20),
+                },
+              ]}
               adjustsFontSizeToFit
               numberOfLines={1}
             >
               {boundText}
             </Typography>
             {selectedBound && boundSuffix.length ? (
-              <Typography
-                style={{
-                  ...styles.boundSuffix,
-                  fontSize: RFValue(14),
-                }}
-              >
-                {boundSuffix}
-              </Typography>
+              <Typography style={styles.boundSuffix}>{boundSuffix}</Typography>
             ) : null}
           </View>
         </View>
