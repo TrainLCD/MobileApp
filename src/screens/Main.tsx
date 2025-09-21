@@ -3,13 +3,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtom, useAtomValue } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   AppState,
@@ -92,9 +86,6 @@ const MainScreen: React.FC = () => {
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
-  const currentStationRef = useRef(currentStation);
-  const stationsRef = useRef(stations);
-
   const hasTerminus = useMemo((): boolean => {
     if (
       (!currentLine || isYamanoteLine || isOsakaLoopLine || isMeijoLine) &&
@@ -144,17 +135,15 @@ const MainScreen: React.FC = () => {
   );
 
   const stationsFromCurrentStation = useMemo(() => {
-    if (!selectedDirection) {
-      return [];
-    }
+    if (!selectedDirection) return [];
     const currentStationIndex = getCurrentStationIndex(
-      stationsRef.current,
-      currentStationRef.current
+      stations,
+      currentStation
     );
     return selectedDirection === 'INBOUND'
-      ? stationsRef.current.slice(currentStationIndex)
-      : stationsRef.current.slice(0, currentStationIndex + 1);
-  }, [selectedDirection]);
+      ? stations.slice(currentStationIndex)
+      : stations.slice(0, currentStationIndex + 1);
+  }, [selectedDirection, stations, currentStation]);
 
   useEffect(() => {
     const lockOrientationAsync = async () => {
