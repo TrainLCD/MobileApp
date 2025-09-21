@@ -115,15 +115,28 @@ export const TrainTypeListModal = ({
           (l) => l.id === destination.line?.id
         );
 
-        const slicedLines =
-          currentLineIndex > destinationLineIndex
-            ? lines.slice().reverse().slice(currentLineIndex, lines.length)
-            : lines.slice(currentLineIndex, lines.length);
+        if (destinationLineIndex === -1) {
+          return null;
+        }
+
+        const [start, end] =
+          currentLineIndex <= destinationLineIndex
+            ? [currentLineIndex, destinationLineIndex]
+            : [destinationLineIndex, currentLineIndex];
+        let segment = lines.slice(start, end + 1);
+        if (currentLineIndex > destinationLineIndex) {
+          segment = segment.reverse();
+        }
+        const viaLines = segment.slice(1);
 
         const title = `${isJapanese ? item.name : item.nameRoman}`;
         const subtitle = isJapanese
-          ? `${slicedLines.map((l) => l.nameShort).join('・')}経由`
-          : `Via ${slicedLines.map((l) => l.nameRoman).join(', ')}`;
+          ? `${viaLines.map((l) => l.nameShort).join('・')}${
+              viaLines.length ? '経由' : ''
+            }`
+          : viaLines.length
+            ? `Via ${viaLines.map((l) => l.nameRoman).join(', ')}`
+            : '';
 
         return (
           <LineCard

@@ -1,32 +1,17 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { parenthesisRegexp } from '~/constants';
-import {
-  type Line,
-  StopCondition,
-  type TrainType,
-} from '~/gen/proto/stationapi_pb';
-import {
-  useCurrentLine,
-  useCurrentStation,
-  useCurrentTrainType,
-  useNextTrainType,
-  useThemeStore,
-} from '../hooks';
+import {LinearGradient} from 'expo-linear-gradient';
+import {useAtomValue} from 'jotai';
+import React, {useCallback, useMemo} from 'react';
+import {SafeAreaView, StyleSheet, useWindowDimensions, View,} from 'react-native';
+import {parenthesisRegexp} from '~/constants';
+import {type Line, StopCondition, type TrainType,} from '~/gen/proto/stationapi_pb';
+import {useCurrentLine, useCurrentStation, useCurrentTrainType, useNextTrainType, useThemeStore,} from '~/hooks';
 import stationState from '../store/atoms/station';
 import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
-import { getIsLocal } from '../utils/trainTypeString';
+import {RFValue} from '~/utils/rfValue';
+import {getIsLocal} from '~/utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
-import { BarTerminalEast } from './BarTerminalEast';
-import { BarTerminalSaikyo } from './BarTerminalSaikyo';
+import {BarTerminalEast} from './BarTerminalEast';
+import {BarTerminalSaikyo} from './BarTerminalSaikyo';
 import Typography from './Typography';
 
 const edgeOffset = isTablet ? 100 : 70;
@@ -59,7 +44,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#212121',
   },
-  bottom: { flex: 1.5 },
+  bottom: {flex: 1.5},
   linesContainer: {
     position: 'relative',
     justifyContent: 'center',
@@ -104,7 +89,7 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    transform: [{ rotate: '90deg' }],
+    transform: [{rotate: '90deg'}],
     borderWidth: 0,
   },
   trainTypeLeft: {
@@ -169,15 +154,15 @@ const styles = StyleSheet.create({
 
 const useBarWidth = () => {
   const dim = useWindowDimensions();
-  return dim.width / 2 - edgeOffset;
+  return Math.max(0, dim.width / 2 - edgeOffset);
 };
 
 const MetroBars = ({
-  currentLine,
-  nextLine,
-  trainType,
-  nextTrainType,
-}: {
+                     currentLine,
+                     nextLine,
+                     trainType,
+                     nextTrainType,
+                   }: {
   currentLine: Line;
   nextLine: Line;
   trainType: TrainType;
@@ -185,13 +170,14 @@ const MetroBars = ({
 }) => {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
 
   if (!trainType || !nextTrainType) {
     return null;
   }
 
   return (
-    <View style={[styles.linesContainer, { width: dim.width }]}>
+    <View style={[styles.linesContainer, {width: dim.width}]}>
       {/* Current line */}
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
@@ -239,7 +225,7 @@ const MetroBars = ({
         ]}
       />
 
-      <View style={styles.centerCircle} />
+      <View style={styles.centerCircle}/>
 
       {/* Next line */}
       <LinearGradient
@@ -249,7 +235,7 @@ const MetroBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -259,7 +245,7 @@ const MetroBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -270,7 +256,7 @@ const MetroBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -283,7 +269,7 @@ const MetroBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -392,11 +378,11 @@ const MetroBars = ({
 };
 
 const SaikyoBars = ({
-  currentLine,
-  nextLine,
-  trainType,
-  nextTrainType,
-}: {
+                      currentLine,
+                      nextLine,
+                      trainType,
+                      nextTrainType,
+                    }: {
   currentLine: Line;
   nextLine: Line;
   trainType: TrainType;
@@ -404,9 +390,10 @@ const SaikyoBars = ({
 }) => {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
 
   return (
-    <View style={[styles.linesContainer, { width: dim.width }]}>
+    <View style={[styles.linesContainer, {width: dim.width}]}>
       {/* Current line */}
       <LinearGradient
         colors={['#fff', '#000', '#000']}
@@ -453,7 +440,7 @@ const SaikyoBars = ({
           },
         ]}
       />
-      <View style={styles.centerCircle} />
+      <View style={styles.centerCircle}/>
       {/* Next line */}
       <LinearGradient
         colors={['#fff', '#000', '#000']}
@@ -462,7 +449,7 @@ const SaikyoBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -472,7 +459,7 @@ const SaikyoBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -483,7 +470,7 @@ const SaikyoBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -496,7 +483,7 @@ const SaikyoBars = ({
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
           },
         ]}
       />
@@ -606,11 +593,11 @@ const SaikyoBars = ({
 };
 
 const JOBars = ({
-  currentLine,
-  nextLine,
-  trainType,
-  nextTrainType,
-}: {
+                  currentLine,
+                  nextLine,
+                  trainType,
+                  nextTrainType,
+                }: {
   currentLine: Line;
   nextLine: Line;
   trainType: TrainType;
@@ -618,9 +605,10 @@ const JOBars = ({
 }) => {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
 
   return (
-    <View style={[styles.linesContainer, { width: dim.width }]}>
+    <View style={[styles.linesContainer, {width: dim.width}]}>
       {/* Current line */}
       <View
         style={[
@@ -632,14 +620,14 @@ const JOBars = ({
           },
         ]}
       />
-      <View style={styles.centerCircle} />
+      <View style={styles.centerCircle}/>
       {/* Next line */}
       <View
         style={[
           styles.bar,
           {
             right: edgeOffset + barTerminalSize,
-            width: barWidth - barTerminalSize,
+            width: rightBarWidth,
             backgroundColor: (nextLine ?? nextTrainType)?.color,
           },
         ]}
@@ -672,13 +660,13 @@ const JOBars = ({
           <Typography
             adjustsFontSizeToFit
             numberOfLines={1}
-            style={[styles.text, { shadowOpacity: 0 }]}
+            style={[styles.text, {shadowOpacity: 0}]}
           >
             {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
-            style={[styles.textEn, { shadowOpacity: 0 }]}
+            style={[styles.textEn, {shadowOpacity: 0}]}
             numberOfLines={1}
           >
             {truncateTrainType(
@@ -720,7 +708,7 @@ const JOBars = ({
           <Typography
             numberOfLines={1}
             adjustsFontSizeToFit
-            style={[styles.text, { shadowOpacity: 0 }]}
+            style={[styles.text, {shadowOpacity: 0}]}
           >
             {nextTrainType.name
               .replace('\n', '')
@@ -728,7 +716,7 @@ const JOBars = ({
           </Typography>
           <Typography
             adjustsFontSizeToFit
-            style={[styles.textEn, { shadowOpacity: 0 }]}
+            style={[styles.textEn, {shadowOpacity: 0}]}
             numberOfLines={1}
           >
             {truncateTrainType(
@@ -759,8 +747,8 @@ const JOBars = ({
 
 const HeadingJa = React.memo(
   ({
-    headingTexts,
-  }: {
+     headingTexts,
+   }: {
     headingTexts: {
       jaPrefix: string;
       enPrefix: string;
@@ -781,7 +769,7 @@ const HeadingJa = React.memo(
           {`${headingTexts.jaPrefix} `}
           <Typography
             style={[
-              { color: (nextTrainType ?? trainType)?.color ?? '#212121' },
+              {color: (nextTrainType ?? trainType)?.color ?? '#212121'},
               styles.trainTypeText,
             ]}
           >
@@ -801,8 +789,8 @@ const HeadingJa = React.memo(
 
 const HeadingEn = React.memo(
   ({
-    headingTexts,
-  }: {
+     headingTexts,
+   }: {
     headingTexts: {
       jaPrefix: string;
       enPrefix: string;
@@ -824,7 +812,7 @@ const HeadingEn = React.memo(
           {headingTexts.enPrefix}{' '}
           <Typography
             style={[
-              { color: (nextTrainType ?? trainType)?.color ?? '#212121' },
+              {color: (nextTrainType ?? trainType)?.color ?? '#212121'},
               styles.trainTypeText,
             ]}
           >
@@ -844,7 +832,7 @@ const HeadingEn = React.memo(
 );
 
 const TypeChangeNotify: React.FC = () => {
-  const { selectedDirection, stations, selectedBound } =
+  const {selectedDirection, stations, selectedBound} =
     useAtomValue(stationState);
   const theme = useThemeStore();
   const station = useCurrentStation();
@@ -881,7 +869,7 @@ const TypeChangeNotify: React.FC = () => {
       !getIsLocal(trainType) &&
       // 最後に各駅に停まる駅の路線が次の路線の種別と同じ
       afterAllStopLastStation?.line?.id ===
-        (nextTrainType.line ?? currentLine)?.id &&
+      (nextTrainType.line ?? currentLine)?.id &&
       // 次の停車駅パターン変更駅が現在の駅より前の駅ではない
       reversedCurrentStationIndex > reversedFinalPassedStationIndex,
     [
@@ -898,7 +886,7 @@ const TypeChangeNotify: React.FC = () => {
       isNextTypeIsLocal &&
       // 現在の路線内から各駅に停まる時は表示しない
       currentLine?.id !==
-        reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
+      reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
     ) {
       return afterAllStopLastStation;
     }
@@ -958,7 +946,7 @@ const TypeChangeNotify: React.FC = () => {
       isNextTypeIsLocal &&
       // 現在の路線内から各駅に停まる時は表示しない
       currentLine?.id !==
-        reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
+      reversedStations[reversedFinalPassedStationIndex - 2]?.line?.id
     ) {
       return {
         jaPrefix: `${afterAllStopLastStation?.name}から先は各駅にとまります`,
@@ -1029,8 +1017,8 @@ const TypeChangeNotify: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
-        <HeadingJa headingTexts={headingTexts} />
-        <HeadingEn headingTexts={headingTexts} />
+        <HeadingJa headingTexts={headingTexts}/>
+        <HeadingEn headingTexts={headingTexts}/>
       </View>
       <View style={styles.bottom}>
         <Typography style={styles.headingJa}>
@@ -1039,7 +1027,7 @@ const TypeChangeNotify: React.FC = () => {
         <Typography style={styles.headingEn}>
           {currentTypeFinalStation?.nameRoman}
         </Typography>
-        <BarsComponent />
+        <BarsComponent/>
       </View>
     </SafeAreaView>
   );

@@ -1,34 +1,29 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
-import { useScale } from '~/hooks/useScale';
-import {
-  useCurrentLine,
-  useInterval,
-  useStationNumberIndexFunc,
-  useTransferLinesFromStation,
-} from '../hooks';
+import {LinearGradient} from 'expo-linear-gradient';
+import {useAtomValue} from 'jotai';
+import React, {useCallback, useMemo, useState} from 'react';
+import {Platform, StyleSheet, useWindowDimensions, View} from 'react-native';
+import type {Line, Station, StationNumber} from '~/gen/proto/stationapi_pb';
+import {useScale} from '~/hooks/useScale';
+import {useCurrentLine, useInterval, useStationNumberIndexFunc, useTransferLinesFromStation,} from '~/hooks';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import { isEnAtom } from '../store/selectors/isEn';
+import {isEnAtom} from '~/store/selectors/isEn';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
-import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChervronTY';
+import {RFValue} from '~/utils/rfValue';
+import {BarTerminalEast} from './BarTerminalEast';
+import {ChevronTY} from './ChevronTY';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
 import Typography from './Typography';
 
 const useBarStyles = ({
-  index,
-}: {
+                        index,
+                      }: {
   index?: number;
 }): { left: number; width: number } => {
-  const { widthScale } = useScale();
+  const {widthScale} = useScale();
 
   const left = useMemo(() => {
     if (index === 0) {
@@ -48,7 +43,7 @@ const useBarStyles = ({
     }
     return widthScale(62);
   }, [index, widthScale]);
-  return { left, width };
+  return {left, width};
 };
 
 type Props = {
@@ -83,7 +78,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: 5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
+    marginBottom: Platform.select({android: -6, ios: 0}),
   },
   splittedStationName: {
     marginLeft: 1,
@@ -91,7 +86,7 @@ const styles = StyleSheet.create({
   stationNameHorizontal: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    transform: [{ rotate: '-55deg' }],
+    transform: [{rotate: '-55deg'}],
   },
   stationNameExtra: {
     fontSize: RFValue(10),
@@ -140,7 +135,7 @@ const styles = StyleSheet.create({
     bottom: isTablet ? 0 : 64,
     textAlign: 'center',
   },
-  marksContainer: { top: 38, position: 'absolute' },
+  marksContainer: {top: 38, position: 'absolute'},
   nameCommon: {
     marginBottom: isTablet ? undefined : 64,
   },
@@ -155,6 +150,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
 });
+
 interface StationNameProps {
   station: Station;
   en?: boolean;
@@ -173,11 +169,11 @@ interface StationNameCellProps {
 }
 
 const StationName: React.FC<StationNameProps> = ({
-  station,
-  en,
-  horizontal,
-  passed,
-}: StationNameProps) => {
+                                                   station,
+                                                   en,
+                                                   horizontal,
+                                                   passed,
+                                                 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
   const dim = useWindowDimensions();
 
@@ -264,13 +260,13 @@ type LineDotProps = {
 };
 
 const LineDot: React.FC<LineDotProps> = ({
-  station,
-  shouldGrayscale,
-  transferLines,
-  arrived,
-  passed,
-}) => {
-  const { widthScale } = useScale();
+                                           station,
+                                           shouldGrayscale,
+                                           transferLines,
+                                           arrived,
+                                           passed,
+                                         }) => {
+  const {widthScale} = useScale();
 
   if (getIsPass(station)) {
     return (
@@ -283,7 +279,7 @@ const LineDot: React.FC<LineDotProps> = ({
             },
           ]}
         >
-          <PassChevronTY />
+          <PassChevronTY/>
         </View>
         <View style={styles.marksContainer}>
           <PadLineMarks
@@ -318,15 +314,15 @@ const LineDot: React.FC<LineDotProps> = ({
 };
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
-  station,
-  index,
-  stations,
-  line,
-  lineColors,
-  hasTerminus,
-  chevronColor,
-}: StationNameCellProps) => {
-  const { station: currentStation, arrived } = useAtomValue(stationState);
+                                                           station,
+                                                           index,
+                                                           stations,
+                                                           line,
+                                                           lineColors,
+                                                           hasTerminus,
+                                                           chevronColor,
+                                                         }: StationNameCellProps) => {
+  const {station: currentStation, arrived} = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
 
   const currentStationIndex = useMemo(
@@ -350,13 +346,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     omitRepeatingLine: true,
   });
 
-  const { left: barLeft, width: barWidth } = useBarStyles({ index });
-  const { widthScale } = useScale();
+  const {left: barLeft, width: barWidth} = useBarStyles({index});
+  const {widthScale} = useScale();
 
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
     if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
+      return arrived ? {left: widthScale(-14)} : null;
     }
 
     // 到着済みの場合
@@ -483,9 +479,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             colors={
               line.color
                 ? [
-                    `${lineColors[index] || line.color}ff`,
-                    `${lineColors[index] || line.color}bb`,
-                  ]
+                  `${lineColors[index] || line.color}ff`,
+                  `${lineColors[index] || line.color}bb`,
+                ]
                 : ['#000000ff', '#000000bb']
             }
             style={[
@@ -546,7 +542,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
-          <ChevronTY color={chevronColor} />
+          <ChevronTY color={chevronColor}/>
         ) : null}
       </View>
     </>
@@ -560,12 +556,12 @@ type EmptyStationNameCellProps = {
 };
 
 const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
-  lastLineColor: lastLineColorOriginal,
-  isLast,
-  hasTerminus,
-}: EmptyStationNameCellProps) => {
+                                                                     lastLineColor: lastLineColorOriginal,
+                                                                     isLast,
+                                                                     hasTerminus,
+                                                                   }: EmptyStationNameCellProps) => {
   const lastLineColor = lastLineColorOriginal;
-  const { left: barLeft, width: barWidth } = useBarStyles({});
+  const {left: barLeft, width: barWidth} = useBarStyles({});
 
   return (
     <View style={styles.stationNameContainer}>
@@ -605,12 +601,12 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
 };
 
 const LineBoardToei: React.FC<Props> = ({
-  stations,
-  hasTerminus,
-  lineColors,
-}: Props) => {
+                                          stations,
+                                          hasTerminus,
+                                          lineColors,
+                                        }: Props) => {
   const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
-  const { selectedLine } = useAtomValue(lineState);
+  const {selectedLine} = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
   const dim = useWindowDimensions();
@@ -630,8 +626,8 @@ const LineBoardToei: React.FC<Props> = ({
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): React.ReactNode | null => {
       const isLast =
-        [...stations, ...Array.from({ length: 8 - stations.length })].length -
-          1 ===
+        [...stations, ...Array.from({length: 8 - stations.length})].length -
+        1 ===
         i;
 
       if (!s) {
@@ -672,7 +668,7 @@ const LineBoardToei: React.FC<Props> = ({
     () =>
       [
         ...stations,
-        ...Array.from({ length: 8 - stations.length }),
+        ...Array.from({length: 8 - stations.length}),
       ] as Station[],
     [stations]
   );

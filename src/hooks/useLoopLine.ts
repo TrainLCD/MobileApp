@@ -1,26 +1,26 @@
-import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import {useAtomValue} from 'jotai';
+import {useMemo} from 'react';
+import type {Station} from '~/gen/proto/stationapi_pb';
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
+  OSAKA_LOOP_LINE_ID,
   OSAKA_LOOP_LINE_MAJOR_STATIONS_ID,
-  OSASA_LOOP_LINE_ID,
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
-} from '../constants';
+} from '~/constants';
 import stationState from '../store/atoms/station';
-import { getIsLocal } from '../utils/trainTypeString';
-import { useCurrentLine } from './useCurrentLine';
-import { useCurrentStation } from './useCurrentStation';
-import { useCurrentTrainType } from './useCurrentTrainType';
+import {getIsLocal} from '~/utils/trainTypeString';
+import {useCurrentLine} from './useCurrentLine';
+import {useCurrentStation} from './useCurrentStation';
+import {useCurrentTrainType} from './useCurrentTrainType';
 
 export const useLoopLine = (
   overrideStations?: Station[],
   checkCurrentLine = true
 ) => {
-  const { stations: stationsFromAtom } = useAtomValue(stationState);
+  const {stations: stationsFromAtom} = useAtomValue(stationState);
 
   const stations = useMemo(
     () => overrideStations ?? stationsFromAtom,
@@ -45,8 +45,8 @@ export const useLoopLine = (
   const isOsakaLoopLine = useMemo(
     (): boolean =>
       line
-        ? line?.id === OSASA_LOOP_LINE_ID
-        : stations.every((s) => s.line?.id === OSASA_LOOP_LINE_ID),
+        ? line?.id === OSAKA_LOOP_LINE_ID
+        : stations.every((s) => s.line?.id === OSAKA_LOOP_LINE_ID),
     [line, stations]
   );
   const isMeijoLine = useMemo(

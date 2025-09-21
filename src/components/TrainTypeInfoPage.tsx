@@ -259,7 +259,11 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       (s) => s.groupId === finalStation.groupId
     );
 
-    return stopStations.slice(finalIndex + 1, stopStations.length);
+    if (finalIndex === -1) {
+      return [];
+    }
+
+    return stopStations.slice(finalIndex + 1);
   }, [stopStations, finalStation]);
 
   const trainTypeLines = useMemo(

@@ -6,10 +6,13 @@ import React, {
   useRef,
 } from 'react';
 import {
+  type LayoutChangeEvent,
   ScrollView,
+  type StyleProp,
   StyleSheet,
   useWindowDimensions,
   type View,
+  type ViewStyle,
 } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -59,26 +62,33 @@ const Marquee = ({ children }: Props) => {
     [dim.width, offsetX]
   );
 
-  const childrenCloned = useMemo(
-    () =>
-      cloneElement(children, {
-        // biome-ignore lint/suspicious/noExplicitAny: どうしょうもない
-        ...(children.props as any),
-        style: {
-          // biome-ignore lint/suspicious/noExplicitAny: どうしょうもない
-          ...(children.props as any).style,
+  const childrenCloned = useMemo(() => {
+    type LayoutableProps = {
+      style?: StyleProp<ViewStyle>;
+      onLayout?: (event: LayoutChangeEvent) => void;
+    };
+    const { style: childStyle, onLayout: originalOnLayout } =
+      children.props as LayoutableProps;
+
+    const handleLayout = (event: LayoutChangeEvent) => {
+      const {
+        nativeEvent: {
+          layout: { width },
         },
-        onLayout: ({
-          nativeEvent: {
-            layout: { width },
-          },
-        }: {
-          nativeEvent: { layout: { width: number } };
-        }) => startScroll(width),
-        ref: wrapperViewRef,
-      }),
-    [children, startScroll]
-  );
+      } = event;
+      startScroll(width);
+      originalOnLayout?.(event);
+    };
+
+    const mergedProps = {
+      ...(children.props as Record<string, unknown>),
+      style: childStyle,
+      onLayout: handleLayout,
+      ref: wrapperViewRef,
+    };
+
+    return cloneElement(children, mergedProps);
+  }, [children, startScroll]);
 
   // restart on rotation or size change
   useEffect(() => {

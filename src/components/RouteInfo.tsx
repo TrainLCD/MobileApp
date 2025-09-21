@@ -262,8 +262,9 @@ export const RouteInfo: React.FC<Props> = ({
   }, [stations, stopStations, trainType?.lines]);
 
   return (
-    <Pressable style={styles.root} onPress={onClose}>
-      <Pressable
+    <View style={styles.root}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+      <View
         style={[
           styles.contentView,
           {
@@ -369,7 +370,7 @@ export const RouteInfo: React.FC<Props> = ({
         <View style={styles.buttons}>
           <Button onPress={onClose}>OK</Button>
         </View>
-      </Pressable>
-    </Pressable>
+      </View>
+    </View>
   );
 };

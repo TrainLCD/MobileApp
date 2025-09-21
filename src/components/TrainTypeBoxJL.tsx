@@ -111,8 +111,9 @@ const TrainTypeBoxJL: React.FC<Props> = ({
   return (
     <View style={styles.box}>
       <View style={styles.innerBox}>
-        {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
-          trainTypeName.split('').map((char, idx) => (
+        {headerLangState !== 'EN' &&
+        japaneseRegexp.test(trainTypeName ?? '') ? (
+          (trainTypeName ?? '').split('').map((char, idx) => (
             <Typography
               numberOfLines={numberOfLines}
               adjustsFontSizeToFit

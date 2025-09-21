@@ -9,6 +9,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import type { Station } from '~/gen/proto/stationapi_pb';
 import { getStationsByName } from '~/gen/proto/stationapi-StationAPI_connectquery';
@@ -84,6 +85,7 @@ type Props = {
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const insets = useSafeAreaInsets();
 
   const {
     data: stationsData,
@@ -158,10 +160,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     >
       <Pressable style={styles.root} onPress={handleClose}>
         <Pressable
+          onPress={() => {}}
           style={[
             styles.contentView,
             {
               backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+              marginBottom: insets.bottom || 0,
             },
             isTablet && {
               width: '80%',
