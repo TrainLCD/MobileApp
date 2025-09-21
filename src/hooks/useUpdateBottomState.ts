@@ -1,18 +1,18 @@
-import {useAtom, useAtomValue} from 'jotai';
-import {useCallback, useEffect} from 'react';
-import {APP_THEME} from '~/models/Theme';
+import { useAtom, useAtomValue } from 'jotai';
+import { useCallback, useEffect } from 'react';
+import { APP_THEME } from '~/models/Theme';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
-import {useInterval} from './useInterval';
-import {useShouldHideTypeChange} from './useShouldHideTypeChange';
-import {useThemeStore} from './useThemeStore';
-import {useTransferLines} from './useTransferLines';
-import {useTypeWillChange} from './useTypeWillChange';
-import {useValueRef} from './useValueRef';
+import { useInterval } from './useInterval';
+import { useShouldHideTypeChange } from './useShouldHideTypeChange';
+import { useThemeStore } from './useThemeStore';
+import { useTransferLines } from './useTransferLines';
+import { useTypeWillChange } from './useTypeWillChange';
+import { useValueRef } from './useValueRef';
 
 export const useUpdateBottomState = () => {
-  const [{bottomState}, setNavigation] = useAtom(navigationState);
-  const {bottomTransitionInterval} = useAtomValue(tuningState);
+  const [{ bottomState }, setNavigation] = useAtom(navigationState);
+  const { bottomTransitionInterval } = useAtomValue(tuningState);
   const bottomStateRef = useValueRef(bottomState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
@@ -25,11 +25,11 @@ export const useUpdateBottomState = () => {
 
   useEffect(() => {
     if (!transferLines.length) {
-      setNavigation((prev) => ({...prev, bottomState: 'LINE'}));
+      setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
     }
   }, [setNavigation, transferLines.length]);
 
-  const {pause} = useInterval(
+  const { pause } = useInterval(
     useCallback(() => {
       if (isLEDThemeRef.current) {
         return;
@@ -38,7 +38,7 @@ export const useUpdateBottomState = () => {
       switch (bottomStateRef.current) {
         case 'LINE':
           if (transferLines.length) {
-            setNavigation((prev) => ({...prev, bottomState: 'TRANSFER'}));
+            setNavigation((prev) => ({ ...prev, bottomState: 'TRANSFER' }));
             return;
           }
           if (isTypeWillChangeRef.current && !shouldHideTypeChangeRef.current) {
@@ -55,7 +55,7 @@ export const useUpdateBottomState = () => {
               bottomState: 'TYPE_CHANGE',
             }));
           } else {
-            setNavigation((prev) => ({...prev, bottomState: 'LINE'}));
+            setNavigation((prev) => ({ ...prev, bottomState: 'LINE' }));
           }
           break;
         case 'TYPE_CHANGE':
@@ -78,5 +78,5 @@ export const useUpdateBottomState = () => {
     bottomTransitionInterval
   );
 
-  return {pause};
+  return { pause };
 };

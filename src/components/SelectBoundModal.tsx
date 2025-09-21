@@ -1,27 +1,37 @@
-import {useNavigation} from '@react-navigation/native';
-import {useAtom, useSetAtom} from 'jotai';
+import { useNavigation } from '@react-navigation/native';
+import { useAtom, useSetAtom } from 'jotai';
 import type React from 'react';
-import {useCallback, useEffect, useState} from 'react';
-import {Alert, Modal, Pressable, StyleSheet, View} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type {Line, Station, TrainType} from '~/gen/proto/stationapi_pb';
-import type {SavedRoute, SavedRouteWithoutTrainTypeInput, SavedRouteWithTrainTypeInput,} from '~/models/SavedRoute';
-import {APP_THEME} from '~/models/Theme';
+import { Heading } from '~/components/Heading';
+import { LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID } from '~/constants';
+import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
+import {
+  useBounds,
+  useGetStationsWithTermination,
+  useLoopLine,
+  useSavedRoutes,
+  useThemeStore,
+} from '~/hooks';
+import { directionToDirectionName, type LineDirection } from '~/models/Bound';
+import type {
+  SavedRoute,
+  SavedRouteWithoutTrainTypeInput,
+  SavedRouteWithTrainTypeInput,
+} from '~/models/SavedRoute';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
-import {Heading} from '~/components/Heading';
-import {LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID} from '~/constants';
-import {useBounds, useGetStationsWithTermination, useLoopLine, useSavedRoutes, useThemeStore,} from '~/hooks';
-import {directionToDirectionName, type LineDirection} from '~/models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import {isJapanese, translate} from '~/translation';
-import {RFValue} from '~/utils/rfValue';
 import ErrorScreen from './ErrorScreen';
-import {LineCard} from './LineCard';
-import {RouteInfoModal} from './RouteInfoModal';
-import {SelectBoundSettingListModal} from './SelectBoundSettingListModal';
+import { LineCard } from './LineCard';
+import { RouteInfoModal } from './RouteInfoModal';
+import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -37,7 +47,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minHeight: 256,
   },
-  stopsContainer: {gap: 14, marginTop: 24},
+  stopsContainer: { gap: 14, marginTop: 24 },
   buttonsContainer: {
     gap: 8,
     marginTop: 24,
@@ -60,9 +70,9 @@ const styles = StyleSheet.create({
   redOutlinedButtonText: {
     color: '#ff3b30',
   },
-  closeButton: {marginTop: 24},
-  closeButtonText: {fontWeight: 'bold'},
-  heading: {width: '100%', marginLeft: 48},
+  closeButton: { marginTop: 24 },
+  closeButtonText: { fontWeight: 'bold' },
+  heading: { width: '100%', marginLeft: 48 },
 });
 
 type RenderButtonProps = {
@@ -86,18 +96,18 @@ type Props = {
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
-                                                    visible,
-                                                    onClose,
-                                                    line,
-                                                    station,
-                                                    stations,
-                                                    trainType,
-                                                    destination: wantedDestination,
-                                                    loading,
-                                                    error,
-                                                    terminateByDestination,
-                                                    onTrainTypeSelect,
-                                                  }) => {
+  visible,
+  onClose,
+  line,
+  station,
+  stations,
+  trainType,
+  destination: wantedDestination,
+  loading,
+  error,
+  terminateByDestination,
+  onTrainTypeSelect,
+}) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
 
   const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
@@ -108,10 +118,10 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   const navigation = useNavigation();
   const setStationState = useSetAtom(stationState);
-  const [{fetchedTrainTypes, autoModeEnabled}, setNavigationState] =
+  const [{ fetchedTrainTypes, autoModeEnabled }, setNavigationState] =
     useAtom(navigationState);
   const setLineState = useSetAtom(lineState);
-  const {isLoopLine} = useLoopLine(stations, false);
+  const { isLoopLine } = useLoopLine(stations, false);
   const {
     bounds: [inboundStations, outboundStations],
   } = useBounds(stations);
@@ -177,7 +187,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       const oedoLineTerminus =
         direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
 
-      setLineState((prev) => ({...prev, selectedLine: line}));
+      setLineState((prev) => ({ ...prev, selectedLine: line }));
       setStationState((prev) => ({
         ...prev,
         station,
@@ -244,11 +254,11 @@ export const SelectBoundModal: React.FC<Props> = ({
   );
 
   const renderButton = useCallback(
-    ({boundStations, direction, loading}: RenderButtonProps) => {
+    ({ boundStations, direction, loading }: RenderButtonProps) => {
       if (loading) {
         return (
           <SkeletonPlaceholder borderRadius={4} speed={1500}>
-            <SkeletonPlaceholder.Item width="100%" height={72}/>
+            <SkeletonPlaceholder.Item width="100%" height={72} />
           </SkeletonPlaceholder>
         );
       }
@@ -359,7 +369,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     if (savedRoute) {
       Alert.alert(
         translate('removeFromSavedRoutes'),
-        translate('confirmDeleteRouteText', {routeName: savedRoute.name}),
+        translate('confirmDeleteRouteText', { routeName: savedRoute.name }),
         [
           {
             text: 'OK',
@@ -489,17 +499,17 @@ export const SelectBoundModal: React.FC<Props> = ({
             <View style={styles.buttonsContainer}>
               {inboundStations.length
                 ? renderButton({
-                  boundStations: inboundStations,
-                  direction: 'INBOUND',
-                  loading,
-                })
+                    boundStations: inboundStations,
+                    direction: 'INBOUND',
+                    loading,
+                  })
                 : null}
               {outboundStations.length
                 ? renderButton({
-                  boundStations: outboundStations,
-                  direction: 'OUTBOUND',
-                  loading,
-                })
+                    boundStations: outboundStations,
+                    direction: 'OUTBOUND',
+                    loading,
+                  })
                 : null}
 
               <View style={styles.stopsContainer}>

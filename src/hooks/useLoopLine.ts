@@ -1,6 +1,5 @@
-import {useAtomValue} from 'jotai';
-import {useMemo} from 'react';
-import type {Station} from '~/gen/proto/stationapi_pb';
+import { useAtomValue } from 'jotai';
+import { useMemo } from 'react';
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
@@ -10,17 +9,18 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '~/constants';
+import type { Station } from '~/gen/proto/stationapi_pb';
+import { getIsLocal } from '~/utils/trainTypeString';
 import stationState from '../store/atoms/station';
-import {getIsLocal} from '~/utils/trainTypeString';
-import {useCurrentLine} from './useCurrentLine';
-import {useCurrentStation} from './useCurrentStation';
-import {useCurrentTrainType} from './useCurrentTrainType';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import { useCurrentTrainType } from './useCurrentTrainType';
 
 export const useLoopLine = (
   overrideStations?: Station[],
   checkCurrentLine = true
 ) => {
-  const {stations: stationsFromAtom} = useAtomValue(stationState);
+  const { stations: stationsFromAtom } = useAtomValue(stationState);
 
   const stations = useMemo(
     () => overrideStations ?? stationsFromAtom,

@@ -1,10 +1,15 @@
-import {Orientation} from 'expo-screen-orientation';
+import { Orientation } from 'expo-screen-orientation';
 import React from 'react';
-import {type GestureResponderEvent, Pressable, StyleSheet, useWindowDimensions,} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useDeviceOrientation} from '~/hooks/useDeviceOrientation';
-import {translate} from '~/translation';
-import {RFValue} from '~/utils/rfValue';
+import {
+  type GestureResponderEvent,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { translate } from '~/translation';
+import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 interface Props {
@@ -14,10 +19,10 @@ interface Props {
 }
 
 const WarningPanel: React.FC<Props> = ({
-                                         text,
-                                         onPress,
-                                         warningLevel,
-                                       }: Props) => {
+  text,
+  onPress,
+  warningLevel,
+}: Props) => {
   const borderColor = (() => {
     switch (warningLevel) {
       case 'URGENT':

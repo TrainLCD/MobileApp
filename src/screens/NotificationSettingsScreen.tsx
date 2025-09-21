@@ -1,23 +1,30 @@
-import {useNavigation} from '@react-navigation/native';
-import {Effect, pipe} from 'effect';
+import { useNavigation } from '@react-navigation/native';
+import { Effect, pipe } from 'effect';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import {useAtom, useAtomValue} from 'jotai';
-import React, {useCallback, useEffect, useMemo} from 'react';
-import {Alert, FlatList, SafeAreaView, StyleSheet, TouchableWithoutFeedback, View,} from 'react-native';
-import {isClip} from 'react-native-app-clip';
-import {Path, Svg} from 'react-native-svg';
-import type {Station} from '~/gen/proto/stationapi_pb';
+import { useAtom, useAtomValue } from 'jotai';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import {
+  Alert,
+  FlatList,
+  SafeAreaView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
+import { isClip } from 'react-native-app-clip';
+import { Path, Svg } from 'react-native-svg';
+import { Heading } from '~/components/Heading';
+import type { Station } from '~/gen/proto/stationapi_pb';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese, translate } from '~/translation';
+import { RFValue } from '~/utils/rfValue';
 import FAB from '../components/FAB';
-import {Heading} from '~/components/Heading';
 import Typography from '../components/Typography';
-import {useThemeStore} from '~/hooks';
-import {APP_THEME} from '~/models/Theme';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
-import {isJapanese, translate} from '~/translation';
-import {RFValue} from '~/utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
@@ -59,11 +66,11 @@ type ListItemProps = {
 };
 
 const ListItem: React.FC<ListItemProps> = ({
-                                             active,
-                                             item,
-                                             isLEDTheme,
-                                             onPress,
-                                           }: ListItemProps) => {
+  active,
+  item,
+  isLEDTheme,
+  onPress,
+}: ListItemProps) => {
   const checkboxBorderColor = useMemo(() => {
     return isLEDTheme ? '#fff' : '#333';
   }, [isLEDTheme]);
@@ -109,8 +116,8 @@ const ListItem: React.FC<ListItemProps> = ({
 const NotificationSettings: React.FC = () => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const {stations} = useAtomValue(stationState);
-  const [{targetStationIds}, setNotify] = useAtom(notifyState);
+  const { stations } = useAtomValue(stationState);
+  const [{ targetStationIds }, setNotify] = useAtom(notifyState);
   const navigation = useNavigation();
 
   const handlePressBack = useCallback(() => {
@@ -182,7 +189,7 @@ const NotificationSettings: React.FC = () => {
   useEffect(() => {
     pipe(
       Effect.promise(() => Notifications.requestPermissionsAsync()),
-      Effect.andThen(({granted: notifyPermGranted}) => {
+      Effect.andThen(({ granted: notifyPermGranted }) => {
         if (!notifyPermGranted) {
           showNotificationNotGrantedAlert();
           return;
@@ -191,7 +198,7 @@ const NotificationSettings: React.FC = () => {
         return Effect.promise(() =>
           Location.getBackgroundPermissionsAsync()
         ).pipe(
-          Effect.andThen(({granted: bgPermGranted}) => {
+          Effect.andThen(({ granted: bgPermGranted }) => {
             if (!bgPermGranted) {
               showAlwaysPermissionNotGrantedAlert();
             }
@@ -203,7 +210,7 @@ const NotificationSettings: React.FC = () => {
   }, [showAlwaysPermissionNotGrantedAlert, showNotificationNotGrantedAlert]);
 
   const renderItem = useCallback(
-    ({item}: { item: Station }) => {
+    ({ item }: { item: Station }) => {
       const isActive = !!targetStationIds.find((id) => id === item.id);
       const handleListItemPress = (): void => {
         if (isActive) {
@@ -252,7 +259,7 @@ const NotificationSettings: React.FC = () => {
           keyExtractor={(item: Station): string => item.id.toString()}
         />
       </SafeAreaView>
-      <FAB onPress={handlePressBack} icon="checkmark"/>
+      <FAB onPress={handlePressBack} icon="checkmark" />
     </>
   );
 };

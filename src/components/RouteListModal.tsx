@@ -1,23 +1,23 @@
-import type {ConnectError} from '@connectrpc/connect';
-import {useMutation} from '@connectrpc/connect-query';
-import {useSetAtom} from 'jotai';
+import type { ConnectError } from '@connectrpc/connect';
+import { useMutation } from '@connectrpc/connect-query';
+import { useSetAtom } from 'jotai';
 import type React from 'react';
-import {useCallback, useMemo, useState} from 'react';
-import {Modal, SafeAreaView, StyleSheet, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import type {Route, Station, TrainType} from '~/gen/proto/stationapi_pb';
-import {getTrainTypesByStationId} from '~/gen/proto/stationapi-StationAPI_connectquery';
-import {useCurrentStation, useThemeStore} from '~/hooks';
-import {LED_THEME_BG_COLOR} from '~/constants';
-import {APP_THEME} from '~/models/Theme';
+import { useCallback, useMemo, useState } from 'react';
+import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LED_THEME_BG_COLOR } from '~/constants';
+import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
+import { getTrainTypesByStationId } from '~/gen/proto/stationapi-StationAPI_connectquery';
+import { useCurrentStation, useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese, translate } from '~/translation';
 import lineState from '../store/atoms/line';
-import {isJapanese, translate} from '~/translation';
 import isTablet from '../utils/isTablet';
 import FAB from './FAB';
-import {Heading} from './Heading';
+import { Heading } from './Heading';
 import Loading from './Loading';
-import {RouteList} from './RouteList';
-import {TrainTypeInfoPage} from './TrainTypeInfoPage';
+import { RouteList } from './RouteList';
+import { TrainTypeInfoPage } from './TrainTypeInfoPage';
 
 type Props = {
   finalStation: Station;
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  flexOne: {flex: 1},
+  flexOne: { flex: 1 },
   listContainer: {
     flex: 1,
     width: '100%',
@@ -66,20 +66,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 12,
   },
-  loading: {marginTop: 12},
+  loading: { marginTop: 12 },
 });
 
 const SAFE_AREA_FALLBACK = 32;
 
 export const RouteListModal: React.FC<Props> = ({
-                                                  finalStation,
-                                                  routes,
-                                                  visible,
-                                                  isRoutesLoading,
-                                                  isTrainTypesLoading,
-                                                  onClose,
-                                                  onSelect,
-                                                }: Props) => {
+  finalStation,
+  routes,
+  visible,
+  isRoutesLoading,
+  isTrainTypesLoading,
+  onClose,
+  onSelect,
+}: Props) => {
   const [trainTypeInfoPageVisible, setTrainTypeInfoPageVisible] =
     useState(false);
   const [selectedRoute, setSelectedRoute] = useState<Route>();
@@ -88,7 +88,7 @@ export const RouteListModal: React.FC<Props> = ({
   const setLineState = useSetAtom(lineState);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-  const {left: leftSafeArea, right: rightSafeArea} = useSafeAreaInsets();
+  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
   const currentStation = useCurrentStation();
 
   const {
@@ -121,7 +121,7 @@ export const RouteListModal: React.FC<Props> = ({
       }));
       setSelectedRoute(route);
       setSelectedTrainType(selectedStop.trainType);
-      fetchTrainTypes({stationId: selectedStop.id});
+      fetchTrainTypes({ stationId: selectedStop.id });
     },
     [currentStation?.groupId, fetchTrainTypes, setLineState]
   );
@@ -161,18 +161,18 @@ export const RouteListModal: React.FC<Props> = ({
             },
             isTablet
               ? {
-                width: '80%',
-                maxHeight: '90%',
-                shadowOpacity: 0.25,
-                shadowColor: '#333',
-                borderRadius: 16,
-              }
+                  width: '80%',
+                  maxHeight: '90%',
+                  shadowOpacity: 0.25,
+                  shadowColor: '#333',
+                  borderRadius: 16,
+                }
               : {
-                width: '100%',
-                height: '100%',
-                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-              },
+                  width: '100%',
+                  height: '100%',
+                  paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                  paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
+                },
           ]}
         >
           <View style={styles.root}>
@@ -187,12 +187,12 @@ export const RouteListModal: React.FC<Props> = ({
             </View>
             <View style={styles.listContainer}>
               {isRoutesLoading ? (
-                <Loading message={translate('loadingAPI')}/>
+                <Loading message={translate('loadingAPI')} />
               ) : (
                 <View
                   style={[
                     styles.flexOne,
-                    {opacity: isTrainTypesLoading ? 0.5 : 1},
+                    { opacity: isTrainTypesLoading ? 0.5 : 1 },
                   ]}
                 >
                   <RouteList
@@ -206,7 +206,7 @@ export const RouteListModal: React.FC<Props> = ({
             </View>
           </View>
         </SafeAreaView>
-        <FAB onPress={onClose} icon="close"/>
+        <FAB onPress={onClose} icon="close" />
       </View>
     </Modal>
   );
