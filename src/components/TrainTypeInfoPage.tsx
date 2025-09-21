@@ -210,17 +210,22 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       (s) => s.groupId === finalStation?.groupId
     );
 
+    if (curIndex === -1 || finalIndex === -1) {
+      return uniqBy(stops, 'id');
+    }
+
     if (curIndex > finalIndex) {
       const reversedStops = stops.slice().reverse();
+      const curInReversed = reversedStops.findIndex(
+        (s) => s.groupId === currentStation?.groupId
+      );
       return uniqBy(
-        reversedStops.slice(
-          reversedStops.findIndex((s) => s.groupId === currentStation?.groupId)
-        ),
+        reversedStops.slice(Math.max(curInReversed, 0)),
         'id'
       );
     }
 
-    return uniqBy(stops.slice(curIndex), 'id');
+    return uniqBy(stops.slice(Math.max(curIndex, 0)), 'id');
   }, [
     stations,
     currentStation?.groupId,
@@ -228,27 +233,23 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     fromRouteListModal,
   ]);
 
-  const afterFinalLines = useMemo(
-    () =>
-      uniqBy(stopStations, 'line.id')
-        .reduce<Line[]>((acc, sta, idx, arr) => {
-          if (!finalStation) {
-            return [];
-          }
+  const afterFinalLines = useMemo(() => {
+    if (!finalStation) {
+      return [];
+    }
 
-          const finalIndex = arr.findIndex(
-            (s) => s.line?.id === finalStation.line?.id
-          );
+    const stationsWithLine = stopStations.filter((s) => s.line);
+    const uniqStationsByLine = uniqBy(stationsWithLine, 'line.id');
+    const finalIndex = uniqStationsByLine.findIndex(
+      (s) => s.line?.id === finalStation.line?.id
+    );
 
-          if (!sta.line || idx < finalIndex) {
-            return acc;
-          }
+    if (finalIndex === -1) {
+      return [];
+    }
 
-          return acc.concat(sta.line);
-        }, [])
-        .slice(1),
-    [stopStations, finalStation]
-  );
+    return uniqStationsByLine.slice(finalIndex + 1).map((s) => s.line!);
+  }, [stopStations, finalStation]);
 
   const afterFinalStations = useMemo(() => {
     if (!finalStation) {
@@ -270,20 +271,21 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     () =>
       trainType?.lines.length
         ? uniqBy(
-            stopStations.map(
-              (s) =>
-                new Line({
-                  ...s.line,
-                  trainType: trainType.lines.find((l) => l.id === s.line?.id)
-                    ?.trainType,
-                })
-            ),
+            stopStations
+              .filter((s): s is Station & { line: NonNullable<Station['line']> } => Boolean(s.line))
+              .map(
+                (s) =>
+                  new Line({
+                    ...s.line,
+                    trainType: trainType.lines.find((l) => l.id === s.line?.id)?.trainType,
+                  })
+              ),
             'id'
           )
         : uniqBy(
             stations.map((s) => s.line ?? null),
             'id'
-          ).filter((l) => l !== null),
+          ).filter((l): l is Line => l !== null),
     [stations, stopStations, trainType?.lines]
   );
 
