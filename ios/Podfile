@@ -48,17 +48,17 @@ abstract_target 'TrainLCD' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
-    end
+  end
 
-    target 'ProdTrainLCD' do
-      target 'ProdAppClip' do
-        inherit! :complete
-      end
+  target 'ProdTrainLCD' do
+    target 'ProdAppClip' do
+      inherit! :complete
     end
+  end
 
-    target 'CanaryTrainLCD' do
-      target 'CanaryAppClip' do
-        inherit! :complete
+  target 'CanaryTrainLCD' do
+    target 'CanaryAppClip' do
+      inherit! :complete
     end
   end
 end
