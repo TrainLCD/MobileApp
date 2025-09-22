@@ -201,6 +201,9 @@ export const useTTS = (): void => {
       pathEnFile.write(base64ToUint8Array(ttsJson.result.enAudioContent));
     }
 
+    if (!ttsJson?.result?.jaAudioContent || !ttsJson?.result?.enAudioContent) {
+      return null;
+    }
     return {
       id: ttsJson.result.id,
       pathJa: pathJaFile.uri,
