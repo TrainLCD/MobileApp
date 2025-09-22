@@ -167,7 +167,8 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
     // 相鉄
     case 29001: // 本線
     case 29002: // いずみ野線
-    case 29003: // 新横浜線
+    case 29003: // 相鉄・JR直通線
+    case 29004: // 新横浜線
       return { signPath: require('../assets/marks/sotetsu/so.webp') };
     // 横浜市交通局
     case 99316: // ブルーライン

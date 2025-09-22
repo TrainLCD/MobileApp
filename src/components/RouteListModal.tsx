@@ -3,8 +3,8 @@ import { useMutation } from '@connectrpc/connect-query';
 import { useSetAtom } from 'jotai';
 import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, SafeAreaView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Modal, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { getTrainTypesByStationId } from '~/gen/proto/stationapi-StationAPI_connectquery';
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   loading: { marginTop: 12 },
 });
 
-const SAFE_AREA_FALLBACK = 32;
+const _SAFE_AREA_FALLBACK = 32;
 
 export const RouteListModal: React.FC<Props> = ({
   finalStation,
@@ -88,7 +88,6 @@ export const RouteListModal: React.FC<Props> = ({
   const setLineState = useSetAtom(lineState);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-  const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
   const currentStation = useCurrentStation();
 
   const {
@@ -170,8 +169,8 @@ export const RouteListModal: React.FC<Props> = ({
               : {
                   width: '100%',
                   height: '100%',
-                  paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                  paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
+                  // paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+                  // paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
                 },
           ]}
         >

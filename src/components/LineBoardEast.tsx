@@ -317,13 +317,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
     if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
+      return arrived ? { left: widthScale(-15) } : null;
     }
 
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.57 * index) - widthScale(14),
+        left: widthScale(41.57 * index) - widthScale(15),
       };
     }
 
@@ -482,7 +482,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             bottom: isTablet ? dim.height / 3.5 + 32 : 32,
-            marginLeft: widthScale(14),
+            marginLeft: widthScale(15),
           },
         ]}
       >

@@ -2,7 +2,7 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { Effect, pipe } from 'effect';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -124,8 +124,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       }),
       Effect.andThen((capturedURI) =>
         Effect.tryPromise({
-          try: () =>
-            FileSystem.readAsStringAsync(capturedURI, { encoding: 'base64' }),
+          try: async () => {
+            const file = new File(capturedURI);
+            return await file.base64();
+          },
           catch: captureError,
         })
       ),
@@ -157,7 +159,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         catch: captureError,
       }),
       Effect.andThen((capturedURI) =>
-        FileSystem.readAsStringAsync(capturedURI, { encoding: 'base64' })
+        Effect.tryPromise({
+          try: async () => {
+            const file = new File(capturedURI);
+            return await file.base64();
+          },
+          catch: captureError,
+        })
       ),
       Effect.andThen((base64) => {
         const urlString = `data:image/jpeg;base64,${base64}`;
