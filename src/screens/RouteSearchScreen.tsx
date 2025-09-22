@@ -2,12 +2,13 @@ import { useMutation } from '@connectrpc/connect-query';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { EmptyResult } from '~/components/EmptyResult';
 import FooterTabBar from '~/components/FooterTabBar';

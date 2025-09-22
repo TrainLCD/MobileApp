@@ -1,6 +1,6 @@
 import type { AudioPlayer } from 'expo-audio';
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
@@ -10,6 +10,47 @@ import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { usePrevious } from './usePrevious';
 import { useTTSCache } from './useTTSCache';
 import { useTTSText } from './useTTSText';
+
+const BASE64_ALPHABET =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+
+const base64ToUint8Array = (input: string): Uint8Array => {
+  const sanitized = input.replace(/[^A-Za-z0-9+/=]/g, '');
+  const length =
+    (sanitized.length * 3) / 4 -
+    (sanitized.endsWith('==') ? 2 : sanitized.endsWith('=') ? 1 : 0);
+  const bytes = new Uint8Array(length);
+
+  let byteIndex = 0;
+  const decodeChar = (char: string): number => {
+    if (char === '=') {
+      return 0;
+    }
+    const index = BASE64_ALPHABET.indexOf(char);
+    if (index === -1) {
+      throw new Error('Invalid base64 character.');
+    }
+    return index;
+  };
+
+  for (let i = 0; i < sanitized.length; i += 4) {
+    const chunk =
+      (decodeChar(sanitized[i]) << 18) |
+      (decodeChar(sanitized[i + 1]) << 12) |
+      (decodeChar(sanitized[i + 2]) << 6) |
+      decodeChar(sanitized[i + 3]);
+
+    bytes[byteIndex++] = (chunk >> 16) & 0xff;
+    if (sanitized[i + 2] !== '=') {
+      bytes[byteIndex++] = (chunk >> 8) & 0xff;
+    }
+    if (sanitized[i + 3] !== '=') {
+      bytes[byteIndex++] = chunk & 0xff;
+    }
+  }
+
+  return bytes;
+};
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled } = useAtomValue(speechState);
@@ -149,30 +190,22 @@ export const useTTS = (): void => {
       })
     ).json();
 
-    const baseDir = FileSystem.cacheDirectory;
+    const cacheDirectory = Paths.cache;
+    const pathJaFile = new File(cacheDirectory, `${ttsJson.result.id}_ja.mp3`);
+    const pathEnFile = new File(cacheDirectory, `${ttsJson.result.id}_en.mp3`);
 
-    const pathJa = `${baseDir}/${ttsJson.result.id}_ja.mp3`;
     if (ttsJson?.result?.jaAudioContent) {
-      await FileSystem.writeAsStringAsync(
-        pathJa,
-        ttsJson.result.jaAudioContent,
-        {
-          encoding: FileSystem.EncodingType.Base64,
-        }
-      );
+      pathJaFile.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
     }
-    const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`;
     if (ttsJson?.result?.enAudioContent) {
-      await FileSystem.writeAsStringAsync(
-        pathEn,
-        ttsJson.result.enAudioContent,
-        {
-          encoding: FileSystem.EncodingType.Base64,
-        }
-      );
+      pathEnFile.write(base64ToUint8Array(ttsJson.result.enAudioContent));
     }
 
-    return { id: ttsJson.result.id, pathJa, pathEn };
+    return {
+      id: ttsJson.result.id,
+      pathJa: pathJaFile.uri,
+      pathEn: pathEnFile.uri,
+    };
   }, [textEn, textJa, ttsApiUrl, user]);
 
   const speech = useCallback(async () => {

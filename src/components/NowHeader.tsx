@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
     backgroundColor: Platform.OS === 'android' ? '#FAFAFA' : undefined,
   },
   nowHeaderCard: {
+    position: 'relative',
     width: '100%',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
