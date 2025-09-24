@@ -1,11 +1,12 @@
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import { isJapanese } from '~/translation';
 
 export const getStationPrimaryCode = (
   s: Station | null | undefined
 ): string | null => s?.stationNumbers?.[0]?.stationNumber ?? null;
 
 export const getStationName = (s: Station | null | undefined): string | null =>
-  s?.name ?? null;
+  (isJapanese ? s?.name : s?.nameRoman) ?? null;
 
 export const getStationLineId = (
   s: Station | null | undefined
