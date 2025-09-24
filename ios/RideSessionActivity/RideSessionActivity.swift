@@ -22,11 +22,10 @@ func getRunningStateText(
   }
 
   if stopped {
-    if isDynamicIsland{
+    if isDynamicIsland {
       return String(localized: "stop")
-    } else {
-      return String(localized: "nowStoppingAt")
     }
+    return String(localized: "nowStoppingAt")
   }
 
   if approaching {
