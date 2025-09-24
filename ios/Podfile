@@ -48,6 +48,25 @@ abstract_target 'TrainLCD' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
+
+    plist_buddy = '/usr/libexec/PlistBuddy'
+    info_plists_to_clean = [File.join(__dir__, 'WatchApp', 'Info.plist')]
+
+    [
+      'WatchApp/Schemes',
+      'WatchApp Extension/Schemes',
+      'WatchWidget/Schemes',
+      'RideSessionActivity/Schemes',
+    ].each do |relative_dir|
+      info_plists_to_clean.concat Dir[File.join(__dir__, relative_dir, '*', 'Info.plist')]
+    end
+
+    info_plists_to_clean.each do |plist_path|
+      next unless File.exist?(plist_path)
+      next unless system(plist_buddy, '-c', 'Print :RCTNewArchEnabled', plist_path, out: File::NULL, err: File::NULL)
+
+      system(plist_buddy, '-c', 'Delete :RCTNewArchEnabled', plist_path)
+    end
   end
 
   target 'ProdTrainLCD' do
