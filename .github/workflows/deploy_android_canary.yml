@@ -76,3 +76,4 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           NODE_ENV: production
+          ANDROID_HOME: /opt/android-sdk
