@@ -1299,6 +1299,8 @@ PODS:
     - Yoga
   - ExpoNetwork (8.0.7):
     - ExpoModulesCore
+  - ExpoScreenCapture (8.0.8):
+    - ExpoModulesCore
   - ExpoScreenOrientation (9.0.7):
     - boost
     - DoubleConversion
@@ -4490,6 +4492,7 @@ DEPENDENCIES:
   - "ExpoLocation (from `../node_modules/.pnpm/expo-location@19.0.7_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@0.81.4_ee347b4317ac9408eae3ec60421e9c3c/node_modules/expo-location/ios`)"
   - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@3.0.18_react-native@0.81.4_@babel+core@7.27.1_@react-native-community_ebb399f34160ffe7967e61d4627e1aed/node_modules/expo-modules-core`)"
   - "ExpoNetwork (from `../node_modules/.pnpm/expo-network@8.0.7_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@0.81.4_@_389677330552d7bcb29d1f13ccc3c34f/node_modules/expo-network/ios`)"
+  - "ExpoScreenCapture (from `../node_modules/.pnpm/expo-screen-capture@8.0.8_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@0_1610a58b76a749a4b780d71551caa76f/node_modules/expo-screen-capture/ios`)"
   - "ExpoScreenOrientation (from `../node_modules/.pnpm/expo-screen-orientation@9.0.7_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-nati_db5fadd88ca46d16bec94fae770fca61/node_modules/expo-screen-orientation/ios`)"
   - "ExpoSplashScreen (from `../node_modules/.pnpm/expo-splash-screen@31.0.10_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@_17d8311dbc1e7e3d3784e3d685aaea63/node_modules/expo-splash-screen/ios`)"
   - "ExpoSQLite (from `../node_modules/.pnpm/expo-sqlite@16.0.8_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@0.81.4_@_f556aae13b0e957d66c43da6ce5bdded/node_modules/expo-sqlite/ios`)"
@@ -4672,6 +4675,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo-modules-core@3.0.18_react-native@0.81.4_@babel+core@7.27.1_@react-native-community_ebb399f34160ffe7967e61d4627e1aed/node_modules/expo-modules-core"
   ExpoNetwork:
     :path: "../node_modules/.pnpm/expo-network@8.0.7_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@0.81.4_@_389677330552d7bcb29d1f13ccc3c34f/node_modules/expo-network/ios"
+  ExpoScreenCapture:
+    :path: "../node_modules/.pnpm/expo-screen-capture@8.0.8_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-native@0_1610a58b76a749a4b780d71551caa76f/node_modules/expo-screen-capture/ios"
   ExpoScreenOrientation:
     :path: "../node_modules/.pnpm/expo-screen-orientation@9.0.7_expo@54.0.10_@babel+core@7.27.1_graphql@16.8.1_react-nati_db5fadd88ca46d16bec94fae770fca61/node_modules/expo-screen-orientation/ios"
   ExpoSplashScreen:
@@ -4892,6 +4897,7 @@ SPEC CHECKSUMS:
   ExpoLocation: 93d7faa0c2adbd5a04686af0c1a61bc6ed3ee2f7
   ExpoModulesCore: e1b5401a7af4c7dbf4fe26b535918a72c6ed8a7b
   ExpoNetwork: b87392dcc24d49a595f186ca25cdcf7293d30275
+  ExpoScreenCapture: d3bf63d48c87f8dad3f0874412ce9d47b6ddf709
   ExpoScreenOrientation: 6d5996b4de4e5d464fff470949404ec4d91567b7
   ExpoSplashScreen: cbb839de72110dea1851dd3e85080b7923af2540
   ExpoSQLite: 7fa091ba5562474093fef09be644161a65e11b3f
@@ -5020,6 +5026,6 @@ SPEC CHECKSUMS:
   UMAppLoader: e1234c45d2b7da239e9e90fc4bbeacee12afd5b6
   Yoga: 9b30b783a17681321b52ac507a37219d7d795ace
 
-PODFILE CHECKSUM: 712d8e114c8ef95eed06b45f6398ef00ee409808
+PODFILE CHECKSUM: f85b0bd25b40d4d1cf4450f9a78e561703d551ed
 
 COCOAPODS: 1.16.2
