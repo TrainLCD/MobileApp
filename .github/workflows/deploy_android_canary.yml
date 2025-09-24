@@ -3,7 +3,7 @@ name: Deploy Android Canary App
 on:
   push:
     branches:
-      - dev
+      - canary
     paths:
       - "android/app/build.gradle"
       - "android/wearable/build.gradle.kts"
