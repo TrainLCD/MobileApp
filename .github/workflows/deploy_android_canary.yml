@@ -12,7 +12,7 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
         with:
@@ -75,3 +75,4 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           NODE_ENV: production
+          ANDROID_HOME: /opt/android-sdk
