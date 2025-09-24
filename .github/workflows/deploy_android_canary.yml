@@ -3,11 +3,11 @@ name: Deploy Android Canary App
 on:
   push:
     branches:
-      - canary
+      # - canary
       - feature/self-hosted-canary
-    paths:
-      - "android/app/build.gradle"
-      - "android/wearable/build.gradle.kts"
+    # paths:
+    #   - "android/app/build.gradle"
+    #   - "android/wearable/build.gradle.kts"
 env:
   TZ: "Asia/Tokyo"
 
