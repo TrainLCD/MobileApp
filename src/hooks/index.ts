@@ -12,6 +12,7 @@ export { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 export { useCanGoForward } from './useCanGoForward';
 export { useCheckStoreVersion } from './useCheckStoreVersion';
 export { useClock } from './useClock';
+export { useCommunityRoutes } from './useCommunityRoutes';
 export { useConnectedLines } from './useConnectedLines';
 export { useConnectivity } from './useConnectivity';
 export { useCurrentLine } from './useCurrentLine';

@@ -1,7 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/gen/proto/stationapi_pb';
-import { TOEI_OEDO_LINE_ID } from '../constants';
 import {
   TOEI_OEDO_LINE_MAJOR_STATIONS_ID,
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER,
@@ -11,39 +10,41 @@ import {
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
-import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
-export const useBounds = (): {
+export const useBounds = (
+  stations: Station[]
+): {
   bounds: [Station[], Station[]];
   directionalStops: Station[];
 } => {
-  const { stations, selectedDirection, selectedBound } =
-    useAtomValue(stationState);
+  const { selectedDirection, selectedBound } = useAtomValue(stationState);
   const { trainType } = useAtomValue(navigationState);
   const currentStation = useCurrentStation();
-  const currentLine = useCurrentLine();
 
   const {
     isLoopLine,
+    isOedoLine,
     inboundStationsForLoopLine,
     outboundStationsForLoopLine,
-  } = useLoopLine();
+  } = useLoopLine(stations, false);
 
   const bounds = useMemo((): [Station[], Station[]] => {
+    if (!stations.length) return [[], []];
     const inboundStation = stations[stations.length - 1];
     const outboundStation = stations[0];
 
-    if (TOEI_OEDO_LINE_ID === currentLine?.id) {
+    if (isOedoLine) {
       const stationIndex = stations.findIndex(
         (s) => s.groupId === currentStation?.groupId
       );
+      if (stationIndex < 0) return [[], []];
       const oedoLineInboundStops = stations
         .slice(stationIndex, stations.length)
         .filter(
           (s) =>
-            s.groupId !== currentStation?.groupId &&
+            s.id !== currentStation?.id &&
             TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
         );
       const oedoLineOutboundStops = stations
@@ -51,7 +52,7 @@ export const useBounds = (): {
         .reverse()
         .filter(
           (s) =>
-            (s.groupId !== currentStation?.groupId &&
+            (s.id !== currentStation?.id &&
               TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)) ||
             s.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER
         )
@@ -74,12 +75,12 @@ export const useBounds = (): {
 
     return [[inboundStation], [outboundStation]];
   }, [
-    currentLine?.id,
     currentStation,
     inboundStationsForLoopLine,
     isLoopLine,
-    outboundStationsForLoopLine,
     stations,
+    outboundStationsForLoopLine,
+    isOedoLine,
     trainType,
   ]);
 

@@ -1,7 +1,8 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import React, { useCallback } from 'react';
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { STATUS_URL } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
@@ -71,10 +72,12 @@ const ErrorScreen: React.FC<Props> = ({
 
   return (
     <SafeAreaView
-      style={{
-        ...styles.root,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
+      style={[
+        styles.root,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        },
+      ]}
     >
       <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
       <Typography style={styles.text}>{text}</Typography>

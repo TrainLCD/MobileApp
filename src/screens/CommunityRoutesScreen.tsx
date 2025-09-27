@@ -1,5 +1,4 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
-import findNearest from 'geolib/es/findNearest';
 import { useSetAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -9,8 +8,8 @@ import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';
 import Loading from '../components/Loading';
 import Typography from '../components/Typography';
-import { useLocationStore, useSavedRoutes, useThemeStore } from '../hooks';
-import type { SavedRoute } from '../models/SavedRoute';
+import { useCommunityRoutes, useLocationStore, useThemeStore } from '../hooks';
+import type { CommunityRoute } from '../models/CommunityRoute';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -39,6 +38,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignSelf: 'center',
   },
+  list: { width: '65%', alignSelf: 'center', borderWidth: 1, flex: 1 },
   routeNameText: {
     fontSize: RFValue(14),
   },
@@ -59,7 +59,7 @@ const ListEmptyComponent: React.FC = () => (
   </Typography>
 );
 
-const SavedRoutesScreen: React.FC = () => {
+const CommunityRoutesScreen: React.FC = () => {
   const setLineState = useSetAtom(lineState);
   const setNavigationState = useSetAtom(navigationState);
   const setStationState = useSetAtom(stationState);
@@ -67,7 +67,7 @@ const SavedRoutesScreen: React.FC = () => {
   const longitude = useLocationStore((state) => state?.coords.longitude);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
-  const { routes, loading, fetchStationsByRoute } = useSavedRoutes();
+  const { routes, loading, fetchStationsByRoute } = useCommunityRoutes();
 
   const onPressBack = useCallback(async () => {
     if (navigation.canGoBack()) {
@@ -104,7 +104,7 @@ const SavedRoutesScreen: React.FC = () => {
   );
 
   const handleItemPress = useCallback(
-    async (route: SavedRoute) => {
+    async (route: CommunityRoute) => {
       const { stations: fetchedStations } = await fetchStationsByRoute({
         ids: route.stations.map((s) => s.id),
       });
@@ -119,19 +119,19 @@ const SavedRoutesScreen: React.FC = () => {
         trainType: route.trainType,
       }));
 
-      const nearestCoordinates = findNearest(
-        { latitude, longitude },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
-        }))
-      ) as { latitude: number; longitude: number };
-
-      const nearestStation = stations.find(
-        (sta) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
-      );
+      // 近傍駅は距離最小のインデックスで決定（浮動小数一致に依存しない）
+      let nearestIndex = 0;
+      let best = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < stations.length; i++) {
+        const dLat = stations[i].latitude - latitude;
+        const dLon = stations[i].longitude - longitude;
+        const dist2 = dLat * dLat + dLon * dLon;
+        if (dist2 < best) {
+          best = dist2;
+          nearestIndex = i;
+        }
+      }
+      const nearestStation = stations[nearestIndex];
 
       if (!nearestStation) {
         return;
@@ -145,7 +145,7 @@ const SavedRoutesScreen: React.FC = () => {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: SavedRoute }) => {
+    ({ item }: { item: CommunityRoute }) => {
       const handlePress = () => handleItemPress(item);
       return (
         <>
@@ -159,7 +159,7 @@ const SavedRoutesScreen: React.FC = () => {
     [handleItemPress]
   );
 
-  const keyExtractor = useCallback(({ id }: SavedRoute) => id, []);
+  const keyExtractor = useCallback(({ id }: CommunityRoute) => id, []);
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   if (loading) {
@@ -170,22 +170,23 @@ const SavedRoutesScreen: React.FC = () => {
 
   return (
     <View
-      style={{
-        ...styles.root,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
+      style={[
+        styles.root,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        },
+      ]}
     >
-      <Heading style={styles.heading}>{translate('savedRoutes')}</Heading>
+      <Heading style={styles.heading}>{translate('communityRoutes')}</Heading>
 
       <FlatList
-        style={{
-          width: '65%',
-          alignSelf: 'center',
-          borderColor: isLEDTheme ? '#fff' : '#aaa',
-          borderWidth: 1,
-          flex: 1,
-          marginBottom: safeAreaBottom,
-        }}
+        style={[
+          styles.list,
+          {
+            borderColor: isLEDTheme ? '#fff' : '#aaa',
+            marginBottom: safeAreaBottom,
+          },
+        ]}
         data={routes}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
@@ -197,4 +198,4 @@ const SavedRoutesScreen: React.FC = () => {
   );
 };
 
-export default React.memo(SavedRoutesScreen);
+export default React.memo(CommunityRoutesScreen);

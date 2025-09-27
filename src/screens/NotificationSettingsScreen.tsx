@@ -15,16 +15,16 @@ import {
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
+import { Heading } from '~/components/Heading';
 import type { Station } from '~/gen/proto/stationapi_pb';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import { isJapanese, translate } from '~/translation';
+import { RFValue } from '~/utils/rfValue';
 import FAB from '../components/FAB';
-import { Heading } from '../components/Heading';
 import Typography from '../components/Typography';
-import { useThemeStore } from '../hooks';
-import { APP_THEME } from '../models/Theme';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
-import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   root: {
@@ -87,11 +87,13 @@ const ListItem: React.FC<ListItemProps> = ({
       <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.item}>
           <View
-            style={{
-              ...styles.checkbox,
-              borderColor: checkboxBorderColor,
-              backgroundColor: isLEDTheme ? '#212121' : 'white',
-            }}
+            style={[
+              styles.checkbox,
+              {
+                borderColor: checkboxBorderColor,
+                backgroundColor: isLEDTheme ? '#212121' : 'white',
+              },
+            ]}
           >
             {active && (
               <Svg height="100%" width="100%" viewBox="0 0 24 24">
@@ -221,7 +223,7 @@ const NotificationSettings: React.FC = () => {
         } else {
           setNotify((prev) => ({
             ...prev,
-            targetStationIds: [...targetStationIds, item.id],
+            targetStationIds: [...prev.targetStationIds, item.id],
           }));
         }
       };

@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     zIndex: 9999,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowOpacity: 0.5,
     shadowRadius: 1,
     shadowOffset: { height: 1, width: 0 },
@@ -111,17 +111,20 @@ const TrainTypeBoxJL: React.FC<Props> = ({
   return (
     <View style={styles.box}>
       <View style={styles.innerBox}>
-        {headerLangState !== 'EN' && japaneseRegexp.test(trainTypeName) ? (
-          trainTypeName.split('').map((char, idx) => (
+        {headerLangState !== 'EN' &&
+        japaneseRegexp.test(trainTypeName ?? '') ? (
+          (trainTypeName ?? '').split('').map((char, idx) => (
             <Typography
               numberOfLines={numberOfLines}
               adjustsFontSizeToFit
-              style={{
-                ...styles.text,
-                color: trainTypeColor,
-                fontFamily: undefined,
-                fontWeight: '800',
-              }}
+              style={[
+                styles.text,
+                {
+                  color: trainTypeColor,
+                  fontFamily: undefined,
+                  fontWeight: '800',
+                },
+              ]}
               key={`${char}${idx.toString()}`}
             >
               {char}
@@ -131,10 +134,12 @@ const TrainTypeBoxJL: React.FC<Props> = ({
           <Typography
             numberOfLines={1}
             adjustsFontSizeToFit
-            style={{
-              ...styles.text,
-              color: trainTypeColor,
-            }}
+            style={[
+              styles.text,
+              {
+                color: trainTypeColor,
+              },
+            ]}
           >
             {trainTypeName}
           </Typography>

@@ -1,6 +1,7 @@
 {
   "expo.jsEngine": "hermes",
   "ios.useFrameworks": "static",
+  "ios.buildReactNativeFromSource": "true",
   "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
   "newArchEnabled": "true",
   "apple.ccacheEnabled": "true"

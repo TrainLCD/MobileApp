@@ -1,10 +1,11 @@
 import { useAtomValue } from 'jotai';
 /* eslint-disable react-native/no-unused-styles */
 import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import type { Line, Station } from '~/gen/proto/stationapi_pb';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
+import { useScale } from '~/hooks/useScale';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { isEnAtom } from '~/store/selectors/isEn';
 import isTablet from '~/utils/isTablet';
@@ -20,14 +21,8 @@ type Props = {
   theme?: AppTheme;
 };
 
-const screenWidth = Dimensions.get('screen').width;
-
 const stylesNormal = StyleSheet.create({
-  root: {
-    marginTop: 4,
-  },
   lineMarkWrapper: {
-    marginTop: 4,
     flexDirection: 'row',
   },
   lineNameWrapper: {
@@ -55,7 +50,6 @@ const stylesWest = StyleSheet.create({
   },
   lineMarkWrapper: {
     marginTop: 4,
-    width: screenWidth / 10,
     flexDirection: 'row',
   },
   lineNameWrapper: {
@@ -90,19 +84,35 @@ const PadLineMarks: React.FC<Props> = ({
 
   const isDifferentStationName = useIsDifferentStationName();
 
+  const { heightScale } = useScale();
+
   if (!isTablet) {
     return <></>;
   }
 
   return (
-    <View style={styles.root}>
+    <View
+      style={{
+        marginTop: heightScale(
+          Platform.select({ ios: 8, android: 0, default: 0 })
+        ),
+      }}
+    >
       {!!lineMarks.length && theme === APP_THEME.JR_WEST && (
         <View style={styles.topBar} />
       )}
 
       {lineMarks.map((lm, i) =>
         lm ? (
-          <View style={styles.lineMarkWrapper} key={transferLines[i]?.id}>
+          <View
+            style={[
+              styles.lineMarkWrapper,
+              {
+                marginTop: heightScale(4),
+              },
+            ]}
+            key={transferLines[i]?.id}
+          >
             <TransferLineMark
               line={transferLines[i]}
               mark={lm}
@@ -111,10 +121,12 @@ const PadLineMarks: React.FC<Props> = ({
             />
             <View style={styles.lineNameWrapper}>
               <Typography
-                style={{
-                  ...styles.lineName,
-                  color: shouldGrayscale ? '#ccc' : 'black',
-                }}
+                style={[
+                  styles.lineName,
+                  {
+                    color: shouldGrayscale ? '#ccc' : 'black',
+                  },
+                ]}
               >
                 {`${
                   isEn
@@ -150,10 +162,12 @@ const PadLineMarks: React.FC<Props> = ({
               shouldGrayscale={shouldGrayscale}
             />
             <Typography
-              style={{
-                ...styles.lineName,
-                color: shouldGrayscale ? '#ccc' : 'black',
-              }}
+              style={[
+                styles.lineName,
+                {
+                  color: shouldGrayscale ? '#ccc' : 'black',
+                },
+              ]}
             >
               {isEn ? transferLines[i]?.nameRoman : transferLines[i]?.nameShort}
             </Typography>

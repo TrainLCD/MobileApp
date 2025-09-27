@@ -1,7 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { parenthesisRegexp } from '~/constants';
 import {
   type Line,
@@ -14,20 +19,17 @@ import {
   useCurrentTrainType,
   useNextTrainType,
   useThemeStore,
-} from '../hooks';
+} from '~/hooks';
+import { RFValue } from '~/utils/rfValue';
+import { getIsLocal } from '~/utils/trainTypeString';
 import stationState from '../store/atoms/station';
 import isTablet from '../utils/isTablet';
-import { RFValue } from '../utils/rfValue';
-import { getIsLocal } from '../utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
 import { BarTerminalEast } from './BarTerminalEast';
 import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import Typography from './Typography';
 
-const { width: screenWidth } = Dimensions.get('screen');
 const edgeOffset = isTablet ? 100 : 70;
-const barWidth = screenWidth / 2 - edgeOffset;
-
 const barTerminalSize = isTablet ? 64 : 40;
 
 const styles = StyleSheet.create({
@@ -61,7 +63,6 @@ const styles = StyleSheet.create({
   linesContainer: {
     position: 'relative',
     justifyContent: 'center',
-    width: screenWidth,
   },
   bar: {
     position: 'absolute',
@@ -91,7 +92,21 @@ const styles = StyleSheet.create({
     borderRadius: isTablet ? 25 : 15,
     zIndex: 9999,
   },
-
+  trainTypeLeftContainer: {
+    position: 'absolute',
+    top: isTablet ? 16 : 10,
+    borderLeftWidth: isTablet ? 32 : 20,
+    borderRightWidth: isTablet ? 32 : 20,
+    borderBottomWidth: isTablet ? 32 : 20,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    transform: [{ rotate: '90deg' }],
+    borderWidth: 0,
+  },
   trainTypeLeft: {
     width: 128,
     height: 48,
@@ -126,7 +141,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     shadowOpacity: 0.25,
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(18),
@@ -136,7 +151,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     shadowOpacity: 0.25,
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(12),
@@ -152,6 +167,11 @@ const styles = StyleSheet.create({
   },
 });
 
+const useBarWidth = () => {
+  const dim = useWindowDimensions();
+  return Math.max(0, dim.width / 2 - edgeOffset);
+};
+
 const MetroBars = ({
   currentLine,
   nextLine,
@@ -163,49 +183,61 @@ const MetroBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
+
   if (!trainType || !nextTrainType) {
     return null;
   }
 
   return (
-    <View style={styles.linesContainer}>
+    <View style={[styles.linesContainer, { width: dim.width }]}>
       {/* Current line */}
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={[
           `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
           `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
         ]}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
 
       <View style={styles.centerCircle} />
@@ -214,39 +246,47 @@ const MetroBars = ({
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#fff', '#000', '#000', '#fff']}
         locations={[0.5, 0.5, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={[
           `${(nextLine ?? nextTrainType)?.color ?? '#000000'}ff`,
           `${(nextLine ?? nextTrainType)?.color ?? '#000000'}bb`,
         ]}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <BarTerminalEast
         style={styles.barTerminal}
@@ -288,8 +328,8 @@ const MetroBars = ({
         {nextLine && (
           <Typography
             style={[
+              styles.lineText,
               {
-                ...styles.lineText,
                 color: currentLine?.color ?? '#000000',
               },
             ]}
@@ -336,8 +376,8 @@ const MetroBars = ({
         {nextLine && (
           <Typography
             style={[
+              styles.lineText,
               {
-                ...styles.lineText,
                 color: nextLine.color ?? '#000000',
               },
             ]}
@@ -363,84 +403,104 @@ const SaikyoBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
+
   return (
-    <View style={styles.linesContainer}>
+    <View style={[styles.linesContainer, { width: dim.width }]}>
       {/* Current line */}
       <LinearGradient
         colors={['#fff', '#000', '#000']}
         locations={[0.1, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#fff', '#000', '#000']}
         locations={[0.1, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={[
           `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
           `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
         ]}
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+          },
+        ]}
       />
       <View style={styles.centerCircle} />
       {/* Next line */}
       <LinearGradient
         colors={['#fff', '#000', '#000']}
         locations={[0.1, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#aaaaaaff', '#aaaaaabb']}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={['#fff', '#000', '#000']}
         locations={[0.1, 0.5, 0.9]}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <LinearGradient
         colors={[
           `${(nextLine ?? nextTrainType)?.color || '#000000'}ff`,
           `${(nextLine ?? nextTrainType)?.color || '#000000'}bb`,
         ]}
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+          },
+        ]}
       />
       <BarTerminalSaikyo
         style={styles.barTerminal}
@@ -482,8 +542,8 @@ const SaikyoBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: currentLine?.color ?? '#000000',
             },
           ]}
@@ -532,8 +592,8 @@ const SaikyoBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: nextLine.color ?? '#000000',
             },
           ]}
@@ -558,57 +618,58 @@ const JOBars = ({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) => {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
+
   return (
-    <View style={styles.linesContainer}>
+    <View style={[styles.linesContainer, { width: dim.width }]}>
       {/* Current line */}
       <View
-        style={{
-          ...styles.bar,
-          left: edgeOffset,
-          width: barWidth,
-          backgroundColor: (nextLine ? currentLine : trainType)?.color,
-        }}
+        style={[
+          styles.bar,
+          {
+            left: edgeOffset,
+            width: barWidth,
+            backgroundColor: (nextLine ? currentLine : trainType)?.color,
+          },
+        ]}
       />
       <View style={styles.centerCircle} />
       {/* Next line */}
       <View
-        style={{
-          ...styles.bar,
-          right: edgeOffset + barTerminalSize,
-          width: barWidth - barTerminalSize,
-          backgroundColor: (nextLine ?? nextTrainType)?.color,
-        }}
+        style={[
+          styles.bar,
+          {
+            right: edgeOffset + barTerminalSize,
+            width: rightBarWidth,
+            backgroundColor: (nextLine ?? nextTrainType)?.color,
+          },
+        ]}
       />
 
       <View
-        style={{
-          top: isTablet ? 16 : 10,
-          right: isTablet ? edgeOffset + 16 : edgeOffset + 10,
-          position: 'absolute',
-          width: 0,
-          height: 0,
-          backgroundColor: 'transparent',
-          borderStyle: 'solid',
-          borderLeftWidth: isTablet ? 32 : 20,
-          borderRightWidth: isTablet ? 32 : 20,
-          borderBottomWidth: isTablet ? 32 : 20,
-          borderLeftColor: 'transparent',
-          borderRightColor: 'transparent',
-          transform: [{ rotate: '90deg' }],
-          borderWidth: 0,
-          borderBottomColor: (nextLine ?? nextTrainType)?.color,
-        }}
+        style={[
+          styles.trainTypeLeftContainer,
+          {
+            right: isTablet ? edgeOffset + 16 : edgeOffset + 10,
+
+            borderBottomColor: (nextLine ?? nextTrainType)?.color,
+          },
+        ]}
       />
 
       <View
-        style={{
-          ...styles.trainTypeLeft,
-          backgroundColor: trainType.color,
-          width: isTablet ? 200 : 128,
-          height: isTablet ? 80 : 48,
-          borderRadius: 4,
-          top: isTablet ? -8 : -5,
-        }}
+        style={[
+          styles.trainTypeLeft,
+          {
+            backgroundColor: trainType.color,
+            width: isTablet ? 200 : 128,
+            height: isTablet ? 80 : 48,
+            borderRadius: 4,
+            top: isTablet ? -8 : -5,
+          },
+        ]}
       >
         <View style={styles.textWrapper}>
           <Typography
@@ -633,8 +694,8 @@ const JOBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: currentLine?.color ?? '#000000',
               top: isTablet ? 90 : 55,
             },
@@ -647,14 +708,16 @@ const JOBars = ({
       </View>
 
       <View
-        style={{
-          ...styles.trainTypeRight,
-          backgroundColor: nextTrainType.color,
-          width: isTablet ? 200 : 128,
-          height: isTablet ? 80 : 48,
-          borderRadius: 4,
-          top: isTablet ? -8 : -5,
-        }}
+        style={[
+          styles.trainTypeRight,
+          {
+            backgroundColor: nextTrainType.color,
+            width: isTablet ? 200 : 128,
+            height: isTablet ? 80 : 48,
+            borderRadius: 4,
+            top: isTablet ? -8 : -5,
+          },
+        ]}
       >
         <View style={styles.textWrapper}>
           <Typography
@@ -681,8 +744,8 @@ const JOBars = ({
 
         <Typography
           style={[
+            styles.lineText,
             {
-              ...styles.lineText,
               color: nextLine?.color ?? '#000000',
               top: isTablet ? 90 : 55,
             },

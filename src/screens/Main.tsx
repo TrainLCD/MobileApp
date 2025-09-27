@@ -1,19 +1,27 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackActions, useNavigation } from '@react-navigation/native';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { useAtom, useAtomValue } from 'jotai';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
-  Dimensions,
+  AppState,
   Linking,
   Platform,
   Pressable,
   StyleSheet,
-  View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
+import DevOverlay from '~/components/DevOverlay';
+import Header from '~/components/Header';
+import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
   LineType,
   type Station,
@@ -42,46 +50,38 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
 import tuningState from '~/store/atoms/tuning';
+import { isJapanese, translate } from '~/translation';
+import { isDevApp } from '~/utils/isDevApp';
 import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
+import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import { ASYNC_STORAGE_KEYS } from '../constants';
-import { APP_THEME } from '../models/Theme';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { isJapanese, translate } from '../translation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
-import { getIsLocal } from '../utils/trainTypeString';
-
-const { height: screenHeight } = Dimensions.get('screen');
-
-const styles = StyleSheet.create({
-  touchable: {
-    height: screenHeight - 128,
-  },
-});
 
 const MainScreen: React.FC = () => {
+  const [isRotated, setIsRotated] = useState(false);
+
   const theme = useThemeStore();
   const isLEDTheme = theme === APP_THEME.LED;
 
-  const [{ stations, selectedDirection, arrived }, setStationState] =
+  const [{ stations, selectedDirection, arrived }, _setStationState] =
     useAtom(stationState);
   const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
-  const setLineState = useSetAtom(lineState);
+  const { devOverlayEnabled } = useAtomValue(tuningState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
   const trainType = useCurrentTrainType();
-
   const nextStation = useNextStation();
 
   useAutoMode();
@@ -124,7 +124,6 @@ const MainScreen: React.FC = () => {
     trainType,
   ]);
 
-  const navigation = useNavigation();
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
@@ -158,6 +157,30 @@ const MainScreen: React.FC = () => {
   }, [selectedDirection]);
 
   useEffect(() => {
+    const lockOrientationAsync = async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } catch (_e) {
+        // ignore and proceed
+      } finally {
+        // fail-open to avoid blocking UI even if locking fails
+        setIsRotated(true);
+      }
+    };
+    lockOrientationAsync();
+    return () => {
+      ScreenOrientation.unlockAsync().catch(console.error);
+    };
+  }, []);
+
+  useEffect(() => {
+    // 横画面になるのを待たないと2回スクリーンロックがかかる
+    if (!isRotated) {
+      return;
+    }
+
     if (
       stationsFromCurrentStation.some(
         (s) => s.line?.lineType === LineType.Subway
@@ -167,11 +190,16 @@ const MainScreen: React.FC = () => {
         { text: 'OK' },
       ]);
     }
-  }, [stationsFromCurrentStation]);
+  }, [stationsFromCurrentStation, isRotated]);
 
   const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
 
   useEffect(() => {
+    // 横画面になるのを待たないと2回スクリーンロックがかかる
+    if (!isRotated) {
+      return;
+    }
+
     if (
       stationsFromCurrentStation.some(
         (s) => s.stopCondition === StopCondition.Weekday
@@ -196,49 +224,43 @@ const MainScreen: React.FC = () => {
     ) {
       Alert.alert(translate('notice'), translate('partiallyPassNotice'));
     }
-  }, [stationsFromCurrentStation, isHoliday]);
+  }, [stationsFromCurrentStation, isHoliday, isRotated]);
 
   const transferLines = useTransferLines();
-
-  const toTransferState = useCallback((): void => {
-    if (transferLines.length) {
-      pauseBottomTimer();
-      setNavigationState((prev) => ({
-        ...prev,
-        bottomState: 'TRANSFER',
-      }));
-    }
-  }, [pauseBottomTimer, setNavigationState, transferLines.length]);
-
-  const toLineState = useCallback((): void => {
-    pauseBottomTimer();
-    setNavigationState((prev) => ({
-      ...prev,
-      bottomState: 'LINE',
-    }));
-  }, [pauseBottomTimer, setNavigationState]);
 
   const isTypeWillChange = useTypeWillChange();
   const shouldHideTypeChange = useShouldHideTypeChange();
 
-  const toTypeChangeState = useCallback(() => {
-    if (!isTypeWillChange || shouldHideTypeChange) {
-      pauseBottomTimer();
-      setNavigationState((prev) => ({
+  const updateBottomState = useCallback((): void => {
+    pauseBottomTimer();
+    setNavigationState((prev) => {
+      if (prev.bottomState === 'LINE' && transferLines.length) {
+        return {
+          ...prev,
+          bottomState: 'TRANSFER',
+        };
+      }
+
+      if (prev.bottomState === 'TRANSFER') {
+        if (isTypeWillChange && !shouldHideTypeChange) {
+          return {
+            ...prev,
+            bottomState: 'TYPE_CHANGE',
+          };
+        }
+      }
+
+      return {
         ...prev,
         bottomState: 'LINE',
-      }));
-      return;
-    }
-    setNavigationState((prev) => ({
-      ...prev,
-      bottomState: 'TYPE_CHANGE',
-    }));
+      };
+    });
   }, [
-    isTypeWillChange,
     pauseBottomTimer,
     setNavigationState,
+    isTypeWillChange,
     shouldHideTypeChange,
+    transferLines.length,
   ]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
@@ -248,14 +270,12 @@ const MainScreen: React.FC = () => {
     };
   }, []);
 
-  const marginForMetroThemeStyle = useMemo(
-    () => ({
-      marginTop: theme === APP_THEME.TOKYO_METRO ? -4 : 0, // メトロのヘッダーにある下部の影を相殺する
-    }),
-    [theme]
-  );
-
   useEffect(() => {
+    // 横画面になるのを待たないと2回スクリーンロックがかかる
+    if (!isRotated) {
+      return;
+    }
+
     const f = async (): Promise<void> => {
       const warningDismissed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
@@ -345,38 +365,30 @@ const MainScreen: React.FC = () => {
       }
     };
     f();
+  }, [isRotated]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        ).catch(console.warn);
+      }
+    });
+
+    return () => sub.remove();
   }, []);
 
-  const changeOperatingLine = useCallback(
-    async (selectedStation: Station) => {
-      const selectedLine = selectedStation.line;
-      if (!selectedLine) {
-        return;
-      }
-
-      setLineState((prev) => ({ ...prev, selectedLine }));
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: selectedStation.trainType ?? null,
-        stationForHeader: selectedStation,
-        headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
-        bottomState: 'LINE',
-        leftStations: [],
-      }));
-      setStationState((prev) => ({
-        ...prev,
-        station: selectedStation,
-        selectedDirection: null,
-        selectedBound: null,
-        arrived: true,
-        approaching: false,
-        stations: [],
-        wantedDestination: null,
-      }));
-      navigation.dispatch(StackActions.replace('SelectBound'));
-    },
-    [navigation, setLineState, setNavigationState, setStationState]
-  );
+  const changeOperatingLine = useCallback(async (selectedStation: Station) => {
+    const selectedLine = selectedStation.line;
+    if (!selectedLine) {
+      return;
+    }
+    // TODO: 実装し直す
+    if (isDevApp) {
+      Alert.alert('Unimplemented', 'This feature is not implemented yet.');
+    }
+  }, []);
 
   const handleTransferPress = useCallback(
     (selectedStation?: Station) => {
@@ -385,7 +397,7 @@ const MainScreen: React.FC = () => {
       }
 
       if (!selectedStation) {
-        isTypeWillChange ? toTypeChangeState() : toLineState();
+        updateBottomState();
         return;
       }
 
@@ -421,64 +433,60 @@ const MainScreen: React.FC = () => {
     },
     [
       currentLine,
-      isTypeWillChange,
       untouchableModeEnabled,
       changeOperatingLine,
-      toTypeChangeState,
-      toLineState,
+      updateBottomState,
     ]
   );
 
+  const inner = useMemo(() => {
+    switch (bottomState) {
+      case 'LINE':
+        return <LineBoard hasTerminus={hasTerminus} />;
+      case 'TRANSFER':
+        if (!transferStation) {
+          return null;
+        }
+        if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
+          return (
+            <TransfersYamanote
+              onPress={handleTransferPress}
+              station={transferStation}
+            />
+          );
+        }
+
+        return <Transfers theme={theme} onPress={handleTransferPress} />;
+      case 'TYPE_CHANGE':
+        return <TypeChangeNotify />;
+      default:
+        return <></>;
+    }
+  }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
+
+  if (!isRotated) {
+    return null;
+  }
+
   if (isLEDTheme) {
-    return <LineBoard />;
+    return (
+      <>
+        <Header />
+        <LineBoard hasTerminus={hasTerminus} />
+      </>
+    );
   }
 
-  switch (bottomState) {
-    case 'LINE':
-      return (
-        <View
-          style={{
-            flex: 1,
-            ...marginForMetroThemeStyle,
-          }}
-        >
-          <Pressable
-            style={styles.touchable}
-            onPress={transferLines.length ? toTransferState : toTypeChangeState}
-          >
-            <LineBoard hasTerminus={hasTerminus} />
-          </Pressable>
-        </View>
-      );
-    case 'TRANSFER':
-      if (!transferStation) {
-        return null;
-      }
-      if (theme === APP_THEME.YAMANOTE || theme === APP_THEME.JO) {
-        return (
-          <TransfersYamanote
-            onPress={handleTransferPress}
-            station={transferStation}
-          />
-        );
-      }
+  return (
+    <>
+      <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
+        <Header />
+        {inner}
+      </Pressable>
 
-      return (
-        <View style={[styles.touchable, marginForMetroThemeStyle]}>
-          <Transfers theme={theme} onPress={handleTransferPress} />
-        </View>
-      );
-    case 'TYPE_CHANGE':
-      return (
-        <View style={[styles.touchable, marginForMetroThemeStyle]}>
-          <Pressable onPress={toLineState} style={styles.touchable}>
-            <TypeChangeNotify />
-          </Pressable>
-        </View>
-      );
-    default:
-      return <></>;
-  }
+      {isDevApp && devOverlayEnabled && <DevOverlay />}
+    </>
+  );
 };
 
 export default React.memo(MainScreen);

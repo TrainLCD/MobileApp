@@ -12,7 +12,7 @@ import WidgetKit
 // NOTE: 通過中の値を追加するとなぜかライブアクティビティが死ぬので含めていない
 // ちなみにライブアクティビティにスピナーが表示され固まる
 func getRunningStateText(
-  approaching: Bool, stopped: Bool, isNextLastStop: Bool
+  approaching: Bool, stopped: Bool, isNextLastStop: Bool, isDynamicIsland: Bool = false
 ) -> String {
   if !stopped && !approaching {
     if isNextLastStop {
@@ -22,7 +22,10 @@ func getRunningStateText(
   }
 
   if stopped {
-    return String(localized: "stop")
+    if isDynamicIsland {
+      return String(localized: "stop")
+    }
+    return String(localized: "nowStoppingAt")
   }
 
   if approaching {
@@ -90,7 +93,8 @@ struct RideSessionWidget: Widget {
                 getRunningStateText(
                   approaching: context.state.approaching,
                   stopped: context.state.stopped,
-                  isNextLastStop: context.state.isNextLastStop
+                  isNextLastStop: context.state.isNextLastStop,
+                  isDynamicIsland: true
                 )
               )
               .bold()
@@ -112,7 +116,8 @@ struct RideSessionWidget: Widget {
                 getRunningStateText(
                   approaching: context.state.approaching,
                   stopped: context.state.stopped,
-                  isNextLastStop: context.state.isNextLastStop
+                  isNextLastStop: context.state.isNextLastStop,
+                  isDynamicIsland: true
                 )
               )
               .bold()
@@ -144,7 +149,8 @@ struct RideSessionWidget: Widget {
               getRunningStateText(
                 approaching: context.state.approaching,
                 stopped: context.state.stopped,
-                isNextLastStop: context.state.isNextLastStop
+                isNextLastStop: context.state.isNextLastStop,
+                isDynamicIsland: true
               )
             )
             .font(.caption)

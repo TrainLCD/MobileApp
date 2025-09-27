@@ -170,10 +170,12 @@ const FakeStationSettingsScreen: React.FC = () => {
   return (
     <>
       <View
-        style={{
-          ...styles.root,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-        }}
+        style={[
+          styles.root,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+          },
+        ]}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -185,12 +187,14 @@ const FakeStationSettingsScreen: React.FC = () => {
           <TextInput
             placeholder={translate('searchByStationNamePlaceholder')}
             value={query}
-            style={{
-              ...styles.stationNameInput,
-              borderColor: isLEDTheme ? '#fff' : '#aaa',
-              color: isLEDTheme ? '#fff' : '#000',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.stationNameInput,
+              {
+                borderColor: isLEDTheme ? '#fff' : '#aaa',
+                color: isLEDTheme ? '#fff' : '#000',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             placeholderTextColor={isLEDTheme ? '#fff' : undefined}
             onChange={onChange}
             onSubmitEditing={handleSubmit}
@@ -199,11 +203,13 @@ const FakeStationSettingsScreen: React.FC = () => {
           />
           {isByCoordsLoading || byNameFetchStatus === 'pending' ? (
             <View
-              style={{
-                ...StyleSheet.absoluteFillObject,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                },
+              ]}
             >
               <ActivityIndicator size="large" />
             </View>

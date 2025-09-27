@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   clockOverride: {
     position: 'absolute',
     top: 8,
-    right: Dimensions.get('screen').width * 0.25,
+    right: '25%',
   },
   stationNameContainer: {
     flexDirection: 'row',
@@ -314,28 +314,34 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
         {isJO ? <TrainTypeBoxJO trainType={trainType} /> : null}
 
         <View
-          style={{
-            ...styles.boundContainer,
-            marginTop: boundContainerMarginTop,
-          }}
+          style={[
+            styles.boundContainer,
+            {
+              marginTop: boundContainerMarginTop,
+            },
+          ]}
         >
           {selectedBound && boundPrefix.length ? (
             <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
-              style={{
-                ...styles.boundGrayText,
-                fontSize: RFValue(isJO ? 14 : 18),
-              }}
+              style={[
+                styles.boundGrayText,
+                {
+                  fontSize: RFValue(isJO ? 14 : 18),
+                },
+              ]}
             >
               {boundPrefix}
             </Typography>
           ) : null}
           <Typography
-            style={{
-              ...styles.bound,
-              fontSize: boundFontSize,
-            }}
+            style={[
+              styles.bound,
+              {
+                fontSize: boundFontSize,
+              },
+            ]}
             adjustsFontSizeToFit
             numberOfLines={1}
           >
@@ -344,8 +350,8 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
           {selectedBound && boundSuffix.length ? (
             <Typography
               style={[
+                styles.boundSuffix,
                 {
-                  ...styles.boundSuffix,
                   fontSize: RFValue(isJO ? 14 : 18),
                 },
                 headerLangState === 'KO' ? styles.boundGrayText : null,
@@ -357,10 +363,14 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
         </View>
       </View>
       <View
-        style={{
-          ...styles.colorBar,
-          backgroundColor: currentLine ? (currentLine.color ?? '#000') : '#aaa',
-        }}
+        style={[
+          styles.colorBar,
+          {
+            backgroundColor: currentLine
+              ? (currentLine.color ?? '#000')
+              : '#aaa',
+          },
+        ]}
       />
       <View style={styles.right}>
         <Typography style={styles.state}>{stateText}</Typography>

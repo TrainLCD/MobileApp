@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     shadowOpacity: 0.25,
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowRadius: 1,
     elevation: 5,
     fontSize: isTablet ? 18 * 1.5 : 18,
@@ -246,9 +246,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
+              styles.text,
               textTopAnimatedStyles,
               {
-                ...styles.text,
                 paddingLeft,
                 letterSpacing,
               },
@@ -262,9 +262,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
+              styles.text,
               textBottomAnimatedStyles,
               {
-                ...styles.text,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },

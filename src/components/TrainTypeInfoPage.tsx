@@ -1,21 +1,13 @@
 import type { ConnectError } from '@connectrpc/connect';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
-import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LED_THEME_BG_COLOR } from '~/constants';
+import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
 import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
-import { useCurrentStation, useThemeStore } from '~/hooks';
+import { useCurrentStation, useGetLineMark, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
-import lineState from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
@@ -25,6 +17,7 @@ import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { Heading } from './Heading';
 import LEDThemeSwitch from './LEDThemeSwitch';
+import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 type Props = {
@@ -39,22 +32,20 @@ type Props = {
   fromRouteListModal?: boolean;
 };
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
   root: {
-    position: 'absolute',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    width: '100%',
-    height: '100%',
+    padding: 24,
   },
-  scrollView: {
+  fullWidth: { width: '100%' },
+  contentView: {
+    width: '100%',
     paddingVertical: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: isTablet ? 'auto' : '100%',
+    borderRadius: 8,
+    minHeight: 256,
   },
   buttons: {
     flexDirection: 'row',
@@ -63,14 +54,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     gap: 16,
+    marginTop: 24,
   },
   switchContainer: {
     flexDirection: 'row',
+    marginTop: 16,
+    marginHorizontal: 24,
   },
   enableTerminusText: {
     fontWeight: 'bold',
     alignSelf: 'center',
     fontSize: RFValue(11),
+  },
+  allStopsText: {
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+    marginTop: 8,
   },
   trainTypeList: {
     marginTop: 8,
@@ -87,10 +86,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   colorIndicator: {
-    width: 10,
-    height: 10,
+    width: 16,
+    height: 16,
     borderRadius: 8,
-    marginRight: 2,
+    marginLeft: 2,
+    marginRight: 6,
   },
   trainTypeLineName: {
     fontSize: RFValue(11),
@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: RFValue(14),
   },
+  mr8: { marginRight: 8 },
 });
 
 const SAFE_AREA_FALLBACK = 32;
@@ -114,35 +115,63 @@ const TrainTypeItem = React.memo(
   }: {
     line: Line | null;
     outOfLineRange: boolean;
-  }) => (
-    <View
-      style={[
-        styles.trainTypeItemContainer,
-        outOfLineRange && { opacity: 0.5 },
-      ]}
-      key={line?.id}
-    >
+  }) => {
+    const isLEDTheme = useThemeStore((st) => st === APP_THEME.LED);
+    const getLineMark = useGetLineMark();
+
+    const lineMark = useMemo(
+      () => line && getLineMark({ line }),
+      [getLineMark, line]
+    );
+
+    if (!line) {
+      return null;
+    }
+
+    return (
       <View
-        style={{
-          ...styles.colorIndicator,
-          backgroundColor: line?.color ?? '#000000',
-        }}
-      />
-      <Typography style={styles.trainTypeLineName}>
-        {(isJapanese ? line?.nameShort : line?.nameRoman) ?? ''}:{' '}
-      </Typography>
-      <Typography
-        style={{
-          ...styles.lineTrainTypeName,
-          color: line?.trainType?.color ?? '#000000',
-        }}
+        style={[
+          styles.trainTypeItemContainer,
+          outOfLineRange && { opacity: 0.5 },
+        ]}
+        key={line.id}
       >
-        {isJapanese
-          ? (line?.trainType?.name ?? '普通/各駅停車')
-          : (line?.trainType?.nameRoman ?? 'Local')}
-      </Typography>
-    </View>
-  )
+        {lineMark ? (
+          <TransferLineMark
+            line={line}
+            mark={lineMark}
+            size={NUMBERING_ICON_SIZE.SMALL}
+            withDarkTheme={isLEDTheme}
+          />
+        ) : (
+          <View
+            style={[
+              styles.colorIndicator,
+              {
+                backgroundColor: line?.color ?? '#000000',
+              },
+            ]}
+          />
+        )}
+
+        <Typography style={styles.trainTypeLineName}>
+          {(isJapanese ? line.nameShort : line.nameRoman) ?? ''}:{' '}
+        </Typography>
+        <Typography
+          style={[
+            styles.lineTrainTypeName,
+            {
+              color: line.trainType?.color ?? '#000000',
+            },
+          ]}
+        >
+          {isJapanese
+            ? (line.trainType?.name ?? '普通/各駅停車')
+            : (line.trainType?.nameRoman ?? 'Local')}
+        </Typography>
+      </View>
+    );
+  }
 );
 
 export const TrainTypeInfoPage: React.FC<Props> = ({
@@ -161,7 +190,6 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
 
   const [asTerminus, setAsTerminus] = useState(false);
 
-  const { selectedLine } = useAtomValue(lineState);
   const [{ autoModeEnabled }, setNavigationState] = useAtom(navigationState);
 
   const { left: leftSafeArea, right: rightSafeArea } = useSafeAreaInsets();
@@ -182,17 +210,19 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       (s) => s.groupId === finalStation?.groupId
     );
 
-    if (curIndex > finalIndex) {
-      const reversedStops = stops.slice().reverse();
-      return uniqBy(
-        reversedStops.slice(
-          reversedStops.findIndex((s) => s.groupId === currentStation?.groupId)
-        ),
-        'id'
-      );
+    if (curIndex === -1 || finalIndex === -1) {
+      return uniqBy(stops, 'id');
     }
 
-    return uniqBy(stops.slice(curIndex), 'id');
+    if (curIndex > finalIndex) {
+      const reversedStops = stops.slice().reverse();
+      const curInReversed = reversedStops.findIndex(
+        (s) => s.groupId === currentStation?.groupId
+      );
+      return uniqBy(reversedStops.slice(Math.max(curInReversed, 0)), 'id');
+    }
+
+    return uniqBy(stops.slice(Math.max(curIndex, 0)), 'id');
   }, [
     stations,
     currentStation?.groupId,
@@ -200,27 +230,23 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     fromRouteListModal,
   ]);
 
-  const afterFinalLines = useMemo(
-    () =>
-      uniqBy(stopStations, 'line.id')
-        .reduce<Line[]>((acc, sta, idx, arr) => {
-          if (!finalStation) {
-            return [];
-          }
+  const afterFinalLines = useMemo(() => {
+    if (!finalStation) {
+      return [];
+    }
 
-          const finalIndex = arr.findIndex(
-            (s) => s.line?.id === finalStation.line?.id
-          );
+    const stationsWithLine = stopStations.filter((s) => s.line);
+    const uniqStationsByLine = uniqBy(stationsWithLine, 'line.id');
+    const finalIndex = uniqStationsByLine.findIndex(
+      (s) => s.line?.id === finalStation.line?.id
+    );
 
-          if (!sta.line || idx < finalIndex) {
-            return acc;
-          }
+    if (finalIndex === -1) {
+      return [];
+    }
 
-          return acc.concat(sta.line);
-        }, [])
-        .slice(1),
-    [stopStations, finalStation]
-  );
+    return uniqStationsByLine.slice(finalIndex + 1).map((s) => s.line) ?? null;
+  }, [stopStations, finalStation]);
 
   const afterFinalStations = useMemo(() => {
     if (!finalStation) {
@@ -231,246 +257,209 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
       (s) => s.groupId === finalStation.groupId
     );
 
-    return stopStations.slice(finalIndex + 1, stopStations.length);
+    if (finalIndex === -1) {
+      return [];
+    }
+
+    return stopStations.slice(finalIndex + 1);
   }, [stopStations, finalStation]);
 
   const trainTypeLines = useMemo(
     () =>
       trainType?.lines.length
         ? uniqBy(
-            stopStations.map(
-              (s) =>
-                new Line({
-                  ...s.line,
-                  trainType: trainType.lines.find((l) => l.id === s.line?.id)
-                    ?.trainType,
-                })
-            ),
+            stopStations
+              .filter(
+                (s): s is Station & { line: NonNullable<Station['line']> } =>
+                  Boolean(s.line)
+              )
+              .map(
+                (s) =>
+                  new Line({
+                    ...s.line,
+                    trainType: trainType.lines.find((l) => l.id === s.line?.id)
+                      ?.trainType,
+                  })
+              ),
             'id'
           )
         : uniqBy(
             stations.map((s) => s.line ?? null),
             'id'
-          ).filter((l) => l !== null),
+          ).filter((l): l is Line => l !== null),
     [stations, stopStations, trainType?.lines]
   );
 
   return (
-    <View style={styles.root}>
-      <View
+    <Pressable style={styles.root} onPress={onClose}>
+      <Pressable
         style={[
+          styles.contentView,
           {
             backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           },
-          isTablet
-            ? {
-                width: '80%',
-                maxHeight: '90%',
-                shadowOpacity: 0.25,
-                shadowColor: '#000',
-                borderRadius: 16,
-              }
-            : {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: screenWidth,
-                height: screenHeight,
-              },
+          isTablet && {
+            width: '80%',
+            maxHeight: '90%',
+            shadowOpacity: 0.25,
+            shadowColor: '#333',
+            borderRadius: 16,
+          },
         ]}
       >
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <Heading>
-            {isJapanese
-              ? `${selectedLine?.nameShort} ${trainType?.name ?? ''}`
-              : `${selectedLine?.nameRoman} ${trainType?.nameRoman ?? ''}`}
-          </Heading>
+        <Heading>
+          {isJapanese
+            ? `${trainType?.line?.nameShort ?? ''} ${trainType?.name ?? ''}`
+            : `${trainType?.line?.nameRoman ?? ''} ${trainType?.nameRoman ?? ''}`}
+        </Heading>
 
+        <View style={styles.fullWidth}>
           <View
             style={{
-              width: '100%',
+              paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
+              paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
             }}
           >
-            <View
-              style={{
-                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-              }}
-            >
-              <Typography
-                style={{
-                  fontSize: RFValue(14),
-                  fontWeight: 'bold',
-                  marginTop: 8,
-                }}
-              >
-                {translate('allStops')}:
-              </Typography>
-              <Typography
-                style={{
-                  fontSize: RFValue(11),
-                  marginTop: 8,
-                  lineHeight: RFValue(14),
-                }}
-              >
-                {!loading && stopStations.length
-                  ? stopStations.map((s, i, a) =>
-                      isJapanese ? (
-                        <React.Fragment key={s.id}>
-                          <Typography
-                            style={[
-                              afterFinalStations
-                                .map((s) => s.groupId)
-                                .includes(s.groupId)
-                                ? {
-                                    opacity: 0.5,
-                                  }
-                                : { fontWeight: 'bold' },
-                            ]}
-                          >
-                            {s.name}
-                          </Typography>
-                          {a.length - 1 !== i ? ' ' : ''}
-                        </React.Fragment>
-                      ) : (
-                        <React.Fragment key={s.id}>
-                          <Typography
-                            style={[
-                              afterFinalStations
-                                .map((s) => s.groupId)
-                                .includes(s.groupId)
-                                ? {
-                                    opacity: 0.5,
-                                  }
-                                : { fontWeight: 'bold' },
-                            ]}
-                          >
-                            {s.nameRoman}
-                          </Typography>
-                          {a.length - 1 !== i ? '  ' : ''}
-                        </React.Fragment>
-                      )
+            <Typography style={styles.allStopsText}>
+              {translate('allStops')}:
+            </Typography>
+            <Typography style={styles.allStopsText}>
+              {!loading && stopStations.length
+                ? stopStations.map((s, i, a) =>
+                    isJapanese ? (
+                      <React.Fragment key={s.id}>
+                        <Typography
+                          style={[
+                            afterFinalStations
+                              .map((s) => s.groupId)
+                              .includes(s.groupId)
+                              ? {
+                                  opacity: 0.5,
+                                }
+                              : { fontWeight: 'bold' },
+                          ]}
+                        >
+                          {s.name}
+                        </Typography>
+                        {a.length - 1 !== i ? ' ' : ''}
+                      </React.Fragment>
+                    ) : (
+                      <React.Fragment key={s.id}>
+                        <Typography
+                          style={[
+                            afterFinalStations
+                              .map((s) => s.groupId)
+                              .includes(s.groupId)
+                              ? {
+                                  opacity: 0.5,
+                                }
+                              : { fontWeight: 'bold' },
+                          ]}
+                        >
+                          {s.nameRoman}
+                        </Typography>
+                        {a.length - 1 !== i ? '  ' : ''}
+                      </React.Fragment>
                     )
-                  : `${translate('loadingAPI')}...`}
-              </Typography>
-              <Typography
-                style={{
-                  fontSize: RFValue(14),
-                  fontWeight: 'bold',
-                  marginTop: 16,
-                }}
-              >
-                {translate('eachTrainTypes')}:
-              </Typography>
-            </View>
-            <FlatList
-              horizontal
-              style={styles.trainTypeList}
-              contentContainerStyle={{
-                ...styles.trainTypeListContent,
+                  )
+                : `${translate('loadingAPI')}...`}
+            </Typography>
+            <Typography style={styles.allStopsText}>
+              {translate('eachTrainTypes')}:
+            </Typography>
+          </View>
+          <FlatList
+            horizontal
+            style={styles.trainTypeList}
+            contentContainerStyle={[
+              styles.trainTypeListContent,
+              {
                 paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
                 paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-              }}
-              data={trainTypeLines}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TrainTypeItem
-                  outOfLineRange={afterFinalLines
-                    .map((l) => l.id)
-                    .includes(item.id)}
-                  line={item}
-                />
-              )}
-            />
-
-            {fromRouteListModal && (
-              <View
-                style={{
-                  ...styles.switchContainer,
-                  marginTop: 16,
-                  paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                  paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-                }}
-              >
-                {isLEDTheme ? (
-                  <LEDThemeSwitch
-                    style={{ marginRight: 8 }}
-                    value={asTerminus}
-                    onValueChange={() => setAsTerminus((prev) => !prev)}
-                  />
-                ) : (
-                  <Switch
-                    style={{ marginRight: 8 }}
-                    value={asTerminus}
-                    onValueChange={() => setAsTerminus((prev) => !prev)}
-                    ios_backgroundColor={'#fff'}
-                  />
-                )}
-
-                <Typography style={styles.enableTerminusText}>
-                  {translate('setTerminusText', {
-                    stationName:
-                      (isJapanese
-                        ? finalStation?.name
-                        : finalStation?.nameRoman) ?? '',
-                  })}
-                </Typography>
-              </View>
+              },
+            ]}
+            data={trainTypeLines}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TrainTypeItem
+                outOfLineRange={afterFinalLines
+                  .map((l) => l?.id)
+                  .includes(item.id)}
+                line={item}
+              />
             )}
+          />
 
-            <View
-              style={{
-                ...styles.switchContainer,
-                marginTop: 8,
-                paddingLeft: leftSafeArea || SAFE_AREA_FALLBACK,
-                paddingRight: rightSafeArea || SAFE_AREA_FALLBACK,
-              }}
-            >
+          {fromRouteListModal && (
+            <View style={styles.switchContainer}>
               {isLEDTheme ? (
                 <LEDThemeSwitch
-                  style={{ marginRight: 8 }}
-                  value={autoModeEnabled}
-                  onValueChange={() =>
-                    setNavigationState((prev) => ({
-                      ...prev,
-                      autoModeEnabled: !prev.autoModeEnabled,
-                    }))
-                  }
+                  style={styles.mr8}
+                  value={asTerminus}
+                  onValueChange={() => setAsTerminus((prev) => !prev)}
                 />
               ) : (
                 <Switch
-                  style={{ marginRight: 8 }}
-                  value={autoModeEnabled}
-                  onValueChange={() =>
-                    setNavigationState((prev) => ({
-                      ...prev,
-                      autoModeEnabled: !prev.autoModeEnabled,
-                    }))
-                  }
+                  style={styles.mr8}
+                  value={asTerminus}
+                  onValueChange={() => setAsTerminus((prev) => !prev)}
                   ios_backgroundColor={'#fff'}
                 />
               )}
 
               <Typography style={styles.enableTerminusText}>
-                {translate('setAutoModeText')}
+                {translate('setTerminusText', {
+                  stationName:
+                    (isJapanese
+                      ? finalStation?.name
+                      : finalStation?.nameRoman) ?? '',
+                })}
               </Typography>
             </View>
+          )}
 
-            <View style={styles.buttons}>
-              <Button
-                color={isLEDTheme ? undefined : '#008ffe'}
-                onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
-                disabled={loading || disabled}
-              >
-                {translate('submit')}
-              </Button>
-              <Button color={isLEDTheme ? undefined : '#333'} onPress={onClose}>
-                {translate('cancel')}
-              </Button>
-            </View>
+          <View style={styles.switchContainer}>
+            {isLEDTheme ? (
+              <LEDThemeSwitch
+                style={styles.mr8}
+                value={autoModeEnabled}
+                onValueChange={() =>
+                  setNavigationState((prev) => ({
+                    ...prev,
+                    autoModeEnabled: !prev.autoModeEnabled,
+                  }))
+                }
+              />
+            ) : (
+              <Switch
+                style={styles.mr8}
+                value={autoModeEnabled}
+                onValueChange={() =>
+                  setNavigationState((prev) => ({
+                    ...prev,
+                    autoModeEnabled: !prev.autoModeEnabled,
+                  }))
+                }
+                ios_backgroundColor={'#fff'}
+              />
+            )}
+
+            <Typography style={styles.enableTerminusText}>
+              {translate('setAutoModeText')}
+            </Typography>
           </View>
-        </ScrollView>
-      </View>
-    </View>
+
+          <View style={styles.buttons}>
+            <Button
+              onPress={() => onConfirmed(trainType ?? undefined, asTerminus)}
+              disabled={loading || disabled}
+            >
+              {translate('submit')}
+            </Button>
+            <Button onPress={onClose}>{translate('cancel')}</Button>
+          </View>
+        </View>
+      </Pressable>
+    </Pressable>
   );
 };

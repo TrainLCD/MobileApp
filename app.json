@@ -6,7 +6,9 @@
     "plugins": [
       "expo-font",
       "expo-localization",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sqlite",
+      "expo-audio"
     ]
   }
 }

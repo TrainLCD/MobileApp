@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { SavedRoute } from '~/models/SavedRoute';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,
@@ -22,6 +23,8 @@ export interface NavigationState {
   enableLegacyAutoMode: boolean;
   isAppLatest: boolean;
   firstStop: boolean;
+  presetsFetched: boolean;
+  presetRoutes: SavedRoute[];
 }
 
 export const initialNavigationState: NavigationState = {
@@ -36,6 +39,8 @@ export const initialNavigationState: NavigationState = {
   enableLegacyAutoMode: false,
   isAppLatest: false,
   firstStop: true,
+  presetsFetched: false,
+  presetRoutes: [],
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

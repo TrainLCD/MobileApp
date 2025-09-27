@@ -142,11 +142,13 @@ export const TrainTypeList = ({
   return (
     <FlatList
       initialNumToRender={data.length}
-      style={{
-        ...styles.root,
-        borderColor: isLEDTheme ? '#fff' : '#aaa',
-        marginBottom: safeAreaBottom,
-      }}
+      style={[
+        styles.root,
+        {
+          borderColor: isLEDTheme ? '#fff' : '#aaa',
+          marginBottom: safeAreaBottom,
+        },
+      ]}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}

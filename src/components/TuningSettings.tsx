@@ -3,7 +3,6 @@ import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import {
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -26,7 +25,7 @@ import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
-    height: Dimensions.get('screen').height,
+    height: '100%',
     paddingVertical: 24,
   },
   settingItem: {
@@ -144,12 +143,14 @@ const TuningSettings: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={{
-          ...styles.root,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          paddingLeft: safeAreaLeft || 32,
-          paddingRight: safeAreaRight || 32,
-        }}
+        contentContainerStyle={[
+          styles.root,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+            paddingLeft: safeAreaLeft || 32,
+            paddingRight: safeAreaRight || 32,
+          },
+        ]}
       >
         <Heading>{translate('tuning')}</Heading>
         <Typography style={styles.settingItemGroupTitle}>
@@ -161,11 +162,13 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : 'black',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             onChangeText={handleHeaderIntervalChange}
             value={settings.headerTransitionInterval.toString()}
             placeholder={settings.headerTransitionInterval.toString()}
@@ -179,11 +182,13 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : 'black',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             onChangeText={handleHeaderDelayChange}
             value={settings.headerTransitionDelay.toString()}
             placeholder={settings.headerTransitionDelay.toString()}
@@ -197,11 +202,13 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : 'black',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             onChangeText={handleBottomDelayChange}
             value={settings.bottomTransitionInterval.toString()}
             placeholder={settings.bottomTransitionInterval.toString()}
