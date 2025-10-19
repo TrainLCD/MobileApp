@@ -16,6 +16,7 @@ import * as useInRadiusStationModule from '~/hooks/useInRadiusStation';
 import * as useLocationStoreModule from '~/hooks/useLocationStore';
 import * as useNextStationModule from '~/hooks/useNextStation';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
+import * as trainSpeedModule from '~/utils/trainSpeed';
 
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
@@ -431,7 +432,14 @@ describe('useSimulationMode', () => {
       mockStation(1, 1, 35.681, 139.767),
       { ...mockStation(2, 2, 0, 0), latitude: undefined, longitude: undefined },
       mockStation(3, 3, 35.701, 139.787),
+      mockStation(4, 4, 35.711, 139.797),
     ];
+
+    // Spy on generateTrainSpeedProfile to verify it's not called for stations with undefined coordinates
+    const generateSpeedProfileSpy = jest.spyOn(
+      trainSpeedModule,
+      'generateTrainSpeedProfile'
+    );
 
     (useAtomValue as jest.Mock)
       .mockReturnValueOnce({
@@ -440,19 +448,50 @@ describe('useSimulationMode', () => {
       })
       .mockReturnValueOnce({
         enableLegacyAutoMode: false,
-        autoModeEnabled: false,
+        autoModeEnabled: true, // Enable auto mode to trigger profile generation
       });
 
     jest
       .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[0]);
+      .mockReturnValue(stations[2]); // Start at station 3 (which has valid coordinates)
 
-    const { result } = renderHook(() => useSimulationMode(), {
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(stations[3]); // Next station is station 4
+
+    (
+      useLocationStoreModule.useLocationStore as unknown as jest.Mock
+    ).mockReturnValue({
+      coords: {
+        latitude: 35.701,
+        longitude: 139.787,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: 0,
+        heading: null,
+      },
+      timestamp: 100000,
+    });
+
+    renderHook(() => useSimulationMode(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
     });
 
-    expect(result).toBeTruthy();
-    // 緯度・経度が未定義の駅を除外して処理されることを期待
+    // Verify that generateTrainSpeedProfile was called only for segments with valid coordinates
+    // With stations [1, 2 (undefined), 3, 4]:
+    // - Station 1 → Station 2: NOT called (station 2 has undefined coords)
+    // - Station 2 → Station 3: NOT called (station 2 has undefined coords)
+    // - Station 3 → Station 4: CALLED (both have valid coords)
+    // Total: 1 call
+    expect(generateSpeedProfileSpy).toHaveBeenCalledTimes(1);
+
+    // Verify the call was made with valid distance (station 3 to station 4)
+    const callArgs = generateSpeedProfileSpy.mock.calls[0][0];
+    expect(callArgs.distance).toBeGreaterThan(0);
+    expect(callArgs.maxSpeed).toBeDefined();
+    expect(callArgs.accel).toBeDefined();
+    expect(callArgs.decel).toBeDefined();
   });
 
   it('インターバルで位置情報が定期的に更新される', () => {
