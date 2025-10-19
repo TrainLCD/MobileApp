@@ -151,14 +151,17 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             ) : (
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() =>
+                onPress={() => {
+                  if (!line.station) {
+                    return;
+                  }
                   onPress({
                     ...line.station,
                     __typename: 'Station',
                     line,
                     lines,
-                  } as Station)
-                }
+                  } as Station);
+                }}
               >
                 <TransferLineDot line={line} />
               </TouchableOpacity>
@@ -166,14 +169,17 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             <View style={styles.lineNameContainer}>
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() =>
+                onPress={() => {
+                  if (!line.station) {
+                    return;
+                  }
                   onPress({
                     ...line.station,
                     __typename: 'Station',
                     line,
                     lines,
-                  } as Station)
-                }
+                  } as Station);
+                }}
               >
                 <Typography style={styles.lineName}>
                   {line.nameShort?.replace(parenthesisRegexp, '')}
@@ -196,14 +202,17 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             <View style={styles.transferLineInnerRight}>
               {stationNumbers[index] ? (
                 <TouchableOpacity
-                  onPress={() =>
+                  onPress={() => {
+                    if (!line.station) {
+                      return;
+                    }
                     onPress({
                       ...line.station,
                       __typename: 'Station',
                       line,
                       lines,
-                    } as Station)
-                  }
+                    } as Station);
+                  }}
                   activeOpacity={1}
                   style={styles.numberingIconContainer}
                 >
@@ -222,14 +231,17 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               {line.station && (
                 <TouchableOpacity
                   activeOpacity={1}
-                  onPress={() =>
+                  onPress={() => {
+                    if (!line.station) {
+                      return;
+                    }
                     onPress({
                       ...line.station,
                       __typename: 'Station',
                       line,
                       lines,
-                    } as Station)
-                  }
+                    } as Station);
+                  }}
                 >
                   <Typography style={styles.lineName}>
                     {`${line.station?.name?.replace(parenthesisRegexp, '')}駅`}
