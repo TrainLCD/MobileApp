@@ -160,7 +160,7 @@ const HeaderJL = () => {
           setStateText(
             translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
           );
-          setStationText(nextStation.name);
+          setStationText(nextStation.name || '');
         }
         break;
       case 'ARRIVING_KANA':
@@ -197,7 +197,7 @@ const HeaderJL = () => {
         break;
       case 'CURRENT':
         setStateText(translate('nowStoppingAt'));
-        setStationText(station.name);
+        setStationText(station.name || '');
         break;
       case 'CURRENT_KANA':
         setStateText(translate('nowStoppingAt'));
@@ -226,7 +226,7 @@ const HeaderJL = () => {
           setStateText(
             translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
           );
-          setStationText(nextStation.name);
+          setStationText(nextStation.name || '');
         }
         break;
       case 'NEXT_KANA':
@@ -378,9 +378,9 @@ const HeaderJL = () => {
         <View style={styles.stationNameContainer}>
           {currentStationNumber ? (
             <NumberingIcon
-              shape={currentStationNumber.lineSymbolShape}
+              shape={currentStationNumber.lineSymbolShape || ''}
               lineColor={numberingColor}
-              stationNumber={currentStationNumber.stationNumber}
+              stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               withDarkTheme
             />

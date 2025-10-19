@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { type StationNumber, TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import { type StationNumber, TrainTypeKind } from '~/@types/graphql';
 import { JOBAN_LINE_IDS } from '../constants';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -48,7 +48,8 @@ export const useNumbering = (
   const isJobanLineRapid = useMemo(
     () =>
       currentLine &&
-      JOBAN_LINE_IDS.includes(currentLine?.id) &&
+      currentLine.id !== undefined &&
+      JOBAN_LINE_IDS.includes(currentLine.id) &&
       (trainType?.kind === TrainTypeKind.Rapid ||
         trainType?.kind === TrainTypeKind.HighSpeedRapid),
     [currentLine, trainType?.kind]
@@ -68,7 +69,7 @@ export const useNumbering = (
 
     if (priorCurrent && !getIsPass(targetStation)) {
       if (isJobanLineRapid) {
-        const jjNumber = targetStation.stationNumbers.find(
+        const jjNumber = targetStation.stationNumbers?.find(
           (num) => num.lineSymbol === 'JJ'
         );
         if (jjNumber) {
@@ -88,7 +89,7 @@ export const useNumbering = (
     // 到着していない場合は無条件で次の駅の番号を表示する
     if ((arrived && getIsPass(currentStation)) || !arrived) {
       if (isJobanLineRapid) {
-        const jjNumber = nextStation?.stationNumbers.find(
+        const jjNumber = nextStation?.stationNumbers?.find(
           (num) => num.lineSymbol === 'JJ'
         );
 
@@ -104,7 +105,7 @@ export const useNumbering = (
     }
 
     if (isJobanLineRapid) {
-      const jjNumber = targetStation?.stationNumbers.find(
+      const jjNumber = targetStation?.stationNumbers?.find(
         (num) => num.lineSymbol === 'JJ'
       );
       if (jjNumber) {

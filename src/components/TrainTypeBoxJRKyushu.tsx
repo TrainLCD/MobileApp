@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
+import type { TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import { useLazyPrevious, usePrevious } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';

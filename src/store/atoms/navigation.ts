@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Station, TrainType } from '~/@types/graphql';
 import type { SavedRoute } from '~/models/SavedRoute';
 import {
   ALL_AVAILABLE_LANGUAGES,

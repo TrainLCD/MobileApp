@@ -8,11 +8,7 @@ import {
   View,
 } from 'react-native';
 import { parenthesisRegexp } from '~/constants';
-import {
-  type Line,
-  StopCondition,
-  type TrainType,
-} from '~/gen/proto/stationapi_pb';
+import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentStation,
@@ -311,7 +307,9 @@ const MetroBars = ({
             adjustsFontSizeToFit
             numberOfLines={1}
           >
-            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
@@ -335,7 +333,7 @@ const MetroBars = ({
             ]}
           >
             {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {currentLine?.nameShort?.replace(parenthesisRegexp, '')}{' '}
             {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
           </Typography>
         )}
@@ -358,7 +356,7 @@ const MetroBars = ({
             numberOfLines={1}
           >
             {nextTrainType.name
-              .replace('\n', '')
+              ?.replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
@@ -383,7 +381,7 @@ const MetroBars = ({
             ]}
           >
             {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+            {nextLine.nameShort?.replace(parenthesisRegexp, '')}{' '}
             {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
           </Typography>
         )}
@@ -525,7 +523,9 @@ const SaikyoBars = ({
             numberOfLines={1}
             style={styles.text}
           >
-            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
@@ -549,7 +549,7 @@ const SaikyoBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameShort?.replace(parenthesisRegexp, '')}{' '}
           {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
@@ -573,8 +573,8 @@ const SaikyoBars = ({
             adjustsFontSizeToFit
             style={styles.text}
           >
-            {(nextTrainType ?? trainType).name
-              .replace('\n', '')
+            {(nextTrainType ?? trainType)?.name
+              ?.replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
@@ -583,7 +583,7 @@ const SaikyoBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              (nextTrainType ?? trainType).nameRoman
+              (nextTrainType ?? trainType)?.nameRoman
                 ?.replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
@@ -599,7 +599,7 @@ const SaikyoBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine.nameShort?.replace(parenthesisRegexp, '')}{' '}
           {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
@@ -663,7 +663,7 @@ const JOBars = ({
         style={[
           styles.trainTypeLeft,
           {
-            backgroundColor: trainType.color,
+            backgroundColor: trainType.color ?? '#000000',
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
@@ -677,7 +677,9 @@ const JOBars = ({
             numberOfLines={1}
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
@@ -702,7 +704,7 @@ const JOBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {currentLine?.nameShort?.replace(parenthesisRegexp, '')}{' '}
           {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
@@ -711,7 +713,7 @@ const JOBars = ({
         style={[
           styles.trainTypeRight,
           {
-            backgroundColor: nextTrainType.color,
+            backgroundColor: nextTrainType.color ?? '#000000',
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
@@ -726,7 +728,7 @@ const JOBars = ({
             style={[styles.text, { shadowOpacity: 0 }]}
           >
             {nextTrainType.name
-              .replace('\n', '')
+              ?.replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
@@ -752,7 +754,7 @@ const JOBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
+          {nextLine.nameShort?.replace(parenthesisRegexp, '')}{' '}
           {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
         </Typography>
       </View>
@@ -789,7 +791,7 @@ const HeadingJa = React.memo(
             ]}
           >
             {(nextTrainType ?? trainType)?.name
-              .replace('\n', '')
+              ?.replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
           {` ${headingTexts.jaSuffix}`}

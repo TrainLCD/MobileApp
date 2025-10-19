@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -168,7 +168,7 @@ export const TrainTypeListModal = ({
   );
 
   const keyExtractor = useCallback(
-    (tt: TrainType) => tt.groupId.toString(),
+    (tt: TrainType) => tt.groupId?.toString() ?? tt.id?.toString() ?? '',
     []
   );
 

@@ -171,7 +171,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         const urlString = `data:image/jpeg;base64,${base64}`;
 
         const message = isJapanese
-          ? `${currentLine.nameShort.replace(
+          ? `${currentLine.nameShort?.replace(
               parenthesisRegexp,
               ''
             )}で移動中です！ #TrainLCD https://trainlcd.app`

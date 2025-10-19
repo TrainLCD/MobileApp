@@ -1,7 +1,6 @@
-import type { ConnectError } from '@connectrpc/connect';
 import type React from 'react';
 import { Modal } from 'react-native';
-import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Station, TrainType } from '~/@types/graphql';
 import { TrainTypeInfoPage } from './TrainTypeInfoPage';
 
 type Props = {
@@ -10,7 +9,7 @@ type Props = {
   stations: Station[];
   loading: boolean;
   disabled?: boolean;
-  error: ConnectError | null;
+  error: Error | null;
   onClose: () => void;
   onConfirmed: (trainType: TrainType | undefined) => void;
 };

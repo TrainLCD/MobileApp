@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { japaneseRegexp, parenthesisRegexp } from '~/constants';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
+import type { TrainType } from '~/@types/graphql';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
 import { translate } from '~/translation';

@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import type { LineDirection } from '../../models/Bound';
 
 export interface StationState {

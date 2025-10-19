@@ -13,15 +13,10 @@
     "deploy:ios:canary": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_canary",
     "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
-    "generate": "buf generate --path proto",
-    "postinstall": "pnpm run generate"
+    "gql:codegen": "graphql-codegen --config utils/codegen.ts"
   },
   "dependencies": {
-    "@connectrpc/connect": "^1.4.0",
-    "@connectrpc/connect-query": "^1.3.1",
-    "@connectrpc/connect-web": "^1.4.0",
-    "@connectrpc/protoc-gen-connect-es": "^1.3.0",
-    "@connectrpc/protoc-gen-connect-query": "^1.4.2",
+    "@apollo/client": "^4.0.7",
     "@expo-google-fonts/roboto": "^0.2.3",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^15.0.2",
@@ -37,7 +32,6 @@
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.3.1",
     "@sentry/react-native": "~6.20.0",
-    "@tanstack/react-query": "^5.76.1",
     "dayjs": "^1.10.7",
     "effect": "^3.16.12",
     "expo": "~54.0.10",
@@ -65,6 +59,7 @@
     "expo-task-manager": "~14.0.7",
     "expo-web-browser": "~15.0.7",
     "geolib": "^3.3.4",
+    "graphql": "^16.11.0",
     "i18n-js": "^3.5.1",
     "jotai": "^2.12.4",
     "lodash": "^4.17.20",
@@ -96,9 +91,9 @@
   "devDependencies": {
     "@babel/core": "^7.19.3",
     "@biomejs/biome": "2.0.0",
-    "@bufbuild/buf": "^1.40.1",
-    "@bufbuild/protobuf": "^1.10.0",
-    "@bufbuild/protoc-gen-es": "^1.7.2",
+    "@graphql-codegen/cli": "^6.0.0",
+    "@graphql-codegen/typescript": "^5.0.2",
+    "@graphql-codegen/typescript-operations": "^5.0.2",
     "@react-native/js-polyfills": "^0.81.0",
     "@react-native/metro-config": "^0.81.1",
     "@testing-library/jest-native": "^4.0.11",
@@ -122,6 +117,15 @@
   "private": true,
   "jest": {
     "preset": "jest-expo",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node",
+      "d.ts"
+    ],
     "testPathIgnorePatterns": [
       "<rootDir>/functions/"
     ],
@@ -133,7 +137,8 @@
       "<rootDir>/jest.setup.js"
     ],
     "moduleNameMapper": {
-      "^~/(.*)$": "<rootDir>/src/$1"
+      "^~/(.*)$": "<rootDir>/src/$1",
+      "^~/@types/graphql$": "<rootDir>/src/@types/graphql.d.ts"
     }
   },
   "name": "trainlcd",

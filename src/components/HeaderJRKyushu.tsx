@@ -156,7 +156,7 @@ const HeaderJRKyushu: React.FC = () => {
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+        ?.map((l) => l.nameShort?.replace(parenthesisRegexp, ''))
         .slice(0, 2)
         .join('・'),
     [connectedLines]
@@ -604,9 +604,9 @@ const HeaderJRKyushu: React.FC = () => {
           {currentStationNumber ? (
             <View style={styles.numberingIconContainer}>
               <NumberingIcon
-                shape={currentStationNumber.lineSymbolShape}
+                shape={currentStationNumber.lineSymbolShape || ''}
                 lineColor={numberingColor}
-                stationNumber={currentStationNumber.stationNumber}
+                stationNumber={currentStationNumber.stationNumber || ''}
                 threeLetterCode={threeLetterCode}
                 transformOrigin="top"
               />

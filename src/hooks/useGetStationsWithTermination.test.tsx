@@ -1,12 +1,8 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station as StationType } from '~/gen/proto/stationapi_pb';
-import {
-  OperationStatus,
-  Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
+import type { Station as StationType } from '~/@types/graphql';
+import { OperationStatus, StopCondition } from '~/@types/graphql';
 
 // useCurrentStation をモック
 jest.mock('./useCurrentStation', () => ({ useCurrentStation: jest.fn() }));
@@ -19,24 +15,32 @@ type Props = {
   stations: StationType[];
 };
 
-const mkStation = (groupId: number, id: number = groupId): StationType =>
-  new Station({
-    id,
-    groupId,
-    name: '',
-    nameKatakana: '',
-    lines: [],
-    prefectureId: 0,
-    postalCode: '',
-    address: '',
-    latitude: 0,
-    longitude: 0,
-    openedAt: '',
-    closedAt: '',
-    status: OperationStatus.InOperation,
-    stationNumbers: [],
-    stopCondition: StopCondition.All,
-  });
+const mkStation = (groupId: number, id: number = groupId): StationType => ({
+  __typename: 'Station',
+  id,
+  groupId,
+  name: '',
+  nameKatakana: '',
+  nameRoman: undefined,
+  nameChinese: undefined,
+  nameKorean: undefined,
+  threeLetterCode: undefined,
+  lines: [],
+  prefectureId: 0,
+  postalCode: '',
+  address: '',
+  latitude: 0,
+  longitude: 0,
+  openedAt: '',
+  closedAt: '',
+  status: OperationStatus.InOperation,
+  stationNumbers: [],
+  stopCondition: StopCondition.All,
+  distance: undefined,
+  hasTrainTypes: undefined,
+  line: undefined,
+  trainType: undefined,
+});
 
 const TestComponent: React.FC<Props> = ({ destination, stations }) => {
   const getStations = useGetStationsWithTermination();
@@ -44,7 +48,7 @@ const TestComponent: React.FC<Props> = ({ destination, stations }) => {
   return (
     <>
       <Text testID="result">
-        {JSON.stringify(result.map((s) => s.groupId))}
+        {JSON.stringify(result.map((s: any) => s.groupId))}
       </Text>
     </>
   );
@@ -96,7 +100,7 @@ describe('useGetStationsWithTermination', () => {
     const stations = [mkStation(1), mkStation(2), mkStation(3), mkStation(4)];
 
     const getJSON = (arr: StationType[]) =>
-      JSON.stringify(arr.map((s) => s.groupId));
+      JSON.stringify(arr.map((s: any) => s.groupId));
 
     const Asserts: React.FC = () => {
       const getStations = useGetStationsWithTermination();
@@ -116,7 +120,7 @@ describe('useGetStationsWithTermination', () => {
     const stations = [mkStation(1), mkStation(2), mkStation(3), mkStation(4)];
 
     const getJSON = (arr: StationType[]) =>
-      JSON.stringify(arr.map((s) => s.groupId));
+      JSON.stringify(arr.map((s: any) => s.groupId));
 
     const Asserts: React.FC = () => {
       const getStations = useGetStationsWithTermination();

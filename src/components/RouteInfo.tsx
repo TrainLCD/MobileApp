@@ -1,10 +1,9 @@
-import type { ConnectError } from '@connectrpc/connect';
 import uniqBy from 'lodash/uniqBy';
 import React, { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
-import { Line, type Station, type TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { useCurrentStation, useGetLineMark, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -22,7 +21,7 @@ type Props = {
   finalStation?: Station;
   stations: Station[];
   loading: boolean;
-  error: ConnectError | null;
+  error: Error | null;
   routeName: string;
   onClose: () => void;
 };
@@ -246,17 +245,17 @@ export const RouteInfo: React.FC<Props> = ({
   }, [stopStations, finalStation]);
 
   const trainTypeLines = useMemo(() => {
-    if (trainType?.lines.length) {
+    if (trainType?.lines?.length) {
       const mapped = stopStations
-        .map((s) => {
+        .map((s: Station) => {
           if (!s.line) return null;
-          return new Line({ ...s.line, trainType: s.trainType });
+          return { ...s.line, trainType: s.trainType };
         })
         .filter((l): l is Line => l !== null);
       return uniqBy(mapped, 'id');
     }
     return uniqBy(
-      stations.map((s) => s.line ?? null),
+      stations.map((s: Station) => s.line ?? null),
       'id'
     ).filter((l): l is Line => l !== null);
   }, [stations, stopStations, trainType?.lines]);
@@ -302,7 +301,7 @@ export const RouteInfo: React.FC<Props> = ({
                     <Typography
                       style={[
                         afterFinalStations
-                          .map((s) => s.groupId)
+                          .map((s: Station) => s.groupId)
                           .includes(s.groupId)
                           ? {
                               opacity: 0.5,
@@ -319,7 +318,7 @@ export const RouteInfo: React.FC<Props> = ({
                     <Typography
                       style={[
                         afterFinalStations
-                          .map((s) => s.groupId)
+                          .map((s: Station) => s.groupId)
                           .includes(s.groupId)
                           ? {
                               opacity: 0.5,
@@ -354,7 +353,7 @@ export const RouteInfo: React.FC<Props> = ({
               style={styles.trainTypeList}
               contentContainerStyle={styles.trainTypeListContent}
               data={trainTypeLines}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => (item.id ?? 0).toString()}
               renderItem={({ item }) => (
                 <SavedItem
                   outOfLineRange={afterFinalLines

@@ -16,7 +16,7 @@ import {
 import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
 import { Heading } from '~/components/Heading';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -213,6 +213,9 @@ const NotificationSettings: React.FC = () => {
     ({ item }: { item: Station }) => {
       const isActive = !!targetStationIds.find((id) => id === item.id);
       const handleListItemPress = (): void => {
+        if (!item.id) {
+          return;
+        }
         if (isActive) {
           setNotify((prev) => ({
             ...prev,
@@ -223,7 +226,7 @@ const NotificationSettings: React.FC = () => {
         } else {
           setNotify((prev) => ({
             ...prev,
-            targetStationIds: [...prev.targetStationIds, item.id],
+            targetStationIds: [...prev.targetStationIds, item.id as number],
           }));
         }
       };
@@ -256,7 +259,7 @@ const NotificationSettings: React.FC = () => {
           numColumns={4}
           data={stations}
           renderItem={renderItem}
-          keyExtractor={(item: Station): string => item.id.toString()}
+          keyExtractor={(item: Station): string => (item.id ?? 0).toString()}
         />
       </SafeAreaView>
       <FAB onPress={handlePressBack} icon="checkmark" />

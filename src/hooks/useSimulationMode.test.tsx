@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook } from '@testing-library/react-native';
 import * as Jotai from 'jotai';
-import { TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import { TrainTypeKind } from '~/@types/graphql';
 import * as currentLineHook from '~/hooks/useCurrentLine';
 import { useLocationStore } from '~/hooks/useLocationStore';
 import { useSimulationMode } from '~/hooks/useSimulationMode';

@@ -1,4 +1,4 @@
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { isSameStationShallow } from './station';
 
 export type PresetEndpoints = {

@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useCallback, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
-import type { Line, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, TrainType } from '~/@types/graphql';
 import { APP_THEME } from '~/models/Theme';
 import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';

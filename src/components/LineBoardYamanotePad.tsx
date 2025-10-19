@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useGetLineMark,
@@ -75,7 +75,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
 
   const numberingInfo = useMemo(
     () =>
-      archStations.map((s) => {
+      archStations.map((s: any) => {
         if (!s) {
           return null;
         }

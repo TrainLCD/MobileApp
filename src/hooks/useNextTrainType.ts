@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { TrainType } from '~/gen/proto/stationapi_pb';
+import type { TrainType } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
@@ -10,7 +10,7 @@ export const useNextTrainType = (): TrainType | null => {
   const currentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
 
-  const nextTrainType = useMemo(() => {
+  const nextTrainType = useMemo((): TrainType | null => {
     if (selectedDirection === 'INBOUND') {
       const currentIndex = stations.findIndex(
         (sta) => sta.id === currentStation?.id
@@ -22,14 +22,15 @@ export const useNextTrainType = (): TrainType | null => {
         .filter((s) => s.trainType)
         .find((s) => s.trainType?.typeId !== trainType?.typeId);
 
-      if (!nextTypeStation) {
+      if (!nextTypeStation || !nextTypeStation.trainType) {
         return null;
       }
 
-      return new TrainType({
+      return {
         ...nextTypeStation.trainType,
+        __typename: 'TrainType' as const,
         line: nextTypeStation.line,
-      });
+      };
     }
 
     const reversedStations = stations.slice().reverse();
@@ -43,14 +44,15 @@ export const useNextTrainType = (): TrainType | null => {
       .filter((s) => s.trainType)
       .find((s) => s.trainType?.typeId !== trainType?.typeId);
 
-    if (!nextTypeStation) {
+    if (!nextTypeStation || !nextTypeStation.trainType) {
       return null;
     }
 
-    return new TrainType({
+    return {
       ...nextTypeStation.trainType,
+      __typename: 'TrainType' as const,
       line: nextTypeStation.line,
-    });
+    };
   }, [currentStation, selectedDirection, stations, trainType]);
 
   return nextTrainType;

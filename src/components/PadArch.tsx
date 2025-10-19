@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
@@ -204,7 +204,7 @@ const Transfers: React.FC<TransfersProps> = ({
             <Typography style={styles.lineName}>
               {isEn
                 ? l.nameRoman?.replace(parenthesisRegexp, '')
-                : l.nameShort.replace(parenthesisRegexp, '')}
+                : l.nameShort?.replace(parenthesisRegexp, '')}
             </Typography>
           </View>
         );

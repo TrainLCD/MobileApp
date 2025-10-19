@@ -151,7 +151,7 @@ const HeaderTY: React.FC = () => {
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+        ?.map((l) => l.nameShort?.replace(parenthesisRegexp, ''))
 
         .slice(0, 2)
         .join('・'),
@@ -552,9 +552,9 @@ const HeaderTY: React.FC = () => {
 
           {currentStationNumber ? (
             <NumberingIcon
-              shape={currentStationNumber.lineSymbolShape}
+              shape={currentStationNumber.lineSymbolShape || ''}
               lineColor={numberingColor}
-              stationNumber={currentStationNumber.stationNumber}
+              stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               allowScaling
               withDarkTheme

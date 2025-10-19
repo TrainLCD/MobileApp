@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@connectrpc/connect-query';
+import { useLazyQuery, useQuery } from '@apollo/client/react';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -18,11 +18,11 @@ import {
   NEARBY_STATIONS_LIMIT,
   SEARCH_STATION_RESULT_LIMIT,
 } from 'react-native-dotenv';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import {
-  getStationsByCoordinates,
-  getStationsByName,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_STATIONS_NEARBY,
+  GET_STATIONS_BY_NAME,
+} from '~/lib/graphql/queries';
 import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';
 import { StationList } from '../components/StationList';
@@ -35,6 +35,26 @@ import { TestIds } from '../test/e2e';
 import { translate } from '../translation';
 import { groupStations } from '../utils/groupStations';
 import { RFValue } from '../utils/rfValue';
+
+type GetStationsNearbyData = {
+  stationsNearby: Station[];
+};
+
+type GetStationsNearbyVariables = {
+  latitude: number;
+  longitude: number;
+  limit?: number;
+};
+
+type GetStationsByNameData = {
+  stationsByName: Station[];
+};
+
+type GetStationsByNameVariables = {
+  name: string;
+  limit?: number;
+  fromStationGroupId?: number;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -79,24 +99,28 @@ const FakeStationSettingsScreen: React.FC = () => {
 
   const {
     data: byCoordsData,
-    isLoading: isByCoordsLoading,
+    loading: isByCoordsLoading,
     error: byCoordsError,
-  } = useQuery(
-    getStationsByCoordinates,
+  } = useQuery<GetStationsNearbyData, GetStationsNearbyVariables>(
+    GET_STATIONS_NEARBY,
     {
-      latitude,
-      longitude,
-      limit: Number(NEARBY_STATIONS_LIMIT),
-    },
-    { enabled: !!latitude && !!longitude }
+      variables: {
+        latitude: latitude ?? 0,
+        longitude: longitude ?? 0,
+        limit: Number(NEARBY_STATIONS_LIMIT),
+      },
+      skip: !latitude || !longitude,
+    }
   );
 
-  const {
-    data: byNameData,
-    error: byNameError,
-    status: byNameFetchStatus,
-    mutate: fetchByName,
-  } = useMutation(getStationsByName);
+  const [
+    fetchByName,
+    { data: byNameData, error: byNameError, loading: byNameLoading },
+  ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+    GET_STATIONS_BY_NAME
+  );
+
+  const byNameFetchStatus = byNameLoading ? 'pending' : 'success';
 
   const onPressBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -111,8 +135,10 @@ const FakeStationSettingsScreen: React.FC = () => {
       return;
     }
     fetchByName({
-      stationName: query.trim(),
-      limit: Number(SEARCH_STATION_RESULT_LIMIT),
+      variables: {
+        name: query.trim(),
+        limit: Number(SEARCH_STATION_RESULT_LIMIT),
+      },
     });
   }, [fetchByName, query]);
 
@@ -123,7 +149,7 @@ const FakeStationSettingsScreen: React.FC = () => {
   }, [byCoordsError, byNameError]);
 
   const foundStations = useMemo(
-    () => byNameData?.stations ?? byCoordsData?.stations ?? [],
+    () => byNameData?.stationsByName ?? byCoordsData?.stationsNearby ?? [],
     [byCoordsData, byNameData]
   );
 
@@ -134,7 +160,9 @@ const FakeStationSettingsScreen: React.FC = () => {
 
   const handleStationPress = useCallback(
     (stationFromSearch: Station) => {
-      const station = foundStations.find((s) => s.id === stationFromSearch.id);
+      const station = foundStations.find(
+        (s: Station) => s.id === stationFromSearch.id
+      );
       if (!station) {
         return;
       }

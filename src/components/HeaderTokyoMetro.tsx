@@ -151,7 +151,7 @@ const HeaderTokyoMetro: React.FC = () => {
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+        ?.map((l) => l.nameShort?.replace(parenthesisRegexp, ''))
         .slice(0, 2)
         .join('・'),
     [connectedLines]
@@ -561,7 +561,8 @@ const HeaderTokyoMetro: React.FC = () => {
             </Animated.Text>
           </View>
 
-          {currentStationNumber ? (
+          {currentStationNumber?.lineSymbolShape &&
+          currentStationNumber?.stationNumber ? (
             <View
               style={{
                 bottom:

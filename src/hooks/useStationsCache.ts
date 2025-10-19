@@ -1,18 +1,39 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import { useRef } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import {
-  getStationsByLineGroupId,
-  getStationsByLineId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+} from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
+
 export const useStationsCache = () => {
-  const { mutateAsync: fetchByLineId } = useMutation(getStationsByLineId);
+  const [fetchByLineId] = useLazyQuery<
+    GetLineStationsData,
+    GetLineStationsVariables
+  >(GET_LINE_STATIONS);
   // lineGroupId 用。命名を実装に合わせる
-  const { mutateAsync: fetchByLineGroupId } = useMutation(
-    getStationsByLineGroupId
-  );
+  const [fetchByLineGroupId] = useLazyQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
   const cacheRef = useRef(new Map<string, Station[]>());
   const pendingRef = useRef(new Map<string, Promise<Station[]>>());
 
@@ -22,12 +43,20 @@ export const useStationsCache = () => {
     const existing = pendingRef.current.get(route.id);
     if (existing) return existing;
     const p = (async (): Promise<Station[]> => {
-      const { stations } = route.hasTrainType
-        ? await fetchByLineGroupId({
-            // API expects line_group_id (train type group)
+      if (route.hasTrainType) {
+        const { data } = await fetchByLineGroupId({
+          variables: {
             lineGroupId: route.trainTypeId,
-          })
-        : await fetchByLineId({ lineId: route.lineId });
+          },
+        });
+        const stations = data?.lineGroupStations ?? [];
+        cacheRef.current.set(route.id, stations);
+        return stations;
+      }
+      const { data } = await fetchByLineId({
+        variables: { lineId: route.lineId },
+      });
+      const stations = data?.lineStations ?? [];
       cacheRef.current.set(route.id, stations);
       return stations;
     })();

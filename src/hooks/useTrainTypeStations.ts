@@ -1,15 +1,26 @@
-import { useMutation } from '@connectrpc/connect-query';
-import { getStationsByLineGroupId } from '~/gen/proto/stationapi-StationAPI_connectquery';
+import { useLazyQuery } from '@apollo/client/react';
+import type { Station } from '~/@types/graphql';
+import { GET_LINE_GROUP_STATIONS } from '~/lib/graphql/queries';
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
 
 export const useTrainTypeStations = () => {
-  const { data, status, error, mutateAsync } = useMutation(
-    getStationsByLineGroupId
-  );
+  const [fetchStations, { data, loading, error }] = useLazyQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
 
   return {
-    stations: data?.stations ?? [],
-    isLoading: status === 'pending',
+    stations: data?.lineGroupStations ?? [],
+    isLoading: loading,
     error,
-    fetchStations: mutateAsync,
+    fetchStations: (variables: GetLineGroupStationsVariables) =>
+      fetchStations({ variables }),
   };
 };

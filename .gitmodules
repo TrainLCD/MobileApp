@@ -1,6 +1,3 @@
-[submodule "proto"]
-	path = proto
-	url = https://github.com/TrainLCD/gRPCProto.git
 [submodule "ios/Fonts"]
 	path = ios/Fonts
 	url = git@github.com:TrainLCD/MobileAppFonts.git

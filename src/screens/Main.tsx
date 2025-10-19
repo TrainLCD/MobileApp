@@ -22,11 +22,7 @@ import { isClip } from 'react-native-app-clip';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
-import {
-  LineType,
-  type Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
+import { LineType, type Station, StopCondition } from '~/@types/graphql';
 import {
   useAutoMode,
   useCurrentLine,

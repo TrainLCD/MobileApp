@@ -1,14 +1,21 @@
-import type { ConnectError } from '@connectrpc/connect';
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import { useSetAtom } from 'jotai';
 import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import type { Route, Station, TrainType } from '~/gen/proto/stationapi_pb';
-import { getTrainTypesByStationId } from '~/gen/proto/stationapi-StationAPI_connectquery';
+import type { Route, Station, TrainType } from '~/@types/graphql';
+import { GET_STATION_TRAIN_TYPES } from '~/lib/graphql/queries';
 import { useCurrentStation, useThemeStore } from '~/hooks';
+
+type GetStationTrainTypesData = {
+  stationTrainTypes: TrainType[];
+};
+
+type GetStationTrainTypesVariables = {
+  stationId: number;
+};
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import lineState from '../store/atoms/line';
@@ -25,7 +32,7 @@ type Props = {
   visible: boolean;
   isRoutesLoading: boolean;
   isTrainTypesLoading: boolean;
-  error: ConnectError | null;
+  error: Error | null;
   onClose: () => void;
   onSelect: (route: Route | undefined, asTerminus: boolean) => void;
 };
@@ -90,25 +97,32 @@ export const RouteListModal: React.FC<Props> = ({
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const currentStation = useCurrentStation();
 
-  const {
-    data: trainTypes,
-    mutate: fetchTrainTypes,
-    status: fetchTrainTypesStatus,
-    error: fetchTrainTypesError,
-  } = useMutation(getTrainTypesByStationId);
+  const [
+    fetchTrainTypes,
+    {
+      data: trainTypesData,
+      loading: fetchTrainTypesLoading,
+      error: fetchTrainTypesError,
+    },
+  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
+    GET_STATION_TRAIN_TYPES
+  );
+
+  const fetchTrainTypesStatus = fetchTrainTypesLoading ? 'pending' : 'success';
+  const trainTypes = trainTypesData?.stationTrainTypes ?? [];
 
   const trainType = useMemo(
     () =>
-      trainTypes?.trainTypes.find(
-        (tt) => tt.groupId === selectedTrainType?.groupId
+      trainTypes.find(
+        (tt: TrainType) => tt.groupId === selectedTrainType?.groupId
       ) ?? null,
-    [selectedTrainType?.groupId, trainTypes?.trainTypes]
+    [selectedTrainType?.groupId, trainTypes]
   );
 
   const handleSelect = useCallback(
     (route: Route | undefined) => {
       if (!route) return;
-      const selectedStop = route.stops.find(
+      const selectedStop = (route.stops ?? []).find(
         (s) => s.groupId === currentStation?.groupId
       );
       if (!selectedStop?.id) return;
@@ -119,8 +133,8 @@ export const RouteListModal: React.FC<Props> = ({
         selectedLine: selectedStop.line ?? null,
       }));
       setSelectedRoute(route);
-      setSelectedTrainType(selectedStop.trainType);
-      fetchTrainTypes({ stationId: selectedStop.id });
+      setSelectedTrainType(selectedStop.trainType ?? undefined);
+      fetchTrainTypes({ variables: { stationId: selectedStop.id } });
     },
     [currentStation?.groupId, fetchTrainTypes, setLineState]
   );
@@ -129,7 +143,7 @@ export const RouteListModal: React.FC<Props> = ({
     return (
       <TrainTypeInfoPage
         trainType={trainType}
-        error={fetchTrainTypesError}
+        error={fetchTrainTypesError ?? null}
         loading={fetchTrainTypesStatus === 'pending'}
         disabled={isTrainTypesLoading}
         finalStation={finalStation}
@@ -179,8 +193,8 @@ export const RouteListModal: React.FC<Props> = ({
               <Heading>
                 {translate('routeListTitle', {
                   stationName: isJapanese
-                    ? finalStation.name
-                    : (finalStation.nameRoman ?? ''),
+                    ? finalStation.name || ''
+                    : finalStation.nameRoman || '',
                 })}
               </Heading>
             </View>

@@ -1,11 +1,11 @@
-import { useQuery } from '@connectrpc/connect-query';
+import { useQuery } from '@apollo/client/react';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
-import { getStationsByLineGroupId } from '~/gen/proto/stationapi-StationAPI_connectquery';
+import type { Station, TrainType } from '~/@types/graphql';
+import { GET_LINE_GROUP_STATIONS } from '~/lib/graphql/queries';
 import FAB from '../components/FAB';
 import { FilterModal, type SearchQuery } from '../components/FilterModal';
 import { Heading } from '../components/Heading';
@@ -14,6 +14,14 @@ import { TrainTypeList } from '../components/TrainTypeList';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 48, paddingVertical: 12 },
@@ -33,24 +41,24 @@ const TrainTypeSettings: React.FC = () => {
 
   const defaultQueries: SearchQuery[] = useMemo(() => {
     const allLines = uniqBy(
-      fetchedTrainTypes.flatMap((tt) => tt.lines.map((l) => l)),
+      fetchedTrainTypes.flatMap((tt) => (tt.lines ?? []).map((l) => l)),
       'id'
     );
     const allTrainTypes = fetchedTrainTypes.flatMap((tt) =>
-      tt.lines
+      (tt.lines ?? [])
         .map((l) => ({ ...l.trainType, line: l }))
         .filter((tt) => tt !== undefined)
     );
     return allLines.map((l) => ({
-      id: l.id,
-      name: l.nameShort,
+      id: l.id ?? 0,
+      name: l.nameShort ?? '',
       options: uniqBy(
         allTrainTypes
           .filter((tt) => tt.line?.id === l.id)
           .map((tt) => ({
             id: tt.typeId as number,
             name: tt.name as string,
-            parentId: l.id,
+            parentId: (l.id ?? 0) as number,
             color: tt.color as string,
             active: true,
           })),
@@ -65,22 +73,24 @@ const TrainTypeSettings: React.FC = () => {
 
   const {
     data: byLineGroupIdData,
-    isLoading: isLineGroupByIdLoading,
+    loading: isLineGroupByIdLoading,
     error: byLineGroupIdFetchError,
-  } = useQuery(
-    getStationsByLineGroupId,
+  } = useQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS,
     {
-      lineGroupId: selectedTrainType?.groupId,
-    },
-    { enabled: !!selectedTrainType }
+      variables: {
+        lineGroupId: selectedTrainType?.groupId ?? 0,
+      },
+      skip: !selectedTrainType,
+    }
   );
 
   const stations = useMemo(
     () =>
-      byLineGroupIdData?.stations?.length
-        ? byLineGroupIdData.stations
+      byLineGroupIdData?.lineGroupStations?.length
+        ? byLineGroupIdData.lineGroupStations
         : stationsFromState,
-    [byLineGroupIdData?.stations, stationsFromState]
+    [byLineGroupIdData?.lineGroupStations, stationsFromState]
   );
 
   const onPressBack = useCallback(async () => {
@@ -167,7 +177,7 @@ const TrainTypeSettings: React.FC = () => {
       fetchedTrainTypes.filter(
         (tt) =>
           !hiddenIdPairs.some(([l, t]) =>
-            tt.lines.some(
+            tt.lines?.some(
               (line) => line.id === l && line.trainType?.typeId === t
             )
           )
@@ -191,7 +201,7 @@ const TrainTypeSettings: React.FC = () => {
         trainType={selectedTrainType}
         stations={stations}
         loading={isLineGroupByIdLoading}
-        error={byLineGroupIdFetchError}
+        error={byLineGroupIdFetchError ?? null}
         onConfirmed={handleTrainTypeConfirmed}
         onClose={() => setIsTrainTypeModalVisible(false)}
       />

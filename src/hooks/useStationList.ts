@@ -1,21 +1,57 @@
-import { useQuery } from '@connectrpc/connect-query';
+import { useQuery } from '@apollo/client/react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
-import {
+import type {
+  Station,
   TrainDirection,
   TrainType,
   TrainTypeKind,
-} from '~/gen/proto/stationapi_pb';
+} from '~/@types/graphql';
 import {
-  getStationsByLineId,
-  getTrainTypesByStationId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_LINE_STATIONS,
+  GET_STATION_TRAIN_TYPES,
+} from '~/lib/graphql/queries';
 import lineState from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
 import navigationState from '../store/atoms/navigation';
 import type { StationState } from '../store/atoms/station';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
+
+// Helper to create the default local train type
+const createLocalTrainType = (): TrainType => ({
+  __typename: 'TrainType',
+  id: 0,
+  typeId: 0,
+  groupId: 0,
+  name: '普通/各駅停車',
+  nameKatakana: '',
+  nameRoman: 'Local',
+  nameChinese: '慢车/每站停车',
+  nameKorean: '보통/각역정차',
+  color: '',
+  lines: [],
+  direction: 'Both' as TrainDirection,
+  kind: 'Default' as TrainTypeKind,
+  line: undefined,
+});
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetStationTrainTypesData = {
+  stationTrainTypes: TrainType[];
+};
+
+type GetStationTrainTypesVariables = {
+  stationId: number;
+};
 
 export const useStationList = () => {
   const setStationState = useSetAtom(stationState);
@@ -32,36 +68,41 @@ export const useStationList = () => {
 
   const {
     data: byLineIdData,
-    isLoading: isLoadingStations,
+    loading: isLoadingStations,
     error: loadingStationsError,
     refetch: refetchStations,
-  } = useQuery(
-    getStationsByLineId,
-    // NOTE: ここでselectedLineを使わないとどの路線選んでも同じ行先が表示される
-    { lineId: selectedLine?.id, stationId: selectedLine?.station?.id },
+  } = useQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS,
     {
-      enabled: !!selectedLine,
+      variables: {
+        lineId: selectedLine?.id ?? 0,
+        stationId: selectedLine?.station?.id ?? undefined,
+      },
+      skip: !selectedLine,
     }
   );
 
   const {
     data: fetchedTrainTypesData,
-    isLoading: isTrainTypesLoading,
+    loading: isTrainTypesLoading,
     error: trainTypesFetchError,
     refetch: refetchTrainTypes,
-  } = useQuery(
-    getTrainTypesByStationId,
+  } = useQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
+    GET_STATION_TRAIN_TYPES,
     {
-      stationId: currentLine?.station?.id,
-    },
-    { enabled: !!currentLine }
+      variables: {
+        stationId: currentLine?.station?.id ?? 0,
+      },
+      skip: !currentLine,
+    }
   );
 
   const designatedTrainType = useMemo(
     () =>
-      byLineIdData?.stations.find((s) => s.id === currentLine?.station?.id)
-        ?.trainType ?? null,
-    [byLineIdData?.stations, currentLine?.station?.id]
+      byLineIdData?.lineStations.find(
+        (s: Station) => s.id === currentLine?.station?.id
+      )?.trainType ?? null,
+    [byLineIdData?.lineStations, currentLine?.station?.id]
   );
 
   useEffect(() => {
@@ -69,7 +110,7 @@ export const useStationList = () => {
       ...prev,
       stations: prev.stations.length
         ? prev.stations
-        : (byLineIdData?.stations ?? []),
+        : (byLineIdData?.lineStations ?? []),
     }));
     if (designatedTrainType) {
       setNavigationState((prev: NavigationState) => ({
@@ -78,29 +119,16 @@ export const useStationList = () => {
       }));
     }
   }, [
-    byLineIdData?.stations,
+    byLineIdData?.lineStations,
     designatedTrainType,
     setNavigationState,
     setStationState,
   ]);
 
   useEffect(() => {
-    const localType = new TrainType({
-      id: 0,
-      typeId: 0,
-      groupId: 0,
-      name: '普通/各駅停車',
-      nameKatakana: '',
-      nameRoman: 'Local',
-      nameChinese: '慢车/每站停车',
-      nameKorean: '보통/각역정차',
-      color: '',
-      lines: [],
-      direction: TrainDirection.Both,
-      kind: TrainTypeKind.Default,
-    });
+    const localType = createLocalTrainType();
 
-    const fetchedTrainTypes = fetchedTrainTypesData?.trainTypes ?? [];
+    const fetchedTrainTypes = fetchedTrainTypesData?.stationTrainTypes ?? [];
 
     if (!designatedTrainType) {
       setNavigationState((prev: NavigationState) => ({
@@ -116,15 +144,15 @@ export const useStationList = () => {
     }));
   }, [
     designatedTrainType,
-    fetchedTrainTypesData?.trainTypes,
+    fetchedTrainTypesData?.stationTrainTypes,
     setNavigationState,
   ]);
 
   return {
     refetchStations,
     refetchTrainTypes,
-    stations: byLineIdData?.stations ?? [],
-    trainTypes: fetchedTrainTypesData?.trainTypes ?? [],
+    stations: byLineIdData?.lineStations ?? [],
+    trainTypes: fetchedTrainTypesData?.stationTrainTypes ?? [],
     loading: isLoadingStations || isTrainTypesLoading,
     error: loadingStationsError || trainTypesFetchError,
   };

@@ -35,7 +35,7 @@ export const useAndroidWearable = (): void => {
         return;
       }
       await sendStationInfoToWatch({
-        stationName: station.name,
+        stationName: station.name ?? '',
         stationNameRoman: station.nameRoman ?? '',
         currentStateKey: stoppingState ?? 'CURRENT',
         stationNumber: currentNumbering?.stationNumber ?? '',

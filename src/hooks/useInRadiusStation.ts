@@ -1,7 +1,7 @@
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import stationState from '~/store/atoms/station';
 import { useLocationStore } from './useLocationStore';
 
@@ -20,12 +20,15 @@ export const useInRadiusStation = (radius: number) => {
       return;
     }
 
-    const matchedStation = stations.find((s) =>
-      isPointWithinRadius(
-        { latitude, longitude },
-        { latitude: s.latitude, longitude: s.longitude },
-        radius
-      )
+    const matchedStation = stations.find(
+      (s) =>
+        s.latitude !== undefined &&
+        s.longitude !== undefined &&
+        isPointWithinRadius(
+          { latitude, longitude },
+          { latitude: s.latitude, longitude: s.longitude },
+          radius
+        )
     );
 
     if (matchedStation) {

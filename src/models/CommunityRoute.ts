@@ -1,4 +1,4 @@
-import type { StopCondition, TrainType } from '~/gen/proto/stationapi_pb';
+import type { StopCondition, TrainType } from '~/@types/graphql';
 
 type CommunityRouteStation = {
   id: number;

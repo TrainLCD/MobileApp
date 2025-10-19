@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Line, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, TrainType } from '~/@types/graphql';
 import { useCurrentLine, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -48,21 +48,21 @@ const ItemCell = ({
   const lines = useMemo(
     () =>
       item.lines
-        .reduce<Line[]>((acc, cur) => {
+        ?.reduce<Line[]>((acc, cur) => {
           if (!acc || acc.every((l) => l.nameShort !== cur.nameShort)) {
             return acc.concat(cur);
           }
 
           return acc;
         }, [])
-        .filter((l) => l.id !== currentLine?.id),
+        .filter((l) => l.id !== currentLine?.id) ?? [],
     [currentLine?.id, item.lines]
   );
 
   const isAllSameType = useMemo(
     () =>
-      Array.from(new Set(item.lines.map((l) => l.trainType?.typeId))).length ===
-      1,
+      Array.from(new Set(item.lines?.map((l) => l.trainType?.typeId) ?? []))
+        .length === 1,
     [item.lines]
   );
 
@@ -134,7 +134,7 @@ export const TrainTypeList = ({
     [onSelect]
   );
   const keyExtractor = useCallback(
-    (item: TrainType) => item.groupId.toString(),
+    (item: TrainType) => item.groupId?.toString() ?? item.id?.toString() ?? '',
     []
   );
   const { bottom: safeAreaBottom } = useSafeAreaInsets();

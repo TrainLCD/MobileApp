@@ -3,7 +3,7 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import {
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,
@@ -60,6 +60,13 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
+    if (
+      nearestStation.latitude === undefined ||
+      nearestStation.longitude === undefined
+    ) {
+      return true;
+    }
+
     if (getIsPass(nearestStation)) {
       return isPointWithinRadius(
         { latitude, longitude },
@@ -104,7 +111,13 @@ export const useRefreshStation = (): void => {
   }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
-    if (!latitude || !longitude || !nextStation) {
+    if (
+      !latitude ||
+      !longitude ||
+      !nextStation ||
+      nextStation.latitude === undefined ||
+      nextStation.longitude === undefined
+    ) {
       return false;
     }
 
@@ -121,7 +134,8 @@ export const useRefreshStation = (): void => {
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
       const stationNumberIndex = getStationNumberIndex(s);
-      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber;
+      const stationNumber =
+        s.stationNumbers?.[stationNumberIndex]?.stationNumber;
       const stationNumberMaybeEmpty = `${
         stationNumber ? `(${stationNumber})` : ''
       }`;
@@ -152,14 +166,19 @@ export const useRefreshStation = (): void => {
     if (isNearestStationNotifyTarget) {
       if (
         isApproaching &&
+        nearestStation.id !== undefined &&
         nearestStation.id !== approachingNotifiedIdRef.current
       ) {
         sendApproachingNotification(nearestStation, 'APPROACHING');
-        approachingNotifiedIdRef.current = nearestStation.id;
+        approachingNotifiedIdRef.current = nearestStation.id ?? null;
       }
-      if (isArrived && nearestStation.id !== arrivedNotifiedIdRef.current) {
+      if (
+        isArrived &&
+        nearestStation.id !== undefined &&
+        nearestStation.id !== arrivedNotifiedIdRef.current
+      ) {
         sendApproachingNotification(nearestStation, 'ARRIVED');
-        arrivedNotifiedIdRef.current = nearestStation.id;
+        arrivedNotifiedIdRef.current = nearestStation.id ?? null;
       }
     }
   }, [

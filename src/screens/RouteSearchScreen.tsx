@@ -1,4 +1,4 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -18,17 +18,61 @@ import { NowHeader } from '~/components/NowHeader';
 import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
-import { type Line, Station, type TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
-  getRoutes,
-  getStationsByLineGroupId,
-  getStationsByLineId,
-  getStationsByName,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_ROUTES,
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+  GET_STATIONS_BY_NAME,
+} from '~/lib/graphql/queries';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+
+type GetRoutesData = {
+  routes: {
+    nextPageToken: string | null;
+    routes: {
+      id: string;
+      stops: Station[];
+    }[];
+  };
+};
+
+type GetRoutesVariables = {
+  fromStationGroupId: number;
+  toStationGroupId: number;
+  pageSize?: number;
+  pageToken?: string;
+};
+
+type GetStationsByNameData = {
+  stationsByName: Station[];
+};
+
+type GetStationsByNameVariables = {
+  name: string;
+  limit?: number;
+  fromStationGroupId?: number;
+};
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -72,30 +116,50 @@ const RouteSearchScreen = () => {
 
   const scrollY = useSharedValue(0);
 
-  const {
-    data: routesData,
-    mutate: mutateRoutes,
-    status: mutateRoutesStatus,
-    error: mutateRoutesError,
-  } = useMutation(getRoutes);
-  const {
-    status: byNameLoadingStatus,
-    mutateAsync: fetchByName,
-    error: byNameError,
-  } = useMutation(getStationsByName);
-  const {
-    data: stationsByLineIdData,
-    mutate: mutateStationsByLineId,
-    status: mutateStationsByLineIdStatus,
-    error: mutateStationsByLineIdError,
-  } = useMutation(getStationsByLineId);
+  const [
+    mutateRoutes,
+    {
+      data: routesData,
+      loading: mutateRoutesLoading,
+      error: mutateRoutesError,
+    },
+  ] = useLazyQuery<GetRoutesData, GetRoutesVariables>(GET_ROUTES);
 
-  const {
-    data: stationsByLineGroupIdData,
-    mutate: mutateStationsByLineGroupId,
-    status: mutateStationsByLineGroupIdStatus,
-    error: mutateStationsByLineGroupIdError,
-  } = useMutation(getStationsByLineGroupId);
+  const [fetchByName, { loading: byNameLoading, error: byNameError }] =
+    useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+      GET_STATIONS_BY_NAME
+    );
+
+  const [
+    mutateStationsByLineId,
+    {
+      data: stationsByLineIdData,
+      loading: mutateStationsByLineIdLoading,
+      error: mutateStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
+
+  const [
+    mutateStationsByLineGroupId,
+    {
+      data: stationsByLineGroupIdData,
+      loading: mutateStationsByLineGroupIdLoading,
+      error: mutateStationsByLineGroupIdError,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+
+  const mutateRoutesStatus = mutateRoutesLoading ? 'pending' : 'success';
+  const byNameLoadingStatus = byNameLoading ? 'pending' : 'success';
+  const mutateStationsByLineIdStatus = mutateStationsByLineIdLoading
+    ? 'pending'
+    : 'success';
+  const mutateStationsByLineGroupIdStatus = mutateStationsByLineGroupIdLoading
+    ? 'pending'
+    : 'success';
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -104,11 +168,14 @@ const RouteSearchScreen = () => {
       if (!query.trim().length) {
         return [] as Station[];
       }
-      const { stations } = await fetchByName({
-        stationName: query.trim(),
-        limit: Number(SEARCH_STATION_RESULT_LIMIT),
-        fromStationGroupId: station?.groupId,
+      const result = await fetchByName({
+        variables: {
+          name: query.trim(),
+          limit: Number(SEARCH_STATION_RESULT_LIMIT),
+          fromStationGroupId: station?.groupId ?? undefined,
+        },
       });
+      const stations = result.data?.stationsByName ?? [];
 
       setSearchResults(uniqBy(stations, 'id'));
     },
@@ -128,8 +195,10 @@ const RouteSearchScreen = () => {
       if (selectedStation.hasTrainTypes) {
         setTrainTypeListModalVisible(true);
         mutateRoutes({
-          fromStationGroupId: station?.groupId,
-          toStationGroupId: selectedStation.groupId,
+          variables: {
+            fromStationGroupId: station?.groupId ?? 0,
+            toStationGroupId: selectedStation.groupId ?? 0,
+          },
         });
         return;
       }
@@ -137,8 +206,10 @@ const RouteSearchScreen = () => {
       setSelectBoundModalVisible(true);
 
       mutateStationsByLineId({
-        lineId: selectedStation.line?.id,
-        stationId: selectedStation?.id,
+        variables: {
+          lineId: selectedStation.line?.id ?? 0,
+          stationId: selectedStation?.id ?? undefined,
+        },
       });
     },
     [mutateRoutes, mutateStationsByLineId, station?.groupId]
@@ -153,8 +224,14 @@ const RouteSearchScreen = () => {
       return (
         <LineCard
           line={line}
-          title={isJapanese ? item.name : (item.nameRoman ?? '')}
-          subtitle={isJapanese ? line.nameShort : (line.nameRoman ?? '')}
+          title={
+            isJapanese ? item.name || undefined : item.nameRoman || undefined
+          }
+          subtitle={
+            isJapanese
+              ? line.nameShort || undefined
+              : line.nameRoman || undefined
+          }
           onPress={() => handleLineSelected(item)}
         />
       );
@@ -166,7 +243,9 @@ const RouteSearchScreen = () => {
     async (trainType: TrainType) => {
       setSelectedTrainType(trainType);
       mutateStationsByLineGroupId({
-        lineGroupId: trainType.groupId,
+        variables: {
+          lineGroupId: trainType.groupId ?? 0,
+        },
       });
 
       setTrainTypeListModalVisible(false);
@@ -175,7 +254,7 @@ const RouteSearchScreen = () => {
     [mutateStationsByLineGroupId]
   );
 
-  const keyExtractor = useCallback((s: Station) => s.id.toString(), []);
+  const keyExtractor = useCallback((s: Station) => (s.id ?? 0).toString(), []);
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollY.value = e.contentOffset.y;
@@ -185,22 +264,27 @@ const RouteSearchScreen = () => {
   const currentStationInRoutes = useMemo<Station | null>(() => {
     if (!station || !selectedLine) return null;
 
-    const notConnectedToOthersLine = station.lines.find(
+    const notConnectedToOthersLine = station.lines?.find(
       (l) => l.id === selectedLine.id
     );
 
     if (notConnectedToOthersLine) {
-      return new Station({ ...station, line: notConnectedToOthersLine });
+      return { ...station, line: notConnectedToOthersLine } as Station;
     }
 
     const currentIds = new Set(
       (station.lines ?? []).map((l) => l?.id).filter(Boolean)
     );
+    const routes = routesData?.routes?.routes ?? [];
     const routeIdSet = new Set(
-      (routesData?.routes ?? [])
-        .map((r) => r.stops)
-        .filter((stops) => stops.some((s) => s.line?.id === selectedLine.id))
-        .flatMap((stops) => (stops ?? []).map((s) => s.line?.id))
+      routes
+        .map((r: { id: string; stops: Station[] }) => r.stops)
+        .filter((stops: Station[]) =>
+          stops.some((s: Station) => s.line?.id === selectedLine.id)
+        )
+        .flatMap((stops: Station[]) =>
+          (stops ?? []).map((s: Station) => s.line?.id)
+        )
         .filter(Boolean)
     );
 
@@ -209,33 +293,33 @@ const RouteSearchScreen = () => {
       commonIds.includes(l.id)
     );
 
-    if (!commonLine) return new Station({ ...station, line: selectedLine });
+    if (!commonLine) return { ...station, line: selectedLine } as Station;
 
-    return new Station({ ...station, line: commonLine });
+    return { ...station, line: commonLine } as Station;
   }, [station, selectedLine, routesData?.routes]);
 
   const destinationInRoutes = useMemo<Station | null>(() => {
     if (!selectedLine) return null;
+    const routes = routesData?.routes?.routes ?? [];
 
     return (
-      routesData?.routes
-        .flatMap((r) => r.stops)
-        .find((s) => s.id === selectedLine.station?.id) ?? null
+      routes
+        .flatMap((r: { id: string; stops: Station[] }) => r.stops)
+        .find((s: Station) => s.id === selectedLine.station?.id) ?? null
     );
   }, [selectedLine, routesData?.routes]);
 
-  const trainTypes = useMemo(
-    () =>
-      routesData?.routes
-        .map(
-          (r) =>
-            r.stops.find(
-              (rs) => rs.line?.id === currentStationInRoutes?.line?.id
-            )?.trainType
-        )
-        .filter((tt): tt is TrainType => !!tt) ?? [],
-    [routesData, currentStationInRoutes?.line?.id]
-  );
+  const trainTypes = useMemo(() => {
+    const routes = routesData?.routes?.routes ?? [];
+    return routes
+      .map(
+        (r: { id: string; stops: Station[] }) =>
+          r.stops.find(
+            (rs: Station) => rs.line?.id === currentStationInRoutes?.line?.id
+          )?.trainType
+      )
+      .filter((tt: TrainType | null | undefined): tt is TrainType => !!tt);
+  }, [routesData, currentStationInRoutes?.line?.id]);
 
   return (
     <>
@@ -285,8 +369,8 @@ const RouteSearchScreen = () => {
         station={currentStationInRoutes}
         line={selectedLine}
         stations={
-          stationsByLineGroupIdData?.stations ??
-          stationsByLineIdData?.stations ??
+          stationsByLineGroupIdData?.lineGroupStations ??
+          stationsByLineIdData?.lineStations ??
           []
         }
         trainType={selectedTrainType}

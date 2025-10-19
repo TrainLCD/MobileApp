@@ -1,7 +1,7 @@
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import type { Route, Station } from '~/gen/proto/stationapi_pb';
+import type { Route, Station } from '~/@types/graphql';
 import { useCurrentStation, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
@@ -44,6 +44,9 @@ const ItemCell = ({
   const currentStation = useCurrentStation();
 
   const stops = useMemo(() => {
+    if (!item.stops) {
+      return [];
+    }
     const curIndex = item.stops.findIndex(
       (s) => s.groupId === Number(currentStation?.groupId)
     );
@@ -105,13 +108,13 @@ const ItemCell = ({
 
     if (!otherTypeStops.length) {
       return isJapanese
-        ? `${lines.map((l) => l.nameShort).join('、')}直通`
-        : `${lines.map((l) => l.nameRoman).join(', ')}`;
+        ? `${lines.map((l) => l?.nameShort).join('、')}直通`
+        : `${lines.map((l) => l?.nameRoman).join(', ')}`;
     }
 
     return isJapanese
-      ? `${otherTypeStops.map((s) => `${s.line?.nameShort}から${s.trainType?.name}`).join('、')}に接続`
-      : `${otherTypeStops.map((s) => `Connected to ${s.line?.nameRoman} ${s.trainType?.nameRoman}`).join(', ')}`;
+      ? `${otherTypeStops.map((s: Station) => `${s.line?.nameShort}から${s.trainType?.name}`).join('、')}に接続`
+      : `${otherTypeStops.map((s: Station) => `Connected to ${s.line?.nameRoman} ${s.trainType?.nameRoman}`).join(', ')}`;
   }, [otherTypeStops, lines]);
 
   return (
@@ -154,7 +157,10 @@ export const RouteList = ({
     },
     [destination, loading, onSelect]
   );
-  const keyExtractor = useCallback((item: Route) => item.id.toString(), []);
+  const keyExtractor = useCallback(
+    (item: Route) => (item.id ?? 0).toString(),
+    []
+  );
 
   return (
     <FlatList

@@ -1,4 +1,4 @@
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import type { LineDirection } from '../models/Bound';
 
 // ２路線の接続駅は前の路線の最後の駅データを捨てる

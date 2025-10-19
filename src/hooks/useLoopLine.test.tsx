@@ -8,7 +8,7 @@ import {
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
 } from '~/constants';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { getIsLocal } from '~/utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';

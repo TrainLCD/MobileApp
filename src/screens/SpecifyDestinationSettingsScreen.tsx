@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
+import { type Station, StopCondition } from '~/@types/graphql';
 import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';
 import { StationList } from '../components/StationList';

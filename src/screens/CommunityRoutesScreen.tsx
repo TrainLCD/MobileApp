@@ -3,7 +3,7 @@ import { useSetAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';
 import Loading from '../components/Loading';
@@ -105,17 +105,20 @@ const CommunityRoutesScreen: React.FC = () => {
 
   const handleItemPress = useCallback(
     async (route: CommunityRoute) => {
-      const { stations: fetchedStations } = await fetchStationsByRoute({
+      const { data } = await fetchStationsByRoute({
         ids: route.stations.map((s) => s.id),
       });
+
+      const fetchedStations = data?.stations;
 
       if (!fetchedStations?.length || !latitude || !longitude) {
         return;
       }
       const stations = fetchedStations.map((sta) => ({
         ...sta,
-        stopCondition: route.stations.find((rs) => rs.id === sta.id)
-          ?.stopCondition,
+        stopCondition:
+          route.stations.find((rs) => rs.id === sta.id)?.stopCondition ??
+          sta.stopCondition,
         trainType: route.trainType,
       }));
 
@@ -123,8 +126,18 @@ const CommunityRoutesScreen: React.FC = () => {
       let nearestIndex = 0;
       let best = Number.POSITIVE_INFINITY;
       for (let i = 0; i < stations.length; i++) {
-        const dLat = stations[i].latitude - latitude;
-        const dLon = stations[i].longitude - longitude;
+        const stationLat = stations[i].latitude;
+        const stationLon = stations[i].longitude;
+        if (
+          stationLat === null ||
+          stationLon === null ||
+          stationLat === undefined ||
+          stationLon === undefined
+        ) {
+          continue;
+        }
+        const dLat = stationLat - latitude;
+        const dLon = stationLon - longitude;
         const dist2 = dLat * dLat + dLon * dLon;
         if (dist2 < best) {
           best = dist2;
@@ -136,10 +149,7 @@ const CommunityRoutesScreen: React.FC = () => {
       if (!nearestStation) {
         return;
       }
-      updateStateAndNavigate(
-        stations.map((s) => new Station(s)),
-        new Station(nearestStation)
-      );
+      updateStateAndNavigate(stations, nearestStation);
     },
     [fetchStationsByRoute, latitude, longitude, updateStateAndNavigate]
   );

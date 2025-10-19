@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StopCondition } from '~/gen/proto/stationapi_pb';
+import { StopCondition } from '~/@types/graphql';
 import { useCurrentStation, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -67,7 +67,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   );
 
   const lineColors = useMemo(
-    () => slicedLeftStations.map((s) => s.line?.color),
+    () => slicedLeftStations.map((s: any) => s.line?.color),
     [slicedLeftStations]
   );
 
@@ -161,8 +161,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         >
           {translate('partiallyPassBottomNotice', {
             stations: isJapanese
-              ? passStations.map((s) => s.name).join('、')
-              : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
+              ? passStations.map((s: any) => s.name).join('、')
+              : ` ${passStations.map((s: any) => s.nameRoman).join(', ')}`,
           })}
         </Typography>
       ) : null}

@@ -4,7 +4,7 @@ import type React from 'react';
 import { useEffect } from 'react';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
-import { type Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { useNextStation } from '~/hooks/useNextStation';
 import { useThemeStore } from '~/hooks/useThemeStore';
 import { useTTSText } from '~/hooks/useTTSText';
@@ -70,12 +70,12 @@ describe('Without trainType & With numbering', () => {
     jest.clearAllMocks();
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
     require('~/hooks/useNumbering').useNumbering.mockReturnValue([
-      new StationNumber({
+      {
         lineSymbol: 'S',
         lineSymbolColor: '#B0BF1E',
         lineSymbolShape: 'ROUND',
         stationNumber: 'S-02',
-      }),
+      },
       '',
     ]);
   });

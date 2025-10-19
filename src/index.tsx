@@ -1,4 +1,3 @@
-import { TransportProvider } from '@connectrpc/connect-query';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { NavigationContainer } from '@react-navigation/native';
@@ -6,7 +5,6 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
@@ -23,11 +21,12 @@ import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import TuningSettings from './components/TuningSettings';
-import { queryClient, transport } from './lib/grpc';
+import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
+import { ApolloProvider } from '@apollo/client/react';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -98,39 +97,37 @@ const App: React.FC = () => {
 
       <CustomErrorBoundary>
         <GestureHandlerRootView>
-          <TransportProvider transport={transport}>
-            <QueryClientProvider client={queryClient}>
-              <ActionSheetProvider>
-                <Provider>
-                  <NavigationContainer>
-                    <DeepLinkProvider>
-                      <Stack.Navigator screenOptions={screenOptions}>
-                        {!permStatus?.granted ? (
-                          <Stack.Screen
-                            options={options}
-                            name="Privacy"
-                            component={PrivacyScreen}
-                          />
-                        ) : null}
-
+          <ApolloProvider client={gqlClient}>
+            <ActionSheetProvider>
+              <Provider>
+                <NavigationContainer>
+                  <DeepLinkProvider>
+                    <Stack.Navigator screenOptions={screenOptions}>
+                      {!permStatus?.granted ? (
                         <Stack.Screen
                           options={options}
-                          name="MainStack"
-                          component={MainStack}
+                          name="Privacy"
+                          component={PrivacyScreen}
                         />
+                      ) : null}
 
-                        <Stack.Screen
-                          options={options}
-                          name="TuningSettings"
-                          component={TuningSettings}
-                        />
-                      </Stack.Navigator>
-                    </DeepLinkProvider>
-                  </NavigationContainer>
-                </Provider>
-              </ActionSheetProvider>
-            </QueryClientProvider>
-          </TransportProvider>
+                      <Stack.Screen
+                        options={options}
+                        name="MainStack"
+                        component={MainStack}
+                      />
+
+                      <Stack.Screen
+                        options={options}
+                        name="TuningSettings"
+                        component={TuningSettings}
+                      />
+                    </Stack.Navigator>
+                  </DeepLinkProvider>
+                </NavigationContainer>
+              </Provider>
+            </ActionSheetProvider>
+          </ApolloProvider>
         </GestureHandlerRootView>
       </CustomErrorBoundary>
     </>

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { type Line, LineType } from '~/gen/proto/stationapi_pb';
+import { type Line, LineType } from '~/@types/graphql';
 import { MARK_SHAPE } from '../constants';
 import { getLineSymbolImage } from '../lineSymbolImage';
 import type { LineMark } from '../models/LineMark';

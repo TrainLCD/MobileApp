@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
@@ -134,7 +134,10 @@ const PadLineMarks: React.FC<Props> = ({
                         parenthesisRegexp,
                         ''
                       )
-                    : transferLines[i]?.nameShort.replace(parenthesisRegexp, '')
+                    : transferLines[i]?.nameShort?.replace(
+                        parenthesisRegexp,
+                        ''
+                      )
                 }${
                   isDifferentStationName(station, transferLines[i])
                     ? `\n[ ${
@@ -143,7 +146,7 @@ const PadLineMarks: React.FC<Props> = ({
                               parenthesisRegexp,
                               ''
                             )
-                          : transferLines[i]?.station?.name.replace(
+                          : transferLines[i]?.station?.name?.replace(
                               parenthesisRegexp,
                               ''
                             )

@@ -1,7 +1,7 @@
 import findNearest from 'geolib/es/findNearest';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useLocationStore } from './useLocationStore';
@@ -19,15 +19,19 @@ export const useNearestStation = (): Station | null => {
       return null;
     }
 
-    const nearestCoordinates = stations.length
+    const validStations = stations.filter(
+      (s) => s.latitude !== undefined && s.longitude !== undefined
+    );
+
+    const nearestCoordinates = validStations.length
       ? (findNearest(
           {
             latitude,
             longitude,
           },
-          stations.map((sta) => ({
-            latitude: sta.latitude,
-            longitude: sta.longitude,
+          validStations.map((sta) => ({
+            latitude: sta.latitude as number,
+            longitude: sta.longitude as number,
           }))
         ) as { latitude: number; longitude: number })
       : null;
@@ -36,7 +40,7 @@ export const useNearestStation = (): Station | null => {
       return null;
     }
 
-    const nearestStations = stations.filter(
+    const nearestStations = validStations.filter(
       (sta) =>
         sta.latitude === nearestCoordinates.latitude &&
         sta.longitude === nearestCoordinates.longitude

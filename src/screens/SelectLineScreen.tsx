@@ -1,4 +1,4 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
@@ -25,12 +25,12 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
-  getStationsByLineGroupId,
-  getStationsByLineId,
-  getTrainTypesByStationId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+  GET_STATION_TRAIN_TYPES,
+} from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
@@ -49,6 +49,31 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
 import { SelectLineScreenPresets } from './SelectLineScreenPresets';
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
+
+type GetStationTrainTypesData = {
+  stationTrainTypes: TrainType[];
+};
+
+type GetStationTrainTypesVariables = {
+  stationId: number;
+};
 
 export type LoopItem = (SavedRoute & { stations: Station[] }) & {
   __k: string;
@@ -152,21 +177,38 @@ const SelectLineScreen = () => {
     null
   );
 
-  const {
-    mutateAsync: fetchStationsByLineId,
-    status: fetchStationsByLineIdStatus,
-    error: _fetchStationsByLineIdError,
-  } = useMutation(getStationsByLineId);
-  const {
-    mutateAsync: fetchStationsByLineGroupId,
-    status: fetchStationsByLineGroupIdStatus,
-    error: _fetchStationsByLineGroupIdError,
-  } = useMutation(getStationsByLineGroupId);
-  const {
-    mutateAsync: fetchTrainTypes,
-    status: fetchTrainTypesStatus,
-    error: fetchTrainTypesError,
-  } = useMutation(getTrainTypesByStationId);
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: _fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
+  const [
+    fetchStationsByLineGroupId,
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: _fetchStationsByLineGroupIdError,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+  const [
+    fetchTrainTypes,
+    { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
+  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
+    GET_STATION_TRAIN_TYPES
+  );
+
+  const fetchStationsByLineIdStatus = fetchStationsByLineIdLoading
+    ? 'pending'
+    : 'success';
+  const fetchStationsByLineGroupIdStatus = fetchStationsByLineGroupIdLoading
+    ? 'pending'
+    : 'success';
+  const fetchTrainTypesStatus = fetchTrainTypesLoading ? 'pending' : 'success';
 
   useEffect(() => {
     ScreenOrientation.unlockAsync().catch(console.error);
@@ -182,14 +224,23 @@ const SelectLineScreen = () => {
       try {
         const routeStations = await Promise.all(
           routes.map(async (route) => {
-            const { stations } = route.hasTrainType
-              ? await fetchStationsByLineGroupId({
+            if (route.hasTrainType) {
+              const result = await fetchStationsByLineGroupId({
+                variables: {
                   lineGroupId: route.trainTypeId,
-                })
-              : await fetchStationsByLineId({
-                  lineId: route.lineId,
-                });
-            return { ...route, stations };
+                },
+              });
+              return {
+                ...route,
+                stations: result.data?.lineGroupStations ?? [],
+              };
+            }
+            const result = await fetchStationsByLineId({
+              variables: {
+                lineId: route.lineId,
+              },
+            });
+            return { ...route, stations: result.data?.lineStations ?? [] };
           })
         );
 
@@ -213,12 +264,14 @@ const SelectLineScreen = () => {
       const lines = station?.lines ?? [];
       stationsRef.current = await Promise.all(
         lines.map(async (line) => {
-          const { stations } = await fetchStationsByLineId({
-            lineId: line.id,
-            stationId: line.station?.id,
+          const result = await fetchStationsByLineId({
+            variables: {
+              lineId: line.id ?? 0,
+              stationId: line.station?.id ?? undefined,
+            },
           });
 
-          return stations;
+          return result.data?.lineStations ?? [];
         })
       );
     };
@@ -249,11 +302,13 @@ const SelectLineScreen = () => {
       if (!location) return;
       useLocationStore.setState(location);
       const data = await fetchByCoords({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        limit: 1,
+        variables: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          limit: 1,
+        },
       });
-      const stationFromAPI = data.stations[0] ?? null;
+      const stationFromAPI = data.data?.stationsNearby[0] ?? null;
       setStationState((prev) => ({
         ...prev,
         station: prev.station ?? stationFromAPI,
@@ -305,12 +360,15 @@ const SelectLineScreen = () => {
       setIsSelectBoundModalOpen(true);
 
       if (line.station?.hasTrainTypes) {
-        const { trainTypes } = await fetchTrainTypes({
-          stationId: line.station?.id,
+        const result = await fetchTrainTypes({
+          variables: {
+            stationId: line.station?.id ?? 0,
+          },
         });
+        const trainTypes = result.data?.stationTrainTypes ?? [];
         const trainType =
           trainTypes.find(
-            (tt) =>
+            (tt: TrainType) =>
               tt.groupId ===
               stations.find((s) => s.line?.id === line.id)?.trainType?.groupId
           ) ?? null;
@@ -327,10 +385,12 @@ const SelectLineScreen = () => {
   const handleTrainTypeSelect = useCallback(
     async (trainType: TrainType) => {
       const res = await fetchStationsByLineGroupId({
-        lineGroupId: trainType.groupId,
+        variables: {
+          lineGroupId: trainType.groupId ?? 0,
+        },
       });
       setPendingTrainType(trainType);
-      setPendingStations(res.stations);
+      setPendingStations(res.data?.lineGroupStations ?? []);
     },
     [fetchStationsByLineGroupId]
   );
@@ -339,25 +399,29 @@ const SelectLineScreen = () => {
   const openModalByLineId = useCallback(
     async (lineId: number, destinationStationId: number | null) => {
       // try cache first
-      const { stations } = await fetchStationsByLineId({ lineId });
+      const result = await fetchStationsByLineId({
+        variables: { lineId },
+      });
+      const stations = result.data?.lineStations ?? [];
       if (!stations.length) return;
 
       const wantedDestination =
-        stations.find((sta) => sta.groupId === destinationStationId) ?? null;
+        stations.find((sta: Station) => sta.groupId === destinationStationId) ??
+        null;
 
       const nearestCoordinates = findNearest(
         {
-          latitude: latitude ?? stations[0].latitude,
-          longitude: longitude ?? stations[0].longitude,
+          latitude: latitude ?? stations[0].latitude ?? 0,
+          longitude: longitude ?? stations[0].longitude ?? 0,
         },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
+        stations.map((sta: Station) => ({
+          latitude: sta.latitude ?? 0,
+          longitude: sta.longitude ?? 0,
         }))
       ) as { latitude: number; longitude: number };
 
       const station = stations.find(
-        (sta) =>
+        (sta: Station) =>
           sta.latitude === nearestCoordinates.latitude &&
           sta.longitude === nearestCoordinates.longitude
       );
@@ -376,25 +440,29 @@ const SelectLineScreen = () => {
 
   const openModalByTrainTypeId = useCallback(
     async (lineGroupId: number, destinationStationId: number | null) => {
-      const { stations } = await fetchStationsByLineGroupId({ lineGroupId });
+      const result = await fetchStationsByLineGroupId({
+        variables: { lineGroupId },
+      });
+      const stations = result.data?.lineGroupStations ?? [];
       if (!stations.length) return;
 
       const wantedDestination =
-        stations.find((sta) => sta.groupId === destinationStationId) ?? null;
+        stations.find((sta: Station) => sta.groupId === destinationStationId) ??
+        null;
 
       const nearestCoordinates = findNearest(
         {
-          latitude: latitude ?? stations[0].latitude,
-          longitude: longitude ?? stations[0].longitude,
+          latitude: latitude ?? stations[0].latitude ?? 0,
+          longitude: longitude ?? stations[0].longitude ?? 0,
         },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
+        stations.map((sta: Station) => ({
+          latitude: sta.latitude ?? 0,
+          longitude: sta.longitude ?? 0,
         }))
       ) as { latitude: number; longitude: number };
 
       const station = stations.find(
-        (sta) =>
+        (sta: Station) =>
           sta.latitude === nearestCoordinates.latitude &&
           sta.longitude === nearestCoordinates.longitude
       );
@@ -408,13 +476,17 @@ const SelectLineScreen = () => {
       pendingWantedDestinationRef.current = wantedDestination;
 
       if (station?.hasTrainTypes) {
-        const { trainTypes } = await fetchTrainTypes({
-          stationId: station?.id,
+        const result = await fetchTrainTypes({
+          variables: {
+            stationId: station?.id ?? 0,
+          },
         });
+        const trainTypes = result.data?.stationTrainTypes ?? [];
 
         const trainType =
-          trainTypes.find((tt) => tt.groupId === station.trainType?.groupId) ??
-          null;
+          trainTypes.find(
+            (tt: TrainType) => tt.groupId === station.trainType?.groupId
+          ) ?? null;
         setPendingTrainType(trainType);
         setNavigationState((prev) => ({
           ...prev,
@@ -481,7 +553,7 @@ const SelectLineScreen = () => {
     [handleLineSelected, fetchStationsByLineIdStatus]
   );
 
-  const keyExtractor = useCallback((l: Line) => l.id.toString(), []);
+  const keyExtractor = useCallback((l: Line) => (l.id ?? 0).toString(), []);
 
   const headingTitle = useMemo(() => {
     if (!station) return translate('selectLineTitle');
@@ -559,7 +631,7 @@ const SelectLineScreen = () => {
         line={pendingLineRef.current}
         destination={pendingWantedDestinationRef.current}
         loading={fetchTrainTypesStatus === 'pending'}
-        error={fetchTrainTypesError}
+        error={fetchTrainTypesError ?? null}
         onTrainTypeSelect={handleTrainTypeSelect}
       />
     </>

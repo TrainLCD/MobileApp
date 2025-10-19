@@ -6,7 +6,7 @@ import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Heading } from '~/components/Heading';
 import { LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID } from '~/constants';
-import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
   useBounds,
   useGetStationsWithTermination,
@@ -139,7 +139,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     if (!line || !isRoutesDBInitialized) return;
 
     const route = findSavedRoute({
-      lineId: line.id,
+      lineId: line.id ?? null,
       trainTypeId: trainType?.groupId ?? null,
       destinationStationId: wantedDestination?.groupId ?? null,
     });
@@ -220,13 +220,13 @@ export const SelectBoundModal: React.FC<Props> = ({
   const normalLineDirectionText = useCallback((boundStations: Station[]) => {
     if (isJapanese) {
       return `${boundStations
-        .map((s) => s.name)
+        .map((s: any) => s.name)
         .slice(0, 2)
         .join('・')}方面`;
     }
     const names = boundStations
       .slice(0, 2)
-      .map((s) => s.nameRoman)
+      .map((s: any) => s.nameRoman)
       .filter(Boolean);
     return names.length ? `for ${names.join(' and ')}` : '';
   }, []);
@@ -238,17 +238,17 @@ export const SelectBoundModal: React.FC<Props> = ({
       if (isJapanese) {
         if (direction === 'INBOUND') {
           return `${directionName}(${inboundStations
-            .map((s) => s.name)
+            .map((s: any) => s.name)
             .join('・')}方面)`;
         }
         return `${directionName}(${outboundStations
-          .map((s) => s.name)
+          .map((s: any) => s.name)
           .join('・')}方面)`;
       }
       if (direction === 'INBOUND') {
-        return `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`;
+        return `for ${inboundStations.map((s: any) => s.nameRoman).join(' and ')}`;
       }
-      return `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`;
+      return `for ${outboundStations.map((s: any) => s.nameRoman).join(' and ')}`;
     },
     [inboundStations, outboundStations, line]
   );
@@ -409,7 +409,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         name: wantedDestination
           ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
           : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
-        lineId: line.id,
+        lineId: line.id ?? 0,
         trainTypeId: trainType?.groupId,
         destinationStationId: wantedDestination?.groupId ?? null,
         createdAt: new Date(),
@@ -433,7 +433,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       name: isJapanese
         ? `${lineName} 各駅停車 ${edgeStationNames} ${destinationName ? `${destinationName}行き` : ''}`.trim()
         : `${lineName} Local ${edgeStationNames}${destinationName ? ` for ${destinationName}` : ''}`.trim(),
-      lineId: line.id,
+      lineId: line.id ?? 0,
       trainTypeId: null,
       destinationStationId: wantedDestination?.groupId ?? null,
       createdAt: new Date(),

@@ -1,4 +1,4 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo } from 'react';
 import {
@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import type { Station } from '~/gen/proto/stationapi_pb';
-import { getStationsByName } from '~/gen/proto/stationapi-StationAPI_connectquery';
+import type { Station } from '~/@types/graphql';
+import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -23,6 +23,16 @@ import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
 import { LineCard } from './LineCard';
 import { SearchBar } from './SearchBar';
+
+type GetStationsByNameData = {
+  stationsByName: Station[];
+};
+
+type GetStationsByNameVariables = {
+  name: string;
+  limit?: number;
+  fromStationGroupId?: number;
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -87,13 +97,22 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const insets = useSafeAreaInsets();
 
-  const {
-    data: stationsData,
-    mutate: mutateStations,
-    status: mutateStationsStatus,
-    error: mutateStationsError,
-    reset: resetStations,
-  } = useMutation(getStationsByName);
+  const [
+    mutateStations,
+    {
+      data: stationsData,
+      loading: mutateStationsLoading,
+      error: mutateStationsError,
+    },
+  ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+    GET_STATIONS_BY_NAME
+  );
+
+  const resetStations = useCallback(() => {
+    // Apollo Client doesn't need explicit reset, we can just clear the query
+  }, []);
+
+  const mutateStationsStatus = mutateStationsLoading ? 'pending' : 'success';
 
   useEffect(() => {
     if (mutateStationsError) {
@@ -106,10 +125,10 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       const { line, lines } = item;
       if (!line) return null;
 
-      const title = isJapanese ? item.name : item.nameRoman;
+      const title = (isJapanese ? item.name : item.nameRoman) || undefined;
       const subtitle = isJapanese
-        ? `${lines.map((l) => l.nameShort).join('・')}`
-        : lines.map((l) => l.nameRoman).join(', ');
+        ? `${(lines ?? []).map((l) => l.nameShort).join('・')}`
+        : (lines ?? []).map((l) => l.nameRoman).join(', ');
 
       return (
         <LineCard
@@ -126,7 +145,10 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     [onSelect, resetStations]
   );
 
-  const keyExtractor = useCallback((s: Station) => s.groupId.toString(), []);
+  const keyExtractor = useCallback(
+    (s: Station) => (s.groupId ?? 0).toString(),
+    []
+  );
 
   const handleSearchStations = useCallback(
     (query: string) => {
@@ -135,14 +157,14 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         return;
       }
 
-      mutateStations({ stationName: query });
+      mutateStations({ variables: { name: query } });
     },
     [mutateStations, resetStations]
   );
 
   const stations = useMemo(
-    () => uniqBy(stationsData?.stations ?? [], 'groupId'),
-    [stationsData?.stations]
+    () => uniqBy(stationsData?.stationsByName ?? [], 'groupId'),
+    [stationsData?.stationsByName]
   );
 
   const handleClose = useCallback(() => {
