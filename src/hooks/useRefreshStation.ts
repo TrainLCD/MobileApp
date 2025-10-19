@@ -116,7 +116,7 @@ export const useRefreshStation = (): void => {
     if (
       latitude == null ||
       longitude == null ||
-      !nextStation ||
+      nextStation == null ||
       nextStation.latitude == null ||
       nextStation.longitude == null
     ) {
