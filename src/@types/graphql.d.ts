@@ -1103,7 +1103,7 @@ export type GetStationTrainTypesQuery = {
 };
 
 export type GetStationsQueryVariables = Exact<{
-  ids: Array<Scalars['Int']['input']> | Scalars['Int']['input'];
+  ids: Array<Scalars['Int']['input']>;
 }>;
 
 export type GetStationsQuery = {

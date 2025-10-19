@@ -477,10 +477,10 @@ const SelectLineScreen = () => {
       pendingLineRef.current = station?.line ?? null;
       pendingWantedDestinationRef.current = wantedDestination;
 
-      if (station?.hasTrainTypes) {
+      if (station?.hasTrainTypes && station?.id != null) {
         const result = await fetchTrainTypes({
           variables: {
-            stationId: station?.id ?? 0,
+            stationId: station.id,
           },
         });
         const trainTypes = result.data?.stationTrainTypes ?? [];

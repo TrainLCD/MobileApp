@@ -84,7 +84,7 @@ const TrainTypeSettings: React.FC = () => {
     GET_LINE_GROUP_STATIONS,
     {
       variables: {
-        lineGroupId: selectedTrainType?.groupId ?? 0,
+        lineGroupId: selectedTrainType?.groupId as number,
       },
       skip: !selectedTrainType?.groupId,
     }
