@@ -146,7 +146,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   );
 
   const keyExtractor = useCallback(
-    (s: Station) => (s.groupId ?? 0).toString(),
+    (s: Station, index: number) => `${s.groupId ?? 0}-${s.id ?? index}`,
     []
   );
 

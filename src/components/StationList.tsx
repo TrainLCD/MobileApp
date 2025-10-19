@@ -126,7 +126,7 @@ export const StationList = ({
     [onSelect, withoutTransfer]
   );
   const keyExtractor = useCallback(
-    (item: Station) => (item.id ?? 0).toString(),
+    (item: Station, index: number) => (item.id ?? index).toString(),
     []
   );
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
