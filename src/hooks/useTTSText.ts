@@ -69,6 +69,16 @@ export const useTTSText = (
     }
 
     const stationNumberIndex = getStationNumberIndex(nextStationOrigin);
+
+    // Validate stationNumberIndex is a valid integer within array bounds
+    if (
+      !Number.isInteger(stationNumberIndex) ||
+      stationNumberIndex < 0 ||
+      stationNumberIndex >= nextStationOrigin.stationNumbers.length
+    ) {
+      return;
+    }
+
     return nextStationOrigin.stationNumbers[stationNumberIndex];
   }, [getStationNumberIndex, nextStationOrigin]);
 
