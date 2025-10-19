@@ -109,7 +109,7 @@ const FakeStationSettingsScreen: React.FC = () => {
         longitude: longitude ?? 0,
         limit: Number(NEARBY_STATIONS_LIMIT),
       },
-      skip: !latitude || !longitude,
+      skip: latitude == null || longitude == null,
     }
   );
 

@@ -16,19 +16,17 @@ export const useInRadiusStation = (radius: number) => {
     useState<Station | null>(station);
 
   useEffect(() => {
-    if (!latitude || !longitude) {
+    if (latitude == null || longitude == null) {
       return;
     }
 
     const matchedStation = stations.find(
       (s) =>
-        s.latitude !== undefined &&
-        s.latitude !== null &&
-        s.longitude !== undefined &&
-        s.longitude !== null &&
+        s.latitude != null &&
+        s.longitude != null &&
         isPointWithinRadius(
           { latitude, longitude },
-          { latitude: s.latitude, longitude: s.longitude },
+          { latitude: s.latitude as number, longitude: s.longitude as number },
           radius
         )
     );

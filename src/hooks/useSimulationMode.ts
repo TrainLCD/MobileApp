@@ -128,7 +128,10 @@ export const useSimulationMode = (): void => {
       }
 
       const points: GeolibInputCoordinates[] = [
-        { latitude: cur.latitude, longitude: cur.longitude },
+        {
+          latitude: cur.latitude as number,
+          longitude: cur.longitude as number,
+        },
         ...betweenNextStation
           .filter((s) => s.latitude != null && s.longitude != null)
           .map((s) => ({
@@ -136,8 +139,8 @@ export const useSimulationMode = (): void => {
             longitude: s.longitude as number,
           })),
         {
-          latitude: next.latitude,
-          longitude: next.longitude,
+          latitude: next.latitude as number,
+          longitude: next.longitude as number,
         },
       ];
 

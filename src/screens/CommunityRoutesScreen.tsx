@@ -111,7 +111,7 @@ const CommunityRoutesScreen: React.FC = () => {
 
       const fetchedStations = data?.stations;
 
-      if (!fetchedStations?.length || !latitude || !longitude) {
+      if (!fetchedStations?.length || latitude == null || longitude == null) {
         return;
       }
       const stations = fetchedStations.map((sta) => ({

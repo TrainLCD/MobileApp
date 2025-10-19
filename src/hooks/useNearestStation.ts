@@ -15,12 +15,12 @@ export const useNearestStation = (): Station | null => {
   const nextStation = useNextStation(false);
 
   const nearestStation = useMemo<Station | null>(() => {
-    if (!latitude || !longitude) {
+    if (latitude == null || longitude == null) {
       return null;
     }
 
     const validStations = stations.filter(
-      (s) => s.latitude !== undefined && s.longitude !== undefined
+      (s) => s.latitude != null && s.longitude != null
     );
 
     const nearestCoordinates = validStations.length

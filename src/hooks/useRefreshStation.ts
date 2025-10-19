@@ -56,16 +56,16 @@ export const useRefreshStation = (): void => {
     const inGracePeriod =
       Date.now() - lastArrivedTimeRef.current < ARRIVED_GRACE_PERIOD_MS;
 
-    if (!latitude || !longitude || !nearestStation || inGracePeriod) {
+    if (
+      latitude == null ||
+      longitude == null ||
+      !nearestStation ||
+      inGracePeriod
+    ) {
       return true;
     }
 
-    if (
-      nearestStation.latitude === undefined ||
-      nearestStation.latitude === null ||
-      nearestStation.longitude === undefined ||
-      nearestStation.longitude === null
-    ) {
+    if (nearestStation.latitude == null || nearestStation.longitude == null) {
       return true;
     }
 
@@ -73,8 +73,8 @@ export const useRefreshStation = (): void => {
       return isPointWithinRadius(
         { latitude, longitude },
         {
-          latitude: nearestStation.latitude,
-          longitude: nearestStation.longitude,
+          latitude: nearestStation.latitude as number,
+          longitude: nearestStation.longitude as number,
         },
         arrivedThreshold
       );
@@ -90,16 +90,16 @@ export const useRefreshStation = (): void => {
         ? isPointWithinRadius(
             { latitude, longitude },
             {
-              latitude: nearestStation.latitude,
-              longitude: nearestStation.longitude,
+              latitude: nearestStation.latitude as number,
+              longitude: nearestStation.longitude as number,
             },
             arrivedThreshold
           )
         : isPointWithinRadius(
             { latitude, longitude },
             {
-              latitude: nearestStation.latitude,
-              longitude: nearestStation.longitude,
+              latitude: nearestStation.latitude as number,
+              longitude: nearestStation.longitude as number,
             },
             arrivedThreshold
           ) &&
@@ -114,13 +114,11 @@ export const useRefreshStation = (): void => {
 
   const isApproaching = useMemo((): boolean => {
     if (
-      !latitude ||
-      !longitude ||
+      latitude == null ||
+      longitude == null ||
       !nextStation ||
-      nextStation.latitude === undefined ||
-      nextStation.latitude === null ||
-      nextStation.longitude === undefined ||
-      nextStation.longitude === null
+      nextStation.latitude == null ||
+      nextStation.longitude == null
     ) {
       return false;
     }
@@ -128,8 +126,8 @@ export const useRefreshStation = (): void => {
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation.latitude,
-        longitude: nextStation.longitude,
+        latitude: nextStation.latitude as number,
+        longitude: nextStation.longitude as number,
       },
       approachingThreshold
     );
