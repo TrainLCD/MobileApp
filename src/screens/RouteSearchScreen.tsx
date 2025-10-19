@@ -193,11 +193,15 @@ const RouteSearchScreen = () => {
       setSelectedLine(selectedStation.line ?? null);
 
       if (selectedStation.hasTrainTypes) {
+        // Guard: ensure both groupIds are present before calling the query
+        if (!station?.groupId || !selectedStation.groupId) {
+          return;
+        }
         setTrainTypeListModalVisible(true);
         mutateRoutes({
           variables: {
-            fromStationGroupId: station?.groupId ?? 0,
-            toStationGroupId: selectedStation.groupId ?? 0,
+            fromStationGroupId: station.groupId,
+            toStationGroupId: selectedStation.groupId,
           },
         });
         return;
