@@ -75,10 +75,11 @@ export const useStationList = () => {
     GET_LINE_STATIONS,
     {
       variables: {
-        lineId: selectedLine?.id ?? 0,
+        // biome-ignore lint/style/noNonNullAssertion: skip guard ensures selectedLine.id exists
+        lineId: selectedLine!.id!,
         stationId: selectedLine?.station?.id ?? undefined,
       },
-      skip: !selectedLine,
+      skip: !selectedLine?.id,
     }
   );
 
@@ -91,9 +92,9 @@ export const useStationList = () => {
     GET_STATION_TRAIN_TYPES,
     {
       variables: {
-        stationId: currentLine?.station?.id ?? 0,
+        stationId: currentLine?.station?.id as number,
       },
-      skip: !currentLine,
+      skip: !currentLine?.station?.id,
     }
   );
 
