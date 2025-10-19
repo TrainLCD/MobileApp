@@ -7,7 +7,7 @@ const getIsPass = memoize((station: Station | null): boolean =>
 );
 
 export const getIsPassFromStopCondition = (
-  stopCondition: StopCondition | undefined
+  stopCondition: StopCondition | undefined | null
 ) => {
   const isHoliday = getIsHoliday(new Date());
 

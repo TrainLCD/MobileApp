@@ -631,7 +631,7 @@ const JOBars = ({
           {
             left: edgeOffset,
             width: barWidth,
-            backgroundColor: (nextLine ? currentLine : trainType)?.color,
+            backgroundColor: (nextLine ? currentLine : trainType)?.color ?? 'transparent',
           },
         ]}
       />
@@ -643,7 +643,7 @@ const JOBars = ({
           {
             right: edgeOffset + barTerminalSize,
             width: rightBarWidth,
-            backgroundColor: (nextLine ?? nextTrainType)?.color,
+            backgroundColor: (nextLine ?? nextTrainType)?.color ?? 'transparent',
           },
         ]}
       />
@@ -654,7 +654,7 @@ const JOBars = ({
           {
             right: isTablet ? edgeOffset + 16 : edgeOffset + 10,
 
-            borderBottomColor: (nextLine ?? nextTrainType)?.color,
+            borderBottomColor: (nextLine ?? nextTrainType)?.color ?? 'transparent',
           },
         ]}
       />

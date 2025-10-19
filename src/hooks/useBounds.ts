@@ -46,6 +46,7 @@ export const useBounds = (
           (s) =>
             s.id !== currentStation?.id &&
             s.id !== undefined &&
+            s.id !== null &&
             TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
         );
       const oedoLineOutboundStops = stations
@@ -54,6 +55,7 @@ export const useBounds = (
         .filter(
           (s) =>
             s.id !== undefined &&
+            s.id !== null &&
             ((s.id !== currentStation?.id &&
               TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)) ||
               s.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER)

@@ -14,7 +14,9 @@ export const useDistanceToNextStation = () => {
       longitude &&
       nextStation &&
       nextStation.latitude !== undefined &&
-      nextStation.longitude !== undefined
+      nextStation.latitude !== null &&
+      nextStation.longitude !== undefined &&
+      nextStation.longitude !== null
         ? getDistance(
             { latitude, longitude },
             {

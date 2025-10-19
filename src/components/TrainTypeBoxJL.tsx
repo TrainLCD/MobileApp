@@ -12,7 +12,7 @@ import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
-  trainTypeColor?: string;
+  trainTypeColor?: string | null;
 };
 
 const styles = StyleSheet.create({
@@ -120,7 +120,7 @@ const TrainTypeBoxJL: React.FC<Props> = ({
               style={[
                 styles.text,
                 {
-                  color: trainTypeColor,
+                  color: trainTypeColor ?? '#000',
                   fontFamily: undefined,
                   fontWeight: '800',
                 },
@@ -137,7 +137,7 @@ const TrainTypeBoxJL: React.FC<Props> = ({
             style={[
               styles.text,
               {
-                color: trainTypeColor,
+                color: trainTypeColor ?? '#000',
               },
             ]}
           >

@@ -13,9 +13,13 @@ export const useThreshold = () => {
       !currentStation ||
       !nextStation ||
       currentStation.latitude === undefined ||
+      currentStation.latitude === null ||
       currentStation.longitude === undefined ||
+      currentStation.longitude === null ||
       nextStation.latitude === undefined ||
-      nextStation.longitude === undefined
+      nextStation.latitude === null ||
+      nextStation.longitude === undefined ||
+      nextStation.longitude === null
     ) {
       return null;
     }

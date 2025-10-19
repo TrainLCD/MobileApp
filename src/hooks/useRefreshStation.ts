@@ -62,7 +62,9 @@ export const useRefreshStation = (): void => {
 
     if (
       nearestStation.latitude === undefined ||
-      nearestStation.longitude === undefined
+      nearestStation.latitude === null ||
+      nearestStation.longitude === undefined ||
+      nearestStation.longitude === null
     ) {
       return true;
     }
@@ -116,7 +118,9 @@ export const useRefreshStation = (): void => {
       !longitude ||
       !nextStation ||
       nextStation.latitude === undefined ||
-      nextStation.longitude === undefined
+      nextStation.latitude === null ||
+      nextStation.longitude === undefined ||
+      nextStation.longitude === null
     ) {
       return false;
     }

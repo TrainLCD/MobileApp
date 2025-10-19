@@ -49,6 +49,7 @@ export const useNumbering = (
     () =>
       currentLine &&
       currentLine.id !== undefined &&
+      currentLine.id !== null &&
       JOBAN_LINE_IDS.includes(currentLine.id) &&
       (trainType?.kind === TrainTypeKind.Rapid ||
         trainType?.kind === TrainTypeKind.HighSpeedRapid),
@@ -81,7 +82,7 @@ export const useNumbering = (
         );
       }
 
-      setThreeLetterCode(targetStation?.threeLetterCode);
+      setThreeLetterCode(targetStation?.threeLetterCode ?? undefined);
       return;
     }
 
@@ -100,7 +101,7 @@ export const useNumbering = (
         setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex]);
       }
 
-      setThreeLetterCode(nextStation?.threeLetterCode);
+      setThreeLetterCode(nextStation?.threeLetterCode ?? undefined);
       return;
     }
 
@@ -116,7 +117,7 @@ export const useNumbering = (
         targetStation?.stationNumbers?.[currentStationNumberIndex]
       );
     }
-    setThreeLetterCode(targetStation?.threeLetterCode);
+    setThreeLetterCode(targetStation?.threeLetterCode ?? undefined);
   }, [
     arrived,
     currentStation,

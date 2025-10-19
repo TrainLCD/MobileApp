@@ -23,7 +23,9 @@ export const useInRadiusStation = (radius: number) => {
     const matchedStation = stations.find(
       (s) =>
         s.latitude !== undefined &&
+        s.latitude !== null &&
         s.longitude !== undefined &&
+        s.longitude !== null &&
         isPointWithinRadius(
           { latitude, longitude },
           { latitude: s.latitude, longitude: s.longitude },
