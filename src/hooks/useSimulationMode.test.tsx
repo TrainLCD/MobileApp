@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
-import { renderHook } from '@testing-library/react-native';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { Provider, useAtomValue } from 'jotai';
 import {
@@ -156,7 +156,7 @@ describe('useSimulationMode', () => {
     expect(result).toBeTruthy();
   });
 
-  it('自動モードが有効で位置情報更新が開始されている場合、停止する', () => {
+  it('自動モードが有効で位置情報更新が開始されている場合、停止する', async () => {
     (useAtomValue as jest.Mock)
       .mockReturnValueOnce({
         stations: [],
@@ -170,13 +170,21 @@ describe('useSimulationMode', () => {
     (Location.hasStartedLocationUpdatesAsync as jest.Mock).mockResolvedValue(
       true
     );
+    (Location.stopLocationUpdatesAsync as jest.Mock).mockResolvedValue(
+      undefined
+    );
 
     renderHook(() => useSimulationMode(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
     });
 
-    // enabled が true の場合、エフェクトが実行される
-    expect(true).toBe(true);
+    // Wait for the effect to call stopLocationUpdatesAsync
+    await waitFor(
+      () => {
+        expect(Location.stopLocationUpdatesAsync).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 3000 }
+    );
   });
 
   it('速度プロファイルを生成し、位置情報を更新する', () => {
@@ -325,7 +333,7 @@ describe('useSimulationMode', () => {
       })
       .mockReturnValueOnce({
         enableLegacyAutoMode: false,
-        autoModeEnabled: false,
+        autoModeEnabled: true,
       });
 
     jest
@@ -336,11 +344,42 @@ describe('useSimulationMode', () => {
       .spyOn(useNextStationModule, 'useNextStation')
       .mockReturnValue(stations[1]);
 
-    const { result } = renderHook(() => useSimulationMode(), {
+    (
+      useLocationStoreModule.useLocationStore as unknown as jest.Mock
+    ).mockReturnValue({
+      coords: {
+        latitude: 35.701,
+        longitude: 139.787,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: 0,
+        heading: null,
+      },
+      timestamp: 100000,
+    });
+
+    renderHook(() => useSimulationMode(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
     });
 
-    expect(result).toBeTruthy();
+    // 初期化時に現在駅の位置にsetStateが呼ばれることを検証
+    const setStateCalls = (
+      useLocationStoreModule.useLocationStore.setState as jest.Mock
+    ).mock.calls;
+
+    expect(setStateCalls.length).toBeGreaterThan(0);
+
+    // INBOUNDの場合、駅リストが逆順になるため、
+    // 速度プロファイルも逆順の駅間で生成される
+    // 初期化時の位置が期待する駅（stations[2]）に設定されることを確認
+    const initialCall = setStateCalls[0][0];
+    if (typeof initialCall === 'function') {
+      // setStateがupdater関数として呼ばれる場合をスキップ
+    } else {
+      expect(initialCall.coords.latitude).toBe(35.701);
+      expect(initialCall.coords.longitude).toBe(139.787);
+    }
   });
 
   it('次の駅がない場合、最初の駅に戻る', () => {
