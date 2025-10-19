@@ -111,7 +111,10 @@ export const useLoopLine = (
       ...reversedStations.slice(currentStationIndex),
       ...reversedStations.slice(0, currentStationIndex),
     ]
-      .filter((s) => s.id !== undefined && s.id !== null && majorStationIds.includes(s.id))
+      .filter(
+        (s) =>
+          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
+      )
       .filter((s) => s.groupId !== station.groupId)
       .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
 
@@ -132,7 +135,10 @@ export const useLoopLine = (
       ...stations.slice(currentStationIndex),
       ...stations.slice(0, currentStationIndex),
     ]
-      .filter((s) => s.id !== undefined && s.id !== null && majorStationIds.includes(s.id))
+      .filter(
+        (s) =>
+          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
+      )
       .filter((s) => s.groupId !== station.groupId)
       .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
 
