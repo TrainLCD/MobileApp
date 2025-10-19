@@ -220,7 +220,7 @@ export const useTTSText = (
       nameRoman: afterNextStationOrigin?.nameRoman,
       lines:
         afterNextStationOrigin.lines?.map(
-          (l: { nameRoman: string | null }) => ({
+          (l: { nameRoman: string | undefined }) => ({
             ...l,
             nameRoman: l.nameRoman,
           })
