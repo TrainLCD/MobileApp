@@ -86,12 +86,10 @@ describe('useSimulationMode', () => {
     jest.spyOn(global.Date, 'now').mockImplementation(() => 100000);
 
     // デフォルトのモック設定
-    jest
-      .spyOn(useCurrentLineModule, 'useCurrentLine')
-      .mockReturnValue({
-        id: YAMANOTE_LINE_ID,
-        lineType: LineType.Normal,
-      } as any);
+    jest.spyOn(useCurrentLineModule, 'useCurrentLine').mockReturnValue({
+      id: YAMANOTE_LINE_ID,
+      lineType: LineType.Normal,
+    } as any);
 
     jest
       .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
