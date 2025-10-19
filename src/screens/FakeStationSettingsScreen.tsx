@@ -137,7 +137,7 @@ const FakeStationSettingsScreen: React.FC = () => {
     fetchByName({
       variables: {
         name: query.trim(),
-        limit: Number(SEARCH_STATION_RESULT_LIMIT),
+        limit: Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10) || 10,
       },
     });
   }, [fetchByName, query]);
