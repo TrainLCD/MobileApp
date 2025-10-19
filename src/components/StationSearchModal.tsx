@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { useThemeStore } from '~/hooks';
+import { gqlClient } from '~/lib/gql';
 import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -103,13 +104,17 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       data: stationsData,
       loading: mutateStationsLoading,
       error: mutateStationsError,
+      called: mutateStationsCalled,
     },
   ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
     GET_STATIONS_BY_NAME
   );
 
   const resetStations = useCallback(() => {
-    // Apollo Client doesn't need explicit reset, we can just clear the query
+    try {
+      gqlClient.cache.evict({ fieldName: 'stationsByName' });
+      gqlClient.cache.gc();
+    } catch {}
   }, []);
 
   const mutateStationsStatus = mutateStationsLoading ? 'pending' : 'success';
@@ -163,8 +168,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   );
 
   const stations = useMemo(
-    () => uniqBy(stationsData?.stationsByName ?? [], 'groupId'),
-    [stationsData?.stationsByName]
+    () =>
+      mutateStationsCalled
+        ? uniqBy(stationsData?.stationsByName ?? [], 'groupId')
+        : [],
+    [stationsData?.stationsByName, mutateStationsCalled]
   );
 
   const handleClose = useCallback(() => {
