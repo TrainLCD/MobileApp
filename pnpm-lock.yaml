@@ -212,6 +212,9 @@ importers:
       react-native-web:
         specifier: ^0.21.1
         version: 0.21.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      rxjs:
+        specifier: ^7.3.0
+        version: 7.8.2
       web-streams-polyfill:
         specifier: ^4.1.0
         version: 4.1.0
