@@ -49,7 +49,10 @@ const TrainTypeSettings: React.FC = () => {
     const allTrainTypes = fetchedTrainTypes.flatMap((tt) =>
       (tt.lines ?? [])
         .filter((l) => l.trainType != null)
-        .map((l) => ({ ...(l.trainType as NonNullable<typeof l.trainType>), line: l }))
+        .map((l) => ({
+          ...(l.trainType as NonNullable<typeof l.trainType>),
+          line: l,
+        }))
     );
     return allLines.map((l) => ({
       id: l.id ?? 0,
