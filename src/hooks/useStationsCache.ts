@@ -44,19 +44,27 @@ export const useStationsCache = () => {
     if (existing) return existing;
     const p = (async (): Promise<Station[]> => {
       if (route.hasTrainType) {
-        const { data } = await fetchByLineGroupId({
+        const { data, error } = await fetchByLineGroupId({
           variables: {
             lineGroupId: route.trainTypeId,
           },
         });
-        const stations = data?.lineGroupStations ?? [];
+        if (error || !data) {
+          // エラー時はキャッシュしない
+          throw error ?? new Error('Failed to fetch lineGroupStations');
+        }
+        const stations = data.lineGroupStations ?? [];
         cacheRef.current.set(route.id, stations);
         return stations;
       }
-      const { data } = await fetchByLineId({
+      const { data, error } = await fetchByLineId({
         variables: { lineId: route.lineId },
       });
-      const stations = data?.lineStations ?? [];
+      if (error || !data) {
+        // エラー時はキャッシュしない
+        throw error ?? new Error('Failed to fetch lineStations');
+      }
+      const stations = data.lineStations ?? [];
       cacheRef.current.set(route.id, stations);
       return stations;
     })();
