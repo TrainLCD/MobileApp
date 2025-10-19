@@ -990,10 +990,10 @@ export const useTTSText = (
                       } will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${
+          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}${
             nextStationNumber?.lineSymbol?.length
-              ? `station number ${nextStationNumberText}`
-              : ''
+              ? ` station number ${nextStationNumberText.replace(/\.$/, '')}.`
+              : '.'
           } ${
             transferLines.length
               ? `Transfer here for ${transferLines
@@ -1009,8 +1009,8 @@ export const useTTSText = (
             nextStation?.nameRoman
           }${
             nextStationNumber?.lineSymbol?.length
-              ? ` station number ${nextStationNumberText}`
-              : ''
+              ? ` station number ${nextStationNumberText.replace(/\.$/, '')}.`
+              : '.'
           } ${
             transferLines.length
               ? `Transfer here for ${transferLines
