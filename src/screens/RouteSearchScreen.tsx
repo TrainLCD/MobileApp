@@ -207,12 +207,17 @@ const RouteSearchScreen = () => {
         return;
       }
 
+      // Guard: ensure both lineId and stationId are present before calling the query
+      if (!selectedStation.line?.id || !selectedStation.id) {
+        return;
+      }
+
       setSelectBoundModalVisible(true);
 
       mutateStationsByLineId({
         variables: {
-          lineId: selectedStation.line?.id ?? 0,
-          stationId: selectedStation?.id ?? undefined,
+          lineId: selectedStation.line.id,
+          stationId: selectedStation.id,
         },
       });
     },
