@@ -41,13 +41,15 @@ const TrainTypeSettings: React.FC = () => {
 
   const defaultQueries: SearchQuery[] = useMemo(() => {
     const allLines = uniqBy(
-      fetchedTrainTypes.flatMap((tt) => (tt.lines ?? []).map((l) => l)),
+      fetchedTrainTypes
+        .flatMap((tt) => tt.lines ?? [])
+        .filter((l) => l?.id != null),
       'id'
     );
     const allTrainTypes = fetchedTrainTypes.flatMap((tt) =>
       (tt.lines ?? [])
-        .map((l) => ({ ...l.trainType, line: l }))
-        .filter((tt) => tt !== undefined)
+        .filter((l) => l.trainType != null)
+        .map((l) => ({ ...(l.trainType as NonNullable<typeof l.trainType>), line: l }))
     );
     return allLines.map((l) => ({
       id: l.id ?? 0,
@@ -81,7 +83,7 @@ const TrainTypeSettings: React.FC = () => {
       variables: {
         lineGroupId: selectedTrainType?.groupId ?? 0,
       },
-      skip: !selectedTrainType,
+      skip: !selectedTrainType?.groupId,
     }
   );
 

@@ -217,12 +217,12 @@ export const useTTSText = (
 
     return {
       ...afterNextStationOrigin,
-      nameRoman: afterNextStationOrigin?.nameRoman,
+      nameRoman: afterNextStationOrigin?.nameRoman ?? undefined,
       lines:
         afterNextStationOrigin.lines?.map(
-          (l: { nameRoman: string | undefined }) => ({
+          (l: { nameRoman: string | null | undefined }) => ({
             ...l,
-            nameRoman: l.nameRoman,
+            nameRoman: l.nameRoman ?? undefined,
           })
         ) ?? [],
     } as Station;

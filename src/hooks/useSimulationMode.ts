@@ -172,8 +172,8 @@ export const useSimulationMode = (): void => {
         const firstStation = maybeRevsersedStations[0];
         useLocationStore.setState((prev) =>
           prev &&
-          firstStation?.latitude !== undefined &&
-          firstStation?.longitude !== undefined
+          firstStation?.latitude != null &&
+          firstStation?.longitude != null
             ? {
                 ...prev,
                 coords: {
@@ -191,8 +191,8 @@ export const useSimulationMode = (): void => {
       useLocationStore.setState((prev) => {
         if (
           !prev ||
-          nextStation.latitude === undefined ||
-          nextStation.longitude === undefined
+          nextStation.latitude == null ||
+          nextStation.longitude == null
         ) {
           return prev;
         }
@@ -238,11 +238,9 @@ export const useSimulationMode = (): void => {
       enabled &&
       stations.length > 0 &&
       station &&
-      station.latitude !== undefined &&
-      station.longitude !== undefined
+      station.latitude != null &&
+      station.longitude != null
     ) {
-      const lat = station.latitude;
-      const lon = station.longitude;
       useLocationStore.setState({
         timestamp: Date.now(),
         coords: {
@@ -251,8 +249,8 @@ export const useSimulationMode = (): void => {
           altitudeAccuracy: null,
           speed: null,
           heading: null,
-          latitude: lat,
-          longitude: lon,
+          latitude: station.latitude,
+          longitude: station.longitude,
         },
       });
     }

@@ -1,5 +1,11 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
+if (!process.env.GQL_API_URL) {
+  throw new Error(
+    "GQL_API_URL environment variable is required for GraphQL code generation"
+  );
+}
+
 const config: CodegenConfig = {
   overwrite: true,
   schema: process.env.GQL_API_URL,
@@ -16,7 +22,7 @@ const config: CodegenConfig = {
         defaultScalarType: "unknown",
         nonOptionalTypename: true,
         skipTypeNameForRoot: true,
-        maybeValue: "T | undefined",
+        maybeValue: "T | null | undefined",
       },
     },
   },

@@ -15,13 +15,15 @@ export const groupStations = (stations: Station[]): Station[] => {
         arr.some(
           (s) => s.prefectureId !== sta.prefectureId && s.name === sta.name
         ) &&
-        sta.prefectureId
+        sta.prefectureId &&
+        sta.prefectureId >= 1 &&
+        sta.prefectureId <= 47
       ) {
         return {
           ...sta,
-          name: `${sta.name}(${PREFECTURES_JA[(sta.prefectureId ?? 1) - 1]})`,
+          name: `${sta.name}(${PREFECTURES_JA[sta.prefectureId - 1]})`,
           nameRoman: `${sta.nameRoman}(${
-            PREFECTURES_ROMAN[(sta.prefectureId ?? 1) - 1]
+            PREFECTURES_ROMAN[sta.prefectureId - 1]
           })`,
         };
       }

@@ -262,11 +262,12 @@ const SelectLineScreen = () => {
   useEffect(() => {
     const fetchStationsAsync = async () => {
       const lines = station?.lines ?? [];
+      const validLines = lines.filter((line) => line.id != null);
       stationsRef.current = await Promise.all(
-        lines.map(async (line) => {
+        validLines.map(async (line) => {
           const result = await fetchStationsByLineId({
             variables: {
-              lineId: line.id ?? 0,
+              lineId: line.id as number,
               stationId: line.station?.id ?? undefined,
             },
           });
@@ -359,10 +360,10 @@ const SelectLineScreen = () => {
       setPendingStations(stations);
       setIsSelectBoundModalOpen(true);
 
-      if (line.station?.hasTrainTypes) {
+      if (line.station?.hasTrainTypes && line.station?.id != null) {
         const result = await fetchTrainTypes({
           variables: {
-            stationId: line.station?.id ?? 0,
+            stationId: line.station.id,
           },
         });
         const trainTypes = result.data?.stationTrainTypes ?? [];
@@ -384,9 +385,10 @@ const SelectLineScreen = () => {
 
   const handleTrainTypeSelect = useCallback(
     async (trainType: TrainType) => {
+      if (trainType.groupId == null) return;
       const res = await fetchStationsByLineGroupId({
         variables: {
-          lineGroupId: trainType.groupId ?? 0,
+          lineGroupId: trainType.groupId,
         },
       });
       setPendingTrainType(trainType);

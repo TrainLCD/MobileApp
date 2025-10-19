@@ -139,7 +139,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     if (!line || !isRoutesDBInitialized) return;
 
     const route = findSavedRoute({
-      lineId: line.id ?? null,
+      lineId: line.id ?? 0,
       trainTypeId: trainType?.groupId ?? null,
       destinationStationId: wantedDestination?.groupId ?? null,
     });

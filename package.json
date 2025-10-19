@@ -18,6 +18,7 @@
   "dependencies": {
     "@apollo/client": "^4.0.7",
     "@expo-google-fonts/roboto": "^0.2.3",
+    "rxjs": "^7.3.0",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^15.0.2",
     "@holiday-jp/holiday_jp": "^2.5.1",
