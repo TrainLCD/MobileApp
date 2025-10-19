@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { EmptyResult } from '~/components/EmptyResult';
 import FooterTabBar from '~/components/FooterTabBar';
@@ -18,11 +19,10 @@ import { NowHeader } from '~/components/NowHeader';
 import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
-import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
-  GET_ROUTES,
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
+  GET_ROUTES,
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
 import { useThemeStore } from '../hooks';

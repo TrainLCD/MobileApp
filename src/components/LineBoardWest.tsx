@@ -8,8 +8,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { FONTS } from '~/constants';
 import type { Station, StationNumber } from '~/@types/graphql';
+import { FONTS } from '~/constants';
 import {
   useCurrentLine,
   useCurrentStation,

@@ -2,13 +2,13 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
+import type { Station } from '~/@types/graphql';
 import {
   MEIJO_LINE_ID,
   OSAKA_LOOP_LINE_ID,
   TOEI_OEDO_LINE_ID,
   YAMANOTE_LINE_ID,
 } from '~/constants';
-import type { Station } from '~/@types/graphql';
 import { getIsLocal } from '~/utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';

@@ -1,3 +1,4 @@
+import { ApolloProvider } from '@apollo/client/react';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { NavigationContainer } from '@react-navigation/native';
@@ -26,7 +27,6 @@ import DeepLinkProvider from './providers/DeepLinkProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
-import { ApolloProvider } from '@apollo/client/react';
 
 SplashScreen.preventAutoHideAsync();
 

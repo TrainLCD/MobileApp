@@ -20,8 +20,8 @@ import {
 } from 'react-native-dotenv';
 import type { Station } from '~/@types/graphql';
 import {
-  GET_STATIONS_NEARBY,
   GET_STATIONS_BY_NAME,
+  GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
 import FAB from '../components/FAB';
 import { Heading } from '../components/Heading';

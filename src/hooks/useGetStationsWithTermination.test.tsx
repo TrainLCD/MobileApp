@@ -48,7 +48,7 @@ const TestComponent: React.FC<Props> = ({ destination, stations }) => {
   return (
     <>
       <Text testID="result">
-        {JSON.stringify(result.map((s: any) => s.groupId))}
+        {JSON.stringify(result.map((s) => s.groupId))}
       </Text>
     </>
   );
@@ -100,7 +100,7 @@ describe('useGetStationsWithTermination', () => {
     const stations = [mkStation(1), mkStation(2), mkStation(3), mkStation(4)];
 
     const getJSON = (arr: StationType[]) =>
-      JSON.stringify(arr.map((s: any) => s.groupId));
+      JSON.stringify(arr.map((s) => s.groupId));
 
     const Asserts: React.FC = () => {
       const getStations = useGetStationsWithTermination();
@@ -120,7 +120,7 @@ describe('useGetStationsWithTermination', () => {
     const stations = [mkStation(1), mkStation(2), mkStation(3), mkStation(4)];
 
     const getJSON = (arr: StationType[]) =>
-      JSON.stringify(arr.map((s: any) => s.groupId));
+      JSON.stringify(arr.map((s) => s.groupId));
 
     const Asserts: React.FC = () => {
       const getStations = useGetStationsWithTermination();

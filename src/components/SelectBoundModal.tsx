@@ -4,9 +4,9 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
 import { LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID } from '~/constants';
-import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
   useBounds,
   useGetStationsWithTermination,
@@ -220,13 +220,13 @@ export const SelectBoundModal: React.FC<Props> = ({
   const normalLineDirectionText = useCallback((boundStations: Station[]) => {
     if (isJapanese) {
       return `${boundStations
-        .map((s: any) => s.name)
+        .map((s) => s.name)
         .slice(0, 2)
         .join('・')}方面`;
     }
     const names = boundStations
       .slice(0, 2)
-      .map((s: any) => s.nameRoman)
+      .map((s) => s.nameRoman)
       .filter(Boolean);
     return names.length ? `for ${names.join(' and ')}` : '';
   }, []);
@@ -238,17 +238,17 @@ export const SelectBoundModal: React.FC<Props> = ({
       if (isJapanese) {
         if (direction === 'INBOUND') {
           return `${directionName}(${inboundStations
-            .map((s: any) => s.name)
+            .map((s) => s.name)
             .join('・')}方面)`;
         }
         return `${directionName}(${outboundStations
-          .map((s: any) => s.name)
+          .map((s) => s.name)
           .join('・')}方面)`;
       }
       if (direction === 'INBOUND') {
-        return `for ${inboundStations.map((s: any) => s.nameRoman).join(' and ')}`;
+        return `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`;
       }
-      return `for ${outboundStations.map((s: any) => s.nameRoman).join(' and ')}`;
+      return `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`;
     },
     [inboundStations, outboundStations, line]
   );

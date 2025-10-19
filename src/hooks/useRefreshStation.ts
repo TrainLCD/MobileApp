@@ -2,8 +2,8 @@ import * as Notifications from 'expo-notifications';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import type { Station } from '~/@types/graphql';
+import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import {
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,

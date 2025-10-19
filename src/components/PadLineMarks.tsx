@@ -2,8 +2,8 @@ import { useAtomValue } from 'jotai';
 /* eslint-disable react-native/no-unused-styles */
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import type { Line, Station } from '~/@types/graphql';
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { APP_THEME, type AppTheme } from '~/models/Theme';

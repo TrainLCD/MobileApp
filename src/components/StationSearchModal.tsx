@@ -10,10 +10,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LED_THEME_BG_COLOR } from '~/constants/color';
 import type { Station } from '~/@types/graphql';
-import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
+import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { useThemeStore } from '~/hooks';
+import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';

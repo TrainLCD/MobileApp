@@ -67,7 +67,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   );
 
   const lineColors = useMemo(
-    () => slicedLeftStations.map((s: any) => s.line?.color),
+    () => slicedLeftStations.map((s) => s.line?.color),
     [slicedLeftStations]
   );
 
@@ -161,8 +161,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         >
           {translate('partiallyPassBottomNotice', {
             stations: isJapanese
-              ? passStations.map((s: any) => s.name).join('、')
-              : ` ${passStations.map((s: any) => s.nameRoman).join(', ')}`,
+              ? passStations.map((s) => s.name).join('、')
+              : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
           })}
         </Typography>
       ) : null}

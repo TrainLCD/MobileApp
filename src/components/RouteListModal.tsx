@@ -4,10 +4,10 @@ import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LED_THEME_BG_COLOR } from '~/constants';
 import type { Route, Station, TrainType } from '~/@types/graphql';
-import { GET_STATION_TRAIN_TYPES } from '~/lib/graphql/queries';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { useCurrentStation, useThemeStore } from '~/hooks';
+import { GET_STATION_TRAIN_TYPES } from '~/lib/graphql/queries';
 
 type GetStationTrainTypesData = {
   stationTrainTypes: TrainType[];
@@ -16,6 +16,7 @@ type GetStationTrainTypesData = {
 type GetStationTrainTypesVariables = {
   stationId: number;
 };
+
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import lineState from '../store/atoms/line';

@@ -3,8 +3,8 @@ import uniqBy from 'lodash/uniqBy';
 import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR, NUMBERING_ICON_SIZE } from '~/constants';
-import { Line, type Station, type TrainType } from '~/@types/graphql';
 import { useCurrentStation, useGetLineMark, useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
@@ -245,7 +245,10 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
     }
 
     return (
-      uniqStationsByLine.slice(finalIndex + 1).map((s: any) => s.line) ?? null
+      uniqStationsByLine
+        .slice(finalIndex + 1)
+        .map((s) => s.line)
+        .filter((l): l is Line => !!l) ?? []
     );
   }, [stopStations, finalStation]);
 
@@ -282,7 +285,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
             'id'
           )
         : uniqBy(
-            stations.map((s: any) => s.line ?? null),
+            stations.map((s) => s.line ?? null),
             'id'
           ).filter((l): l is Line => l !== null),
     [stations, stopStations, trainType?.lines]
@@ -329,7 +332,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                         <Typography
                           style={[
                             afterFinalStations
-                              .map((s: any) => s.groupId)
+                              .map((s) => s.groupId)
                               .includes(s.groupId)
                               ? {
                                   opacity: 0.5,
@@ -346,7 +349,7 @@ export const TrainTypeInfoPage: React.FC<Props> = ({
                         <Typography
                           style={[
                             afterFinalStations
-                              .map((s: any) => s.groupId)
+                              .map((s) => s.groupId)
                               .includes(s.groupId)
                               ? {
                                   opacity: 0.5,

@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
+import type { Line } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
-import { Line } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 
@@ -13,10 +13,9 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
   const belongLines = useMemo(
     () =>
       stations
-        .map((s: any) => s.line)
-        .filter((l) => !!l)
-        .filter((line, idx, arr) => arr[idx - 1]?.id !== line?.id)
-        .map((l) => l) ?? [],
+        .map((s) => s.line)
+        .filter((l): l is Line => !!l)
+        .filter((line, idx, arr) => arr[idx - 1]?.id !== line?.id) ?? [],
     [stations]
   );
 

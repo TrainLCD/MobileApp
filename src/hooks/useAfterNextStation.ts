@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Station } from '~/@types/graphql';
+import type { Station } from '~/@types/graphql';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
@@ -13,10 +13,9 @@ export const useAfterNextStation = () => {
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は、渋谷に止まります)
   const slicedStations = useMemo(
     () =>
-      Array.from(new Set(slicedStationsOrigin.map((s: any) => s.groupId)))
+      Array.from(new Set(slicedStationsOrigin.map((s) => s.groupId)))
         .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-        .filter((s) => !!s)
-        .map((s: any) => s),
+        .filter((s): s is Station => !!s),
     [slicedStationsOrigin]
   );
 

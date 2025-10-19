@@ -155,12 +155,12 @@ export const LineCard: React.FC<Props> = ({
     const format = (arr: Station[]): string => {
       const ja = arr
         .slice(0, 2)
-        .map((s: any) => s.name)
+        .map((s) => s.name)
         .filter(Boolean)
         .join('・');
       const en = arr
         .slice(0, 2)
-        .map((s: any) => s.nameRoman || s.name)
+        .map((s) => s.nameRoman || s.name)
         .filter(Boolean)
         .join(' & ');
       if (isJapanese) return ja ? `${ja}方面` : '';

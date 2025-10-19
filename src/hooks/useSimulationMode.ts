@@ -6,6 +6,7 @@ import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { LineType } from '~/@types/graphql';
 import {
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
@@ -13,7 +14,6 @@ import {
   LOCATION_TASK_NAME,
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
-import { LineType } from '~/@types/graphql';
 import navigationState from '~/store/atoms/navigation';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';

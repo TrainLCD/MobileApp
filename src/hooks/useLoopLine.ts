@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import type { Station } from '~/@types/graphql';
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
@@ -9,7 +10,6 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '~/constants';
-import type { Station } from '~/@types/graphql';
 import { getIsLocal } from '~/utils/trainTypeString';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';

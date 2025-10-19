@@ -75,7 +75,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
 
   const numberingInfo = useMemo(
     () =>
-      archStations.map((s: any) => {
+      archStations.map((s) => {
         if (!s) {
           return null;
         }
@@ -84,12 +84,16 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         const lineMarkShape = getLineMarkFunc({
           line: s.line,
         });
-        return s.stationNumbers[stationNumberIndex] && lineMarkShape
+        const stationNumber =
+          s.stationNumbers?.[stationNumberIndex]?.stationNumber;
+        const lineColor =
+          s.stationNumbers?.[stationNumberIndex]?.lineSymbolColor ??
+          s.line?.color;
+
+        return stationNumber && lineColor && lineMarkShape
           ? {
-              stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
-              lineColor:
-                s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
-                s.line?.color,
+              stationNumber,
+              lineColor,
               lineMarkShape,
             }
           : null;

@@ -15,8 +15,8 @@ import {
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { Path, Svg } from 'react-native-svg';
-import { Heading } from '~/components/Heading';
 import type { Station } from '~/@types/graphql';
+import { Heading } from '~/components/Heading';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';

@@ -7,8 +7,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { parenthesisRegexp } from '~/constants';
 import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
+import { parenthesisRegexp } from '~/constants';
 import {
   useCurrentLine,
   useCurrentStation,

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
-import { NUMBERING_ICON_SIZE } from '~/constants';
 import type { Line, Station } from '~/@types/graphql';
+import { NUMBERING_ICON_SIZE } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
 import { APP_THEME } from '~/models/Theme';

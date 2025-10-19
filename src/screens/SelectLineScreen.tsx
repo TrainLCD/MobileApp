@@ -22,10 +22,10 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
