@@ -555,7 +555,11 @@ const SelectLineScreen = () => {
     [handleLineSelected, fetchStationsByLineIdStatus]
   );
 
-  const keyExtractor = useCallback((l: Line) => (l.id ?? 0).toString(), []);
+  const keyExtractor = useCallback(
+    (l: Line, index: number) =>
+      l.id !== null && l.id !== undefined ? String(l.id) : `tmp-${index}`,
+    []
+  );
 
   const headingTitle = useMemo(() => {
     if (!station) return translate('selectLineTitle');
