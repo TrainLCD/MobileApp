@@ -79,10 +79,10 @@ describe('TrainTypeBoxJO', () => {
     nameChinese: '测试',
     nameKorean: '테스트',
     color: '#000000',
-    direction: undefined,
-    kind: undefined,
-    line: undefined,
-    lines: undefined,
+    direction: null,
+    kind: null,
+    line: null,
+    lines: null,
   };
 
   beforeEach(() => {
