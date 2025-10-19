@@ -23,12 +23,15 @@ jest.mock('jotai', () => ({
 }));
 
 jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: Object.assign(jest.fn(() => null), {
-    setState: jest.fn(),
-    getState: jest.fn(() => null),
-    subscribe: jest.fn(),
-    destroy: jest.fn(),
-  }),
+  useLocationStore: Object.assign(
+    jest.fn(() => null),
+    {
+      setState: jest.fn(),
+      getState: jest.fn(() => null),
+      subscribe: jest.fn(),
+      destroy: jest.fn(),
+    }
+  ),
 }));
 
 jest.mock('expo-location', () => ({
@@ -85,7 +88,10 @@ describe('useSimulationMode', () => {
     // デフォルトのモック設定
     jest
       .spyOn(useCurrentLineModule, 'useCurrentLine')
-      .mockReturnValue({ id: YAMANOTE_LINE_ID, lineType: LineType.Normal } as any);
+      .mockReturnValue({
+        id: YAMANOTE_LINE_ID,
+        lineType: LineType.Normal,
+      } as any);
 
     jest
       .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
@@ -200,7 +206,9 @@ describe('useSimulationMode', () => {
       .spyOn(useNextStationModule, 'useNextStation')
       .mockReturnValue(stations[1]);
 
-    (useLocationStoreModule.useLocationStore as unknown as jest.Mock).mockReturnValue({
+    (
+      useLocationStoreModule.useLocationStore as unknown as jest.Mock
+    ).mockReturnValue({
       coords: {
         latitude: 35.681,
         longitude: 139.767,
@@ -254,10 +262,12 @@ describe('useSimulationMode', () => {
         autoModeEnabled: false,
       });
 
-    jest.spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType').mockReturnValue({
-      id: 1,
-      kind: TrainTypeKind.LimitedExpress,
-    } as any);
+    jest
+      .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
+      .mockReturnValue({
+        id: 1,
+        kind: TrainTypeKind.LimitedExpress,
+      } as any);
 
     const { result } = renderHook(() => useSimulationMode(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -270,7 +280,10 @@ describe('useSimulationMode', () => {
   it('通過駅を除外して速度プロファイルを生成する', () => {
     const stations = [
       mockStation(1, 1, 35.681, 139.767),
-      { ...mockStation(2, 2, 35.691, 139.777), stopCondition: StopCondition.Not },
+      {
+        ...mockStation(2, 2, 35.691, 139.777),
+        stopCondition: StopCondition.Not,
+      },
       mockStation(3, 3, 35.701, 139.787),
     ];
 
@@ -349,9 +362,13 @@ describe('useSimulationMode', () => {
       .spyOn(useInRadiusStationModule, 'useInRadiusStation')
       .mockReturnValue(stations[0]);
 
-    jest.spyOn(useNextStationModule, 'useNextStation').mockReturnValue(undefined);
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(undefined);
 
-    (useLocationStoreModule.useLocationStore as unknown as jest.Mock).mockReturnValue({
+    (
+      useLocationStoreModule.useLocationStore as unknown as jest.Mock
+    ).mockReturnValue({
       coords: {
         latitude: 35.681,
         longitude: 139.767,
@@ -425,7 +442,9 @@ describe('useSimulationMode', () => {
       .spyOn(useNextStationModule, 'useNextStation')
       .mockReturnValue(stations[1]);
 
-    (useLocationStoreModule.useLocationStore as unknown as jest.Mock).mockReturnValue({
+    (
+      useLocationStoreModule.useLocationStore as unknown as jest.Mock
+    ).mockReturnValue({
       coords: {
         latitude: 35.681,
         longitude: 139.767,
@@ -446,7 +465,10 @@ describe('useSimulationMode', () => {
     jest.advanceTimersByTime(1000);
 
     // setStateが複数回呼ばれることを期待（初期化 + インターバル更新）
-    expect((useLocationStoreModule.useLocationStore.setState as jest.Mock).mock.calls.length).toBeGreaterThan(0);
+    expect(
+      (useLocationStoreModule.useLocationStore.setState as jest.Mock).mock.calls
+        .length
+    ).toBeGreaterThan(0);
 
     unmount();
   });
@@ -476,7 +498,9 @@ describe('useSimulationMode', () => {
       .spyOn(useNextStationModule, 'useNextStation')
       .mockReturnValue(stations[1]);
 
-    (useLocationStoreModule.useLocationStore as unknown as jest.Mock).mockReturnValue({
+    (
+      useLocationStoreModule.useLocationStore as unknown as jest.Mock
+    ).mockReturnValue({
       coords: {
         latitude: 35.681,
         longitude: 139.767,
