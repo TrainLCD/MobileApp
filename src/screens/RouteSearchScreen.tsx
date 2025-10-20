@@ -263,7 +263,11 @@ const RouteSearchScreen = () => {
     [mutateStationsByLineGroupId]
   );
 
-  const keyExtractor = useCallback((s: Station) => (s.id ?? 0).toString(), []);
+  const keyExtractor = useCallback(
+    (s: Station, index: number) =>
+      s.id?.toString() ?? `fallback-${index}-${s.groupId ?? s.name}`,
+    []
+  );
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollY.value = e.contentOffset.y;
