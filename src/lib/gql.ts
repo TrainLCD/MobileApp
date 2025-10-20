@@ -56,5 +56,18 @@ const uri = (() => {
 
 export const gqlClient = new ApolloClient({
   link: new HttpLink({ uri }),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Station: {
+        fields: {
+          lines: {
+            merge(existing, incoming) {
+              // incoming が空配列または undefined の場合でも安全にマージ
+              return incoming ?? existing ?? [];
+            },
+          },
+        },
+      },
+    },
+  }),
 });
