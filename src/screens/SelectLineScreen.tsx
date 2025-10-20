@@ -411,14 +411,30 @@ const SelectLineScreen = () => {
         stations.find((sta: Station) => sta.groupId === destinationStationId) ??
         null;
 
+      // Filter stations with valid coordinates
+      const stationsWithCoords = stations.filter(
+        (sta: Station) => sta.latitude != null && sta.longitude != null
+      );
+
+      if (!stationsWithCoords.length) {
+        // No stations have coordinates, cannot determine nearest
+        return;
+      }
+
+      // Determine reference coordinates: user location or first station with coords
+      const referenceCoords =
+        latitude != null && longitude != null
+          ? { latitude, longitude }
+          : {
+              latitude: stationsWithCoords[0].latitude as number,
+              longitude: stationsWithCoords[0].longitude as number,
+            };
+
       const nearestCoordinates = findNearest(
-        {
-          latitude: latitude ?? stations[0].latitude ?? 0,
-          longitude: longitude ?? stations[0].longitude ?? 0,
-        },
-        stations.map((sta: Station) => ({
-          latitude: sta.latitude ?? 0,
-          longitude: sta.longitude ?? 0,
+        referenceCoords,
+        stationsWithCoords.map((sta: Station) => ({
+          latitude: sta.latitude as number,
+          longitude: sta.longitude as number,
         }))
       ) as { latitude: number; longitude: number };
 
@@ -452,14 +468,30 @@ const SelectLineScreen = () => {
         stations.find((sta: Station) => sta.groupId === destinationStationId) ??
         null;
 
+      // Filter stations with valid coordinates
+      const stationsWithCoords = stations.filter(
+        (sta: Station) => sta.latitude != null && sta.longitude != null
+      );
+
+      if (!stationsWithCoords.length) {
+        // No stations have coordinates, cannot determine nearest
+        return;
+      }
+
+      // Determine reference coordinates: user location or first station with coords
+      const referenceCoords =
+        latitude != null && longitude != null
+          ? { latitude, longitude }
+          : {
+              latitude: stationsWithCoords[0].latitude as number,
+              longitude: stationsWithCoords[0].longitude as number,
+            };
+
       const nearestCoordinates = findNearest(
-        {
-          latitude: latitude ?? stations[0].latitude ?? 0,
-          longitude: longitude ?? stations[0].longitude ?? 0,
-        },
-        stations.map((sta: Station) => ({
-          latitude: sta.latitude ?? 0,
-          longitude: sta.longitude ?? 0,
+        referenceCoords,
+        stationsWithCoords.map((sta: Station) => ({
+          latitude: sta.latitude as number,
+          longitude: sta.longitude as number,
         }))
       ) as { latitude: number; longitude: number };
 
