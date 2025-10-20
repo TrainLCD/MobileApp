@@ -83,8 +83,8 @@ const mockStation = (
 
 describe('useSimulationMode', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.spyOn(global.Date, 'now').mockImplementation(() => 100000);
+    jest.useFakeTimers('modern');
+    jest.setSystemTime(new Date(100000));
 
     // デフォルトのモック設定
     jest.spyOn(useCurrentLineModule, 'useCurrentLine').mockReturnValue({
@@ -116,8 +116,9 @@ describe('useSimulationMode', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
     jest.useRealTimers();
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   it('自動モードが無効の場合は何もしない', () => {
