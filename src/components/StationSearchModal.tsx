@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
+import { PREFECTURES_JA } from '~/constants/province';
 import { useThemeStore } from '~/hooks';
 import { gqlClient } from '~/lib/gql';
 import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
@@ -170,7 +171,19 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const stations = useMemo(
     () =>
       mutateStationsCalled
-        ? uniqBy(stationsData?.stationsByName ?? [], 'groupId')
+        ? uniqBy(stationsData?.stationsByName ?? [], (station) => {
+            if (station.groupId) {
+              return station.groupId;
+            }
+            if (station.id) {
+              return station.id;
+            }
+            const prefecture =
+              station.prefectureId != null
+                ? PREFECTURES_JA[station.prefectureId - 1]
+                : '';
+            return `${station.name}|${prefecture}`;
+          })
         : [],
     [stationsData?.stationsByName, mutateStationsCalled]
   );
