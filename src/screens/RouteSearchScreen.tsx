@@ -173,10 +173,13 @@ const RouteSearchScreen = () => {
         return [] as Station[];
       }
       setHasSearched(true);
+      const parsedLimit = Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10);
+      const limit =
+        Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 50 : parsedLimit;
       const result = await fetchByName({
         variables: {
           name: query.trim(),
-          limit: Number(SEARCH_STATION_RESULT_LIMIT),
+          limit,
           fromStationGroupId: station?.groupId ?? undefined,
         },
       });

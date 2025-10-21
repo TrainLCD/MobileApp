@@ -170,7 +170,8 @@ export const TrainTypeListModal = ({
   );
 
   const keyExtractor = useCallback(
-    (tt: TrainType) => tt.id?.toString() ?? '',
+    (tt: TrainType, index: number) =>
+      tt.groupId?.toString() ?? tt.id?.toString() ?? index.toString(),
     []
   );
 
