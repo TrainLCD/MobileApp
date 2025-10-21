@@ -68,6 +68,16 @@ export const gqlClient = new ApolloClient({
           },
         },
       },
+      TrainType: {
+        fields: {
+          lines: {
+            merge(existing, incoming) {
+              // incoming が空配列または undefined の場合でも安全にマージ
+              return incoming ?? existing ?? [];
+            },
+          },
+        },
+      },
     },
   }),
 });

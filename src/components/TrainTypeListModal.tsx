@@ -99,16 +99,14 @@ export const TrainTypeListModal = ({
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
-      const line = item.line;
+      const itemLine = item.line;
       const lines = uniqBy(item.lines ?? [], 'id');
 
-      if (!line) return null;
+      if (!itemLine || !line) return null;
 
-      const currentLineIndex = destination
-        ? lines.findIndex((l) => l.id === line?.id)
-        : 0;
-
-      if (currentLineIndex === -1) return null;
+      // 選択された路線がこの列車種別の路線リストに含まれているかチェック
+      const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
+      if (selectedLineIndex === -1) return null;
 
       if (destination) {
         const destinationLineIndex = lines.findIndex(
@@ -119,20 +117,26 @@ export const TrainTypeListModal = ({
           return null;
         }
 
-        const [start, end] =
-          currentLineIndex <= destinationLineIndex
-            ? [currentLineIndex, destinationLineIndex]
-            : [destinationLineIndex, currentLineIndex];
-        let segment = lines.slice(start, end + 1);
-        if (currentLineIndex > destinationLineIndex) {
-          segment = segment.reverse();
+        // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
+        let viaLines: Line[];
+        if (selectedLineIndex === destinationLineIndex) {
+          viaLines = lines.slice(selectedLineIndex + 1);
+        } else {
+          const [start, end] =
+            selectedLineIndex <= destinationLineIndex
+              ? [selectedLineIndex, destinationLineIndex]
+              : [destinationLineIndex, selectedLineIndex];
+          let segment = lines.slice(start, end + 1);
+          if (selectedLineIndex > destinationLineIndex) {
+            segment = segment.reverse();
+          }
+          viaLines = segment.slice(1);
         }
-        const viaLines = segment.slice(1);
 
         const title = `${isJapanese ? item.name : item.nameRoman}`;
         const subtitle = isJapanese
           ? `${viaLines.map((l) => l.nameShort).join('・')}${
-              viaLines.length ? '経由' : ''
+              viaLines.length ? '直通' : ''
             }`
           : viaLines.length
             ? `Via ${viaLines.map((l) => l.nameRoman).join(', ')}`
@@ -148,12 +152,10 @@ export const TrainTypeListModal = ({
         );
       }
 
-      const slicedLines = lines.slice(currentLineIndex + 1, lines.length);
-
       const title = `${isJapanese ? item.name : item.nameRoman}`;
       const subtitle = isJapanese
-        ? slicedLines.map((l) => l.nameShort).join('・')
-        : slicedLines.map((l) => l.nameRoman).join(', ');
+        ? lines.map((l) => l.nameShort).join('・')
+        : lines.map((l) => l.nameRoman).join(', ');
 
       return (
         <LineCard
@@ -164,7 +166,7 @@ export const TrainTypeListModal = ({
         />
       );
     },
-    [destination, onSelect]
+    [destination, line, onSelect]
   );
 
   const keyExtractor = useCallback(

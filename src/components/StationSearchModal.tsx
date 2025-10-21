@@ -118,8 +118,6 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     } catch {}
   }, []);
 
-  const mutateStationsStatus = mutateStationsLoading ? 'pending' : 'success';
-
   useEffect(() => {
     if (mutateStationsError) {
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
@@ -233,7 +231,10 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             scrollEventThrottle={16}
             contentContainerStyle={styles.flatListContentContainer}
             ListEmptyComponent={
-              <EmptyResult statuses={[mutateStationsStatus]} />
+              <EmptyResult
+                loading={mutateStationsLoading}
+                hasSearched={mutateStationsCalled}
+              />
             }
           />
           <View style={styles.closeButtonContainer}>

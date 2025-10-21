@@ -18,7 +18,6 @@
   "dependencies": {
     "@apollo/client": "^4.0.7",
     "@expo-google-fonts/roboto": "^0.2.3",
-    "rxjs": "^7.3.0",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^15.0.2",
     "@holiday-jp/holiday_jp": "^2.5.1",
@@ -41,6 +40,7 @@
     "expo-blur": "~15.0.7",
     "expo-constants": "~18.0.9",
     "expo-crypto": "~15.0.7",
+    "expo-dev-client": "~6.0.15",
     "expo-device": "~8.0.8",
     "expo-file-system": "~19.0.15",
     "expo-font": "~14.0.8",
@@ -85,6 +85,7 @@
     "react-native-view-shot": "4.0.3",
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "^0.21.1",
+    "rxjs": "^7.3.0",
     "web-streams-polyfill": "^4.1.0",
     "zod": "^3.24.3",
     "zustand": "^4.5.2"

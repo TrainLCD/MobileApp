@@ -34,22 +34,6 @@ export const STATION_NUMBER_FRAGMENT = gql`
   }
 `;
 
-export const TRAIN_TYPE_FRAGMENT = gql`
-  fragment TrainTypeFields on TrainType {
-    id
-    typeId
-    groupId
-    name
-    nameKatakana
-    nameRoman
-    nameChinese
-    nameKorean
-    color
-    direction
-    kind
-  }
-`;
-
 export const LINE_FRAGMENT = gql`
   ${COMPANY_FRAGMENT}
   ${LINE_SYMBOL_FRAGMENT}
@@ -69,6 +53,29 @@ export const LINE_FRAGMENT = gql`
     nameRoman
     nameShort
     status
+  }
+`;
+
+export const TRAIN_TYPE_FRAGMENT = gql`
+  ${LINE_FRAGMENT}
+  fragment TrainTypeFields on TrainType {
+    id
+    typeId
+    groupId
+    name
+    nameKatakana
+    nameRoman
+    nameChinese
+    nameKorean
+    color
+    direction
+    kind
+    line {
+      ...LineFields
+    }
+    lines {
+      ...LineFields
+    }
   }
 `;
 
@@ -104,6 +111,9 @@ export const STATION_FRAGMENT = gql`
     }
     trainType {
       ...TrainTypeFields
+      lines {
+        ...LineFields
+      }
     }
   }
 `;
@@ -233,7 +243,6 @@ export const GET_CONNECTED_ROUTES = gql`
 // Query for getting route types
 export const GET_ROUTE_TYPES = gql`
   ${TRAIN_TYPE_FRAGMENT}
-  ${LINE_FRAGMENT}
   query GetRouteTypes($fromStationGroupId: Int!, $toStationGroupId: Int!, $pageSize: Int, $pageToken: String) {
     routeTypes(
       fromStationGroupId: $fromStationGroupId
@@ -244,12 +253,6 @@ export const GET_ROUTE_TYPES = gql`
       nextPageToken
       trainTypes {
         ...TrainTypeFields
-        line {
-          ...LineFields
-        }
-        lines {
-          ...LineFields
-        }
       }
     }
   }
