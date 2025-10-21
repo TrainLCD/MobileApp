@@ -162,7 +162,7 @@ const SelectLineScreen = () => {
     updateRoutes,
     isInitialized: isRoutesDBInitialized,
   } = useSavedRoutes();
-  const stationsRef = useRef<Station[][]>([]);
+  const [stationsCache, setStationsCache] = useState<Station[][]>([]);
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   // SavedRouteモーダル用の状態
@@ -222,27 +222,32 @@ const SelectLineScreen = () => {
   useEffect(() => {
     const fetchAsync = async () => {
       try {
-        const routeStations = await Promise.all(
-          routes.map(async (route) => {
-            if (route.hasTrainType) {
-              const result = await fetchStationsByLineGroupId({
-                variables: {
-                  lineGroupId: route.trainTypeId,
-                },
-              });
-              return {
-                ...route,
-                stations: result.data?.lineGroupStations ?? [],
-              };
-            }
-            const result = await fetchStationsByLineId({
+        const routeStations: Array<SavedRoute & { stations: Station[] }> = [];
+
+        for (const route of routes) {
+          if (route.hasTrainType) {
+            const result = await fetchStationsByLineGroupId({
               variables: {
-                lineId: route.lineId,
+                lineGroupId: route.trainTypeId,
               },
             });
-            return { ...route, stations: result.data?.lineStations ?? [] };
-          })
-        );
+            routeStations.push({
+              ...route,
+              stations: result.data?.lineGroupStations ?? [],
+            });
+            continue;
+          }
+
+          const result = await fetchStationsByLineId({
+            variables: {
+              lineId: route.lineId,
+            },
+          });
+          routeStations.push({
+            ...route,
+            stations: result.data?.lineStations ?? [],
+          });
+        }
 
         setCarouselData(
           routes.map((r) => ({
@@ -263,18 +268,19 @@ const SelectLineScreen = () => {
     const fetchStationsAsync = async () => {
       const lines = station?.lines ?? [];
       const validLines = lines.filter((line) => line.id != null);
-      stationsRef.current = await Promise.all(
-        validLines.map(async (line) => {
-          const result = await fetchStationsByLineId({
-            variables: {
-              lineId: line.id as number,
-              stationId: line.station?.id ?? undefined,
-            },
-          });
+      const stations: Station[][] = [];
 
-          return result.data?.lineStations ?? [];
-        })
-      );
+      for (const line of validLines) {
+        const result = await fetchStationsByLineId({
+          variables: {
+            lineId: line.id as number,
+            stationId: line.station?.id ?? undefined,
+          },
+        });
+
+        stations.push(result.data?.lineStations ?? []);
+      }
+      setStationsCache(stations);
     };
 
     fetchStationsAsync();
@@ -318,6 +324,28 @@ const SelectLineScreen = () => {
         ...prev,
         stationForHeader: stationFromAPI,
       }));
+
+      const stationLines = stationFromAPI?.lines ?? [];
+
+      const stations: Station[][] = [];
+
+      for (const line of stationLines) {
+        try {
+          const result = await fetchStationsByLineId({
+            variables: {
+              lineId: line.id as number,
+              stationId: line.station?.id ?? undefined,
+            },
+          });
+
+          stations.push(result.data?.lineStations ?? []);
+        } catch (error) {
+          console.error(error);
+          stations.push([]);
+        }
+      }
+
+      setStationsCache(stations);
     };
     fetchInitialNearbyStationAsync();
   }, []);
@@ -354,7 +382,7 @@ const SelectLineScreen = () => {
 
   const handleLineSelected = useCallback(
     async (line: Line, index: number) => {
-      const stations = stationsRef.current[index] ?? [];
+      const stations = stationsCache[index] ?? [];
       pendingLineRef.current = line ?? null;
       pendingStationRef.current = line.station ?? null;
       setPendingStations(stations);
@@ -380,7 +408,7 @@ const SelectLineScreen = () => {
         }));
       }
     },
-    [fetchTrainTypes, setNavigationState]
+    [fetchTrainTypes, setNavigationState, stationsCache]
   );
 
   const handleTrainTypeSelect = useCallback(
@@ -566,7 +594,7 @@ const SelectLineScreen = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Line; index: number }) => {
-      const stations = stationsRef.current[index];
+      const stations = stationsCache[index];
       if (!stations || fetchStationsByLineIdStatus === 'pending') {
         return (
           <SkeletonPlaceholder borderRadius={4} speed={1500}>
@@ -584,7 +612,7 @@ const SelectLineScreen = () => {
         />
       );
     },
-    [handleLineSelected, fetchStationsByLineIdStatus]
+    [handleLineSelected, fetchStationsByLineIdStatus, stationsCache]
   );
 
   const keyExtractor = useCallback(
