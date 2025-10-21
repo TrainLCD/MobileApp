@@ -21,7 +21,7 @@ export const EmptyResult = ({ loading, hasSearched }: Props) => {
     );
   }
 
-  if (hasSearched && !loading) {
+  if (hasSearched) {
     return (
       <Typography style={styles.bold}>
         {translate('emptySearchResult')}
