@@ -271,6 +271,7 @@ const RouteSearchScreen = () => {
 
   const handleTrainTypeSelected = useCallback(
     async (trainType: TrainType) => {
+      if (!trainType.groupId) return;
       setSelectedTrainType(trainType);
       mutateStationsByLineGroupId({
         variables: {
