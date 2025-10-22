@@ -5,13 +5,13 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeList } from '~/components/ThemeList';
 import { getSettingsThemes } from '~/utils/theme';
-import FAB from '../../components/FAB';
-import { Heading } from '../../components/Heading';
-import { ASYNC_STORAGE_KEYS } from '../../constants';
-import { useThemeStore } from '../../hooks';
-import type { AppTheme } from '../../models/Theme';
-import { translate } from '../../translation';
-import { isDevApp } from '../../utils/isDevApp';
+import FAB from '../components/FAB';
+import { Heading } from '../components/Heading';
+import { ASYNC_STORAGE_KEYS } from '../constants';
+import { useThemeStore } from '../hooks';
+import type { AppTheme } from '../models/Theme';
+import { translate } from '../translation';
+import { isDevApp } from '../utils/isDevApp';
 
 const styles = StyleSheet.create({
   rootPadding: {

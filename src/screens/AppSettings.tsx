@@ -6,20 +6,18 @@ import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import navigationState from '~/store/atoms/navigation';
-import Button from '../../components/Button';
-import FooterTabBar, {
-  FOOTER_BASE_HEIGHT,
-} from '../../components/FooterTabBar';
-import { Heading } from '../../components/Heading';
-import LEDThemeSwitch from '../../components/LEDThemeSwitch';
-import Typography from '../../components/Typography';
-import { ASYNC_STORAGE_KEYS } from '../../constants';
-import { useThemeStore } from '../../hooks';
-import { APP_THEME } from '../../models/Theme';
-import speechState from '../../store/atoms/speech';
-import { translate } from '../../translation';
-import { isDevApp } from '../../utils/isDevApp';
-import { RFValue } from '../../utils/rfValue';
+import Button from '../components/Button';
+import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
+import { Heading } from '../components/Heading';
+import LEDThemeSwitch from '../components/LEDThemeSwitch';
+import Typography from '../components/Typography';
+import { ASYNC_STORAGE_KEYS } from '../constants';
+import { useThemeStore } from '../hooks';
+import { APP_THEME } from '../models/Theme';
+import speechState from '../store/atoms/speech';
+import { translate } from '../translation';
+import { isDevApp } from '../utils/isDevApp';
+import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
   rootPadding: {
