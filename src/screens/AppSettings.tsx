@@ -7,9 +7,7 @@ import { isClip } from 'react-native-app-clip';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import navigationState from '~/store/atoms/navigation';
 import Button from '../components/Button';
-import FooterTabBar, {
-  FOOTER_BASE_HEIGHT,
-} from '../components/FooterTabBar';
+import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import LEDThemeSwitch from '../components/LEDThemeSwitch';
 import Typography from '../components/Typography';
