@@ -275,7 +275,7 @@ const RouteSearchScreen = () => {
       setSelectedTrainType(trainType);
       mutateStationsByLineGroupId({
         variables: {
-          lineGroupId: trainType.groupId ?? 0,
+          lineGroupId: trainType.groupId,
         },
       });
 
