@@ -10,7 +10,7 @@ import Permitted from '../components/Permitted';
 import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import AppSettings from '../screens/AppSettings';
-import ThemeSettings from '../screens/AppSettings/ThemeSettings';
+import ThemeSettings from '../screens/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import SelectLine from '../screens/SelectLineScreen';
