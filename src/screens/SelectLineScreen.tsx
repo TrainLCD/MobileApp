@@ -165,13 +165,21 @@ const SelectLineScreen = () => {
     isInitialized: isRoutesDBInitialized,
   } = useSavedRoutes();
 
-  const [fetchStationsByLineId, { loading: fetchStationsByLineIdLoading }] =
-    useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
-      GET_LINE_STATIONS
-    );
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
   const [
     fetchStationsByLineGroupId,
-    { loading: fetchStationsByLineGroupIdLoading },
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+    },
   ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
     GET_LINE_GROUP_STATIONS
   );
@@ -746,7 +754,12 @@ const SelectLineScreen = () => {
           fetchStationsByLineIdLoading ||
           fetchStationsByLineGroupIdLoading
         }
-        error={fetchTrainTypesError ?? null}
+        error={
+          fetchTrainTypesError ??
+          fetchStationsByLineIdError ??
+          fetchStationsByLineGroupIdError ??
+          null
+        }
         onTrainTypeSelect={handleTrainTypeSelect}
       />
     </>
