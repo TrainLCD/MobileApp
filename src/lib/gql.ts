@@ -58,7 +58,7 @@ const uri = (() => {
 export const gqlClient = new ApolloClient({
   link: new BatchHttpLink({
     uri,
-    batchMax: 10,
+    batchMax: 20,
     batchInterval: 20,
     includeExtensions: false,
   }),
