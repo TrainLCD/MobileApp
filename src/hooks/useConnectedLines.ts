@@ -14,7 +14,7 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
     () =>
       stations
         .map((s) => s.line)
-        .filter((l): l is Line => !!l)
+        .filter((l) => !!l)
         .filter((line, idx, arr) => arr[idx - 1]?.id !== line?.id) ?? [],
     [stations]
   );

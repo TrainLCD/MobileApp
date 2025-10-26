@@ -29,7 +29,7 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
   status: OperationStatus.InOperation,
   trainType: undefined,
   station: {
-    __typename: 'Station',
+    __typename: 'StationNested',
     lines: [],
     stationNumbers: [
       {
@@ -94,7 +94,7 @@ export const RYOMO_LINE: Line = {
   status: OperationStatus.InOperation,
   trainType: undefined,
   station: {
-    __typename: 'Station',
+    __typename: 'StationNested',
     lines: [],
     stationNumbers: [],
     id: 1134101,

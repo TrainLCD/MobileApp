@@ -1,7 +1,7 @@
 import { useLazyQuery } from '@apollo/client/react';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import type { Station } from '~/@types/graphql';
+import type { Station, TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -65,7 +65,7 @@ export const useOpenRouteFromLink = () => {
       setLineState((prev) => ({ ...prev, selectedLine: line }));
       setNavigationState((prev) => ({
         ...prev,
-        trainType: station.trainType ?? null,
+        trainType: (station.trainType ?? null) as TrainType | null,
         leftStations: [],
         stationForHeader: station,
       }));

@@ -25,7 +25,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 11603,
       nameShort: 'JR神戸線',
       nameKatakana: 'コウベセン',
@@ -82,7 +82,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 35001,
       nameShort: '阪神本線',
       nameKatakana: 'ハンシンホンセン',
@@ -139,7 +139,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 35001,
       nameShort: '阪神本線',
       nameKatakana: 'ハンシンホンセン',
@@ -199,7 +199,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 11106,
       nameShort: '根室本線',
       nameKatakana: 'ネムロホンセン',
@@ -256,7 +256,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 11203,
       nameShort: '仙石線',
       nameKatakana: 'センセキセン',
@@ -313,7 +313,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 99177,
       nameShort: '多摩都市モノレール線',
       nameKatakana: 'タマトシモノレールセン',
@@ -370,7 +370,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 11326,
       nameShort: '姫新線',
       nameKatakana: 'キシンセン',
@@ -427,7 +427,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 11326,
       nameShort: '芸備線',
       nameKatakana: 'ゲイビセン',
@@ -484,7 +484,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 11612,
       nameShort: '西武新宿線',
       nameKatakana: 'セイブシンジュクセン',
@@ -541,7 +541,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 28003,
       nameShort: '東京メトロ東西線',
       nameKatakana: 'トウザイセン',
@@ -598,7 +598,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     threeLetterCode: undefined,
     lines: [],
     line: {
-      __typename: 'Line',
+      __typename: 'LineNested',
       id: 28005,
       nameShort: '都営大江戸線',
       nameKatakana: 'オオエドセン',
