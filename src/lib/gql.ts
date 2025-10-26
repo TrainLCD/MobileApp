@@ -1,4 +1,5 @@
 import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import DeviceInfo from 'react-native-device-info';
 import {
   DEV_API_URL,
@@ -6,7 +7,6 @@ import {
   STAGING_API_URL,
 } from 'react-native-dotenv';
 import { isDevApp } from '~/utils/isDevApp';
-import { BatchHttpLink } from '@apollo/client/link/batch-http';
 
 /**
  * Validates that all required API URL environment variables are defined and non-empty.

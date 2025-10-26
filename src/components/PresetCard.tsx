@@ -9,9 +9,9 @@ import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import { getStationName, getStationPrimaryCode } from '~/utils/station';
+import { NoPresetsCard } from './NoPresetsCard';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
-import { NoPresetsCard } from './NoPresetsCard';
 
 type Props = {
   title: string;

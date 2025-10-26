@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { Modal } from 'react-native';
 import type { Station, TrainType } from '~/@types/graphql';
+import lineState from '~/store/atoms/line';
 import { isJapanese } from '~/translation';
 import { RouteInfo } from './RouteInfo';
-import lineState from '~/store/atoms/line';
 
 type Props = {
   visible: boolean;

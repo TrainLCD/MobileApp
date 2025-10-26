@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
@@ -6,14 +7,13 @@ import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
+import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
 import { LineCard } from './LineCard';
-import { useAtomValue } from 'jotai';
-import navigationState from '~/store/atoms/navigation';
 
 const styles = StyleSheet.create({
   root: {
