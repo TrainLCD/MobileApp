@@ -729,7 +729,11 @@ const SelectLineScreen = () => {
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
         onClose={handleCloseSelectBoundModal}
-        loading={fetchTrainTypesLoading || fetchStationsByLineIdLoading}
+        loading={
+          fetchTrainTypesLoading ||
+          fetchStationsByLineIdLoading ||
+          fetchStationsByLineGroupIdLoading
+        }
         error={fetchTrainTypesError ?? null}
         onTrainTypeSelect={handleTrainTypeSelect}
       />
