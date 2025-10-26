@@ -41,7 +41,7 @@ const createLine = (id: string): Line =>
     id,
     nameShort: id,
     name: id,
-  } as Line);
+  }) as Line;
 
 const createStation = (id: number): Station =>
   ({
@@ -50,16 +50,18 @@ const createStation = (id: number): Station =>
     groupId: id,
     name: `Station${id}`,
     nameRoman: `Station${id}`,
-  } as Station);
+  }) as Station;
 
 describe('useTransferLines', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
-  const mockUseCurrentStation =
-    useCurrentStation as jest.MockedFunction<typeof useCurrentStation>;
-  const mockUseNextStation =
-    useNextStation as jest.MockedFunction<typeof useNextStation>;
+  const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
+    typeof useCurrentStation
+  >;
+  const mockUseNextStation = useNextStation as jest.MockedFunction<
+    typeof useNextStation
+  >;
   const mockUseTransferLinesFromStation =
     useTransferLinesFromStation as jest.MockedFunction<
       typeof useTransferLinesFromStation
@@ -133,12 +135,9 @@ describe('useTransferLines', () => {
 
     render(<TestComponent />);
 
-    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(
-      nextStation,
-      {
-        omitRepeatingLine: undefined,
-        omitJR: false,
-      }
-    );
+    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(nextStation, {
+      omitRepeatingLine: undefined,
+      omitJR: false,
+    });
   });
 });

@@ -37,7 +37,9 @@ jest.mock('../utils/isPass', () => ({
 const TestComponent: React.FC = () => {
   const trainType = useCurrentTrainType();
   return (
-    <Text testID="trainType">{trainType ? trainType.typeId ?? '' : 'null'}</Text>
+    <Text testID="trainType">
+      {trainType ? (trainType.typeId ?? '') : 'null'}
+    </Text>
   );
 };
 
@@ -47,7 +49,7 @@ const createLine = (overrides: Partial<Line> = {}): Line =>
     nameShort: 'Main',
     name: 'Main',
     ...overrides,
-  } as Line);
+  }) as Line;
 
 const createTrainType = (overrides: Partial<TrainType> = {}): TrainType =>
   ({
@@ -57,7 +59,7 @@ const createTrainType = (overrides: Partial<TrainType> = {}): TrainType =>
     nameRoman: 'Local',
     color: '#fff',
     ...overrides,
-  } as TrainType);
+  }) as TrainType;
 
 const createStation = (overrides: Partial<Station> = {}): Station =>
   ({
@@ -69,16 +71,18 @@ const createStation = (overrides: Partial<Station> = {}): Station =>
     line: createLine(),
     trainType: null,
     ...overrides,
-  } as Station);
+  }) as Station;
 
 describe('useCurrentTrainType', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
-  const mockUseCurrentStation =
-    useCurrentStation as jest.MockedFunction<typeof useCurrentStation>;
-  const mockUseCurrentLine =
-    useCurrentLine as jest.MockedFunction<typeof useCurrentLine>;
+  const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
+    typeof useCurrentStation
+  >;
+  const mockUseCurrentLine = useCurrentLine as jest.MockedFunction<
+    typeof useCurrentLine
+  >;
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
   let stationAtomValue: { stations: Station[] };
@@ -132,7 +136,10 @@ describe('useCurrentTrainType', () => {
       trainType: actualTrainType,
     });
     stationAtomValue = { stations: [throughStation] };
-    currentLineValue = createLine({ id: 'line-b', station: { id: 200 } as any });
+    currentLineValue = createLine({
+      id: 'line-b',
+      station: { id: 200 } as any,
+    });
 
     const { getByTestId } = render(<TestComponent />);
 
@@ -176,7 +183,9 @@ describe('useCurrentTrainType', () => {
     currentStationValue = baseStation;
     currentLineValue = baseStation.line as Line;
     navigationAtomValue.trainType = createTrainType({ typeId: 'rapid' });
-    mockGetIsPass.mockImplementation((station) => station?.id === passStation.id);
+    mockGetIsPass.mockImplementation(
+      (station) => station?.id === passStation.id
+    );
 
     const screen = render(<TestComponent />);
     expect(screen.getByTestId('trainType').props.children).toBe('rapid');

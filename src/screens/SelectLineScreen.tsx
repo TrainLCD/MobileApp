@@ -292,6 +292,10 @@ const SelectLineScreen = () => {
       const fetchedLines = (stationFromAPI?.lines ?? []).filter((line) =>
         Boolean(line)
       );
+      setStationState((prev) => ({
+        ...prev,
+        stationsCache: [],
+      }));
 
       for (const line of fetchedLines) {
         const lineId = line.id;

@@ -34,7 +34,7 @@ const createLine = (overrides: Partial<Line> = {}): Line =>
       nameEnglishShort: 'Metro',
     },
     ...overrides,
-  } as Line);
+  }) as Line;
 
 const createStation = (id: number, line: Line): Station =>
   ({
@@ -44,14 +44,15 @@ const createStation = (id: number, line: Line): Station =>
     name: `Station${id}`,
     nameRoman: `Station${id}`,
     line,
-  } as Station);
+  }) as Station;
 
 describe('useConnectedLines', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
-  const mockUseCurrentLine =
-    useCurrentLine as jest.MockedFunction<typeof useCurrentLine>;
+  const mockUseCurrentLine = useCurrentLine as jest.MockedFunction<
+    typeof useCurrentLine
+  >;
 
   let stationAtomValue: {
     selectedBound: Station | null;

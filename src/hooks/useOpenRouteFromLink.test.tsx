@@ -31,7 +31,7 @@ const createTrainType = (overrides: Partial<TrainType> = {}): TrainType =>
     nameRoman: 'Local',
     color: '#fff',
     ...overrides,
-  } as TrainType);
+  }) as TrainType;
 
 const createStation = (overrides: Partial<Station> = {}): Station =>
   ({
@@ -48,7 +48,7 @@ const createStation = (overrides: Partial<Station> = {}): Station =>
     },
     trainType: createTrainType(),
     ...overrides,
-  } as Station);
+  }) as Station;
 
 describe('useOpenRouteFromLink', () => {
   const mockUseLazyQuery = useLazyQuery as jest.MockedFunction<
@@ -145,7 +145,10 @@ describe('useOpenRouteFromLink', () => {
     const { mockSetStationState } = setupMolecules();
     const { mockFetchByGroup, mockFetchByLine } = setupQueries();
     mockFetchByGroup.mockResolvedValue({ data: { lineGroupStations: [] } });
-    const stations = [createStation({ groupId: 5 }), createStation({ groupId: 9 })];
+    const stations = [
+      createStation({ groupId: 5 }),
+      createStation({ groupId: 9 }),
+    ];
     mockFetchByLine.mockResolvedValue({ data: { lineStations: stations } });
 
     let hook: HookResult = null;
