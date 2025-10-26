@@ -429,17 +429,12 @@ export const SelectBoundModal: React.FC<Props> = ({
     stations,
   ]);
 
-  if (error) {
-    console.error(error);
-    // return (
-    //   <ErrorScreen
-    //     showStatus
-    //     title={translate('errorTitle')}
-    //     text={translate('apiErrorText')}
-    //     isFetching={loading}
-    //   />
-    // );
-  }
+  useEffect(() => {
+    if (error) {
+      console.error(error);
+      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+    }
+  }, [error]);
 
   return (
     <Modal
