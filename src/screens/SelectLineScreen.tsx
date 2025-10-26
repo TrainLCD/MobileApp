@@ -204,7 +204,7 @@ const SelectLineScreen = () => {
       try {
         const jobs = routes.map((route) => {
           if (route.hasTrainType) {
-            return gqlClient.query<{ stationsByLineGroupId: Station[] }>({
+            return gqlClient.query<{ lineGroupStations: Station[] }>({
               query: GET_LINE_GROUP_STATIONS,
               variables: {
                 lineGroupId: route.trainTypeId,
@@ -229,8 +229,8 @@ const SelectLineScreen = () => {
               ? {
                   ...routes[index],
                   stations:
-                    (r.value.data as { stationsByLineGroupId: Station[] })
-                      .stationsByLineGroupId ??
+                    (r.value.data as { lineGroupStations: Station[] })
+                      .lineGroupStations ??
                     (r.value.data as { lineStations: Station[] })
                       .lineStations ??
                     [],
