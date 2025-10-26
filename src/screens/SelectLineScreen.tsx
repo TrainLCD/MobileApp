@@ -379,11 +379,11 @@ const SelectLineScreen = () => {
 
   const handleLineSelected = useCallback(
     async (line: Line) => {
-      setIsSelectBoundModalOpen(true);
-
       const lineId = line.id;
       const lineStationId = line.station?.id;
       if (!lineId || !lineStationId) return;
+
+      setIsSelectBoundModalOpen(true);
 
       const result = await fetchStationsByLineId({
         variables: { lineId, stationId: lineStationId },
