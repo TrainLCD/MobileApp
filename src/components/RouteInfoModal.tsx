@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
 import { Modal } from 'react-native';
 import type { Station, TrainType } from '~/@types/graphql';
-import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
 import { RouteInfo } from './RouteInfo';
+import lineState from '~/store/atoms/line';
 
 type Props = {
   visible: boolean;
@@ -17,11 +17,11 @@ type Props = {
 };
 
 export const RouteInfoModal: React.FC<Props> = (props: Props) => {
-  const { station } = useAtomValue(stationState);
+  const { pendingLine } = useAtomValue(lineState);
   const { visible, routeName, trainType, onClose } = props;
   const lineName = isJapanese
-    ? (trainType?.line?.nameShort ?? station?.line?.nameShort ?? '')
-    : (trainType?.line?.nameRoman ?? station?.line?.nameRoman ?? '');
+    ? (pendingLine?.nameShort ?? '')
+    : (pendingLine?.nameRoman ?? '');
   const trainTypeName = isJapanese ? trainType?.name : trainType?.nameRoman;
   const displayRouteName = routeName
     ? routeName

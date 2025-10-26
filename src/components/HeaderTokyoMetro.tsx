@@ -548,6 +548,8 @@ const HeaderTokyoMetro: React.FC = () => {
                 stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {stateTextLeft}
             </Animated.Text>
@@ -556,6 +558,8 @@ const HeaderTokyoMetro: React.FC = () => {
                 stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {prevStateTextLeft}
             </Animated.Text>

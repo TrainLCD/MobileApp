@@ -323,14 +323,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.57 * index) - widthScale(15),
+        left: widthScale(41.57 * index),
       };
     }
 
     // 通過していない場合
     if (!passed) {
       return {
-        left: widthScale(arrived ? 45 : 42 * index),
+        left: widthScale(arrived ? 45 * index : 42 * index),
       };
     }
 
@@ -519,6 +519,9 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
           styles.bar,
           {
             left: barLeft,
+            width: barWidth,
+            borderTopLeftRadius: 0,
+            borderBottomLeftRadius: 0,
           },
         ]}
       />
@@ -538,7 +541,15 @@ const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
       />
       {isLast ? (
         <BarTerminalEast
-          style={styles.barTerminal}
+          width={isTablet ? 41 : 27}
+          height={isTablet ? 48 : 32}
+          style={[
+            styles.barTerminal,
+            {
+              left: barLeft + barWidth,
+              bottom: isTablet ? -52 : 32,
+            },
+          ]}
           lineColor={lastLineColor}
           hasTerminus={hasTerminus}
         />

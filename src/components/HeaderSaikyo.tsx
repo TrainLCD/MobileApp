@@ -503,10 +503,18 @@ const HeaderSaikyo: React.FC = () => {
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+            <Animated.Text
+              style={[stateTopAnimatedStyles, styles.state]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
+            >
               {stateText}
             </Animated.Text>
-            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+            <Animated.Text
+              style={[stateBottomAnimatedStyles, styles.state]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
+            >
               {prevStateText}
             </Animated.Text>
           </View>

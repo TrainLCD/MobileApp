@@ -537,6 +537,8 @@ const HeaderTY: React.FC = () => {
                 stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {stateText}
             </Animated.Text>
@@ -545,6 +547,8 @@ const HeaderTY: React.FC = () => {
                 stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {prevStateTextLeft}
             </Animated.Text>

@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 24 * 1.5 : 24,
     fontFamily: FONTS.FrutigerNeueLTProBold,
     includeFontPadding: false,
-    ...(Platform.OS === 'ios' ? { lineHeight: isTablet ? 24 * 1.5 : 24 } : {}),
+    lineHeight: isTablet ? 24 * 1.5 : 24,
   },
   rootSmall: {
     width: 20,

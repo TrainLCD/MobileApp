@@ -56,6 +56,7 @@ const roundShapes = new Set<string>([
   MARK_SHAPE.KEISEI,
   MARK_SHAPE.HANKYU,
   MARK_SHAPE.HANSHIN,
+  MARK_SHAPE.IZUHAKONE,
 ]);
 
 const TransferLineMark: React.FC<Props> = ({

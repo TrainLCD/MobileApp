@@ -9,6 +9,10 @@ import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { isJapanese } from '../../translation';
 
+export type LoopItem = (SavedRoute & { stations: Station[] }) & {
+  __k: string;
+};
+
 export interface NavigationState {
   leftStations: Station[];
   trainType: TrainType | null;
@@ -25,6 +29,7 @@ export interface NavigationState {
   firstStop: boolean;
   presetsFetched: boolean;
   presetRoutes: SavedRoute[];
+  pendingWantedDestination: Station | null;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -41,6 +46,7 @@ export const initialNavigationState: NavigationState = {
   firstStop: true,
   presetsFetched: false,
   presetRoutes: [],
+  pendingWantedDestination: null,
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

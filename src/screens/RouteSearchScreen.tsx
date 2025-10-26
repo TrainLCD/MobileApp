@@ -1,5 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
-import { useAtomValue } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { Line, Station, TrainType } from '~/@types/graphql';
+import type { Station, TrainType } from '~/@types/graphql';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { EmptyResult } from '~/components/EmptyResult';
 import FooterTabBar from '~/components/FooterTabBar';
@@ -25,8 +25,10 @@ import {
   GET_ROUTE_TYPES,
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
+import navigationState from '~/store/atoms/navigation';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
+import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 
@@ -101,31 +103,27 @@ const RouteSearchScreen = () => {
   const [selectBoundModalVisible, setSelectBoundModalVisible] = useState(false);
   const [trainTypeListModalVisible, setTrainTypeListModalVisible] =
     useState(false);
-  const [selectedLine, setSelectedLine] = useState<Line | null>(null);
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [searchResults, setSearchResults] = useState<Station[]>([]);
-  const [selectedTrainType, setSelectedTrainType] = useState<TrainType | null>(
-    null
-  );
   const [hasSearched, setHasSearched] = useState(false);
-  const [cachedTrainTypes, setCachedTrainTypes] = useState<TrainType[]>([]);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const { station } = useAtomValue(stationState);
+  const [stationAtom, setStationState] = useAtom(stationState);
+  const [lineAtom, setLineState] = useAtom(lineState);
+  const { station, pendingStation } = stationAtom;
+  const { pendingLine } = lineAtom;
+  const setNavigationState = useSetAtom(navigationState);
 
   const scrollY = useSharedValue(0);
 
   const [
-    mutateRouteTypes,
+    fetchRouteTypes,
     {
       data: routeTypesData,
-      loading: mutateRouteTypesLoading,
-      error: mutateRouteTypesError,
+      loading: fetchRouteTypesLoading,
+      error: fetchRouteTypesError,
     },
-  ] = useLazyQuery<GetRouteTypesData, GetRouteTypesVariables>(GET_ROUTE_TYPES, {
-    fetchPolicy: 'no-cache', // FIXME: Apollo Client のキャッシュ問題を回避するため、一時的に no-cache を使用
-  });
+  ] = useLazyQuery<GetRouteTypesData, GetRouteTypesVariables>(GET_ROUTE_TYPES);
 
   const [fetchByName, { loading: byNameLoading, error: byNameError }] =
     useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
@@ -133,36 +131,25 @@ const RouteSearchScreen = () => {
     );
 
   const [
-    mutateStationsByLineId,
+    fetchStationsByLineId,
     {
-      data: stationsByLineIdData,
-      loading: mutateStationsByLineIdLoading,
-      error: mutateStationsByLineIdError,
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
     },
   ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
 
   const [
-    mutateStationsByLineGroupId,
+    fetchStationsByLineGroupId,
     {
-      data: stationsByLineGroupIdData,
-      loading: mutateStationsByLineGroupIdLoading,
-      error: mutateStationsByLineGroupIdError,
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+      client: fetchStationsByLineGroupIdClient,
     },
   ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
     GET_LINE_GROUP_STATIONS
   );
-
-  const mutateRouteTypesStatus = mutateRouteTypesLoading
-    ? 'pending'
-    : 'success';
-  const mutateStationsByLineIdStatus = mutateStationsByLineIdLoading
-    ? 'pending'
-    : 'success';
-  const mutateStationsByLineGroupIdStatus = mutateStationsByLineGroupIdLoading
-    ? 'pending'
-    : 'success';
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -196,35 +183,25 @@ const RouteSearchScreen = () => {
     }
   }, [byNameError]);
 
-  // Cache train types when they are first loaded to prevent Apollo cache issues
-  useEffect(() => {
-    const trainTypes = routeTypesData?.routeTypes?.trainTypes ?? [];
-    if (trainTypes.length > 0 && cachedTrainTypes.length === 0) {
-      // Deep clone to avoid Apollo cache mutation issues
-      setCachedTrainTypes(JSON.parse(JSON.stringify(trainTypes)));
-    }
-  }, [routeTypesData, cachedTrainTypes.length]);
-
   const handleLineSelected = useCallback(
     async (selectedStation: Station) => {
-      // 新しい検索を開始する前に前回の状態をすべてクリア
-      setCachedTrainTypes([]);
-      setSelectedTrainType(null);
-      setSelectedLine(selectedStation.line ?? null);
-      setSelectedStation(selectedStation);
+      setTrainTypeListModalVisible(true);
+
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: null,
+      }));
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation: selectedStation,
+        pendingStations: [],
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        pendingLine: selectedStation.line ?? null,
+      }));
 
       if (selectedStation.hasTrainTypes) {
-        // Guard: ensure both groupIds are present before calling the query
-        if (!station?.groupId || !selectedStation.groupId) {
-          return;
-        }
-        setTrainTypeListModalVisible(true);
-        mutateRouteTypes({
-          variables: {
-            fromStationGroupId: station.groupId,
-            toStationGroupId: selectedStation.groupId,
-          },
-        });
         return;
       }
 
@@ -235,14 +212,20 @@ const RouteSearchScreen = () => {
 
       setSelectBoundModalVisible(true);
 
-      mutateStationsByLineId({
+      const result = await fetchStationsByLineId({
         variables: {
           lineId: selectedStation.line.id,
           stationId: selectedStation.id,
         },
       });
+
+      const newPendingStations = result.data?.lineStations ?? [];
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations: newPendingStations,
+      }));
     },
-    [mutateRouteTypes, mutateStationsByLineId, station?.groupId]
+    [fetchStationsByLineId, setNavigationState, setStationState, setLineState]
   );
 
   const renderItem = useCallback(
@@ -272,17 +255,38 @@ const RouteSearchScreen = () => {
   const handleTrainTypeSelected = useCallback(
     async (trainType: TrainType) => {
       if (!trainType.groupId) return;
-      setSelectedTrainType(trainType);
-      mutateStationsByLineGroupId({
+
+      setSelectBoundModalVisible(true);
+
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType,
+      }));
+
+      fetchStationsByLineGroupIdClient.cache.evict({
+        fieldName: 'lineGroupStations',
+        args: { lineGroupId: trainType.groupId },
+      });
+      fetchStationsByLineGroupIdClient.cache.gc();
+
+      const pendingStationsData = await fetchStationsByLineGroupId({
         variables: {
           lineGroupId: trainType.groupId,
         },
       });
-
-      // TrainTypeListModalは閉じずに、SelectBoundModalを開く
-      setSelectBoundModalVisible(true);
+      const pendingStations = pendingStationsData.data?.lineGroupStations ?? [];
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations,
+      }));
     },
-    [mutateStationsByLineGroupId]
+    [
+      fetchStationsByLineGroupId,
+      setStationState,
+      setNavigationState,
+      fetchStationsByLineGroupIdClient.cache.evict,
+      fetchStationsByLineGroupIdClient.cache.gc,
+    ]
   );
 
   const keyExtractor = useCallback(
@@ -297,10 +301,10 @@ const RouteSearchScreen = () => {
   });
 
   const currentStationInRoutes = useMemo<Station | null>(() => {
-    if (!station || !selectedLine) return null;
+    if (!station || !pendingLine) return null;
 
     const notConnectedToOthersLine = station.lines?.find(
-      (l) => l.id === selectedLine.id
+      (l) => l.id === pendingLine.id
     );
 
     if (notConnectedToOthersLine) {
@@ -327,38 +331,88 @@ const RouteSearchScreen = () => {
       commonIds.includes(l.id)
     );
 
-    if (!commonLine) return { ...station, line: selectedLine } as Station;
+    if (!commonLine) return { ...station, line: pendingLine } as Station;
 
     return { ...station, line: commonLine } as Station;
-  }, [station, selectedLine, routeTypesData?.routeTypes]);
+  }, [station, pendingLine, routeTypesData?.routeTypes]);
 
-  const destinationInRoutes = useMemo<Station | null>(() => {
-    // Return the selected station as the destination
-    return selectedStation;
-  }, [selectedStation]);
-
-  const trainTypes = useMemo(() => {
-    // Use cached train types to avoid Apollo cache mutation issues
-    const trainTypes =
-      cachedTrainTypes.length > 0
-        ? cachedTrainTypes
-        : (routeTypesData?.routeTypes?.trainTypes ?? []);
-
-    // Filter train types that are relevant to the current station's line
-    if (!currentStationInRoutes?.line?.id) {
-      return trainTypes;
-    }
-
-    // Filter train types that include the current station's line in their route
-    return trainTypes.filter((tt) => {
-      if (tt.line?.id === currentStationInRoutes.line?.id) {
-        return true;
+  useEffect(() => {
+    if (!currentStationInRoutes) return;
+    setStationState((prev) => {
+      if (prev.pendingStation?.groupId === currentStationInRoutes.groupId) {
+        return prev;
       }
-      return (tt.lines ?? []).some(
-        (l) => l.id === currentStationInRoutes.line?.id
-      );
+      return {
+        ...prev,
+        pendingStation: currentStationInRoutes,
+      };
     });
-  }, [cachedTrainTypes, routeTypesData, currentStationInRoutes?.line?.id]);
+  }, [currentStationInRoutes, setStationState]);
+
+  useEffect(() => {
+    setLineState((prev) => {
+      if (prev.pendingLine?.id === pendingLine?.id) {
+        return prev;
+      }
+      return {
+        ...prev,
+        pendingLine,
+      };
+    });
+  }, [pendingLine, setLineState]);
+
+  useEffect(() => {
+    setNavigationState((prev) => {
+      const currentDestId = prev.pendingWantedDestination?.groupId ?? null;
+      const nextDestId = pendingStation?.groupId ?? null;
+      if (currentDestId === nextDestId) {
+        return prev;
+      }
+      return {
+        ...prev,
+        pendingWantedDestination: pendingStation,
+      };
+    });
+  }, [pendingStation, setNavigationState]);
+
+  useEffect(() => {
+    const fetchAsync = async () => {
+      const fromStationGroupId = station?.groupId;
+      const toStationGroupId = pendingStation?.groupId;
+      if (!fromStationGroupId || !toStationGroupId) {
+        return;
+      }
+
+      const fetchedTrainTypesData = await fetchRouteTypes({
+        variables: {
+          fromStationGroupId,
+          toStationGroupId,
+        },
+      });
+      const fetchedTrainTypes = (
+        fetchedTrainTypesData.data?.routeTypes.trainTypes ?? []
+      ).filter((tt) => {
+        if (tt.line?.id === currentStationInRoutes?.line?.id) {
+          return true;
+        }
+
+        return tt.lines?.some((l) => l.id === currentStationInRoutes?.line?.id);
+      });
+
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes,
+      }));
+    };
+
+    fetchAsync();
+  }, [
+    fetchRouteTypes,
+    setNavigationState,
+    currentStationInRoutes?.line?.id,
+    pendingStation?.groupId,
+    station?.groupId,
+  ]);
 
   return (
     <>
@@ -371,7 +425,7 @@ const RouteSearchScreen = () => {
           ItemSeparatorComponent={EmptyLineSeparator}
           ListEmptyComponent={
             <EmptyResult
-              loading={byNameLoading || mutateRouteTypesLoading}
+              loading={byNameLoading || fetchRouteTypesLoading}
               hasSearched={hasSearched}
             />
           }
@@ -395,13 +449,11 @@ const RouteSearchScreen = () => {
         />
       </SafeAreaView>
 
-      {station && (
-        <NowHeader
-          station={station}
-          onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height)}
-          scrollY={scrollY}
-        />
-      )}
+      <NowHeader
+        station={station}
+        onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height)}
+        scrollY={scrollY}
+      />
       {/* フッター */}
       <FooterTabBar active="search" />
 
@@ -412,24 +464,15 @@ const RouteSearchScreen = () => {
           // (TrainTypeListModalに戻れるようにする)
           setSelectBoundModalVisible(false);
         }}
-        station={currentStationInRoutes}
-        line={selectedLine}
-        stations={
-          stationsByLineGroupIdData?.lineGroupStations ??
-          stationsByLineIdData?.lineStations ??
-          []
-        }
-        trainType={selectedTrainType}
-        destination={destinationInRoutes}
         loading={
-          mutateStationsByLineIdStatus === 'pending' ||
-          mutateStationsByLineGroupIdStatus === 'pending' ||
-          mutateRouteTypesStatus === 'pending'
+          fetchStationsByLineIdLoading ||
+          fetchStationsByLineGroupIdLoading ||
+          fetchRouteTypesLoading
         }
         error={
-          mutateStationsByLineIdError ??
-          mutateStationsByLineGroupIdError ??
-          mutateRouteTypesError ??
+          fetchStationsByLineIdError ??
+          fetchStationsByLineGroupIdError ??
+          fetchRouteTypesError ??
           null
         }
         onTrainTypeSelect={handleTrainTypeSelected}
@@ -437,20 +480,28 @@ const RouteSearchScreen = () => {
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
         line={currentStationInRoutes?.line ?? null}
-        trainTypes={trainTypes}
-        destination={destinationInRoutes}
+        destination={pendingStation}
         onClose={() => {
           // キャンセル時のみリセット
-          setSelectedLine(null);
-          setSelectedStation(null);
-          setSelectedTrainType(null);
-          setCachedTrainTypes([]);
+          setLineState((prev) => ({ ...prev, pendingLine: null }));
+          setStationState((prev) => ({
+            ...prev,
+            pendingStation: null,
+            pendingStations: [],
+          }));
+          setNavigationState((prev) => ({
+            ...prev,
+            trainType: null,
+            fetchedTrainTypes: [],
+            pendingWantedDestination: null,
+          }));
           setTrainTypeListModalVisible(false);
         }}
         onSelect={handleTrainTypeSelected}
         loading={
-          mutateStationsByLineIdStatus === 'pending' ||
-          mutateRouteTypesStatus === 'pending'
+          fetchStationsByLineIdLoading ||
+          fetchStationsByLineGroupIdLoading ||
+          fetchRouteTypesLoading
         }
       />
     </>

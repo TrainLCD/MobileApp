@@ -12,6 +12,8 @@ import Button from './Button';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
 import { LineCard } from './LineCard';
+import { useAtomValue } from 'jotai';
+import navigationState from '~/store/atoms/navigation';
 
 const styles = StyleSheet.create({
   root: {
@@ -63,7 +65,6 @@ type Props = {
   visible: boolean;
   line: Line | null;
   destination?: Station | null;
-  trainTypes: TrainType[];
   loading?: boolean;
   onClose: () => void;
   onSelect: (trainType: TrainType) => void;
@@ -73,11 +74,12 @@ export const TrainTypeListModal = ({
   visible,
   line,
   destination,
-  trainTypes,
   loading,
   onClose,
   onSelect,
 }: Props) => {
+  const { fetchedTrainTypes } = useAtomValue(navigationState);
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const title = useMemo(() => {
@@ -213,7 +215,7 @@ export const TrainTypeListModal = ({
 
           <FlatList<TrainType>
             style={StyleSheet.absoluteFill}
-            data={trainTypes}
+            data={fetchedTrainTypes}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             ItemSeparatorComponent={EmptyLineSeparator}

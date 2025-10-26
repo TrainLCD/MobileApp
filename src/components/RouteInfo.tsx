@@ -251,13 +251,13 @@ export const RouteInfo: React.FC<Props> = ({
           if (!s.line) return null;
           return { ...s.line, trainType: s.trainType };
         })
-        .filter((l): l is Line => l !== null);
+        .filter((l) => l !== null);
       return uniqBy(mapped, 'id');
     }
     return uniqBy(
       stations.map((s: Station) => s.line ?? null),
       'id'
-    ).filter((l): l is Line => l !== null);
+    ).filter((l) => l !== null);
   }, [stations, stopStations, trainType?.lines]);
 
   return (

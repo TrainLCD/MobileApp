@@ -41,8 +41,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
     paddingTop: 32,
     overflow: 'hidden',
     // iOS shadow
@@ -77,7 +75,7 @@ const styles = StyleSheet.create({
 });
 
 type Props = {
-  station: Station;
+  station: Station | null;
   onLayout?: (event: LayoutChangeEvent) => void;
   scrollY: SharedValue<number>;
 };
@@ -156,7 +154,16 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
   return (
     <>
       <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
-        <View style={styles.nowHeaderCard} onLayout={onLayout}>
+        <View
+          style={[
+            styles.nowHeaderCard,
+            {
+              borderBottomLeftRadius: isLEDTheme ? 0 : 16,
+              borderBottomRightRadius: isLEDTheme ? 0 : 16,
+            },
+          ]}
+          onLayout={onLayout}
+        >
           <BlurView
             intensity={40}
             tint={isLEDTheme ? 'dark' : 'light'}

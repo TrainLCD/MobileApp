@@ -1,4 +1,4 @@
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 import DeviceInfo from 'react-native-device-info';
 import {
   DEV_API_URL,
@@ -6,6 +6,7 @@ import {
   STAGING_API_URL,
 } from 'react-native-dotenv';
 import { isDevApp } from '~/utils/isDevApp';
+import { BatchHttpLink } from '@apollo/client/link/batch-http';
 
 /**
  * Validates that all required API URL environment variables are defined and non-empty.
@@ -55,29 +56,17 @@ const uri = (() => {
 })();
 
 export const gqlClient = new ApolloClient({
-  link: new HttpLink({ uri }),
+  link: new BatchHttpLink({
+    uri,
+    batchMax: 10,
+    batchInterval: 20,
+    includeExtensions: false,
+  }),
   cache: new InMemoryCache({
     typePolicies: {
-      Station: {
-        fields: {
-          lines: {
-            merge(existing, incoming) {
-              // incoming が空配列または undefined の場合でも安全にマージ
-              return incoming ?? existing ?? [];
-            },
-          },
-        },
-      },
-      TrainType: {
-        fields: {
-          lines: {
-            merge(existing, incoming) {
-              // incoming が空配列または undefined の場合でも安全にマージ
-              return incoming ?? existing ?? [];
-            },
-          },
-        },
-      },
+      LineNested: { keyFields: false },
+      StationNested: { keyFields: false },
+      TrainTypeNested: { keyFields: false },
     },
   }),
 });

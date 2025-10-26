@@ -14,7 +14,6 @@ import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
 import { useThemeStore } from '~/hooks';
-import { gqlClient } from '~/lib/gql';
 import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
@@ -100,29 +99,22 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const insets = useSafeAreaInsets();
 
   const [
-    mutateStations,
+    fetchStations,
     {
       data: stationsData,
-      loading: mutateStationsLoading,
-      error: mutateStationsError,
-      called: mutateStationsCalled,
+      loading: fetchStationsLoading,
+      error: fetchStationsError,
+      called: fetchStationsCalled,
     },
   ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
     GET_STATIONS_BY_NAME
   );
 
-  const resetStations = useCallback(() => {
-    try {
-      gqlClient.cache.evict({ fieldName: 'stationsByName' });
-      gqlClient.cache.gc();
-    } catch {}
-  }, []);
-
   useEffect(() => {
-    if (mutateStationsError) {
+    if (fetchStationsError) {
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
     }
-  }, [mutateStationsError]);
+  }, [fetchStationsError]);
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
@@ -141,12 +133,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           subtitle={subtitle}
           onPress={() => {
             onSelect(item);
-            resetStations();
           }}
         />
       );
     },
-    [onSelect, resetStations]
+    [onSelect]
   );
 
   const keyExtractor = useCallback(
@@ -157,18 +148,17 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const handleSearchStations = useCallback(
     (query: string) => {
       if (!query.trim().length) {
-        resetStations();
         return;
       }
 
-      mutateStations({ variables: { name: query } });
+      fetchStations({ variables: { name: query } });
     },
-    [mutateStations, resetStations]
+    [fetchStations]
   );
 
   const stations = useMemo(
     () =>
-      mutateStationsCalled
+      fetchStationsCalled
         ? uniqBy(stationsData?.stationsByName ?? [], (station) => {
             if (station.groupId) {
               return station.groupId;
@@ -183,13 +173,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             return `${station.name}|${prefecture}`;
           })
         : [],
-    [stationsData?.stationsByName, mutateStationsCalled]
+    [stationsData?.stationsByName, fetchStationsCalled]
   );
 
   const handleClose = useCallback(() => {
     onClose();
-    resetStations();
-  }, [onClose, resetStations]);
+  }, [onClose]);
 
   return (
     <Modal
@@ -232,8 +221,8 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             contentContainerStyle={styles.flatListContentContainer}
             ListEmptyComponent={
               <EmptyResult
-                loading={mutateStationsLoading}
-                hasSearched={mutateStationsCalled}
+                loading={fetchStationsLoading}
+                hasSearched={fetchStationsCalled}
               />
             }
           />

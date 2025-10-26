@@ -373,7 +373,9 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
         ]}
       />
       <View style={styles.right}>
-        <Typography style={styles.state}>{stateText}</Typography>
+        <Typography style={styles.state} adjustsFontSizeToFit numberOfLines={2}>
+          {stateText}
+        </Typography>
         <View style={styles.stationNameContainer}>
           {currentStationNumber ? (
             <NumberingIcon

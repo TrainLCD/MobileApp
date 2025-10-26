@@ -113,9 +113,7 @@ export const useOpenRouteFromLink = () => {
 
       if (lineId) {
         const { data } = await fetchStationsByLineId({
-          variables: {
-            lineId,
-          },
+          variables: { lineId },
         });
 
         const stations = data?.lineStations ?? [];
@@ -127,7 +125,7 @@ export const useOpenRouteFromLink = () => {
         handleStationsFetched(station, stations, lineDirection);
       }
     },
-    [fetchStationsByLineGroupId, fetchStationsByLineId, handleStationsFetched]
+    [handleStationsFetched, fetchStationsByLineGroupId, fetchStationsByLineId]
   );
 
   return {

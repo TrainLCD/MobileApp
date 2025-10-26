@@ -171,6 +171,7 @@ export const useTTSText = (
     if (!nextStationNumber?.stationNumber) {
       return '';
     }
+
     const split = nextStationNumber.stationNumber.split('-');
 
     if (!split.length) {
@@ -182,7 +183,7 @@ export const useTTSText = (
       )}`;
     }
 
-    const symbol = split[0]?.split('').join('-');
+    const symbol = split[0]?.split('').join(' ');
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
       : Number(split[1]).toString();

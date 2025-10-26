@@ -140,7 +140,7 @@
     ],
     "moduleNameMapper": {
       "^~/(.*)$": "<rootDir>/src/$1",
-      "^~/@types/graphql$": "<rootDir>/src/@types/graphql.d.ts"
+      "^~/@types/graphql$": "<rootDir>/src/@types/graphql.ts"
     }
   },
   "name": "trainlcd",

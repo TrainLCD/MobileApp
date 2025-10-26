@@ -11,7 +11,7 @@ type GetLineGroupStationsVariables = {
 };
 
 export const useTrainTypeStations = () => {
-  const [fetchStations, { data, loading, error }] = useLazyQuery<
+  const [fetchLineGroupStations, { data, loading, error }] = useLazyQuery<
     GetLineGroupStationsData,
     GetLineGroupStationsVariables
   >(GET_LINE_GROUP_STATIONS);
@@ -21,6 +21,6 @@ export const useTrainTypeStations = () => {
     isLoading: loading,
     error,
     fetchStations: (variables: GetLineGroupStationsVariables) =>
-      fetchStations({ variables }),
+      fetchLineGroupStations({ variables }),
   };
 };

@@ -7,6 +7,9 @@ export interface StationState {
   approaching: boolean;
   station: Station | null;
   stations: Station[];
+  stationsCache: Station[][];
+  pendingStation: Station | null;
+  pendingStations: Station[];
   selectedDirection: LineDirection | null;
   selectedBound: Station | null;
   wantedDestination: Station | null;
@@ -17,6 +20,9 @@ const initialStationState: StationState = {
   approaching: false,
   station: null,
   stations: [],
+  stationsCache: [],
+  pendingStation: null,
+  pendingStations: [],
   selectedDirection: null,
   selectedBound: null,
   wantedDestination: null,
