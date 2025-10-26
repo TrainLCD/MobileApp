@@ -380,13 +380,12 @@ const SelectLineScreen = () => {
   const handleLineSelected = useCallback(
     async (line: Line) => {
       const lineId = line.id;
-      const lineStationId = line.station?.id;
-      if (!lineId || !lineStationId) return;
+      if (!lineId) return;
 
       setIsSelectBoundModalOpen(true);
 
       const result = await fetchStationsByLineId({
-        variables: { lineId, stationId: lineStationId },
+        variables: { lineId },
       });
       const pendingStations = result.data?.lineStations ?? [];
 
@@ -577,7 +576,6 @@ const SelectLineScreen = () => {
 
       if (!station) return;
 
-      // モーダル表示用のローカル状態のみ更新（グローバルは確定時に反映）
       setStationState((prev) => ({
         ...prev,
         pendingStation: station,
