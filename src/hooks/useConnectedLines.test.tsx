@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
+import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
 import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
@@ -23,28 +24,55 @@ const TestComponent: React.FC<{ excludePassed?: boolean }> = ({
   return <Text testID="lines">{JSON.stringify(lines)}</Text>;
 };
 
-const createLine = (overrides: Partial<Line> = {}): Line =>
-  ({
-    id: 'line-a',
-    nameShort: 'Main',
-    name: 'Main',
-    company: {
-      id: 'comp-1',
-      nameShort: 'Metro',
-      nameEnglishShort: 'Metro',
-    },
-    ...overrides,
-  }) as Line;
+const createLine = (
+  overrides: Partial<Line> = {},
+  typename: Line['__typename'] = 'Line'
+): Line => ({
+  __typename: typename,
+  averageDistance: null,
+  color: '#123456',
+  company: null,
+  id: 1,
+  lineSymbols: [],
+  lineType: LineType.Normal,
+  nameChinese: null,
+  nameFull: 'Main Line',
+  nameKatakana: 'メインライン',
+  nameKorean: 'メインライン',
+  nameRoman: 'Main Line',
+  nameShort: 'Main',
+  station: null,
+  status: OperationStatus.InOperation,
+  trainType: null,
+  ...overrides,
+});
 
-const createStation = (id: number, line: Line): Station =>
-  ({
-    __typename: 'Station',
-    id,
-    groupId: id,
-    name: `Station${id}`,
-    nameRoman: `Station${id}`,
-    line,
-  }) as Station;
+const createStation = (id: number, line: Line): Station => ({
+  __typename: 'Station',
+  address: null,
+  closedAt: null,
+  distance: null,
+  groupId: id,
+  hasTrainTypes: false,
+  id,
+  latitude: null,
+  line: { ...line, __typename: 'LineNested' },
+  lines: [],
+  longitude: null,
+  name: `Station${id}`,
+  nameChinese: null,
+  nameKatakana: `ステーション${id}`,
+  nameKorean: null,
+  nameRoman: `Station${id}`,
+  openedAt: null,
+  postalCode: null,
+  prefectureId: null,
+  stationNumbers: [],
+  status: OperationStatus.InOperation,
+  stopCondition: StopCondition.All,
+  threeLetterCode: null,
+  trainType: null,
+});
 
 describe('useConnectedLines', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -84,13 +112,13 @@ describe('useConnectedLines', () => {
   });
 
   it('INBOUND 方向で現在路線より先の直通路線を返す', () => {
-    const lineA = createLine({ id: 'line-a', nameShort: '本線' });
-    const lineB = createLine({ id: 'line-b', nameShort: 'A線' });
+    const lineA = createLine({ id: 1, nameShort: '本線' });
+    const lineB = createLine({ id: 2, nameShort: 'A線' });
     const lineBBranch = createLine({
-      id: 'line-b-branch',
+      id: 3,
       nameShort: 'A線(支線)',
     });
-    const lineC = createLine({ id: 'line-c', nameShort: 'C線' });
+    const lineC = createLine({ id: 4, nameShort: 'C線' });
 
     stationAtomValue = {
       selectedBound: createStation(7, lineC),
@@ -110,14 +138,14 @@ describe('useConnectedLines', () => {
     const { getByTestId } = render(<TestComponent />);
     const lines = JSON.parse(getByTestId('lines').props.children as string);
 
-    expect(lines.map((l: Line) => l.id)).toEqual(['line-b', 'line-c']);
+    expect(lines.map((l: Line) => l.id)).toEqual([2, 4]);
   });
 
   it('excludePassed=false で全ての直通候補を返しつつ現在路線は除外する', () => {
-    const lineA = createLine({ id: 'line-a', nameShort: 'M線' });
-    const lineB = createLine({ id: 'line-b', nameShort: 'N線' });
-    const lineBAlt = createLine({ id: 'line-b-alt', nameShort: 'N線(快速)' });
-    const lineC = createLine({ id: 'line-c', nameShort: 'C線' });
+    const lineA = createLine({ id: 10, nameShort: 'M線' });
+    const lineB = createLine({ id: 11, nameShort: 'N線' });
+    const lineBAlt = createLine({ id: 12, nameShort: 'N線(快速)' });
+    const lineC = createLine({ id: 13, nameShort: 'C線' });
 
     stationAtomValue = {
       selectedBound: createStation(7, lineC),
@@ -136,11 +164,7 @@ describe('useConnectedLines', () => {
     const { getByTestId } = render(<TestComponent excludePassed={false} />);
     const lines = JSON.parse(getByTestId('lines').props.children as string);
 
-    expect(lines.map((l: Line) => l.id)).toEqual([
-      'line-c',
-      'line-b-alt',
-      'line-b',
-    ]);
-    expect(lines.find((l: Line) => l.id === 'line-a')).toBeUndefined();
+    expect(lines.map((l: Line) => l.id)).toEqual([13, 12, 11]);
+    expect(lines.find((l: Line) => l.id === 10)).toBeUndefined();
   });
 });

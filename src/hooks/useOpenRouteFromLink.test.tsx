@@ -96,9 +96,7 @@ const createLineState = (overrides: Partial<LineState> = {}): LineState => ({
 });
 
 describe('useOpenRouteFromLink', () => {
-  const mockUseLazyQuery = useLazyQuery as jest.MockedFunction<
-    typeof useLazyQuery
-  >;
+  const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
   const mockUseSetAtom = useSetAtom as jest.MockedFunction<typeof useSetAtom>;
 
   const setupMolecules = () => {
@@ -115,13 +113,13 @@ describe('useOpenRouteFromLink', () => {
   const setupQueries = ({
     groupLoading = false,
     lineLoading = false,
-    groupError = null,
-    lineError = null,
+    groupError,
+    lineError,
   }: {
     groupLoading?: boolean;
     lineLoading?: boolean;
-    groupError?: Error | null;
-    lineError?: Error | null;
+    groupError?: Error;
+    lineError?: Error;
   } = {}) => {
     const mockFetchByGroup = jest.fn();
     const mockFetchByLine = jest.fn();
@@ -260,7 +258,6 @@ describe('useOpenRouteFromLink', () => {
       groupLoading: true,
       lineLoading: false,
       groupError: new Error('group'),
-      lineError: null,
     });
 
     const hookRef: { current: HookResult } = { current: null };
