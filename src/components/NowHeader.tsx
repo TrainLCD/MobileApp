@@ -139,6 +139,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
       setStationAtom((prev) => ({
         ...prev,
         station,
+        stationsCache: [],
       }));
       setNavigationAtom((prev) => ({
         ...prev,
