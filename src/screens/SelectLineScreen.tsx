@@ -468,7 +468,7 @@ const SelectLineScreen = () => {
       if (!stations.length) return;
 
       const wantedDestination =
-        stations.find((sta: Station) => sta.groupId === destinationStationId) ??
+        stations.find((sta: Station) => sta.id === destinationStationId) ??
         null;
 
       // Filter stations with valid coordinates
@@ -539,7 +539,7 @@ const SelectLineScreen = () => {
       if (!stations.length) return;
 
       const wantedDestination =
-        stations.find((sta: Station) => sta.groupId === destinationStationId) ??
+        stations.find((sta: Station) => sta.id === destinationStationId) ??
         null;
 
       // Filter stations with valid coordinates

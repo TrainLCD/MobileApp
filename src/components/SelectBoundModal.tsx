@@ -134,14 +134,14 @@ export const SelectBoundModal: React.FC<Props> = ({
     const route = findSavedRoute({
       lineId: line.id ?? 0,
       trainTypeId: trainType?.groupId ?? null,
-      destinationStationId: pendingWantedDestination?.groupId ?? null,
+      destinationStationId: pendingWantedDestination?.id ?? null,
     });
     setSavedRoute(route ?? null);
   }, [
     findSavedRoute,
     line,
     trainType?.groupId,
-    pendingWantedDestination?.groupId,
+    pendingWantedDestination?.id,
     isRoutesDBInitialized,
   ]);
 
@@ -384,7 +384,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
         lineId: line.id ?? 0,
         trainTypeId: trainType?.groupId,
-        destinationStationId: pendingWantedDestination?.groupId ?? null,
+        destinationStationId: pendingWantedDestination?.id ?? null,
         createdAt: new Date(),
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
@@ -408,7 +408,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         : `${lineName} Local ${edgeStationNames}${destinationName ? ` for ${destinationName}` : ''}`.trim(),
       lineId: line.id ?? 0,
       trainTypeId: null,
-      destinationStationId: pendingWantedDestination?.groupId ?? null,
+      destinationStationId: pendingWantedDestination?.id ?? null,
       createdAt: new Date(),
     };
 
