@@ -1,10 +1,10 @@
 import { render } from '@testing-library/react-native';
-import type { Line, Station } from '~/@types/graphql';
-import { Text } from 'react-native';
-import React from 'react';
 import { useAtomValue } from 'jotai';
-import { useConnectedLines } from './useConnectedLines';
+import type React from 'react';
+import { Text } from 'react-native';
+import type { Line, Station } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
+import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
 
 jest.mock('jotai', () => ({

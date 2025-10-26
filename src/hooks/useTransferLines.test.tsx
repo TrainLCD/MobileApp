@@ -1,14 +1,14 @@
 import { render } from '@testing-library/react-native';
-import type { Line, Station } from '~/@types/graphql';
-import { Text } from 'react-native';
-import React from 'react';
 import { useAtomValue } from 'jotai';
-import { useTransferLines } from './useTransferLines';
+import type React from 'react';
+import { Text } from 'react-native';
+import type { Line, Station } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
+import { useTransferLines } from './useTransferLines';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
-import getIsPass from '../utils/isPass';
 
 jest.mock('jotai', () => ({
   __esModule: true,

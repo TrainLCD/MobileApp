@@ -1,14 +1,14 @@
 import { render, waitFor } from '@testing-library/react-native';
-import type { Line, Station, TrainType } from '~/@types/graphql';
-import { Text } from 'react-native';
-import React from 'react';
 import { useAtomValue } from 'jotai';
-import { useCurrentTrainType } from './useCurrentTrainType';
-import { useCurrentStation } from './useCurrentStation';
-import { useCurrentLine } from './useCurrentLine';
-import getIsPass from '../utils/isPass';
-import stationState from '../store/atoms/station';
+import type React from 'react';
+import { Text } from 'react-native';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import navigationState from '../store/atoms/navigation';
+import stationState from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import { useCurrentTrainType } from './useCurrentTrainType';
 
 jest.mock('jotai', () => ({
   __esModule: true,
@@ -68,7 +68,7 @@ const createStation = (overrides: Partial<Station> = {}): Station =>
     groupId: 1,
     name: 'Shibuya',
     nameRoman: 'Shibuya',
-    line: createLine(),
+    line: undefined,
     trainType: null,
     ...overrides,
   }) as Station;
@@ -138,7 +138,7 @@ describe('useCurrentTrainType', () => {
     stationAtomValue = { stations: [throughStation] };
     currentLineValue = createLine({
       id: 'line-b',
-      station: { id: 200 } as any,
+      station: createStation({ id: 200, line: undefined }),
     });
 
     const { getByTestId } = render(<TestComponent />);

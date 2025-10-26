@@ -1,9 +1,12 @@
-import { act, render } from '@testing-library/react-native';
-import type { LineDirection } from '../models/Bound';
-import type { Station, TrainType } from '~/@types/graphql';
-import React from 'react';
 import { useLazyQuery } from '@apollo/client/react';
+import { act, render } from '@testing-library/react-native';
 import { useSetAtom } from 'jotai';
+import type React from 'react';
+import type { Station, TrainType } from '~/@types/graphql';
+import type { LineDirection } from '../models/Bound';
+import type { LineState } from '../store/atoms/line';
+import type { NavigationState } from '../store/atoms/navigation';
+import type { StationState } from '../store/atoms/station';
 import { useOpenRouteFromLink } from './useOpenRouteFromLink';
 
 jest.mock('@apollo/client/react', () => ({
@@ -49,6 +52,48 @@ const createStation = (overrides: Partial<Station> = {}): Station =>
     trainType: createTrainType(),
     ...overrides,
   }) as Station;
+
+const createStationState = (
+  overrides: Partial<StationState> = {}
+): StationState => ({
+  arrived: false,
+  approaching: false,
+  station: null,
+  stations: [],
+  stationsCache: [],
+  pendingStation: null,
+  pendingStations: [],
+  selectedDirection: null,
+  selectedBound: null,
+  wantedDestination: null,
+  ...overrides,
+});
+
+const createNavigationState = (
+  overrides: Partial<NavigationState> = {}
+): NavigationState => ({
+  headerState: 'CURRENT',
+  trainType: null,
+  bottomState: 'LINE',
+  leftStations: [],
+  stationForHeader: null,
+  enabledLanguages: [],
+  fetchedTrainTypes: [],
+  autoModeEnabled: false,
+  enableLegacyAutoMode: false,
+  isAppLatest: false,
+  firstStop: true,
+  presetsFetched: false,
+  presetRoutes: [],
+  pendingWantedDestination: null,
+  ...overrides,
+});
+
+const createLineState = (overrides: Partial<LineState> = {}): LineState => ({
+  selectedLine: null,
+  pendingLine: null,
+  ...overrides,
+});
 
 describe('useOpenRouteFromLink', () => {
   const mockUseLazyQuery = useLazyQuery as jest.MockedFunction<
@@ -108,11 +153,14 @@ describe('useOpenRouteFromLink', () => {
       data: { lineGroupStations: stations },
     });
 
-    let hook: HookResult = null;
-    render(<HookBridge onReady={(value) => (hook = value)} />);
+    const hookRef: { current: HookResult } = { current: null };
+    const handleReady = (value: HookResult) => {
+      hookRef.current = value;
+    };
+    render(<HookBridge onReady={handleReady} />);
 
     await act(async () => {
-      await hook?.openLink({
+      await hookRef.current?.openLink({
         stationGroupId: 1,
         direction: 0,
         lineGroupId: 10,
@@ -125,19 +173,19 @@ describe('useOpenRouteFromLink', () => {
     });
 
     const stationSetter = mockSetStationState.mock.calls[0][0];
-    const stationResult = stationSetter({ stations: [] } as any);
+    const stationResult = stationSetter(createStationState());
     expect(stationResult.station?.groupId).toBe(1);
     expect(stationResult.stations).toEqual(stations);
     expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
     expect(stationResult.selectedBound?.groupId).toBe(2);
 
     const navigationSetter = mockSetNavigationState.mock.calls[0][0];
-    const navigationResult = navigationSetter({ leftStations: [] } as any);
+    const navigationResult = navigationSetter(createNavigationState());
     expect(navigationResult.trainType?.typeId).toBe('local');
     expect(navigationResult.stationForHeader?.groupId).toBe(1);
 
     const lineSetter = mockSetLineState.mock.calls[0][0];
-    const lineResult = lineSetter({} as any);
+    const lineResult = lineSetter(createLineState());
     expect(lineResult.selectedLine?.id).toBe(999);
   });
 
@@ -151,11 +199,14 @@ describe('useOpenRouteFromLink', () => {
     ];
     mockFetchByLine.mockResolvedValue({ data: { lineStations: stations } });
 
-    let hook: HookResult = null;
-    render(<HookBridge onReady={(value) => (hook = value)} />);
+    const hookRef: { current: HookResult } = { current: null };
+    const handleReady = (value: HookResult) => {
+      hookRef.current = value;
+    };
+    render(<HookBridge onReady={handleReady} />);
 
     await act(async () => {
-      await hook?.openLink({
+      await hookRef.current?.openLink({
         stationGroupId: 9,
         direction: 1,
         lineGroupId: undefined,
@@ -165,7 +216,7 @@ describe('useOpenRouteFromLink', () => {
 
     expect(mockFetchByLine).toHaveBeenCalledWith({ variables: { lineId: 55 } });
     const stationSetter = mockSetStationState.mock.calls[0][0];
-    const result = stationSetter({ stations: [] } as any);
+    const result = stationSetter(createStationState());
     expect(result.selectedDirection).toBe<LineDirection>('OUTBOUND');
     expect(result.selectedBound?.groupId).toBe(5);
   });
@@ -177,17 +228,20 @@ describe('useOpenRouteFromLink', () => {
     mockFetchByGroup.mockResolvedValue({ data: { lineGroupStations: [] } });
     mockFetchByLine.mockResolvedValue({ data: { lineStations: [] } });
 
-    let hook: HookResult = null;
-    render(<HookBridge onReady={(value) => (hook = value)} />);
+    const hookRef: { current: HookResult } = { current: null };
+    const handleReady = (value: HookResult) => {
+      hookRef.current = value;
+    };
+    render(<HookBridge onReady={handleReady} />);
 
     await act(async () => {
-      await hook?.openLink({
+      await hookRef.current?.openLink({
         stationGroupId: 99,
         direction: 0,
         lineGroupId: 1,
         lineId: undefined,
       });
-      await hook?.openLink({
+      await hookRef.current?.openLink({
         stationGroupId: 99,
         direction: 0,
         lineGroupId: undefined,
@@ -209,10 +263,13 @@ describe('useOpenRouteFromLink', () => {
       lineError: null,
     });
 
-    let hook: HookResult = null;
-    render(<HookBridge onReady={(value) => (hook = value)} />);
+    const hookRef: { current: HookResult } = { current: null };
+    const handleReady = (value: HookResult) => {
+      hookRef.current = value;
+    };
+    render(<HookBridge onReady={handleReady} />);
 
-    expect(hook?.isLoading).toBe(true);
-    expect(hook?.error?.message).toBe('group');
+    expect(hookRef.current?.isLoading).toBe(true);
+    expect(hookRef.current?.error?.message).toBe('group');
   });
 });
