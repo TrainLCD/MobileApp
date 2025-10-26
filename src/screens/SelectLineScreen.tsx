@@ -20,6 +20,7 @@ import type { Line, Station, TrainType } from '~/@types/graphql';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
+import { gqlClient } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -125,11 +126,7 @@ const SelectLineScreen = () => {
 
   const [stationAtomState, setStationState] = useAtom(stationState);
   const [, setLineState] = useAtom(lineStateAtom);
-  const {
-    station: stationFromAtom,
-    stationsCache,
-    selectedBound,
-  } = stationAtomState;
+  const { station: stationFromAtom, stationsCache } = stationAtomState;
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -190,43 +187,50 @@ const SelectLineScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (!isRoutesDBInitialized || !!selectedBound) return;
+    if (!isRoutesDBInitialized) return;
     updateRoutes();
-  }, [isRoutesDBInitialized, updateRoutes, selectedBound]);
+  }, [isRoutesDBInitialized, updateRoutes]);
 
   useEffect(() => {
     const fetchAsync = async () => {
-      if (selectedBound) {
-        return;
-      }
-
       try {
-        const routeStations: Array<SavedRoute & { stations: Station[] }> = [];
-
-        for (const route of routes) {
+        const jobs = routes.map((route) => {
           if (route.hasTrainType) {
-            const result = await fetchStationsByLineGroupId({
+            return gqlClient.query<{ stationsByLineGroupId: Station[] }>({
+              query: GET_LINE_GROUP_STATIONS,
               variables: {
                 lineGroupId: route.trainTypeId,
               },
+              context: { batchGroup: 'presets-init' },
             });
-            routeStations.push({
-              ...route,
-              stations: result.data?.lineGroupStations ?? [],
-            });
-            continue;
           }
 
-          const result = await fetchStationsByLineId({
+          return gqlClient.query<{ lineStations: Station[] }>({
+            query: GET_LINE_STATIONS,
             variables: {
               lineId: route.lineId,
             },
+            context: { batchGroup: 'presets-init' },
           });
-          routeStations.push({
-            ...route,
-            stations: result.data?.lineStations ?? [],
-          });
-        }
+        });
+
+        const results = await Promise.allSettled(jobs);
+        const routeStations: Array<SavedRoute & { stations: Station[] }> =
+          results.map((r, index) =>
+            r.status === 'fulfilled'
+              ? {
+                  ...routes[index],
+                  stations:
+                    (r.value.data as { stationsByLineGroupId: Station[] })
+                      .stationsByLineGroupId ??
+                    (r.value.data as { lineStations: Station[] })
+                      .lineStations ??
+                    [],
+                }
+              : ({ ...routes[index], stations: [] } as SavedRoute & {
+                  stations: Station[];
+                })
+          );
 
         setCarouselData(
           routes.map((r) => ({
@@ -241,12 +245,7 @@ const SelectLineScreen = () => {
       }
     };
     fetchAsync();
-  }, [
-    routes,
-    fetchStationsByLineId,
-    fetchStationsByLineGroupId,
-    selectedBound,
-  ]);
+  }, [routes]);
 
   useEffect(() => {
     pipe(
@@ -264,11 +263,41 @@ const SelectLineScreen = () => {
     );
   }, []);
 
+  const updateStationsCache = useCallback(
+    async (station: Station) => {
+      const fetchedLines = (station.lines ?? []).filter((line) =>
+        Boolean(line)
+      );
+
+      const jobs = fetchedLines.map((line) =>
+        gqlClient.query<{ lineStations: Station[] }>({
+          query: GET_LINE_STATIONS,
+          variables: {
+            lineId: line.id,
+          },
+          context: { batchGroup: 'lines-init' },
+        })
+      );
+
+      const results = await Promise.allSettled(jobs);
+
+      const stationsCache: Station[][] = results.map((r) =>
+        r.status === 'fulfilled'
+          ? (r.value.data?.lineStations ?? [])
+          : ([] as Station[])
+      );
+
+      setStationState((prev) => ({
+        ...prev,
+        stationsCache,
+      }));
+    },
+    [setStationState]
+  );
+
   useEffect(() => {
     const fetchInitialNearbyStationAsync = async () => {
-      if (selectedBound) {
-        return;
-      }
+      if (station) return;
 
       const location = await fetchCurrentLocation(true);
       if (!location) return;
@@ -279,6 +308,7 @@ const SelectLineScreen = () => {
         limit: 1,
       });
       const stationFromAPI = data.data?.stationsNearby[0] ?? null;
+
       setStationState((prev) => ({
         ...prev,
         station: stationFromAPI,
@@ -288,49 +318,25 @@ const SelectLineScreen = () => {
         stationForHeader: stationFromAPI,
       }));
 
-      const stations: Station[][] = [];
-      const fetchedLines = (stationFromAPI?.lines ?? []).filter((line) =>
-        Boolean(line)
-      );
-      setStationState((prev) => ({
-        ...prev,
-        stationsCache: [],
-      }));
-
-      for (const line of fetchedLines) {
-        const lineId = line.id;
-        if (!lineId) {
-          stations.push([]);
-          continue;
-        }
-
-        try {
-          const result = await fetchStationsByLineId({
-            variables: {
-              lineId,
-            },
-          });
-          stations.push(result.data?.lineStations ?? []);
-        } catch (error) {
-          console.error(error);
-          stations.push([]);
-        }
+      if (stationFromAPI) {
+        await updateStationsCache(stationFromAPI);
       }
-
-      setStationState((prev) => ({
-        ...prev,
-        stationsCache: stations,
-      }));
     };
     fetchInitialNearbyStationAsync();
   }, [
     fetchByCoords,
     fetchCurrentLocation,
-    fetchStationsByLineId,
     setNavigationState,
     setStationState,
-    selectedBound,
+    station,
+    updateStationsCache,
   ]);
+
+  useEffect(() => {
+    if (station && !stationsCache.length) {
+      updateStationsCache(station);
+    }
+  }, [station, updateStationsCache, stationsCache.length]);
 
   useEffect(() => {
     pipe(
@@ -636,14 +642,15 @@ const SelectLineScreen = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Line; index: number }) => {
-      const stations = stationsCache[index];
-      if (!stations || fetchStationsByLineIdLoading) {
+      if (fetchStationsByLineIdLoading) {
         return (
           <SkeletonPlaceholder borderRadius={4} speed={1500}>
             <SkeletonPlaceholder.Item width="100%" height={72} />
           </SkeletonPlaceholder>
         );
       }
+
+      const stations = stationsCache[index] ?? [];
 
       return (
         <LineCard
@@ -698,6 +705,7 @@ const SelectLineScreen = () => {
         <Animated.FlatList
           style={StyleSheet.absoluteFill}
           data={stationLines}
+          extraData={stationsCache}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={EmptyLineSeparator}
