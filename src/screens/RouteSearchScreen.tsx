@@ -289,8 +289,7 @@ const RouteSearchScreen = () => {
       fetchStationsByLineGroupId,
       setStationState,
       setNavigationState,
-      fetchStationsByLineGroupIdClient.cache.evict,
-      fetchStationsByLineGroupIdClient.cache.gc,
+      fetchStationsByLineGroupIdClient,
     ]
   );
 
