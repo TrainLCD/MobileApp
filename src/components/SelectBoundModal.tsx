@@ -131,7 +131,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   } = useSavedRoutes();
 
   useEffect(() => {
-    if (!line || !isRoutesDBInitialized) return;
+    if (!line || line.id == null || !isRoutesDBInitialized) return;
 
     const route = findSavedRoute({
       lineId: line.id ?? 0,
