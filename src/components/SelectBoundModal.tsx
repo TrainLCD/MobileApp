@@ -282,7 +282,7 @@ export const SelectBoundModal: React.FC<Props> = ({
 
           return (
             <LineCard
-              line={line}
+              line={lineForCard ?? line}
               onPress={() =>
                 handleBoundSelected(
                   pendingWantedDestination,

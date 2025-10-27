@@ -16,7 +16,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Line, Station, TrainType } from '~/@types/graphql';
+import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
@@ -155,7 +155,9 @@ const SelectLineScreen = () => {
   );
 
   const stationLines = useMemo<Line[]>(() => {
-    return (station?.lines ?? []).filter((line) => Boolean(line));
+    return (station?.lines ?? []).filter(
+      (line): line is LineNested => line?.id != null
+    );
   }, [station?.lines]);
 
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
@@ -273,8 +275,8 @@ const SelectLineScreen = () => {
 
   const updateStationsCache = useCallback(
     async (station: Station) => {
-      const fetchedLines = (station.lines ?? []).filter((line) =>
-        Boolean(line)
+      const fetchedLines = (station.lines ?? []).filter(
+        (line): line is LineNested => line?.id != null
       );
 
       const jobs = fetchedLines.map((line) =>
