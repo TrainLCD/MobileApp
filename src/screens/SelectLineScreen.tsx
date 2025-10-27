@@ -283,7 +283,7 @@ const SelectLineScreen = () => {
         gqlClient.query<{ lineStations: Station[] }>({
           query: GET_LINE_STATIONS,
           variables: {
-            lineId: line.id,
+            lineId: line.id as number,
           },
           context: { batchGroup: 'lines-init' },
         })
