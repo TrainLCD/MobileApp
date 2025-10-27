@@ -153,6 +153,8 @@ const RouteSearchScreen = () => {
 
   const handleSearch = useCallback(
     async (query: string) => {
+      if (!station?.groupId) return;
+
       setSearchResults([]);
 
       if (!query.trim().length) {
@@ -167,7 +169,7 @@ const RouteSearchScreen = () => {
         variables: {
           name: query.trim(),
           limit,
-          fromStationGroupId: station?.groupId ?? undefined,
+          fromStationGroupId: station.groupId,
         },
       });
       const stations = result.data?.stationsByName ?? [];

@@ -462,9 +462,9 @@ const SelectLineScreen = () => {
   // PresetCard押下時のモーダル表示ロジック
   const openModalByLineId = useCallback(
     async (lineId: number, destinationStationId: number | null) => {
-      // try cache first
+      if (!destinationStationId) return;
       const result = await fetchStationsByLineId({
-        variables: { lineId, stationId: destinationStationId ?? undefined },
+        variables: { lineId, stationId: destinationStationId },
       });
       const stations = result.data?.lineStations ?? [];
       if (!stations.length) return;
