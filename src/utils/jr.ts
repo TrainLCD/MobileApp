@@ -1,8 +1,9 @@
-import { Line, LineType } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
+import { LineType } from '~/@types/graphql';
 import { JR_LINE_MAX_ID, MARK_SHAPE, OMIT_JR_THRESHOLD } from '../constants';
 
 export const isJRLine = (line: Line): boolean =>
-  line.company ? line.company.id <= JR_LINE_MAX_ID : false;
+  line.company ? (line.company.id ?? 0) <= JR_LINE_MAX_ID : false;
 
 const jrCompanyColor = (companyId: number): string => {
   switch (companyId) {
@@ -38,81 +39,91 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
     (line: Line) => line.lineType === LineType.BulletTrain
   );
   if (jrLinesWithoutBT.length >= OMIT_JR_THRESHOLD) {
-    withoutJR.unshift(
-      new Line({
-        id: 1,
-        color: jrLinesWithoutBT[0].company
-          ? jrCompanyColor(jrLinesWithoutBT[0].company?.id)
+    withoutJR.unshift({
+      __typename: 'Line',
+      id: 1,
+      color: jrLinesWithoutBT[0].company
+        ? jrCompanyColor(jrLinesWithoutBT[0].company?.id ?? 0)
+        : '#000000',
+      nameShort: 'JR線',
+      nameRoman: 'JR Lines',
+      nameKatakana: 'JRセン',
+      lineType: LineType.Normal,
+      nameChinese: 'JR线',
+      nameKorean: 'JR선',
+      nameFull: 'JR線',
+      status: undefined,
+      averageDistance: undefined,
+      station: undefined,
+      trainType: undefined,
+      company: {
+        __typename: 'Company',
+        id: 0,
+        railroadId: 0,
+        type: undefined,
+        status: undefined,
+        name: 'JR',
+        nameShort: 'JR',
+        nameFull: 'JR',
+        nameKatakana: 'ジェイアール',
+        nameEnglishShort: 'JR',
+        nameEnglishFull: 'JR',
+        url: undefined,
+      },
+      lineSymbols: [
+        {
+          __typename: 'LineSymbol',
+          symbol: '',
+          shape: MARK_SHAPE.JR_UNION,
+          color: jrLinesWithoutBT[0].company
+            ? jrCompanyColor(jrLinesWithoutBT[0].company?.id ?? 0)
+            : '#000000',
+        },
+      ],
+    });
+    if (jrLinesWithBT.length) {
+      withoutJR.unshift({
+        __typename: 'Line',
+        id: jrLinesWithBT[0].id,
+        color: jrLinesWithBT[0].company
+          ? jrCompanyColor(jrLinesWithBT[0].company?.id ?? 0)
           : '#000000',
-        nameShort: 'JR線',
-        nameRoman: 'JR Lines',
-        nameKatakana: 'JRセン',
+        nameShort: '新幹線',
+        nameRoman: 'Shinkansen',
+        nameKatakana: 'シンカンセン',
         lineType: LineType.Normal,
-        nameChinese: 'JR线',
-        nameKorean: 'JR선',
-        nameFull: 'JR線',
-        status: 0,
+        nameChinese: '新干线',
+        nameKorean: '신칸센',
+        nameFull: '新幹線',
+        status: undefined,
+        averageDistance: undefined,
+        station: undefined,
+        trainType: undefined,
         company: {
+          __typename: 'Company',
           id: 0,
           railroadId: 0,
-          type: 0,
-          status: 0,
+          type: undefined,
+          status: undefined,
           name: 'JR',
           nameShort: 'JR',
           nameFull: 'JR',
           nameKatakana: 'ジェイアール',
           nameEnglishShort: 'JR',
           nameEnglishFull: 'JR',
+          url: undefined,
         },
         lineSymbols: [
           {
+            __typename: 'LineSymbol',
             symbol: '',
-            shape: MARK_SHAPE.JR_UNION,
+            shape: MARK_SHAPE.BULLET_TRAIN_UNION,
             color: jrLinesWithoutBT[0].company
-              ? jrCompanyColor(jrLinesWithoutBT[0].company?.id)
+              ? jrCompanyColor(jrLinesWithoutBT[0].company?.id ?? 0)
               : '#000000',
           },
         ],
-      })
-    );
-    if (jrLinesWithBT.length) {
-      withoutJR.unshift(
-        new Line({
-          id: jrLinesWithBT[0].id,
-          color: jrLinesWithBT[0].company
-            ? jrCompanyColor(jrLinesWithBT[0].company?.id)
-            : '#000000',
-          nameShort: '新幹線',
-          nameRoman: 'Shinkansen',
-          nameKatakana: 'シンカンセン',
-          lineType: LineType.Normal,
-          nameChinese: '新干线',
-          nameKorean: '신칸센',
-          nameFull: '新幹線',
-          status: 0,
-          company: {
-            id: 0,
-            railroadId: 0,
-            type: 0,
-            status: 0,
-            name: 'JR',
-            nameShort: 'JR',
-            nameFull: 'JR',
-            nameKatakana: 'ジェイアール',
-            nameEnglishShort: 'JR',
-            nameEnglishFull: 'JR',
-          },
-          lineSymbols: [
-            {
-              symbol: '',
-              shape: MARK_SHAPE.BULLET_TRAIN_UNION,
-              color: jrLinesWithoutBT[0].company
-                ? jrCompanyColor(jrLinesWithoutBT[0].company?.id)
-                : '#000000',
-            },
-          ],
-        })
-      );
+      });
     }
     return withoutJR;
   }

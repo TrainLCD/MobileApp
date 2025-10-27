@@ -15,7 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
@@ -41,8 +41,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
     paddingTop: 32,
     overflow: 'hidden',
     // iOS shadow
@@ -77,7 +75,7 @@ const styles = StyleSheet.create({
 });
 
 type Props = {
-  station: Station;
+  station: Station | null;
   onLayout?: (event: LayoutChangeEvent) => void;
   scrollY: SharedValue<number>;
 };
@@ -141,6 +139,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
       setStationAtom((prev) => ({
         ...prev,
         station,
+        stationsCache: [],
       }));
       setNavigationAtom((prev) => ({
         ...prev,
@@ -156,7 +155,16 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
   return (
     <>
       <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
-        <View style={styles.nowHeaderCard} onLayout={onLayout}>
+        <View
+          style={[
+            styles.nowHeaderCard,
+            {
+              borderBottomLeftRadius: isLEDTheme ? 0 : 16,
+              borderBottomRightRadius: isLEDTheme ? 0 : 16,
+            },
+          ]}
+          onLayout={onLayout}
+        >
           <BlurView
             intensity={40}
             tint={isLEDTheme ? 'dark' : 'light'}

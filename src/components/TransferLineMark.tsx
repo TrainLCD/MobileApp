@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { Line } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
 import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
@@ -56,6 +56,7 @@ const roundShapes = new Set<string>([
   MARK_SHAPE.KEISEI,
   MARK_SHAPE.HANKYU,
   MARK_SHAPE.HANSHIN,
+  MARK_SHAPE.IZUHAKONE,
 ]);
 
 const TransferLineMark: React.FC<Props> = ({

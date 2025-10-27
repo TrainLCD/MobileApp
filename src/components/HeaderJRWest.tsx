@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LineType, TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import { LineType, TrainTypeKind } from '~/@types/graphql';
 import {
   useBoundText,
   useCurrentLine,
@@ -57,14 +57,14 @@ const HeaderJRWest: React.FC = () => {
   useEffect(() => {
     if (!selectedBound && station) {
       setStateText(translate('nowStoppingAt'));
-      setStationText(station.name);
+      setStationText(station.name || '');
     }
 
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonLast' : 'soon'));
-          setStationText(nextStation.name);
+          setStationText(nextStation.name || '');
         }
         break;
       case 'ARRIVING_KANA':
@@ -94,7 +94,7 @@ const HeaderJRWest: React.FC = () => {
       case 'CURRENT':
         if (station) {
           setStateText(translate('nowStoppingAt'));
-          setStationText(station.name);
+          setStationText(station.name || '');
         }
         break;
       case 'CURRENT_KANA':
@@ -126,7 +126,7 @@ const HeaderJRWest: React.FC = () => {
       case 'NEXT':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextLast' : 'next'));
-          setStationText(nextStation.name);
+          setStationText(nextStation.name || '');
         }
         break;
       case 'NEXT_KANA':
@@ -471,7 +471,7 @@ const HeaderJRWest: React.FC = () => {
     }
   }, [headerLangState]);
 
-  const trainTypeName = trainType?.name.replace(parenthesisRegexp, '') || '';
+  const trainTypeName = trainType?.name?.replace(parenthesisRegexp, '') || '';
 
   const trainTypeImage = useMemo((): number => {
     if (!station) {
@@ -626,9 +626,9 @@ const HeaderJRWest: React.FC = () => {
           {currentStationNumber ? (
             <View style={styles.numberingContainer}>
               <NumberingIcon
-                shape={currentStationNumber.lineSymbolShape}
+                shape={currentStationNumber.lineSymbolShape || ''}
                 lineColor={numberingColor}
-                stationNumber={currentStationNumber.stationNumber}
+                stationNumber={currentStationNumber.stationNumber || ''}
                 threeLetterCode={threeLetterCode}
                 withDarkTheme
               />

@@ -151,7 +151,7 @@ const HeaderTokyoMetro: React.FC = () => {
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+        ?.map((l) => l.nameShort?.replace(parenthesisRegexp, ''))
         .slice(0, 2)
         .join('・'),
     [connectedLines]
@@ -548,6 +548,8 @@ const HeaderTokyoMetro: React.FC = () => {
                 stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {stateTextLeft}
             </Animated.Text>
@@ -556,12 +558,15 @@ const HeaderTokyoMetro: React.FC = () => {
                 stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
               {prevStateTextLeft}
             </Animated.Text>
           </View>
 
-          {currentStationNumber ? (
+          {currentStationNumber?.lineSymbolShape &&
+          currentStationNumber?.stationNumber ? (
             <View
               style={{
                 bottom:

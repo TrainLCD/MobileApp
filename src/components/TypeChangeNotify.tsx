@@ -7,12 +7,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
-import {
-  type Line,
-  StopCondition,
-  type TrainType,
-} from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
   useCurrentStation,
@@ -311,7 +307,9 @@ const MetroBars = ({
             adjustsFontSizeToFit
             numberOfLines={1}
           >
-            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
@@ -319,8 +317,8 @@ const MetroBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              trainType.nameRoman
-                ?.replace('\n', '')
+              (trainType.nameRoman ?? '')
+                .replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
@@ -335,8 +333,8 @@ const MetroBars = ({
             ]}
           >
             {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-            {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+            {(currentLine?.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+            {(currentLine?.nameRoman ?? '').replace(parenthesisRegexp, '')}
           </Typography>
         )}
       </View>
@@ -357,7 +355,7 @@ const MetroBars = ({
             adjustsFontSizeToFit
             numberOfLines={1}
           >
-            {nextTrainType.name
+            {(nextTrainType.name ?? '')
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
@@ -367,8 +365,8 @@ const MetroBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              nextTrainType.nameRoman
-                ?.replace('\n', '')
+              (nextTrainType.nameRoman ?? '')
+                .replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
@@ -383,8 +381,8 @@ const MetroBars = ({
             ]}
           >
             {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-            {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
-            {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+            {(nextLine.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+            {(nextLine.nameRoman ?? '').replace(parenthesisRegexp, '')}
           </Typography>
         )}
       </View>
@@ -525,7 +523,9 @@ const SaikyoBars = ({
             numberOfLines={1}
             style={styles.text}
           >
-            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
@@ -533,8 +533,8 @@ const SaikyoBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              trainType.nameRoman
-                ?.replace('\n', '')
+              (trainType.nameRoman ?? '')
+                .replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
@@ -549,8 +549,8 @@ const SaikyoBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+          {(currentLine?.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+          {(currentLine?.nameRoman ?? '').replace(parenthesisRegexp, '')}
         </Typography>
       </View>
       <View style={styles.trainTypeRight}>
@@ -573,7 +573,7 @@ const SaikyoBars = ({
             adjustsFontSizeToFit
             style={styles.text}
           >
-            {(nextTrainType ?? trainType).name
+            {((nextTrainType ?? trainType)?.name ?? '')
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
@@ -583,8 +583,8 @@ const SaikyoBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              (nextTrainType ?? trainType).nameRoman
-                ?.replace('\n', '')
+              ((nextTrainType ?? trainType)?.nameRoman ?? '')
+                .replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
@@ -599,8 +599,8 @@ const SaikyoBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+          {(nextLine.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+          {(nextLine.nameRoman ?? '').replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -631,7 +631,8 @@ const JOBars = ({
           {
             left: edgeOffset,
             width: barWidth,
-            backgroundColor: (nextLine ? currentLine : trainType)?.color,
+            backgroundColor:
+              (nextLine ? currentLine : trainType)?.color ?? 'transparent',
           },
         ]}
       />
@@ -643,7 +644,8 @@ const JOBars = ({
           {
             right: edgeOffset + barTerminalSize,
             width: rightBarWidth,
-            backgroundColor: (nextLine ?? nextTrainType)?.color,
+            backgroundColor:
+              (nextLine ?? nextTrainType)?.color ?? 'transparent',
           },
         ]}
       />
@@ -654,7 +656,8 @@ const JOBars = ({
           {
             right: isTablet ? edgeOffset + 16 : edgeOffset + 10,
 
-            borderBottomColor: (nextLine ?? nextTrainType)?.color,
+            borderBottomColor:
+              (nextLine ?? nextTrainType)?.color ?? 'transparent',
           },
         ]}
       />
@@ -663,7 +666,7 @@ const JOBars = ({
         style={[
           styles.trainTypeLeft,
           {
-            backgroundColor: trainType.color,
+            backgroundColor: trainType.color ?? '#000000',
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
@@ -677,7 +680,9 @@ const JOBars = ({
             numberOfLines={1}
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {trainType.name.replace('\n', '').replace(parenthesisRegexp, '')}
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
           </Typography>
           <Typography
             adjustsFontSizeToFit
@@ -685,8 +690,8 @@ const JOBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              trainType.nameRoman
-                ?.replace('\n', '')
+              (trainType.nameRoman ?? '')
+                .replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
@@ -702,8 +707,8 @@ const JOBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {currentLine?.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {currentLine?.nameRoman?.replace(parenthesisRegexp, '')}
+          {(currentLine?.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+          {(currentLine?.nameRoman ?? '').replace(parenthesisRegexp, '')}
         </Typography>
       </View>
 
@@ -711,7 +716,7 @@ const JOBars = ({
         style={[
           styles.trainTypeRight,
           {
-            backgroundColor: nextTrainType.color,
+            backgroundColor: nextTrainType.color ?? '#000000',
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
@@ -725,7 +730,7 @@ const JOBars = ({
             adjustsFontSizeToFit
             style={[styles.text, { shadowOpacity: 0 }]}
           >
-            {nextTrainType.name
+            {(nextTrainType.name ?? '')
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
@@ -735,8 +740,8 @@ const JOBars = ({
             numberOfLines={1}
           >
             {truncateTrainType(
-              nextTrainType.nameRoman
-                ?.replace('\n', '')
+              (nextTrainType.nameRoman ?? '')
+                .replace('\n', '')
                 .replace(parenthesisRegexp, '')
             )}
           </Typography>
@@ -752,8 +757,8 @@ const JOBars = ({
           ]}
         >
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
-          {nextLine.nameShort.replace(parenthesisRegexp, '')}{' '}
-          {nextLine.nameRoman?.replace(parenthesisRegexp, '')}
+          {(nextLine.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+          {(nextLine.nameRoman ?? '').replace(parenthesisRegexp, '')}
         </Typography>
       </View>
     </View>
@@ -788,7 +793,7 @@ const HeadingJa = React.memo(
               styles.trainTypeText,
             ]}
           >
-            {(nextTrainType ?? trainType)?.name
+            {((nextTrainType ?? trainType)?.name ?? '')
               .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
@@ -831,8 +836,8 @@ const HeadingEn = React.memo(
               styles.trainTypeText,
             ]}
           >
-            {(nextTrainType ?? trainType)?.nameRoman
-              ?.replace('\n', '')
+            {((nextTrainType ?? trainType)?.nameRoman ?? '')
+              .replace('\n', '')
               .replace(parenthesisRegexp, '')}
           </Typography>
           {` ${headingTexts.enSuffix}`}

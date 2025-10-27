@@ -19,14 +19,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
+import { LineType, type Station, StopCondition } from '~/@types/graphql';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
-import {
-  LineType,
-  type Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
 import {
   useAutoMode,
   useCurrentLine,

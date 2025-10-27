@@ -1,20 +1,23 @@
 import {
   CompanyType,
-  Line,
+  type Line,
   LineType,
   OperationStatus,
   StopCondition,
-} from '~/gen/proto/stationapi_pb';
+} from '~/@types/graphql';
 
-export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
+export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
+  __typename: 'Line',
   lineSymbols: [
     {
+      __typename: 'LineSymbol',
       symbol: 'S',
       color: '#B0BF1E',
       shape: 'ROUND',
     },
   ],
   id: 99304,
+  averageDistance: undefined,
   nameShort: '都営新宿線',
   nameKatakana: 'トエイシンジュクセン',
   nameFull: '都営新宿線',
@@ -24,10 +27,13 @@ export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
   color: '#B0BF1E',
   lineType: LineType.Subway,
   status: OperationStatus.InOperation,
+  trainType: undefined,
   station: {
+    __typename: 'StationNested',
     lines: [],
     stationNumbers: [
       {
+        __typename: 'StationNumber',
         lineSymbol: 'S',
         lineSymbolColor: '#B0BF1E',
         lineSymbolShape: 'ROUND',
@@ -41,6 +47,7 @@ export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
     nameRoman: 'Shinjuku',
     nameChinese: '新宿',
     nameKorean: '신주쿠',
+    threeLetterCode: undefined,
     prefectureId: 13,
     postalCode: '160-0023',
     address: '東京都新宿区西新宿一丁目18',
@@ -51,8 +58,12 @@ export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
     status: OperationStatus.InOperation,
     stopCondition: StopCondition.All,
     hasTrainTypes: true,
+    distance: undefined,
+    line: undefined,
+    trainType: undefined,
   },
   company: {
+    __typename: 'Company',
     id: 119,
     railroadId: 99,
     nameShort: '都営',
@@ -65,11 +76,13 @@ export const TOEI_SHINJUKU_LINE_LOCAL = new Line({
     name: '東京都交通局',
     url: 'http://www.kotsu.metro.tokyo.jp/',
   },
-});
+};
 
-export const RYOMO_LINE = new Line({
+export const RYOMO_LINE: Line = {
+  __typename: 'Line',
   lineSymbols: [],
   id: 11341,
+  averageDistance: undefined,
   nameShort: '両毛線',
   nameKatakana: 'リョウモウセン',
   nameFull: '両毛線',
@@ -79,7 +92,9 @@ export const RYOMO_LINE = new Line({
   color: '#FFD400',
   lineType: LineType.Normal,
   status: OperationStatus.InOperation,
+  trainType: undefined,
   station: {
+    __typename: 'StationNested',
     lines: [],
     stationNumbers: [],
     id: 1134101,
@@ -89,6 +104,7 @@ export const RYOMO_LINE = new Line({
     nameRoman: 'Takasaki',
     nameChinese: '高崎',
     nameKorean: '다카사키',
+    threeLetterCode: undefined,
     prefectureId: 10,
     postalCode: '370-0849',
     address: '群馬県高崎市八島町',
@@ -99,8 +115,12 @@ export const RYOMO_LINE = new Line({
     status: OperationStatus.InOperation,
     stopCondition: StopCondition.All,
     hasTrainTypes: true,
+    distance: undefined,
+    line: undefined,
+    trainType: undefined,
   },
   company: {
+    __typename: 'Company',
     id: 2,
     railroadId: 11,
     nameShort: 'JR東日本',
@@ -108,9 +128,9 @@ export const RYOMO_LINE = new Line({
     nameFull: '東日本旅客鉄道株式会社',
     nameEnglishShort: 'JR East',
     nameEnglishFull: 'JR East',
-    type: CompanyType.JR,
+    type: CompanyType.Jr,
     status: OperationStatus.InOperation,
     name: 'JR東日本',
     url: 'http://www.jreast.co.jp/',
   },
-});
+};

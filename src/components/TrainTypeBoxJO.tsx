@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
+import type { TrainType } from '~/@types/graphql';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';

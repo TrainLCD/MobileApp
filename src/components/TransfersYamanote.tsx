@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { type Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useGetLineMark, useTransferLines } from '../hooks';
 import { translate } from '../translation';
@@ -90,7 +90,12 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
             <TouchableOpacity
               activeOpacity={1}
               onPress={() =>
-                onPress(new Station({ ...line.station, line, lines }))
+                onPress({
+                  ...line.station,
+                  __typename: 'Station',
+                  line,
+                  lines,
+                } as Station)
               }
             >
               {lineMark ? (
@@ -108,11 +113,16 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
               <TouchableOpacity
                 activeOpacity={1}
                 onPress={() =>
-                  onPress(new Station({ ...line.station, line, lines }))
+                  onPress({
+                    ...line.station,
+                    __typename: 'Station',
+                    line,
+                    lines,
+                  } as Station)
                 }
               >
                 <Typography style={styles.lineName}>
-                  {line.nameShort.replace(parenthesisRegexp, '')}
+                  {line.nameShort?.replace(parenthesisRegexp, '')}
                 </Typography>
                 <Typography style={styles.lineNameEn}>
                   {line.nameRoman?.replace(parenthesisRegexp, '')}
@@ -139,7 +149,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
       </View>
       <FlatList
         data={lines}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => (item.id ?? 0).toString()}
         renderItem={renderTransferLine}
         contentContainerStyle={styles.transferList}
         numColumns={2}

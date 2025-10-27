@@ -6,6 +6,7 @@ import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { LineType } from '~/@types/graphql';
 import {
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
@@ -13,7 +14,6 @@ import {
   LOCATION_TASK_NAME,
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
-import { LineType } from '~/gen/proto/stationapi_pb';
 import navigationState from '~/store/atoms/navigation';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
@@ -118,15 +118,29 @@ export const useSimulationMode = (): void => {
 
       const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
 
+      if (
+        cur.latitude == null ||
+        cur.longitude == null ||
+        next.latitude == null ||
+        next.longitude == null
+      ) {
+        return [];
+      }
+
       const points: GeolibInputCoordinates[] = [
-        { latitude: cur.latitude, longitude: cur.longitude },
-        ...betweenNextStation.map((s) => ({
-          latitude: s.latitude,
-          longitude: s.longitude,
-        })),
         {
-          latitude: next.latitude,
-          longitude: next.longitude,
+          latitude: cur.latitude as number,
+          longitude: cur.longitude as number,
+        },
+        ...betweenNextStation
+          .filter((s) => s.latitude != null && s.longitude != null)
+          .map((s) => ({
+            latitude: s.latitude as number,
+            longitude: s.longitude as number,
+          })),
+        {
+          latitude: next.latitude as number,
+          longitude: next.longitude as number,
         },
       ];
 
@@ -158,14 +172,17 @@ export const useSimulationMode = (): void => {
     (speed: number) => {
       if (!nextStation) {
         segmentIndexRef.current = 0;
+        const firstStation = maybeRevsersedStations[0];
         useLocationStore.setState((prev) =>
-          prev
+          prev &&
+          firstStation?.latitude != null &&
+          firstStation?.longitude != null
             ? {
                 ...prev,
                 coords: {
                   ...prev.coords,
-                  latitude: maybeRevsersedStations[0]?.latitude,
-                  longitude: maybeRevsersedStations[0]?.longitude,
+                  latitude: firstStation.latitude,
+                  longitude: firstStation.longitude,
                 },
                 timestamp: Date.now(),
               }
@@ -175,7 +192,11 @@ export const useSimulationMode = (): void => {
       }
 
       useLocationStore.setState((prev) => {
-        if (!prev) {
+        if (
+          !prev ||
+          nextStation.latitude == null ||
+          nextStation.longitude == null
+        ) {
           return prev;
         }
 
@@ -216,7 +237,13 @@ export const useSimulationMode = (): void => {
   );
 
   useEffect(() => {
-    if (enabled && stations.length > 0 && station) {
+    if (
+      enabled &&
+      stations.length > 0 &&
+      station &&
+      station.latitude != null &&
+      station.longitude != null
+    ) {
       useLocationStore.setState({
         timestamp: Date.now(),
         coords: {

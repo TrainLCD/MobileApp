@@ -189,6 +189,7 @@
   "routeSavedText": "Saved the route \"%{routeName}\".",
   "routeDeletedText": "Deleted the \"%{routeName}\".",
   "noPresets": "No presets available",
+  "failedToFetchPreset": "Failed to fetch presets",
   "close": "Close",
   "searchResult": "Search Results",
   "emptySearchResult": "No matching information was found.",

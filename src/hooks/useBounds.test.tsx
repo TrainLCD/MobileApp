@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 
 // モジュールをモックしてフックの依存を制御
 jest.mock('jotai', () => ({

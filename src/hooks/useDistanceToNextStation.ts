@@ -10,7 +10,13 @@ export const useDistanceToNextStation = () => {
 
   const distanceToNextStation = useMemo(
     () =>
-      latitude && longitude && nextStation
+      latitude &&
+      longitude &&
+      nextStation &&
+      nextStation.latitude !== undefined &&
+      nextStation.latitude !== null &&
+      nextStation.longitude !== undefined &&
+      nextStation.longitude !== null
         ? getDistance(
             { latitude, longitude },
             {

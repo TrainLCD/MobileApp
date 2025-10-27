@@ -32,7 +32,7 @@ type Props = {
   shape: string;
   lineColor: string;
   stationNumber: string;
-  threeLetterCode?: string;
+  threeLetterCode?: string | null;
   size?: NumberingIconSize;
   allowScaling?: boolean;
   withDarkTheme?: boolean;

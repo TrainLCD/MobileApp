@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { StopCondition } from '~/gen/proto/stationapi_pb';
+import { StopCondition } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp, STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useAfterNextStation,
@@ -104,7 +104,7 @@ const LineBoardLED = () => {
   const boundTexts = useMemo(() => {
     const jaText = directionalStops
       .filter((station) => station)
-      .map((station) => station.name.replace(parenthesisRegexp, ''))
+      .map((station) => station.name?.replace(parenthesisRegexp, ''))
       .join('・');
     const enText = directionalStops
       .filter((station) => station)
@@ -224,7 +224,7 @@ const LineBoardLED = () => {
       <Marquee>
         <View style={styles.container}>
           <GreenText>
-            この電車は、{line?.nameShort.replace(parenthesisRegexp, '')}
+            この電車は、{line?.nameShort?.replace(parenthesisRegexp, '')}
           </GreenText>
           <OrangeText>
             {trainTypeTexts[0]} {boundTexts[0]}行き

@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
@@ -233,7 +233,7 @@ const StationName: React.FC<StationNameProps> = ({
   return (
     <View style={styles.splittedStationNameWithExtraLang}>
       <View>
-        {station.name.split('').map((c, j) => (
+        {station.name?.split('').map((c, j) => (
           <Typography
             style={[styles.stationName, passed ? styles.grayColor : null]}
             key={`${j + 1}${c}`}
@@ -357,13 +357,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
     if (!index) {
-      return arrived ? { left: widthScale(-15) } : null;
+      return arrived ? { left: widthScale(-14) } : null;
     }
 
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.57 * index) - widthScale(15),
+        left: widthScale(41.75 * index) - widthScale(14),
       };
     }
 
@@ -382,8 +382,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const includesLongStationName = useMemo(
     () =>
-      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
-        .length,
+      !!stations.filter(
+        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
+      ).length,
     [stations]
   );
 

@@ -11,7 +11,7 @@ import Typography from './Typography';
 type Props = {
   stationNumber: string;
   lineColor: string;
-  threeLetterCode?: string;
+  threeLetterCode?: string | null;
   allowScaling: boolean;
   size?: NumberingIconSize;
   transformOrigin?: 'top' | 'center' | 'bottom';
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 24 * 1.5 : 24,
     fontFamily: FONTS.FrutigerNeueLTProBold,
     includeFontPadding: false,
-    ...(Platform.OS === 'ios' ? { lineHeight: isTablet ? 24 * 1.5 : 24 } : {}),
+    lineHeight: isTablet ? 24 * 1.5 : 24,
   },
   rootSmall: {
     width: 20,
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
 
 type CommonCompProps = {
   lineColor: string;
-  threeLetterCode: string | undefined;
+  threeLetterCode: string | undefined | null;
   lineSymbol: string;
   stationNumber: string;
   size?: NumberingIconSize;

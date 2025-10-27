@@ -1,4 +1,4 @@
-import type { Line } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
 import { MEIJO_LINE_ID } from '../constants';
 import { translate } from '../translation';
 export type LineDirection = 'INBOUND' | 'OUTBOUND';

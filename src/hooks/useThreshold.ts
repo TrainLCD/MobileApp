@@ -9,15 +9,25 @@ export const useThreshold = () => {
   const nextStation = useNextStation(false);
 
   const betweenDistance = useMemo(() => {
-    if (!currentStation || !nextStation) {
+    if (
+      !currentStation ||
+      !nextStation ||
+      currentStation.latitude == null ||
+      currentStation.longitude == null ||
+      nextStation.latitude == null ||
+      nextStation.longitude == null
+    ) {
       return null;
     }
     return getDistance(
       {
-        latitude: currentStation.latitude,
-        longitude: currentStation.longitude,
+        latitude: currentStation.latitude as number,
+        longitude: currentStation.longitude as number,
       },
-      { latitude: nextStation.latitude, longitude: nextStation.longitude }
+      {
+        latitude: nextStation.latitude as number,
+        longitude: nextStation.longitude as number,
+      }
     );
   }, [currentStation, nextStation]);
 

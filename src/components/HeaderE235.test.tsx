@@ -53,10 +53,6 @@ jest.mock('~/hooks/useTransferLines', () => ({
   useTransferLines: jest.fn(() => []),
 }));
 
-jest.mock('~/hooks/useStationList', () => ({
-  useStationList: jest.fn(() => []),
-}));
-
 jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
   default: false,

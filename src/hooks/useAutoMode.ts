@@ -92,8 +92,8 @@ export const useAutoMode = (): void => {
               altitudeAccuracy: -1,
               speed: 0,
               heading: 0,
-              latitude: stations[0].latitude,
-              longitude: stations[0].longitude,
+              latitude: stations[0].latitude ?? 0,
+              longitude: stations[0].longitude ?? 0,
             },
           });
           return;
@@ -105,12 +105,12 @@ export const useAutoMode = (): void => {
         if (cur && next) {
           const center = getCenter([
             {
-              latitude: cur.latitude,
-              longitude: cur.longitude,
+              latitude: cur.latitude ?? 0,
+              longitude: cur.longitude ?? 0,
             },
             {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
             },
           ]);
 
@@ -140,8 +140,8 @@ export const useAutoMode = (): void => {
               altitudeAccuracy: -1,
               speed: 0,
               heading: 0,
-              latitude: stations[stations.length - 1].latitude,
-              longitude: stations[stations.length - 1].longitude,
+              latitude: stations[stations.length - 1].latitude ?? 0,
+              longitude: stations[stations.length - 1].longitude ?? 0,
             },
           });
           return;
@@ -153,12 +153,12 @@ export const useAutoMode = (): void => {
         if (cur && next) {
           const center = getCenter([
             {
-              latitude: cur.latitude,
-              longitude: cur.longitude,
+              latitude: cur.latitude ?? 0,
+              longitude: cur.longitude ?? 0,
             },
             {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
             },
           ]);
 
@@ -230,8 +230,8 @@ export const useAutoMode = (): void => {
           useLocationStore.setState({
             timestamp: 0,
             coords: {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
               accuracy: 0,
               altitude: 0,
               altitudeAccuracy: -1,
@@ -260,8 +260,8 @@ export const useAutoMode = (): void => {
           useLocationStore.setState({
             timestamp: 0,
             coords: {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
               accuracy: 0,
               altitude: 0,
               altitudeAccuracy: -1,

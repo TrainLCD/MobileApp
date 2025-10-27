@@ -1,4 +1,4 @@
-import type { Line } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
 
 export type LineSymbolImage = {
   signPath?: number;

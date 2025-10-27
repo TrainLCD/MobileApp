@@ -1,7 +1,7 @@
 import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { Line } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
 
 interface Props {
   line: Line;

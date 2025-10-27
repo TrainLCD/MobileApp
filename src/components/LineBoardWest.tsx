@@ -8,8 +8,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import type { Station, StationNumber } from '~/@types/graphql';
 import { FONTS } from '~/constants';
-import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
   useCurrentStation,
@@ -219,7 +219,7 @@ const StationName: React.FC<StationNameProps> = ({
   }
   return (
     <View>
-      {station.name.split('').map((c, j) => (
+      {station.name?.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
@@ -297,7 +297,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     if (passed) {
       return '#fff';
     }
-    if (numberingObj?.lineSymbolShape.includes('DARK_TEXT')) {
+    if (numberingObj?.lineSymbolShape?.includes('DARK_TEXT')) {
       return '#231f20';
     }
 
@@ -319,8 +319,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const includesLongStationName = useMemo(
     () =>
-      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
-        .length,
+      !!stations.filter(
+        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
+      ).length,
     [stations]
   );
 

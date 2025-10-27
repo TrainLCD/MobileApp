@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese, translate } from '../translation';
@@ -55,7 +55,7 @@ const ItemCell = ({
 }) => {
   const ownLine = useMemo(() => item.line, [item.line]);
   const otherLines = useMemo(
-    () => item.lines.filter((l) => l.id !== ownLine?.id),
+    () => item.lines?.filter((l) => l.id !== ownLine?.id) ?? [],
     [item.lines, ownLine?.id]
   );
   const transferLabel = useMemo(
@@ -64,9 +64,11 @@ const ItemCell = ({
   );
   const transferText: string = useMemo(() => {
     if (withoutTransfer) {
-      return item.lines
-        .map((l) => (isJapanese ? l.nameShort : l.nameRoman))
-        .join(isJapanese ? '、' : ', ');
+      return (
+        item.lines
+          ?.map((l) => (isJapanese ? l.nameShort : l.nameRoman))
+          .join(isJapanese ? '、' : ', ') ?? ''
+      );
     }
 
     return `${isJapanese ? ownLine?.nameShort : ownLine?.nameRoman}${' '}${
@@ -123,7 +125,10 @@ export const StationList = ({
     },
     [onSelect, withoutTransfer]
   );
-  const keyExtractor = useCallback((item: Station) => item.id.toString(), []);
+  const keyExtractor = useCallback(
+    (item: Station, index: number) => (item.id ?? index).toString(),
+    []
+  );
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   return (

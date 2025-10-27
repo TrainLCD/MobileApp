@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { type Line, LineType } from '~/gen/proto/stationapi_pb';
+import { type Line, LineType } from '~/@types/graphql';
 import { MARK_SHAPE } from '../constants';
 import { getLineSymbolImage } from '../lineSymbolImage';
 import type { LineMark } from '../models/LineMark';
@@ -30,21 +30,21 @@ export const useGetLineMark = () => {
         firstLineSymbol?.shape === MARK_SHAPE.BULLET_TRAIN_UNION;
       if (isJRLinesOmitted) {
         return {
-          sign: firstLineSymbol.symbol,
-          signShape: firstLineSymbol.shape,
+          sign: firstLineSymbol.symbol ?? undefined,
+          signShape: firstLineSymbol.shape ?? undefined,
           signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
         };
       }
 
       const lineMarkMap = {
-        sign: line.lineSymbols?.[0]?.symbol,
-        signShape: line.lineSymbols?.[0]?.shape,
+        sign: line.lineSymbols?.[0]?.symbol ?? undefined,
+        signShape: line.lineSymbols?.[0]?.shape ?? undefined,
         signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
-        subSign: line.lineSymbols?.[1]?.symbol,
-        subSignShape: line.lineSymbols?.[1]?.shape,
+        subSign: line.lineSymbols?.[1]?.symbol ?? undefined,
+        subSignShape: line.lineSymbols?.[1]?.shape ?? undefined,
         subSignPath: getLineSymbolImage(line, shouldGrayscale)?.subSignPath,
-        extraSign: line.lineSymbols?.[2]?.symbol,
-        extraSignShape: line.lineSymbols?.[2]?.shape,
+        extraSign: line.lineSymbols?.[2]?.symbol ?? undefined,
+        extraSignShape: line.lineSymbols?.[2]?.shape ?? undefined,
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       };
 

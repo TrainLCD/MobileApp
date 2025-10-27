@@ -11,7 +11,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { PresetCard } from '~/components/PresetCard';
-import type { LoopItem } from './SelectLineScreen';
+import type { LoopItem } from '../store/atoms/navigation';
 
 type Props = {
   carouselData: LoopItem[];
@@ -119,7 +119,9 @@ export const SelectLineScreenPresets = ({
         renderItem={({ item }) => (
           <View style={{ width: cardWidth }}>
             <View style={styles.horizontalMargin}>
-              <Pressable onPress={() => onPress(item)}>
+              <Pressable
+                onPress={() => item.stations.length > 0 && onPress(item)}
+              >
                 <PresetCard
                   title={item.name}
                   from={item.stations[0]}

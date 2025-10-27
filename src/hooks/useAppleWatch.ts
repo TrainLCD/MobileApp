@@ -6,7 +6,7 @@ import {
   updateApplicationContext,
   useReachability,
 } from 'react-native-watch-connectivity';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
@@ -41,7 +41,7 @@ export const useAppleWatch = (): void => {
     const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき';
 
     return `${isJapanese ? '' : enPrefix}${directionalStops
-      .map((s) => (isJapanese ? s.name : s.nameRoman))
+      .map((s: Station) => (isJapanese ? s.name : s.nameRoman))
       .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
   }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
 
@@ -58,20 +58,20 @@ export const useAppleWatch = (): void => {
       station: {
         id: switchedStation.id,
         name: isJapanese ? switchedStation.name : switchedStation.nameRoman,
-        lines: switchedStation.lines
+        lines: (switchedStation.lines ?? [])
           .filter((l) => l.id !== currentLine.id)
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
             name: isJapanese
-              ? l.nameShort.replace(parenthesisRegexp, '')
+              ? l.nameShort?.replace(parenthesisRegexp, '')
               : l.nameRoman?.replace(parenthesisRegexp, ''),
             lineSymbol: currentNumbering?.lineSymbol ?? '',
           })),
         stationNumber: currentNumbering?.stationNumber,
         pass: false,
       },
-      stationList: switchedStations.map((s) => ({
+      stationList: switchedStations.map((s: Station) => ({
         id: s.id,
         name: isJapanese ? s.name : s.nameRoman,
         lines: [],
@@ -82,7 +82,7 @@ export const useAppleWatch = (): void => {
         id: currentLine.id,
         name:
           (isJapanese
-            ? currentLine.nameShort.replace(parenthesisRegexp, '')
+            ? currentLine.nameShort?.replace(parenthesisRegexp, '')
             : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
         lineColorC: currentLine.color,
         lineSymbol: currentNumbering?.lineSymbol ?? '',

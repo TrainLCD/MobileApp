@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';

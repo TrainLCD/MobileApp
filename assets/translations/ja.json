@@ -190,6 +190,7 @@
   "routeSavedText": "経路「%{routeName}」を保存しました。",
   "routeDeletedText": "経路「%{routeName}」を削除しました。",
   "noPresets": "プリセットがありません",
+  "failedToFetchPreset": "プリセットの取得に失敗しました",
   "close": "閉じる",
   "searchResult": "検索結果",
   "emptySearchResult": "一致する情報が見つかりませんでした。",

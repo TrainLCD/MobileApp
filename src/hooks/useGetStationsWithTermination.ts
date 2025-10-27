@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useGetStationsWithTermination = () => {

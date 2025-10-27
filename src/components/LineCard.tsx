@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
 import { NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark, useThemeStore } from '../hooks';

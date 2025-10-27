@@ -1,4 +1,4 @@
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
 
 export const getStationPrimaryCode = (

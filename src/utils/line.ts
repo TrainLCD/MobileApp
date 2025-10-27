@@ -1,4 +1,4 @@
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 
 export const filterWithoutCurrentLine = (
   stations: Station[],
@@ -9,10 +9,12 @@ export const filterWithoutCurrentLine = (
   if (!currentLine || !currentStation) {
     return [];
   }
-  return currentStation.lines.filter(
-    (line: Line) =>
-      line.id !== currentLine.id &&
-      line.nameKatakana !== currentLine.nameKatakana
+  return (
+    currentStation.lines?.filter(
+      (line: Line) =>
+        line.id !== currentLine.id &&
+        line.nameKatakana !== currentLine.nameKatakana
+    ) ?? []
   );
 };
 

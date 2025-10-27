@@ -1,8 +1,7 @@
-import type { ConnectError } from '@connectrpc/connect';
 import { useAtomValue } from 'jotai';
 import { Modal } from 'react-native';
-import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
-import stationState from '~/store/atoms/station';
+import type { Station, TrainType } from '~/@types/graphql';
+import lineState from '~/store/atoms/line';
 import { isJapanese } from '~/translation';
 import { RouteInfo } from './RouteInfo';
 
@@ -12,17 +11,17 @@ type Props = {
   stations: Station[];
   loading: boolean;
   disabled?: boolean;
-  error: ConnectError | null;
+  error: Error | null;
   routeName?: string;
   onClose: () => void;
 };
 
 export const RouteInfoModal: React.FC<Props> = (props: Props) => {
-  const { station } = useAtomValue(stationState);
+  const { pendingLine } = useAtomValue(lineState);
   const { visible, routeName, trainType, onClose } = props;
   const lineName = isJapanese
-    ? (trainType?.line?.nameShort ?? station?.line?.nameShort ?? '')
-    : (trainType?.line?.nameRoman ?? station?.line?.nameRoman ?? '');
+    ? (pendingLine?.nameShort ?? '')
+    : (pendingLine?.nameRoman ?? '');
   const trainTypeName = isJapanese ? trainType?.name : trainType?.nameRoman;
   const displayRouteName = routeName
     ? routeName

@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useGetLineMark,
@@ -82,14 +82,18 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         const stationNumberIndex = getStationNumberIndex(s);
 
         const lineMarkShape = getLineMarkFunc({
-          line: s.line,
+          line: s.line ?? undefined,
         });
-        return s.stationNumbers[stationNumberIndex] && lineMarkShape
+        const stationNumber =
+          s.stationNumbers?.[stationNumberIndex]?.stationNumber;
+        const lineColor =
+          s.stationNumbers?.[stationNumberIndex]?.lineSymbolColor ??
+          s.line?.color;
+
+        return stationNumber && lineColor && lineMarkShape
           ? {
-              stationNumber: s.stationNumbers[stationNumberIndex].stationNumber,
-              lineColor:
-                s.stationNumbers[stationNumberIndex]?.lineSymbolColor ??
-                s.line?.color,
+              stationNumber,
+              lineColor,
               lineMarkShape,
             }
           : null;
