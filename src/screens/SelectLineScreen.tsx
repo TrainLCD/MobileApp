@@ -644,7 +644,11 @@ const SelectLineScreen = () => {
       ...prev,
       pendingLine: null,
     }));
-  }, [setLineState, setStationState]);
+    setNavigationState((prev) => ({
+      ...prev,
+      pendingWantedDestination: null,
+    }));
+  }, [setLineState, setStationState, setNavigationState]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Line; index: number }) => {

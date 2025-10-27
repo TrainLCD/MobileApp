@@ -158,7 +158,11 @@ export const SelectBoundModal: React.FC<Props> = ({
       const oedoLineTerminus =
         direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
 
-      setLineState((prev) => ({ ...prev, selectedLine: line }));
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine: line,
+        pendingLine: null,
+      }));
       setStationState((prev) => ({
         ...prev,
         station,
@@ -172,11 +176,18 @@ export const SelectBoundModal: React.FC<Props> = ({
               ? stations[stations.length - 1]
               : stations[0],
         selectedDirection: direction,
+        pendingStation: null,
+        pendingStations: [],
       }));
       onClose();
       requestAnimationFrame(() => {
         navigation.navigate('Main' as never);
       });
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingWantedDestination: null,
+        presetRoutes: [],
+      }));
     },
     [
       navigation,
@@ -187,6 +198,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       stations,
       onClose,
       getTerminatedStations,
+      setNavigationState,
     ]
   );
 
@@ -466,20 +478,16 @@ export const SelectBoundModal: React.FC<Props> = ({
             </Heading>
 
             <View style={styles.buttonsContainer}>
-              {inboundStations.length
-                ? renderButton({
-                    boundStations: inboundStations,
-                    direction: 'INBOUND',
-                    loading,
-                  })
-                : null}
-              {outboundStations.length
-                ? renderButton({
-                    boundStations: outboundStations,
-                    direction: 'OUTBOUND',
-                    loading,
-                  })
-                : null}
+              {renderButton({
+                boundStations: inboundStations,
+                direction: 'INBOUND',
+                loading,
+              })}
+              {renderButton({
+                boundStations: outboundStations,
+                direction: 'OUTBOUND',
+                loading,
+              })}
 
               <View style={styles.stopsContainer}>
                 <Button outline onPress={() => setRouteInfoModalVisible(true)}>
