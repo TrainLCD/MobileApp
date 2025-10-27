@@ -354,18 +354,6 @@ const RouteSearchScreen = () => {
   }, [currentStationInRoutes, setStationState]);
 
   useEffect(() => {
-    setLineState((prev) => {
-      if (prev.pendingLine?.id === pendingLine?.id) {
-        return prev;
-      }
-      return {
-        ...prev,
-        pendingLine,
-      };
-    });
-  }, [pendingLine, setLineState]);
-
-  useEffect(() => {
     const fetchAsync = async () => {
       const fromStationGroupId = station?.groupId;
       const toStationGroupId = pendingWantedDestination?.groupId;
