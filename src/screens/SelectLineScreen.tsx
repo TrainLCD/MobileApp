@@ -343,10 +343,9 @@ const SelectLineScreen = () => {
   ]);
 
   useEffect(() => {
-    if (station && !stationsCache.length) {
-      updateStationsCache(station);
-    }
-  }, [station, updateStationsCache, stationsCache.length]);
+    if (!station) return;
+    updateStationsCache(station);
+  }, [station, updateStationsCache]);
 
   useEffect(() => {
     pipe(
@@ -677,11 +676,7 @@ const SelectLineScreen = () => {
     [handleLineSelected, fetchStationsByLineIdLoading, stationsCache]
   );
 
-  const keyExtractor = useCallback(
-    (l: Line, index: number) =>
-      l.id !== null && l.id !== undefined ? String(l.id) : `tmp-${index}`,
-    []
-  );
+  const keyExtractor = useCallback((l: Line) => String(l.id as number), []);
 
   const headingTitle = useMemo(() => {
     if (!station) return translate('selectLineTitle');
@@ -743,7 +738,7 @@ const SelectLineScreen = () => {
       </SafeAreaView>
       {/* 固定ヘッダー */}
       <NowHeader
-        station={stationFromAtom}
+        station={station}
         onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height + 32)}
         scrollY={scrollY}
       />
