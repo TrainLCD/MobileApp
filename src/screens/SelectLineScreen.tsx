@@ -380,17 +380,18 @@ const SelectLineScreen = () => {
   const handleLineSelected = useCallback(
     async (line: Line) => {
       const lineId = line.id;
-      if (!lineId) return;
+      const lineStationId = line.station?.id;
+      if (!lineId || !lineStationId) return;
 
       setIsSelectBoundModalOpen(true);
 
       const result = await fetchStationsByLineId({
-        variables: { lineId },
+        variables: { lineId, stationId: lineStationId },
       });
       const pendingStations = result.data?.lineStations ?? [];
 
       const pendingStation =
-        pendingStations.find((s) => s.id === line.station?.id) ?? null;
+        pendingStations.find((s) => s.id === lineStationId) ?? null;
 
       setStationState((prev) => ({
         ...prev,
@@ -407,16 +408,16 @@ const SelectLineScreen = () => {
         trainType: null,
       }));
 
-      if (line.station?.hasTrainTypes && line.station?.id != null) {
+      if (line.station?.hasTrainTypes) {
         const result = await fetchTrainTypes({
           variables: {
-            stationId: line.station.id,
+            stationId: lineStationId,
           },
         });
         const fetchedTrainTypes = result.data?.stationTrainTypes ?? [];
         const designatedTrainTypeId =
-          pendingStations.find((s) => s.id === line?.station?.id)?.trainType
-            ?.id ?? null;
+          pendingStations.find((s) => s.id === lineStationId)?.trainType?.id ??
+          null;
         const designatedTrainType =
           fetchedTrainTypes.find((tt) => tt.id === designatedTrainTypeId) ??
           null;
@@ -751,6 +752,7 @@ const SelectLineScreen = () => {
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
         onClose={handleCloseSelectBoundModal}
+        onBoundSelect={handleCloseSelectBoundModal}
         loading={
           fetchTrainTypesLoading ||
           fetchStationsByLineIdLoading ||

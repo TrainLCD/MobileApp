@@ -1,5 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -108,11 +108,11 @@ const RouteSearchScreen = () => {
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const [stationAtom, setStationState] = useAtom(stationState);
+  const [{ station }, setStationState] = useAtom(stationState);
   const [lineAtom, setLineState] = useAtom(lineState);
-  const { station, pendingStation } = stationAtom;
   const { pendingLine } = lineAtom;
-  const setNavigationState = useSetAtom(navigationState);
+  const [{ pendingWantedDestination }, setNavigationState] =
+    useAtom(navigationState);
 
   const scrollY = useSharedValue(0);
 
@@ -185,7 +185,9 @@ const RouteSearchScreen = () => {
 
   const handleLineSelected = useCallback(
     async (selectedStation: Station) => {
-      setTrainTypeListModalVisible(true);
+      if (selectedStation.hasTrainTypes) {
+        setTrainTypeListModalVisible(true);
+      }
 
       setNavigationState((prev) => ({
         ...prev,
@@ -193,12 +195,15 @@ const RouteSearchScreen = () => {
       }));
       setStationState((prev) => ({
         ...prev,
-        pendingStation: selectedStation,
         pendingStations: [],
       }));
       setLineState((prev) => ({
         ...prev,
         pendingLine: selectedStation.line ?? null,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingWantedDestination: selectedStation,
       }));
 
       if (selectedStation.hasTrainTypes) {
@@ -362,23 +367,9 @@ const RouteSearchScreen = () => {
   }, [pendingLine, setLineState]);
 
   useEffect(() => {
-    setNavigationState((prev) => {
-      const currentDestId = prev.pendingWantedDestination?.groupId ?? null;
-      const nextDestId = pendingStation?.groupId ?? null;
-      if (currentDestId === nextDestId) {
-        return prev;
-      }
-      return {
-        ...prev,
-        pendingWantedDestination: pendingStation,
-      };
-    });
-  }, [pendingStation, setNavigationState]);
-
-  useEffect(() => {
     const fetchAsync = async () => {
       const fromStationGroupId = station?.groupId;
-      const toStationGroupId = pendingStation?.groupId;
+      const toStationGroupId = pendingWantedDestination?.groupId;
       if (!fromStationGroupId || !toStationGroupId) {
         return;
       }
@@ -410,7 +401,7 @@ const RouteSearchScreen = () => {
     fetchRouteTypes,
     setNavigationState,
     currentStationInRoutes?.line?.id,
-    pendingStation?.groupId,
+    pendingWantedDestination?.groupId,
     station?.groupId,
   ]);
 
@@ -464,6 +455,10 @@ const RouteSearchScreen = () => {
           // (TrainTypeListModalに戻れるようにする)
           setSelectBoundModalVisible(false);
         }}
+        onBoundSelect={() => {
+          setSelectBoundModalVisible(false);
+          setTrainTypeListModalVisible(false);
+        }}
         loading={
           fetchStationsByLineIdLoading ||
           fetchStationsByLineGroupIdLoading ||
@@ -480,7 +475,7 @@ const RouteSearchScreen = () => {
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
         line={currentStationInRoutes?.line ?? null}
-        destination={pendingStation}
+        destination={pendingWantedDestination}
         onClose={() => {
           // キャンセル時のみリセット
           setLineState((prev) => ({ ...prev, pendingLine: null }));
