@@ -1,35 +1,15 @@
-import { useCallback, useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const STANDARD_WIDTH = 375;
-const STANDARD_HEIGHT = 667;
+const standardWidth = 375.0;
+const standardHeight = 667.0;
 
 export const useScale = () => {
-  const { width, height } = useWindowDimensions();
-  const { left, right, top, bottom } = useSafeAreaInsets();
+  const { width: myWidth, height: myHeight } = useWindowDimensions();
 
-  const widthRatio = useMemo(() => {
-    const usableWidth = width - left - right;
-    const baseWidth = usableWidth > 0 ? usableWidth : width;
-    return baseWidth / STANDARD_WIDTH;
-  }, [width, left, right]);
+  const widthScale = (dimension: number): number =>
+    (dimension / standardWidth) * myWidth;
+  const heightScale = (dimension: number): number =>
+    (dimension / standardHeight) * myHeight;
 
-  const heightRatio = useMemo(() => {
-    const usableHeight = height - top - bottom;
-    const baseHeight = usableHeight > 0 ? usableHeight : height;
-    return baseHeight / STANDARD_HEIGHT;
-  }, [height, top, bottom]);
-
-  const widthScale = useCallback(
-    (dimension: number): number => dimension * widthRatio,
-    [widthRatio]
-  );
-
-  const heightScale = useCallback(
-    (dimension: number): number => dimension * heightRatio,
-    [heightRatio]
-  );
-
-  return { widthScale, heightScale };
+  return { widthScale, heightScale, myWidth, myHeight };
 };

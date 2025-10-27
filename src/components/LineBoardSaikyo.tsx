@@ -329,7 +329,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.57 * index) - widthScale(14),
+        left: widthScale(41.75 * index) - widthScale(14),
       };
     }
 
