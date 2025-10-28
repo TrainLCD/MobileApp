@@ -1,12 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
 import {
@@ -26,7 +22,8 @@ import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import Typography from './Typography';
 
 const edgeOffset = isTablet ? 100 : 70;
-const barTerminalSize = isTablet ? 64 : 40;
+const barTerminalWidth = isTablet ? 41 : 27;
+const barHeight = isTablet ? 48 : 32;
 
 const styles = StyleSheet.create({
   container: {
@@ -41,19 +38,23 @@ const styles = StyleSheet.create({
   },
   headingJa: {
     fontSize: isTablet ? RFValue(24) : RFValue(21),
+    lineHeight: isTablet ? RFValue(24) : RFValue(21),
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#212121',
     flexWrap: 'wrap',
+    marginBottom: 4,
   },
   trainTypeText: {
     fontWeight: 'bold',
   },
   headingEn: {
     fontSize: isTablet ? RFValue(16) : RFValue(12),
+    lineHeight: isTablet ? RFValue(16) : RFValue(12),
     textAlign: 'center',
     fontWeight: 'bold',
     color: '#212121',
+    marginBottom: 4,
   },
   bottom: { flex: 1.5 },
   linesContainer: {
@@ -62,17 +63,16 @@ const styles = StyleSheet.create({
   },
   bar: {
     position: 'absolute',
-    height: isTablet ? 64 : 40,
+    height: barHeight,
     top: 0,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
   },
   barTerminal: {
-    width: barTerminalSize,
-    height: barTerminalSize,
-    bottom: isTablet ? -64 : -40,
+    width: barTerminalWidth,
+    height: barHeight,
+    bottom: -barHeight,
     position: 'absolute',
-    right: edgeOffset + 5,
   },
   joBar: {
     position: 'absolute',
@@ -80,17 +80,17 @@ const styles = StyleSheet.create({
   },
   centerCircle: {
     position: 'absolute',
-    width: isTablet ? 50 : 30,
-    height: isTablet ? 50 : 30,
+    width: isTablet ? 50 : 24,
+    height: isTablet ? 50 : 24,
     backgroundColor: 'white',
     alignSelf: 'center',
-    top: 5,
+    top: 4,
     borderRadius: isTablet ? 25 : 15,
     zIndex: 9999,
   },
   trainTypeLeftContainer: {
     position: 'absolute',
-    top: isTablet ? 16 : 10,
+    top: 0,
     borderLeftWidth: isTablet ? 32 : 20,
     borderRightWidth: isTablet ? 32 : 20,
     borderBottomWidth: isTablet ? 32 : 20,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? 4 : -4,
+    top: isTablet ? 8 : -8,
     left: edgeOffset * 2,
   },
   trainTypeRight: {
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? 4 : -4,
-    right: edgeOffset * 2 + barTerminalSize / 2,
+    top: isTablet ? 8 : -8,
+    right: edgeOffset * 2 + barTerminalWidth / 2,
   },
   trainTypeBoxGradient: {
     width: isTablet ? 200 : 128,
@@ -141,6 +141,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(18),
+    lineHeight: RFValue(18),
   },
   textEn: {
     color: '#fff',
@@ -158,8 +159,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     position: 'absolute',
-    top: isTablet ? 70 : 55,
+    top: isTablet ? 70 : 50,
     fontSize: RFValue(12),
+    lineHeight: RFValue(12),
   },
 });
 
@@ -181,7 +183,7 @@ const MetroBars = ({
 }) => {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
-  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
+  const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
 
   if (!trainType || !nextTrainType) {
     return null;
@@ -245,7 +247,7 @@ const MetroBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
@@ -255,7 +257,7 @@ const MetroBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
@@ -266,7 +268,7 @@ const MetroBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
@@ -279,13 +281,20 @@ const MetroBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
       />
       <BarTerminalEast
-        style={styles.barTerminal}
+        width={barTerminalWidth}
+        height={barHeight}
+        style={[
+          styles.barTerminal,
+          {
+            left: edgeOffset + barWidth + rightBarWidth,
+          },
+        ]}
         lineColor={(nextLine ?? nextTrainType)?.color ?? '#000000'}
         hasTerminus={false}
       />
@@ -403,7 +412,7 @@ const SaikyoBars = ({
 }) => {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
-  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
+  const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
 
   return (
     <View style={[styles.linesContainer, { width: dim.width }]}>
@@ -461,7 +470,7 @@ const SaikyoBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
@@ -471,7 +480,7 @@ const SaikyoBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
@@ -482,7 +491,7 @@ const SaikyoBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
@@ -495,13 +504,20 @@ const SaikyoBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
           },
         ]}
       />
       <BarTerminalSaikyo
-        style={styles.barTerminal}
+        width={barTerminalWidth}
+        height={barHeight}
+        style={[
+          styles.barTerminal,
+          {
+            left: edgeOffset + barWidth + rightBarWidth,
+          },
+        ]}
         lineColor={(nextLine ?? nextTrainType)?.color ?? '#000000'}
         hasTerminus={false}
       />
@@ -620,7 +636,7 @@ const JOBars = ({
 }) => {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
-  const rightBarWidth = Math.max(0, barWidth - barTerminalSize);
+  const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
 
   return (
     <View style={[styles.linesContainer, { width: dim.width }]}>
@@ -642,7 +658,7 @@ const JOBars = ({
         style={[
           styles.bar,
           {
-            right: edgeOffset + barTerminalSize,
+            right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
             backgroundColor:
               (nextLine ?? nextTrainType)?.color ?? 'transparent',
@@ -915,14 +931,14 @@ const TypeChangeNotify: React.FC = () => {
       const currentTypeStations = stations.filter(
         (s) => s.trainType?.typeId === trainType?.typeId
       );
-      return currentTypeStations[currentTypeStations.length - 1];
+      return currentTypeStations.at(-1);
     }
 
     // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうのでOUTBOUNDではnextTrainTypeを使用している
     const nextTypeStations = stations.filter(
       (s) => s.trainType?.typeId === nextTrainType?.typeId
     );
-    return nextTypeStations[nextTypeStations.length - 1];
+    return nextTypeStations.at(-1);
   }, [
     trainType,
     nextTrainType,
