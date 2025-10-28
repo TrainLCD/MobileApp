@@ -7,7 +7,7 @@ import {
   Pressable,
   StyleSheet,
   View,
-  ViewStyle,
+  type ViewStyle,
 } from 'react-native';
 import Animated, {
   interpolate,
@@ -17,6 +17,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
@@ -24,7 +25,6 @@ import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
-import { LED_THEME_BG_COLOR } from '~/constants';
 
 const styles = StyleSheet.create({
   nowHeaderContainer: {
