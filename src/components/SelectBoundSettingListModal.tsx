@@ -1,8 +1,10 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { useCallback, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import type { Line, TrainType } from '~/@types/graphql';
 import { APP_THEME } from '~/models/Theme';
+import navigationState from '~/store/atoms/navigation';
 import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import Button from '../components/Button';
@@ -44,8 +46,6 @@ const styles = StyleSheet.create({
 type Props = {
   visible: boolean;
   onClose: () => void;
-  trainType: TrainType | null;
-  trainTypes: TrainType[];
   isLoopLine: boolean;
   autoModeEnabled: boolean;
   line: Line | null;
@@ -56,14 +56,13 @@ type Props = {
 export const SelectBoundSettingListModal: React.FC<Props> = ({
   visible,
   onClose,
-  trainType,
-  trainTypes,
   isLoopLine,
   autoModeEnabled,
   line,
   toggleAutoModeEnabled,
   onTrainTypeSelect,
 }) => {
+  const { trainType, fetchedTrainTypes } = useAtomValue(navigationState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
@@ -105,7 +104,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
               <Button outline onPress={showUnimplementedAlert}>
                 {translate('notifySettings')}
               </Button>
-              {trainTypes.length ? (
+              {fetchedTrainTypes.length ? (
                 <Button
                   outline
                   onPress={() => setIsTrainTypeModalVisible(true)}
