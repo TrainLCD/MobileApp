@@ -321,7 +321,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     () =>
       Array.from({
         length: 8 - lineColors.length,
-      }).fill(lineColors[lineColors.length - 1]) as string[],
+      }).fill(lineColors.at(-1)) as string[],
     [lineColors]
   );
 
@@ -457,7 +457,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           styles.barTerminal,
           {
             borderBottomColor: line.color
-              ? lineColors[lineColors.length - 1] || line.color
+              ? lineColors.at(-1) || line.color
               : '#000',
             left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
           },
