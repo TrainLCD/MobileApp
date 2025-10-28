@@ -210,7 +210,9 @@ export const TrainTypeListModal = ({
             {destination ? (
               <Heading style={styles.subtitle}>{subtitle}</Heading>
             ) : null}
-            <Heading style={styles.title}>{title}</Heading>
+            <Heading singleLine style={styles.title}>
+              {title}
+            </Heading>
           </View>
 
           <FlatList<TrainType>
