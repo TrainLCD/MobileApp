@@ -317,13 +317,15 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [isPassing, stations]
   );
 
-  const emptyArray = useMemo(
-    () =>
-      Array.from({
-        length: 8 - lineColors.length,
-      }).fill(lineColors.at(-1)) as string[],
-    [lineColors]
-  );
+  const emptyArray = useMemo(() => {
+    const gap = Math.max(0, 8 - lineColors.length);
+    const last = lineColors.at(-1);
+    return Array.from({ length: gap }, () => last) as (
+      | string
+      | null
+      | undefined
+    )[];
+  }, [lineColors]);
 
   const getLeft = useCallback(
     (index: number) => {
