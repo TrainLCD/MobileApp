@@ -111,7 +111,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   const [stationAtom, setStationState] = useAtom(stationState);
   const { pendingStation: station, pendingStations: stations } = stationAtom;
   const [
-    { fetchedTrainTypes, autoModeEnabled, trainType, pendingWantedDestination },
+    { autoModeEnabled, trainType, pendingWantedDestination },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
@@ -540,8 +540,6 @@ export const SelectBoundModal: React.FC<Props> = ({
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}
         onClose={() => setSelectBoundSettingListModalVisible(false)}
-        trainType={trainType}
-        trainTypes={fetchedTrainTypes ?? []}
         isLoopLine={isLoopLine}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}

@@ -317,13 +317,15 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [isPassing, stations]
   );
 
-  const emptyArray = useMemo(
-    () =>
-      Array.from({
-        length: 8 - lineColors.length,
-      }).fill(lineColors[lineColors.length - 1]) as string[],
-    [lineColors]
-  );
+  const emptyArray = useMemo(() => {
+    const gap = Math.max(0, 8 - lineColors.length);
+    const last = lineColors.at(-1);
+    return Array.from({ length: gap }, () => last) as (
+      | string
+      | null
+      | undefined
+    )[];
+  }, [lineColors]);
 
   const getLeft = useCallback(
     (index: number) => {
@@ -457,7 +459,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           styles.barTerminal,
           {
             borderBottomColor: line.color
-              ? lineColors[lineColors.length - 1] || line.color
+              ? lineColors.at(-1) || line.color
               : '#000',
             left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
           },

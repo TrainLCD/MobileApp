@@ -288,15 +288,80 @@ const LineDot: React.FC<LineDotProps> = ({
   );
 };
 
-const StationNameCell: React.FC<StationNameCellProps> = ({
-  station,
-  index,
-  stations,
-  line,
-  lineColors,
-  hasTerminus,
-  chevronColor,
-}: StationNameCellProps) => {
+// Helper: Calculate chevron position based on station state
+const useChevronPosition = (
+  index: number,
+  arrived: boolean,
+  passed: boolean
+) => {
+  const { widthScale } = useScale();
+
+  return useMemo(() => {
+    if (!index) {
+      return arrived ? { left: widthScale(-14) } : null;
+    }
+
+    if (arrived) {
+      return {
+        left: widthScale(41.75 * index) - widthScale(14),
+      };
+    }
+
+    if (!passed) {
+      return {
+        left: widthScale(arrived ? 45 : 42 * index),
+      };
+    }
+
+    return {
+      left: widthScale(42 * index),
+    };
+  }, [arrived, index, passed, widthScale]);
+};
+
+// Helper: Determine if the bar should be split at current station
+const useBarSplitConfig = (
+  currentStationIndex: number,
+  index: number,
+  stationsLength: number
+) => {
+  const isSplitPosition = useMemo(
+    () =>
+      currentStationIndex !== 0 &&
+      currentStationIndex === index &&
+      currentStationIndex !== stationsLength - 1,
+    [currentStationIndex, index, stationsLength]
+  );
+
+  return { isSplitPosition };
+};
+
+// Helper: Calculate bar style properties
+const useBarStyleProps = (
+  barLeft: number,
+  barWidth: number,
+  isSplitPosition: boolean,
+  isSecondHalf: boolean
+) => {
+  return useMemo(() => {
+    if (!isSplitPosition) {
+      return { left: barLeft, width: barWidth };
+    }
+
+    const halfWidth = barWidth / 2.5;
+    return {
+      left: isSecondHalf ? barLeft + halfWidth : barLeft,
+      width: halfWidth,
+    };
+  }, [barLeft, barWidth, isSplitPosition, isSecondHalf]);
+};
+
+// Custom hook: Extract station rendering state logic
+const useStationRenderState = (
+  station: Station,
+  index: number,
+  stations: Station[]
+) => {
   const { station: currentStation, arrived } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
 
@@ -309,46 +374,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () => index <= currentStationIndex || (!index && !arrived),
     [arrived, currentStationIndex, index]
   );
+
   const shouldGrayscale = useMemo(
     () =>
       getIsPass(station) ||
       (arrived && currentStationIndex === index ? false : passed),
     [arrived, currentStationIndex, index, passed, station]
   );
-
-  const transferLines = useTransferLinesFromStation(station, {
-    omitJR: true,
-    omitRepeatingLine: true,
-  });
-
-  const { left: barLeft, width: barWidth } = useBarStyles({ index });
-  const { widthScale } = useScale();
-
-  const additionalChevronStyle = useMemo(() => {
-    // 最初の駅の場合
-    if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
-    }
-
-    // 到着済みの場合
-    if (arrived) {
-      return {
-        left: widthScale(41.75 * index) - widthScale(14),
-      };
-    }
-
-    // 通過していない場合
-    if (!passed) {
-      return {
-        left: widthScale(arrived ? 45 : 42 * index),
-      };
-    }
-
-    // デフォルト（通過済み）
-    return {
-      left: widthScale(42 * index),
-    };
-  }, [arrived, index, passed, widthScale]);
 
   const includesLongStationName = useMemo(
     () =>
@@ -358,10 +390,163 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [stations]
   );
 
-  const dim = useWindowDimensions();
+  const showFutureBar = (arrived && currentStationIndex < index + 1) || !passed;
+  const showChevron =
+    (currentStationIndex < 1 && index === 0) || currentStationIndex === index;
+
+  return {
+    currentStationIndex,
+    arrived,
+    passed,
+    shouldGrayscale,
+    isEn,
+    includesLongStationName,
+    showFutureBar,
+    showChevron,
+  };
+};
+
+// Component: Render numbering icon if available
+const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
   const numberingObj = useMemo(
     () => station.stationNumbers?.[0],
     [station.stationNumbers]
+  );
+
+  if (!numberingObj?.lineSymbolShape || !numberingObj?.stationNumber) {
+    return null;
+  }
+
+  return (
+    <View style={styles.numberingIconContainer}>
+      <NumberingIcon
+        shape={numberingObj.lineSymbolShape}
+        lineColor={numberingObj.lineSymbolColor || '#000'}
+        stationNumber={numberingObj.stationNumber}
+        threeLetterCode={station.threeLetterCode}
+        transformOrigin="center"
+      />
+    </View>
+  );
+};
+
+// Component: Render bar gradients
+const BarGradients: React.FC<{
+  line: Line;
+  lineColors: (string | null | undefined)[];
+  index: number;
+  barLeft: number;
+  barWidth: number;
+  isSplitPosition: boolean;
+  arrived: boolean;
+  showFutureBar: boolean;
+  firstHalfBarProps: { left: number; width: number };
+  secondHalfBarProps: { left: number; width: number };
+}> = ({
+  line,
+  lineColors,
+  index,
+  barLeft,
+  barWidth,
+  isSplitPosition,
+  arrived,
+  showFutureBar,
+  firstHalfBarProps,
+  secondHalfBarProps,
+}) => (
+  <>
+    <LinearGradient
+      colors={['#fff', '#000', '#000', '#fff']}
+      locations={[0.5, 0.5, 0.5, 0.9]}
+      style={[styles.bar, { left: barLeft, width: barWidth }]}
+    />
+    <LinearGradient
+      colors={line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']}
+      style={[styles.bar, { left: barLeft, width: barWidth }]}
+    />
+
+    {showFutureBar ? (
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={[styles.bar, { left: barLeft, width: barWidth }]}
+      />
+    ) : null}
+
+    {arrived && isSplitPosition ? (
+      <LinearGradient
+        colors={line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']}
+        style={[styles.bar, firstHalfBarProps]}
+      />
+    ) : null}
+
+    {showFutureBar ? (
+      <LinearGradient
+        colors={
+          line.color
+            ? [
+                `${lineColors[index] || line.color}ff`,
+                `${lineColors[index] || line.color}bb`,
+              ]
+            : ['#000000ff', '#000000bb']
+        }
+        style={[
+          styles.bar,
+          isSplitPosition
+            ? secondHalfBarProps
+            : { left: barLeft, width: barWidth },
+        ]}
+      />
+    ) : null}
+  </>
+);
+
+const StationNameCell: React.FC<StationNameCellProps> = ({
+  station,
+  index,
+  stations,
+  line,
+  lineColors,
+  hasTerminus,
+  chevronColor,
+}: StationNameCellProps) => {
+  const dim = useWindowDimensions();
+  const {
+    currentStationIndex,
+    arrived,
+    passed,
+    shouldGrayscale,
+    isEn,
+    includesLongStationName,
+    showFutureBar,
+    showChevron,
+  } = useStationRenderState(station, index, stations);
+
+  const transferLines = useTransferLinesFromStation(station, {
+    omitJR: true,
+    omitRepeatingLine: true,
+  });
+
+  const { left: barLeft, width: barWidth } = useBarStyles({ index });
+  const { widthScale } = useScale();
+  const additionalChevronStyle = useChevronPosition(index, arrived, passed);
+  const { isSplitPosition } = useBarSplitConfig(
+    currentStationIndex,
+    index,
+    stations.length
+  );
+
+  const firstHalfBarProps = useBarStyleProps(
+    barLeft,
+    barWidth,
+    isSplitPosition,
+    false
+  );
+  const secondHalfBarProps = useBarStyleProps(
+    barLeft,
+    barWidth,
+    isSplitPosition,
+    true
   );
 
   return (
@@ -383,99 +568,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         </View>
 
-        {numberingObj?.lineSymbolShape && numberingObj?.stationNumber ? (
-          <View style={styles.numberingIconContainer}>
-            <NumberingIcon
-              shape={numberingObj.lineSymbolShape}
-              lineColor={numberingObj.lineSymbolColor || '#000'}
-              stationNumber={numberingObj.stationNumber}
-              threeLetterCode={station.threeLetterCode}
-              transformOrigin="center"
-            />
-          </View>
-        ) : null}
-        <LinearGradient
-          colors={['#fff', '#000', '#000', '#fff']}
-          locations={[0.5, 0.5, 0.5, 0.9]}
-          style={[
-            styles.bar,
-            {
-              left: barLeft,
-              width: barWidth,
-            },
-          ]}
+        <NumberingIconView station={station} />
+
+        <BarGradients
+          line={line}
+          lineColors={lineColors}
+          index={index}
+          barLeft={barLeft}
+          barWidth={barWidth}
+          isSplitPosition={isSplitPosition}
+          arrived={arrived}
+          showFutureBar={showFutureBar}
+          firstHalfBarProps={firstHalfBarProps}
+          secondHalfBarProps={secondHalfBarProps}
         />
-        <LinearGradient
-          colors={
-            line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
-          }
-          style={[
-            styles.bar,
-            {
-              left: barLeft,
-              width: barWidth,
-            },
-          ]}
-        />
-        {(arrived && currentStationIndex < index + 1) || !passed ? (
-          <LinearGradient
-            colors={['#fff', '#000', '#000', '#fff']}
-            locations={[0.5, 0.5, 0.5, 0.9]}
-            style={[
-              styles.bar,
-              {
-                left: barLeft,
-                width: barWidth,
-              },
-            ]}
-          />
-        ) : null}
-        {arrived &&
-        currentStationIndex !== 0 &&
-        currentStationIndex === index &&
-        currentStationIndex !== stations.length - 1 ? (
-          <LinearGradient
-            colors={
-              line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
-            }
-            style={[
-              styles.bar,
-              {
-                left: barLeft,
-                width: barWidth / 2.5,
-              },
-            ]}
-          />
-        ) : null}
-        {(arrived && currentStationIndex < index + 1) || !passed ? (
-          <LinearGradient
-            colors={
-              line.color
-                ? [
-                    `${lineColors[index] || line.color}ff`,
-                    `${lineColors[index] || line.color}bb`,
-                  ]
-                : ['#000000ff', '#000000bb']
-            }
-            style={[
-              styles.bar,
-              {
-                left:
-                  currentStationIndex !== 0 &&
-                  currentStationIndex === index &&
-                  currentStationIndex !== stations.length - 1
-                    ? barLeft + barWidth / 2.5
-                    : barLeft,
-                width:
-                  currentStationIndex !== 0 &&
-                  currentStationIndex === index &&
-                  currentStationIndex !== stations.length - 1
-                    ? barWidth / 2.5
-                    : barWidth,
-              },
-            ]}
-          />
-        ) : null}
+
         <LineDot
           station={station}
           shouldGrayscale={shouldGrayscale}
@@ -483,6 +590,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           arrived={arrived}
           passed={passed}
         />
+
         {stations.length - 1 === index ? (
           <BarTerminalEast
             width={isTablet ? 41 : 27}
@@ -494,15 +602,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 bottom: isTablet ? -52 : 32,
               },
             ]}
-            lineColor={
-              line.color
-                ? lineColors[lineColors.length - 1] || line.color
-                : '#000'
-            }
+            lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
             hasTerminus={hasTerminus}
           />
         ) : null}
       </View>
+
       <View
         style={[
           styles.chevron,
@@ -513,10 +618,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           },
         ]}
       >
-        {(currentStationIndex < 1 && index === 0) ||
-        currentStationIndex === index ? (
-          <ChevronTY color={chevronColor} />
-        ) : null}
+        {showChevron ? <ChevronTY color={chevronColor} /> : null}
       </View>
     </>
   );
@@ -604,9 +706,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       if (!s) {
         return (
           <EmptyStationNameCell
-            lastLineColor={
-              lineColors[lineColors.length - 1] || line?.color || '#fff'
-            }
+            lastLineColor={lineColors.at(-1) || line?.color || '#fff'}
             key={i}
             isLast={isLast}
             hasTerminus={hasTerminus}

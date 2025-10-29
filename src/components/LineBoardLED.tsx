@@ -44,6 +44,233 @@ const CrimsonText = ({ children }: { children: React.ReactNode }) => (
   <Text style={[styles.text, styles.crimson]}>{children}</Text>
 );
 
+// Helper component for arriving state content
+const ArrivingContent = ({
+  nextStation,
+  afterNextStation,
+  transferLines,
+  nextStationNumber,
+}: {
+  nextStation: ReturnType<typeof useNextStation>;
+  afterNextStation: ReturnType<typeof useAfterNextStation>;
+  transferLines: ReturnType<typeof useTransferLines>;
+  nextStationNumber: ReturnType<typeof useNumbering>[0];
+}) => (
+  <>
+    <GreenText>まもなく</GreenText>
+    <OrangeText>{nextStation?.name}</OrangeText>
+    <GreenText>です。</GreenText>
+    {afterNextStation ? (
+      <>
+        <OrangeText>{nextStation?.name}</OrangeText>
+        <GreenText>の次は</GreenText>
+        <OrangeText>{afterNextStation?.name}</OrangeText>
+        <GreenText>に停車いたします。</GreenText>
+        {nextStation?.stopCondition !== StopCondition.All && (
+          <>
+            <CrimsonText>
+              {nextStation?.name}
+              は一部列車は通過いたします。
+            </CrimsonText>
+            <OrangeText>ご注意ください。</OrangeText>
+          </>
+        )}
+      </>
+    ) : null}
+
+    {transferLines.length > 0 ? (
+      <>
+        <OrangeText>
+          {transferLines.map((l) => l.nameShort).join('、')}
+        </OrangeText>
+        <GreenText>はお乗り換えです。</GreenText>
+      </>
+    ) : null}
+
+    <GreenText>The next stop is</GreenText>
+    <Text>
+      <OrangeText>
+        {nextStation?.nameRoman}
+        {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+      </OrangeText>
+      <GreenText>.</GreenText>
+    </Text>
+
+    {afterNextStation ? (
+      <>
+        <GreenText>The stop after</GreenText>
+        <Text>
+          <OrangeText>
+            {nextStation?.nameRoman}
+            {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+          </OrangeText>
+          <GreenText>,</GreenText>
+        </Text>
+
+        <GreenText>will be</GreenText>
+
+        <Text>
+          <OrangeText>
+            {afterNextStation?.nameRoman}
+            {afterNextStation?.stationNumbers?.[0]
+              ? `(${afterNextStation?.stationNumbers?.[0]?.stationNumber})`
+              : ''}
+          </OrangeText>
+          <GreenText>.</GreenText>
+        </Text>
+      </>
+    ) : null}
+    {transferLines.length > 0 ? (
+      <>
+        <GreenText>Please change here for</GreenText>
+
+        <Text>
+          <OrangeText>
+            {transferLines
+              .map((l) => l.nameRoman)
+              .map((name, idx, arr) => {
+                if (!idx) {
+                  return name;
+                }
+                return idx === arr.length - 1 && arr.length > 1
+                  ? ` and ${name}`
+                  : `, ${name}`;
+              })
+              .join('')}
+          </OrangeText>
+          <GreenText>.</GreenText>
+        </Text>
+      </>
+    ) : null}
+  </>
+);
+
+// Helper component for current state content
+const CurrentContent = ({
+  line,
+  trainTypeTexts,
+  boundTexts,
+}: {
+  line: ReturnType<typeof useCurrentLine>;
+  trainTypeTexts: [string, string];
+  boundTexts: [string, string];
+}) => (
+  <>
+    <GreenText>
+      この電車は、{line?.nameShort?.replace(parenthesisRegexp, '')}
+    </GreenText>
+    <OrangeText>
+      {trainTypeTexts[0]} {boundTexts[0]}行き
+    </OrangeText>
+    <GreenText>です。</GreenText>
+    <GreenText>
+      This is the {line?.nameRoman?.replace(parenthesisRegexp, '')}
+    </GreenText>
+    <OrangeText>{trainTypeTexts[1]}</OrangeText>
+    <GreenText>train for</GreenText>
+    <Text>
+      <OrangeText>{boundTexts[1]}</OrangeText>
+      <GreenText>.</GreenText>
+    </Text>
+  </>
+);
+
+// Helper component for next stop content
+const NextStopContent = ({
+  nextStation,
+  afterNextStation,
+  transferLines,
+  nextStationNumber,
+}: {
+  nextStation: ReturnType<typeof useNextStation>;
+  afterNextStation: ReturnType<typeof useAfterNextStation>;
+  transferLines: ReturnType<typeof useTransferLines>;
+  nextStationNumber: ReturnType<typeof useNumbering>[0];
+}) => (
+  <>
+    <GreenText>次は</GreenText>
+    <OrangeText>{nextStation?.name}</OrangeText>
+    <GreenText>です。</GreenText>
+    {afterNextStation ? (
+      <>
+        <OrangeText>{nextStation?.name}</OrangeText>
+        <GreenText>の次は</GreenText>
+        <OrangeText>{afterNextStation?.name}</OrangeText>
+        <GreenText>に停車いたします。</GreenText>
+        {nextStation?.stopCondition !== StopCondition.All && (
+          <>
+            <CrimsonText>
+              {nextStation?.name}
+              は一部列車は通過いたします。
+            </CrimsonText>
+            <OrangeText>ご注意ください。</OrangeText>
+          </>
+        )}
+      </>
+    ) : null}
+    {transferLines.length > 0 ? (
+      <>
+        <OrangeText>
+          {transferLines.map((l) => l.nameShort).join('、')}
+        </OrangeText>
+        <GreenText>はお乗り換えです。</GreenText>
+      </>
+    ) : null}
+    <GreenText>The next stop is</GreenText>
+    <Text>
+      <OrangeText>
+        {nextStation?.nameRoman}
+        {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+      </OrangeText>
+      <GreenText>.</GreenText>
+    </Text>
+    {afterNextStation ? (
+      <>
+        <GreenText>The stop after</GreenText>
+        <Text>
+          <OrangeText>
+            {nextStation?.nameRoman}
+            {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
+          </OrangeText>
+          <GreenText>,</GreenText>
+        </Text>
+
+        <GreenText>will be</GreenText>
+        <Text>
+          <OrangeText>
+            {afterNextStation?.nameRoman}
+            {afterNextStation?.stationNumbers?.[0]
+              ? `(${afterNextStation?.stationNumbers?.[0]?.stationNumber})`
+              : ''}
+          </OrangeText>
+          <GreenText>.</GreenText>
+        </Text>
+      </>
+    ) : null}
+    {transferLines.length > 0 ? (
+      <>
+        <GreenText>Please change here for</GreenText>
+        <Text>
+          <OrangeText>
+            {transferLines
+              .map((l) => l.nameRoman)
+              .map((name, idx, arr) => {
+                if (!idx) {
+                  return name;
+                }
+                return idx === arr.length - 1 && arr.length > 1
+                  ? ` and ${name}`
+                  : `, ${name}`;
+              })
+              .join('')}
+          </OrangeText>
+          <GreenText>.</GreenText>
+        </Text>
+      </>
+    ) : null}
+  </>
+);
+
 const LineBoardLED = () => {
   const { selectedDirection, stations } = useAtomValue(stationState);
   const { headerState } = useAtomValue(navigationState);
@@ -70,27 +297,27 @@ const LineBoardLED = () => {
 
   const trainTypeTexts = useMemo(() => {
     if (!line) {
-      return '';
+      return ['', ''] as [string, string];
     }
 
     if (isMeijoLine) {
       return [
         selectedDirection === 'INBOUND' ? '左回り' : '右回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-      ];
+      ] as [string, string];
     }
 
     if ((isYamanoteLine || isOsakaLoopLine) && selectedDirection) {
       return [
         selectedDirection === 'INBOUND' ? '内回り' : '外回り',
         selectedDirection === 'INBOUND' ? 'Counterclockwise' : 'Clockwise',
-      ];
+      ] as [string, string];
     }
 
     return [
       trainType?.name?.replace(parenthesisRegexp, '') ?? '',
       trainType?.nameRoman?.replace(parenthesisRegexp, '') ?? '',
-    ];
+    ] as [string, string];
   }, [
     isMeijoLine,
     isOsakaLoopLine,
@@ -103,11 +330,11 @@ const LineBoardLED = () => {
 
   const boundTexts = useMemo(() => {
     const jaText = directionalStops
-      .filter((station) => station)
+      .filter(Boolean)
       .map((station) => station.name?.replace(parenthesisRegexp, ''))
       .join('・');
     const enText = directionalStops
-      .filter((station) => station)
+      .filter(Boolean)
       .map(
         (station) =>
           `${station?.nameRoman?.replace(parenthesisRegexp, '')}${
@@ -120,100 +347,19 @@ const LineBoardLED = () => {
     return [
       `${jaText}${isLoopLine || isPartiallyLoopLine ? '方面' : ''}`,
       enText,
-    ];
+    ] as [string, string];
   }, [directionalStops, isLoopLine, isPartiallyLoopLine]);
 
   if (stoppingState === 'ARRIVING') {
     return (
       <Marquee>
         <View style={styles.container}>
-          <GreenText>まもなく</GreenText>
-          <OrangeText>{nextStation?.name}</OrangeText>
-          <GreenText>です。</GreenText>
-          {afterNextStation ? (
-            <>
-              <OrangeText>{nextStation?.name}</OrangeText>
-              <GreenText>の次は</GreenText>
-              <OrangeText>{afterNextStation?.name}</OrangeText>
-              <GreenText>に停車いたします。</GreenText>
-              {nextStation?.stopCondition !== StopCondition.All && (
-                <>
-                  <CrimsonText>
-                    {nextStation?.name}
-                    は一部列車は通過いたします。
-                  </CrimsonText>
-                  <OrangeText>ご注意ください。</OrangeText>
-                </>
-              )}
-            </>
-          ) : null}
-
-          {transferLines.length > 0 ? (
-            <>
-              <OrangeText>
-                {transferLines.map((l) => l.nameShort).join('、')}
-              </OrangeText>
-              <GreenText>はお乗り換えです。</GreenText>
-            </>
-          ) : null}
-
-          <GreenText>The next stop is</GreenText>
-          <Text>
-            <OrangeText>
-              {nextStation?.nameRoman}
-              {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
-            </OrangeText>
-            <GreenText>.</GreenText>
-          </Text>
-
-          {afterNextStation ? (
-            <>
-              <GreenText>The stop after</GreenText>
-              <Text>
-                <OrangeText>
-                  {nextStation?.nameRoman}
-                  {nextStationNumber
-                    ? `(${nextStationNumber.stationNumber})`
-                    : ''}
-                </OrangeText>
-                <GreenText>,</GreenText>
-              </Text>
-
-              <GreenText>will be</GreenText>
-
-              <Text>
-                <OrangeText>
-                  {afterNextStation?.nameRoman}
-                  {afterNextStation?.stationNumbers?.[0]
-                    ? `(${afterNextStation?.stationNumbers?.[0]?.stationNumber})`
-                    : ''}
-                </OrangeText>
-                <GreenText>.</GreenText>
-              </Text>
-            </>
-          ) : null}
-          {transferLines.length > 0 ? (
-            <>
-              <GreenText>Please change here for</GreenText>
-
-              <Text>
-                <OrangeText>
-                  {transferLines
-                    .map((l) => l.nameRoman)
-                    .map((name, idx, arr) => {
-                      if (!idx) {
-                        return name;
-                      }
-                      return idx === arr.length - 1 && arr.length > 1
-                        ? ` and ${name}`
-                        : `, ${name}`;
-                    })
-                    .join('')}
-                </OrangeText>
-                <GreenText>.</GreenText>
-              </Text>
-            </>
-          ) : null}
+          <ArrivingContent
+            nextStation={nextStation}
+            afterNextStation={afterNextStation}
+            transferLines={transferLines}
+            nextStationNumber={nextStationNumber}
+          />
         </View>
       </Marquee>
     );
@@ -223,22 +369,11 @@ const LineBoardLED = () => {
     return (
       <Marquee>
         <View style={styles.container}>
-          <GreenText>
-            この電車は、{line?.nameShort?.replace(parenthesisRegexp, '')}
-          </GreenText>
-          <OrangeText>
-            {trainTypeTexts[0]} {boundTexts[0]}行き
-          </OrangeText>
-          <GreenText>です。</GreenText>
-          <GreenText>
-            This is the {line?.nameRoman?.replace(parenthesisRegexp, '')}
-          </GreenText>
-          <OrangeText>{trainTypeTexts[1]}</OrangeText>
-          <GreenText>train for</GreenText>
-          <Text>
-            <OrangeText>{boundTexts[1]}</OrangeText>
-            <GreenText>.</GreenText>
-          </Text>
+          <CurrentContent
+            line={line}
+            trainTypeTexts={trainTypeTexts}
+            boundTexts={boundTexts}
+          />
         </View>
       </Marquee>
     );
@@ -247,88 +382,12 @@ const LineBoardLED = () => {
   return (
     <Marquee>
       <View style={styles.container}>
-        <GreenText>次は</GreenText>
-        <OrangeText>{nextStation?.name}</OrangeText>
-        <GreenText>です。</GreenText>
-        {afterNextStation ? (
-          <>
-            <OrangeText>{nextStation?.name}</OrangeText>
-            <GreenText>の次は</GreenText>
-            <OrangeText>{afterNextStation?.name}</OrangeText>
-            <GreenText>に停車いたします。</GreenText>
-            {nextStation?.stopCondition !== StopCondition.All && (
-              <>
-                <CrimsonText>
-                  {nextStation?.name}
-                  は一部列車は通過いたします。
-                </CrimsonText>
-                <OrangeText>ご注意ください。</OrangeText>
-              </>
-            )}
-          </>
-        ) : null}
-        {transferLines.length > 0 ? (
-          <>
-            <OrangeText>
-              {transferLines.map((l) => l.nameShort).join('、')}
-            </OrangeText>
-            <GreenText>はお乗り換えです。</GreenText>
-          </>
-        ) : null}
-        <GreenText>The next stop is</GreenText>
-        <Text>
-          <OrangeText>
-            {nextStation?.nameRoman}
-            {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
-          </OrangeText>
-          <GreenText>.</GreenText>
-        </Text>
-        {afterNextStation ? (
-          <>
-            <GreenText>The stop after</GreenText>
-            <Text>
-              <OrangeText>
-                {nextStation?.nameRoman}
-                {nextStationNumber
-                  ? `(${nextStationNumber.stationNumber})`
-                  : ''}
-              </OrangeText>
-              <GreenText>,</GreenText>
-            </Text>
-
-            <GreenText>will be</GreenText>
-            <Text>
-              <OrangeText>
-                {afterNextStation?.nameRoman}
-                {afterNextStation?.stationNumbers?.[0]
-                  ? `(${afterNextStation?.stationNumbers?.[0]?.stationNumber})`
-                  : ''}
-              </OrangeText>
-              <GreenText>.</GreenText>
-            </Text>
-          </>
-        ) : null}
-        {transferLines.length > 0 ? (
-          <>
-            <GreenText>Please change here for</GreenText>
-            <Text>
-              <OrangeText>
-                {transferLines
-                  .map((l) => l.nameRoman)
-                  .map((name, idx, arr) => {
-                    if (!idx) {
-                      return name;
-                    }
-                    return idx === arr.length - 1 && arr.length > 1
-                      ? ` and ${name}`
-                      : `, ${name}`;
-                  })
-                  .join('')}
-              </OrangeText>
-              <GreenText>.</GreenText>
-            </Text>
-          </>
-        ) : null}
+        <NextStopContent
+          nextStation={nextStation}
+          afterNextStation={afterNextStation}
+          transferLines={transferLines}
+          nextStationNumber={nextStationNumber}
+        />
       </View>
     </Marquee>
   );
