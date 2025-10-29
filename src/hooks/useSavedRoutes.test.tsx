@@ -203,48 +203,56 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      let saved1: SavedRoute;
+      let saved1: SavedRoute | undefined;
       await act(async () => {
         saved1 = await result.current.save(withType);
       });
 
-      expect(saved1.id).toMatch(/^550e8400-e29b-41d4-a716-4466554400001$/);
+      expect(saved1).toBeDefined();
+      const saved1Defined = saved1!;
+      expect(saved1Defined.id).toMatch(
+        /^550e8400-e29b-41d4-a716-4466554400001$/
+      );
       expect(mockDb.runAsync).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO saved_routes'),
         [
-          saved1.id,
+          saved1Defined.id,
           withType.name,
           withType.lineId,
           withType.trainTypeId,
           1,
-          saved1.createdAt.toISOString(),
+          saved1Defined.createdAt.toISOString(),
         ]
       );
 
-      await waitFor(() => expect(result.current.routes[0]?.id).toBe(saved1.id));
+      await waitFor(() =>
+        expect(result.current.routes[0]?.id).toBe(saved1Defined.id)
+      );
 
-      let saved2: SavedRoute;
+      let saved2: SavedRoute | undefined;
       await act(async () => {
         saved2 = await result.current.save(withoutType);
       });
-      expect(saved2.hasTrainType).toBe(false);
-      expect(saved2.trainTypeId).toBeNull();
+      expect(saved2).toBeDefined();
+      const saved2Defined = saved2!;
+      expect(saved2Defined.hasTrainType).toBe(false);
+      expect(saved2Defined.trainTypeId).toBeNull();
       expect(mockDb.runAsync).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO saved_routes'),
         expect.arrayContaining([
-          saved2.id,
+          saved2Defined.id,
           withoutType.name,
           withoutType.lineId,
           null,
           0,
-          saved2.createdAt.toISOString(),
+          saved2Defined.createdAt.toISOString(),
         ])
       );
 
       await waitFor(() => expect(result.current.routes.length).toBe(2));
-      expect(result.current.routes.map((route) => route.id)).toEqual([
-        saved2.id,
-        saved1.id,
+      expect(result.current.routes.map((route: SavedRoute) => route.id)).toEqual([
+        saved2Defined.id,
+        saved1Defined.id,
       ]);
     });
 
@@ -261,18 +269,20 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      let saved: SavedRoute;
+      let saved: SavedRoute | undefined;
       await act(async () => {
         saved = await result.current.save(withType);
       });
+      expect(saved).toBeDefined();
+      const savedDefined = saved!;
       await waitFor(() => expect(result.current.routes.length).toBe(1));
 
       await act(async () => {
-        await result.current.remove(saved.id);
+        await result.current.remove(savedDefined.id);
       });
       expect(mockDb.runAsync).toHaveBeenCalledWith(
         'DELETE FROM saved_routes WHERE id = ?',
-        [saved.id]
+        [savedDefined.id]
       );
       await waitFor(() => expect(result.current.routes.length).toBe(0));
     });
