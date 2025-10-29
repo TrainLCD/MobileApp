@@ -236,14 +236,19 @@ interface StationNameCellProps {
   stations: Station[];
   station: Station;
   index: number;
+  line: Line | null;
 }
 
 // Extract station numbering logic into a separate hook
-const useStationNumberingData = (stationInLoop: Station, passed: boolean) => {
+const useStationNumberingData = (
+  stationInLoop: Station,
+  passed: boolean,
+  line: Line | null
+) => {
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = useMemo(
-    () => getStationNumberIndex(stationInLoop),
-    [getStationNumberIndex, stationInLoop]
+    () => getStationNumberIndex(stationInLoop, line),
+    [getStationNumberIndex, line, stationInLoop]
   );
   const numberingObj = useMemo<StationNumber | undefined>(
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
@@ -421,6 +426,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   arrived,
   station: stationInLoop,
   index,
+  line,
 }: StationNameCellProps) => {
   const { stations: allStations } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
@@ -442,7 +448,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     stationNumberString,
     stationNumberBGColor,
     stationNumberTextColor,
-  } = useStationNumberingData(stationInLoop, passed);
+  } = useStationNumberingData(stationInLoop, passed, line);
 
   const getLineMarks = useGetLineMark();
   const lineMarks = useMemo(
@@ -552,9 +558,10 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         stations={stations}
         arrived={!isPassing && !approaching && arrived}
         index={i}
+        line={line ?? null}
       />
     ),
-    [approaching, arrived, isPassing, stations]
+    [approaching, arrived, isPassing, line, stations]
   );
 
   const emptyArray = useMemo(() => {
