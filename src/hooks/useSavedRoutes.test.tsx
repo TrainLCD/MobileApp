@@ -209,7 +209,10 @@ describe('useSavedRoutes', () => {
       });
 
       expect(saved1).toBeDefined();
-      const saved1Defined = saved1!;
+      if (!saved1) {
+        throw new Error('save should return route with train type');
+      }
+      const saved1Defined: SavedRoute = saved1;
       expect(saved1Defined.id).toMatch(
         /^550e8400-e29b-41d4-a716-4466554400001$/
       );
@@ -234,7 +237,10 @@ describe('useSavedRoutes', () => {
         saved2 = await result.current.save(withoutType);
       });
       expect(saved2).toBeDefined();
-      const saved2Defined = saved2!;
+      if (!saved2) {
+        throw new Error('save should return route without train type');
+      }
+      const saved2Defined: SavedRoute = saved2;
       expect(saved2Defined.hasTrainType).toBe(false);
       expect(saved2Defined.trainTypeId).toBeNull();
       expect(mockDb.runAsync).toHaveBeenCalledWith(
@@ -273,7 +279,10 @@ describe('useSavedRoutes', () => {
         saved = await result.current.save(withType);
       });
       expect(saved).toBeDefined();
-      const savedDefined = saved!;
+      if (!saved) {
+        throw new Error('save should return route before removing');
+      }
+      const savedDefined: SavedRoute = saved;
       await waitFor(() => expect(result.current.routes.length).toBe(1));
 
       await act(async () => {
@@ -327,7 +336,7 @@ describe('useSavedRoutes', () => {
       );
       expect(
         result.current.find({
-          lineId: null,
+          lineId: withTrainType.lineId,
           trainTypeId: withTrainType.trainTypeId,
         })
       ).toBe(withTrainType);
