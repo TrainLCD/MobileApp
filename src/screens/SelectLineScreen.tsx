@@ -4,6 +4,7 @@ import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
+import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
@@ -460,44 +461,26 @@ const SelectLineScreen = () => {
 
   // PresetCard押下時のモーダル表示ロジック
   const openModalByLineId = useCallback(
-    async (lineId: number, destinationStationId: number | null) => {
-      if (!destinationStationId) return;
+    async (lineId: number) => {
       const result = await fetchStationsByLineId({
-        variables: { lineId, stationId: destinationStationId },
+        variables: { lineId },
       });
       const stations = result.data?.lineStations ?? [];
       if (!stations.length) return;
 
-      const wantedDestination =
-        stations.find((sta: Station) => sta.id === destinationStationId) ??
-        null;
-
-      // Filter stations with valid coordinates
-      const stationsWithCoords = stations.filter(
-        (sta: Station) => sta.latitude != null && sta.longitude != null
-      );
-
-      if (!stationsWithCoords.length) {
-        // No stations have coordinates, cannot determine nearest
-        return;
-      }
-
-      // Determine reference coordinates: user location or first station with coords
-      const referenceCoords =
-        latitude != null && longitude != null
-          ? { latitude, longitude }
-          : {
-              latitude: stationsWithCoords[0].latitude as number,
-              longitude: stationsWithCoords[0].longitude as number,
-            };
-
-      const nearestCoordinates = findNearest(
-        referenceCoords,
-        stationsWithCoords.map((sta: Station) => ({
-          latitude: sta.latitude as number,
-          longitude: sta.longitude as number,
-        }))
-      ) as { latitude: number; longitude: number };
+      const nearestCoordinates =
+        latitude && longitude
+          ? (findNearest(
+              { latitude, longitude },
+              stations.map((sta: Station) => ({
+                latitude: sta.latitude as number,
+                longitude: sta.longitude as number,
+              }))
+            ) as { latitude: number; longitude: number })
+          : stations.map((s) => ({
+              latitude: s.latitude,
+              longitude: s.longitude,
+            }))[0];
 
       const station = stations.find(
         (sta: Station) =>
@@ -518,7 +501,6 @@ const SelectLineScreen = () => {
       }));
       setNavigationState((prev) => ({
         ...prev,
-        pendingWantedDestination: wantedDestination,
         fetchedTrainTypes: [],
         trainType: null,
       }));
@@ -533,49 +515,43 @@ const SelectLineScreen = () => {
     ]
   );
 
+  // PresetCard押下時のモーダル表示ロジック
   const openModalByTrainTypeId = useCallback(
-    async (lineGroupId: number, destinationStationId: number | null) => {
+    async (lineGroupId: number) => {
       const result = await fetchStationsByLineGroupId({
         variables: { lineGroupId },
       });
       const stations = result.data?.lineGroupStations ?? [];
       if (!stations.length) return;
 
-      const wantedDestination =
-        stations.find((sta: Station) => sta.id === destinationStationId) ??
-        null;
+      const sortedStationCoords =
+        latitude && longitude
+          ? (orderByDistance(
+              { lat: latitude, lon: longitude },
+              stations.map((sta) => ({
+                latitude: sta.latitude as number,
+                longitude: sta.longitude as number,
+              }))
+            ) as { latitude: number; longitude: number }[])
+          : stations.map((sta) => ({
+              latitude: sta.latitude,
+              longitude: sta.longitude,
+            }));
 
-      // Filter stations with valid coordinates
-      const stationsWithCoords = stations.filter(
-        (sta: Station) => sta.latitude != null && sta.longitude != null
-      );
+      const sortedStations = stations.slice().sort((a, b) => {
+        const aIndex = sortedStationCoords.findIndex(
+          (coord) =>
+            coord.latitude === a.latitude && coord.longitude === a.longitude
+        );
+        const bIndex = sortedStationCoords.findIndex(
+          (coord) =>
+            coord.latitude === b.latitude && coord.longitude === b.longitude
+        );
+        return aIndex - bIndex;
+      });
 
-      if (!stationsWithCoords.length) {
-        // No stations have coordinates, cannot determine nearest
-        return;
-      }
-
-      // Determine reference coordinates: user location or first station with coords
-      const referenceCoords =
-        latitude != null && longitude != null
-          ? { latitude, longitude }
-          : {
-              latitude: stationsWithCoords[0].latitude as number,
-              longitude: stationsWithCoords[0].longitude as number,
-            };
-
-      const nearestCoordinates = findNearest(
-        referenceCoords,
-        stationsWithCoords.map((sta: Station) => ({
-          latitude: sta.latitude as number,
-          longitude: sta.longitude as number,
-        }))
-      ) as { latitude: number; longitude: number };
-
-      const station = stations.find(
-        (sta: Station) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
+      const station = sortedStations.find(
+        (sta: Station) => sta.trainType?.groupId === lineGroupId
       );
 
       if (!station) return;
@@ -591,24 +567,22 @@ const SelectLineScreen = () => {
       }));
       setNavigationState((prev) => ({
         ...prev,
-        pendingWantedDestination: wantedDestination,
         fetchedTrainTypes: [],
         trainType: null,
       }));
 
-      if (station?.hasTrainTypes && station?.id != null) {
-        const result = await fetchTrainTypes({
-          variables: {
-            stationId: station.id,
-          },
-        });
-        const trainTypes = result.data?.stationTrainTypes ?? [];
+      const fetchedTrainTypesData = await fetchTrainTypes({
+        variables: {
+          stationId: station.id as number,
+        },
+      });
+      const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
 
-        setNavigationState((prev) => ({
-          ...prev,
-          fetchedTrainTypes: trainTypes,
-        }));
-      }
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: station.trainType ?? null,
+        fetchedTrainTypes: trainTypes,
+      }));
     },
     [
       fetchStationsByLineGroupId,
@@ -625,15 +599,9 @@ const SelectLineScreen = () => {
     async (route: SavedRoute) => {
       setIsSelectBoundModalOpen(true);
       if (route.hasTrainType) {
-        await openModalByTrainTypeId(
-          route.trainTypeId,
-          route.destinationStationId ?? null
-        );
+        await openModalByTrainTypeId(route.trainTypeId);
       } else {
-        await openModalByLineId(
-          route.lineId,
-          route.destinationStationId ?? null
-        );
+        await openModalByLineId(route.lineId);
       }
     },
     [openModalByLineId, openModalByTrainTypeId]
