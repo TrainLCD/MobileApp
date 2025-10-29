@@ -250,10 +250,9 @@ describe('useSavedRoutes', () => {
       );
 
       await waitFor(() => expect(result.current.routes.length).toBe(2));
-      expect(result.current.routes.map((route: SavedRoute) => route.id)).toEqual([
-        saved2Defined.id,
-        saved1Defined.id,
-      ]);
+      expect(
+        result.current.routes.map((route: SavedRoute) => route.id)
+      ).toEqual([saved2Defined.id, saved1Defined.id]);
     });
 
     it('remove: 指定 ID を削除し routes からも取り除く', async () => {
