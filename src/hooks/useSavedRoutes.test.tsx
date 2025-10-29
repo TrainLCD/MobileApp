@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
 import { createStore, Provider as JotaiProvider } from 'jotai';
 import type {
   SavedRoute,
@@ -36,7 +37,7 @@ jest.mock('expo-sqlite', () => ({
 
 // 各テストを独立させるため Jotai のストアを毎回作り直す
 const withJotaiProvider = (store: ReturnType<typeof createStore>) =>
-  function Wrapper({ children }: { children: React.ReactNode }) {
+  function Wrapper({ children }: { children: ReactNode }) {
     return <JotaiProvider store={store}>{children}</JotaiProvider>;
   };
 
