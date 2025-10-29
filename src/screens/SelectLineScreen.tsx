@@ -533,18 +533,25 @@ const SelectLineScreen = () => {
                 longitude: sta.longitude as number,
               }))
             ) as { latitude: number; longitude: number }[])
-          : stations;
+          : stations.map((sta) => ({
+              latitude: sta.latitude,
+              longitude: sta.longitude,
+            }));
 
-      const station = stations.find(
-        (sta: Station) =>
-          sta.trainType?.groupId === lineGroupId &&
-          (latitude && longitude
-            ? sortedStationCoords.some(
-                (coords) =>
-                  coords.latitude === sta.latitude &&
-                  coords.longitude === sta.longitude
-              )
-            : true)
+      const sortedStations = stations.slice().sort((a, b) => {
+        const aIndex = sortedStationCoords.findIndex(
+          (coord) =>
+            coord.latitude === a.latitude && coord.longitude === a.longitude
+        );
+        const bIndex = sortedStationCoords.findIndex(
+          (coord) =>
+            coord.latitude === b.latitude && coord.longitude === b.longitude
+        );
+        return aIndex - bIndex;
+      });
+
+      const station = sortedStations.find(
+        (sta: Station) => sta.trainType?.groupId === lineGroupId
       );
 
       if (!station) return;

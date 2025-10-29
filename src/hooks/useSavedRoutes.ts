@@ -100,8 +100,10 @@ export const useSavedRoutes = () => {
       trainTypeId: number | null;
     }): SavedRoute | null => {
       return (
-        routes.find(
-          (r) => r.trainTypeId === trainTypeId || r.lineId === lineId
+        routes.find((r) =>
+          r.hasTrainType
+            ? r.trainTypeId === trainTypeId && r.lineId === lineId
+            : r.lineId === lineId
         ) ?? null
       );
     },
