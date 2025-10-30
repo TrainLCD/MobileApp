@@ -1,4 +1,4 @@
-import { useLazyQuery } from '@apollo/client/react';
+import { useLazyQuery, useQuery } from '@apollo/client/react';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo } from 'react';
 import {
@@ -9,12 +9,19 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Station } from '~/@types/graphql';
+import type {
+  GetStationsNearbyQueryVariables,
+  Station,
+} from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
-import { useThemeStore } from '~/hooks';
-import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
+import { useLocationStore, useThemeStore } from '~/hooks';
+import {
+  GET_STATIONS_BY_NAME,
+  GET_STATIONS_NEARBY,
+} from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -24,6 +31,10 @@ import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
 import { LineCard } from './LineCard';
 import { SearchBar } from './SearchBar';
+
+type GetStationsNearbyData = {
+  stationsNearby: Station[];
+};
 
 type GetStationsByNameData = {
   stationsByName: Station[];
@@ -95,26 +106,42 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
+  const latitude = useLocationStore((state) => state?.coords.latitude);
+  const longitude = useLocationStore((state) => state?.coords.longitude);
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const insets = useSafeAreaInsets();
 
+  const {
+    data: stationsNearbyData,
+    loading: fetchStationsNearbyLoading,
+    error: fetchStationsNearbyError,
+  } = useQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
+    skip: !visible || latitude == null || longitude == null,
+    variables: {
+      latitude: latitude as number,
+      longitude: longitude as number,
+      limit: Number(NEARBY_STATIONS_LIMIT ?? 10),
+    } as GetStationsNearbyQueryVariables,
+  });
+
   const [
-    fetchStations,
+    fetchStationsByName,
     {
-      data: stationsData,
-      loading: fetchStationsLoading,
-      error: fetchStationsError,
-      called: fetchStationsCalled,
+      data: stationsByNameData,
+      loading: fetchStationsByNameLoading,
+      error: fetchStationsByNameError,
+      called: fetchStationsByNameCalled,
     },
   ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
     GET_STATIONS_BY_NAME
   );
 
   useEffect(() => {
-    if (fetchStationsError) {
+    if (fetchStationsByNameError || fetchStationsNearbyError) {
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
     }
-  }, [fetchStationsError]);
+  }, [fetchStationsByNameError, fetchStationsNearbyError]);
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
@@ -151,29 +178,33 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         return;
       }
 
-      fetchStations({ variables: { name: query } });
+      fetchStationsByName({ variables: { name: query } });
     },
-    [fetchStations]
+    [fetchStationsByName]
   );
 
   const stations = useMemo(
     () =>
-      fetchStationsCalled
-        ? uniqBy(stationsData?.stationsByName ?? [], (station) => {
+      fetchStationsByNameCalled
+        ? uniqBy(stationsByNameData?.stationsByName ?? [], (station) => {
             if (station.groupId) {
               return station.groupId;
             }
             if (station.id) {
               return station.id;
             }
-            const prefecture =
-              station.prefectureId != null
-                ? PREFECTURES_JA[station.prefectureId - 1]
-                : '';
-            return `${station.name}|${prefecture}`;
+            const prefId = station.prefectureId;
+            if (!prefId) {
+              return station.name;
+            }
+            return `${station.name}|${PREFECTURES_JA[prefId - 1]}`;
           })
-        : [],
-    [stationsData?.stationsByName, fetchStationsCalled]
+        : (stationsNearbyData?.stationsNearby ?? []),
+    [
+      stationsNearbyData?.stationsNearby,
+      stationsByNameData?.stationsByName,
+      fetchStationsByNameCalled,
+    ]
   );
 
   const handleClose = useCallback(() => {
@@ -221,8 +252,10 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             contentContainerStyle={styles.flatListContentContainer}
             ListEmptyComponent={
               <EmptyResult
-                loading={fetchStationsLoading}
-                hasSearched={fetchStationsCalled}
+                loading={
+                  fetchStationsNearbyLoading || fetchStationsByNameLoading
+                }
+                hasSearched={fetchStationsByNameCalled}
               />
             }
           />
