@@ -85,7 +85,6 @@
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "^0.21.1",
     "rxjs": "^7.3.0",
-    "web-streams-polyfill": "^4.1.0",
     "zod": "^3.24.3",
     "zustand": "^4.5.2"
   },
