@@ -8,4 +8,4 @@ nvm install 24
 npm install -g pnpm@10
 pnpm approve-builds
 pnpm i
-pod install --repo-update
+pod install
