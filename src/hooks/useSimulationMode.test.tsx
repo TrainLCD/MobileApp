@@ -83,7 +83,7 @@ const mockStation = (
 
 describe('useSimulationMode', () => {
   beforeEach(() => {
-    jest.useFakeTimers('modern');
+    jest.useFakeTimers();
     jest.setSystemTime(new Date(100000));
 
     // デフォルトのモック設定

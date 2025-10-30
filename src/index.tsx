@@ -10,14 +10,8 @@ import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  StatusBar,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
@@ -29,6 +23,7 @@ import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
 
 SplashScreen.preventAutoHideAsync();
+setI18nConfig();
 
 const Stack = createNativeStackNavigator();
 
@@ -44,21 +39,6 @@ const options: NativeStackNavigationOptions = {
 };
 
 const App: React.FC = () => {
-  const [readyForLaunch, setReadyForLaunch] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setI18nConfig();
-
-      const locationServicesEnabled = await Location.hasServicesEnabledAsync();
-      if (!locationServicesEnabled) {
-        setReadyForLaunch(true);
-        return;
-      }
-      setReadyForLaunch(true);
-    })();
-  }, []);
-
   useEffect(() => {
     type TextProps = {
       defaultProps: {
@@ -78,14 +58,13 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    if (readyForLaunch && (fontsLoaded || fontsLoadError)) {
+    if (fontsLoaded || fontsLoadError) {
+      if (fontsLoadError) {
+        Alert.alert('Font Load Error', 'Failed to load fonts.');
+      }
       SplashScreen.hideAsync();
     }
-  }, [fontsLoadError, fontsLoaded, readyForLaunch]);
-
-  if (!readyForLaunch) {
-    return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />;
-  }
+  }, [fontsLoadError, fontsLoaded]);
 
   return (
     <>
