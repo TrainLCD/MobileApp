@@ -1,8 +1,8 @@
-const { getSentryExpoConfig } = require('@sentry/react-native/metro');
-
-const baseConfig = getSentryExpoConfig(__dirname);
+const { getDefaultConfig } = require("@react-native/metro-config");
+const { withSentryConfig } = require("@sentry/react-native/metro");
+const config = getDefaultConfig(__dirname);
 
 // Add .d.ts to source extensions
-baseConfig.resolver.sourceExts.push('d.ts');
+config.resolver.sourceExts.push('d.ts');
 
-module.exports = baseConfig;
+module.exports = withSentryConfig(config);
