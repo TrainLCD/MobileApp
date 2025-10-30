@@ -1,4 +1,7 @@
 #!/bin/zsh
+
+set -euo pipefail
+
 mkdir -p /Volumes/workspace/repository/ios/Schemes/Dev
 
 # 環境変数の存在確認
