@@ -1,5 +1,5 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { FONTS } from '../constants';
 import isTablet from '../utils/isTablet';
 import Typography from './Typography';
@@ -23,9 +23,10 @@ const styles = StyleSheet.create({
   lineSymbol: {
     color: '#221714',
     fontSize: isTablet ? 22 * 1.5 : 22,
+    lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: -4,
+    marginTop: Platform.select({ android: -2, ios: -4 }),
     letterSpacing: -1,
   },
   stationNumber: {
