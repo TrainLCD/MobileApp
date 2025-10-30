@@ -117,7 +117,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     loading: fetchStationsNearbyLoading,
     error: fetchStationsNearbyError,
   } = useQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
-    skip: !visible || latitude === null || longitude === null,
+    skip: !visible || latitude == null || longitude == null,
     variables: {
       latitude: latitude as number,
       longitude: longitude as number,
