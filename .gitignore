@@ -146,7 +146,7 @@ buck-out/
 */fastlane/Preview.html
 */fastlane/screenshots
 
-android/fastlane/play-store-credentials.json
+android/google-play-services.json
 ios/TrainLCD.app.dSYM.zip
 ios/CanaryTrainLCD.app.dSYM.zip
 

@@ -1,0 +1,34 @@
+{
+  "cli": {
+    "version": ">= 16.26.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "distribution": "store",
+      "android": {
+        "gradleCommand": ":app:bundleDevRelease",
+        "autoIncrement": true
+      },
+      "ios": {
+        "scheme": "CanaryTrainLCD",
+        "buildConfiguration": "Release",
+        "autoIncrement": true
+      }
+    },
+    "preview": {
+      "distribution": "store"
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "development": {
+      "ios": {
+        "ascAppId": "6450133462",
+        "bundleIdentifier": "me.tinykitten.trainlcd.dev"
+      }
+    }
+  }
+}

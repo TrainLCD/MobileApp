@@ -1,0 +1,73 @@
+name: Create Canary Builds
+
+jobs:
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: development
+    steps:
+      - uses: eas/checkout
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
+      - name: Decode Sentry properties
+        run: |
+          if [ -z "${SENTRY_PROPERTIES_BASE64:-}" ]; then
+            echo "Environment variable SENTRY_PROPERTIES_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$SENTRY_PROPERTIES_BASE64" | base64 --decode > android/sentry.properties
+      - name: Decode google-services.json
+        run: |
+          if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
+            echo "Environment variable GOOGLE_SERVICES_JSON_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+      - name: Delete any .env for environment consistency
+        run: rm -f .env*
+      - uses: eas/build
+
+  submit_android:
+    name: Submit to Google Play Store
+    needs: [build_android]
+    type: submit
+    params:
+      platform: android
+      build_id: ${{ needs.build_android.outputs.build_id }}
+
+  build_ios:
+    type: build
+    params:
+      platform: ios
+      profile: development
+    steps:
+      - uses: eas/checkout
+      - name: Checkout submodules
+        run: |
+            git submodule update --init --recursive
+      - name: Decode Sentry properties
+        run: |
+          if [ -z "${SENTRY_PROPERTIES_BASE64:-}" ]; then
+            echo "Environment variable SENTRY_PROPERTIES_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$SENTRY_PROPERTIES_BASE64" | base64 --decode > ios/sentry.properties
+      - name: Decode GoogleService-Info.plist
+        run: |
+          if [ -z "${GOOGLE_SERVICE_INFO_PLIST_BASE64:-}" ]; then
+            echo "Environment variable GOOGLE_SERVICE_INFO_PLIST_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/Schemes/Dev/GoogleService-Info.plist
+      - name: Delete any .env for environment consistency
+        run: rm -f .env*
+      - uses: eas/build
+
+  submit_ios:
+    name: Submit to TestFlight
+    needs: [build_ios]
+    type: testflight
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
