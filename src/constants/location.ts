@@ -13,5 +13,5 @@ export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   timeInterval: LOCATION_TIME_INTERVAL,
   deferredUpdatesInterval: LOCATION_TIME_INTERVAL,
   deferredUpdatesDistance: LOCATION_DISTANCE_INTERVAL,
-  pausesUpdatesAutomatically: false
+  pausesUpdatesAutomatically: false,
 } as const;
