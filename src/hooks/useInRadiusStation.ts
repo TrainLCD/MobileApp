@@ -9,8 +9,8 @@ export const useInRadiusStation = (radius: number) => {
   const { stations, station } = useAtomValue(stationState);
 
   const locationState = useLocationStore();
-  const latitude = locationState?.coords.latitude;
-  const longitude = locationState?.coords.longitude;
+  const latitude = locationState?.location?.coords.latitude;
+  const longitude = locationState?.location?.coords.longitude;
 
   const [latestMatchedStation, setLatestMatchedStation] =
     useState<Station | null>(station);

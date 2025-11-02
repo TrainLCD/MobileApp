@@ -106,8 +106,12 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const insets = useSafeAreaInsets();

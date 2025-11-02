@@ -90,7 +90,7 @@ export const useTelemetrySender = (
     }
   }, []);
 
-  const coords = useLocationStore((state) => state?.coords);
+  const coords = useLocationStore((state) => state?.location?.coords);
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
     useAtomValue(stationState);
