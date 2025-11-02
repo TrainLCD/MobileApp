@@ -1,0 +1,60 @@
+name: Bump Version on Canary PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - canary
+
+permissions:
+  contents: write
+
+env:
+  TZ: "Asia/Tokyo"
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Bump version
+        run: |
+          set -e
+          pnpm run version:bump
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email \
+            "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git commit -m "Bump version for canary release"
+          git push
