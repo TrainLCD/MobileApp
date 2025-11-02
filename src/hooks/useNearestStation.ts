@@ -8,8 +8,12 @@ import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
 export const useNearestStation = (): Station | null => {
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
   const { stations } = useAtomValue(stationState);
   const currentStation = useCurrentStation(false);
   const nextStation = useNextStation(false);

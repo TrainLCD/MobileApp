@@ -28,11 +28,15 @@ jest.mock('~/hooks/useLocationStore', () => ({
     jest.fn(() => null),
     {
       setState: jest.fn(),
-      getState: jest.fn(() => null),
+      getState: jest.fn(() => ({
+        location: null,
+        accuracyHistory: [],
+      })),
       subscribe: jest.fn(),
       destroy: jest.fn(),
     }
   ),
+  setLocation: jest.fn(),
 }));
 
 jest.mock('expo-location', () => ({
@@ -111,8 +115,8 @@ describe('useSimulationMode', () => {
       undefined
     );
 
-    //  useLocationStore.setStateをリセット
-    (useLocationStoreModule.useLocationStore.setState as jest.Mock).mockClear();
+    //  setLocationをリセット
+    (useLocationStoreModule.setLocation as jest.Mock).mockClear();
   });
 
   afterEach(() => {
@@ -233,7 +237,7 @@ describe('useSimulationMode', () => {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
     });
 
-    expect(useLocationStoreModule.useLocationStore.setState).toHaveBeenCalled();
+    expect(useLocationStoreModule.setLocation).toHaveBeenCalled();
   });
 
   it('新幹線の路線タイプでは最高速度が適用される', () => {
@@ -365,23 +369,18 @@ describe('useSimulationMode', () => {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
     });
 
-    // 初期化時に現在駅の位置にsetStateが呼ばれることを検証
-    const setStateCalls = (
-      useLocationStoreModule.useLocationStore.setState as jest.Mock
-    ).mock.calls;
+    // 初期化時に現在駅の位置にsetLocationが呼ばれることを検証
+    const setLocationCalls = (useLocationStoreModule.setLocation as jest.Mock)
+      .mock.calls;
 
-    expect(setStateCalls.length).toBeGreaterThan(0);
+    expect(setLocationCalls.length).toBeGreaterThan(0);
 
     // INBOUNDの場合、駅リストが逆順になるため、
     // 速度プロファイルも逆順の駅間で生成される
     // 初期化時の位置が期待する駅（stations[2]）に設定されることを確認
-    const initialCall = setStateCalls[0][0];
-    if (typeof initialCall === 'function') {
-      // setStateがupdater関数として呼ばれる場合をスキップ
-    } else {
-      expect(initialCall.coords.latitude).toBe(35.701);
-      expect(initialCall.coords.longitude).toBe(139.787);
-    }
+    const initialCall = setLocationCalls[0][0];
+    expect(initialCall.coords.latitude).toBe(35.701);
+    expect(initialCall.coords.longitude).toBe(139.787);
   });
 
   it('次の駅がない場合、最初の駅に戻る', () => {
@@ -425,7 +424,7 @@ describe('useSimulationMode', () => {
     });
 
     // step関数が呼ばれたときに最初の駅に戻ることを期待
-    expect(useLocationStoreModule.useLocationStore.setState).toHaveBeenCalled();
+    expect(useLocationStoreModule.setLocation).toHaveBeenCalled();
   });
 
   it('緯度・経度が未定義の駅は速度プロファイル生成から除外される', () => {
@@ -541,10 +540,9 @@ describe('useSimulationMode', () => {
     // 1秒進める
     jest.advanceTimersByTime(1000);
 
-    // setStateが複数回呼ばれることを期待（初期化 + インターバル更新）
+    // setLocationが複数回呼ばれることを期待（初期化 + インターバル更新）
     expect(
-      (useLocationStoreModule.useLocationStore.setState as jest.Mock).mock.calls
-        .length
+      (useLocationStoreModule.setLocation as jest.Mock).mock.calls.length
     ).toBeGreaterThan(0);
 
     unmount();
@@ -599,6 +597,6 @@ describe('useSimulationMode', () => {
       jest.advanceTimersByTime(1000);
     }
 
-    expect(useLocationStoreModule.useLocationStore.setState).toHaveBeenCalled();
+    expect(useLocationStoreModule.setLocation).toHaveBeenCalled();
   });
 });

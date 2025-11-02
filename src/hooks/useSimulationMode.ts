@@ -22,7 +22,7 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
-import { useLocationStore } from './useLocationStore';
+import { setLocation, useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
 export const useSimulationMode = (): void => {
@@ -173,64 +173,64 @@ export const useSimulationMode = (): void => {
       if (!nextStation) {
         segmentIndexRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
-        useLocationStore.setState((prev) =>
+        const prev = useLocationStore.getState().location;
+        if (
           prev &&
           firstStation?.latitude != null &&
           firstStation?.longitude != null
-            ? {
-                ...prev,
-                coords: {
-                  ...prev.coords,
-                  latitude: firstStation.latitude,
-                  longitude: firstStation.longitude,
-                },
-                timestamp: Date.now(),
-              }
-            : prev
-        );
+        ) {
+          setLocation({
+            ...prev,
+            coords: {
+              ...prev.coords,
+              latitude: firstStation.latitude,
+              longitude: firstStation.longitude,
+            },
+            timestamp: Date.now(),
+          });
+        }
         return;
       }
 
-      useLocationStore.setState((prev) => {
-        if (
-          !prev ||
-          nextStation.latitude == null ||
-          nextStation.longitude == null
-        ) {
-          return prev;
+      const prev = useLocationStore.getState().location;
+      if (
+        !prev ||
+        nextStation.latitude == null ||
+        nextStation.longitude == null
+      ) {
+        return;
+      }
+
+      const bearingForNextStation = getGreatCircleBearing(
+        {
+          latitude: prev.coords.latitude,
+          longitude: prev.coords.longitude,
+        },
+        {
+          latitude: nextStation.latitude,
+          longitude: nextStation.longitude,
         }
+      );
 
-        const bearingForNextStation = getGreatCircleBearing(
-          {
-            latitude: prev.coords.latitude,
-            longitude: prev.coords.longitude,
-          },
-          {
-            latitude: nextStation.latitude,
-            longitude: nextStation.longitude,
-          }
-        );
+      const nextPoint = computeDestinationPoint(
+        {
+          lat: prev.coords.latitude,
+          lon: prev.coords.longitude,
+        },
+        speed,
+        bearingForNextStation
+      );
 
-        const nextPoint = computeDestinationPoint(
-          {
-            lat: prev.coords.latitude,
-            lon: prev.coords.longitude,
-          },
+      setLocation({
+        timestamp: Date.now(),
+        coords: {
+          ...nextPoint,
+          accuracy: 0,
+          altitude: null,
+          altitudeAccuracy: null,
           speed,
-          bearingForNextStation
-        );
-
-        return {
-          timestamp: Date.now(),
-          coords: {
-            ...nextPoint,
-            accuracy: 0,
-            altitude: null,
-            altitudeAccuracy: null,
-            speed,
-            heading: null,
-          },
-        };
+          heading: null,
+        },
       });
     },
     [nextStation, maybeRevsersedStations]
@@ -244,7 +244,7 @@ export const useSimulationMode = (): void => {
       station.latitude != null &&
       station.longitude != null
     ) {
-      useLocationStore.setState({
+      setLocation({
         timestamp: Date.now(),
         coords: {
           accuracy: null,

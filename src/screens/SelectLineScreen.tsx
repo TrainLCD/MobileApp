@@ -33,6 +33,7 @@ import { Heading } from '../components/Heading';
 import { LineCard } from '../components/LineCard';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import {
+  setLocation,
   useFetchCurrentLocationOnce,
   useFetchNearbyStation,
   useLocationStore,
@@ -132,8 +133,12 @@ const SelectLineScreen = () => {
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
 
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
@@ -312,7 +317,7 @@ const SelectLineScreen = () => {
 
       const location = await fetchCurrentLocation(true);
       if (!location) return;
-      useLocationStore.setState(location);
+      setLocation(location);
       const data = await fetchByCoords({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,

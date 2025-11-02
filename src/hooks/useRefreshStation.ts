@@ -36,10 +36,17 @@ Notifications.setNotificationHandler({
 export const useRefreshStation = (): void => {
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
-  const speed = useLocationStore((state) => state?.coords.speed) ?? -1;
-  const accuracy = useLocationStore((state) => state?.coords.accuracy);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
+  const speed =
+    useLocationStore((state) => state?.location?.coords.speed) ?? -1;
+  const accuracy = useLocationStore(
+    (state) => state?.location?.coords.accuracy
+  );
 
   const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);

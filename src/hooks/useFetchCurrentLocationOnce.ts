@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { useLocationStore } from './useLocationStore';
 
 export const useFetchCurrentLocationOnce = () => {
-  const lastKnownLocation = useLocationStore();
+  const lastKnownLocation = useLocationStore((state) => state?.location);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
