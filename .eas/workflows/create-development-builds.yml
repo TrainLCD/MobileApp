@@ -32,7 +32,7 @@ jobs:
             exit 1
           fi
           printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
-      - name: Resotre android/app/release.jks
+      - name: Restore android/app/release.jks
         run: |
           if [ -z "${ANDROID_RELEASE_JKS_BASE64:-}" ]; then
             echo "Environment variable ANDROID_RELEASE_JKS_BASE64 is not set."
