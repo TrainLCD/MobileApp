@@ -6,6 +6,7 @@ import {
   useLocationStore,
   useNextStation,
 } from '~/hooks';
+import { generateAccuracyChart } from '~/utils/accuracyChart';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import Typography from './Typography';
 
@@ -29,8 +30,13 @@ const styles = StyleSheet.create({
 });
 
 const DevOverlay: React.FC = () => {
-  const speed = useLocationStore((state) => state?.coords.speed);
-  const accuracy = useLocationStore((state) => state?.coords.accuracy);
+  const speed = useLocationStore((state) => state?.location?.coords.speed);
+  const accuracy = useLocationStore(
+    (state) => state?.location?.coords.accuracy
+  );
+  const accuracyHistory = useLocationStore(
+    (state) => state?.accuracyHistory ?? []
+  );
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation();
 
@@ -39,6 +45,11 @@ const DevOverlay: React.FC = () => {
   const speedKMH = useMemo(
     () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
     [coordsSpeed, speed]
+  );
+
+  const accuracyChartText = useMemo(
+    () => generateAccuracyChart(accuracyHistory),
+    [accuracyHistory]
   );
 
   const dim = useWindowDimensions();
@@ -52,7 +63,7 @@ const DevOverlay: React.FC = () => {
 
       <Typography style={styles.text}>{`Accuracy: ${
         accuracy ?? ''
-      }m`}</Typography>
+      }m ${accuracyChartText}`}</Typography>
 
       {distanceToNextStation ? (
         <Typography style={styles.text}>
