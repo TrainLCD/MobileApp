@@ -11,6 +11,13 @@ jobs:
       - name: Checkout submodules
         run: |
           git submodule update --init --recursive
+      - name: Decode .env.local
+        run: |
+         if [ -z "${DOTENV_LOCAL_BASE64:-}" ]; then
+           echo "Environment variable DOTENV_LOCAL_BASE64 is not set."
+           exit 1
+         fi
+         printf '%s' "$DOTENV_LOCAL_BASE64" | base64 --decode > .env.local
       - name: Decode Sentry properties
         run: |
           if [ -z "${SENTRY_PROPERTIES_BASE64:-}" ]; then
@@ -25,8 +32,6 @@ jobs:
             exit 1
           fi
           printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
-      - name: Delete any .env for environment consistency
-        run: rm -f .env*
       - uses: eas/build
 
   submit_android:
@@ -34,8 +39,8 @@ jobs:
     needs: [build_android]
     type: submit
     params:
-      platform: android
       build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: development
 
   build_ios:
     type: build
@@ -47,6 +52,13 @@ jobs:
       - name: Checkout submodules
         run: |
             git submodule update --init --recursive
+      - name: Decode .env.local
+        run: |
+          if [ -z "${DOTENV_LOCAL_BASE64:-}" ]; then
+            echo "Environment variable DOTENV_LOCAL_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$DOTENV_LOCAL_BASE64" | base64 --decode > .env.local
       - name: Decode Sentry properties
         run: |
           if [ -z "${SENTRY_PROPERTIES_BASE64:-}" ]; then
@@ -61,8 +73,6 @@ jobs:
             exit 1
           fi
           printf '%s' "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/Schemes/Dev/GoogleService-Info.plist
-      - name: Delete any .env for environment consistency
-        run: rm -f .env*
       - uses: eas/build
 
   submit_ios:
@@ -71,3 +81,4 @@ jobs:
     type: testflight
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: development
