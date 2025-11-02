@@ -125,7 +125,7 @@ export const SelectLineScreenPresets = ({
                 <PresetCard
                   title={item.name}
                   from={item.stations[0]}
-                  to={item.stations[item.stations.length - 1]}
+                  to={item.stations.at(-1)}
                 />
               </Pressable>
             </View>
