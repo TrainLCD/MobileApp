@@ -73,7 +73,9 @@ jobs:
       - uses: eas/checkout
       - name: Checkout submodules
         run: |
-            git submodule update --init --recursive
+          set -euo pipefail
+          git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
       - name: Decode .env.local
         run: |
           if [ -z "${DOTENV_LOCAL_BASE64:-}" ]; then
