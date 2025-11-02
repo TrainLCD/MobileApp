@@ -88,7 +88,7 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
             }}
           >
             <Ionicons
-              name={active === 'search' ? 'search' : 'search-outline'}
+              name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
               size={26}
               color={
                 active === 'search' ? iconColor.active : iconColor.inactive
