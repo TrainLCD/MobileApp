@@ -53,7 +53,6 @@ jobs:
           git config --local user.email \
             "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add app.json package.json android/app/build.gradle \
-            ios/TrainLCD.xcodeproj/project.pbxproj
+          git add -A
           git commit -m "Bump version for canary release"
           git push
