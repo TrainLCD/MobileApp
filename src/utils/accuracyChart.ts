@@ -13,9 +13,15 @@ export const generateAccuracyChart = (accuracyHistory: number[]): string => {
   // Block characters from tallest to shortest
   const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
 
-  // Find min and max for normalization
-  const minAccuracy = Math.min(...accuracyHistory);
-  const maxAccuracy = Math.max(...accuracyHistory);
+  // Find min and max for normalization using reduce to avoid stack overflow
+  const minAccuracy = accuracyHistory.reduce(
+    (min, val) => (val < min ? val : min),
+    accuracyHistory[0]
+  );
+  const maxAccuracy = accuracyHistory.reduce(
+    (max, val) => (val > max ? val : max),
+    accuracyHistory[0]
+  );
 
   // If all values are the same, use middle block
   if (minAccuracy === maxAccuracy) {

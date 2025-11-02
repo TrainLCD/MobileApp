@@ -15,11 +15,13 @@ export const useLocationStore = create<LocationStoreState>(() => ({
 
 export const setLocation = (location: Location.LocationObject) => {
   const currentHistory = useLocationStore.getState().accuracyHistory;
-  const newAccuracy = location.coords.accuracy ?? 0;
+  const newAccuracy = location.coords.accuracy;
 
-  const updatedHistory = [...currentHistory, newAccuracy].slice(
-    -MAX_ACCURACY_HISTORY
-  );
+  // Only add to history if accuracy is a valid number
+  const updatedHistory =
+    newAccuracy != null
+      ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
+      : currentHistory;
 
   useLocationStore.setState({
     location,
