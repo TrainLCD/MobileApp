@@ -16,10 +16,8 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
+      - name: Checkout
+        uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 10
