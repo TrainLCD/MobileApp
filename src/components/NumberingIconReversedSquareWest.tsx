@@ -1,5 +1,5 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { FONTS } from '../constants';
 import isTablet from '../utils/isTablet';
 import Typography from './Typography';
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet ? 30 * 1.5 : 30,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: 4,
+    marginTop: Platform.OS === 'ios' ? 4 : 0,
   },
   stationNumber: {
     marginTop: -4,
