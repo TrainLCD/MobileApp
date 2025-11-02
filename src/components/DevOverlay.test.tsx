@@ -240,7 +240,7 @@ describe('DevOverlay', () => {
       const { getByText } = render(<DevOverlay />);
       expect(
         getByText(
-          (content: string, _element?: Element): boolean =>
+          (content: string, _element: Element): boolean =>
             content.includes('Next: 850m') && content.includes('Shinjuku')
         )
       ).toBeTruthy();
@@ -441,7 +441,7 @@ describe('DevOverlay', () => {
       const { getByText } = render(<DevOverlay />);
       expect(
         getByText(
-          (content: string, _element?: Element): boolean =>
+          (content: string, _element: Element): boolean =>
             content.includes('東京駅 (Tokyo Station) / 도쿄역')
         )
       ).toBeTruthy();
