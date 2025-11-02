@@ -17,7 +17,9 @@ jest.mock('react-native', () => {
   };
 });
 
-jest.mock('react-native/Libraries/DevSupport/DevMenu', () => ({}));
+jest.mock('react-native/Libraries/DevSupport/DevMenu', () => ({}), {
+  virtual: true,
+});
 
 jest.mock('~/hooks', () => ({
   useLocationStore: jest.fn((selector) => {
@@ -48,7 +50,15 @@ jest.mock('./Typography', () => {
   const { Text } = jest.requireActual('react-native');
   return {
     __esModule: true,
-    default: ({ children, style, testID }: { children?: React.ReactNode; style?: any; testID?: string }) => (
+    default: ({
+      children,
+      style,
+      testID,
+    }: {
+      children?: React.ReactNode;
+      style?: any;
+      testID?: string;
+    }) => (
       <Text style={style} testID={testID}>
         {children}
       </Text>
@@ -74,9 +84,7 @@ describe('DevOverlay', () => {
 
     it('should display application version and build number', () => {
       const { getByText } = render(<DevOverlay />);
-      expect(
-        getByText(/TrainLCD DO/)
-      ).toBeTruthy();
+      expect(getByText(/TrainLCD DO/)).toBeTruthy();
       expect(getByText(/1\.0\.0\(100\)/)).toBeTruthy();
     });
 
@@ -216,9 +224,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(
-        getByText(/Shibuya Station/)
-      ).toBeTruthy();
+      expect(getByText(/Shibuya Station/)).toBeTruthy();
     });
 
     it('should display both distance and station name together', () => {
@@ -233,8 +239,9 @@ describe('DevOverlay', () => {
 
       const { getByText } = render(<DevOverlay />);
       expect(
-        getByText((content: string): boolean =>
-          content.includes('Next: 850m') && content.includes('Shinjuku')
+        getByText(
+          (content: string, _element?: Element): boolean =>
+            content.includes('Next: 850m') && content.includes('Shinjuku')
         )
       ).toBeTruthy();
     });
@@ -433,8 +440,9 @@ describe('DevOverlay', () => {
 
       const { getByText } = render(<DevOverlay />);
       expect(
-        getByText((content: string): boolean =>
-          content.includes('東京駅 (Tokyo Station) / 도쿄역')
+        getByText(
+          (content: string, _element?: Element): boolean =>
+            content.includes('東京駅 (Tokyo Station) / 도쿄역')
         )
       ).toBeTruthy();
     });
@@ -443,10 +451,10 @@ describe('DevOverlay', () => {
   describe('Speed Calculation Logic', () => {
     it('should correctly convert m/s to km/h using formula (speed * 3600) / 1000', () => {
       const { useLocationStore } = require('~/hooks');
-      
+
       // Test various speeds
       const testCases = [
-        { input: 5, expected: 18 },    // 5 m/s = 18 km/h
+        { input: 5, expected: 18 }, // 5 m/s = 18 km/h
         { input: 16.67, expected: 60 }, // ~16.67 m/s = ~60 km/h
         { input: 27.78, expected: 100 }, // ~27.78 m/s = ~100 km/h
       ];
@@ -458,15 +466,13 @@ describe('DevOverlay', () => {
         });
 
         const { getByText } = render(<DevOverlay />);
-        expect(
-          getByText(new RegExp(`Speed: ${expected}`))
-        ).toBeTruthy();
+        expect(getByText(new RegExp(`Speed: ${expected}`))).toBeTruthy();
       });
     });
 
     it('should handle the double null coalescing operator correctly', () => {
       const { useLocationStore } = require('~/hooks');
-      
+
       // When speed is null, (null ?? 0) < 0 should be false, so result is null
       // Then ((null) ?? 0) gives 0
       useLocationStore.mockImplementation((selector: any) => {
@@ -486,7 +492,7 @@ describe('DevOverlay', () => {
 
       // Verify the selector functions are called
       expect(useLocationStore).toHaveBeenCalled();
-      
+
       // Check that the mock was called with a function (selector)
       const calls = useLocationStore.mock.calls;
       expect(calls.length).toBeGreaterThan(0);
@@ -555,7 +561,7 @@ describe('DevOverlay', () => {
     it('should use useMemo for speedKMH calculation', () => {
       const { useLocationStore } = require('~/hooks');
       const mockSpeed = 10;
-      
+
       useLocationStore.mockImplementation((selector: any) => {
         const state = { coords: { speed: mockSpeed } };
         return selector(state);
@@ -563,22 +569,22 @@ describe('DevOverlay', () => {
 
       // First render
       const { rerender } = render(<DevOverlay />);
-      
+
       // Re-render with same data should use memoized value
       rerender(<DevOverlay />);
-      
+
       // The component should render successfully with memoization
       expect(useLocationStore).toHaveBeenCalled();
     });
 
     it('should handle multiple rapid re-renders', () => {
       const { rerender } = render(<DevOverlay />);
-      
+
       // Simulate rapid re-renders
       for (let i = 0; i < 10; i++) {
         rerender(<DevOverlay />);
       }
-      
+
       // Should not crash or cause issues
       expect(true).toBe(true);
     });
@@ -588,7 +594,7 @@ describe('DevOverlay', () => {
     it('should render all required Typography components', () => {
       const { UNSAFE_getAllByType } = render(<DevOverlay />);
       const Typography = require('./Typography').default;
-      
+
       // Should have multiple Typography components
       expect(UNSAFE_getAllByType(Typography).length).toBeGreaterThan(0);
     });
