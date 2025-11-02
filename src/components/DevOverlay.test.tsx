@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import * as Application from 'expo-application';
 import React from 'react';
 import { useWindowDimensions } from 'react-native';
 import DevOverlay from './DevOverlay';
@@ -17,6 +16,8 @@ jest.mock('react-native', () => {
     useWindowDimensions: jest.fn(() => ({ width: 400, height: 800 })),
   };
 });
+
+jest.mock('react-native/Libraries/DevSupport/DevMenu', () => ({}));
 
 jest.mock('~/hooks', () => ({
   useLocationStore: jest.fn((selector) => {
@@ -47,7 +48,7 @@ jest.mock('./Typography', () => {
   const { Text } = jest.requireActual('react-native');
   return {
     __esModule: true,
-    default: ({ children, style, testID }: any) => (
+    default: ({ children, style, testID }: { children?: React.ReactNode; style?: any; testID?: string }) => (
       <Text style={style} testID={testID}>
         {children}
       </Text>
@@ -74,9 +75,9 @@ describe('DevOverlay', () => {
     it('should display application version and build number', () => {
       const { getByText } = render(<DevOverlay />);
       expect(
-        getByText((content) => content.includes('TrainLCD DO'))
+        getByText(/TrainLCD DO/)
       ).toBeTruthy();
-      expect(getByText((content) => content.includes('1.0.0(100)'))).toBeTruthy();
+      expect(getByText(/1\.0\.0\(100\)/)).toBeTruthy();
     });
 
     it('should set width to 1/4 of window dimensions', () => {
@@ -135,8 +136,8 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 36'))).toBeTruthy();
-      expect(getByText((content) => content.includes('km/h'))).toBeTruthy();
+      expect(getByText(/Speed: 36/)).toBeTruthy();
+      expect(getByText(/km\/h/)).toBeTruthy();
     });
 
     it('should handle zero speed', () => {
@@ -147,7 +148,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 0'))).toBeTruthy();
+      expect(getByText(/Speed: 0/)).toBeTruthy();
     });
 
     it('should handle null speed as 0 km/h', () => {
@@ -158,7 +159,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 0'))).toBeTruthy();
+      expect(getByText(/Speed: 0/)).toBeTruthy();
     });
 
     it('should handle undefined speed as 0 km/h', () => {
@@ -169,7 +170,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 0'))).toBeTruthy();
+      expect(getByText(/Speed: 0/)).toBeTruthy();
     });
 
     it('should treat negative speed as 0', () => {
@@ -180,7 +181,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 0'))).toBeTruthy();
+      expect(getByText(/Speed: 0/)).toBeTruthy();
     });
 
     it('should round speed to nearest integer', () => {
@@ -192,7 +193,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 50'))).toBeTruthy();
+      expect(getByText(/Speed: 50/)).toBeTruthy();
     });
   });
 
@@ -202,7 +203,7 @@ describe('DevOverlay', () => {
       useDistanceToNextStation.mockReturnValue(1234);
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Next: 1234m'))).toBeTruthy();
+      expect(getByText(/Next: 1234m/)).toBeTruthy();
     });
 
     it('should display next station name when available', () => {
@@ -216,7 +217,7 @@ describe('DevOverlay', () => {
 
       const { getByText } = render(<DevOverlay />);
       expect(
-        getByText((content) => content.includes('Shibuya Station'))
+        getByText(/Shibuya Station/)
       ).toBeTruthy();
     });
 
@@ -232,7 +233,7 @@ describe('DevOverlay', () => {
 
       const { getByText } = render(<DevOverlay />);
       expect(
-        getByText((content) =>
+        getByText((content: string): boolean =>
           content.includes('Next: 850m') && content.includes('Shinjuku')
         )
       ).toBeTruthy();
@@ -249,7 +250,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Next: 500m'))).toBeTruthy();
+      expect(getByText(/Next: 500m/)).toBeTruthy();
       // Should not display station name when null
       expect(getByText('Next: 500m')).toBeTruthy();
     });
@@ -385,7 +386,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 3600'))).toBeTruthy();
+      expect(getByText(/Speed: 3600/)).toBeTruthy();
     });
 
     it('should handle very large distance values', () => {
@@ -393,7 +394,7 @@ describe('DevOverlay', () => {
       useDistanceToNextStation.mockReturnValue(999999);
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Next: 999999m'))).toBeTruthy();
+      expect(getByText(/Next: 999999m/)).toBeTruthy();
     });
 
     it('should handle decimal accuracy values', () => {
@@ -432,7 +433,7 @@ describe('DevOverlay', () => {
 
       const { getByText } = render(<DevOverlay />);
       expect(
-        getByText((content) =>
+        getByText((content: string): boolean =>
           content.includes('東京駅 (Tokyo Station) / 도쿄역')
         )
       ).toBeTruthy();
@@ -458,7 +459,7 @@ describe('DevOverlay', () => {
 
         const { getByText } = render(<DevOverlay />);
         expect(
-          getByText((content) => content.includes(`Speed: ${expected}`))
+          getByText(new RegExp(`Speed: ${expected}`))
         ).toBeTruthy();
       });
     });
@@ -474,7 +475,7 @@ describe('DevOverlay', () => {
       });
 
       const { getByText } = render(<DevOverlay />);
-      expect(getByText((content) => content.includes('Speed: 0'))).toBeTruthy();
+      expect(getByText(/Speed: 0/)).toBeTruthy();
     });
   });
 
