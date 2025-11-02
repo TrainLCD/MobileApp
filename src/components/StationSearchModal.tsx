@@ -48,13 +48,13 @@ type GetStationsByNameVariables = {
 
 const getStationUniqueKey = (station: Station) => {
   if (station.groupId) {
-    return station.groupId;
+    return String(station.groupId);
   }
   if (station.id) {
-    return station.id;
+    return String(station.id);
   }
   const prefId = station.prefectureId;
-  if (!prefId) {
+  if (!prefId || prefId < 1) {
     return station.name;
   }
   return `${station.name}|${PREFECTURES_JA[prefId - 1]}`;
