@@ -1,4 +1,8 @@
 name: Create Canary Builds
+on:
+  push:
+    branches:
+      - canary
 
 jobs:
   build_android:
