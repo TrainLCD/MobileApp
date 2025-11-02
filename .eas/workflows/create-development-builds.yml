@@ -32,6 +32,22 @@ jobs:
             exit 1
           fi
           printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+      - name: Resotre android/app/release.jks
+        run: |
+          if [ -z "${ANDROID_RELEASE_JKS_BASE64:-}" ]; then
+            echo "Environment variable ANDROID_RELEASE_JKS_BASE64 is not set."
+            exit 1
+          fi
+          mkdir -p android/app
+          printf '%s' "$ANDROID_RELEASE_JKS_BASE64" | base64 --decode > android/app/release.jks
+      - name: Restore $HOME/.gradle/gradle.properties
+        run: |
+          if [ -z "${HOME_GRADLE_PROPERTIES_BASE64:-}" ]; then
+            echo "Environment variable HOME_GRADLE_PROPERTIES_BASE64 is not set."
+            exit 1
+          fi
+          mkdir -p $HOME/.gradle
+          printf '%s' "$HOME_GRADLE_PROPERTIES_BASE64" | base64 --decode > $HOME/.gradle/gradle.properties
       - uses: eas/build
 
   submit_android:
