@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 env:
   TZ: "Asia/Tokyo"
@@ -39,21 +40,23 @@ jobs:
           set -e
           pnpm run version:bump
 
-      - name: Check for changes
-        id: check_changes
-        run: |
-          if git diff --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push changes
-        if: steps.check_changes.outputs.has_changes == 'true'
-        run: |
-          git config --local user.email \
-            "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add -A
-          git commit -m "Bump version for canary release"
-          git push
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Bump version for canary release"
+          title: "chore: Bump version for PR #${{ github.event.pull_request.number }}"
+          body: |
+            This PR was automatically created by the bump version workflow.
+            
+            It bumps the version number for the canary release.
+            
+            **Related PR:** #${{ github.event.pull_request.number }}
+            
+            Please merge this PR into the source branch of PR #${{ github.event.pull_request.number }} to update its version numbers.
+          branch: "auto-version-bump-${{ github.event.pull_request.number }}"
+          base: ${{ github.event.pull_request.head.ref }}
+          delete-branch: true
+          labels: |
+            automated
+            version-bump
