@@ -17,10 +17,8 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
+      - name: Checkout
+        uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 10
