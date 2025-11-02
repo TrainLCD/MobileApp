@@ -24,7 +24,9 @@ describe('useFetchCurrentLocationOnce', () => {
       timestamp: 1,
     } as unknown as Location.LocationObject;
     const mockedUseLocationStore = useLocationStore as unknown as jest.Mock;
-    mockedUseLocationStore.mockReturnValue(lastKnown);
+    mockedUseLocationStore.mockImplementation((selector) =>
+      selector({ location: lastKnown, accuracyHistory: [] })
+    );
 
     const { result } = renderHook(() => useFetchCurrentLocationOnce());
 
@@ -38,7 +40,9 @@ describe('useFetchCurrentLocationOnce', () => {
 
   it('lastKnown が無い場合は getCurrentPositionAsync を呼び結果を返す', async () => {
     const mockedUseLocationStore = useLocationStore as unknown as jest.Mock;
-    mockedUseLocationStore.mockReturnValue(null);
+    mockedUseLocationStore.mockImplementation((selector) =>
+      selector({ location: null, accuracyHistory: [] })
+    );
     const pos = {
       coords: { latitude: 35.681236, longitude: 139.767125 },
       timestamp: 1730000000000,
@@ -62,7 +66,9 @@ describe('useFetchCurrentLocationOnce', () => {
 
   it('getCurrentPositionAsync が失敗したら error を設定して reject する', async () => {
     const mockedUseLocationStore = useLocationStore as unknown as jest.Mock;
-    mockedUseLocationStore.mockReturnValue(null);
+    mockedUseLocationStore.mockImplementation((selector) =>
+      selector({ location: null, accuracyHistory: [] })
+    );
     const err = new Error('denied');
     (Location.getCurrentPositionAsync as jest.Mock).mockRejectedValue(err);
 

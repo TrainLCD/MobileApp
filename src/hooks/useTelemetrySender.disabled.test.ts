@@ -27,12 +27,15 @@ jest.mock('~/hooks/useLocationStore', () => ({
     .fn()
     .mockImplementation((selector: (state: any) => any) =>
       selector({
-        coords: {
-          latitude: 35,
-          longitude: 139,
-          accuracy: 5,
-          speed: 10,
+        location: {
+          coords: {
+            latitude: 35,
+            longitude: 139,
+            accuracy: 5,
+            speed: 10,
+          },
         },
+        accuracyHistory: [5],
       })
     ),
 }));
