@@ -2,5 +2,5 @@ auto_review:
   enabled: true
   ignore_usernames: []
 
-review:
-  auto_approve: true
+reviews:
+  request_changes_workflow: true
