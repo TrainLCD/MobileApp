@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: 180,
+    marginTop: 4,
     borderRadius: 8,
     paddingHorizontal: 24,
     paddingTop: 24,
