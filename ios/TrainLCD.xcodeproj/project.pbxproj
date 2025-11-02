@@ -2555,7 +2555,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				CURRENT_PROJECT_VERSION = 2291;
+				CURRENT_PROJECT_VERSION = 2292;
 				MARKETING_VERSION = 10.0.0;
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._ef86e70f27f34fbe058853a6e08d7115/node_modules/react-native";
 				SDKROOT = iphoneos;
@@ -2656,7 +2656,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				CURRENT_PROJECT_VERSION = 2291;
+				CURRENT_PROJECT_VERSION = 2292;
 				MARKETING_VERSION = 10.0.0;
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._ef86e70f27f34fbe058853a6e08d7115/node_modules/react-native";
 				SDKROOT = iphoneos;
@@ -3616,7 +3616,7 @@
 				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				CURRENT_PROJECT_VERSION = 2291;
+				CURRENT_PROJECT_VERSION = 2292;
 				MARKETING_VERSION = 10.0.0;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -3667,7 +3667,7 @@
 				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				CURRENT_PROJECT_VERSION = 2291;
+				CURRENT_PROJECT_VERSION = 2292;
 				MARKETING_VERSION = 10.0.0;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
