@@ -4,7 +4,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   useDistanceToNextStation,
   useLocationStore,
-  useThreshold,
+  useNextStation,
 } from '~/hooks';
 import { isTelemetryEnabled } from '~/utils/telemetryConfig';
 import Typography from './Typography';
@@ -29,12 +29,10 @@ const styles = StyleSheet.create({
 });
 
 const DevOverlay: React.FC = () => {
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
   const speed = useLocationStore((state) => state?.coords.speed);
   const accuracy = useLocationStore((state) => state?.coords.accuracy);
-  const { approachingThreshold, arrivedThreshold } = useThreshold();
   const distanceToNextStation = useDistanceToNextStation();
+  const nextStation = useNextStation();
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
@@ -51,12 +49,6 @@ const DevOverlay: React.FC = () => {
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
-      <Typography style={styles.text}>{`Latitude: ${
-        latitude ?? ''
-      }`}</Typography>
-      <Typography style={styles.text}>{`Longitude: ${
-        longitude ?? ''
-      }`}</Typography>
 
       <Typography style={styles.text}>{`Accuracy: ${
         accuracy ?? ''
@@ -65,6 +57,7 @@ const DevOverlay: React.FC = () => {
       {distanceToNextStation ? (
         <Typography style={styles.text}>
           Next: {distanceToNextStation}m
+          {nextStation?.name ? ` ${nextStation.name}` : ''}
         </Typography>
       ) : (
         <Typography style={styles.text}>Next:</Typography>
@@ -75,12 +68,6 @@ const DevOverlay: React.FC = () => {
         km/h
       </Typography>
 
-      <Typography style={styles.text}>
-        Approaching: {approachingThreshold.toLocaleString()}m
-      </Typography>
-      <Typography style={styles.text}>
-        Arrived: {arrivedThreshold.toLocaleString()}m
-      </Typography>
       <Typography style={styles.text}>
         Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
       </Typography>
