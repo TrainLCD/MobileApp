@@ -21,8 +21,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: recursive
-          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
 
       - uses: pnpm/action-setup@v4
         with:
