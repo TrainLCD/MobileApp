@@ -148,7 +148,6 @@ CI が失敗した場合は、根本原因のメモと再現手順を追加す�
 - シークレットは`.env.local`に保存
 - `.env`をテンプレートとして扱い、`.env.example`をオンボーディング用に同期
 - クレデンシャル、アクセストークン、本番エンドポイントは絶対にコミットしない
-- 既存の GitHub Actions シークレット名（例: `FONTS_SSH_KEY`）を再利用してドリフトを防止
 - 依存関係のアップグレード（`pnpm up --interactive`）や Expo SDK マイグレーション後は、`expo-doctor`、`pnpm lint`、`pnpm test`、`pnpm typecheck`を実行し、結果を`docs/changelog.md`に記録
 
 ## AI 支援開発の原則

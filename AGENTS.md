@@ -87,7 +87,6 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 - Store secrets in `.env.local`; treat `.env` as the template, and keep `.env.example` synchronized for onboarding.
 - Never commit credentials, access tokens, or production endpoints.
-- Reuse existing GitHub Actions secret names (e.g., `FONTS_SSH_KEY`) to avoid drift.
 - Protect Expo and Fastlane credentials with 2FA and rotate access when automations change.
 - After dependency upgrades (`pnpm up --interactive`) or Expo SDK migrations, run `expo-doctor`, `pnpm lint`, `pnpm test`, and `pnpm typecheck`, then capture results in `docs/changelog.md`.
 
