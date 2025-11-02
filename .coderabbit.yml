@@ -1,3 +1,5 @@
+language: ja-JP
+
 auto_review:
   enabled: true
   ignore_usernames: []
