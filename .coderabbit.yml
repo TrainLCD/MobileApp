@@ -1,12 +1,6 @@
 auto_review:
   enabled: true
-  ignore_users: []
-  trigger:
-    - pull_request_opened
-    - pull_request_synchronized
-
-  reviewers:
-    - coderabbit
+  ignore_usernames: []
 
 review:
   auto_approve: true
