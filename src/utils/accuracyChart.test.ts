@@ -98,4 +98,56 @@ describe('generateAccuracyChart', () => {
       expect(validBlocks).toContain(char);
     }
   });
+
+  it('should filter out NaN values', () => {
+    const result = generateAccuracyChart([10, Number.NaN, 50, 100]);
+    // Should have 3 valid values
+    expect(result).toHaveLength(3);
+  });
+
+  it('should filter out Infinity values', () => {
+    const result = generateAccuracyChart([
+      10,
+      Number.POSITIVE_INFINITY,
+      50,
+      Number.NEGATIVE_INFINITY,
+      100,
+    ]);
+    // Should have 3 valid values
+    expect(result).toHaveLength(3);
+  });
+
+  it('should filter out negative values', () => {
+    const result = generateAccuracyChart([10, -5, 50, -100, 100]);
+    // Should have 3 valid values (10, 50, 100)
+    expect(result).toHaveLength(3);
+  });
+
+  it('should return empty string when all values are invalid', () => {
+    const result = generateAccuracyChart([
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      -10,
+      Number.NEGATIVE_INFINITY,
+    ]);
+    expect(result).toBe('');
+  });
+
+  it('should handle mixed valid and invalid values', () => {
+    const result = generateAccuracyChart([
+      10,
+      Number.NaN,
+      50,
+      Number.POSITIVE_INFINITY,
+      100,
+      -5,
+    ]);
+    // Should have 3 valid values
+    expect(result).toHaveLength(3);
+
+    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
+    for (const char of result) {
+      expect(blocks).toContain(char);
+    }
+  });
 });

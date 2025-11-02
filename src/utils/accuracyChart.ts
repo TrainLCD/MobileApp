@@ -13,30 +13,46 @@ export const generateAccuracyChart = (accuracyHistory: number[]): string => {
   // Block characters from tallest to shortest
   const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
 
-  // Find min and max for normalization using reduce to avoid stack overflow
-  const minAccuracy = accuracyHistory.reduce(
-    (min, val) => (val < min ? val : min),
-    accuracyHistory[0]
+  // Filter out invalid values (NaN, Infinity, negative numbers)
+  const validHistory = accuracyHistory.filter(
+    (val) => Number.isFinite(val) && val >= 0
   );
-  const maxAccuracy = accuracyHistory.reduce(
+
+  // Return empty string if no valid values
+  if (validHistory.length === 0) {
+    return '';
+  }
+
+  // Find min and max for normalization using reduce to avoid stack overflow
+  const minAccuracy = validHistory.reduce(
+    (min, val) => (val < min ? val : min),
+    validHistory[0]
+  );
+  const maxAccuracy = validHistory.reduce(
     (max, val) => (val > max ? val : max),
-    accuracyHistory[0]
+    validHistory[0]
   );
 
   // If all values are the same, use middle block
   if (minAccuracy === maxAccuracy) {
-    return blocks[3].repeat(accuracyHistory.length);
+    return blocks[3].repeat(validHistory.length);
   }
 
   // Normalize and map to block characters
   // Lower accuracy (better) maps to taller blocks (index 0)
   // Higher accuracy (worse) maps to shorter blocks (index 6)
-  return accuracyHistory
+  return validHistory
     .map((accuracy) => {
       // Lower accuracy values should map to lower indices (taller blocks)
-      const normalized = (accuracy - minAccuracy) / (maxAccuracy - minAccuracy);
+      const denominator = maxAccuracy - minAccuracy;
+      const normalized =
+        denominator > 0
+          ? Math.max(0, Math.min(1, (accuracy - minAccuracy) / denominator))
+          : 0.5;
       const blockIndex = Math.floor(normalized * (blocks.length - 1));
-      return blocks[blockIndex];
+      // Ensure blockIndex is within bounds
+      const safeIndex = Math.max(0, Math.min(blocks.length - 1, blockIndex));
+      return blocks[safeIndex] || blocks[3];
     })
     .join('');
 };

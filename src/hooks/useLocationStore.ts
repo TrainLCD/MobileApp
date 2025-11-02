@@ -17,9 +17,9 @@ export const setLocation = (location: Location.LocationObject) => {
   const currentHistory = useLocationStore.getState().accuracyHistory;
   const newAccuracy = location.coords.accuracy;
 
-  // Only add to history if accuracy is a valid number
+  // Only add to history if accuracy is a valid finite non-negative number
   const updatedHistory =
-    newAccuracy != null
+    newAccuracy != null && Number.isFinite(newAccuracy) && newAccuracy >= 0
       ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
       : currentHistory;
 
