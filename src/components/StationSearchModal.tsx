@@ -46,6 +46,23 @@ type GetStationsByNameVariables = {
   fromStationGroupId?: number;
 };
 
+const getStationUniqueKey = (station: Station) => {
+  if (station.groupId) {
+    return String(station.groupId);
+  }
+  if (station.id) {
+    return String(station.id);
+  }
+  const prefId = station.prefectureId;
+  if (!prefId || prefId < 1) {
+    return station.name;
+  }
+  return `${station.name}|${PREFECTURES_JA[prefId - 1]}`;
+};
+
+const getUniqueStations = (stations?: Station[]) =>
+  uniqBy(stations ?? [], getStationUniqueKey);
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -190,20 +207,8 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const stations = useMemo(
     () =>
       fetchStationsByNameCalled
-        ? uniqBy(stationsByNameData?.stationsByName ?? [], (station) => {
-            if (station.groupId) {
-              return station.groupId;
-            }
-            if (station.id) {
-              return station.id;
-            }
-            const prefId = station.prefectureId;
-            if (!prefId) {
-              return station.name;
-            }
-            return `${station.name}|${PREFECTURES_JA[prefId - 1]}`;
-          })
-        : (stationsNearbyData?.stationsNearby ?? []),
+        ? getUniqueStations(stationsByNameData?.stationsByName)
+        : getUniqueStations(stationsNearbyData?.stationsNearby),
     [
       stationsNearbyData?.stationsNearby,
       stationsByNameData?.stationsByName,
