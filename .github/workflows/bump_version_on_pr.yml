@@ -36,7 +36,9 @@ jobs:
         run: pnpm i
 
       - name: Bump version
-        run: pnpm run version:bump
+        run: |
+          set -e
+          pnpm run version:bump
 
       - name: Check for changes
         id: check_changes
