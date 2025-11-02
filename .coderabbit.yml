@@ -1,6 +1,7 @@
 auto_review:
   enabled: true
   ignore_usernames: []
+  language: ja-JP
 
 reviews:
   request_changes_workflow: true
