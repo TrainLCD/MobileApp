@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
@@ -38,7 +38,10 @@ const styles = StyleSheet.create({
   },
   headingJa: {
     fontSize: isTablet ? RFValue(24) : RFValue(21),
-    lineHeight: isTablet ? RFValue(24) : RFValue(21),
+    lineHeight: Platform.select({
+      android: isTablet ? RFValue(24) : RFValue(21),
+      ios: undefined,
+    }),
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#212121',
@@ -50,7 +53,10 @@ const styles = StyleSheet.create({
   },
   headingEn: {
     fontSize: isTablet ? RFValue(16) : RFValue(12),
-    lineHeight: isTablet ? RFValue(16) : RFValue(12),
+    lineHeight: Platform.select({
+      android: isTablet ? RFValue(16) : RFValue(12),
+      ios: undefined,
+    }),
     textAlign: 'center',
     fontWeight: 'bold',
     color: '#212121',
@@ -141,7 +147,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
     fontSize: RFValue(18),
-    lineHeight: RFValue(18),
+    lineHeight: Platform.OS === 'android' ? RFValue(18) : undefined,
   },
   textEn: {
     color: '#fff',
@@ -161,7 +167,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: isTablet ? 70 : 50,
     fontSize: RFValue(12),
-    lineHeight: RFValue(12),
+    lineHeight: Platform.OS === 'android' ? RFValue(12) : undefined,
   },
 });
 
