@@ -16,18 +16,15 @@ export const useDistanceToNextStation = () => {
     () =>
       latitude &&
       longitude &&
-      nextStation &&
-      nextStation.latitude !== undefined &&
-      nextStation.latitude !== null &&
-      nextStation.longitude !== undefined &&
-      nextStation.longitude !== null
+      nextStation?.latitude != null &&
+      nextStation?.longitude != null
         ? getDistance(
             { latitude, longitude },
             {
               latitude: nextStation.latitude,
               longitude: nextStation.longitude,
             }
-          )
+          ).toLocaleString()
         : 0,
     [latitude, longitude, nextStation]
   );
