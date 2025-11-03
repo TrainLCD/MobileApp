@@ -24,7 +24,6 @@ const CARD_GAP = 12;
 const styles = StyleSheet.create({
   root: { marginHorizontal: -24 },
   horizontalMargin: { marginHorizontal: 24 },
-  noPresetsContainer: { height: 160, justifyContent: 'center' },
   itemSeparator: { width: CARD_GAP },
   contentContainer: { paddingHorizontal: 0, marginBottom: 48 },
 });
@@ -103,12 +102,9 @@ export const SelectLineScreenPresets = ({
             </SkeletonPlaceholder>
           ) : (
             <View
-              style={[
-                styles.noPresetsContainer,
-                {
-                  width: cardWidth,
-                },
-              ]}
+              style={{
+                width: cardWidth,
+              }}
             >
               <View style={styles.horizontalMargin}>
                 <NoPresetsCard />
