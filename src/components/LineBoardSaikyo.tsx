@@ -458,14 +458,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View style={styles.stationNameContainer}>
+      <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
         <View
           style={[
             styles.nameCommon,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
-            { width: dim.width / 9 },
           ]}
         >
           <StationName
