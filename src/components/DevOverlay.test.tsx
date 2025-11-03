@@ -26,7 +26,7 @@ jest.mock('~/hooks', () => ({
 jest.mock('~/utils/accuracyChart', () => ({
   generateAccuracyChart: jest.fn((history: number[]) => {
     // Mock implementation that returns AccuracyBlock[] format
-    if (!Array.isArray(history) || history.length === 0) {
+    if (history.length === 0) {
       return [];
     }
     return history.map((_accuracy) => ({
