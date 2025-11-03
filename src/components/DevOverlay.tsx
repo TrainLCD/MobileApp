@@ -43,7 +43,11 @@ const DevOverlay: React.FC = () => {
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
   const speedKMH = useMemo(
-    () => (speed && Math.round((coordsSpeed * 3600) / 1000)) ?? 0,
+    () =>
+      (
+        (speed && Math.round((coordsSpeed * 3600) / 1000)) ??
+        0
+      ).toLocaleString(),
     [coordsSpeed, speed]
   );
 
