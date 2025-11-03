@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
     paddingBottom: 0,
-    width: `${100 / 9}%`,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -430,6 +429,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { stations: allStations } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
+  const { width: windowWidth } = useWindowDimensions();
 
   const transferLines = useTransferLinesFromStation(stationInLoop, {
     omitJR: true,
@@ -483,6 +483,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         styles.stationNameContainer,
         {
           paddingBottom,
+          width: windowWidth / 9,
         },
       ]}
     >

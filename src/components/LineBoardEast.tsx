@@ -76,7 +76,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    width: `${100 / 9}%`,
   },
   stationNameMapContainer: {
     flex: 1,
@@ -495,7 +494,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View style={styles.stationNameContainer}>
+      <View
+        style={[
+          styles.stationNameContainer,
+          {
+            width: dim.width / 9,
+          },
+        ]}
+      >
         <View
           style={[
             styles.nameCommon,
