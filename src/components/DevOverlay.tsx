@@ -1,6 +1,6 @@
 import * as Application from 'expo-application';
 import React, { useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import {
   useDistanceToNextStation,
   useLocationStore,
@@ -47,7 +47,7 @@ const DevOverlay: React.FC = () => {
     [coordsSpeed, speed]
   );
 
-  const accuracyChartText = useMemo(
+  const accuracyChartBlocks = useMemo(
     () => generateAccuracyChart(accuracyHistory),
     [accuracyHistory]
   );
@@ -60,7 +60,16 @@ const DevOverlay: React.FC = () => {
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
-      <Typography style={styles.text}>{accuracyChartText}</Typography>
+      <Typography style={styles.text}>
+        {accuracyChartBlocks.map((block, index) => (
+          <Text
+            key={`${index}-${block.char}-${block.color}`}
+            style={{ color: block.color }}
+          >
+            {block.char}
+          </Text>
+        ))}
+      </Typography>
       <Typography style={styles.text}>{`Accuracy: ${
         accuracy ?? ''
       }m`}</Typography>
