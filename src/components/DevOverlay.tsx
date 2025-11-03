@@ -60,9 +60,7 @@ const DevOverlay: React.FC = () => {
         TrainLCD DO
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
-
       <Typography style={styles.text}>
-        {`Accuracy: ${accuracy ?? ''}m `}
         {accuracyChartBlocks.map((block, index) => (
           <Text
             key={`${index}-${block.char}-${block.color}`}
@@ -72,7 +70,9 @@ const DevOverlay: React.FC = () => {
           </Text>
         ))}
       </Typography>
-
+      <Typography style={styles.text}>{`Accuracy: ${
+        accuracy ?? ''
+      }m`}</Typography>
       {distanceToNextStation ? (
         <Typography style={styles.text}>
           Next: {distanceToNextStation}m
@@ -81,12 +81,10 @@ const DevOverlay: React.FC = () => {
       ) : (
         <Typography style={styles.text}>Next:</Typography>
       )}
-
       <Typography style={styles.text}>
         Speed: {speedKMH}
         km/h
       </Typography>
-
       <Typography style={styles.text}>
         Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
       </Typography>
