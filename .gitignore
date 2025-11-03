@@ -163,4 +163,5 @@ buck-out/
 web-build/
 dist/
 
-# @end expo-clipackage-lock.json
+# @end expo-cli
+package-lock.json
