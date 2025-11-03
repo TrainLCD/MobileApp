@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    width: `${100 / 9}%`,
   },
   stationNameMapContainer: {
     flex: 1,
@@ -558,6 +557,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
+            { width: dim.width / 9 },
           ]}
         >
           <StationName
