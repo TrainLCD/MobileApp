@@ -25,8 +25,14 @@ jest.mock('~/hooks', () => ({
 // Mock utils
 jest.mock('~/utils/accuracyChart', () => ({
   generateAccuracyChart: jest.fn((history: number[]) => {
-    // Simple mock implementation
-    return history.length > 0 ? '▇'.repeat(history.length) : '';
+    // Mock implementation that returns AccuracyBlock[] format
+    if (history.length === 0) {
+      return [];
+    }
+    return history.map((_accuracy) => ({
+      char: '▇',
+      color: '#ffffff',
+    }));
   }),
 }));
 
@@ -71,7 +77,7 @@ describe('DevOverlay', () => {
       return selector(state);
     });
 
-    mockUseDistanceToNextStation.mockReturnValue(500);
+    mockUseDistanceToNextStation.mockReturnValue('500');
     mockUseNextStation.mockReturnValue({
       id: 1,
       name: 'テスト駅',
