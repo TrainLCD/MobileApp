@@ -52,7 +52,7 @@ const DevOverlay: React.FC = () => {
   );
 
   const accuracyChartBlocks = useMemo(
-    () => generateAccuracyChart(accuracyHistory),
+    () => generateAccuracyChart(accuracyHistory) ?? [],
     [accuracyHistory]
   );
 
@@ -65,14 +65,15 @@ const DevOverlay: React.FC = () => {
         {` ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`}
       </Typography>
       <Typography style={styles.text}>
-        {accuracyChartBlocks.map((block, index) => (
-          <Text
-            key={`${index}-${block.char}-${block.color}`}
-            style={{ color: block.color }}
-          >
-            {block.char}
-          </Text>
-        ))}
+        {Array.isArray(accuracyChartBlocks) &&
+          accuracyChartBlocks.map((block, index) => (
+            <Text
+              key={`${index}-${block.char}-${block.color}`}
+              style={{ color: block.color }}
+            >
+              {block.char}
+            </Text>
+          ))}
       </Typography>
       <Typography style={styles.text}>{`Accuracy: ${
         accuracy ?? ''
