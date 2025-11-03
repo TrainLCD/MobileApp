@@ -53,7 +53,15 @@ describe('useRefreshStation', () => {
 
       .mockImplementation((fn: any) =>
         fn({
-          coords: { latitude: 35.0, longitude: 135.0, speed: 0, accuracy: 5 },
+          location: {
+            coords: {
+              latitude: 35.0,
+              longitude: 135.0,
+              speed: 0,
+              accuracy: 5,
+            },
+          },
+          accuracyHistory: [5],
         })
       );
 

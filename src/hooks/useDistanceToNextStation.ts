@@ -4,26 +4,27 @@ import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
 export const useDistanceToNextStation = () => {
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
   const nextStation = useNextStation();
 
   const distanceToNextStation = useMemo(
     () =>
       latitude &&
       longitude &&
-      nextStation &&
-      nextStation.latitude !== undefined &&
-      nextStation.latitude !== null &&
-      nextStation.longitude !== undefined &&
-      nextStation.longitude !== null
+      nextStation?.latitude != null &&
+      nextStation?.longitude != null
         ? getDistance(
             { latitude, longitude },
             {
               latitude: nextStation.latitude,
               longitude: nextStation.longitude,
             }
-          )
+          ).toLocaleString()
         : 0,
     [latitude, longitude, nextStation]
   );

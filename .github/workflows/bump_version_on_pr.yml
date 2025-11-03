@@ -1,0 +1,62 @@
+name: Bump Version on Canary PR
+
+on:
+  pull_request:
+    types: opened
+    branches:
+      - canary
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  TZ: "Asia/Tokyo"
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Bump version
+        run: |
+          set -e
+          pnpm run version:bump
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Bump version for canary release"
+          title: "chore: Bump version for PR #${{ github.event.pull_request.number }}"
+          body: |
+            This PR was automatically created by the bump version workflow.
+            
+            It bumps the version number for the canary release.
+            
+            **Related PR:** #${{ github.event.pull_request.number }}
+            
+            Please merge this PR into the source branch of PR #${{ github.event.pull_request.number }} to update its version numbers.
+          branch: "auto-version-bump-${{ github.event.pull_request.number }}"
+          base: ${{ github.event.pull_request.head.ref }}
+          delete-branch: true
+          labels: |
+            automated
+            version-bump
