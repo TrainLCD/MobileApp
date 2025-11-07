@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     height: isTablet ? 50 : 24,
     backgroundColor: 'white',
     alignSelf: 'center',
-    top: 4,
+    top: isTablet ? 0 : 4,
     borderRadius: isTablet ? 25 : 15,
     zIndex: 9999,
   },
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? 8 : -8,
+    top: isTablet ? 0 : -8,
     left: edgeOffset * 2,
   },
   trainTypeRight: {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: isTablet ? 8 : -8,
+    top: isTablet ? 0 : -8,
     right: edgeOffset * 2 + barTerminalWidth / 2,
   },
   trainTypeBoxGradient: {
@@ -692,7 +692,6 @@ const JOBars = ({
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
-            top: isTablet ? -8 : -5,
           },
         ]}
       >
@@ -742,7 +741,6 @@ const JOBars = ({
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
-            top: isTablet ? -8 : -5,
           },
         ]}
       >
