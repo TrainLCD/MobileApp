@@ -177,42 +177,42 @@ export const useTTS = (): void => {
     try {
       const idToken = await user?.getIdToken();
 
-    const ttsJson = await (
-      await fetch(ttsApiUrl, {
-        headers: {
-          'content-type': 'application/json; charset=UTF-8',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify(reqBody),
-        method: 'POST',
-      })
-    ).json();
+      const ttsJson = await (
+        await fetch(ttsApiUrl, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify(reqBody),
+          method: 'POST',
+        })
+      ).json();
 
-    const baseDir = FileSystem.cacheDirectory;
+      const baseDir = FileSystem.cacheDirectory;
 
-    const pathJa = `${baseDir}/${ttsJson.result.id}_ja.mp3`;
+      const pathJa = `${baseDir}/${ttsJson.result.id}_ja.mp3`;
       if (ttsJson?.result?.jaAudioContent) {
-      await FileSystem.writeAsStringAsync(
-        pathJa,
-        ttsJson.result.jaAudioContent,
-        {
-          encoding: FileSystem.EncodingType.Base64,
-        }
-      );
-    }
-    const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`;
-    if (ttsJson?.result?.enAudioContent) {
-      await FileSystem.writeAsStringAsync(
-        pathEn,
-        ttsJson.result.enAudioContent,
-        {
-          encoding: FileSystem.EncodingType.Base64,
-        }
-      );
-    }
+        await FileSystem.writeAsStringAsync(
+          pathJa,
+          ttsJson.result.jaAudioContent,
+          {
+            encoding: FileSystem.EncodingType.Base64,
+          }
+        );
+      }
+      const pathEn = `${baseDir}/${ttsJson.result.id}_en.mp3`;
+      if (ttsJson?.result?.enAudioContent) {
+        await FileSystem.writeAsStringAsync(
+          pathEn,
+          ttsJson.result.enAudioContent,
+          {
+            encoding: FileSystem.EncodingType.Base64,
+          }
+        );
+      }
 
-    return { id: ttsJson.result.id, pathJa, pathEn };
-  } catch (error) {
+      return { id: ttsJson.result.id, pathJa, pathEn };
+    } catch (error) {
       console.error('[useTTS] fetchSpeech error:', error);
       return;
     }
