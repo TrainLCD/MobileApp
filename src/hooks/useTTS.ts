@@ -92,6 +92,18 @@ export const useTTS = (): void => {
 
     firstSpeechRef.current = false;
 
+    // 既存のプレイヤーをクリーンアップ
+    try {
+      soundJaRef.current?.pause();
+      soundJaRef.current?.remove();
+    } catch {}
+    try {
+      soundEnRef.current?.pause();
+      soundEnRef.current?.remove();
+    } catch {}
+    soundJaRef.current = null;
+    soundEnRef.current = null;
+
     const soundJa = createAudioPlayer({
       uri: pathJa,
     });
@@ -108,11 +120,16 @@ export const useTTS = (): void => {
       (enStatus) => {
         if (enStatus.didJustFinish) {
           enRemoveListener?.remove();
-          soundEn.remove();
+          try {
+            soundEn.remove();
+          } catch (e) {
+            console.warn('[useTTS] Failed to remove soundEn:', e);
+          }
           soundEnRef.current = null;
           playingRef.current = false;
         } else if ('error' in enStatus && enStatus.error) {
           // 英語側エラー時も確実に終了
+          console.warn('[useTTS] soundEn error:', enStatus.error);
           enRemoveListener?.remove();
           try {
             soundEn.remove();
@@ -128,7 +145,11 @@ export const useTTS = (): void => {
       (jaStatus) => {
         if (jaStatus.didJustFinish) {
           jaRemoveListener?.remove();
-          soundJa.remove();
+          try {
+            soundJa.remove();
+          } catch (e) {
+            console.warn('[useTTS] Failed to remove soundJa:', e);
+          }
           soundJaRef.current = null;
           if (isLoadableRef.current) {
             soundEn.play();
@@ -143,6 +164,7 @@ export const useTTS = (): void => {
           }
         } else if ('error' in jaStatus && jaStatus.error) {
           // 日本語側エラー時は両者解放して停止
+          console.warn('[useTTS] soundJa error:', jaStatus.error);
           jaRemoveListener?.remove();
           try {
             soundJa.remove();
@@ -158,7 +180,23 @@ export const useTTS = (): void => {
       }
     );
 
-    soundJa.play();
+    try {
+      soundJa.play();
+    } catch (e) {
+      console.error('[useTTS] Failed to play soundJa:', e);
+      // 再生失敗時もリスナーとリソースをクリーンアップ
+      jaRemoveListener?.remove();
+      enRemoveListener?.remove();
+      try {
+        soundJa.remove();
+      } catch {}
+      try {
+        soundEn.remove();
+      } catch {}
+      soundJaRef.current = null;
+      soundEnRef.current = null;
+      playingRef.current = false;
+    }
   }, []);
 
   const ttsApiUrl = useMemo(() => {
@@ -177,61 +215,96 @@ export const useTTS = (): void => {
       },
     };
 
-    const idToken = await user?.getIdToken();
+    try {
+      const idToken = await user?.getIdToken();
 
-    const ttsJson = await (
-      await fetch(ttsApiUrl, {
+      const response = await fetch(ttsApiUrl, {
         headers: {
           'content-type': 'application/json; charset=UTF-8',
           Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify(reqBody),
         method: 'POST',
-      })
-    ).json();
+      });
 
-    const cacheDirectory = Paths.cache;
-    const pathJaFile = new File(cacheDirectory, `${ttsJson.result.id}_ja.mp3`);
-    const pathEnFile = new File(cacheDirectory, `${ttsJson.result.id}_en.mp3`);
+      if (!response.ok) {
+        console.error(
+          '[useTTS] TTS API request failed:',
+          response.status,
+          response.statusText
+        );
+        return null;
+      }
 
-    if (ttsJson?.result?.jaAudioContent) {
-      pathJaFile.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
-    }
-    if (ttsJson?.result?.enAudioContent) {
-      pathEnFile.write(base64ToUint8Array(ttsJson.result.enAudioContent));
-    }
+      const ttsJson = await response.json();
 
-    if (!ttsJson?.result?.jaAudioContent || !ttsJson?.result?.enAudioContent) {
+      if (!ttsJson?.result?.id) {
+        console.error('[useTTS] TTS API response missing id');
+        return null;
+      }
+
+      const cacheDirectory = Paths.cache;
+      const pathJaFile = new File(
+        cacheDirectory,
+        `${ttsJson.result.id}_ja.mp3`
+      );
+      const pathEnFile = new File(
+        cacheDirectory,
+        `${ttsJson.result.id}_en.mp3`
+      );
+
+      if (ttsJson?.result?.jaAudioContent) {
+        pathJaFile.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
+      }
+      if (ttsJson?.result?.enAudioContent) {
+        pathEnFile.write(base64ToUint8Array(ttsJson.result.enAudioContent));
+      }
+
+      if (
+        !ttsJson?.result?.jaAudioContent ||
+        !ttsJson?.result?.enAudioContent
+      ) {
+        console.error('[useTTS] TTS API response missing audio content');
+        return null;
+      }
+      return {
+        id: ttsJson.result.id,
+        pathJa: pathJaFile.uri,
+        pathEn: pathEnFile.uri,
+      };
+    } catch (error) {
+      console.error('[useTTS] fetchSpeech error:', error);
       return null;
     }
-    return {
-      id: ttsJson.result.id,
-      pathJa: pathJaFile.uri,
-      pathEn: pathEnFile.uri,
-    };
   }, [textEn, textJa, ttsApiUrl, user]);
 
   const speech = useCallback(async () => {
     if (!textJa || !textEn) {
       return;
     }
-    const cache = getByText(textJa);
 
-    if (cache) {
-      await speakFromPath(cache.ja.path, cache.en.path);
-      return;
+    try {
+      const cache = getByText(textJa);
+
+      if (cache) {
+        await speakFromPath(cache.ja.path, cache.en.path);
+        return;
+      }
+
+      const fetched = await fetchSpeech();
+      if (!fetched) {
+        console.warn('[useTTS] Failed to fetch speech audio');
+        return;
+      }
+
+      const { id, pathJa, pathEn } = fetched;
+
+      store(id, { text: textJa, path: pathJa }, { text: textEn, path: pathEn });
+
+      await speakFromPath(pathJa, pathEn);
+    } catch (error) {
+      console.error('[useTTS] speech error:', error);
     }
-
-    const fetched = await fetchSpeech();
-    if (!fetched) {
-      return;
-    }
-
-    const { id, pathJa, pathEn } = fetched;
-
-    store(id, { text: textJa, path: pathJa }, { text: textEn, path: pathEn });
-
-    await speakFromPath(pathJa, pathEn);
   }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
 
   useEffect(() => {
