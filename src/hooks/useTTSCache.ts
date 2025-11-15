@@ -8,11 +8,15 @@ type TTSCache = {
   ja: TTSCacheData;
 };
 
+// キャッシュの最大数を制限してメモリリークを防ぐ
+const MAX_CACHE_SIZE = 50;
+
 export const useTTSCache = () => {
   const cacheArray = useRef<TTSCache[]>([]);
 
   const store = useCallback(
     (id: string, ja: TTSCacheData, en: TTSCacheData) => {
+      // 新しいキャッシュエントリを追加
       cacheArray.current = [
         ...cacheArray.current,
         {
@@ -21,6 +25,21 @@ export const useTTSCache = () => {
           ja,
         },
       ];
+
+      // キャッシュサイズが上限を超えたら古いエントリを削除
+      if (cacheArray.current.length > MAX_CACHE_SIZE) {
+        const removed = cacheArray.current.slice(
+          0,
+          cacheArray.current.length - MAX_CACHE_SIZE
+        );
+        cacheArray.current = cacheArray.current.slice(-MAX_CACHE_SIZE);
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            `Cache size limit reached. Removed ${removed.length} old entries.`
+          );
+        }
+      }
 
       if (process.env.NODE_ENV === 'development') {
         console.log('Stored into storage: ', id);
