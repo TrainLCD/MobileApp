@@ -2399,7 +2399,7 @@
 				CODE_SIGN_ENTITLEMENTS = ProdTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
@@ -2409,7 +2409,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2439,7 +2439,7 @@
 				CODE_SIGN_ENTITLEMENTS = ProdTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
@@ -2448,7 +2448,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2542,7 +2542,7 @@
 					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
 					"\"$(inherited)\"",
 				);
-				MARKETING_VERSION = 8.7.1;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "$(inherited)";
@@ -2630,7 +2630,7 @@
 					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
 					"\"$(inherited)\"",
 				);
-				MARKETING_VERSION = 8.7.1;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
@@ -2656,7 +2656,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -2666,7 +2666,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2696,7 +2696,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -2706,7 +2706,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2740,7 +2740,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/CanaryWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -2748,7 +2748,7 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -2782,7 +2782,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -2790,7 +2790,7 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -2822,7 +2822,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/CanaryWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -2836,7 +2836,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -2870,7 +2870,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -2884,7 +2884,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -2916,7 +2916,7 @@
 				CODE_SIGN_ENTITLEMENTS = RideSessionActivity/CanaryRideSessionActivity.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2930,7 +2930,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -2966,7 +2966,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2980,7 +2980,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3016,7 +3016,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchWidget/ProdWatchWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3036,7 +3036,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3073,7 +3073,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3089,7 +3089,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3123,7 +3123,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchWidget/CanaryWatchWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3143,7 +3143,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3179,7 +3179,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3195,7 +3195,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3226,7 +3226,7 @@
 				CODE_SIGN_ENTITLEMENTS = RideSessionActivity/ProdRideSessionActivity.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3240,7 +3240,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3276,7 +3276,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3290,7 +3290,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3324,7 +3324,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/ProdWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -3338,7 +3338,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3372,7 +3372,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -3386,7 +3386,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3418,7 +3418,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/ProdWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -3426,7 +3426,7 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3460,7 +3460,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -3468,7 +3468,7 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3502,7 +3502,7 @@
 				CODE_SIGN_ENTITLEMENTS = ProdAppClip/ProdAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3525,7 +3525,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3557,7 +3557,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3576,7 +3576,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.Clip;
@@ -3606,7 +3606,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryAppClip/CanaryAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3629,7 +3629,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3662,7 +3662,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1837;
+				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3681,7 +3681,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.6;
+				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";

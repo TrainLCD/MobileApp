@@ -1,9 +1,9 @@
 [submodule "proto"]
 	path = proto
-	url = https://github.com/TrainLCD/gRPCProto.git
+	url = https://github.com/TrainLCD/gRPCProto
 [submodule "ios/Fonts"]
 	path = ios/Fonts
-	url = git@github.com:TrainLCD/MobileAppFonts.git
+	url = https://github.com/TrainLCD/MobileAppFonts
 [submodule "android/app/src/main/assets/fonts"]
 	path = android/app/src/main/assets/fonts
-	url = git@github.com:TrainLCD/MobileAppFonts.git
+	url = https://github.com/TrainLCD/MobileAppFonts

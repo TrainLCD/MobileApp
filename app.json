@@ -2,11 +2,22 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "version": "1.0.0",
+    "version": "9.0.7",
     "plugins": [
       "expo-font",
       "expo-localization",
       "expo-web-browser"
-    ]
+    ],
+    "ios": {
+      "buildNumber": "1538"
+    },
+    "android": {
+      "versionCode": 90007000
+    },
+    "extra": {
+      "versioning": {
+        "androidMinVersionCode": 90007000
+      }
+    }
   }
 }
