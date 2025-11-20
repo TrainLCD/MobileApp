@@ -15,9 +15,15 @@ type Props = {
   allowScaling: boolean;
   size?: NumberingIconSize;
   transformOrigin?: 'top' | 'center' | 'bottom';
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 72 * 1.5 : 72,
@@ -30,6 +36,8 @@ const styles = StyleSheet.create({
   },
   tlcRoot: {
     transform: [{ scale: 0.7 }],
+    flex: 1,
+    justifyContent: 'center',
   },
   tlcContainer: {
     backgroundColor: '#231e1f',
@@ -87,6 +95,7 @@ type CommonCompProps = {
   lineSymbol: string;
   stationNumber: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const Common = ({
@@ -94,6 +103,7 @@ const Common = ({
   lineSymbol,
   stationNumber,
   size,
+  withOutline,
 }: CommonCompProps) => {
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -103,9 +113,11 @@ const Common = ({
     );
   }
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
-      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { borderColor: lineColor }]}>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+      </View>
     </View>
   );
 };
@@ -116,7 +128,8 @@ const NumberingIconSquare: React.FC<Props> = ({
   threeLetterCode,
   allowScaling,
   size,
-  transformOrigin = 'bottom',
+  transformOrigin = 'center',
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -152,6 +165,7 @@ const NumberingIconSquare: React.FC<Props> = ({
         lineSymbol={lineSymbol}
         stationNumber={stationNumber}
         size={size}
+        withOutline={withOutline}
       />
     );
   }
@@ -172,9 +186,9 @@ const NumberingIconSquare: React.FC<Props> = ({
         threeLetterCode={threeLetterCode}
         lineSymbol={lineSymbol}
         stationNumber={stationNumber}
+        withOutline={withOutline}
       />
     </View>
   );
 };
-
 export default NumberingIconSquare;

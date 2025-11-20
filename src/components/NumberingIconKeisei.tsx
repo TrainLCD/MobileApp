@@ -12,9 +12,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: '100%',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 72 * 1.5 : 72,
@@ -66,6 +72,7 @@ const NumberingIconKeisei: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
@@ -88,13 +95,15 @@ const NumberingIconKeisei: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
-      <Typography style={[styles.lineSymbol, { color: lineColor }]}>
-        {lineSymbol}
-      </Typography>
-      <Typography style={[stationNumberTextStyles, { color: lineColor }]}>
-        {stationNumber}
-      </Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { borderColor: lineColor }]}>
+        <Typography style={[styles.lineSymbol, { color: lineColor }]}>
+          {lineSymbol}
+        </Typography>
+        <Typography style={[stationNumberTextStyles, { color: lineColor }]}>
+          {stationNumber}
+        </Typography>
+      </View>
     </View>
   );
 };

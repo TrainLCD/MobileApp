@@ -8,9 +8,15 @@ type Props = {
   withDarkTheme: boolean;
   stationNumber: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: '100%',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     borderWidth: isTablet ? 2 : 1,
     width: isTablet ? 72 * 1.5 : 72,
@@ -71,6 +77,7 @@ const NumberingIconSMR: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   size,
   withDarkTheme,
+  withOutline,
 }: Props) => {
   const lineSymbol = stationNumberRaw.split('-')[0];
   const stationNumber = stationNumberRaw.split('-')[1];
@@ -97,21 +104,23 @@ const NumberingIconSMR: React.FC<Props> = ({
   }
 
   return (
-    <View
-      style={[
-        styles.root,
-        {
-          borderColor: preferColor,
-        },
-      ]}
-    >
-      <Typography style={[styles.stationNumber, { color: preferColor }]}>
-        {stationNumber}
-      </Typography>
-      <View style={[styles.divider, { backgroundColor: preferColor }]} />
-      <Typography style={[styles.lineSymbol, { color: preferColor }]}>
-        {lineSymbol}
-      </Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View
+        style={[
+          styles.root,
+          {
+            borderColor: preferColor,
+          },
+        ]}
+      >
+        <Typography style={[styles.stationNumber, { color: preferColor }]}>
+          {stationNumber}
+        </Typography>
+        <View style={[styles.divider, { backgroundColor: preferColor }]} />
+        <Typography style={[styles.lineSymbol, { color: preferColor }]}>
+          {lineSymbol}
+        </Typography>
+      </View>
     </View>
   );
 };

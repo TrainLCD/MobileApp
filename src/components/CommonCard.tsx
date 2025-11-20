@@ -14,6 +14,7 @@ import Typography from './Typography';
 
 type Props = {
   line: Line;
+  targetStation?: Station;
   stations?: Station[];
   title?: string;
   subtitle?: string;
@@ -50,6 +51,16 @@ const styles = StyleSheet.create({
     height: isTablet ? 52.5 : 35,
     marginRight: 12,
   },
+  numberingIconContainer: {
+    flex: 1,
+    alignItems: 'center',
+    transformOrigin: 'top',
+    transform: [
+      {
+        scale: 0.5,
+      },
+    ],
+  },
   markPlaceholder: {
     width: isTablet ? 52.5 : 35,
     height: isTablet ? 52.5 : 35,
@@ -77,7 +88,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
   },
   chevron: {
     width: 24,
@@ -133,8 +143,9 @@ const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
   );
 };
 
-export const LineCard: React.FC<Props> = ({
+export const CommonCard: React.FC<Props> = ({
   line,
+  targetStation,
   stations = [],
   title,
   subtitle,
@@ -179,6 +190,9 @@ export const LineCard: React.FC<Props> = ({
     [title, line.nameShort, line.nameRoman]
   );
 
+  const targetStationNumber = targetStation?.stationNumbers?.[0]?.stationNumber;
+  const targetStationThreeLetterCode = targetStation?.threeLetterCode;
+
   return (
     <TouchableOpacity
       onPress={disabled ? undefined : onPress}
@@ -196,13 +210,24 @@ export const LineCard: React.FC<Props> = ({
     >
       <View style={styles.insetBorder} pointerEvents="none" />
       {mark ? (
-        <View style={styles.mark}>
+        <View
+          style={[
+            styles.mark,
+            !mark.signPath || targetStationNumber
+              ? {
+                  transform: [{ scale: 0.5 }],
+                }
+              : null,
+          ]}
+        >
           <TransferLineMark
             line={line}
             mark={mark}
-            size={NUMBERING_ICON_SIZE.MEDIUM}
+            size={NUMBERING_ICON_SIZE.LARGE}
             withOutline
             withDarkTheme={isLEDTheme}
+            stationNumber={targetStationNumber ?? undefined}
+            threeLetterCode={targetStationThreeLetterCode}
           />
         </View>
       ) : (

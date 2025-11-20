@@ -12,9 +12,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: '100%',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     borderWidth: isTablet ? 4 : 2,
     width: isTablet ? 72 * 1.5 : 72,
@@ -103,6 +109,7 @@ const NumberingIconSanyo: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -128,10 +135,12 @@ const NumberingIconSanyo: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
-      <View style={[styles.inner, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { borderColor: lineColor }]}>
+        <View style={[styles.inner, { backgroundColor: lineColor }]}>
+          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );

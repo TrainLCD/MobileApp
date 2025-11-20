@@ -7,9 +7,15 @@ import Typography from './Typography';
 type Props = {
   stationNumber: string;
   hakone: boolean;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2.2 + 2,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 72 * 1.5 : 72,
@@ -43,27 +49,30 @@ const styles = StyleSheet.create({
 const NumberingIconOdakyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   hakone,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   return (
-    <View
-      style={[styles.root, { borderColor: hakone ? '#EA4D15' : '#0D82C7' }]}
-    >
-      <Typography
-        style={[styles.lineSymbol, { color: hakone ? '#6A3906' : '#0D82C7' }]}
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View
+        style={[styles.root, { borderColor: hakone ? '#EA4D15' : '#0D82C7' }]}
       >
-        {lineSymbol}
-      </Typography>
-      <Typography
-        style={[
-          styles.stationNumber,
-          { color: hakone ? '#6A3906' : '#0D82C7' },
-        ]}
-      >
-        {stationNumber}
-      </Typography>
+        <Typography
+          style={[styles.lineSymbol, { color: hakone ? '#6A3906' : '#0D82C7' }]}
+        >
+          {lineSymbol}
+        </Typography>
+        <Typography
+          style={[
+            styles.stationNumber,
+            { color: hakone ? '#6A3906' : '#0D82C7' },
+          ]}
+        >
+          {stationNumber}
+        </Typography>
+      </View>
     </View>
   );
 };

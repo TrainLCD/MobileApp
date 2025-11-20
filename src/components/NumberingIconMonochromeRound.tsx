@@ -4,6 +4,11 @@ import isTablet from '../utils/isTablet';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: '100%',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 72 * 1.5 : 72,
@@ -25,12 +30,18 @@ const styles = StyleSheet.create({
 
 type Props = {
   stationNumber: string;
+  withOutline?: boolean;
 };
 
-const NumberingIconMonochromeRound: React.FC<Props> = ({ stationNumber }) => {
+const NumberingIconMonochromeRound: React.FC<Props> = ({
+  stationNumber,
+  withOutline,
+}) => {
   return (
-    <View style={styles.root}>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={styles.root}>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+      </View>
     </View>
   );
 };
