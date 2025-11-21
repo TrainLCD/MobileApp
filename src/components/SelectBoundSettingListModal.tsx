@@ -12,6 +12,7 @@ import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks';
 import { isJapanese, translate } from '../translation';
+import { ToggleButton } from './ToggleButton';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
@@ -124,10 +125,13 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                   {translate('selectBoundSettings')}
                 </Button>
               ) : null}
-              <Button outline onPress={toggleAutoModeEnabled}>
-                {translate('autoModeSettings')}:{' '}
-                {autoModeEnabled ? 'ON' : 'OFF'}
-              </Button>
+              <ToggleButton
+                outline
+                onToggle={toggleAutoModeEnabled}
+                state={autoModeEnabled}
+              >
+                {translate('autoModeSettings')}
+              </ToggleButton>
               <Button
                 style={styles.closeButton}
                 textStyle={styles.closeButtonText}
