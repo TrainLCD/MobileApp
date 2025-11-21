@@ -285,6 +285,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               }
               title={title}
               subtitle={subtitle}
+              targetStation={pendingWantedDestination}
             />
           );
         }
@@ -317,6 +318,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           line={lineForCard}
           title={title}
           subtitle={subtitle}
+          targetStation={boundStations[0]}
         />
       );
     },
