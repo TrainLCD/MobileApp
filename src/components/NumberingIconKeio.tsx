@@ -11,7 +11,7 @@ type Props = {
 
 const styles = StyleSheet.create({
   optionalBorder: {
-    borderRadius: '100%',
+    borderRadius: (isTablet ? 64 * 1.5 : 64) / 2,
     borderWidth: 2,
     borderColor: '#fff',
   },

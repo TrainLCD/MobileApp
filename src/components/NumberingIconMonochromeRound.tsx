@@ -5,7 +5,7 @@ import Typography from './Typography';
 
 const styles = StyleSheet.create({
   optionalBorder: {
-    borderRadius: '100%',
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
     borderWidth: 2,
     borderColor: '#fff',
   },
