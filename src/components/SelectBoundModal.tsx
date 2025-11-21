@@ -525,6 +525,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         trainType={trainType}
         stations={stations}
         onClose={() => setRouteInfoModalVisible(false)}
+        onSelect={(_station) => {}}
         loading={loading}
       />
       <SelectBoundSettingListModal
