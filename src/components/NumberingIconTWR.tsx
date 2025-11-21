@@ -7,9 +7,15 @@ import Typography from './Typography';
 type Props = {
   stationNumber: string;
   lineColor: string;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     borderWidth: isTablet ? 8 : 4,
     borderColor: '#89c6cb',
@@ -49,15 +55,18 @@ const styles = StyleSheet.create({
 const NumberingIconTWR: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   return (
-    <View style={styles.root}>
-      <View style={[styles.inner, { backgroundColor: lineColor }]}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={styles.root}>
+        <View style={[styles.inner, { backgroundColor: lineColor }]}>
+          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );

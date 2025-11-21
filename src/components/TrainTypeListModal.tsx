@@ -11,9 +11,9 @@ import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
+import { CommonCard } from './CommonCard';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
-import { LineCard } from './LineCard';
 
 const styles = StyleSheet.create({
   root: {
@@ -145,7 +145,7 @@ export const TrainTypeListModal = ({
             : '';
 
         return (
-          <LineCard
+          <CommonCard
             line={line}
             title={title}
             subtitle={subtitle}
@@ -160,7 +160,7 @@ export const TrainTypeListModal = ({
         : lines.map((l) => l.nameRoman).join(', ');
 
       return (
-        <LineCard
+        <CommonCard
           line={line}
           title={title}
           subtitle={subtitle}

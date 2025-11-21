@@ -26,10 +26,10 @@ import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
+import { CommonCard } from './CommonCard';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
-import { LineCard } from './LineCard';
 import { SearchBar } from './SearchBar';
 
 type GetStationsNearbyData = {
@@ -175,7 +175,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         : (lines ?? []).map((l) => l.nameRoman).join(', ');
 
       return (
-        <LineCard
+        <CommonCard
           line={line}
           title={title}
           subtitle={subtitle}

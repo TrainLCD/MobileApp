@@ -7,6 +7,7 @@ import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
+  ROUND_SHAPES,
 } from '../constants';
 import type { LineMark } from '../models/LineMark';
 import isTablet from '../utils/isTablet';
@@ -23,6 +24,8 @@ interface Props {
   withOutline?: boolean;
   // 角丸の半径を上書き（ラウンド系は自動で円形）
   outlineRadius?: number;
+  stationNumber?: string;
+  threeLetterCode?: string | null;
 }
 
 const styles = StyleSheet.create({
@@ -45,20 +48,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const roundShapes = new Set<string>([
-  MARK_SHAPE.ROUND,
-  MARK_SHAPE.REVERSED_ROUND,
-  MARK_SHAPE.MONOCHROME_ROUND,
-  MARK_SHAPE.ROUND_HORIZONTAL,
-  MARK_SHAPE.REVERSED_ROUND_HORIZONTAL,
-  MARK_SHAPE.KEIO,
-  MARK_SHAPE.TWR,
-  MARK_SHAPE.KEISEI,
-  MARK_SHAPE.HANKYU,
-  MARK_SHAPE.HANSHIN,
-  MARK_SHAPE.IZUHAKONE,
-]);
-
 const TransferLineMark: React.FC<Props> = ({
   line,
   mark,
@@ -68,6 +57,8 @@ const TransferLineMark: React.FC<Props> = ({
   withDarkTheme,
   withOutline,
   outlineRadius,
+  stationNumber,
+  threeLetterCode,
 }: Props) => {
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
   const dim = useMemo(
@@ -76,16 +67,8 @@ const TransferLineMark: React.FC<Props> = ({
   );
 
   const isRadiusShape = useMemo(
-    () => mark.signShape && roundShapes.has(mark.signShape),
+    () => mark.signShape && ROUND_SHAPES.has(mark.signShape),
     [mark.signShape]
-  );
-
-  const containerStyle = useMemo(
-    () => [
-      styles.container,
-      { width: dim, height: dim, opacity: shouldGrayscale ? 0.5 : 1 },
-    ],
-    [dim, shouldGrayscale]
   );
   const imageStyle = useMemo(
     () =>
@@ -98,6 +81,14 @@ const TransferLineMark: React.FC<Props> = ({
           }
         : { width: dim, height: dim },
     [dim, withOutline, isRadiusShape]
+  );
+
+  const containerStyle = useMemo(
+    () => [
+      styles.container,
+      { width: dim, height: dim, opacity: shouldGrayscale ? 0.5 : 1 },
+    ],
+    [dim, shouldGrayscale]
   );
 
   const numberingIconContainerStyle = useMemo(
@@ -156,7 +147,7 @@ const TransferLineMark: React.FC<Props> = ({
     [outlineRadiusValue]
   );
 
-  if (mark.btUnionSignPaths) {
+  if (mark.btUnionSignPaths && !stationNumber) {
     return (
       <View style={[containerStyle, withOutline ? outlineStyle : null]}>
         {withOutline ? (
@@ -173,7 +164,7 @@ const TransferLineMark: React.FC<Props> = ({
     );
   }
 
-  if (mark.signPath) {
+  if (mark.signPath && !stationNumber) {
     return (
       <View style={[containerStyle, withOutline ? outlineStyle : null]}>
         {withOutline ? (
@@ -191,27 +182,23 @@ const TransferLineMark: React.FC<Props> = ({
   }
 
   return (
-    <View
-      style={[
-        containerStyle,
-        numberingIconContainerStyle,
-        withOutline && outlineStyle,
-      ]}
-    >
-      {withOutline ? (
-        <View pointerEvents="none" style={[styles.outline, outlineStyle]} />
-      ) : null}
+    <View style={[containerStyle, numberingIconContainerStyle]}>
       {mark.signShape && (
         <NumberingIcon
           shape={mark.signShape}
           lineColor={
             shouldGrayscale ? fadedLineColor : color || (line?.color ?? '#000')
           }
-          stationNumber={`${
-            mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
-          }-00`}
+          stationNumber={
+            stationNumber ??
+            `${
+              mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
+            }-00`
+          }
+          threeLetterCode={threeLetterCode}
           size={size}
           withDarkTheme={withDarkTheme}
+          withOutline={withOutline}
         />
       )}
     </View>

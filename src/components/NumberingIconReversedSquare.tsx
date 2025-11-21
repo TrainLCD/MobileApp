@@ -13,9 +13,15 @@ type Props = {
   lineColor: string;
   size?: NumberingIconSize;
   darkText?: boolean;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 8,
+  },
   root: {
     width: isTablet ? 64 * 1.5 : 64,
     height: isTablet ? 64 * 1.5 : 64,
@@ -81,6 +87,7 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   lineColor,
   size,
   darkText,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -116,20 +123,22 @@ const NumberingIconReversedSquare: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Typography
-        style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
-      >
-        {lineSymbol}
-      </Typography>
-      <Typography
-        style={[
-          styles.stationNumber,
-          { color: darkText ? '#241f20' : 'white' },
-        ]}
-      >
-        {stationNumber}
-      </Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { backgroundColor: lineColor }]}>
+        <Typography
+          style={[styles.lineSymbol, { color: darkText ? '#241f20' : 'white' }]}
+        >
+          {lineSymbol}
+        </Typography>
+        <Typography
+          style={[
+            styles.stationNumber,
+            { color: darkText ? '#241f20' : 'white' },
+          ]}
+        >
+          {stationNumber}
+        </Typography>
+      </View>
     </View>
   );
 };

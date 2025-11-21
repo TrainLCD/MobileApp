@@ -18,6 +18,7 @@ import {
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
+import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
@@ -30,7 +31,6 @@ import {
 import type { SavedRoute } from '~/models/SavedRoute';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
-import { LineCard } from '../components/LineCard';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import {
   setLocation,
@@ -642,7 +642,7 @@ const SelectLineScreen = () => {
       const stations = stationsCache[index] ?? [];
 
       return (
-        <LineCard
+        <CommonCard
           line={item}
           onPress={() => handleLineSelected(item)}
           stations={stations}
