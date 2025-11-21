@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
     borderRadius: 8,
     justifyContent: 'center',
+    alignItems: 'center',
     flexDirection: 'row',
   },
   buttonLED: {
