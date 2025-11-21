@@ -28,7 +28,7 @@ import Button from '../components/Button';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { LineCard } from './LineCard';
+import { CommonCard } from './CommonCard';
 import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 
@@ -274,7 +274,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             : `${lineForCard.nameRoman} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.nameRoman}` : ''}`;
 
           return (
-            <LineCard
+            <CommonCard
               line={lineForCard ?? line}
               onPress={() =>
                 handleBoundSelected(
@@ -285,6 +285,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               }
               title={title}
               subtitle={subtitle}
+              targetStation={pendingWantedDestination}
             />
           );
         }
@@ -312,11 +313,12 @@ export const SelectBoundModal: React.FC<Props> = ({
         : `${lineForCard.nameRoman} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.nameRoman}` : ''}`;
 
       return (
-        <LineCard
+        <CommonCard
           onPress={boundSelectOnPress}
           line={lineForCard}
           title={title}
           subtitle={subtitle}
+          targetStation={boundStations[0]}
         />
       );
     },
@@ -525,8 +527,8 @@ export const SelectBoundModal: React.FC<Props> = ({
         trainType={trainType}
         stations={stations}
         onClose={() => setRouteInfoModalVisible(false)}
+        onSelect={(_station) => {}}
         loading={loading}
-        error={error}
       />
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}

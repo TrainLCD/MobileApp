@@ -10,11 +10,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station, TrainType } from '~/@types/graphql';
+import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { EmptyResult } from '~/components/EmptyResult';
 import FooterTabBar from '~/components/FooterTabBar';
 import { Heading } from '~/components/Heading';
-import { LineCard } from '~/components/LineCard';
 import { NowHeader } from '~/components/NowHeader';
 import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
@@ -242,7 +242,7 @@ const RouteSearchScreen = () => {
       if (!line) return null;
 
       return (
-        <LineCard
+        <CommonCard
           line={line}
           title={
             isJapanese ? item.name || undefined : item.nameRoman || undefined

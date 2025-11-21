@@ -11,9 +11,14 @@ import Typography from './Typography';
 type Props = {
   stationNumber: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 48 * 1.5 : 48,
@@ -101,6 +106,7 @@ const styles = StyleSheet.create({
 const NumberingIconKeihan: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -122,12 +128,14 @@ const NumberingIconKeihan: React.FC<Props> = ({
   }
 
   return (
-    <View style={styles.root}>
-      <View style={styles.lineSymbolContainer}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-      </View>
-      <View style={styles.stationNumberContainer}>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={styles.root}>
+        <View style={styles.lineSymbolContainer}>
+          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        </View>
+        <View style={styles.stationNumberContainer}>
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );
