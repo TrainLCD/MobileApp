@@ -86,7 +86,7 @@ export const RouteInfoModal = ({
   trainType,
   stations,
   loading,
-  onSelect: _onSelect,
+  onSelect,
   onClose,
 }: Props) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
@@ -99,25 +99,28 @@ export const RouteInfoModal = ({
     ? (trainType?.name ?? '普通/各駅停車')
     : (trainType?.nameRoman ?? 'Local');
 
-  const renderItem = useCallback(({ item }: { item: Station }) => {
-    const { line, lines } = item;
-    if (!line) return null;
+  const renderItem = useCallback(
+    ({ item }: { item: Station }) => {
+      const { line, lines } = item;
+      if (!line) return null;
 
-    const title = (isJapanese ? item.name : item.nameRoman) || undefined;
-    const subtitle = isJapanese
-      ? `${(lines ?? []).map((l) => l.nameShort).join('・')}`
-      : (lines ?? []).map((l) => l.nameRoman).join(', ');
+      const title = (isJapanese ? item.name : item.nameRoman) || undefined;
+      const subtitle = isJapanese
+        ? `${(lines ?? []).map((l) => l.nameShort).join('・')}`
+        : (lines ?? []).map((l) => l.nameRoman).join(', ');
 
-    return (
-      <CommonCard
-        targetStation={item}
-        line={line}
-        title={title}
-        subtitle={subtitle}
-        onPress={() => {}}
-      />
-    );
-  }, []);
+      return (
+        <CommonCard
+          targetStation={item}
+          line={line}
+          title={title}
+          subtitle={subtitle}
+          onPress={() => onSelect?.(item)}
+        />
+      );
+    },
+    [onSelect]
+  );
 
   const keyExtractor = useCallback(
     (s: Station, index: number) => `${s.groupId ?? 0}-${s.id ?? index}`,
