@@ -194,5 +194,7 @@
   "routeSearchPlaceholder": "どこへ行きますか？",
   "trainTypeIs": "列車種別: %{trainTypeName}",
   "trainTypesNotExist": "列車種別がありません",
-  "enableNotificationMode": "到着通知を有効にする"
+  "enableNotificationMode": "到着通知を有効にする",
+  "betaNotice": "このTrainLCDは現在ベータリリースです。",
+  "canaryNotice": "このTrainLCDはカナリアリリースです。"
 }
