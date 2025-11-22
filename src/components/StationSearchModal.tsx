@@ -1,14 +1,7 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo } from 'react';
-import {
-  Alert,
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
@@ -27,6 +20,7 @@ import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
+import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
@@ -68,7 +62,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
   contentView: {
@@ -221,64 +214,55 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   }, [onClose]);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={handleClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={handleClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.root}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          marginBottom: insets.bottom || 0,
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={handleClose}>
-        <Pressable
-          onPress={() => {}}
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-              marginBottom: insets.bottom || 0,
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View style={styles.headerContainer}>
-            <Heading style={styles.title}>
-              {translate('searchFirstStationTitle')}
-            </Heading>
-            <SearchBar onSearch={handleSearchStations} nameSearch />
-          </View>
+      <View style={styles.headerContainer}>
+        <Heading style={styles.title}>
+          {translate('searchFirstStationTitle')}
+        </Heading>
+        <SearchBar onSearch={handleSearchStations} nameSearch />
+      </View>
 
-          <FlatList<Station>
-            style={StyleSheet.absoluteFill}
-            data={stations ?? []}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ItemSeparatorComponent={EmptyLineSeparator}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.flatListContentContainer}
-            ListEmptyComponent={
-              <EmptyResult
-                loading={
-                  fetchStationsNearbyLoading || fetchStationsByNameLoading
-                }
-                hasSearched={fetchStationsByNameCalled}
-              />
-            }
+      <FlatList<Station>
+        style={StyleSheet.absoluteFill}
+        data={stations ?? []}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={EmptyLineSeparator}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.flatListContentContainer}
+        ListEmptyComponent={
+          <EmptyResult
+            loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
+            hasSearched={fetchStationsByNameCalled}
           />
-          <View style={styles.closeButtonContainer}>
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={handleClose}
-            >
-              {translate('close')}
-            </Button>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+        }
+      />
+      <View style={styles.closeButtonContainer}>
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={handleClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
+    </CustomModal>
   );
 };

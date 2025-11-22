@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -13,6 +13,7 @@ import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
+import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
 
@@ -21,7 +22,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
   contentView: {
@@ -182,77 +182,71 @@ export const TrainTypeListModal = ({
   );
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={onClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.root}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.headerContainer,
-              {
-                backgroundColor: isLEDTheme ? '#212121' : '#fff',
-              },
-            ]}
-          >
-            {destination ? (
-              <Heading style={styles.subtitle}>{subtitle}</Heading>
-            ) : null}
-            <Heading singleLine style={styles.title}>
-              {title}
-            </Heading>
-          </View>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+          },
+        ]}
+      >
+        {destination ? (
+          <Heading style={styles.subtitle}>{subtitle}</Heading>
+        ) : null}
+        <Heading singleLine style={styles.title}>
+          {title}
+        </Heading>
+      </View>
 
-          <FlatList<TrainType>
-            style={StyleSheet.absoluteFill}
-            data={fetchedTrainTypes}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ItemSeparatorComponent={EmptyLineSeparator}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.flatListContentContainer}
-            ListEmptyComponent={
-              loading ? (
-                <SkeletonPlaceholder borderRadius={4} speed={1500}>
-                  <SkeletonPlaceholder.Item width="100%" height={72} />
-                </SkeletonPlaceholder>
-              ) : null
-            }
-          />
-          <View
-            style={[
-              styles.closeButtonContainer,
-              {
-                backgroundColor: isLEDTheme ? '#212121' : '#fff',
-              },
-            ]}
-          >
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={onClose}
-            >
-              {translate('close')}
-            </Button>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <FlatList<TrainType>
+        style={StyleSheet.absoluteFill}
+        data={fetchedTrainTypes}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={EmptyLineSeparator}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.flatListContentContainer}
+        ListEmptyComponent={
+          loading ? (
+            <SkeletonPlaceholder borderRadius={4} speed={1500}>
+              <SkeletonPlaceholder.Item width="100%" height={72} />
+            </SkeletonPlaceholder>
+          ) : null
+        }
+      />
+      <View
+        style={[
+          styles.closeButtonContainer,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+          },
+        ]}
+      >
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={onClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
+    </CustomModal>
   );
 };

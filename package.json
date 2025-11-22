@@ -21,6 +21,7 @@
     "@expo-google-fonts/roboto": "^0.2.3",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^15.0.3",
+    "@gorhom/portal": "^1.0.14",
     "@holiday-jp/holiday_jp": "^2.5.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/cli": "^15.1.2",

@@ -1,6 +1,7 @@
 import { ApolloProvider } from '@apollo/client/react';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
+import { PortalProvider } from '@gorhom/portal';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -81,27 +82,29 @@ const App: React.FC = () => {
               <Provider>
                 <NavigationContainer>
                   <DeepLinkProvider>
-                    <Stack.Navigator screenOptions={screenOptions}>
-                      {!permStatus?.granted ? (
+                    <PortalProvider>
+                      <Stack.Navigator screenOptions={screenOptions}>
+                        {!permStatus?.granted ? (
+                          <Stack.Screen
+                            options={options}
+                            name="Privacy"
+                            component={PrivacyScreen}
+                          />
+                        ) : null}
+
                         <Stack.Screen
                           options={options}
-                          name="Privacy"
-                          component={PrivacyScreen}
+                          name="MainStack"
+                          component={MainStack}
                         />
-                      ) : null}
 
-                      <Stack.Screen
-                        options={options}
-                        name="MainStack"
-                        component={MainStack}
-                      />
-
-                      <Stack.Screen
-                        options={options}
-                        name="TuningSettings"
-                        component={TuningSettings}
-                      />
-                    </Stack.Navigator>
+                        <Stack.Screen
+                          options={options}
+                          name="TuningSettings"
+                          component={TuningSettings}
+                        />
+                      </Stack.Navigator>
+                    </PortalProvider>
                   </DeepLinkProvider>
                 </NavigationContainer>
               </Provider>

@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
@@ -30,19 +30,13 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { CommonCard } from './CommonCard';
+import { CustomModal } from './CustomModal';
 import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 24,
-  },
   contentView: {
     width: '100%',
     paddingVertical: 24,
@@ -495,93 +489,86 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [fetchedTrainTypes, trainType]);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={onClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          shadowOpacity: 0.25,
+          shadowColor: '#333',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              shadowOpacity: 0.25,
-              shadowColor: '#333',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View style={styles.container}>
-            <Heading style={styles.heading}>
-              {translate('selectBoundTitle')}
-            </Heading>
+      <View style={styles.container}>
+        <Heading style={styles.heading}>
+          {translate('selectBoundTitle')}
+        </Heading>
 
-            <View style={styles.buttonsContainer}>
-              {inboundStations.length
-                ? renderButton({
-                    boundStations: inboundStations,
-                    direction: 'INBOUND',
-                    loading,
-                  })
-                : null}
-              {outboundStations.length
-                ? renderButton({
-                    boundStations: outboundStations,
-                    direction: 'OUTBOUND',
-                    loading,
-                  })
-                : null}
+        <View style={styles.buttonsContainer}>
+          {inboundStations.length
+            ? renderButton({
+                boundStations: inboundStations,
+                direction: 'INBOUND',
+                loading,
+              })
+            : null}
+          {outboundStations.length
+            ? renderButton({
+                boundStations: outboundStations,
+                direction: 'OUTBOUND',
+                loading,
+              })
+            : null}
 
-              <View style={styles.stopsContainer}>
-                <Button outline onPress={() => setRouteInfoModalVisible(true)}>
-                  {translate('viewStopStations')}
-                </Button>
+          <View style={styles.stopsContainer}>
+            <Button outline onPress={() => setRouteInfoModalVisible(true)}>
+              {translate('viewStopStations')}
+            </Button>
 
-                <Button
-                  outline
-                  onPress={() => setIsTrainTypeModalVisible(true)}
-                  disabled={!fetchedTrainTypes.length}
-                >
-                  {trainTypeText}
-                </Button>
+            <Button
+              outline
+              onPress={() => setIsTrainTypeModalVisible(true)}
+              disabled={!fetchedTrainTypes.length}
+            >
+              {trainTypeText}
+            </Button>
 
-                <Button
-                  outline
-                  style={savedRoute ? styles.redOutlinedButton : null}
-                  textStyle={savedRoute ? styles.redOutlinedButtonText : null}
-                  onPress={handleSaveRoutePress}
-                  disabled={!line || !isRoutesDBInitialized}
-                >
-                  {translate(
-                    !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
-                  )}
-                </Button>
-                <Button
-                  outline
-                  onPress={() => setSelectBoundSettingListModalVisible(true)}
-                >
-                  {translate('settings')}
-                </Button>
-              </View>
-
-              <Button
-                style={styles.closeButton}
-                textStyle={styles.closeButtonText}
-                onPress={onClose}
-              >
-                {translate('close')}
-              </Button>
-            </View>
+            <Button
+              outline
+              style={savedRoute ? styles.redOutlinedButton : null}
+              textStyle={savedRoute ? styles.redOutlinedButtonText : null}
+              onPress={handleSaveRoutePress}
+              disabled={!line || !isRoutesDBInitialized}
+            >
+              {translate(
+                !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
+              )}
+            </Button>
+            <Button
+              outline
+              onPress={() => setSelectBoundSettingListModalVisible(true)}
+            >
+              {translate('settings')}
+            </Button>
           </View>
-        </Pressable>
-      </Pressable>
+
+          <Button
+            style={styles.closeButton}
+            textStyle={styles.closeButtonText}
+            onPress={onClose}
+          >
+            {translate('close')}
+          </Button>
+        </View>
+      </View>
 
       <RouteInfoModal
         visible={routeInfoModalVisible}
@@ -621,6 +608,6 @@ export const SelectBoundModal: React.FC<Props> = ({
         )}
         toggleNotificationModeEnabled={toggleNotificationModeEnabled}
       />
-    </Modal>
+    </CustomModal>
   );
 };

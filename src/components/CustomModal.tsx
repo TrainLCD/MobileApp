@@ -1,0 +1,134 @@
+import { Portal } from '@gorhom/portal';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
+
+type Props = {
+  visible: boolean;
+  children: React.ReactNode;
+  onClose?: () => void;
+  dismissOnBackdropPress?: boolean;
+  backdropStyle?: StyleProp<ViewStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  animationDuration?: number;
+  testID?: string;
+};
+
+const ANIMATION_DURATION = 180;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export const CustomModal: React.FC<Props> = ({
+  visible,
+  children,
+  onClose,
+  dismissOnBackdropPress = true,
+  backdropStyle,
+  containerStyle,
+  contentContainerStyle,
+  animationDuration = ANIMATION_DURATION,
+  testID,
+}) => {
+  const [isMounted, setIsMounted] = useState(visible);
+  const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+
+  const scale = useMemo(
+    () =>
+      opacity.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.96, 1],
+      }),
+    [opacity]
+  );
+
+  useEffect(() => {
+    if (visible) {
+      setIsMounted(true);
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: animationDuration,
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: animationDuration,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setIsMounted(false);
+      }
+    });
+  }, [animationDuration, opacity, visible]);
+
+  const handleBackdropPress = () => {
+    if (dismissOnBackdropPress) {
+      onClose?.();
+    }
+  };
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <Portal>
+      <View
+        style={StyleSheet.absoluteFill}
+        pointerEvents="box-none"
+        testID={testID}
+      >
+        <AnimatedPressable
+          style={[
+            StyleSheet.absoluteFill,
+            styles.backdrop,
+            backdropStyle,
+            { opacity },
+          ]}
+          onPress={dismissOnBackdropPress ? handleBackdropPress : undefined}
+        />
+
+        <View
+          style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+          pointerEvents="box-none"
+        >
+          <Animated.View
+            style={[
+              styles.content,
+              contentContainerStyle,
+              { opacity, transform: [{ scale }] },
+            ]}
+          >
+            {children}
+          </Animated.View>
+        </View>
+      </View>
+    </Portal>
+  );
+};
+
+const styles = StyleSheet.create({
+  backdrop: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 720,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+});
+
+export default React.memo(CustomModal);

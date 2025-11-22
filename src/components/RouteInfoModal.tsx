@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -12,6 +12,7 @@ import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
+import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
 import Typography from './Typography';
@@ -21,7 +22,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
   contentView: {
@@ -136,60 +136,53 @@ export const RouteInfoModal = ({
   }, [onClose]);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={handleClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={handleClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.root}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={handleClose}>
-        <Pressable
-          onPress={() => {}}
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View style={styles.headerContainer}>
-            <Typography style={styles.boldTypography}>{lineName}</Typography>
-            <Heading>{trainTypeName}</Heading>
-          </View>
+      <View style={styles.headerContainer}>
+        <Typography style={styles.boldTypography}>{lineName}</Typography>
+        <Heading>{trainTypeName}</Heading>
+      </View>
 
-          <FlatList<Station>
-            data={stations ?? []}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ItemSeparatorComponent={EmptyLineSeparator}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.flatListContentContainer}
-            style={styles.flatList}
-            ListEmptyComponent={
-              loading ? (
-                <SkeletonPlaceholder borderRadius={4} speed={1500}>
-                  <SkeletonPlaceholder.Item width="100%" height={72} />
-                </SkeletonPlaceholder>
-              ) : null
-            }
-          />
-          <View style={styles.closeButtonContainer}>
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={handleClose}
-            >
-              {translate('close')}
-            </Button>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <FlatList<Station>
+        data={stations ?? []}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={EmptyLineSeparator}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.flatListContentContainer}
+        style={styles.flatList}
+        ListEmptyComponent={
+          loading ? (
+            <SkeletonPlaceholder borderRadius={4} speed={1500}>
+              <SkeletonPlaceholder.Item width="100%" height={72} />
+            </SkeletonPlaceholder>
+          ) : null
+        }
+      />
+      <View style={styles.closeButtonContainer}>
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={handleClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
+    </CustomModal>
   );
 };
