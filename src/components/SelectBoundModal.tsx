@@ -21,6 +21,7 @@ import type {
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
 import { APP_THEME } from '~/models/Theme';
+import notifyState from '~/store/atoms/notify';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -31,6 +32,7 @@ import stationState from '../store/atoms/station';
 import { CommonCard } from './CommonCard';
 import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
+import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
@@ -107,6 +109,9 @@ export const SelectBoundModal: React.FC<Props> = ({
     selectBoundSettingListModalVisible,
     setSelectBoundSettingListModalVisible,
   ] = useState(false);
+  const [isStationSettingsModalVisible, setIsStationSettingsModalVisible] =
+    useState(false);
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
 
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
@@ -117,6 +122,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
   const { pendingLine: line } = lineAtom;
+  const [{ targetStationIds }, setNotifyState] = useAtom(notifyState);
 
   const { isLoopLine } = useLoopLine(stations, false);
   const {
@@ -197,6 +203,11 @@ export const SelectBoundModal: React.FC<Props> = ({
       setNavigationState,
     ]
   );
+
+  const handleStationSelected = useCallback((station: Station) => {
+    setSelectedStation(station);
+    setIsStationSettingsModalVisible(true);
+  }, []);
 
   const normalLineDirectionText = useCallback((boundStations: Station[]) => {
     if (isJapanese) {
@@ -442,6 +453,24 @@ export const SelectBoundModal: React.FC<Props> = ({
     stations,
   ]);
 
+  const toggleNotificationModeEnabled = useCallback(() => {
+    if (!selectedStation) return;
+
+    setNotifyState((prev) => {
+      const isEnabled = prev.targetStationIds.includes(
+        selectedStation.id ?? -1
+      );
+      return {
+        ...prev,
+        targetStationIds: isEnabled
+          ? prev.targetStationIds.filter(
+              (id) => id !== (selectedStation.id ?? -1)
+            )
+          : [...prev.targetStationIds, selectedStation.id ?? -1],
+      };
+    });
+  }, [selectedStation, setNotifyState]);
+
   useEffect(() => {
     if (error) {
       console.error(error);
@@ -559,7 +588,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         trainType={trainType}
         stations={stations}
         onClose={() => setRouteInfoModalVisible(false)}
-        onSelect={(_station) => {}}
+        onSelect={handleStationSelected}
         loading={loading}
       />
       <SelectBoundSettingListModal
@@ -582,6 +611,15 @@ export const SelectBoundModal: React.FC<Props> = ({
           setIsTrainTypeModalVisible(false);
           onTrainTypeSelect(trainType);
         }}
+      />
+      <StationSettingsModal
+        visible={isStationSettingsModalVisible}
+        onClose={() => setIsStationSettingsModalVisible(false)}
+        station={selectedStation}
+        notificationModeEnabled={targetStationIds.includes(
+          selectedStation?.id ?? -1
+        )}
+        toggleNotificationModeEnabled={toggleNotificationModeEnabled}
       />
     </Modal>
   );
