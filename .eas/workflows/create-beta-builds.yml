@@ -1,0 +1,65 @@
+name: Create Beta Builds
+on:
+  push:
+    branches:
+      - beta
+
+jobs:
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: production
+    steps:
+      - uses: eas/checkout
+      - name: Checkout submodules
+        run: |
+          set -euo pipefail
+          git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+      - name: Decode .env.local
+        run: |
+          if [ -z "${DOTENV_LOCAL_BASE64:-}" ]; then
+            echo "Environment variable DOTENV_LOCAL_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$DOTENV_LOCAL_BASE64" | base64 --decode > .env.local
+      - name: Decode Sentry properties
+        run: |
+          if [ -z "${SENTRY_PROPERTIES_BASE64:-}" ]; then
+            echo "Environment variable SENTRY_PROPERTIES_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$SENTRY_PROPERTIES_BASE64" | base64 --decode > android/sentry.properties
+      - name: Decode google-services.json
+        run: |
+          if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
+            echo "Environment variable GOOGLE_SERVICES_JSON_BASE64 is not set."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+      - name: Restore android/app/release.jks
+        run: |
+          if [ -z "${ANDROID_RELEASE_JKS_BASE64:-}" ]; then
+            echo "Environment variable ANDROID_RELEASE_JKS_BASE64 is not set."
+            exit 1
+          fi
+          mkdir -p android/app
+          printf '%s' "$ANDROID_RELEASE_JKS_BASE64" | base64 --decode > android/app/release.jks
+      - name: Restore $HOME/.gradle/gradle.properties
+        run: |
+          if [ -z "${HOME_GRADLE_PROPERTIES_BASE64:-}" ]; then
+            echo "Environment variable HOME_GRADLE_PROPERTIES_BASE64 is not set."
+            exit 1
+          fi
+          mkdir -p $HOME/.gradle
+          printf '%s' "$HOME_GRADLE_PROPERTIES_BASE64" | base64 --decode > $HOME/.gradle/gradle.properties
+      - uses: eas/build
+
+  submit_android:
+    name: Submit to Google Play Store
+    needs: [build_android]
+    type: submit
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: production
