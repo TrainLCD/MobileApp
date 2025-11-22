@@ -42,25 +42,40 @@ export const CustomModal: React.FC<Props> = ({
   );
 
   useEffect(() => {
+    let cancelled = false;
+
     if (visible) {
       setIsMounted(true);
-      Animated.timing(opacity, {
+      const animation = Animated.timing(opacity, {
         toValue: 1,
         duration: animationDuration,
         useNativeDriver: true,
-      }).start();
-      return;
+      });
+
+      animation.start();
+
+      return () => {
+        cancelled = true;
+        animation.stop();
+      };
     }
 
-    Animated.timing(opacity, {
+    const animation = Animated.timing(opacity, {
       toValue: 0,
       duration: animationDuration,
       useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
+    });
+
+    animation.start(({ finished }) => {
+      if (finished && !cancelled && !visible) {
         setIsMounted(false);
       }
     });
+
+    return () => {
+      cancelled = true;
+      animation.stop();
+    };
   }, [animationDuration, opacity, visible]);
 
   const handleBackdropPress = () => {
