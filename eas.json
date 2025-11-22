@@ -18,7 +18,14 @@
       "distribution": "store"
     },
     "production": {
-      "distribution": "store"
+      "distribution": "store",
+      "android": {
+        "gradleCommand": ":app:bundleProdRelease"
+      },
+      "ios": {
+        "scheme": "ProdTrainLCD",
+        "buildConfiguration": "Release"
+      }
     }
   },
   "submit": {
