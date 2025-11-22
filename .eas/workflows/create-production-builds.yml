@@ -1,8 +1,9 @@
-name: Create Canary Builds
+name: Create Production Builds
 on:
   push:
     branches:
-      - canary
+      - main
+      - beta
 
 jobs:
   build_android:
