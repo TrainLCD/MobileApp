@@ -16,13 +16,13 @@
         "projectId": "2b6911f2-567d-453b-ac7f-aaf0f3dca1b2"
       },
       "versioning": {
-        "androidMinVersionCode": 100000098
+        "androidMinVersionCode": 100000099
       }
     },
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd",
       "scheme": "CanaryTrainLCD",
-      "buildNumber": "2311"
+      "buildNumber": "2312"
     },
     "android": {
       "package": "me.tinykitten.trainlcd",
