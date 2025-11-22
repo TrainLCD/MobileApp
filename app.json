@@ -13,14 +13,14 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "dad36dde-0056-4760-8eda-37f05e7c9c6c"
+        "projectId": "2b6911f2-567d-453b-ac7f-aaf0f3dca1b2"
       },
       "versioning": {
         "androidMinVersionCode": 100000098
       }
     },
     "ios": {
-      "bundleIdentifier": "me.tinykitten.trainlcd.dev",
+      "bundleIdentifier": "me.tinykitten.trainlcd",
       "scheme": "CanaryTrainLCD",
       "buildNumber": "2311"
     },
