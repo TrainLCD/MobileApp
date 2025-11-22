@@ -626,6 +626,7 @@ const SelectLineScreen = () => {
     setNavigationState((prev) => ({
       ...prev,
       pendingWantedDestination: null,
+      trainType: null,
     }));
   }, [setLineState, setStationState, setNavigationState]);
 

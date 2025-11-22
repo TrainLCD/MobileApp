@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -21,6 +21,7 @@ import type {
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
 import { APP_THEME } from '~/models/Theme';
+import notifyState from '~/store/atoms/notify';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -31,6 +32,8 @@ import stationState from '../store/atoms/station';
 import { CommonCard } from './CommonCard';
 import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
+import { StationSettingsModal } from './StationSettingsModal';
+import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -100,22 +103,27 @@ export const SelectBoundModal: React.FC<Props> = ({
   onBoundSelect,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
-
+  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
   const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
   const [
     selectBoundSettingListModalVisible,
     setSelectBoundSettingListModalVisible,
   ] = useState(false);
+  const [isStationSettingsModalVisible, setIsStationSettingsModalVisible] =
+    useState(false);
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
 
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
   const { pendingStation: station, pendingStations: stations } = stationAtom;
   const [
-    { autoModeEnabled, trainType, pendingWantedDestination },
+    { autoModeEnabled, trainType, pendingWantedDestination, fetchedTrainTypes },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
   const { pendingLine: line } = lineAtom;
+  const [{ targetStationIds }, setNotifyState] = useAtom(notifyState);
+
   const { isLoopLine } = useLoopLine(stations, false);
   const {
     bounds: [inboundStations, outboundStations],
@@ -196,6 +204,11 @@ export const SelectBoundModal: React.FC<Props> = ({
     ]
   );
 
+  const handleStationSelected = useCallback((station: Station) => {
+    setSelectedStation(station);
+    setIsStationSettingsModalVisible(true);
+  }, []);
+
   const normalLineDirectionText = useCallback((boundStations: Station[]) => {
     if (isJapanese) {
       return `${boundStations
@@ -242,6 +255,11 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
       }
 
+      const finalStop =
+        direction === 'INBOUND'
+          ? boundStations[0]
+          : boundStations[boundStations.length - 1];
+
       const lineForCard =
         direction === 'INBOUND'
           ? (boundStations[0]?.line ?? line)
@@ -285,7 +303,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               }
               title={title}
               subtitle={subtitle}
-              targetStation={pendingWantedDestination}
+              targetStation={finalStop}
             />
           );
         }
@@ -435,12 +453,46 @@ export const SelectBoundModal: React.FC<Props> = ({
     stations,
   ]);
 
+  const toggleNotificationModeEnabled = useCallback(() => {
+    if (!selectedStation) return;
+
+    setNotifyState((prev) => {
+      const isEnabled = prev.targetStationIds.includes(
+        selectedStation.id ?? -1
+      );
+      return {
+        ...prev,
+        targetStationIds: isEnabled
+          ? prev.targetStationIds.filter(
+              (id) => id !== (selectedStation.id ?? -1)
+            )
+          : [...prev.targetStationIds, selectedStation.id ?? -1],
+      };
+    });
+  }, [selectedStation, setNotifyState]);
+
   useEffect(() => {
     if (error) {
       console.error(error);
       Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
   }, [error]);
+
+  const trainTypeText = useMemo(() => {
+    if (!fetchedTrainTypes.length) {
+      return translate('trainTypesNotExist');
+    }
+
+    if (!trainType) {
+      return translate('trainTypeSettings');
+    }
+
+    return translate('trainTypeIs', {
+      trainTypeName: isJapanese
+        ? (trainType.name ?? '')
+        : (trainType.nameRoman ?? ''),
+    });
+  }, [fetchedTrainTypes, trainType]);
 
   return (
     <Modal
@@ -491,6 +543,15 @@ export const SelectBoundModal: React.FC<Props> = ({
                 <Button outline onPress={() => setRouteInfoModalVisible(true)}>
                   {translate('viewStopStations')}
                 </Button>
+
+                <Button
+                  outline
+                  onPress={() => setIsTrainTypeModalVisible(true)}
+                  disabled={!fetchedTrainTypes.length}
+                >
+                  {trainTypeText}
+                </Button>
+
                 <Button
                   outline
                   style={savedRoute ? styles.redOutlinedButton : null}
@@ -527,17 +588,38 @@ export const SelectBoundModal: React.FC<Props> = ({
         trainType={trainType}
         stations={stations}
         onClose={() => setRouteInfoModalVisible(false)}
-        onSelect={(_station) => {}}
+        onSelect={handleStationSelected}
         loading={loading}
       />
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}
         onClose={() => setSelectBoundSettingListModalVisible(false)}
-        isLoopLine={isLoopLine}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
+      />
+      <TrainTypeListModal
+        visible={isTrainTypeModalVisible}
         line={line}
-        onTrainTypeSelect={onTrainTypeSelect}
+        onClose={() => {
+          setIsTrainTypeModalVisible(false);
+          setNavigationState((prev) => ({
+            ...prev,
+            trainType: null,
+          }));
+        }}
+        onSelect={(trainType) => {
+          setIsTrainTypeModalVisible(false);
+          onTrainTypeSelect(trainType);
+        }}
+      />
+      <StationSettingsModal
+        visible={isStationSettingsModalVisible}
+        onClose={() => setIsStationSettingsModalVisible(false)}
+        station={selectedStation}
+        notificationModeEnabled={targetStationIds.includes(
+          selectedStation?.id ?? -1
+        )}
+        toggleNotificationModeEnabled={toggleNotificationModeEnabled}
       />
     </Modal>
   );

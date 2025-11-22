@@ -9,6 +9,7 @@ import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
@@ -29,7 +30,10 @@ const styles = StyleSheet.create({
     minHeight: 512,
     overflow: 'hidden',
   },
-  boldTypography: { fontWeight: 'bold' },
+  boldTypography: {
+    fontSize: RFValue(12),
+    fontWeight: 'bold',
+  },
   closeButtonContainer: {
     position: 'absolute',
     left: 0,

@@ -1,13 +1,16 @@
 import type React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import type { Station } from '~/@types/graphql';
 import { APP_THEME } from '~/models/Theme';
 import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 import { ToggleButton } from './ToggleButton';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
@@ -36,20 +39,23 @@ const styles = StyleSheet.create({
   closeButton: { marginTop: 24 },
   closeButtonText: { fontWeight: 'bold' },
   heading: { width: '100%' },
+  lineText: { width: '100%', fontWeight: 'bold', fontSize: RFValue(12) },
 });
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  autoModeEnabled: boolean;
-  toggleAutoModeEnabled: () => void;
+  station: Station | null;
+  notificationModeEnabled: boolean;
+  toggleNotificationModeEnabled: () => void;
 };
 
-export const SelectBoundSettingListModal: React.FC<Props> = ({
+export const StationSettingsModal: React.FC<Props> = ({
   visible,
   onClose,
-  autoModeEnabled,
-  toggleAutoModeEnabled,
+  station,
+  notificationModeEnabled,
+  toggleNotificationModeEnabled,
 }) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
@@ -78,15 +84,21 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           ]}
         >
           <View style={styles.container}>
-            <Heading style={styles.heading}>{translate('settings')}</Heading>
+            <Typography style={styles.lineText}>
+              {isJapanese ? station?.line?.nameShort : station?.line?.nameRoman}
+            </Typography>
+            <Heading style={styles.heading}>
+              {isJapanese ? station?.name : station?.nameRoman}
+              {translate('station')}
+            </Heading>
 
             <View style={styles.buttonsContainer}>
               <ToggleButton
                 outline
-                onToggle={toggleAutoModeEnabled}
-                state={autoModeEnabled}
+                onToggle={toggleNotificationModeEnabled}
+                state={notificationModeEnabled}
               >
-                {translate('autoModeSettings')}
+                {translate('enableNotificationMode')}
               </ToggleButton>
               <Button
                 style={styles.closeButton}
