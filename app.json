@@ -21,7 +21,7 @@
     },
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd",
-      "scheme": "CanaryTrainLCD",
+      "scheme": "ProdTrainLCD",
       "buildNumber": "2312"
     },
     "android": {
