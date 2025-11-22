@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   },
   tlcRoot: {
     transform: [{ scale: 0.7 }],
+    maxWidth: isTablet ? 82 * 1.5 : 82,
     flex: 1,
     justifyContent: 'center',
   },

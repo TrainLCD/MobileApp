@@ -7,11 +7,11 @@ import {
   Alert,
   PermissionsAndroid,
   Platform,
-  SafeAreaView,
   StyleSheet,
   View,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import Typography from '../components/Typography';
 import { setLocation, useFetchCurrentLocationOnce } from '../hooks';
