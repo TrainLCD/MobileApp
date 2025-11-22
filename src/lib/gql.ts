@@ -11,7 +11,7 @@ import { isDevApp } from '~/utils/isDevApp';
 const assertUrl = (name: string, value?: string | null): string => {
   if (value === undefined || value === null || value.trim() === '') {
     throw new Error(
-      `[GraphQL Client Configuration Error] Missing or empty ${name}. Please check your .env.local file and ensure the ${name} is properly configured.`,
+      `[GraphQL Client Configuration Error] Missing or empty ${name}. Please check your .env.local file and ensure the ${name} is properly configured.`
     );
   }
   return value;
