@@ -156,7 +156,6 @@
   "loadingAPI": "Communicating with server...",
   "routeSearchTitle": "Find a route",
   "submit": "Submit",
-  "eachTrainTypes": "Train types",
   "matchedStationListEmpty": "Transfer station not found.",
   "searchDestinationPlaceholder": "Please enter the station name of your destination.",
   "alwaysPermissionNotGrantedPanelText": "Location access is not set to \"Always Allow\", so location updates will not occur when the TrainLCD app is not displayed. To change this setting, please go to your smartphone’s settings and select \"Always Allow\" for location access.",
@@ -192,5 +191,6 @@
   "emptySearchResult": "No matching information was found.",
   "stationNameSearchPlaceholder": "Where are you?",
   "routeSearchPlaceholder": "Where to?",
-  "trainTypeIs": "Train type: %{trainTypeName}"
+  "trainTypeIs": "Train type: %{trainTypeName}",
+  "trainTypesNotExist": "No train types available"
 }

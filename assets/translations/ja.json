@@ -157,7 +157,6 @@
   "loadingAPI": "サーバーと通信中です",
   "routeSearchTitle": "経路を検索",
   "submit": "確定",
-  "eachTrainTypes": "各線の種別",
   "matchedStationListEmpty": "接続駅が見つかりませんでした。",
   "searchDestinationPlaceholder": "目的地の駅名を入力してください",
   "alwaysPermissionNotGrantedPanelText": "位置情報の常時取得が許可されていないため、TrainLCDアプリを表示していない間は位置情報が更新されません。設定を変更するには、お使いのスマートフォンの設定画面から位置情報の『常に許可』を選択してください。",
@@ -193,5 +192,6 @@
   "emptySearchResult": "一致する情報が見つかりませんでした。",
   "stationNameSearchPlaceholder": "どこにいますか？",
   "routeSearchPlaceholder": "どこへ行きますか？",
-  "trainTypeIs": "列車種別: %{trainTypeName}"
+  "trainTypeIs": "列車種別: %{trainTypeName}",
+  "trainTypesNotExist": "列車種別がありません"
 }

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -244,6 +244,11 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
       }
 
+      const finalStop =
+        direction === 'INBOUND'
+          ? boundStations[0]
+          : boundStations[boundStations.length - 1];
+
       const lineForCard =
         direction === 'INBOUND'
           ? (boundStations[0]?.line ?? line)
@@ -287,7 +292,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               }
               title={title}
               subtitle={subtitle}
-              targetStation={pendingWantedDestination}
+              targetStation={finalStop}
             />
           );
         }
@@ -444,6 +449,22 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
   }, [error]);
 
+  const trainTypeText = useMemo(() => {
+    if (!fetchedTrainTypes.length) {
+      return translate('trainTypesNotExist');
+    }
+
+    if (!trainType) {
+      return translate('trainTypeSettings');
+    }
+
+    return translate('trainTypeIs', {
+      trainTypeName: isJapanese
+        ? (trainType.name ?? '')
+        : (trainType.nameRoman ?? ''),
+    });
+  }, [fetchedTrainTypes, trainType]);
+
   return (
     <Modal
       animationType="fade"
@@ -494,20 +515,13 @@ export const SelectBoundModal: React.FC<Props> = ({
                   {translate('viewStopStations')}
                 </Button>
 
-                {fetchedTrainTypes.length > 0 ? (
-                  <Button
-                    outline
-                    onPress={() => setIsTrainTypeModalVisible(true)}
-                  >
-                    {trainType
-                      ? translate('trainTypeIs', {
-                          trainTypeName: isJapanese
-                            ? (trainType.name ?? '')
-                            : (trainType.nameRoman ?? ''),
-                        })
-                      : translate('trainTypeSettings')}
-                  </Button>
-                ) : null}
+                <Button
+                  outline
+                  onPress={() => setIsTrainTypeModalVisible(true)}
+                  disabled={!fetchedTrainTypes.length}
+                >
+                  {trainTypeText}
+                </Button>
 
                 <Button
                   outline
@@ -557,7 +571,13 @@ export const SelectBoundModal: React.FC<Props> = ({
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
         line={line}
-        onClose={() => setIsTrainTypeModalVisible(false)}
+        onClose={() => {
+          setIsTrainTypeModalVisible(false);
+          setNavigationState((prev) => ({
+            ...prev,
+            trainType: null,
+          }));
+        }}
         onSelect={(trainType) => {
           setIsTrainTypeModalVisible(false);
           onTrainTypeSelect(trainType);

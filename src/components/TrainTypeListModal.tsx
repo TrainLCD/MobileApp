@@ -10,6 +10,7 @@ import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
@@ -51,7 +52,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  subtitle: { width: '100%', fontSize: 16 },
+  subtitle: {
+    width: '100%',
+    fontSize: RFValue(12),
+  },
   title: {
     width: '100%',
   },
