@@ -26,7 +26,12 @@
     },
     "android": {
       "package": "me.tinykitten.trainlcd.dev",
-      "versionCode": 100000098
-    }
+      "versionCode": 100000098,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "owner": "trainlcd"
   }
 }

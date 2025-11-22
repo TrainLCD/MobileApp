@@ -12,6 +12,12 @@ jobs:
       profile: production
     steps:
       - uses: eas/checkout
+      - name: Ensure EAS_PROJECT is beta
+        run: |
+          if [ "${EAS_PROJECT:-}" != "beta" ]; then
+            echo "EAS_PROJECT must be 'beta' for this workflow; got '${EAS_PROJECT:-<unset>}'"
+            exit 1
+          fi
       - name: Checkout submodules
         run: |
           set -euo pipefail
