@@ -20,12 +20,12 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "me.tinykitten.trainlcd.dev",
+      "bundleIdentifier": "me.tinykitten.trainlcd",
       "scheme": "CanaryTrainLCD",
       "buildNumber": "2310"
     },
     "android": {
-      "package": "me.tinykitten.trainlcd.dev",
+      "package": "me.tinykitten.trainlcd",
       "versionCode": 100000097,
       "permissions": [
         "android.permission.RECORD_AUDIO",
