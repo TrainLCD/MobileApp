@@ -1,7 +1,16 @@
 import { Portal } from '@gorhom/portal';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  createAnimatedComponent,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 type Props = {
   visible: boolean;
@@ -16,7 +25,7 @@ type Props = {
 };
 
 const ANIMATION_DURATION = 180;
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedPressable = createAnimatedComponent(Pressable);
 
 export const CustomModal: React.FC<Props> = ({
   visible,
@@ -30,51 +39,43 @@ export const CustomModal: React.FC<Props> = ({
   testID,
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
-  const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const opacity = useSharedValue(visible ? 1 : 0);
 
-  const scale = useMemo(
-    () =>
-      opacity.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.96, 1],
-      }),
-    [opacity]
-  );
+  const animatedBackdropStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const animatedContentStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: interpolate(opacity.value, [0, 1], [0.96, 1]) }],
+  }));
 
   useEffect(() => {
     let cancelled = false;
 
     if (visible) {
       setIsMounted(true);
-      const animation = Animated.timing(opacity, {
-        toValue: 1,
-        duration: animationDuration,
-        useNativeDriver: true,
-      });
-
-      animation.start();
+      opacity.value = withTiming(1, { duration: animationDuration });
 
       return () => {
         cancelled = true;
-        animation.stop();
+        cancelAnimation(opacity);
       };
     }
 
-    const animation = Animated.timing(opacity, {
-      toValue: 0,
-      duration: animationDuration,
-      useNativeDriver: true,
-    });
-
-    animation.start(({ finished }) => {
-      if (finished && !cancelled && !visible) {
-        setIsMounted(false);
+    opacity.value = withTiming(
+      0,
+      { duration: animationDuration },
+      (finished) => {
+        if (finished && !cancelled && !visible) {
+          runOnJS(setIsMounted)(false);
+        }
       }
-    });
+    );
 
     return () => {
       cancelled = true;
-      animation.stop();
+      cancelAnimation(opacity);
     };
   }, [animationDuration, opacity, visible]);
 
@@ -100,7 +101,7 @@ export const CustomModal: React.FC<Props> = ({
             StyleSheet.absoluteFill,
             styles.backdrop,
             backdropStyle,
-            { opacity },
+            animatedBackdropStyle,
           ]}
           onPress={dismissOnBackdropPress ? handleBackdropPress : undefined}
         />
@@ -113,7 +114,7 @@ export const CustomModal: React.FC<Props> = ({
             style={[
               styles.content,
               contentContainerStyle,
-              { opacity, transform: [{ scale }] },
+              animatedContentStyle,
             ]}
           >
             {children}
