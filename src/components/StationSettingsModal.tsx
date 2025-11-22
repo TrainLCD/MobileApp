@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { APP_THEME } from '~/models/Theme';
 import isTablet from '~/utils/isTablet';
@@ -9,17 +9,11 @@ import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks';
 import { isJapanese, translate } from '../translation';
+import { CustomModal } from './CustomModal';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 24,
-  },
   contentView: {
     width: '100%',
     paddingVertical: 24,
@@ -60,57 +54,50 @@ export const StationSettingsModal: React.FC<Props> = ({
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={onClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          shadowOpacity: 0.25,
+          shadowColor: '#333',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              shadowOpacity: 0.25,
-              shadowColor: '#333',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View style={styles.container}>
-            <Typography style={styles.lineText}>
-              {isJapanese ? station?.line?.nameShort : station?.line?.nameRoman}
-            </Typography>
-            <Heading style={styles.heading}>
-              {isJapanese ? station?.name : station?.nameRoman}
-              {translate('station')}
-            </Heading>
+      <View style={styles.container}>
+        <Typography style={styles.lineText}>
+          {isJapanese ? station?.line?.nameShort : station?.line?.nameRoman}
+        </Typography>
+        <Heading style={styles.heading}>
+          {isJapanese ? station?.name : station?.nameRoman}
+          {translate('station')}
+        </Heading>
 
-            <View style={styles.buttonsContainer}>
-              <ToggleButton
-                outline
-                onToggle={toggleNotificationModeEnabled}
-                state={notificationModeEnabled}
-              >
-                {translate('enableNotificationMode')}
-              </ToggleButton>
-              <Button
-                style={styles.closeButton}
-                textStyle={styles.closeButtonText}
-                onPress={onClose}
-              >
-                {translate('close')}
-              </Button>
-            </View>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+        <View style={styles.buttonsContainer}>
+          <ToggleButton
+            outline
+            onToggle={toggleNotificationModeEnabled}
+            state={notificationModeEnabled}
+          >
+            {translate('enableNotificationMode')}
+          </ToggleButton>
+          <Button
+            style={styles.closeButton}
+            textStyle={styles.closeButtonText}
+            onPress={onClose}
+          >
+            {translate('close')}
+          </Button>
+        </View>
+      </View>
+    </CustomModal>
   );
 };
