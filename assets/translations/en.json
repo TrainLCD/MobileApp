@@ -192,5 +192,6 @@
   "stationNameSearchPlaceholder": "Where are you?",
   "routeSearchPlaceholder": "Where to?",
   "trainTypeIs": "Train type: %{trainTypeName}",
-  "trainTypesNotExist": "No train types available"
+  "trainTypesNotExist": "No train types available",
+  "enableNotificationMode": "Enable arrival notifications"
 }
