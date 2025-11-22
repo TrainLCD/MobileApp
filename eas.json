@@ -38,6 +38,16 @@
         "ascAppId": "6450133462",
         "bundleIdentifier": "me.tinykitten.trainlcd.dev"
       }
+    },
+    "production": {
+      "android": {
+        "track": "internal",
+        "applicationId": "me.tinykitten.trainlcd"
+      },
+      "ios": {
+        "ascAppId": "6450133462",
+        "bundleIdentifier": "me.tinykitten.trainlcd"
+      }
     }
   }
 }
