@@ -56,6 +56,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   mr: { marginRight: 16 },
+  betaNotice: {
+    fontSize: RFValue(12),
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 32,
+  },
 });
 
 const AppSettingsScreen: React.FC = () => {
@@ -285,6 +291,10 @@ const AppSettingsScreen: React.FC = () => {
             </View>
           ) : null}
         </View>
+
+        <Typography style={styles.betaNotice}>
+          {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
+        </Typography>
       </ScrollView>
       <FooterTabBar active="settings" />
     </>

@@ -2555,8 +2555,8 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				CURRENT_PROJECT_VERSION = 2309;
-				MARKETING_VERSION = 10.0.17;
+				CURRENT_PROJECT_VERSION = 2310;
+				MARKETING_VERSION = 10.0.18;
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._ef86e70f27f34fbe058853a6e08d7115/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -2656,8 +2656,8 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				CURRENT_PROJECT_VERSION = 2309;
-				MARKETING_VERSION = 10.0.17;
+				CURRENT_PROJECT_VERSION = 2310;
+				MARKETING_VERSION = 10.0.18;
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._ef86e70f27f34fbe058853a6e08d7115/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
@@ -3616,8 +3616,8 @@
 				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				CURRENT_PROJECT_VERSION = 2309;
-				MARKETING_VERSION = 10.0.17;
+				CURRENT_PROJECT_VERSION = 2310;
+				MARKETING_VERSION = 10.0.18;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3667,8 +3667,8 @@
 				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				CURRENT_PROJECT_VERSION = 2309;
-				MARKETING_VERSION = 10.0.17;
+				CURRENT_PROJECT_VERSION = 2310;
+				MARKETING_VERSION = 10.0.18;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
