@@ -1,8 +1,7 @@
-name: Create Production Builds
+name: Create Beta Builds
 on:
   push:
     branches:
-      - main
       - beta
 
 jobs:
