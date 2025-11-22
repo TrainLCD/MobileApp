@@ -38,11 +38,9 @@
   "transfer": "のりかえ",
   "menuNotice": "次の画面から画面を長押しするとメニューが開けます。",
   "back": "戻る",
-  "notifySettings": "通知を受け取る駅を指定",
   "trainTypeSettings": "列車種別を指定",
   "viewStopStations": "停車駅を見る",
   "allStops": "停車駅",
-  "notifySettingsTitle": "到着通知を受け取りたい駅を選択してください",
   "cancel": "キャンセル",
   "notice": "はじめに",
   "dozeAlertText": "お使いのスマートフォンがバッテリー最適化機能に対応している場合、設定アプリからTrainLCDアプリへのバッテリー最適化を無効に設定してください。",
@@ -143,7 +141,6 @@
   "headerDelayTooShortErrorText": "ヘッダーアニメーション遅延はヘッダーアニメーション時間より大きい値である必要があります。",
   "nanErrorText": "値は数値で入力してください。",
   "permissionsNotGranted": "位置情報の取得が許可されていないため、実際の位置情報の変化は反映されません。お使いのスマートフォンの設定画面より許可できます。",
-  "selectBoundSettings": "行先を指定",
   "notSpecified": "指定なし",
   "awaitingLatestData": "最新のデータを取得しています...",
   "maintenanceTitle": "現在メンテナンス中です",
@@ -160,7 +157,6 @@
   "loadingAPI": "サーバーと通信中です",
   "routeSearchTitle": "経路を検索",
   "submit": "確定",
-  "eachTrainTypes": "各線の種別",
   "matchedStationListEmpty": "接続駅が見つかりませんでした。",
   "searchDestinationPlaceholder": "目的地の駅名を入力してください",
   "alwaysPermissionNotGrantedPanelText": "位置情報の常時取得が許可されていないため、TrainLCDアプリを表示していない間は位置情報が更新されません。設定を変更するには、お使いのスマートフォンの設定画面から位置情報の『常に許可』を選択してください。",
@@ -196,5 +192,6 @@
   "emptySearchResult": "一致する情報が見つかりませんでした。",
   "stationNameSearchPlaceholder": "どこにいますか？",
   "routeSearchPlaceholder": "どこへ行きますか？",
-  "trainTypeIs": "列車種別: %{trainTypeName}"
+  "trainTypeIs": "列車種別: %{trainTypeName}",
+  "trainTypesNotExist": "列車種別がありません"
 }

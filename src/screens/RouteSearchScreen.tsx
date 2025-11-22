@@ -443,6 +443,10 @@ const RouteSearchScreen = () => {
           // SelectBoundModalを閉じるだけで、選択状態はリセットしない
           // (TrainTypeListModalに戻れるようにする)
           setSelectBoundModalVisible(false);
+          setNavigationState((prev) => ({
+            ...prev,
+            trainType: null,
+          }));
         }}
         onBoundSelect={() => {
           setSelectBoundModalVisible(false);

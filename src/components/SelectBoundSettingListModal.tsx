@@ -1,19 +1,13 @@
-import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { useCallback, useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
-import type { Line, TrainType } from '~/@types/graphql';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { APP_THEME } from '~/models/Theme';
-import navigationState from '~/store/atoms/navigation';
-import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { useThemeStore } from '../hooks';
-import { isJapanese, translate } from '../translation';
+import { translate } from '../translation';
 import { ToggleButton } from './ToggleButton';
-import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -47,32 +41,17 @@ const styles = StyleSheet.create({
 type Props = {
   visible: boolean;
   onClose: () => void;
-  isLoopLine: boolean;
   autoModeEnabled: boolean;
-  line: Line | null;
   toggleAutoModeEnabled: () => void;
-  onTrainTypeSelect: (trainType: TrainType) => void;
 };
 
 export const SelectBoundSettingListModal: React.FC<Props> = ({
   visible,
   onClose,
-  isLoopLine,
   autoModeEnabled,
-  line,
   toggleAutoModeEnabled,
-  onTrainTypeSelect,
 }) => {
-  const { trainType, fetchedTrainTypes } = useAtomValue(navigationState);
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-
-  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
-
-  const showUnimplementedAlert = useCallback(() => {
-    if (isDevApp) {
-      Alert.alert('Unimplemented', 'This feature is not implemented yet.');
-    }
-  }, []);
 
   return (
     <Modal
@@ -102,29 +81,6 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
             <Heading style={styles.heading}>{translate('settings')}</Heading>
 
             <View style={styles.buttonsContainer}>
-              <Button outline onPress={showUnimplementedAlert}>
-                {translate('notifySettings')}
-              </Button>
-              {fetchedTrainTypes.length ? (
-                <Button
-                  outline
-                  onPress={() => setIsTrainTypeModalVisible(true)}
-                >
-                  {trainType
-                    ? translate('trainTypeIs', {
-                        trainTypeName: isJapanese
-                          ? (trainType.name ?? '')
-                          : (trainType.nameRoman ?? ''),
-                      })
-                    : translate('trainTypeSettings')}
-                </Button>
-              ) : null}
-              {/* NOTE: 処理が複雑になりそこまで需要もなさそうなので環状運転路線では行先を指定できないようにする */}
-              {!isLoopLine ? (
-                <Button outline onPress={showUnimplementedAlert}>
-                  {translate('selectBoundSettings')}
-                </Button>
-              ) : null}
               <ToggleButton
                 outline
                 onToggle={toggleAutoModeEnabled}
@@ -143,15 +99,6 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           </View>
         </Pressable>
       </Pressable>
-      <TrainTypeListModal
-        visible={isTrainTypeModalVisible}
-        line={line}
-        onClose={() => setIsTrainTypeModalVisible(false)}
-        onSelect={(trainType) => {
-          setIsTrainTypeModalVisible(false);
-          onTrainTypeSelect(trainType);
-        }}
-      />
     </Modal>
   );
 };

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -31,6 +31,7 @@ import stationState from '../store/atoms/station';
 import { CommonCard } from './CommonCard';
 import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
+import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
   root: {
@@ -100,7 +101,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   onBoundSelect,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
-
+  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
   const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
   const [
     selectBoundSettingListModalVisible,
@@ -111,11 +112,12 @@ export const SelectBoundModal: React.FC<Props> = ({
   const [stationAtom, setStationState] = useAtom(stationState);
   const { pendingStation: station, pendingStations: stations } = stationAtom;
   const [
-    { autoModeEnabled, trainType, pendingWantedDestination },
+    { autoModeEnabled, trainType, pendingWantedDestination, fetchedTrainTypes },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
   const { pendingLine: line } = lineAtom;
+
   const { isLoopLine } = useLoopLine(stations, false);
   const {
     bounds: [inboundStations, outboundStations],
@@ -242,6 +244,11 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
       }
 
+      const finalStop =
+        direction === 'INBOUND'
+          ? boundStations[0]
+          : boundStations[boundStations.length - 1];
+
       const lineForCard =
         direction === 'INBOUND'
           ? (boundStations[0]?.line ?? line)
@@ -285,7 +292,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               }
               title={title}
               subtitle={subtitle}
-              targetStation={pendingWantedDestination}
+              targetStation={finalStop}
             />
           );
         }
@@ -442,6 +449,22 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
   }, [error]);
 
+  const trainTypeText = useMemo(() => {
+    if (!fetchedTrainTypes.length) {
+      return translate('trainTypesNotExist');
+    }
+
+    if (!trainType) {
+      return translate('trainTypeSettings');
+    }
+
+    return translate('trainTypeIs', {
+      trainTypeName: isJapanese
+        ? (trainType.name ?? '')
+        : (trainType.nameRoman ?? ''),
+    });
+  }, [fetchedTrainTypes, trainType]);
+
   return (
     <Modal
       animationType="fade"
@@ -491,6 +514,15 @@ export const SelectBoundModal: React.FC<Props> = ({
                 <Button outline onPress={() => setRouteInfoModalVisible(true)}>
                   {translate('viewStopStations')}
                 </Button>
+
+                <Button
+                  outline
+                  onPress={() => setIsTrainTypeModalVisible(true)}
+                  disabled={!fetchedTrainTypes.length}
+                >
+                  {trainTypeText}
+                </Button>
+
                 <Button
                   outline
                   style={savedRoute ? styles.redOutlinedButton : null}
@@ -533,11 +565,23 @@ export const SelectBoundModal: React.FC<Props> = ({
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}
         onClose={() => setSelectBoundSettingListModalVisible(false)}
-        isLoopLine={isLoopLine}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
+      />
+      <TrainTypeListModal
+        visible={isTrainTypeModalVisible}
         line={line}
-        onTrainTypeSelect={onTrainTypeSelect}
+        onClose={() => {
+          setIsTrainTypeModalVisible(false);
+          setNavigationState((prev) => ({
+            ...prev,
+            trainType: null,
+          }));
+        }}
+        onSelect={(trainType) => {
+          setIsTrainTypeModalVisible(false);
+          onTrainTypeSelect(trainType);
+        }}
       />
     </Modal>
   );
