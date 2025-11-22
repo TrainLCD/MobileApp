@@ -193,5 +193,7 @@
   "routeSearchPlaceholder": "Where to?",
   "trainTypeIs": "Train type: %{trainTypeName}",
   "trainTypesNotExist": "No train types available",
-  "enableNotificationMode": "Enable arrival notifications"
+  "enableNotificationMode": "Enable arrival notifications",
+  "betaNotice": "This TrainLCD is currently in beta release.",  
+  "canaryNotice": "This TrainLCD is a canary release."
 }
