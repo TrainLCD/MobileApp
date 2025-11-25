@@ -83,6 +83,7 @@
     "react-native-share": "^11.1.0",
     "react-native-skeleton-placeholder": "^5.2.4",
     "react-native-svg": "15.12.1",
+    "react-native-toast-message": "^2.3.3",
     "react-native-version-check": "^3.4.7",
     "react-native-view-shot": "4.0.3",
     "react-native-watch-connectivity": "^1.1.0",

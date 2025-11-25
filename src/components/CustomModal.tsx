@@ -11,6 +11,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import Toast from 'react-native-toast-message';
 
 type Props = {
   visible: boolean;
@@ -105,6 +106,7 @@ export const CustomModal: React.FC<Props> = ({
           ]}
           onPress={dismissOnBackdropPress ? handleBackdropPress : undefined}
         />
+        <Toast />
 
         <View
           style={[StyleSheet.absoluteFill, styles.center, containerStyle]}

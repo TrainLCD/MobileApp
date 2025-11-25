@@ -4,6 +4,7 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import Toast from 'react-native-toast-message';
 import type { Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
 import { LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID } from '~/constants';
@@ -370,12 +371,11 @@ export const SelectBoundModal: React.FC<Props> = ({
             onPress: async () => {
               await removeCurrentRoute(savedRoute.id);
               setSavedRoute(null);
-              Alert.alert(
-                translate('announcementTitle'),
-                translate('routeDeletedText', {
-                  routeName: savedRoute.name,
-                })
-              );
+
+              Toast.show({
+                type: 'success',
+                text1: translate('routeDeletedText'),
+              });
             },
           },
           {
@@ -407,12 +407,11 @@ export const SelectBoundModal: React.FC<Props> = ({
         createdAt: new Date(),
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
-      Alert.alert(
-        translate('announcementTitle'),
-        translate('routeSavedText', {
-          routeName: newRoute.name,
-        })
-      );
+
+      Toast.show({
+        type: 'success',
+        text1: translate('routeSavedText'),
+      });
       return;
     }
 
@@ -431,12 +430,11 @@ export const SelectBoundModal: React.FC<Props> = ({
     };
 
     setSavedRoute(await saveCurrentRoute(newRoute));
-    Alert.alert(
-      translate('announcementTitle'),
-      translate('routeSavedText', {
-        routeName: newRoute.name,
-      })
-    );
+
+    Toast.show({
+      type: 'success',
+      text1: translate('routeSavedText'),
+    });
   }, [
     savedRoute,
     removeCurrentRoute,
