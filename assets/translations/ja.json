@@ -174,7 +174,6 @@
   "routeListTitle": "%{stationName}駅までの経路",
   "legacyAutoModeTitle": "従来のオートモードを有効にする",
   "inUse": "使用中",
-  "autoModeV2AlertText": "オートモードが新しくなりました。駅間距離に応じて動作しますので、駅間距離が長い場合は切り替わりが遅くなる場合があります。設定画面で元のオートモードに戻すことができます。",
   "updateRequiredForReport": "フィードバックを送信するにはアプリをアップデートしてください。",
   "updateApp": "アプリをアップデート",
   "jrKyushuLike": "JR九州風",

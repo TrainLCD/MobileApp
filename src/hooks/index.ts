@@ -3,7 +3,6 @@ export { useAndroidWearable } from './useAndroidWearable';
 export { useAnonymousUser } from './useAnonymousUser';
 export { useAppleWatch } from './useAppleWatch';
 export { useAutoMode } from './useAutoMode';
-export { useAutoModeAlert } from './useAutoModeAlert';
 export { useBadAccuracy } from './useBadAccuracy';
 export { useBounds } from './useBounds';
 export { useBoundText } from './useBoundText';
