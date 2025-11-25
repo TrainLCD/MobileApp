@@ -6,7 +6,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -63,32 +63,31 @@ const WarningPanel: React.FC<Props> = ({
 
   const dim = useWindowDimensions();
   const orientation = useDeviceOrientation();
-  const insets = useSafeAreaInsets();
 
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${text}. ${translate('tapToClose')}`}
-      style={[
-        styles.root,
-        {
-          width:
-            orientation &&
-            (orientation === Orientation.LANDSCAPE_LEFT ||
-              orientation === Orientation.LANDSCAPE_RIGHT)
-              ? dim.width / 2
-              : dim.width - 48,
-          right: insets.right,
-          bottom: insets.bottom,
-        },
-      ]}
-    >
-      <Typography style={styles.message}>{text}</Typography>
-      <Typography style={styles.dismissMessage}>
-        {translate('tapToClose')}
-      </Typography>
-    </Pressable>
+    <SafeAreaView>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${text}. ${translate('tapToClose')}`}
+        style={[
+          styles.root,
+          {
+            width:
+              orientation &&
+              (orientation === Orientation.LANDSCAPE_LEFT ||
+                orientation === Orientation.LANDSCAPE_RIGHT)
+                ? dim.width / 2
+                : dim.width - 48,
+          },
+        ]}
+      >
+        <Typography style={styles.message}>{text}</Typography>
+        <Typography style={styles.dismissMessage}>
+          {translate('tapToClose')}
+        </Typography>
+      </Pressable>
+    </SafeAreaView>
   );
 };
 
