@@ -118,7 +118,7 @@
   "holidayNotice": "休日通過の駅が含まれています。該当の駅は通過表示となります。ご注意ください。",
   "shareNotice": "画面を長押しすると簡単にシェアができます😊",
   "partiallyPassNotice": "一部列車が通過する駅が含まれています。該当の駅は停車表示となります。ご注意ください。",
-  "partiallyPassBottomNotice": "%{stations}は一部列車が通過いたします。ご注意ください。",
+  "partiallyPassPanelNotice": "%{stations}は一部列車が通過いたします。ご注意ください。",
   "connect": "接続",
   "publisherNotFound": "接続先を見つけられませんでした。",
   "publishShareText": "TrainLCDで私の位置を確認してください！",

@@ -117,7 +117,7 @@
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please Be careful.",
   "shareNotice": "Press and hold the screen for easy sharing😊.",
   "partiallyPassNotice": "Includes stations where some trains pass. The corresponding station will be displayed as a stop. Please be careful.",
-  "partiallyPassBottomNotice": "Some trains pass through %{stations}. Please be careful.",
+  "partiallyPassPanelNotice": "Some trains pass through %{stations}. Please be careful.",
   "connect": "Connect",
   "publisherNotFound": "Could not find the publisher.",
   "publishShareText": "Check my location on the Train LCD!",
@@ -194,6 +194,6 @@
   "trainTypeIs": "Train type: %{trainTypeName}",
   "trainTypesNotExist": "No train types available",
   "enableNotificationMode": "Enable arrival notifications",
-  "betaNotice": "This TrainLCD is currently in beta release.",  
+  "betaNotice": "This TrainLCD is currently in beta release.",
   "canaryNotice": "This TrainLCD is a canary release."
 }
