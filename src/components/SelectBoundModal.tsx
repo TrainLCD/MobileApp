@@ -605,6 +605,26 @@ export const SelectBoundModal: React.FC<Props> = ({
           selectedStation?.id ?? -1
         )}
         toggleNotificationModeEnabled={toggleNotificationModeEnabled}
+        onDestinationSelected={() => {
+          if (selectedStation) {
+            setNavigationState((prev) => ({
+              ...prev,
+              pendingWantedDestination: selectedStation,
+            }));
+            const currentStationIndex = stations.findIndex(
+              (s) => s.groupId === station?.groupId
+            );
+            const wantedStationIndex = stations.findIndex(
+              (s) => s.groupId === selectedStation.groupId
+            );
+            const dir: LineDirection =
+              currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
+
+            handleBoundSelected(selectedStation, dir, true);
+          }
+          setIsStationSettingsModalVisible(false);
+          setRouteInfoModalVisible(false);
+        }}
       />
     </CustomModal>
   );
