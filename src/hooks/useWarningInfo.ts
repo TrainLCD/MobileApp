@@ -4,11 +4,12 @@ import { useForegroundPermissions } from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
+import { StopCondition } from '~/@types/graphql';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import navigationState from '~/store/atoms/navigation';
 import tuningState from '~/store/atoms/tuning';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
@@ -30,7 +31,7 @@ export const useWarningInfo = () => {
   const [screenshotTaken, setScreenshotTaken] = useState(false);
 
   const { selectedBound } = useAtomValue(stationState);
-  const { autoModeEnabled } = useAtomValue(navigationState);
+  const { autoModeEnabled, leftStations } = useAtomValue(navigationState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const badAccuracy = useBadAccuracy();
@@ -38,6 +39,18 @@ export const useWarningInfo = () => {
   const bgPermGranted = useLocationPermissionsGranted();
 
   const isInternetAvailable = useConnectivity();
+
+  const passStations = useMemo(
+    () =>
+      leftStations
+        .slice(0, 8)
+        .filter(
+          (s) =>
+            s.stopCondition === StopCondition.Partial ||
+            s.stopCondition === StopCondition.PartialStop
+        ),
+    [leftStations]
+  );
 
   useEffect(() => {
     if (autoModeEnabled) {
@@ -124,6 +137,16 @@ export const useWarningInfo = () => {
         text: translate('badAccuracy'),
       };
     }
+    if (passStations.length > 0 && selectedBound) {
+      return {
+        level: WARNING_PANEL_LEVEL.INFO,
+        text: translate('partiallyPassPanelNotice', {
+          stations: isJapanese
+            ? passStations.map((s) => s.name).join('、')
+            : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
+        }),
+      };
+    }
 
     if (screenshotTaken) {
       return {
@@ -151,6 +174,7 @@ export const useWarningInfo = () => {
     selectedBound,
     warningDismissed,
     untouchableModeEnabled,
+    passStations,
   ]);
 
   const clearWarningInfo = useCallback(() => {

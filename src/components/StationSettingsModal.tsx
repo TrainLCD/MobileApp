@@ -34,6 +34,8 @@ const styles = StyleSheet.create({
   closeButtonText: { fontWeight: 'bold' },
   heading: { width: '100%' },
   lineText: { width: '100%', fontWeight: 'bold', fontSize: RFValue(12) },
+  gotoButton: { marginTop: 8 },
+  gotoButtonText: { fontWeight: 'bold' },
 });
 
 type Props = {
@@ -42,6 +44,7 @@ type Props = {
   station: Station | null;
   notificationModeEnabled: boolean;
   toggleNotificationModeEnabled: () => void;
+  onDestinationSelected: () => void;
 };
 
 export const StationSettingsModal: React.FC<Props> = ({
@@ -50,6 +53,7 @@ export const StationSettingsModal: React.FC<Props> = ({
   station,
   notificationModeEnabled,
   toggleNotificationModeEnabled,
+  onDestinationSelected,
 }) => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
@@ -89,6 +93,15 @@ export const StationSettingsModal: React.FC<Props> = ({
           >
             {translate('enableNotificationMode')}
           </ToggleButton>
+          <Button
+            outline
+            style={styles.gotoButton}
+            textStyle={styles.gotoButtonText}
+            onPress={onDestinationSelected}
+          >
+            {translate('setBoundForSelectedStation')}
+          </Button>
+
           <Button
             style={styles.closeButton}
             textStyle={styles.closeButtonText}
