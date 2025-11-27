@@ -194,5 +194,6 @@
   "trainTypesNotExist": "No train types available",
   "enableNotificationMode": "Enable arrival notifications",
   "betaNotice": "This TrainLCD is currently in beta release.",
-  "canaryNotice": "This TrainLCD is a canary release."
+  "canaryNotice": "This TrainLCD is a canary release.",
+  "setBoundForSelectedStation": "Go to the selected station"
 }

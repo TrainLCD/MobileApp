@@ -195,5 +195,6 @@
   "trainTypesNotExist": "列車種別がありません",
   "enableNotificationMode": "到着通知を有効にする",
   "betaNotice": "このTrainLCDは現在ベータリリースです。",
-  "canaryNotice": "このTrainLCDはカナリアリリースです。"
+  "canaryNotice": "このTrainLCDはカナリアリリースです。",
+  "setBoundForSelectedStation": "この駅に向かう"
 }
