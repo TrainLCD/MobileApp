@@ -6,7 +6,6 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -63,7 +62,6 @@ const WarningPanel: React.FC<Props> = ({
 
   const dim = useWindowDimensions();
   const orientation = useDeviceOrientation();
-  const insets = useSafeAreaInsets();
 
   return (
     <Pressable
@@ -79,8 +77,6 @@ const WarningPanel: React.FC<Props> = ({
               orientation === Orientation.LANDSCAPE_RIGHT)
               ? dim.width / 2
               : dim.width - 48,
-          right: insets.right,
-          bottom: insets.bottom,
         },
       ]}
     >

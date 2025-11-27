@@ -2,7 +2,7 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd-beta",
-    "version": "10.0.20",
+    "version": "10.0.21",
     "plugins": [
       "expo-font",
       "expo-localization",

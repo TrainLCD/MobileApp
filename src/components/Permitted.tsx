@@ -23,7 +23,6 @@ import {
 import {
   useAndroidWearable,
   useAppleWatch,
-  useAutoModeAlert,
   useCachedInitAnonymousUser,
   useCheckStoreVersion,
   useCurrentLine,
@@ -440,9 +439,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     screenShotBase64,
     sendReport,
   ]);
-
-  // TODO: 適当なタイミングで消す
-  useAutoModeAlert();
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
