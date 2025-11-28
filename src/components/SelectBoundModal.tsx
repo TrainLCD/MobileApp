@@ -7,7 +7,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import Toast from 'react-native-toast-message';
 import type { Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
-import { LED_THEME_BG_COLOR, TOEI_OEDO_LINE_ID } from '~/constants';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import {
   useBounds,
   useGetStationsWithTermination,
@@ -153,8 +153,9 @@ export const SelectBoundModal: React.FC<Props> = ({
       direction: LineDirection,
       terminateBySelectedStation = false
     ) => {
-      const oedoLineTerminus =
-        direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
+      const stops = terminateBySelectedStation
+        ? getTerminatedStations(selectedStation, stations)
+        : stations;
 
       setLineState((prev) => ({
         ...prev,
@@ -164,15 +165,9 @@ export const SelectBoundModal: React.FC<Props> = ({
       setStationState((prev) => ({
         ...prev,
         station,
-        stations: terminateBySelectedStation
-          ? getTerminatedStations(selectedStation, stations)
-          : stations,
+        stations: stops,
         selectedBound:
-          line?.id === TOEI_OEDO_LINE_ID && !terminateBySelectedStation
-            ? oedoLineTerminus
-            : direction === 'INBOUND'
-              ? stations[stations.length - 1]
-              : stations[0],
+          direction === 'INBOUND' ? stops[stops.length - 1] : stops[0],
         selectedDirection: direction,
         pendingStation: null,
         pendingStations: [],
