@@ -169,7 +169,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         station,
         stations: stops,
         selectedBound:
-          line?.id === TOEI_OEDO_LINE_ID && !stops.length
+          line?.id === TOEI_OEDO_LINE_ID && !terminateBySelectedStation
             ? oedoLineTerminus
             : direction === 'INBOUND'
               ? stops[stops.length - 1]
