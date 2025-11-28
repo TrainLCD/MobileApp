@@ -155,6 +155,9 @@ export const SelectBoundModal: React.FC<Props> = ({
     ) => {
       const oedoLineTerminus =
         direction === 'INBOUND' ? stations[stations.length - 1] : stations[0];
+      const stops = terminateBySelectedStation
+        ? getTerminatedStations(selectedStation, stations)
+        : stations;
 
       setLineState((prev) => ({
         ...prev,
@@ -164,15 +167,13 @@ export const SelectBoundModal: React.FC<Props> = ({
       setStationState((prev) => ({
         ...prev,
         station,
-        stations: terminateBySelectedStation
-          ? getTerminatedStations(selectedStation, stations)
-          : stations,
+        stations: stops,
         selectedBound:
-          line?.id === TOEI_OEDO_LINE_ID && !terminateBySelectedStation
+          line?.id === TOEI_OEDO_LINE_ID && !stops.length
             ? oedoLineTerminus
             : direction === 'INBOUND'
-              ? stations[stations.length - 1]
-              : stations[0],
+              ? stops[stops.length - 1]
+              : stops[0],
         selectedDirection: direction,
         pendingStation: null,
         pendingStations: [],
