@@ -12,11 +12,12 @@ import {
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 } from '~/constants/telemetry';
+import tuningState from '~/store/atoms/tuning';
 import {
   type GnssState,
   subscribeGnss,
 } from '~/utils/native/android/gnssModule';
-import { isTelemetryEnabled } from '~/utils/telemetryConfig';
+import { isTelemetryEnabledByBuild } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -99,6 +100,8 @@ export const useTelemetrySender = (
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
     useAtomValue(stationState);
+  const { telemetryEnabled: isTelemetryEnabledByUser } =
+    useAtomValue(tuningState);
 
   const passing = useIsPassing();
 
@@ -207,7 +210,7 @@ export const useTelemetrySender = (
     let reconnectTimeout: number;
     let shouldReconnect = true;
 
-    if (!isTelemetryEnabled) {
+    if (!isTelemetryEnabledByBuild || !isTelemetryEnabledByUser) {
       return;
     }
 
@@ -291,15 +294,19 @@ export const useTelemetrySender = (
       socketRef.current?.close();
       clearTimeout(reconnectTimeout);
     };
-  }, [wsUrl, sendTelemetryAutomatically, protocols]);
+  }, [wsUrl, sendTelemetryAutomatically, protocols, isTelemetryEnabledByUser]);
 
   useEffect(() => {
-    if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
+    if (
+      !isTelemetryEnabledByBuild ||
+      !isTelemetryEnabledByUser ||
+      !sendTelemetryAutomatically
+    ) {
       return;
     }
 
     sendTelemetry();
-  }, [sendTelemetry, sendTelemetryAutomatically]);
+  }, [sendTelemetry, sendTelemetryAutomatically, isTelemetryEnabledByUser]);
 
   return { sendLog };
 };

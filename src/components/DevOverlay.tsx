@@ -1,4 +1,5 @@
 import * as Application from 'expo-application';
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import {
@@ -6,8 +7,9 @@ import {
   useLocationStore,
   useNextStation,
 } from '~/hooks';
+import tuningState from '~/store/atoms/tuning';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
-import { isTelemetryEnabled } from '~/utils/telemetryConfig';
+import { isTelemetryEnabledByBuild } from '~/utils/telemetryConfig';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -39,6 +41,11 @@ const DevOverlay: React.FC = () => {
   );
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation();
+  const { telemetryEnabled: telemetryEnabledByUser } =
+    useAtomValue(tuningState);
+
+  const isTelemetryEnabled =
+    isTelemetryEnabledByBuild && telemetryEnabledByUser;
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 

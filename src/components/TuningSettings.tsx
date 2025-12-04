@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
@@ -12,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FONTS } from '~/constants';
+import { ASYNC_STORAGE_KEYS, FONTS } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import tuningState from '~/store/atoms/tuning';
@@ -137,6 +138,34 @@ const TuningSettings: React.FC = () => {
       ...prev,
       untouchableModeEnabled: !prev.untouchableModeEnabled,
     }));
+
+  const toggleTelemetryEnabled = () => {
+    if (settings.telemetryEnabled) {
+      AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED, 'false');
+      setSettings((prev) => ({
+        ...prev,
+        telemetryEnabled: !prev.telemetryEnabled,
+      }));
+      return;
+    }
+
+    Alert.alert(translate('notice'), translate('telemetrySettingWillPersist'), [
+      {
+        text: 'OK',
+        onPress: () => {
+          AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED, 'true');
+          setSettings((prev) => ({
+            ...prev,
+            telemetryEnabled: !prev.telemetryEnabled,
+          }));
+        },
+      },
+      {
+        text: translate('cancel'),
+        style: 'cancel',
+      },
+    ]);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -264,6 +293,31 @@ const TuningSettings: React.FC = () => {
             accessibilityRole="button"
           >
             {translate('enableUntouchableMode')}
+          </Typography>
+        </View>
+
+        <View style={styles.switchSettingItem}>
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={settings.telemetryEnabled}
+              onValueChange={toggleTelemetryEnabled}
+              accessibilityLabel={translate('optInTelemetryTitle')}
+            />
+          ) : (
+            <Switch
+              value={settings.telemetryEnabled}
+              onValueChange={toggleTelemetryEnabled}
+              ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('optInTelemetryTitle')}
+            />
+          )}
+
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleUntouchableModeEnabled}
+            accessibilityRole="button"
+          >
+            {translate('optInTelemetryTitle')}
           </Typography>
         </View>
       </ScrollView>

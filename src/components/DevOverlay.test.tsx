@@ -1,7 +1,16 @@
 import { render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
+import { useAtomValue } from 'jotai';
 import type { Station } from '~/@types/graphql';
 import DevOverlay from './DevOverlay';
+
+jest.mock('jotai', () => {
+  const actual = jest.requireActual('jotai');
+  return {
+    ...actual,
+    useAtomValue: jest.fn(),
+  };
+});
 
 // Mock expo-application
 jest.mock('expo-application', () => ({
@@ -37,7 +46,7 @@ jest.mock('~/utils/accuracyChart', () => ({
 }));
 
 jest.mock('~/utils/telemetryConfig', () => ({
-  isTelemetryEnabled: true,
+  isTelemetryEnabledByBuild: true,
 }));
 
 // Import mocked hooks for type safety
@@ -46,6 +55,10 @@ import {
   useLocationStore,
   useNextStation,
 } from '~/hooks';
+
+const mockUseAtomValue = useAtomValue as jest.MockedFunction<
+  typeof useAtomValue
+>;
 
 const mockUseLocationStore = useLocationStore as jest.MockedFunction<
   typeof useLocationStore
@@ -61,6 +74,10 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 describe('DevOverlay', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockUseAtomValue.mockReturnValue({
+      telemetryEnabled: true,
+    });
 
     // Default mock implementations
     // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
