@@ -314,7 +314,7 @@ const TuningSettings: React.FC = () => {
 
           <Typography
             style={styles.switchSettingItemText}
-            onPress={toggleUntouchableModeEnabled}
+            onPress={toggleTelemetryEnabled}
             accessibilityRole="button"
           >
             {translate('optInTelemetryTitle')}
