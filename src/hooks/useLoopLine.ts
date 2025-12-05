@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import type { Station } from '~/@types/graphql';
 import {
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
@@ -9,7 +10,6 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '~/constants';
-import type { Station } from '~/gen/proto/stationapi_pb';
 import { getIsLocal } from '~/utils/trainTypeString';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
@@ -111,7 +111,10 @@ export const useLoopLine = (
       ...reversedStations.slice(currentStationIndex),
       ...reversedStations.slice(0, currentStationIndex),
     ]
-      .filter((s) => majorStationIds.includes(s.id))
+      .filter(
+        (s) =>
+          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
+      )
       .filter((s) => s.groupId !== station.groupId)
       .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
 
@@ -132,7 +135,10 @@ export const useLoopLine = (
       ...stations.slice(currentStationIndex),
       ...stations.slice(0, currentStationIndex),
     ]
-      .filter((s) => majorStationIds.includes(s.id))
+      .filter(
+        (s) =>
+          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
+      )
       .filter((s) => s.groupId !== station.groupId)
       .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
 

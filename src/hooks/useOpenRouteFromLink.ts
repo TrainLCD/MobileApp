@@ -1,35 +1,56 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
+import type { Station, TrainType } from '~/@types/graphql';
 import {
-  GetStationByLineIdRequest,
-  GetStationsByLineGroupIdRequest,
-  type Station,
-} from '~/gen/proto/stationapi_pb';
-import {
-  getStationsByLineGroupId,
-  getStationsByLineId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+} from '~/lib/graphql/queries';
 import type { LineDirection } from '../models/Bound';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
 
 export const useOpenRouteFromLink = () => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
 
-  const {
-    mutateAsync: fetchStationsByLineGroupId,
-    status: fetchStationsByLineGroupIdStatus,
-    error: fetchStationsByLineGroupIdError,
-  } = useMutation(getStationsByLineGroupId);
-  const {
-    mutateAsync: fetchStationsByLineId,
-    status: fetchStationsByLineIdStatus,
-    error: fetchStationsByLineIdError,
-  } = useMutation(getStationsByLineId);
+  const [
+    fetchStationsByLineGroupId,
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
 
   const handleStationsFetched = useCallback(
     (
@@ -44,7 +65,7 @@ export const useOpenRouteFromLink = () => {
       setLineState((prev) => ({ ...prev, selectedLine: line }));
       setNavigationState((prev) => ({
         ...prev,
-        trainType: station.trainType ?? null,
+        trainType: (station.trainType ?? null) as TrainType | null,
         leftStations: [],
         stationForHeader: station,
       }));
@@ -76,10 +97,11 @@ export const useOpenRouteFromLink = () => {
         direction === 0 ? 'INBOUND' : 'OUTBOUND';
 
       if (lineGroupId) {
-        const { stations } = await fetchStationsByLineGroupId(
-          new GetStationsByLineGroupIdRequest({ lineGroupId })
-        );
+        const { data } = await fetchStationsByLineGroupId({
+          variables: { lineGroupId },
+        });
 
+        const stations = data?.lineGroupStations ?? [];
         const station = stations.find((sta) => sta.groupId === stationGroupId);
         if (!station) {
           return;
@@ -90,12 +112,11 @@ export const useOpenRouteFromLink = () => {
       }
 
       if (lineId) {
-        const { stations } = await fetchStationsByLineId(
-          new GetStationByLineIdRequest({
-            lineId,
-          })
-        );
+        const { data } = await fetchStationsByLineId({
+          variables: { lineId },
+        });
 
+        const stations = data?.lineStations ?? [];
         const station = stations.find((sta) => sta.groupId === stationGroupId);
         if (!station) {
           return;
@@ -104,14 +125,13 @@ export const useOpenRouteFromLink = () => {
         handleStationsFetched(station, stations, lineDirection);
       }
     },
-    [fetchStationsByLineGroupId, fetchStationsByLineId, handleStationsFetched]
+    [handleStationsFetched, fetchStationsByLineGroupId, fetchStationsByLineId]
   );
 
   return {
     openLink,
     isLoading:
-      fetchStationsByLineGroupIdStatus === 'pending' ||
-      fetchStationsByLineIdStatus === 'pending',
+      fetchStationsByLineGroupIdLoading || fetchStationsByLineIdLoading,
     error: fetchStationsByLineGroupIdError || fetchStationsByLineIdError,
   };
 };

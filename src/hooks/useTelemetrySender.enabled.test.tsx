@@ -12,7 +12,9 @@ jest.mock('expo-network', () => ({
   useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
   NetworkStateType: { WIFI: 'WIFI' },
 }));
-jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
+jest.mock('~/utils/telemetryConfig', () => ({
+  isTelemetryEnabledByBuild: true,
+}));
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn(),
 }));
@@ -42,12 +44,15 @@ describe('useTelemetrySender', () => {
     (useLocationStore as unknown as jest.Mock).mockImplementation(
       (selector: (state: any) => any) =>
         selector({
-          coords: {
-            latitude: 35.0,
-            longitude: 139.0,
-            accuracy: 5,
-            speed: 10,
+          location: {
+            coords: {
+              latitude: 35.0,
+              longitude: 139.0,
+              accuracy: 5,
+              speed: 10,
+            },
           },
+          accuracyHistory: [5],
         })
     );
 
@@ -112,12 +117,15 @@ describe('useTelemetrySender', () => {
   test('should not send telemetry if coordinates are null', () => {
     (useLocationStore as unknown as jest.Mock).mockImplementation((selector) =>
       selector({
-        coords: {
-          latitude: null,
-          longitude: null,
-          accuracy: null,
-          speed: null,
+        location: {
+          coords: {
+            latitude: null,
+            longitude: null,
+            accuracy: null,
+            speed: null,
+          },
         },
+        accuracyHistory: [],
       })
     );
     renderHook(() => useTelemetrySender(), { wrapper });

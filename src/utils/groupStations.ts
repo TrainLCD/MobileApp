@@ -1,4 +1,4 @@
-import { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { PREFECTURES_JA, PREFECTURES_ROMAN } from '../constants';
 
 export const groupStations = (stations: Station[]): Station[] => {
@@ -14,7 +14,10 @@ export const groupStations = (stations: Station[]): Station[] => {
       if (
         arr.some(
           (s) => s.prefectureId !== sta.prefectureId && s.name === sta.name
-        )
+        ) &&
+        sta.prefectureId &&
+        sta.prefectureId >= 1 &&
+        sta.prefectureId <= 47
       ) {
         return {
           ...sta,
@@ -39,6 +42,5 @@ export const groupStations = (stations: Station[]): Station[] => {
       }
 
       return sta;
-    })
-    .map((s) => new Station(s));
+    });
 };

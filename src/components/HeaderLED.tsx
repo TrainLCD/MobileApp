@@ -73,20 +73,20 @@ const HeaderLED = () => {
   useEffect(() => {
     if (!selectedBound && station) {
       setStateText('');
-      setStationText(station.name);
+      setStationText(station.name || '');
     }
 
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonLast' : 'soon'));
-          setStationText(nextStation.name);
+          setStationText(nextStation.name || '');
         }
         break;
       case 'ARRIVING_KANA':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonLast' : 'soon'));
-          setStationText(nextStation.nameKatakana);
+          setStationText(nextStation.nameKatakana ?? '');
         }
         break;
       case 'ARRIVING_EN':
@@ -98,13 +98,13 @@ const HeaderLED = () => {
       case 'CURRENT':
         if (station) {
           setStateText(translate('nowStoppingAt'));
-          setStationText(station.name);
+          setStationText(station.name || '');
         }
         break;
       case 'CURRENT_KANA':
         if (station) {
           setStateText(translate('nowStoppingAt'));
-          setStationText(station.nameKatakana);
+          setStationText(station.nameKatakana ?? '');
         }
         break;
       case 'CURRENT_EN':
@@ -116,13 +116,13 @@ const HeaderLED = () => {
       case 'NEXT':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextLast' : 'next'));
-          setStationText(nextStation.name);
+          setStationText(nextStation.name || '');
         }
         break;
       case 'NEXT_KANA':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextLast' : 'next'));
-          setStationText(nextStation.nameKatakana);
+          setStationText(nextStation.nameKatakana ?? '');
         }
         break;
       case 'NEXT_EN':

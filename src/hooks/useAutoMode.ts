@@ -13,7 +13,7 @@ import { AUTO_MODE_RUNNING_SPEED } from '../constants/threshold';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
-import { useLocationStore } from './useLocationStore';
+import { setLocation } from './useLocationStore';
 import { useLoopLine } from './useLoopLine';
 import { useValueRef } from './useValueRef';
 
@@ -84,7 +84,7 @@ export const useAutoMode = (): void => {
         const index = autoModeInboundIndexRef.current;
 
         if (!index) {
-          useLocationStore.setState({
+          setLocation({
             timestamp: 0,
             coords: {
               accuracy: 0,
@@ -92,8 +92,8 @@ export const useAutoMode = (): void => {
               altitudeAccuracy: -1,
               speed: 0,
               heading: 0,
-              latitude: stations[0].latitude,
-              longitude: stations[0].longitude,
+              latitude: stations[0].latitude ?? 0,
+              longitude: stations[0].longitude ?? 0,
             },
           });
           return;
@@ -105,17 +105,17 @@ export const useAutoMode = (): void => {
         if (cur && next) {
           const center = getCenter([
             {
-              latitude: cur.latitude,
-              longitude: cur.longitude,
+              latitude: cur.latitude ?? 0,
+              longitude: cur.longitude ?? 0,
             },
             {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
             },
           ]);
 
           if (center) {
-            useLocationStore.setState({
+            setLocation({
               timestamp: 0,
               coords: {
                 ...center,
@@ -132,7 +132,7 @@ export const useAutoMode = (): void => {
         const index = autoModeOutboundIndexRef.current;
 
         if (index === stations.length - 1) {
-          useLocationStore.setState({
+          setLocation({
             timestamp: 0,
             coords: {
               accuracy: 0,
@@ -140,8 +140,8 @@ export const useAutoMode = (): void => {
               altitudeAccuracy: -1,
               speed: 0,
               heading: 0,
-              latitude: stations[stations.length - 1].latitude,
-              longitude: stations[stations.length - 1].longitude,
+              latitude: stations[stations.length - 1].latitude ?? 0,
+              longitude: stations[stations.length - 1].longitude ?? 0,
             },
           });
           return;
@@ -153,17 +153,17 @@ export const useAutoMode = (): void => {
         if (cur && next) {
           const center = getCenter([
             {
-              latitude: cur.latitude,
-              longitude: cur.longitude,
+              latitude: cur.latitude ?? 0,
+              longitude: cur.longitude ?? 0,
             },
             {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
             },
           ]);
 
           if (center) {
-            useLocationStore.setState({
+            setLocation({
               timestamp: 0,
               coords: {
                 ...center,
@@ -227,11 +227,11 @@ export const useAutoMode = (): void => {
         }
 
         if (next) {
-          useLocationStore.setState({
+          setLocation({
             timestamp: 0,
             coords: {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
               accuracy: 0,
               altitude: 0,
               altitudeAccuracy: -1,
@@ -257,11 +257,11 @@ export const useAutoMode = (): void => {
         }
 
         if (next) {
-          useLocationStore.setState({
+          setLocation({
             timestamp: 0,
             coords: {
-              latitude: next.latitude,
-              longitude: next.longitude,
+              latitude: next.latitude ?? 0,
+              longitude: next.longitude ?? 0,
               accuracy: 0,
               altitude: 0,
               altitudeAccuracy: -1,

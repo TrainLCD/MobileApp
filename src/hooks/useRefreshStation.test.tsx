@@ -1,11 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook } from '@testing-library/react-native';
 import { Provider } from 'jotai';
-import {
-  OperationStatus,
-  Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
+import { OperationStatus, type Station, StopCondition } from '~/@types/graphql';
 import * as useCanGoForwardModule from '~/hooks/useCanGoForward';
 import * as useLocationStoreModule from '~/hooks/useLocationStore';
 import * as useNearestStationModule from '~/hooks/useNearestStation';
@@ -13,12 +9,16 @@ import * as useNextStationModule from '~/hooks/useNextStation';
 import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
 
-const mockStation = new Station({
+const mockStation: Station = {
+  __typename: 'Station',
   id: 1,
   groupId: 1,
   name: 'Test Station',
   nameKatakana: 'テストステーション',
   nameRoman: 'Test Station',
+  nameChinese: undefined,
+  nameKorean: undefined,
+  threeLetterCode: undefined,
   latitude: 35.0,
   longitude: 135.0,
   lines: [],
@@ -30,7 +30,11 @@ const mockStation = new Station({
   status: OperationStatus.InOperation,
   stationNumbers: [],
   stopCondition: StopCondition.All,
-});
+  distance: undefined,
+  hasTrainTypes: undefined,
+  line: undefined,
+  trainType: undefined,
+};
 
 describe('useRefreshStation', () => {
   beforeEach(() => {
@@ -49,7 +53,15 @@ describe('useRefreshStation', () => {
 
       .mockImplementation((fn: any) =>
         fn({
-          coords: { latitude: 35.0, longitude: 135.0, speed: 0, accuracy: 5 },
+          location: {
+            coords: {
+              latitude: 35.0,
+              longitude: 135.0,
+              speed: 0,
+              accuracy: 5,
+            },
+          },
+          accuracyHistory: [5],
         })
       );
 

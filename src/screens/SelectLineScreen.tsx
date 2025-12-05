@@ -1,17 +1,12 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
+import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtom, useSetAtom } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -22,21 +17,23 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
+import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
+import { gqlClient } from '~/lib/gql';
 import {
-  getStationsByLineGroupId,
-  getStationsByLineId,
-  getTrainTypesByStationId,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+  GET_STATION_TRAIN_TYPES,
+} from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
-import { LineCard } from '../components/LineCard';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import {
+  setLocation,
   useFetchCurrentLocationOnce,
   useFetchNearbyStation,
   useLocationStore,
@@ -44,14 +41,36 @@ import {
 } from '../hooks';
 import { useSavedRoutes } from '../hooks/useSavedRoutes';
 import { APP_THEME } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
+import lineStateAtom from '../store/atoms/line';
+import navigationState, { type LoopItem } from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
 import { SelectLineScreenPresets } from './SelectLineScreenPresets';
 
-export type LoopItem = (SavedRoute & { stations: Station[] }) & {
-  __k: string;
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
+
+type GetStationTrainTypesData = {
+  stationTrainTypes: TrainType[];
+};
+
+type GetStationTrainTypesVariables = {
+  stationId: number;
 };
 
 const styles = StyleSheet.create({
@@ -103,13 +122,23 @@ const NearbyStationLoader = () => (
 );
 
 const SelectLineScreen = () => {
-  const [{ station: stationFromAtom }, setStationState] = useAtom(stationState);
+  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
+  const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
+  const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
+
+  const [stationAtomState, setStationState] = useAtom(stationState);
+  const [, setLineState] = useAtom(lineStateAtom);
+  const { station: stationFromAtom, stationsCache } = stationAtomState;
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
 
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
@@ -128,8 +157,14 @@ const SelectLineScreen = () => {
   } = useFetchNearbyStation();
   const station = useMemo(
     () => stationFromAtom ?? nearbyStations[0] ?? null,
-    [stationFromAtom, nearbyStations[0]]
+    [stationFromAtom, nearbyStations]
   );
+
+  const stationLines = useMemo<Line[]>(() => {
+    return (station?.lines ?? []).filter(
+      (line): line is LineNested => line?.id != null
+    );
+  }, [station?.lines]);
 
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
   const {
@@ -137,36 +172,31 @@ const SelectLineScreen = () => {
     updateRoutes,
     isInitialized: isRoutesDBInitialized,
   } = useSavedRoutes();
-  const stationsRef = useRef<Station[][]>([]);
-  const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
-  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
-  // SavedRouteモーダル用の状態
-  const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
-  // 確定時にのみ反映するための一時保存データ
-  const pendingStationRef = useRef<Station | null>(null);
-  const pendingLineRef = useRef<Line | null>(null);
-  const pendingWantedDestinationRef = useRef<Station | null>(null);
 
-  const [pendingStations, setPendingStations] = useState<Station[]>([]);
-  const [pendingTrainType, setPendingTrainType] = useState<TrainType | null>(
-    null
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
   );
-
-  const {
-    mutateAsync: fetchStationsByLineId,
-    status: fetchStationsByLineIdStatus,
-    error: _fetchStationsByLineIdError,
-  } = useMutation(getStationsByLineId);
-  const {
-    mutateAsync: fetchStationsByLineGroupId,
-    status: fetchStationsByLineGroupIdStatus,
-    error: _fetchStationsByLineGroupIdError,
-  } = useMutation(getStationsByLineGroupId);
-  const {
-    mutateAsync: fetchTrainTypes,
-    status: fetchTrainTypesStatus,
-    error: fetchTrainTypesError,
-  } = useMutation(getTrainTypesByStationId);
+  const [
+    fetchStationsByLineGroupId,
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+  const [
+    fetchTrainTypes,
+    { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
+  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
+    GET_STATION_TRAIN_TYPES
+  );
 
   useEffect(() => {
     ScreenOrientation.unlockAsync().catch(console.error);
@@ -180,18 +210,43 @@ const SelectLineScreen = () => {
   useEffect(() => {
     const fetchAsync = async () => {
       try {
-        const routeStations = await Promise.all(
-          routes.map(async (route) => {
-            const { stations } = route.hasTrainType
-              ? await fetchStationsByLineGroupId({
-                  lineGroupId: route.trainTypeId,
+        const jobs = routes.map((route) => {
+          if (route.hasTrainType) {
+            return gqlClient.query<{ lineGroupStations: Station[] }>({
+              query: GET_LINE_GROUP_STATIONS,
+              variables: {
+                lineGroupId: route.trainTypeId,
+              },
+              context: { batchGroup: 'presets-init' },
+            });
+          }
+
+          return gqlClient.query<{ lineStations: Station[] }>({
+            query: GET_LINE_STATIONS,
+            variables: {
+              lineId: route.lineId,
+            },
+            context: { batchGroup: 'presets-init' },
+          });
+        });
+
+        const results = await Promise.allSettled(jobs);
+        const routeStations: Array<SavedRoute & { stations: Station[] }> =
+          results.map((r, index) =>
+            r.status === 'fulfilled'
+              ? {
+                  ...routes[index],
+                  stations:
+                    (r.value.data as { lineGroupStations: Station[] })
+                      .lineGroupStations ??
+                    (r.value.data as { lineStations: Station[] })
+                      .lineStations ??
+                    [],
+                }
+              : ({ ...routes[index], stations: [] } as SavedRoute & {
+                  stations: Station[];
                 })
-              : await fetchStationsByLineId({
-                  lineId: route.lineId,
-                });
-            return { ...route, stations };
-          })
-        );
+          );
 
         setCarouselData(
           routes.map((r) => ({
@@ -206,25 +261,7 @@ const SelectLineScreen = () => {
       }
     };
     fetchAsync();
-  }, [routes, fetchStationsByLineId, fetchStationsByLineGroupId]);
-
-  useEffect(() => {
-    const fetchStationsAsync = async () => {
-      const lines = station?.lines ?? [];
-      stationsRef.current = await Promise.all(
-        lines.map(async (line) => {
-          const { stations } = await fetchStationsByLineId({
-            lineId: line.id,
-            stationId: line.station?.id,
-          });
-
-          return stations;
-        })
-      );
-    };
-
-    fetchStationsAsync();
-  }, [station?.lines, fetchStationsByLineId]);
+  }, [routes]);
 
   useEffect(() => {
     pipe(
@@ -242,29 +279,79 @@ const SelectLineScreen = () => {
     );
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 初回のみ
+  const updateStationsCache = useCallback(
+    async (station: Station) => {
+      const fetchedLines = (station.lines ?? []).filter(
+        (line): line is LineNested => line?.id != null
+      );
+
+      const jobs = fetchedLines.map((line) =>
+        gqlClient.query<{ lineStations: Station[] }>({
+          query: GET_LINE_STATIONS,
+          variables: {
+            lineId: line.id as number,
+          },
+          context: { batchGroup: 'lines-init' },
+        })
+      );
+
+      const results = await Promise.allSettled(jobs);
+
+      const stationsCache: Station[][] = results.map((r) =>
+        r.status === 'fulfilled'
+          ? (r.value.data?.lineStations ?? [])
+          : ([] as Station[])
+      );
+
+      setStationState((prev) => ({
+        ...prev,
+        stationsCache,
+      }));
+    },
+    [setStationState]
+  );
+
   useEffect(() => {
     const fetchInitialNearbyStationAsync = async () => {
+      if (station) return;
+
       const location = await fetchCurrentLocation(true);
       if (!location) return;
-      useLocationStore.setState(location);
+      setLocation(location);
       const data = await fetchByCoords({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         limit: 1,
       });
-      const stationFromAPI = data.stations[0] ?? null;
+      const stationFromAPI = data.data?.stationsNearby[0] ?? null;
+
       setStationState((prev) => ({
         ...prev,
-        station: prev.station ?? stationFromAPI,
+        station: stationFromAPI,
       }));
       setNavigationState((prev) => ({
         ...prev,
         stationForHeader: stationFromAPI,
       }));
+
+      if (stationFromAPI) {
+        await updateStationsCache(stationFromAPI);
+      }
     };
     fetchInitialNearbyStationAsync();
-  }, []);
+  }, [
+    fetchByCoords,
+    fetchCurrentLocation,
+    setNavigationState,
+    setStationState,
+    station,
+    updateStationsCache,
+  ]);
+
+  useEffect(() => {
+    if (!station) return;
+    updateStationsCache(station);
+  }, [station, updateStationsCache]);
 
   useEffect(() => {
     pipe(
@@ -292,140 +379,222 @@ const SelectLineScreen = () => {
 
   useEffect(() => {
     if (nearbyStationFetchError) {
+      console.error(nearbyStationFetchError);
       Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
   }, [nearbyStationFetchError]);
 
   const handleLineSelected = useCallback(
-    async (line: Line, index: number) => {
-      const stations = stationsRef.current[index] ?? [];
-      pendingLineRef.current = line ?? null;
-      pendingStationRef.current = line.station ?? null;
-      setPendingStations(stations);
+    async (line: Line) => {
+      const lineId = line.id;
+      const lineStationId = line.station?.id;
+      if (!lineId || !lineStationId) return;
+
       setIsSelectBoundModalOpen(true);
 
+      const result = await fetchStationsByLineId({
+        variables: { lineId, stationId: lineStationId },
+      });
+      const pendingStations = result.data?.lineStations ?? [];
+
+      const pendingStation =
+        pendingStations.find((s) => s.id === lineStationId) ?? null;
+
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation,
+        pendingStations,
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        pendingLine: line ?? null,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+        trainType: null,
+      }));
+
       if (line.station?.hasTrainTypes) {
-        const { trainTypes } = await fetchTrainTypes({
-          stationId: line.station?.id,
+        const result = await fetchTrainTypes({
+          variables: {
+            stationId: lineStationId,
+          },
         });
-        const trainType =
-          trainTypes.find(
-            (tt) =>
-              tt.groupId ===
-              stations.find((s) => s.line?.id === line.id)?.trainType?.groupId
-          ) ?? null;
-        setPendingTrainType(trainType);
+        const fetchedTrainTypes = result.data?.stationTrainTypes ?? [];
+        const designatedTrainTypeId =
+          pendingStations.find((s) => s.id === lineStationId)?.trainType?.id ??
+          null;
+        const designatedTrainType =
+          fetchedTrainTypes.find((tt) => tt.id === designatedTrainTypeId) ??
+          null;
         setNavigationState((prev) => ({
           ...prev,
-          fetchedTrainTypes: trainTypes,
+          fetchedTrainTypes,
+          trainType: designatedTrainType as TrainType | null,
         }));
       }
     },
-    [fetchTrainTypes, setNavigationState]
+    [
+      fetchTrainTypes,
+      setNavigationState,
+      setStationState,
+      setLineState,
+      fetchStationsByLineId,
+    ]
   );
 
   const handleTrainTypeSelect = useCallback(
     async (trainType: TrainType) => {
+      if (trainType.groupId == null) return;
       const res = await fetchStationsByLineGroupId({
-        lineGroupId: trainType.groupId,
+        variables: {
+          lineGroupId: trainType.groupId,
+        },
       });
-      setPendingTrainType(trainType);
-      setPendingStations(res.stations);
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations: res.data?.lineGroupStations ?? [],
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType,
+      }));
     },
-    [fetchStationsByLineGroupId]
+    [fetchStationsByLineGroupId, setStationState, setNavigationState]
   );
 
-  // PresetCard押下時のモーダル表示ロジック（SavedRoutesScreenのhandleItemPress相当）
+  // PresetCard押下時のモーダル表示ロジック
   const openModalByLineId = useCallback(
-    async (lineId: number, destinationStationId: number | null) => {
-      // try cache first
-      const { stations } = await fetchStationsByLineId({ lineId });
+    async (lineId: number) => {
+      const result = await fetchStationsByLineId({
+        variables: { lineId },
+      });
+      const stations = result.data?.lineStations ?? [];
       if (!stations.length) return;
 
-      const wantedDestination =
-        stations.find((sta) => sta.groupId === destinationStationId) ?? null;
-
-      const nearestCoordinates = findNearest(
-        {
-          latitude: latitude ?? stations[0].latitude,
-          longitude: longitude ?? stations[0].longitude,
-        },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
-        }))
-      ) as { latitude: number; longitude: number };
+      const nearestCoordinates =
+        latitude && longitude
+          ? (findNearest(
+              { latitude, longitude },
+              stations.map((sta: Station) => ({
+                latitude: sta.latitude as number,
+                longitude: sta.longitude as number,
+              }))
+            ) as { latitude: number; longitude: number })
+          : stations.map((s) => ({
+              latitude: s.latitude,
+              longitude: s.longitude,
+            }))[0];
 
       const station = stations.find(
-        (sta) =>
+        (sta: Station) =>
           sta.latitude === nearestCoordinates.latitude &&
           sta.longitude === nearestCoordinates.longitude
       );
 
       if (!station) return;
 
-      // モーダル表示用のローカル状態のみ更新（グローバルは確定時に反映）
-      pendingStationRef.current = station;
-      setPendingStations(stations);
-      setPendingTrainType(null);
-      pendingLineRef.current = (station.line as Line) ?? null;
-      pendingWantedDestinationRef.current = wantedDestination;
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation: station,
+        pendingStations: stations,
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        pendingLine: (station.line as Line) ?? null,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+        trainType: null,
+      }));
     },
-    [fetchStationsByLineId, latitude, longitude]
+    [
+      fetchStationsByLineId,
+      latitude,
+      longitude,
+      setNavigationState,
+      setStationState,
+      setLineState,
+    ]
   );
 
+  // PresetCard押下時のモーダル表示ロジック
   const openModalByTrainTypeId = useCallback(
-    async (lineGroupId: number, destinationStationId: number | null) => {
-      const { stations } = await fetchStationsByLineGroupId({ lineGroupId });
+    async (lineGroupId: number) => {
+      const result = await fetchStationsByLineGroupId({
+        variables: { lineGroupId },
+      });
+      const stations = result.data?.lineGroupStations ?? [];
       if (!stations.length) return;
 
-      const wantedDestination =
-        stations.find((sta) => sta.groupId === destinationStationId) ?? null;
+      const sortedStationCoords =
+        latitude && longitude
+          ? (orderByDistance(
+              { lat: latitude, lon: longitude },
+              stations.map((sta) => ({
+                latitude: sta.latitude as number,
+                longitude: sta.longitude as number,
+              }))
+            ) as { latitude: number; longitude: number }[])
+          : stations.map((sta) => ({
+              latitude: sta.latitude,
+              longitude: sta.longitude,
+            }));
 
-      const nearestCoordinates = findNearest(
-        {
-          latitude: latitude ?? stations[0].latitude,
-          longitude: longitude ?? stations[0].longitude,
-        },
-        stations.map((sta) => ({
-          latitude: sta.latitude,
-          longitude: sta.longitude,
-        }))
-      ) as { latitude: number; longitude: number };
+      const sortedStations = stations.slice().sort((a, b) => {
+        const aIndex = sortedStationCoords.findIndex(
+          (coord) =>
+            coord.latitude === a.latitude && coord.longitude === a.longitude
+        );
+        const bIndex = sortedStationCoords.findIndex(
+          (coord) =>
+            coord.latitude === b.latitude && coord.longitude === b.longitude
+        );
+        return aIndex - bIndex;
+      });
 
-      const station = stations.find(
-        (sta) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
+      const station = sortedStations.find(
+        (sta: Station) => sta.trainType?.groupId === lineGroupId
       );
 
       if (!station) return;
 
-      // モーダル表示用のローカル状態のみ更新（グローバルは確定時に反映）
-      pendingStationRef.current = station;
-      setPendingStations(stations);
-      pendingLineRef.current = station?.line ?? null;
-      pendingWantedDestinationRef.current = wantedDestination;
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation: station,
+        pendingStations: stations,
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        pendingLine: station?.line ?? null,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+        trainType: null,
+      }));
 
-      if (station?.hasTrainTypes) {
-        const { trainTypes } = await fetchTrainTypes({
-          stationId: station?.id,
-        });
+      const fetchedTrainTypesData = await fetchTrainTypes({
+        variables: {
+          stationId: station.id as number,
+        },
+      });
+      const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
 
-        const trainType =
-          trainTypes.find((tt) => tt.groupId === station.trainType?.groupId) ??
-          null;
-        setPendingTrainType(trainType);
-        setNavigationState((prev) => ({
-          ...prev,
-          fetchedTrainTypes: trainTypes,
-        }));
-      }
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType: station.trainType ?? null,
+        fetchedTrainTypes: trainTypes,
+      }));
     },
     [
       fetchStationsByLineGroupId,
       fetchTrainTypes,
       setNavigationState,
+      setStationState,
+      setLineState,
       latitude,
       longitude,
     ]
@@ -435,15 +604,9 @@ const SelectLineScreen = () => {
     async (route: SavedRoute) => {
       setIsSelectBoundModalOpen(true);
       if (route.hasTrainType) {
-        await openModalByTrainTypeId(
-          route.trainTypeId,
-          route.destinationStationId ?? null
-        );
+        await openModalByTrainTypeId(route.trainTypeId);
       } else {
-        await openModalByLineId(
-          route.lineId,
-          route.destinationStationId ?? null
-        );
+        await openModalByLineId(route.lineId);
       }
     },
     [openModalByLineId, openModalByTrainTypeId]
@@ -451,17 +614,25 @@ const SelectLineScreen = () => {
 
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
-    pendingStationRef.current = null;
-    setPendingStations([]);
-    setPendingTrainType(null);
-    pendingLineRef.current = null;
-    pendingWantedDestinationRef.current = null;
-  }, []);
+    setStationState((prev) => ({
+      ...prev,
+      pendingStation: null,
+      pendingStations: [],
+    }));
+    setLineState((prev) => ({
+      ...prev,
+      pendingLine: null,
+    }));
+    setNavigationState((prev) => ({
+      ...prev,
+      pendingWantedDestination: null,
+      trainType: null,
+    }));
+  }, [setLineState, setStationState, setNavigationState]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Line; index: number }) => {
-      const stations = stationsRef.current[index];
-      if (!stations || fetchStationsByLineIdStatus === 'pending') {
+      if (fetchStationsByLineIdLoading) {
         return (
           <SkeletonPlaceholder borderRadius={4} speed={1500}>
             <SkeletonPlaceholder.Item width="100%" height={72} />
@@ -469,19 +640,21 @@ const SelectLineScreen = () => {
         );
       }
 
+      const stations = stationsCache[index] ?? [];
+
       return (
-        <LineCard
+        <CommonCard
           line={item}
-          onPress={() => handleLineSelected(item, index)}
+          onPress={() => handleLineSelected(item)}
           stations={stations}
           testID={generateLineTestId(item)}
         />
       );
     },
-    [handleLineSelected, fetchStationsByLineIdStatus]
+    [handleLineSelected, fetchStationsByLineIdLoading, stationsCache]
   );
 
-  const keyExtractor = useCallback((l: Line) => l.id.toString(), []);
+  const keyExtractor = useCallback((l: Line) => String(l.id as number), []);
 
   const headingTitle = useMemo(() => {
     if (!station) return translate('selectLineTitle');
@@ -503,12 +676,12 @@ const SelectLineScreen = () => {
   const isPresetsLoading = useMemo(
     () =>
       !isRoutesDBInitialized ||
-      fetchStationsByLineIdStatus === 'pending' ||
-      fetchStationsByLineGroupIdStatus === 'pending',
+      fetchStationsByLineIdLoading ||
+      fetchStationsByLineGroupIdLoading,
     [
       isRoutesDBInitialized,
-      fetchStationsByLineIdStatus,
-      fetchStationsByLineGroupIdStatus,
+      fetchStationsByLineIdLoading,
+      fetchStationsByLineGroupIdLoading,
     ]
   );
 
@@ -517,7 +690,8 @@ const SelectLineScreen = () => {
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.FlatList
           style={StyleSheet.absoluteFill}
-          data={station?.lines ?? []}
+          data={stationLines}
+          extraData={stationsCache}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           ItemSeparatorComponent={EmptyLineSeparator}
@@ -542,7 +716,7 @@ const SelectLineScreen = () => {
       </SafeAreaView>
       {/* 固定ヘッダー */}
       <NowHeader
-        station={stationFromAtom ?? station}
+        station={station}
         onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height + 32)}
         scrollY={scrollY}
       />
@@ -553,13 +727,18 @@ const SelectLineScreen = () => {
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
         onClose={handleCloseSelectBoundModal}
-        station={pendingStationRef.current}
-        stations={pendingStations}
-        trainType={pendingTrainType}
-        line={pendingLineRef.current}
-        destination={pendingWantedDestinationRef.current}
-        loading={fetchTrainTypesStatus === 'pending'}
-        error={fetchTrainTypesError}
+        onBoundSelect={handleCloseSelectBoundModal}
+        loading={
+          fetchTrainTypesLoading ||
+          fetchStationsByLineIdLoading ||
+          fetchStationsByLineGroupIdLoading
+        }
+        error={
+          fetchTrainTypesError ??
+          fetchStationsByLineIdError ??
+          fetchStationsByLineGroupIdError ??
+          null
+        }
         onTrainTypeSelect={handleTrainTypeSelect}
       />
     </>

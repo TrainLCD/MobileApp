@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     bottom: isTablet ? 84 : undefined,
-    width: `${100 / 9}%`,
   },
   stationName: {
     fontSize: RFValue(18),
@@ -233,7 +232,7 @@ const StationName: React.FC<StationNameProps> = ({
   return (
     <View style={styles.splittedStationNameWithExtraLang}>
       <View>
-        {station.name.split('').map((c, j) => (
+        {station.name?.split('').map((c, j) => (
           <Typography
             style={[styles.stationName, passed ? styles.grayColor : null]}
             key={`${j + 1}${c}`}
@@ -318,6 +317,128 @@ const LineDot: React.FC<LineDotProps> = ({
   );
 };
 
+// Helper: Check if station is at middle position
+const isMiddleStation = (
+  currentStationIndex: number,
+  index: number,
+  stationsLength: number
+): boolean => {
+  return (
+    currentStationIndex !== 0 &&
+    currentStationIndex === index &&
+    currentStationIndex !== stationsLength - 1
+  );
+};
+
+// Helper: Render background bar gradients
+const BackgroundBars: React.FC<{
+  line: Line;
+  barLeft: number;
+  barWidth: number;
+}> = ({ line, barLeft, barWidth }) => (
+  <>
+    <LinearGradient
+      colors={['#fff', '#000', '#000', '#fff']}
+      locations={[0.5, 0.5, 0.5, 0.9]}
+      style={[styles.bar, { left: barLeft, width: barWidth }]}
+    />
+    <LinearGradient
+      colors={line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']}
+      style={[styles.bar, { left: barLeft, width: barWidth }]}
+    />
+  </>
+);
+
+// Helper: Render future/upcoming station bars
+const FutureBars: React.FC<{
+  arrived: boolean;
+  currentStationIndex: number;
+  index: number;
+  passed: boolean;
+  line: Line;
+  lineColors: (string | null | undefined)[];
+  barLeft: number;
+  barWidth: number;
+  stations: Station[];
+}> = ({
+  arrived,
+  currentStationIndex,
+  index,
+  passed,
+  line,
+  lineColors,
+  barLeft,
+  barWidth,
+  stations,
+}) => {
+  const shouldRender = (arrived && currentStationIndex < index + 1) || !passed;
+  if (!shouldRender) {
+    return null;
+  }
+
+  const isMiddle = isMiddleStation(currentStationIndex, index, stations.length);
+
+  return (
+    <>
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[0.5, 0.5, 0.5, 0.9]}
+        style={[styles.bar, { left: barLeft, width: barWidth }]}
+      />
+      <LinearGradient
+        colors={
+          line.color
+            ? [
+                `${lineColors[index] || line.color}ff`,
+                `${lineColors[index] || line.color}bb`,
+              ]
+            : ['#000000ff', '#000000bb']
+        }
+        style={[
+          styles.bar,
+          {
+            left: isMiddle ? barLeft + barWidth / 2.5 : barLeft,
+            width: isMiddle ? barWidth / 2.5 : barWidth,
+          },
+        ]}
+      />
+    </>
+  );
+};
+
+// Helper: Render middle station bar (half-bar for current station)
+const MiddleStationBar: React.FC<{
+  arrived: boolean;
+  currentStationIndex: number;
+  index: number;
+  stations: Station[];
+  line: Line;
+  barLeft: number;
+  barWidth: number;
+}> = ({
+  arrived,
+  currentStationIndex,
+  index,
+  stations,
+  line,
+  barLeft,
+  barWidth,
+}) => {
+  if (
+    !arrived ||
+    !isMiddleStation(currentStationIndex, index, stations.length)
+  ) {
+    return null;
+  }
+
+  return (
+    <LinearGradient
+      colors={line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']}
+      style={[styles.bar, { left: barLeft, width: barWidth / 2.5 }]}
+    />
+  );
+};
+
 const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
@@ -357,13 +478,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const additionalChevronStyle = useMemo(() => {
     // 最初の駅の場合
     if (!index) {
-      return arrived ? { left: widthScale(-15) } : null;
+      return arrived ? { left: widthScale(-14) } : null;
     }
 
     // 到着済みの場合
     if (arrived) {
       return {
-        left: widthScale(41.57 * index) - widthScale(15),
+        left: widthScale(41.75 * index) - widthScale(14),
       };
     }
 
@@ -382,8 +503,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const includesLongStationName = useMemo(
     () =>
-      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
-        .length,
+      !!stations.filter(
+        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
+      ).length,
     [stations]
   );
 
@@ -398,9 +520,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [station.stationNumbers, stationNumberIndex]
   );
 
+  const isLastStation = stations.length - 1 === index;
+  const shouldShowChevron =
+    (currentStationIndex < 1 && index === 0) || currentStationIndex === index;
+
   return (
     <>
-      <View style={styles.stationNameContainer}>
+      <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
         <View
           style={[
             styles.nameCommon,
@@ -426,88 +552,27 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         >
           {numberingObj?.stationNumber ?? ''}
         </Typography>
-        <LinearGradient
-          colors={['#fff', '#000', '#000', '#fff']}
-          locations={[0.5, 0.5, 0.5, 0.9]}
-          style={[
-            styles.bar,
-            {
-              left: barLeft,
-              width: barWidth,
-            },
-          ]}
+        <BackgroundBars line={line} barLeft={barLeft} barWidth={barWidth} />
+        <FutureBars
+          arrived={arrived}
+          currentStationIndex={currentStationIndex}
+          index={index}
+          passed={passed}
+          line={line}
+          lineColors={lineColors}
+          barLeft={barLeft}
+          barWidth={barWidth}
+          stations={stations}
         />
-        <LinearGradient
-          colors={
-            line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
-          }
-          style={[
-            styles.bar,
-            {
-              left: barLeft,
-              width: barWidth,
-            },
-          ]}
+        <MiddleStationBar
+          arrived={arrived}
+          currentStationIndex={currentStationIndex}
+          index={index}
+          stations={stations}
+          line={line}
+          barLeft={barLeft}
+          barWidth={barWidth}
         />
-        {(arrived && currentStationIndex < index + 1) || !passed ? (
-          <LinearGradient
-            colors={['#fff', '#000', '#000', '#fff']}
-            locations={[0.5, 0.5, 0.5, 0.9]}
-            style={[
-              styles.bar,
-              {
-                left: barLeft,
-                width: barWidth,
-              },
-            ]}
-          />
-        ) : null}
-        {arrived &&
-        currentStationIndex !== 0 &&
-        currentStationIndex === index &&
-        currentStationIndex !== stations.length - 1 ? (
-          <LinearGradient
-            colors={
-              line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb']
-            }
-            style={[
-              styles.bar,
-              {
-                left: barLeft,
-                width: barWidth / 2.5,
-              },
-            ]}
-          />
-        ) : null}
-        {(arrived && currentStationIndex < index + 1) || !passed ? (
-          <LinearGradient
-            colors={
-              line.color
-                ? [
-                    `${lineColors[index] || line.color}ff`,
-                    `${lineColors[index] || line.color}bb`,
-                  ]
-                : ['#000000ff', '#000000bb']
-            }
-            style={[
-              styles.bar,
-              {
-                left:
-                  currentStationIndex !== 0 &&
-                  currentStationIndex === index &&
-                  currentStationIndex !== stations.length - 1
-                    ? barLeft + barWidth / 2.5
-                    : barLeft,
-                width:
-                  currentStationIndex !== 0 &&
-                  currentStationIndex === index &&
-                  currentStationIndex !== stations.length - 1
-                    ? barWidth / 2.5
-                    : barWidth,
-              },
-            ]}
-          />
-        ) : null}
         <LineDot
           station={station}
           shouldGrayscale={shouldGrayscale}
@@ -515,7 +580,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           arrived={arrived}
           passed={passed}
         />
-        {stations.length - 1 === index ? (
+        {isLastStation ? (
           <BarTerminalEast
             width={isTablet ? 41 : 27}
             height={isTablet ? 48 : 32}
@@ -526,11 +591,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 bottom: isTablet ? -52 : 32,
               },
             ]}
-            lineColor={
-              line.color
-                ? lineColors[lineColors.length - 1] || line.color
-                : '#000'
-            }
+            lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
             hasTerminus={hasTerminus}
           />
         ) : null}
@@ -545,10 +606,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           },
         ]}
       >
-        {(currentStationIndex < 1 && index === 0) ||
-        currentStationIndex === index ? (
-          <ChevronTY color={chevronColor} />
-        ) : null}
+        {shouldShowChevron ? <ChevronTY color={chevronColor} /> : null}
       </View>
     </>
   );
@@ -638,9 +696,7 @@ const LineBoardToei: React.FC<Props> = ({
       if (!s) {
         return (
           <EmptyStationNameCell
-            lastLineColor={
-              lineColors[lineColors.length - 1] || line?.color || '#fff'
-            }
+            lastLineColor={lineColors.at(-1) || line?.color || '#fff'}
             key={i}
             isLast={isLast}
             hasTerminus={hasTerminus}

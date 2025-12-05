@@ -19,14 +19,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
+import { LineType, type Station, StopCondition } from '~/@types/graphql';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
-import {
-  LineType,
-  type Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
 import {
   useAutoMode,
   useCurrentLine,
@@ -186,9 +182,33 @@ const MainScreen: React.FC = () => {
         (s) => s.line?.lineType === LineType.Subway
       )
     ) {
-      Alert.alert(translate('subwayAlertTitle'), translate('subwayAlertText'), [
-        { text: 'OK' },
-      ]);
+      const alertAsync = async () => {
+        const subwayAlertDismissed = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED
+        );
+
+        if (subwayAlertDismissed !== 'true') {
+          Alert.alert(
+            translate('subwayAlertTitle'),
+            translate('subwayAlertText'),
+            [
+              {
+                text: translate('doNotShowAgain'),
+                style: 'cancel',
+                onPress: async (): Promise<void> => {
+                  await AsyncStorage.setItem(
+                    ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
+                    'true'
+                  );
+                },
+              },
+              { text: 'OK' },
+            ]
+          );
+        }
+      };
+
+      alertAsync();
     }
   }, [stationsFromCurrentStation, isRotated]);
 
@@ -200,30 +220,86 @@ const MainScreen: React.FC = () => {
       return;
     }
 
-    if (
-      stationsFromCurrentStation.some(
-        (s) => s.stopCondition === StopCondition.Weekday
-      ) &&
-      isHoliday
-    ) {
-      Alert.alert(translate('notice'), translate('holidayNotice'));
-    }
-    if (
-      stationsFromCurrentStation.some(
-        (s) => s.stopCondition === StopCondition.Holiday
-      ) &&
-      !isHoliday
-    ) {
-      Alert.alert(translate('notice'), translate('weekdayNotice'));
-    }
+    const alertAsync = async () => {
+      // 土休日通過
+      const holidayNoticeDismissed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED
+      );
+      if (
+        stationsFromCurrentStation.some(
+          (s) => s.stopCondition === StopCondition.Weekday
+        ) &&
+        isHoliday &&
+        holidayNoticeDismissed !== 'true'
+      ) {
+        Alert.alert(translate('notice'), translate('holidayNotice'), [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+                'true'
+              );
+            },
+          },
+          { text: 'OK' },
+        ]);
+      }
 
-    if (
-      stationsFromCurrentStation.findIndex(
-        (s) => s.stopCondition === StopCondition.Partial
-      ) !== -1
-    ) {
-      Alert.alert(translate('notice'), translate('partiallyPassNotice'));
-    }
+      // 平日通過
+      const weekdayNoticeDismissed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED
+      );
+
+      if (
+        stationsFromCurrentStation.some(
+          (s) => s.stopCondition === StopCondition.Holiday
+        ) &&
+        !isHoliday &&
+        weekdayNoticeDismissed !== 'true'
+      ) {
+        Alert.alert(translate('notice'), translate('weekdayNotice'), [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+                'true'
+              );
+            },
+          },
+          { text: 'OK' },
+        ]);
+      }
+
+      // 一部通過
+      const partiallyPassNoticeDismissed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED
+      );
+      if (
+        stationsFromCurrentStation.findIndex(
+          (s) => s.stopCondition === StopCondition.Partial
+        ) !== -1 &&
+        partiallyPassNoticeDismissed !== 'true'
+      ) {
+        Alert.alert(translate('notice'), translate('partiallyPassNotice'), [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: async (): Promise<void> => {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+                'true'
+              );
+            },
+          },
+          { text: 'OK' },
+        ]);
+      }
+    };
+    alertAsync();
   }, [stationsFromCurrentStation, isHoliday, isRotated]);
 
   const transferLines = useTransferLines();

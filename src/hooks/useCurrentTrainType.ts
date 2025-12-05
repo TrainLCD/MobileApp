@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
-import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Station, TrainType } from '~/@types/graphql';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';

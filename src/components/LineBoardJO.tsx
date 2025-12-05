@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentStation,
@@ -182,7 +182,7 @@ const StationName: React.FC<StationNameProps> = ({
   }
   return (
     <View style={styles.verticalStationName}>
-      {station.name.split('').map((c, j) => (
+      {station.name?.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
@@ -218,8 +218,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const includesLongStationName = useMemo(
     () =>
-      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
-        .length,
+      !!stations.filter(
+        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
+      ).length,
     [stations]
   );
 
@@ -258,7 +259,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       />
 
       <View style={styles.numberingIconContainer}>
-        {numberingObj && isTablet && hasNumberedStation ? (
+        {numberingObj &&
+        isTablet &&
+        hasNumberedStation &&
+        numberingObj.lineSymbolShape &&
+        numberingObj.stationNumber ? (
           <NumberingIcon
             shape={numberingObj.lineSymbolShape}
             lineColor={numberingColor}
@@ -305,20 +310,22 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           station={s}
           stations={stations}
           arrived={!isPassing}
-          hasNumberedStation={s.stationNumbers.length > 0}
+          hasNumberedStation={(s.stationNumbers?.length ?? 0) > 0}
         />
       );
     },
     [isPassing, stations]
   );
 
-  const emptyArray = useMemo(
-    () =>
-      Array.from({
-        length: 8 - lineColors.length,
-      }).fill(lineColors[lineColors.length - 1]) as string[],
-    [lineColors]
-  );
+  const emptyArray = useMemo(() => {
+    const gap = Math.max(0, 8 - lineColors.length);
+    const last = lineColors.at(-1);
+    return Array.from({ length: gap }, () => last) as (
+      | string
+      | null
+      | undefined
+    )[];
+  }, [lineColors]);
 
   const getLeft = useCallback(
     (index: number) => {
@@ -452,7 +459,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           styles.barTerminal,
           {
             borderBottomColor: line.color
-              ? lineColors[lineColors.length - 1] || line.color
+              ? lineColors.at(-1) || line.color
               : '#000',
             left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
           },

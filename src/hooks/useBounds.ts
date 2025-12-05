@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import {
   TOEI_OEDO_LINE_MAJOR_STATIONS_ID,
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER,
@@ -45,6 +45,8 @@ export const useBounds = (
         .filter(
           (s) =>
             s.id !== currentStation?.id &&
+            s.id !== undefined &&
+            s.id !== null &&
             TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
         );
       const oedoLineOutboundStops = stations
@@ -52,14 +54,16 @@ export const useBounds = (
         .reverse()
         .filter(
           (s) =>
-            (s.id !== currentStation?.id &&
+            s.id !== undefined &&
+            s.id !== null &&
+            ((s.id !== currentStation?.id &&
               TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)) ||
-            s.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER
+              s.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER)
         )
         // NOTE: 光が丘~築地市場駅間では「都庁前」案内をしない
         .filter((s) =>
           currentStation &&
-          currentStation.id >= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID
+          (currentStation.id ?? 0) >= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID
             ? s.id !== TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER
             : true
         );

@@ -7,14 +7,14 @@ import {
   Alert,
   PermissionsAndroid,
   Platform,
-  SafeAreaView,
   StyleSheet,
   View,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import Typography from '../components/Typography';
-import { useFetchCurrentLocationOnce, useLocationStore } from '../hooks';
+import { setLocation, useFetchCurrentLocationOnce } from '../hooks';
 import { isJapanese, translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 
@@ -74,7 +74,7 @@ const PrivacyScreen: React.FC = () => {
 
     const location = (await fetchCurrentLocation()) ?? null;
     if (location) {
-      useLocationStore.setState(location);
+      setLocation(location);
     }
   }, [fetchCurrentLocation, navigation]);
 

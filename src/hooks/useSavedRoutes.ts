@@ -11,7 +11,6 @@ interface SavedRouteRow {
   name: string;
   lineId: number;
   trainTypeId: number | null;
-  destinationStationId: number | null;
   hasTrainType: number; // SQLiteではBOOLEANが数値として保存される
   createdAt: string; // SQLiteでは日時が文字列として保存される
 }
@@ -32,7 +31,6 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
       name: row.name,
       lineId: row.lineId,
       trainTypeId: row.trainTypeId,
-      destinationStationId: row.destinationStationId,
       hasTrainType: true,
       createdAt: new Date(row.createdAt),
     };
@@ -42,7 +40,6 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
     name: row.name,
     lineId: row.lineId,
     trainTypeId: null,
-    destinationStationId: row.destinationStationId,
     hasTrainType: false,
     createdAt: new Date(row.createdAt),
   };
@@ -62,7 +59,6 @@ export const useSavedRoutes = () => {
         name TEXT NOT NULL,
         lineId INTEGER NOT NULL,
         trainTypeId INTEGER,
-        destinationStationId INTEGER,
         hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
         createdAt TEXT NOT NULL,
         CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
@@ -73,10 +69,10 @@ export const useSavedRoutes = () => {
         'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt ON saved_routes(createdAt DESC);'
       );
       await db.execAsync(
-        'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, destinationStationId, hasTrainType, createdAt DESC);'
+        'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, hasTrainType, createdAt DESC);'
       );
       await db.execAsync(
-        'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, destinationStationId, hasTrainType, createdAt DESC);'
+        'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
       );
       setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
     };
@@ -99,27 +95,15 @@ export const useSavedRoutes = () => {
     ({
       lineId,
       trainTypeId,
-      destinationStationId,
     }: {
       lineId: number | null;
-      destinationStationId: number | null;
       trainTypeId: number | null;
     }): SavedRoute | null => {
-      if (!destinationStationId) {
-        return (
-          routes.find(
-            (r) => r.trainTypeId === trainTypeId || r.lineId === lineId
-          ) ?? null
-        );
-      }
-
       return (
-        routes.find(
-          (r) =>
-            (r.trainTypeId === trainTypeId &&
-              r.destinationStationId === destinationStationId) ||
-            (r.lineId === lineId &&
-              r.destinationStationId === destinationStationId)
+        routes.find((r) =>
+          r.hasTrainType
+            ? r.trainTypeId === trainTypeId && r.lineId === lineId
+            : r.lineId === lineId
         ) ?? null
       );
     },
@@ -140,14 +124,13 @@ export const useSavedRoutes = () => {
 
       await db.runAsync(
         `INSERT INTO saved_routes 
-         (id, name, lineId, trainTypeId, destinationStationId, hasTrainType, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (id, name, lineId, trainTypeId, hasTrainType, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         [
           newRoute.id,
           newRoute.name,
           newRoute.lineId,
           newRoute.trainTypeId ?? null,
-          newRoute.destinationStationId ?? null,
           newRoute.hasTrainType ? 1 : 0,
           newRoute.createdAt.toISOString(),
         ]

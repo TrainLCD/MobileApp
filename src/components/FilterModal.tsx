@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useCallback } from 'react';
-import { FlatList, Modal, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStore } from '~/hooks';
 import { LED_THEME_BG_COLOR } from '../constants';
@@ -9,6 +9,7 @@ import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Chip from './Chip';
+import { CustomModal } from './CustomModal';
 import FAB from './FAB';
 import { Heading } from './Heading';
 import Typography from './Typography';
@@ -36,12 +37,9 @@ type Props = {
 
 const styles = StyleSheet.create({
   root: {
-    position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    width: '100%',
-    height: '100%',
+    padding: 0,
   },
   scrollView: {
     minHeight: isTablet ? 'auto' : '100%',
@@ -109,46 +107,40 @@ export const FilterModal: React.FC<Props> = ({
   );
 
   return (
-    <Modal
-      animationType="slide"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
-    >
-      <View style={styles.root}>
-        <View
-          style={[
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+      onClose={onClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.root}
+      contentContainerStyle={[
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+        },
+        isTablet
+          ? {
+              width: '80%',
+              maxHeight: '90%',
+              shadowOpacity: 0.25,
+              shadowColor: '#333',
+              borderRadius: 16,
+            }
+          : {
+              width: '100%',
+              height: '100%',
             },
-            isTablet
-              ? {
-                  width: '80%',
-                  maxHeight: '90%',
-                  shadowOpacity: 0.25,
-                  shadowColor: '#333',
-                  borderRadius: 16,
-                }
-              : {
-                  width: '100%',
-                  height: '100%',
-                },
-          ]}
-        >
-          <View style={styles.formGroup}>
-            <FlatList
-              ListHeaderComponent={() => (
-                <Heading>{translate('trainTypesFilter')}</Heading>
-              )}
-              contentContainerStyle={styles.scrollView}
-              data={queries}
-              renderItem={renderItem}
-            />
-          </View>
-        </View>
-        <FAB onPress={onClose} icon="close" />
+      ]}
+    >
+      <View style={styles.formGroup}>
+        <FlatList
+          ListHeaderComponent={() => (
+            <Heading>{translate('trainTypesFilter')}</Heading>
+          )}
+          contentContainerStyle={styles.scrollView}
+          data={queries}
+          renderItem={renderItem}
+        />
       </View>
-    </Modal>
+      <FAB onPress={onClose} icon="close" />
+    </CustomModal>
   );
 };

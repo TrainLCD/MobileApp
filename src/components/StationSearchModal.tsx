@@ -1,35 +1,67 @@
-import { useMutation } from '@connectrpc/connect-query';
+import { useLazyQuery, useQuery } from '@apollo/client/react';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo } from 'react';
-import {
-  Alert,
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type {
+  GetStationsNearbyQueryVariables,
+  Station,
+} from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import type { Station } from '~/gen/proto/stationapi_pb';
-import { getStationsByName } from '~/gen/proto/stationapi-StationAPI_connectquery';
-import { useThemeStore } from '~/hooks';
+import { PREFECTURES_JA } from '~/constants/province';
+import { useLocationStore, useThemeStore } from '~/hooks';
+import {
+  GET_STATIONS_BY_NAME,
+  GET_STATIONS_NEARBY,
+} from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
+import { CommonCard } from './CommonCard';
+import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
-import { LineCard } from './LineCard';
 import { SearchBar } from './SearchBar';
+
+type GetStationsNearbyData = {
+  stationsNearby: Station[];
+};
+
+type GetStationsByNameData = {
+  stationsByName: Station[];
+};
+
+type GetStationsByNameVariables = {
+  name: string;
+  limit?: number;
+  fromStationGroupId?: number;
+};
+
+const getStationUniqueKey = (station: Station) => {
+  if (station.groupId) {
+    return String(station.groupId);
+  }
+  if (station.id) {
+    return String(station.id);
+  }
+  const prefId = station.prefectureId;
+  if (!prefId || prefId < 1) {
+    return station.name;
+  }
+  return `${station.name}|${PREFECTURES_JA[prefId - 1]}`;
+};
+
+const getUniqueStations = (stations?: Station[]) =>
+  uniqBy(stations ?? [], getStationUniqueKey);
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
   contentView: {
@@ -84,126 +116,153 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const insets = useSafeAreaInsets();
 
   const {
-    data: stationsData,
-    mutate: mutateStations,
-    status: mutateStationsStatus,
-    error: mutateStationsError,
-    reset: resetStations,
-  } = useMutation(getStationsByName);
+    data: stationsNearbyData,
+    loading: fetchStationsNearbyLoading,
+    error: fetchStationsNearbyError,
+  } = useQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
+    skip: !visible || latitude == null || longitude == null,
+    variables: {
+      latitude: latitude as number,
+      longitude: longitude as number,
+      limit: Number(NEARBY_STATIONS_LIMIT ?? 10),
+    } as GetStationsNearbyQueryVariables,
+  });
+
+  const [
+    fetchStationsByName,
+    {
+      data: stationsByNameData,
+      loading: fetchStationsByNameLoading,
+      error: fetchStationsByNameError,
+      called: fetchStationsByNameCalled,
+    },
+  ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+    GET_STATIONS_BY_NAME
+  );
 
   useEffect(() => {
-    if (mutateStationsError) {
+    if (fetchStationsByNameError || fetchStationsNearbyError) {
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
     }
-  }, [mutateStationsError]);
+  }, [fetchStationsByNameError, fetchStationsNearbyError]);
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
       const { line, lines } = item;
       if (!line) return null;
 
-      const title = isJapanese ? item.name : item.nameRoman;
+      const title = (isJapanese ? item.name : item.nameRoman) || undefined;
       const subtitle = isJapanese
-        ? `${lines.map((l) => l.nameShort).join('・')}`
-        : lines.map((l) => l.nameRoman).join(', ');
+        ? `${(lines ?? []).map((l) => l.nameShort).join('・')}`
+        : (lines ?? []).map((l) => l.nameRoman).join(', ');
 
       return (
-        <LineCard
+        <CommonCard
           line={line}
           title={title}
           subtitle={subtitle}
           onPress={() => {
             onSelect(item);
-            resetStations();
           }}
         />
       );
     },
-    [onSelect, resetStations]
+    [onSelect]
   );
 
-  const keyExtractor = useCallback((s: Station) => s.groupId.toString(), []);
+  const keyExtractor = useCallback(
+    (s: Station, index: number) => `${s.groupId ?? 0}-${s.id ?? index}`,
+    []
+  );
 
   const handleSearchStations = useCallback(
     (query: string) => {
       if (!query.trim().length) {
-        resetStations();
         return;
       }
 
-      mutateStations({ stationName: query });
+      fetchStationsByName({ variables: { name: query } });
     },
-    [mutateStations, resetStations]
+    [fetchStationsByName]
   );
 
   const stations = useMemo(
-    () => uniqBy(stationsData?.stations ?? [], 'groupId'),
-    [stationsData?.stations]
+    () =>
+      fetchStationsByNameCalled
+        ? getUniqueStations(stationsByNameData?.stationsByName)
+        : getUniqueStations(stationsNearbyData?.stationsNearby),
+    [
+      stationsNearbyData?.stationsNearby,
+      stationsByNameData?.stationsByName,
+      fetchStationsByNameCalled,
+    ]
   );
 
   const handleClose = useCallback(() => {
     onClose();
-    resetStations();
-  }, [onClose, resetStations]);
+  }, [onClose]);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={handleClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={handleClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.root}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          marginBottom: insets.bottom || 0,
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={handleClose}>
-        <Pressable
-          onPress={() => {}}
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-              marginBottom: insets.bottom || 0,
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View style={styles.headerContainer}>
-            <Heading style={styles.title}>
-              {translate('searchFirstStationTitle')}
-            </Heading>
-            <SearchBar onSearch={handleSearchStations} nameSearch />
-          </View>
+      <View style={styles.headerContainer}>
+        <Heading style={styles.title}>
+          {translate('searchFirstStationTitle')}
+        </Heading>
+        <SearchBar onSearch={handleSearchStations} nameSearch />
+      </View>
 
-          <FlatList<Station>
-            style={StyleSheet.absoluteFill}
-            data={stations ?? []}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ItemSeparatorComponent={EmptyLineSeparator}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.flatListContentContainer}
-            ListEmptyComponent={
-              <EmptyResult statuses={[mutateStationsStatus]} />
-            }
+      <FlatList<Station>
+        style={StyleSheet.absoluteFill}
+        data={stations ?? []}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={EmptyLineSeparator}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.flatListContentContainer}
+        ListEmptyComponent={
+          <EmptyResult
+            loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
+            hasSearched={fetchStationsByNameCalled}
           />
-          <View style={styles.closeButtonContainer}>
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={handleClose}
-            >
-              {translate('close')}
-            </Button>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+        }
+      />
+      <View style={styles.closeButtonContainer}>
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={handleClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
+    </CustomModal>
   );
 };

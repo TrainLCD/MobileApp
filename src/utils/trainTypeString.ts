@@ -1,4 +1,4 @@
-import { type TrainType, TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 
 // 301 = 私鉄各駅停車
 export const getIsLocal = (tt: TrainType | null): boolean =>

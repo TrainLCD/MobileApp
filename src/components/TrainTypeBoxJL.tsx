@@ -1,8 +1,8 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import type { TrainType } from '~/@types/graphql';
 import { japaneseRegexp, parenthesisRegexp } from '~/constants';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
 import { translate } from '~/translation';
@@ -12,7 +12,7 @@ import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
-  trainTypeColor?: string;
+  trainTypeColor?: string | null;
 };
 
 const styles = StyleSheet.create({
@@ -120,7 +120,7 @@ const TrainTypeBoxJL: React.FC<Props> = ({
               style={[
                 styles.text,
                 {
-                  color: trainTypeColor,
+                  color: trainTypeColor ?? '#000',
                   fontFamily: undefined,
                   fontWeight: '800',
                 },
@@ -137,7 +137,7 @@ const TrainTypeBoxJL: React.FC<Props> = ({
             style={[
               styles.text,
               {
-                color: trainTypeColor,
+                color: trainTypeColor ?? '#000',
               },
             ]}
           >

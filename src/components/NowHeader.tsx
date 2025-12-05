@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  type ViewStyle,
 } from 'react-native';
 import Animated, {
   interpolate,
@@ -15,7 +16,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
@@ -34,16 +36,12 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: 0,
     zIndex: 10,
-    backgroundColor: Platform.OS === 'android' ? '#FAFAFA' : undefined,
   },
   nowHeaderCard: {
     position: 'relative',
     width: '100%',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    paddingTop: 32,
     overflow: 'hidden',
     // iOS shadow
     shadowColor: '#333',
@@ -77,7 +75,7 @@ const styles = StyleSheet.create({
 });
 
 type Props = {
-  station: Station;
+  station: Station | null;
   onLayout?: (event: LayoutChangeEvent) => void;
   scrollY: SharedValue<number>;
 };
@@ -101,8 +99,8 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     if (!station) return { label, name: '' };
     const re = /\([^()]*\)/g;
     const name = isJapanese
-      ? (station.name ?? '').replace(re, '')
-      : (station.nameRoman ?? station.name ?? '').replace(re, '');
+      ? (station.name ?? '').replaceAll(re, '')
+      : (station.nameRoman ?? station.name ?? '').replaceAll(re, '');
     return { label, name };
   }, [station]);
 
@@ -141,6 +139,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
       setStationAtom((prev) => ({
         ...prev,
         station,
+        stationsCache: [],
       }));
       setNavigationAtom((prev) => ({
         ...prev,
@@ -153,16 +152,37 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     [setStationAtom, setNavigationAtom]
   );
 
+  const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
+    const androidBGColor = isLEDTheme
+      ? LED_THEME_BG_COLOR
+      : 'rgba(250,250,250,0.9)';
+    return {
+      backgroundColor: Platform.OS === 'android' ? androidBGColor : undefined,
+      paddingTop: 32 + insets.top,
+    };
+  }, [insets.top, isLEDTheme]);
+
   return (
     <>
       <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
-        <View style={styles.nowHeaderCard} onLayout={onLayout}>
-          <BlurView
-            intensity={40}
-            tint={isLEDTheme ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={[styles.nowHeaderContent, { paddingTop: insets.top }]}>
+        <View
+          style={[
+            styles.nowHeaderCard,
+            {
+              borderBottomLeftRadius: isLEDTheme ? 0 : 16,
+              borderBottomRightRadius: isLEDTheme ? 0 : 16,
+            },
+          ]}
+          onLayout={onLayout}
+        >
+          {Platform.OS === 'ios' ? (
+            <BlurView
+              intensity={40}
+              tint={isLEDTheme ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null}
+          <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
             {/* Stacked layout (fades out) */}
             <Animated.View style={stackedStyle}>
               <Typography style={styles.nowLabel}>

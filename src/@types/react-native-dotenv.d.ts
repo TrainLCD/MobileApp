@@ -16,4 +16,5 @@ declare module 'react-native-dotenv' {
   export const BLE_TARGET_CHARACTERISTIC_UUID: string;
   export const ENABLE_EXPERIMENTAL_TELEMETRY: string;
   export const EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: string;
+  export const EXPERIMENTAL_TELEMETRY_TOKEN: string;
 }

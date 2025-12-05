@@ -12,9 +12,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: isTablet ? 8 * 1.5 : 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -83,6 +89,7 @@ const NumberingIconKintetsu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -104,9 +111,11 @@ const NumberingIconKintetsu: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { backgroundColor: lineColor }]}>
+        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+      </View>
     </View>
   );
 };

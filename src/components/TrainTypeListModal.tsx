@@ -1,24 +1,27 @@
+import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import type { Line, Station, TrainType } from '~/gen/proto/stationapi_pb';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
+import navigationState from '~/store/atoms/navigation';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
+import { CommonCard } from './CommonCard';
+import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
-import { LineCard } from './LineCard';
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 24,
   },
   contentView: {
@@ -49,7 +52,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  subtitle: { width: '100%', fontSize: 16 },
+  subtitle: {
+    width: '100%',
+    fontSize: RFValue(12),
+  },
   title: {
     width: '100%',
   },
@@ -63,7 +69,6 @@ type Props = {
   visible: boolean;
   line: Line | null;
   destination?: Station | null;
-  trainTypes: TrainType[];
   loading?: boolean;
   onClose: () => void;
   onSelect: (trainType: TrainType) => void;
@@ -73,11 +78,12 @@ export const TrainTypeListModal = ({
   visible,
   line,
   destination,
-  trainTypes,
   loading,
   onClose,
   onSelect,
 }: Props) => {
+  const { fetchedTrainTypes } = useAtomValue(navigationState);
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
   const title = useMemo(() => {
@@ -99,16 +105,14 @@ export const TrainTypeListModal = ({
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
-      const line = item.line;
+      const itemLine = item.line;
       const lines = uniqBy(item.lines ?? [], 'id');
 
-      if (!line) return null;
+      if (!itemLine || !line) return null;
 
-      const currentLineIndex = destination
-        ? lines.findIndex((l) => l.id === line?.id)
-        : 0;
-
-      if (currentLineIndex === -1) return null;
+      // 選択された路線がこの列車種別の路線リストに含まれているかチェック
+      const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
+      if (selectedLineIndex === -1) return null;
 
       if (destination) {
         const destinationLineIndex = lines.findIndex(
@@ -119,27 +123,33 @@ export const TrainTypeListModal = ({
           return null;
         }
 
-        const [start, end] =
-          currentLineIndex <= destinationLineIndex
-            ? [currentLineIndex, destinationLineIndex]
-            : [destinationLineIndex, currentLineIndex];
-        let segment = lines.slice(start, end + 1);
-        if (currentLineIndex > destinationLineIndex) {
-          segment = segment.reverse();
+        // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
+        let viaLines: Line[];
+        if (selectedLineIndex === destinationLineIndex) {
+          viaLines = lines.slice(selectedLineIndex + 1);
+        } else {
+          const [start, end] =
+            selectedLineIndex <= destinationLineIndex
+              ? [selectedLineIndex, destinationLineIndex]
+              : [destinationLineIndex, selectedLineIndex];
+          let segment = lines.slice(start, end + 1);
+          if (selectedLineIndex > destinationLineIndex) {
+            segment = segment.reverse();
+          }
+          viaLines = segment.slice(1);
         }
-        const viaLines = segment.slice(1);
 
         const title = `${isJapanese ? item.name : item.nameRoman}`;
         const subtitle = isJapanese
           ? `${viaLines.map((l) => l.nameShort).join('・')}${
-              viaLines.length ? '経由' : ''
+              viaLines.length ? '直通' : ''
             }`
           : viaLines.length
             ? `Via ${viaLines.map((l) => l.nameRoman).join(', ')}`
             : '';
 
         return (
-          <LineCard
+          <CommonCard
             line={line}
             title={title}
             subtitle={subtitle}
@@ -148,15 +158,13 @@ export const TrainTypeListModal = ({
         );
       }
 
-      const slicedLines = lines.slice(currentLineIndex + 1, lines.length);
-
       const title = `${isJapanese ? item.name : item.nameRoman}`;
       const subtitle = isJapanese
-        ? slicedLines.map((l) => l.nameShort).join('・')
-        : slicedLines.map((l) => l.nameRoman).join(', ');
+        ? lines.map((l) => l.nameShort).join('・')
+        : lines.map((l) => l.nameRoman).join(', ');
 
       return (
-        <LineCard
+        <CommonCard
           line={line}
           title={title}
           subtitle={subtitle}
@@ -164,84 +172,81 @@ export const TrainTypeListModal = ({
         />
       );
     },
-    [destination, onSelect]
+    [destination, line, onSelect]
   );
 
   const keyExtractor = useCallback(
-    (tt: TrainType) => tt.groupId.toString(),
+    (tt: TrainType, index: number) =>
+      tt.groupId?.toString() ?? tt.id?.toString() ?? index.toString(),
     []
   );
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      onClose={onClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.root}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+        },
+        isTablet && {
+          width: '80%',
+          maxHeight: '90%',
+          borderRadius: 16,
+        },
+      ]}
     >
-      <Pressable style={styles.root} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.contentView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-            },
-            isTablet && {
-              width: '80%',
-              maxHeight: '90%',
-              borderRadius: 16,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.headerContainer,
-              {
-                backgroundColor: isLEDTheme ? '#212121' : '#fff',
-              },
-            ]}
-          >
-            {destination ? (
-              <Heading style={styles.subtitle}>{subtitle}</Heading>
-            ) : null}
-            <Heading style={styles.title}>{title}</Heading>
-          </View>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+          },
+        ]}
+      >
+        {destination ? (
+          <Heading style={styles.subtitle}>{subtitle}</Heading>
+        ) : null}
+        <Heading singleLine style={styles.title}>
+          {title}
+        </Heading>
+      </View>
 
-          <FlatList<TrainType>
-            style={StyleSheet.absoluteFill}
-            data={trainTypes}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            ItemSeparatorComponent={EmptyLineSeparator}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.flatListContentContainer}
-            ListEmptyComponent={
-              loading ? (
-                <SkeletonPlaceholder borderRadius={4} speed={1500}>
-                  <SkeletonPlaceholder.Item width="100%" height={72} />
-                </SkeletonPlaceholder>
-              ) : null
-            }
-          />
-          <View
-            style={[
-              styles.closeButtonContainer,
-              {
-                backgroundColor: isLEDTheme ? '#212121' : '#fff',
-              },
-            ]}
-          >
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={onClose}
-            >
-              {translate('close')}
-            </Button>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <FlatList<TrainType>
+        style={StyleSheet.absoluteFill}
+        data={fetchedTrainTypes}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={EmptyLineSeparator}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.flatListContentContainer}
+        ListEmptyComponent={
+          loading ? (
+            <SkeletonPlaceholder borderRadius={4} speed={1500}>
+              <SkeletonPlaceholder.Item width="100%" height={72} />
+            </SkeletonPlaceholder>
+          ) : null
+        }
+      />
+      <View
+        style={[
+          styles.closeButtonContainer,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+          },
+        ]}
+      >
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={onClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
+    </CustomModal>
   );
 };

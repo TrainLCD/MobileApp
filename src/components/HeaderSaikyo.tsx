@@ -168,7 +168,7 @@ const HeaderSaikyo: React.FC = () => {
   const connectionText = useMemo(
     () =>
       connectedLines
-        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
+        ?.map((l) => l.nameShort?.replace(parenthesisRegexp, ''))
         .slice(0, 2)
         .join('・'),
     [connectedLines]
@@ -503,19 +503,27 @@ const HeaderSaikyo: React.FC = () => {
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text style={[stateTopAnimatedStyles, styles.state]}>
+            <Animated.Text
+              style={[stateTopAnimatedStyles, styles.state]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
+            >
               {stateText}
             </Animated.Text>
-            <Animated.Text style={[stateBottomAnimatedStyles, styles.state]}>
+            <Animated.Text
+              style={[stateBottomAnimatedStyles, styles.state]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
+            >
               {prevStateText}
             </Animated.Text>
           </View>
 
           {currentStationNumber ? (
             <NumberingIcon
-              shape={currentStationNumber.lineSymbolShape}
+              shape={currentStationNumber.lineSymbolShape || ''}
               lineColor={numberingColor}
-              stationNumber={currentStationNumber.stationNumber}
+              stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               allowScaling
             />

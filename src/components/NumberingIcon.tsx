@@ -32,12 +32,13 @@ type Props = {
   shape: string;
   lineColor: string;
   stationNumber: string;
-  threeLetterCode?: string;
+  threeLetterCode?: string | null;
   size?: NumberingIconSize;
   allowScaling?: boolean;
   withDarkTheme?: boolean;
   shouldGrayscale?: boolean;
   transformOrigin?: 'top' | 'center' | 'bottom';
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({ pass: { opacity: 0.25 } });
@@ -51,6 +52,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
   allowScaling,
   withDarkTheme,
   transformOrigin,
+  withOutline,
 }: Props) => {
   switch (shape) {
     case MARK_SHAPE.ROUND:
@@ -59,6 +61,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.ROUND_HORIZONTAL:
@@ -67,6 +70,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.HANKYU:
@@ -74,6 +78,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconHankyu
           lineColor={lineColor}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.HANSHIN:
@@ -81,6 +86,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconHanshin
           lineColor={lineColor}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.SANYO:
@@ -89,6 +95,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.REVERSED_ROUND:
@@ -97,6 +104,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.REVERSED_ROUND_HORIZONTAL:
@@ -105,6 +113,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.KEIKYU:
@@ -115,6 +124,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
             lineColor={lineColor}
             stationNumber={stationNumber}
             size={size}
+            withOutline={withOutline}
           />
         );
       }
@@ -122,6 +132,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconKeikyu
           lineColor={lineColor}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.KINTETSU:
@@ -130,6 +141,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.NANKAI:
@@ -138,10 +150,17 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.KEIHAN:
-      return <NumberingIconKeihan stationNumber={stationNumber} size={size} />;
+      return (
+        <NumberingIconKeihan
+          stationNumber={stationNumber}
+          size={size}
+          withOutline={withOutline}
+        />
+      );
     case MARK_SHAPE.REVERSED_SQUARE:
     case MARK_SHAPE.REVERSED_SQUARE_DARK_TEXT:
       return (
@@ -150,6 +169,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           stationNumber={stationNumber}
           size={size}
           darkText={shape === MARK_SHAPE.REVERSED_SQUARE_DARK_TEXT}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.REVERSED_SQUARE_WEST:
@@ -159,6 +179,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           darkText={shape === MARK_SHAPE.REVERSED_SQUARE_WEST_DARK_TEXT}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.REVERSED_SQUARE_HORIZONTAL:
@@ -166,6 +187,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconReversedSquareHorizontal
           lineColor={lineColor}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.JR_UNION:
@@ -174,6 +196,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.SQUARE:
@@ -185,6 +208,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           allowScaling={allowScaling ?? true}
           size={size}
           transformOrigin={transformOrigin}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.HALF_SQUARE:
@@ -200,6 +224,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           }
           size={size}
           darkText={shape === MARK_SHAPE.HALF_SQUARE_DARK_TEXT}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.ODAKYU:
@@ -208,6 +233,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconOdakyu
           stationNumber={stationNumber}
           hakone={shape === MARK_SHAPE.HAKONE}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.KEIO:
@@ -215,17 +241,23 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconKeio
           lineColor={lineColor}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.TWR:
       return (
-        <NumberingIconTWR lineColor={lineColor} stationNumber={stationNumber} />
+        <NumberingIconTWR
+          lineColor={lineColor}
+          stationNumber={stationNumber}
+          withOutline={withOutline}
+        />
       );
     case MARK_SHAPE.NEW_SHUTTLE:
       return (
         <NumberingIconNewShuttle
           lineColor={lineColor}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.KEISEI:
@@ -234,18 +266,30 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.MONOCHROME_ROUND:
-      return <NumberingIconMonochromeRound stationNumber={stationNumber} />;
+      return (
+        <NumberingIconMonochromeRound
+          stationNumber={stationNumber}
+          withOutline={withOutline}
+        />
+      );
     case MARK_SHAPE.NTL:
-      return <NumberingIconNTL stationNumber={stationNumber} />;
+      return (
+        <NumberingIconNTL
+          stationNumber={stationNumber}
+          withOutline={withOutline}
+        />
+      );
     case MARK_SHAPE.SMR:
       return (
         <NumberingIconSMR
           withDarkTheme={withDarkTheme ?? false}
           size={size}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.NISHITETSU:
@@ -254,6 +298,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           size={size}
+          withOutline={withOutline}
         />
       );
     case MARK_SHAPE.IZUHAKONE:
@@ -262,6 +307,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           size={size}
           stationNumber={stationNumber}
+          withOutline={withOutline}
         />
       );
     default:

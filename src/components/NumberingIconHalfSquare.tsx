@@ -15,9 +15,14 @@ type Props = {
   withRadius: boolean;
   size?: NumberingIconSize;
   darkText: boolean;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 64 * 1.5 : 64,
     height: isTablet ? 64 * 1.5 : 64,
@@ -66,6 +71,7 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   withRadius,
   size,
   darkText,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -106,19 +112,25 @@ const NumberingIconHalfSquare: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { borderRadius, backgroundColor: lineColor }]}>
-      <Typography
-        style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
-      >
-        {lineSymbol}
-      </Typography>
-      <View
-        style={[
-          styles.stationNumberContainer,
-          { borderRadius: stationNumberContainerBorderRadius },
-        ]}
-      >
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View
+      style={
+        withOutline ? [styles.optionalBorder, { borderRadius }] : undefined
+      }
+    >
+      <View style={[styles.root, { borderRadius, backgroundColor: lineColor }]}>
+        <Typography
+          style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
+        >
+          {lineSymbol}
+        </Typography>
+        <View
+          style={[
+            styles.stationNumberContainer,
+            { borderRadius: stationNumberContainerBorderRadius },
+          ]}
+        >
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );

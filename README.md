@@ -59,8 +59,8 @@ This app recreates the authentic experience of Japanese train travel by displayi
 
 Before you begin, ensure you have met the following requirements:
 
-- **Node.js** (version 18 or higher)
-- **pnpm** package manager
+- **Node.js 20.x**
+- **pnpm 10.x** (use the globally installed pnpm binary)
 - **React Native development environment** set up
 - **Expo CLI** installed globally
 - **Firebase CLI** (for Cloud Functions development)
@@ -80,7 +80,7 @@ Before you begin, ensure you have met the following requirements:
    pnpm install
    ```
 
-   Note: Protocol buffer files are automatically generated during installation via the `postinstall` script.
+   Note: Configure `GQL_API_URL` before running `pnpm gql:codegen` to regenerate GraphQL types.
 
 ### Running the App
 
@@ -115,29 +115,44 @@ If you like this project, join our Discord community!
 
 ```text
 src/
-├── components/     # Reusable UI components
-├── screens/        # Screen components
-├── hooks/          # Custom React hooks
-├── store/          # State management
-├── utils/          # Utility functions
-├── constants/      # App constants
-├── models/         # Data models
-└── assets/         # Static assets
+├── components/        # Reusable UI components
+├── screens/           # Screen components
+├── hooks/             # Custom React hooks
+├── store/             # Zustand stores and selectors
+├── stacks/            # React Navigation stack definitions
+├── providers/         # Context providers and integration wrappers
+├── lib/               # API clients and shared integrations
+├── config/            # Static configuration helpers
+├── constants/         # Shared constants
+├── utils/             # Utility functions and test helpers
+├── test/              # Testing utilities and e2e harness
+├── __mocks__/         # Jest mocks
+├── __fixtures__/      # Test fixtures
+├── @types/            # Global TypeScript declarations
+├── models/            # Data models
+├── index.tsx          # App entry point
+├── translation.ts     # i18n resources
+└── lineSymbolImage.ts # Line symbol metadata
 
-functions/          # Firebase Cloud Functions
-├── src/            # Function source code
-├── lib/            # Compiled JavaScript
-└── package.json    # Function dependencies
+android/               # Native Android project (Fastlane-managed)
+ios/                   # Native iOS project (Fastlane-managed)
+functions/             # Firebase Cloud Functions
+docs/                  # Architectural notes and runbooks
+assets/                # Static media bundled with the app
+utils/                 # Tooling scripts and codegen helpers
 ```
 
 ### Available Scripts
 
 - `pnpm start` - Start the Expo development server
+- `pnpm android` / `pnpm ios` - Build and launch native binaries through Fastlane
+- `pnpm web` - Serve the Expo web build
 - `pnpm lint` - Run Biome linter
 - `pnpm format` - Format code with Biome
 - `pnpm test` - Run Jest tests
 - `pnpm typecheck` - Run TypeScript type checking
 - `pnpm watch:test` - Run tests in watch mode
+- `pnpm gql:codegen` - Regenerate GraphQL types after schema or documents change (requires `GQL_API_URL`)
 
 ### Testing
 
@@ -234,7 +249,7 @@ TrainLCD is built with:
 - **Tanstack Query** - Data fetching and caching
 - **Firebase** - Backend services (Analytics, Auth, Firestore, Storage)
 - **Sentry** - Error tracking and performance monitoring
-- **Protocol Buffers** - Efficient data serialization
+- **GraphQL** with Code Generator - Typed queries and operations
 
 ## Support
 

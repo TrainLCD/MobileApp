@@ -2,19 +2,25 @@ import * as Device from 'expo-device';
 import { NetworkStateType, useNetworkState } from 'expo-network';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { EXPERIMENTAL_TELEMETRY_ENDPOINT_URL } from 'react-native-dotenv';
+import {
+  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL,
+  EXPERIMENTAL_TELEMETRY_TOKEN,
+} from 'react-native-dotenv';
 import { z } from 'zod';
 import { webSocketUrlRegexp } from '~/constants/regexp';
 import {
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 } from '~/constants/telemetry';
+import tuningState from '~/store/atoms/tuning';
 import {
   type GnssState,
   subscribeGnss,
 } from '~/utils/native/android/gnssModule';
-import { isTelemetryEnabled } from '~/utils/telemetryConfig';
+import { isTelemetryEnabledByBuild } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
+import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
 import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
 
@@ -22,17 +28,26 @@ const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
 
 const TelemetryPayload = z.object({
-  schemaVersion: z.literal(2),
-  type: z.enum(['log', 'location_update']),
+  type: z.enum(['location_update', 'log', 'error']),
   coords: z
     .object({
-      accuracy: z.number().nullable(),
-      altitude: z.number().nullable(),
-      altitudeAccuracy: z.number().nullable(),
-      heading: z.number().nullable(),
       latitude: z.number(),
       longitude: z.number(),
-      speed: z.number().nullable(),
+      accuracy: z.number().nullable().optional(),
+      speed: z.number().nullable().optional(),
+    })
+    .optional(),
+  error: z
+    .object({
+      type: z.enum([
+        'websocket_message_error',
+        'json_parse_error',
+        'payload_parse_error',
+        'accuracy_low',
+        'invalid_coords',
+        'unknown',
+      ]),
+      reason: z.string(),
     })
     .optional(),
   log: z
@@ -42,26 +57,11 @@ const TelemetryPayload = z.object({
       message: z.string(),
     })
     .optional(),
-  state: MovingState.optional(),
   device: z.string(),
-  // Androidのみ対応
-  gnss: z
-    .object({
-      usedInFix: z.number().optional(), // 位置解(=fix)に使われた衛星数
-      total: z.number().optional(), // 観測衛星総数
-      meanCn0DbHz: z.number().optional(), // C/N0 平均
-      maxCn0DbHz: z.number().optional(), // C/N0 最大
-      constellations: z.array(z.string()).optional(), // ["GPS","GLONASS","GALILEO",...]
-    })
-    .nullable()
-    .optional(),
-  radio: z
-    .object({
-      isWifiConnected: z.boolean().optional(), // 参考フラグ（iOSは取得制限あり）
-    })
-    .nullable()
-    .optional(),
   timestamp: z.number(),
+  lineId: z.number(),
+  stationId: z.number().nullable().optional(),
+  state: MovingState.optional(),
 });
 
 export const useTelemetrySender = (
@@ -73,6 +73,12 @@ export const useTelemetrySender = (
   const gnssRef = useRef<GnssState | null>(null);
   const telemetryQueueRef = useRef<string[]>([]);
   const messageQueueRef = useRef<string[]>([]);
+  const protocols = useMemo(
+    () => ['thq', `thq-auth-${EXPERIMENTAL_TELEMETRY_TOKEN}`],
+    []
+  );
+  const station = useCurrentStation();
+  const line = useCurrentLine();
 
   useEffect(
     () =>
@@ -90,10 +96,12 @@ export const useTelemetrySender = (
     }
   }, []);
 
-  const coords = useLocationStore((state) => state?.coords);
+  const coords = useLocationStore((state) => state?.location?.coords);
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
     useAtomValue(stationState);
+  const { telemetryEnabled: isTelemetryEnabledByUser } =
+    useAtomValue(tuningState);
 
   const passing = useIsPassing();
 
@@ -118,10 +126,13 @@ export const useTelemetrySender = (
 
   const sendLog = useCallback(
     (message: string, level: 'debug' | 'info' | 'warn' | 'error' = 'debug') => {
+      if (!line?.id) {
+        return;
+      }
+
       const now = Date.now();
 
       const payload = TelemetryPayload.safeParse({
-        schemaVersion: 2,
         type: 'log',
         log: {
           type: 'app',
@@ -129,6 +140,7 @@ export const useTelemetrySender = (
           message,
         },
         device: Device.modelName ?? 'unknown',
+        lineId: line.id,
         timestamp: now,
       });
 
@@ -147,17 +159,20 @@ export const useTelemetrySender = (
         enqueueMessage(messageQueueRef.current, stringifiedMessage);
       }
     },
-    [enqueueMessage]
+    [enqueueMessage, line?.id]
   );
 
   const sendTelemetry = useCallback(() => {
+    if (!line?.id) {
+      return;
+    }
+
     const now = Date.now();
     if (now - lastSentTelemetryRef.current < TELEMETRY_THROTTLE_MS) {
       return;
     }
 
     const payload = TelemetryPayload.safeParse({
-      schemaVersion: 2,
       type: 'location_update',
       coords,
       device: Device.modelName ?? 'unknown',
@@ -166,6 +181,8 @@ export const useTelemetrySender = (
       radio: {
         isWifiConnected,
       },
+      lineId: line.id,
+      stationId: station?.id,
       timestamp: now,
     });
 
@@ -179,9 +196,8 @@ export const useTelemetrySender = (
     });
 
     const isPayloadValid =
-      payload.data.coords &&
-      payload.data.coords.latitude != null &&
-      payload.data.coords.longitude != null;
+      payload.data.coords?.latitude != null &&
+      payload.data.coords?.longitude != null;
 
     if (isPayloadValid) {
       if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -191,7 +207,7 @@ export const useTelemetrySender = (
         enqueueMessage(telemetryQueueRef.current, stringifiedData);
       }
     }
-  }, [coords, state, enqueueMessage, isWifiConnected]);
+  }, [coords, state, enqueueMessage, isWifiConnected, line?.id, station?.id]);
 
   useEffect(() => {
     let reconnectAttempts = 0;
@@ -199,7 +215,7 @@ export const useTelemetrySender = (
     let reconnectTimeout: number;
     let shouldReconnect = true;
 
-    if (!isTelemetryEnabled) {
+    if (!isTelemetryEnabledByBuild || !isTelemetryEnabledByUser || !line?.id) {
       return;
     }
 
@@ -210,7 +226,7 @@ export const useTelemetrySender = (
       }
 
       try {
-        const socket = new WebSocket(wsUrl);
+        const socket = new WebSocket(wsUrl, protocols);
         socketRef.current = socket;
         socket.onopen = () => {
           console.log('WebSocket connected');
@@ -218,14 +234,14 @@ export const useTelemetrySender = (
 
           if (sendTelemetryAutomatically) {
             const logPayload = {
-              schemaVersion: 2 as const,
               type: 'log' as const,
               log: {
                 type: 'app' as const,
                 level: 'info' as const,
-                message: 'Connected to the telemetry server as a client',
+                message: 'Connected to the telemetry server as a app.',
               },
               device: Device.modelName ?? 'unknown',
+              lineId: line.id,
               timestamp: Date.now(),
             };
             socket.send(JSON.stringify(logPayload));
@@ -250,14 +266,14 @@ export const useTelemetrySender = (
         socket.onclose = () => {
           console.log('WebSocket closed');
           const logPayload = {
-            schemaVersion: 2 as const,
             type: 'log' as const,
             log: {
               type: 'app' as const,
               level: 'info' as const,
-              message: 'Disconnected from the telemetry server as a client',
+              message: 'Disconnected from the telemetry server as a app.',
             },
             device: Device.modelName ?? 'unknown',
+            lineId: line.id,
             timestamp: Date.now(),
           };
           // キューへの追加もrefを使って実行
@@ -285,15 +301,25 @@ export const useTelemetrySender = (
       socketRef.current?.close();
       clearTimeout(reconnectTimeout);
     };
-  }, [wsUrl, sendTelemetryAutomatically]);
+  }, [
+    wsUrl,
+    sendTelemetryAutomatically,
+    protocols,
+    isTelemetryEnabledByUser,
+    line?.id,
+  ]);
 
   useEffect(() => {
-    if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
+    if (
+      !isTelemetryEnabledByBuild ||
+      !isTelemetryEnabledByUser ||
+      !sendTelemetryAutomatically
+    ) {
       return;
     }
 
     sendTelemetry();
-  }, [sendTelemetry, sendTelemetryAutomatically]);
+  }, [sendTelemetry, sendTelemetryAutomatically, isTelemetryEnabledByUser]);
 
   return { sendLog };
 };

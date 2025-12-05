@@ -2,8 +2,8 @@ import * as Notifications from 'expo-notifications';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
-import type { Station } from '~/gen/proto/stationapi_pb';
 import {
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,
@@ -36,10 +36,17 @@ Notifications.setNotificationHandler({
 export const useRefreshStation = (): void => {
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
-  const speed = useLocationStore((state) => state?.coords.speed) ?? -1;
-  const accuracy = useLocationStore((state) => state?.coords.accuracy);
+  const latitude = useLocationStore(
+    (state) => state?.location?.coords.latitude
+  );
+  const longitude = useLocationStore(
+    (state) => state?.location?.coords.longitude
+  );
+  const speed =
+    useLocationStore((state) => state?.location?.coords.speed) ?? -1;
+  const accuracy = useLocationStore(
+    (state) => state?.location?.coords.accuracy
+  );
 
   const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);
@@ -56,7 +63,16 @@ export const useRefreshStation = (): void => {
     const inGracePeriod =
       Date.now() - lastArrivedTimeRef.current < ARRIVED_GRACE_PERIOD_MS;
 
-    if (!latitude || !longitude || !nearestStation || inGracePeriod) {
+    if (
+      latitude == null ||
+      longitude == null ||
+      !nearestStation ||
+      inGracePeriod
+    ) {
+      return true;
+    }
+
+    if (nearestStation.latitude == null || nearestStation.longitude == null) {
       return true;
     }
 
@@ -64,8 +80,8 @@ export const useRefreshStation = (): void => {
       return isPointWithinRadius(
         { latitude, longitude },
         {
-          latitude: nearestStation.latitude,
-          longitude: nearestStation.longitude,
+          latitude: nearestStation.latitude as number,
+          longitude: nearestStation.longitude as number,
         },
         arrivedThreshold
       );
@@ -81,16 +97,16 @@ export const useRefreshStation = (): void => {
         ? isPointWithinRadius(
             { latitude, longitude },
             {
-              latitude: nearestStation.latitude,
-              longitude: nearestStation.longitude,
+              latitude: nearestStation.latitude as number,
+              longitude: nearestStation.longitude as number,
             },
             arrivedThreshold
           )
         : isPointWithinRadius(
             { latitude, longitude },
             {
-              latitude: nearestStation.latitude,
-              longitude: nearestStation.longitude,
+              latitude: nearestStation.latitude as number,
+              longitude: nearestStation.longitude as number,
             },
             arrivedThreshold
           ) &&
@@ -104,15 +120,21 @@ export const useRefreshStation = (): void => {
   }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
 
   const isApproaching = useMemo((): boolean => {
-    if (!latitude || !longitude || !nextStation) {
+    if (
+      latitude == null ||
+      longitude == null ||
+      nextStation == null ||
+      nextStation.latitude == null ||
+      nextStation.longitude == null
+    ) {
       return false;
     }
 
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation.latitude,
-        longitude: nextStation.longitude,
+        latitude: nextStation.latitude as number,
+        longitude: nextStation.longitude as number,
       },
       approachingThreshold
     );
@@ -121,7 +143,8 @@ export const useRefreshStation = (): void => {
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
       const stationNumberIndex = getStationNumberIndex(s);
-      const stationNumber = s.stationNumbers[stationNumberIndex]?.stationNumber;
+      const stationNumber =
+        s.stationNumbers?.[stationNumberIndex]?.stationNumber;
       const stationNumberMaybeEmpty = `${
         stationNumber ? `(${stationNumber})` : ''
       }`;
@@ -152,14 +175,19 @@ export const useRefreshStation = (): void => {
     if (isNearestStationNotifyTarget) {
       if (
         isApproaching &&
+        nearestStation.id !== undefined &&
         nearestStation.id !== approachingNotifiedIdRef.current
       ) {
         sendApproachingNotification(nearestStation, 'APPROACHING');
-        approachingNotifiedIdRef.current = nearestStation.id;
+        approachingNotifiedIdRef.current = nearestStation.id ?? null;
       }
-      if (isArrived && nearestStation.id !== arrivedNotifiedIdRef.current) {
+      if (
+        isArrived &&
+        nearestStation.id !== undefined &&
+        nearestStation.id !== arrivedNotifiedIdRef.current
+      ) {
         sendApproachingNotification(nearestStation, 'ARRIVED');
-        arrivedNotifiedIdRef.current = nearestStation.id;
+        arrivedNotifiedIdRef.current = nearestStation.id ?? null;
       }
     }
   }, [

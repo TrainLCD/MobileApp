@@ -1,12 +1,9 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StopCondition } from '~/gen/proto/stationapi_pb';
 import { useCurrentStation, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
-import { isJapanese, translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import LineBoardEast from './LineBoardEast';
@@ -17,7 +14,6 @@ import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
 import LineBoardWest from './LineBoardWest';
 import LineBoardYamanotePad from './LineBoardYamanotePad';
-import Typography from './Typography';
 
 export interface Props {
   hasTerminus?: boolean;
@@ -37,7 +33,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useThemeStore((state) => state);
   const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
-  const isLEDTheme = theme === APP_THEME.LED;
 
   const slicedLeftStations = useMemo(
     () => leftStations.slice(0, 8),
@@ -54,16 +49,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const slicedLeftStationsForYamanote = useMemo(
     () => slicedLeftStations.slice(currentStationIndex, 8),
     [currentStationIndex, slicedLeftStations]
-  );
-
-  const passStations = useMemo(
-    () =>
-      slicedLeftStations.filter(
-        (s) =>
-          s.stopCondition === StopCondition.Partial ||
-          s.stopCondition === StopCondition.PartialStop
-      ),
-    [slicedLeftStations]
   );
 
   const lineColors = useMemo(
@@ -118,9 +103,6 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
       case APP_THEME.LED:
         return <LineBoardLED />;
       case APP_THEME.JO:
-        return (
-          <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
-        );
       case APP_THEME.JL:
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
@@ -144,28 +126,9 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     theme,
   ]);
 
-  const { left: safeAreaLeft } = useSafeAreaInsets();
-
   return (
     <View style={styles.flexOne}>
       <Inner />
-      {passStations.length && !isLEDTheme ? (
-        <Typography
-          style={[
-            styles.bottomNotice,
-            {
-              color: '#3a3a3a',
-              left: safeAreaLeft || 16,
-            },
-          ]}
-        >
-          {translate('partiallyPassBottomNotice', {
-            stations: isJapanese
-              ? passStations.map((s) => s.name).join('、')
-              : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
-          })}
-        </Typography>
-      ) : null}
     </View>
   );
 };

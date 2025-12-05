@@ -1,35 +1,30 @@
-import { TransportProvider } from '@connectrpc/connect-query';
+import { ApolloProvider } from '@apollo/client/react';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
+import { PortalProvider } from '@gorhom/portal';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  StatusBar,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import TuningSettings from './components/TuningSettings';
-import { queryClient, transport } from './lib/grpc';
+import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { setI18nConfig } from './translation';
 
 SplashScreen.preventAutoHideAsync();
+setI18nConfig();
 
 const Stack = createNativeStackNavigator();
 
@@ -45,21 +40,6 @@ const options: NativeStackNavigationOptions = {
 };
 
 const App: React.FC = () => {
-  const [readyForLaunch, setReadyForLaunch] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setI18nConfig();
-
-      const locationServicesEnabled = await Location.hasServicesEnabledAsync();
-      if (!locationServicesEnabled) {
-        setReadyForLaunch(true);
-        return;
-      }
-      setReadyForLaunch(true);
-    })();
-  }, []);
-
   useEffect(() => {
     type TextProps = {
       defaultProps: {
@@ -79,14 +59,13 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    if (readyForLaunch && (fontsLoaded || fontsLoadError)) {
+    if (fontsLoaded || fontsLoadError) {
+      if (fontsLoadError) {
+        Alert.alert('Font Load Error', 'Failed to load fonts.');
+      }
       SplashScreen.hideAsync();
     }
-  }, [fontsLoadError, fontsLoaded, readyForLaunch]);
-
-  if (!readyForLaunch) {
-    return <ActivityIndicator size="large" style={StyleSheet.absoluteFill} />;
-  }
+  }, [fontsLoadError, fontsLoaded]);
 
   return (
     <>
@@ -98,12 +77,12 @@ const App: React.FC = () => {
 
       <CustomErrorBoundary>
         <GestureHandlerRootView>
-          <TransportProvider transport={transport}>
-            <QueryClientProvider client={queryClient}>
-              <ActionSheetProvider>
-                <Provider>
-                  <NavigationContainer>
-                    <DeepLinkProvider>
+          <ApolloProvider client={gqlClient}>
+            <ActionSheetProvider>
+              <Provider>
+                <NavigationContainer>
+                  <DeepLinkProvider>
+                    <PortalProvider>
                       <Stack.Navigator screenOptions={screenOptions}>
                         {!permStatus?.granted ? (
                           <Stack.Screen
@@ -125,12 +104,12 @@ const App: React.FC = () => {
                           component={TuningSettings}
                         />
                       </Stack.Navigator>
-                    </DeepLinkProvider>
-                  </NavigationContainer>
-                </Provider>
-              </ActionSheetProvider>
-            </QueryClientProvider>
-          </TransportProvider>
+                    </PortalProvider>
+                  </DeepLinkProvider>
+                </NavigationContainer>
+              </Provider>
+            </ActionSheetProvider>
+          </ApolloProvider>
         </GestureHandlerRootView>
       </CustomErrorBoundary>
     </>

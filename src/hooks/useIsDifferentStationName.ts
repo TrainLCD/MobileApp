@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import { isEnAtom } from '../store/selectors/isEn';
 
 export const useIsDifferentStationName = () => {

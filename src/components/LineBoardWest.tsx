@@ -8,8 +8,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import type { Line, Station, StationNumber } from '~/@types/graphql';
 import { FONTS } from '~/constants';
-import type { Station, StationNumber } from '~/gen/proto/stationapi_pb';
 import {
   useCurrentLine,
   useCurrentStation,
@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     bottom: isTablet ? 110 : undefined,
     paddingBottom: 0,
-    width: `${100 / 9}%`,
   },
   stationName: {
     width: isTablet ? 48 : 32,
@@ -219,7 +218,7 @@ const StationName: React.FC<StationNameProps> = ({
   }
   return (
     <View>
-      {station.name.split('').map((c, j) => (
+      {station.name?.split('').map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
@@ -236,25 +235,59 @@ interface StationNameCellProps {
   stations: Station[];
   station: Station;
   index: number;
+  line: Line | null;
 }
 
-const StationNameCell: React.FC<StationNameCellProps> = ({
-  stations,
-  arrived,
-  station: stationInLoop,
-  index,
-}: StationNameCellProps) => {
+// Extract station numbering logic into a separate hook
+const useStationNumberingData = (
+  stationInLoop: Station,
+  passed: boolean,
+  line: Line | null
+) => {
+  const getStationNumberIndex = useStationNumberIndexFunc();
+  const stationNumberIndex = useMemo(
+    () => getStationNumberIndex(stationInLoop, line),
+    [getStationNumberIndex, line, stationInLoop]
+  );
+  const numberingObj = useMemo<StationNumber | undefined>(
+    () => stationInLoop.stationNumbers?.[stationNumberIndex],
+    [stationInLoop.stationNumbers, stationNumberIndex]
+  );
+
+  const stationNumberString = useMemo(
+    () => numberingObj?.stationNumber?.split('-').join('') ?? '',
+    [numberingObj?.stationNumber]
+  );
+  const stationNumberBGColor = useMemo(
+    () => (passed ? '#aaa' : numberingObj?.lineSymbolColor) ?? '#000',
+    [passed, numberingObj?.lineSymbolColor]
+  );
+  const stationNumberTextColor = useMemo(() => {
+    if (passed) {
+      return '#fff';
+    }
+    if (numberingObj?.lineSymbolShape?.includes('DARK_TEXT')) {
+      return '#231f20';
+    }
+    return '#fff';
+  }, [passed, numberingObj?.lineSymbolShape]);
+
+  return {
+    numberingObj,
+    stationNumberString,
+    stationNumberBGColor,
+    stationNumberTextColor,
+  };
+};
+
+// Extract station progress calculation into a separate hook
+const useStationProgress = (
+  arrived: boolean,
+  index: number,
+  stationInLoop: Station
+) => {
   const { leftStations } = useAtomValue(navigationState);
-  const { stations: allStations } = useAtomValue(stationState);
-  const isEn = useAtomValue(isEnAtom);
-
   const station = useCurrentStation();
-  const transferLines = useTransferLinesFromStation(stationInLoop, {
-    omitJR: true,
-    omitRepeatingLine: true,
-  });
-
-  const nextStation = useNextStation(true, stationInLoop);
   const prevStation = usePreviousStation(false);
 
   const currentStationIndex = useMemo(
@@ -275,37 +308,149 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     [arrived, index, stationInLoop, currentStationIndex]
   );
 
-  const getStationNumberIndex = useStationNumberIndexFunc();
-  const stationNumberIndex = useMemo(
-    () => getStationNumberIndex(stationInLoop),
-    [getStationNumberIndex, stationInLoop]
+  return { currentStationIndex, passed };
+};
+
+// Helper to determine if chevron should be shown
+const useShowChevron = (
+  arrived: boolean,
+  currentStationIndex: number,
+  index: number
+): boolean => {
+  return useMemo(
+    () =>
+      !arrived &&
+      (currentStationIndex === index || (currentStationIndex === -1 && !index)),
+    [arrived, currentStationIndex, index]
   );
-  const numberingObj = useMemo<StationNumber | undefined>(
-    () => stationInLoop.stationNumbers?.[stationNumberIndex],
-    [stationInLoop.stationNumbers, stationNumberIndex]
+};
+
+// Helper to determine pass mark background color
+const getPassMarkBackgroundColor = (
+  passed: boolean,
+  index: number,
+  currentStationIndex: number
+): string => {
+  const isBeforeCurrentStation = index < currentStationIndex;
+  const isAtCurrentStation = index === currentStationIndex;
+  const shouldBeGray = passed && !isAtCurrentStation;
+
+  if (shouldBeGray || isBeforeCurrentStation) {
+    return '#aaa';
+  }
+
+  return '#fff';
+};
+
+// Helper to determine if pass mark should be shown
+const shouldShowPassMark = (
+  hasPassStationInRegion: boolean,
+  index: number,
+  stationsLength: number
+): boolean => {
+  return hasPassStationInRegion && index !== stationsLength - 1;
+};
+
+// Extract station dot indicators into a separate component
+const StationDotIndicators: React.FC<{
+  passed: boolean;
+  arrived: boolean;
+  currentStationIndex: number;
+  index: number;
+  lineMarks: unknown[];
+  hasPassStationInRegion: boolean;
+  stations: Station[];
+  transferLines: Line[];
+  station: Station;
+}> = ({
+  passed,
+  arrived,
+  currentStationIndex,
+  index,
+  lineMarks,
+  hasPassStationInRegion,
+  stations,
+  transferLines,
+  station,
+}) => {
+  const showChevron = useShowChevron(arrived, currentStationIndex, index);
+  const showTopBar = isTablet && lineMarks.length > 0 && !passed;
+  const showArrivedDot = arrived && currentStationIndex === index;
+  const showPassMark = shouldShowPassMark(
+    hasPassStationInRegion,
+    index,
+    stations.length
+  );
+  const passMarkBgColor = getPassMarkBackgroundColor(
+    passed,
+    index,
+    currentStationIndex
   );
 
-  const stationNumberString = useMemo(
-    () => numberingObj?.stationNumber?.split('-').join('') ?? '',
-    [numberingObj?.stationNumber]
-  );
-  const stationNumberBGColor = useMemo(
-    () => (passed ? '#aaa' : numberingObj?.lineSymbolColor) ?? '#000',
-    [passed, numberingObj?.lineSymbolColor]
-  );
-  const stationNumberTextColor = useMemo(() => {
-    if (passed) {
-      return '#fff';
-    }
-    if (numberingObj?.lineSymbolShape.includes('DARK_TEXT')) {
-      return '#231f20';
-    }
+  return (
+    <View
+      style={[styles.lineDot, { backgroundColor: passed ? '#aaa' : '#fff' }]}
+    >
+      {showTopBar ? <View style={styles.topBar} /> : null}
 
-    return '#fff';
-  }, [passed, numberingObj?.lineSymbolShape]);
+      {showArrivedDot ? <View style={styles.arrivedLineDot} /> : null}
+
+      <View
+        style={[
+          styles.chevron,
+          lineMarks.length ? undefined : { marginTop: isTablet ? 8 : 2 },
+        ]}
+      >
+        {showChevron ? <ChevronJRWest /> : null}
+      </View>
+
+      {showPassMark ? (
+        <View style={[styles.passMark, { backgroundColor: passMarkBgColor }]} />
+      ) : null}
+
+      {passed ? null : (
+        <PadLineMarks
+          shouldGrayscale={passed}
+          transferLines={transferLines}
+          station={station}
+          theme={APP_THEME.JR_WEST}
+        />
+      )}
+    </View>
+  );
+};
+
+const StationNameCell: React.FC<StationNameCellProps> = ({
+  stations,
+  arrived,
+  station: stationInLoop,
+  index,
+  line,
+}: StationNameCellProps) => {
+  const { stations: allStations } = useAtomValue(stationState);
+  const isEn = useAtomValue(isEnAtom);
+  const { width: windowWidth } = useWindowDimensions();
+
+  const transferLines = useTransferLinesFromStation(stationInLoop, {
+    omitJR: true,
+    omitRepeatingLine: true,
+  });
+
+  const nextStation = useNextStation(true, stationInLoop);
+  const { currentStationIndex, passed } = useStationProgress(
+    arrived,
+    index,
+    stationInLoop
+  );
+
+  const {
+    numberingObj,
+    stationNumberString,
+    stationNumberBGColor,
+    stationNumberTextColor,
+  } = useStationNumberingData(stationInLoop, passed, line);
 
   const getLineMarks = useGetLineMark();
-
   const lineMarks = useMemo(
     () => transferLines.map((line) => getLineMarks({ line })),
     [getLineMarks, transferLines]
@@ -319,17 +464,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const includesLongStationName = useMemo(
     () =>
-      !!stations.filter((s) => s.name.includes('ー') || s.name.length > 6)
-        .length,
+      !!stations.filter(
+        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
+      ).length,
     [stations]
   );
+
+  const paddingBottom = useMemo(() => {
+    if (isTablet) {
+      return 0;
+    }
+    return numberingObj ? 110 : 88;
+  }, [numberingObj]);
 
   return (
     <View
       style={[
         styles.stationNameContainer,
         {
-          paddingBottom: isTablet ? 0 : numberingObj ? 110 : 88,
+          paddingBottom,
+          width: windowWidth / 9,
         },
       ]}
     >
@@ -368,48 +522,17 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         </View>
       ) : null}
 
-      <View
-        style={[styles.lineDot, { backgroundColor: passed ? '#aaa' : '#fff' }]}
-      >
-        {isTablet && lineMarks.length && !passed ? (
-          <View style={styles.topBar} />
-        ) : null}
-
-        {arrived && currentStationIndex === index ? (
-          <View style={styles.arrivedLineDot} />
-        ) : null}
-        <View
-          style={[
-            styles.chevron,
-            !lineMarks.length ? { marginTop: isTablet ? 8 : 2 } : undefined,
-          ]}
-        >
-          {!arrived &&
-          (currentStationIndex === index ||
-            (currentStationIndex === -1 && !index)) ? (
-            <ChevronJRWest />
-          ) : null}
-        </View>
-        {hasPassStationInRegion && index !== stations.length - 1 ? (
-          <View
-            style={[
-              styles.passMark,
-              {
-                backgroundColor:
-                  passed && index !== currentStationIndex ? '#aaa' : '#fff',
-              },
-            ]}
-          />
-        ) : null}
-        {!passed ? (
-          <PadLineMarks
-            shouldGrayscale={passed}
-            transferLines={transferLines}
-            station={stationInLoop}
-            theme={APP_THEME.JR_WEST}
-          />
-        ) : null}
-      </View>
+      <StationDotIndicators
+        passed={passed}
+        arrived={arrived}
+        currentStationIndex={currentStationIndex}
+        index={index}
+        lineMarks={lineMarks}
+        hasPassStationInRegion={hasPassStationInRegion}
+        stations={stations}
+        transferLines={transferLines}
+        station={stationInLoop}
+      />
     </View>
   );
 };
@@ -436,18 +559,21 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         stations={stations}
         arrived={!isPassing && !approaching && arrived}
         index={i}
+        line={line ?? null}
       />
     ),
-    [approaching, arrived, isPassing, stations]
+    [approaching, arrived, isPassing, line, stations]
   );
 
-  const emptyArray = useMemo(
-    () =>
-      Array.from({
-        length: 8 - lineColors.length,
-      }).fill(lineColors[lineColors.length - 1]) as string[],
-    [lineColors]
-  );
+  const emptyArray = useMemo(() => {
+    const gap = Math.max(0, 8 - lineColors.length);
+    const last = lineColors.at(-1);
+    return Array.from({ length: gap }, () => last) as (
+      | string
+      | null
+      | undefined
+    )[];
+  }, [lineColors]);
 
   const stationsWithEmpty = useMemo(
     () => [...lineColors, ...emptyArray],
@@ -479,7 +605,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
           styles.barTerminal,
           {
             borderBottomColor: line.color
-              ? lineColors[lineColors.length - 1] || line.color
+              ? lineColors.at(-1) || line.color
               : '#000',
             left: isTablet ? dim.width - 72 + 6 : dim.width - 48 + 6,
           },

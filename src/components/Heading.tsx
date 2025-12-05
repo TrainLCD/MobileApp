@@ -6,6 +6,7 @@ import Typography from './Typography';
 interface Props {
   children: React.ReactNode;
   style?: StyleProp<TextStyle>;
+  singleLine?: boolean;
 }
 
 const styles = StyleSheet.create({
@@ -15,6 +16,18 @@ const styles = StyleSheet.create({
   },
 });
 
-export const Heading: React.FC<Props> = ({ children, style }: Props) => {
-  return <Typography style={[styles.text, style]}>{children}</Typography>;
+export const Heading: React.FC<Props> = ({
+  children,
+  style,
+  singleLine,
+}: Props) => {
+  return (
+    <Typography
+      numberOfLines={singleLine ? 1 : undefined}
+      adjustsFontSizeToFit
+      style={[styles.text, style]}
+    >
+      {children}
+    </Typography>
+  );
 };

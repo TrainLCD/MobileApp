@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import type { PreferredLanguage } from '../models/PreferredLanguage';
 import navigationState from '../store/atoms/navigation';

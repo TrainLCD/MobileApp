@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import {
   useCurrentStation,
@@ -86,50 +86,44 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const stationNumbers = useMemo(
     () =>
       lines
-        ?.map((l) => new Line(l))
-        ?.map<StationNumber>((l) => {
-          const lineSymbol =
-            l.station?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
-            )?.lineSymbol ?? '';
-          const lineSymbolColor =
-            l.station?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
-            )?.lineSymbolColor ?? '';
-          const stationNumber =
-            l.station?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
-            )?.stationNumber ?? '';
-          const lineSymbolShape =
-            l.station?.stationNumbers?.find((sn) =>
-              l.lineSymbols.some((sym) => sym.symbol === sn.lineSymbol)
-            )?.lineSymbolShape ?? 'NOOP';
+        ?.map((l) => l)
+        ?.map((l) => {
+          const stationNumberData = l.station?.stationNumbers?.find((sn) =>
+            l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
+          );
+          const lineSymbol = stationNumberData?.lineSymbol ?? '';
+          const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
+          const stationNumber = stationNumberData?.stationNumber ?? '';
+          const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
 
           if (!lineSymbol.length || !stationNumber.length) {
             const stationNumberWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
+              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
                 ?.stationNumber ?? '';
+            const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
             const lineSymbolColorWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
+              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
                 ?.lineSymbolColor ?? '#000000';
             const lineSymbolShapeWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol.length)
+              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
                 ?.lineSymbolShape ?? 'NOOP';
 
-            return new StationNumber({
-              lineSymbol: stationNumberWhenEmptySymbol,
+            return {
+              __typename: 'StationNumber' as const,
+              lineSymbol: lineSymbolWhenEmptySymbol,
               lineSymbolColor: lineSymbolColorWhenEmptySymbol,
               stationNumber: stationNumberWhenEmptySymbol,
               lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
-            });
+            };
           }
 
-          return new StationNumber({
+          return {
+            __typename: 'StationNumber' as const,
             lineSymbol,
             lineSymbolColor,
             stationNumber,
             lineSymbolShape,
-          });
+          };
         }),
     [lines]
   );
@@ -157,9 +151,17 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             ) : (
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() =>
-                  onPress(new Station({ ...line.station, line, lines }))
-                }
+                onPress={() => {
+                  if (!line.station) {
+                    return;
+                  }
+                  onPress({
+                    ...line.station,
+                    __typename: 'Station',
+                    line,
+                    lines,
+                  } as Station);
+                }}
               >
                 <TransferLineDot line={line} />
               </TouchableOpacity>
@@ -167,12 +169,20 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             <View style={styles.lineNameContainer}>
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() =>
-                  onPress(new Station({ ...line.station, line, lines }))
-                }
+                onPress={() => {
+                  if (!line.station) {
+                    return;
+                  }
+                  onPress({
+                    ...line.station,
+                    __typename: 'Station',
+                    line,
+                    lines,
+                  } as Station);
+                }}
               >
                 <Typography style={styles.lineName}>
-                  {line.nameShort.replace(parenthesisRegexp, '')}
+                  {line.nameShort?.replace(parenthesisRegexp, '')}
                 </Typography>
                 <Typography style={styles.lineNameEn}>
                   {line.nameRoman?.replace(parenthesisRegexp, '')}
@@ -192,15 +202,25 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             <View style={styles.transferLineInnerRight}>
               {stationNumbers[index] ? (
                 <TouchableOpacity
-                  onPress={() =>
-                    onPress(new Station({ ...line.station, line, lines }))
-                  }
+                  onPress={() => {
+                    if (!line.station) {
+                      return;
+                    }
+                    onPress({
+                      ...line.station,
+                      __typename: 'Station',
+                      line,
+                      lines,
+                    } as Station);
+                  }}
                   activeOpacity={1}
                   style={styles.numberingIconContainer}
                 >
                   <NumberingIcon
-                    shape={stationNumbers[index].lineSymbolShape}
-                    lineColor={stationNumbers[index]?.lineSymbolColor}
+                    shape={stationNumbers[index].lineSymbolShape ?? 'NOOP'}
+                    lineColor={
+                      stationNumbers[index]?.lineSymbolColor ?? '#000000'
+                    }
                     stationNumber={stationNumbers[index]?.stationNumber ?? ''}
                     allowScaling={false}
                   />
@@ -211,12 +231,20 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
               {line.station && (
                 <TouchableOpacity
                   activeOpacity={1}
-                  onPress={() =>
-                    onPress(new Station({ ...line.station, line, lines }))
-                  }
+                  onPress={() => {
+                    if (!line.station) {
+                      return;
+                    }
+                    onPress({
+                      ...line.station,
+                      __typename: 'Station',
+                      line,
+                      lines,
+                    } as Station);
+                  }}
                 >
                   <Typography style={styles.lineName}>
-                    {`${line.station?.name.replace(parenthesisRegexp, '')}駅`}
+                    {`${line.station?.name?.replace(parenthesisRegexp, '')}駅`}
                   </Typography>
                   <Typography style={styles.lineNameEn}>
                     {`${(line.station?.nameRoman ?? '').replace(
@@ -257,7 +285,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       <FlatList
         contentContainerStyle={styles.transferView}
         data={lines}
-        keyExtractor={(l) => l.id.toString()}
+        keyExtractor={(l) => (l.id ?? 0).toString()}
         renderItem={renderTransferLine}
       />
     </TouchableOpacity>

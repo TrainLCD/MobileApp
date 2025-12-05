@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -19,6 +18,7 @@ import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
+import { CustomModal } from './CustomModal';
 import { Heading } from './Heading';
 import Typography from './Typography';
 
@@ -36,7 +36,6 @@ const styles = StyleSheet.create({
   modalContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
     width: '100%',
     height: '100%',
   },
@@ -105,102 +104,98 @@ const NewReportModal: React.FC<Props> = ({
   const { widthScale } = useScale();
 
   return (
-    <Modal
-      animationType="slide"
-      transparent
+    <CustomModal
       visible={visible}
-      onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
-    >
-      <Pressable onPress={onClose} style={styles.modalContainer}>
-        <Pressable
-          onPress={Keyboard.dismiss}
-          style={[
-            styles.modalView,
-            {
-              backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-              paddingLeft: hasNotch() ? safeAreaLeft : 32,
-              paddingRight: hasNotch() ? safeAreaRight : 32,
+      onClose={onClose}
+      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      containerStyle={styles.modalContainer}
+      contentContainerStyle={[
+        styles.modalView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          paddingLeft: hasNotch() ? safeAreaLeft : 32,
+          paddingRight: hasNotch() ? safeAreaRight : 32,
+        },
+        isTablet
+          ? {
+              width: '80%',
+              shadowOpacity: 0.25,
+              shadowColor: '#333',
+              borderRadius: 16,
+            }
+          : {
+              borderRadius: 8,
             },
-            isTablet
-              ? {
-                  width: '80%',
-                  shadowOpacity: 0.25,
-                  shadowColor: '#333',
-                  borderRadius: 16,
-                }
-              : {
-                  borderRadius: 8,
-                },
-          ]}
+      ]}
+      dismissOnBackdropPress={!sending}
+    >
+      <Pressable onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
-            <View style={styles.header}>
-              <Heading>{translate('report')}</Heading>
+          <View style={styles.header}>
+            <Heading>{translate('report')}</Heading>
 
-              {needsLeftCount < 0 ? (
-                <Typography style={styles.charCount}>
-                  あと{Math.abs(needsLeftCount)}文字必要です
-                </Typography>
-              ) : (
-                <Typography style={styles.charCount}>送信可能です</Typography>
-              )}
-            </View>
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                あと{Math.abs(needsLeftCount)}文字必要です
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>送信可能です</Typography>
+            )}
+          </View>
 
-            <TextInput
-              autoFocus
-              value={description}
-              onChangeText={onDescriptionChange}
-              multiline
-              style={[
-                styles.textInput,
-                {
-                  color: isLEDTheme ? '#fff' : '#000',
-                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-                },
-              ]}
-              placeholder={translate('reportPlaceholder', {
-                lowerLimit: descriptionLowerLimit,
-              })}
-            />
-          </KeyboardAvoidingView>
-          <Typography
+          <TextInput
+            autoFocus
+            value={description}
+            onChangeText={onDescriptionChange}
+            multiline
             style={[
-              styles.caution,
+              styles.textInput,
               {
-                color: isLEDTheme ? '#fff' : '#555',
-                lineHeight: Platform.select({ ios: RFValue(18) }),
+                color: isLEDTheme ? '#fff' : '#000',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
               },
             ]}
+            placeholder={translate('reportPlaceholder', {
+              lowerLimit: descriptionLowerLimit,
+            })}
+          />
+        </KeyboardAvoidingView>
+        <Typography
+          style={[
+            styles.caution,
+            {
+              color: isLEDTheme ? '#fff' : '#555',
+              lineHeight: Platform.select({ ios: RFValue(18) }),
+            },
+          ]}
+        >
+          {translate('reportCaution')}
+        </Typography>
+        <View style={styles.buttonContainer}>
+          <Button
+            style={[
+              styles.button,
+              {
+                width: widthScale(64),
+              },
+            ]}
+            disabled={
+              description.trim().length < descriptionLowerLimit || sending
+            }
+            onPress={onSubmit}
           >
-            {translate('reportCaution')}
-          </Typography>
-          <View style={styles.buttonContainer}>
-            <Button
-              style={[
-                styles.button,
-                {
-                  width: widthScale(64),
-                },
-              ]}
-              disabled={
-                description.trim().length < descriptionLowerLimit || sending
-              }
-              onPress={onSubmit}
-            >
-              {sending
-                ? translate('reportSendInProgress')
-                : translate('reportSend')}
-            </Button>
-            <Button disabled={sending} style={styles.button} onPress={onClose}>
-              {translate('cancel')}
-            </Button>
-          </View>
-        </Pressable>
+            {sending
+              ? translate('reportSendInProgress')
+              : translate('reportSend')}
+          </Button>
+          <Button disabled={sending} style={styles.button} onPress={onClose}>
+            {translate('cancel')}
+          </Button>
+        </View>
       </Pressable>
-    </Modal>
+    </CustomModal>
   );
 };
 

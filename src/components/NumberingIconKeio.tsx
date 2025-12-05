@@ -6,9 +6,15 @@ import Typography from './Typography';
 type Props = {
   stationNumber: string;
   lineColor: string;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: (isTablet ? 64 * 1.5 : 64) / 2,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 64 * 1.5 : 64,
     height: isTablet ? 64 * 1.5 : 64,
@@ -46,18 +52,21 @@ const styles = StyleSheet.create({
 const NumberingIconKeio: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
-      <View
-        style={[styles.lineSymbolContainer, { backgroundColor: lineColor }]}
-      >
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { borderColor: lineColor }]}>
+        <View
+          style={[styles.lineSymbolContainer, { backgroundColor: lineColor }]}
+        >
+          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+        </View>
+        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
       </View>
-      <Typography style={styles.stationNumber}>{stationNumber}</Typography>
     </View>
   );
 };
