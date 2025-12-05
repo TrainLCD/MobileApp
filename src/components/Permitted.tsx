@@ -126,7 +126,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Effect.tryPromise({
           try: async () => {
             const file = new File(capturedURI);
-            return await file.base64();
+            return file.base64();
           },
           catch: captureError,
         })
@@ -162,7 +162,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Effect.tryPromise({
           try: async () => {
             const file = new File(capturedURI);
-            return await file.base64();
+            return file.base64();
           },
           catch: captureError,
         })
@@ -207,11 +207,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const captureError = (err: unknown) =>
+      const captureError = (err: unknown) => {
         Effect.sync(() => {
           console.error(err);
           Alert.alert(translate('errorTitle'), String(err));
         });
+      };
 
       pipe(
         Effect.tryPromise({
@@ -297,7 +298,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const getItemFromAsyncStorage = (key: string) =>
       Effect.tryPromise({
-        try: () => AsyncStorage.getItem(key) as Promise<string | null>,
+        try: () => AsyncStorage.getItem(key),
         catch: () => null,
       });
 
