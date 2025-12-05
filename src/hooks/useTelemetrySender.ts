@@ -126,6 +126,10 @@ export const useTelemetrySender = (
 
   const sendLog = useCallback(
     (message: string, level: 'debug' | 'info' | 'warn' | 'error' = 'debug') => {
+      if (!line?.id) {
+        return;
+      }
+
       const now = Date.now();
 
       const payload = TelemetryPayload.safeParse({
@@ -136,6 +140,7 @@ export const useTelemetrySender = (
           message,
         },
         device: Device.modelName ?? 'unknown',
+        lineId: line.id,
         timestamp: now,
       });
 
@@ -154,7 +159,7 @@ export const useTelemetrySender = (
         enqueueMessage(messageQueueRef.current, stringifiedMessage);
       }
     },
-    [enqueueMessage]
+    [enqueueMessage, line?.id]
   );
 
   const sendTelemetry = useCallback(() => {
@@ -210,7 +215,7 @@ export const useTelemetrySender = (
     let reconnectTimeout: number;
     let shouldReconnect = true;
 
-    if (!isTelemetryEnabledByBuild || !isTelemetryEnabledByUser) {
+    if (!isTelemetryEnabledByBuild || !isTelemetryEnabledByUser || !line?.id) {
       return;
     }
 
@@ -236,6 +241,7 @@ export const useTelemetrySender = (
                 message: 'Connected to the telemetry server as a app.',
               },
               device: Device.modelName ?? 'unknown',
+              lineId: line.id,
               timestamp: Date.now(),
             };
             socket.send(JSON.stringify(logPayload));
@@ -267,6 +273,7 @@ export const useTelemetrySender = (
               message: 'Disconnected from the telemetry server as a app.',
             },
             device: Device.modelName ?? 'unknown',
+            lineId: line.id,
             timestamp: Date.now(),
           };
           // キューへの追加もrefを使って実行
@@ -294,7 +301,13 @@ export const useTelemetrySender = (
       socketRef.current?.close();
       clearTimeout(reconnectTimeout);
     };
-  }, [wsUrl, sendTelemetryAutomatically, protocols, isTelemetryEnabledByUser]);
+  }, [
+    wsUrl,
+    sendTelemetryAutomatically,
+    protocols,
+    isTelemetryEnabledByUser,
+    line?.id,
+  ]);
 
   useEffect(() => {
     if (
