@@ -11,6 +11,7 @@ import tuningState from '~/store/atoms/tuning';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import { isTelemetryEnabledByBuild } from '~/utils/telemetryConfig';
 import Typography from './Typography';
+import { BLE_ENABLED } from 'react-native-dotenv';
 
 const styles = StyleSheet.create({
   root: {
@@ -96,7 +97,9 @@ const DevOverlay: React.FC = () => {
         Speed: {speedKMH}
         km/h
       </Typography>
-      <Typography style={styles.text}>BLE: ON</Typography>
+      <Typography style={styles.text}>
+        BLE: {BLE_ENABLED ? 'ON' : 'OFF'}
+      </Typography>
       <Typography style={styles.text}>
         Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
       </Typography>

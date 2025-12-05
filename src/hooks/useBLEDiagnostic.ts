@@ -79,9 +79,9 @@ export const useBLEDiagnostic = (): void => {
     const nextStationNumberIndex =
       (nextStation && getStationNumberIndex(nextStation)) ?? -1;
     const stationNumber =
-      station?.stationNumbers[stationNumberIndex]?.stationNumber;
+      station?.stationNumbers?.[stationNumberIndex]?.stationNumber;
     const nextStationNumber =
-      nextStation?.stationNumbers[nextStationNumberIndex]?.stationNumber;
+      nextStation?.stationNumbers?.[nextStationNumberIndex]?.stationNumber;
 
     return [
       `stt:${stateText}`,
@@ -94,11 +94,11 @@ export const useBLEDiagnostic = (): void => {
       `tfr:${
         (!isPassing && arrived
           ? station?.lines
-              .filter((l) => l?.id !== currentLine?.id)
+              ?.filter((l) => l?.id !== currentLine?.id)
               .map((l) => l.nameRoman)
               .join(', ')
           : nextStation?.lines
-              .filter((l) => l?.id !== currentLine?.id)
+              ?.filter((l) => l?.id !== currentLine?.id)
               .map((l) => l.nameRoman)
               .join(', ')) ?? ''
       }`,
