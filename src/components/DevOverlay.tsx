@@ -2,6 +2,7 @@ import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { BLE_ENABLED } from 'react-native-dotenv';
 import {
   useDistanceToNextStation,
   useLocationStore,
@@ -11,7 +12,6 @@ import tuningState from '~/store/atoms/tuning';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import { isTelemetryEnabledByBuild } from '~/utils/telemetryConfig';
 import Typography from './Typography';
-import { BLE_ENABLED } from 'react-native-dotenv';
 
 const styles = StyleSheet.create({
   root: {
