@@ -196,5 +196,7 @@
   "enableNotificationMode": "到着通知を有効にする",
   "betaNotice": "このTrainLCDは現在ベータリリースです。",
   "canaryNotice": "このTrainLCDはカナリアリリースです。",
-  "setBoundForSelectedStation": "この駅に向かう"
+  "setBoundForSelectedStation": "この駅に向かう",
+  "optInTelemetryTitle": "テレメトリを有効にする",
+  "telemetrySettingWillPersist": "テレメトリ有効化は永続的に保持されます。"
 }

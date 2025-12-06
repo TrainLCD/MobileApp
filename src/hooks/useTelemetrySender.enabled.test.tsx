@@ -12,7 +12,9 @@ jest.mock('expo-network', () => ({
   useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
   NetworkStateType: { WIFI: 'WIFI' },
 }));
-jest.mock('~/utils/telemetryConfig', () => ({ isTelemetryEnabled: true }));
+jest.mock('~/utils/telemetryConfig', () => ({
+  isTelemetryEnabledByBuild: true,
+}));
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn(),
 }));

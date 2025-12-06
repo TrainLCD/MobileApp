@@ -141,11 +141,11 @@ export const TrainTypeListModal = ({
 
         const title = `${isJapanese ? item.name : item.nameRoman}`;
         const subtitle = isJapanese
-          ? `${viaLines.map((l) => l.nameShort).join('・')}${
+          ? `${Array.from(new Set(viaLines.map((l) => l.nameShort))).join('・')}${
               viaLines.length ? '直通' : ''
             }`
           : viaLines.length
-            ? `Via ${viaLines.map((l) => l.nameRoman).join(', ')}`
+            ? `Via ${Array.from(new Set(viaLines.map((l) => l.nameRoman))).join(', ')}`
             : '';
 
         return (

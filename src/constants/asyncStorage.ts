@@ -16,6 +16,7 @@ export const ASYNC_STORAGE_KEYS = {
   HOLIDAY_ALERT_DISMISSED: '@TrainLCD:holidayAlertDismissed',
   WEEKDAY_ALERT_DISMISSED: '@TrainLCD:weekdayAlertDismissed',
   PARTIALLY_PASS_ALERT_DISMISSED: '@TrainLCD:partiallyPassAlertDismissed',
+  TELEMETRY_ENABLED: '@TrainLCD:telemetryEnabled',
 } as const;
 
 export type AsyncStorageKeys =

@@ -47,6 +47,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { untouchableModeEnabled } = useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
+  const setTuning = useSetAtom(tuningState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDescription, setReportDescription] = useState('');
@@ -125,7 +126,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Effect.tryPromise({
           try: async () => {
             const file = new File(capturedURI);
-            return await file.base64();
+            return file.base64();
           },
           catch: captureError,
         })
@@ -161,7 +162,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         Effect.tryPromise({
           try: async () => {
             const file = new File(capturedURI);
-            return await file.base64();
+            return file.base64();
           },
           catch: captureError,
         })
@@ -206,11 +207,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const captureError = (err: unknown) =>
+      const captureError = (err: unknown) => {
         Effect.sync(() => {
           console.error(err);
           Alert.alert(translate('errorTitle'), String(err));
         });
+      };
 
       pipe(
         Effect.tryPromise({
@@ -296,7 +298,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const getItemFromAsyncStorage = (key: string) =>
       Effect.tryPromise({
-        try: () => AsyncStorage.getItem(key) as Promise<string | null>,
+        try: () => AsyncStorage.getItem(key),
         catch: () => null,
       });
 
@@ -306,6 +308,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
       getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
       getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED),
+      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
     ]).pipe(
       Effect.map(
         ([
@@ -314,6 +317,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           speechEnabledStr,
           bgTTSEnabledStr,
           legacyAutoModeEnabledStr,
+          telemetryEnabledStr,
         ]) => {
           if (prevThemeKey) {
             useThemeStore.setState(prevThemeKey as AppTheme);
@@ -343,11 +347,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
             }));
           }
+          if (telemetryEnabledStr) {
+            setTuning((prev) => ({
+              ...prev,
+              telemetryEnabled: telemetryEnabledStr === 'true',
+            }));
+          }
         }
       ),
       Effect.runPromise
     );
-  }, [setNavigation, setSpeech]);
+  }, [setNavigation, setSpeech, setTuning]);
 
   useEffect(() => {
     const { remove } = addScreenshotListener(() => {

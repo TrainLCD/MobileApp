@@ -129,7 +129,7 @@ const NumberingIconSquare: React.FC<Props> = ({
   threeLetterCode,
   allowScaling,
   size,
-  transformOrigin = 'center',
+  transformOrigin = Platform.OS === 'android' ? 'center' : 'bottom',
   withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');

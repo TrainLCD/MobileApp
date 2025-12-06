@@ -11,6 +11,7 @@ export type TuningState = {
   bottomTransitionInterval: number;
   devOverlayEnabled: boolean;
   untouchableModeEnabled: boolean;
+  telemetryEnabled: boolean;
 };
 
 const tuningState = atom<TuningState>({
@@ -19,6 +20,7 @@ const tuningState = atom<TuningState>({
   bottomTransitionInterval: DEFAULT_BOTTOM_TRANSITION_INTERVAL,
   devOverlayEnabled: true,
   untouchableModeEnabled: false,
+  telemetryEnabled: false,
 });
 
 export default tuningState;
