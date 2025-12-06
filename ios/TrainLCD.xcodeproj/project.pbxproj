@@ -463,14 +463,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 94E2C8292D64E1A90090392E /* ProdAppClip */;
 		};
-		94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -480,8 +480,30 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8472D64E1AA0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ProdAppClip; sourceTree = "<group>"; };
-		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (94E2C8672D64E1CB0090392E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CanaryAppClip; sourceTree = "<group>"; };
+		94E2C82B2D64E1A90090392E /* ProdAppClip */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				94E2C8472D64E1AA0090392E /* Exceptions for "ProdAppClip" folder in "ProdAppClip" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = ProdAppClip;
+			sourceTree = "<group>";
+		};
+		94E2C84E2D64E1CA0090392E /* CanaryAppClip */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				94E2C8672D64E1CB0090392E /* Exceptions for "CanaryAppClip" folder in "CanaryAppClip" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = CanaryAppClip;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2493,6 +2515,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2319;
 				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2548,6 +2571,7 @@
 					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
 					"\"$(inherited)\"",
 				);
+				MARKETING_VERSION = 10.0.26;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "$(inherited)";
@@ -2555,8 +2579,6 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				CURRENT_PROJECT_VERSION = 2315;
-				MARKETING_VERSION = 10.0.22;
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._ef86e70f27f34fbe058853a6e08d7115/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -2599,6 +2621,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				CURRENT_PROJECT_VERSION = 2319;
 				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2650,14 +2673,13 @@
 					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
 					"\"$(inherited)\"",
 				);
+				MARKETING_VERSION = 10.0.26;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				CURRENT_PROJECT_VERSION = 2315;
-				MARKETING_VERSION = 10.0.22;
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._ef86e70f27f34fbe058853a6e08d7115/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
@@ -3588,6 +3610,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryAppClip/CanaryAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2319;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3610,14 +3633,13 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 10.0.26;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				CURRENT_PROJECT_VERSION = 2315;
-				MARKETING_VERSION = 10.0.22;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -3644,6 +3666,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2319;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3662,13 +3685,12 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 10.0.26;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.dev.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				CURRENT_PROJECT_VERSION = 2315;
-				MARKETING_VERSION = 10.0.22;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;

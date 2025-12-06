@@ -195,5 +195,7 @@
   "enableNotificationMode": "Enable arrival notifications",
   "betaNotice": "This TrainLCD is currently in beta release.",
   "canaryNotice": "This TrainLCD is a canary release.",
-  "setBoundForSelectedStation": "Go to the selected station"
+  "setBoundForSelectedStation": "Go to the selected station",
+  "optInTelemetryTitle": "Enable telemetry",
+  "telemetrySettingWillPersist": "Enabling telemetry will be persisted."
 }

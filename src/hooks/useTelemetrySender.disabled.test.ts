@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react-native';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 
 jest.mock('~/utils/telemetryConfig', () => ({
-  isTelemetryEnabled: false,
+  isTelemetryEnabledByBuild: false,
 }));
 
 jest.mock('expo-device', () => ({
@@ -15,11 +15,20 @@ jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => ({
     arrived: false,
     approaching: true,
+    telemetryEnabled: false,
   })),
 }));
 
 jest.mock('~/hooks/useIsPassing', () => ({
   useIsPassing: jest.fn(() => false),
+}));
+
+jest.mock('~/hooks/useCurrentStation', () => ({
+  useCurrentStation: jest.fn(() => null),
+}));
+
+jest.mock('~/hooks/useCurrentLine', () => ({
+  useCurrentLine: jest.fn(() => ({ id: 1 })),
 }));
 
 jest.mock('~/hooks/useLocationStore', () => ({
@@ -42,9 +51,14 @@ jest.mock('~/hooks/useLocationStore', () => ({
 
 describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
   let mockSend: jest.Mock;
+  let consoleErrorSpy: jest.SpyInstance;
+  let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockSend = jest.fn();
+
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     global.WebSocket = jest.fn().mockImplementation(() => ({
       readyState: 1,
@@ -53,6 +67,11 @@ describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
     })) as any;
 
     (global.WebSocket as any).OPEN = 1;
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
   });
 
   it('does not open websocket or send data', async () => {

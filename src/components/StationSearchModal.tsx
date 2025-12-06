@@ -164,8 +164,8 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
       const subtitle = isJapanese
-        ? `${(lines ?? []).map((l) => l.nameShort).join('・')}`
-        : (lines ?? []).map((l) => l.nameRoman).join(', ');
+        ? Array.from(new Set((lines ?? []).map((l) => l.nameShort))).join('・')
+        : Array.from(new Set((lines ?? []).map((l) => l.nameRoman))).join(', ');
 
       return (
         <CommonCard
