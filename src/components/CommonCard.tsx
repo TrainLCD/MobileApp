@@ -159,7 +159,7 @@ export const CommonCard: React.FC<Props> = ({
   const { bounds } = useBounds(stations);
 
   const [inboundText, outboundText] = useMemo(() => {
-    if (!stations || !stations.length) {
+    if (!stations?.length) {
       // フォールバックは何も表示しない
       return ['', ''];
     }
@@ -191,6 +191,8 @@ export const CommonCard: React.FC<Props> = ({
   );
 
   const targetStationNumber = targetStation?.stationNumbers?.[0]?.stationNumber;
+  const targetStationColor =
+    targetStation?.stationNumbers?.[0]?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
 
   return (
@@ -227,6 +229,7 @@ export const CommonCard: React.FC<Props> = ({
             withOutline
             withDarkTheme={isLEDTheme}
             stationNumber={targetStationNumber ?? undefined}
+            color={targetStationColor ?? line.color ?? undefined}
             threeLetterCode={targetStationThreeLetterCode}
           />
         </View>
