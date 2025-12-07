@@ -6,9 +6,9 @@ import {
   useLocationStore,
   useNextStation,
 } from '~/hooks';
+import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
-import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 
 const styles = StyleSheet.create({
   root: {
