@@ -12,17 +12,16 @@ import {
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 } from '~/constants/telemetry';
-import tuningState from '~/store/atoms/tuning';
 import {
   type GnssState,
   subscribeGnss,
 } from '~/utils/native/android/gnssModule';
-import { isTelemetryEnabledByBuild } from '~/utils/telemetryConfig';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useIsPassing } from './useIsPassing';
 import { useLocationStore } from './useLocationStore';
+import { useTelemetryEnabled } from './useTelemetryEnabled';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
 type MovingState = z.infer<typeof MovingState>;
@@ -100,8 +99,7 @@ export const useTelemetrySender = (
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
     useAtomValue(stationState);
-  const { telemetryEnabled: isTelemetryEnabledByUser } =
-    useAtomValue(tuningState);
+  const isTelemetryEnabled = useTelemetryEnabled();
 
   const passing = useIsPassing();
 
@@ -215,7 +213,7 @@ export const useTelemetrySender = (
     let reconnectTimeout: number;
     let shouldReconnect = true;
 
-    if (!isTelemetryEnabledByBuild || !isTelemetryEnabledByUser || !line?.id) {
+    if (!isTelemetryEnabled || !line?.id) {
       return;
     }
 
@@ -305,21 +303,17 @@ export const useTelemetrySender = (
     wsUrl,
     sendTelemetryAutomatically,
     protocols,
-    isTelemetryEnabledByUser,
+    isTelemetryEnabled,
     line?.id,
   ]);
 
   useEffect(() => {
-    if (
-      !isTelemetryEnabledByBuild ||
-      !isTelemetryEnabledByUser ||
-      !sendTelemetryAutomatically
-    ) {
+    if (!isTelemetryEnabled || !sendTelemetryAutomatically) {
       return;
     }
 
     sendTelemetry();
-  }, [sendTelemetry, sendTelemetryAutomatically, isTelemetryEnabledByUser]);
+  }, [sendTelemetry, sendTelemetryAutomatically, isTelemetryEnabled]);
 
   return { sendLog };
 };
