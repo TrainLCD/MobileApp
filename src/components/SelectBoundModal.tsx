@@ -36,6 +36,7 @@ import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
+import getIsPass from '~/utils/isPass';
 
 const styles = StyleSheet.create({
   contentView: {
@@ -481,6 +482,11 @@ export const SelectBoundModal: React.FC<Props> = ({
     });
   }, [fetchedTrainTypes, trainType]);
 
+  const stationsWithoutPass = useMemo(
+    () => stations.filter((s) => !getIsPass(s)),
+    [stations]
+  );
+
   return (
     <CustomModal
       visible={visible}
@@ -566,7 +572,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       <RouteInfoModal
         visible={routeInfoModalVisible}
         trainType={trainType}
-        stations={stations}
+        stations={stationsWithoutPass}
         onClose={() => setRouteInfoModalVisible(false)}
         onSelect={handleStationSelected}
         loading={loading}

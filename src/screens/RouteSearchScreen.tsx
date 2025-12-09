@@ -25,11 +25,13 @@ import {
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
 import navigationState from '~/store/atoms/navigation';
+import { findLocalType } from '~/utils/trainTypeString';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 
 type GetRouteTypesData = {
   routeTypes: {
@@ -161,9 +163,7 @@ const RouteSearchScreen = () => {
         return [] as Station[];
       }
       setHasSearched(true);
-      const parsedLimit = Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10);
-      const limit =
-        Number.isNaN(parsedLimit) || parsedLimit <= 0 ? 50 : parsedLimit;
+      const limit = Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10);
       const result = await fetchByName({
         variables: {
           name: query.trim(),
@@ -171,7 +171,9 @@ const RouteSearchScreen = () => {
           fromStationGroupId: station.groupId,
         },
       });
-      const stations = result.data?.stationsByName ?? [];
+      const stations = dropEitherJunctionStation(
+        result.data?.stationsByName ?? []
+      );
 
       setSearchResults(stations);
     },
@@ -186,9 +188,7 @@ const RouteSearchScreen = () => {
 
   const handleLineSelected = useCallback(
     async (selectedStation: Station) => {
-      if (selectedStation.hasTrainTypes) {
-        setTrainTypeListModalVisible(true);
-      }
+      setSelectBoundModalVisible(true);
 
       setNavigationState((prev) => ({
         ...prev,
@@ -207,31 +207,70 @@ const RouteSearchScreen = () => {
         pendingWantedDestination: selectedStation,
       }));
 
-      if (selectedStation.hasTrainTypes) {
-        return;
-      }
-
       // Guard: ensure both lineId and stationId are present before calling the query
-      if (!selectedStation.line?.id || !selectedStation.id) {
+      if (!selectedStation.groupId || !station?.groupId) {
         return;
       }
 
-      setSelectBoundModalVisible(true);
-
-      const result = await fetchStationsByLineId({
+      const result = await fetchRouteTypes({
         variables: {
-          lineId: selectedStation.line.id,
-          stationId: selectedStation.id,
+          fromStationGroupId: station.groupId,
+          toStationGroupId: selectedStation.groupId,
+          pageSize: Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10),
         },
       });
 
-      const newPendingStations = result.data?.lineStations ?? [];
+      const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
+
+      if (!fetchedTrainTypes?.length) {
+        if (!station.line?.id) {
+          return;
+        }
+        const stationsByLineIdRes = await fetchStationsByLineId({
+          variables: {
+            lineId: station?.line?.id,
+          },
+        });
+        const stations = stationsByLineIdRes.data?.lineStations ?? [];
+        setStationState((prev) => ({
+          ...prev,
+          pendingStations: stations,
+        }));
+        return;
+      }
+
+      const firstTrainType =
+        findLocalType(fetchedTrainTypes) ?? fetchedTrainTypes[0];
+
+      if (!firstTrainType?.groupId) {
+        return;
+      }
+
+      const stationsByLineGroupIdRes = await fetchStationsByLineGroupId({
+        variables: { lineGroupId: firstTrainType?.groupId },
+      });
+      const stations = stationsByLineGroupIdRes.data?.lineGroupStations ?? [];
+
       setStationState((prev) => ({
         ...prev,
-        pendingStations: newPendingStations,
+        pendingStations: stations,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes,
+        trainType: firstTrainType,
       }));
     },
-    [fetchStationsByLineId, setNavigationState, setStationState, setLineState]
+    [
+      station?.line?.id,
+      station?.groupId,
+      fetchStationsByLineId,
+      fetchStationsByLineGroupId,
+      fetchRouteTypes,
+      setNavigationState,
+      setStationState,
+      setLineState,
+    ]
   );
 
   const renderItem = useCallback(
@@ -354,45 +393,6 @@ const RouteSearchScreen = () => {
     });
   }, [currentStationInRoutes, setStationState]);
 
-  useEffect(() => {
-    const fetchAsync = async () => {
-      const fromStationGroupId = station?.groupId;
-      const toStationGroupId = pendingWantedDestination?.groupId;
-      if (!fromStationGroupId || !toStationGroupId) {
-        return;
-      }
-
-      const fetchedTrainTypesData = await fetchRouteTypes({
-        variables: {
-          fromStationGroupId,
-          toStationGroupId,
-        },
-      });
-      const fetchedTrainTypes = (
-        fetchedTrainTypesData.data?.routeTypes.trainTypes ?? []
-      ).filter((tt) => {
-        if (tt.line?.id === currentStationInRoutes?.line?.id) {
-          return true;
-        }
-
-        return tt.lines?.some((l) => l.id === currentStationInRoutes?.line?.id);
-      });
-
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes,
-      }));
-    };
-
-    fetchAsync();
-  }, [
-    fetchRouteTypes,
-    setNavigationState,
-    currentStationInRoutes?.line?.id,
-    pendingWantedDestination?.groupId,
-    station?.groupId,
-  ]);
-
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
@@ -452,14 +452,14 @@ const RouteSearchScreen = () => {
           setTrainTypeListModalVisible(false);
         }}
         loading={
+          fetchRouteTypesLoading ||
           fetchStationsByLineIdLoading ||
-          fetchStationsByLineGroupIdLoading ||
-          fetchRouteTypesLoading
+          fetchStationsByLineGroupIdLoading
         }
         error={
+          fetchRouteTypesError ??
           fetchStationsByLineIdError ??
           fetchStationsByLineGroupIdError ??
-          fetchRouteTypesError ??
           null
         }
         onTrainTypeSelect={handleTrainTypeSelected}
