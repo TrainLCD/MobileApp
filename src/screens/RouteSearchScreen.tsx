@@ -1,6 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
 import { useAtom } from 'jotai';
-import uniqBy from 'lodash/uniqBy';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
@@ -174,7 +173,7 @@ const RouteSearchScreen = () => {
       });
       const stations = result.data?.stationsByName ?? [];
 
-      setSearchResults(uniqBy(stations, 'id'));
+      setSearchResults(stations);
     },
     [fetchByName, station?.groupId]
   );
