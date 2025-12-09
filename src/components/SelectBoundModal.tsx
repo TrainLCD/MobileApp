@@ -24,6 +24,7 @@ import type {
 import { APP_THEME } from '~/models/Theme';
 import notifyState from '~/store/atoms/notify';
 import { isJapanese, translate } from '~/translation';
+import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
@@ -36,7 +37,6 @@ import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
-import getIsPass from '~/utils/isPass';
 
 const styles = StyleSheet.create({
   contentView: {

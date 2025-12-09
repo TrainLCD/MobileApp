@@ -25,13 +25,13 @@ import {
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
 import navigationState from '~/store/atoms/navigation';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import { findLocalType } from '~/utils/trainTypeString';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
-import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 
 type GetRouteTypesData = {
   routeTypes: {
