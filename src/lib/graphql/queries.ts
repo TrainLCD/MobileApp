@@ -108,10 +108,27 @@ export const LINES_FRAGMENT = gql`
   }
 `;
 
+export const TINY_TRAIN_TYPE_FRAGMENT = gql`
+  fragment TinyTrainTypeFields on TrainTypeNested {
+    id
+    typeId
+    groupId
+    name
+    nameKatakana
+    nameRoman
+    nameChinese
+    nameKorean
+    color
+    direction
+    kind
+  }
+`;
+
 export const LINE_NESTED_FRAGMENT = gql`
   ${COMPANY_FRAGMENT}
   ${LINE_SYMBOL_FRAGMENT}
   ${STATION_NUMBER_FRAGMENT}
+  ${TINY_TRAIN_TYPE_FRAGMENT}
   fragment LineNestedFields on LineNested {
     id
     averageDistance
@@ -133,6 +150,9 @@ export const LINE_NESTED_FRAGMENT = gql`
       stationNumbers {
         ...StationNumberFields
       }
+    }
+    trainType {
+      ...TinyTrainTypeFields
     }
     lineType
     nameFull
@@ -292,8 +312,16 @@ export const GET_LINE_STATIONS = gql`
 // Query for getting stations by name
 export const GET_STATIONS_BY_NAME = gql`
   ${STATION_FRAGMENT}
-  query GetStationsByName($name: String!, $limit: Int, $fromStationGroupId: Int) {
-    stationsByName(name: $name, limit: $limit, fromStationGroupId: $fromStationGroupId) {
+  query GetStationsByName(
+    $name: String!
+    $limit: Int
+    $fromStationGroupId: Int
+  ) {
+    stationsByName(
+      name: $name
+      limit: $limit
+      fromStationGroupId: $fromStationGroupId
+    ) {
       ...StationFields
     }
   }
@@ -332,7 +360,12 @@ export const GET_STATIONS = gql`
 // Query for getting routes between two stations
 export const GET_ROUTES = gql`
   ${STATION_NESTED_FRAGMENT}
-  query GetRoutes($fromStationGroupId: Int!, $toStationGroupId: Int!, $pageSize: Int, $pageToken: String) {
+  query GetRoutes(
+    $fromStationGroupId: Int!
+    $toStationGroupId: Int!
+    $pageSize: Int
+    $pageToken: String
+  ) {
     routes(
       fromStationGroupId: $fromStationGroupId
       toStationGroupId: $toStationGroupId
@@ -354,7 +387,10 @@ export const GET_ROUTES = gql`
 export const GET_CONNECTED_ROUTES = gql`
   ${STATION_NESTED_FRAGMENT}
   query GetConnectedRoutes($fromStationGroupId: Int!, $toStationGroupId: Int!) {
-    connectedRoutes(fromStationGroupId: $fromStationGroupId, toStationGroupId: $toStationGroupId) {
+    connectedRoutes(
+      fromStationGroupId: $fromStationGroupId
+      toStationGroupId: $toStationGroupId
+    ) {
       id
       stops {
         ...StationNestedFields
@@ -366,12 +402,19 @@ export const GET_CONNECTED_ROUTES = gql`
 // Query for getting route types
 export const GET_ROUTE_TYPES = gql`
   ${TRAIN_TYPE_FRAGMENT}
-  query GetRouteTypes($fromStationGroupId: Int!, $toStationGroupId: Int!, $pageSize: Int, $pageToken: String) {
+  query GetRouteTypes(
+    $fromStationGroupId: Int!
+    $toStationGroupId: Int!
+    $pageSize: Int
+    $pageToken: String
+    $viaLineId: Int
+  ) {
     routeTypes(
       fromStationGroupId: $fromStationGroupId
       toStationGroupId: $toStationGroupId
       pageSize: $pageSize
       pageToken: $pageToken
+      viaLineId: $viaLineId
     ) {
       nextPageToken
       trainTypes {
