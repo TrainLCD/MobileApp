@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -16,6 +16,7 @@ import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
 import Typography from './Typography';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 
 const styles = StyleSheet.create({
   root: {
@@ -135,6 +136,11 @@ export const RouteInfoModal = ({
     onClose();
   }, [onClose]);
 
+  const deduppedStations = useMemo(
+    () => dropEitherJunctionStation(stations ?? []),
+    [stations]
+  );
+
   return (
     <CustomModal
       visible={visible}
@@ -159,7 +165,7 @@ export const RouteInfoModal = ({
       </View>
 
       <FlatList<Station>
-        data={stations ?? []}
+        data={deduppedStations}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={EmptyLineSeparator}
