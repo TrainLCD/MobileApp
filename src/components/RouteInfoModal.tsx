@@ -8,6 +8,7 @@ import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
 import { isJapanese, translate } from '~/translation';
+import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
@@ -16,7 +17,6 @@ import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
 import Typography from './Typography';
-import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 
 const styles = StyleSheet.create({
   root: {
