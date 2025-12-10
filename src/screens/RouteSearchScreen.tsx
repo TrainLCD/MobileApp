@@ -25,7 +25,6 @@ import {
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
 import navigationState from '~/store/atoms/navigation';
-import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import { findLocalType } from '~/utils/trainTypeString';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
@@ -45,6 +44,7 @@ type GetRouteTypesVariables = {
   toStationGroupId: number;
   pageSize?: number;
   pageToken?: string;
+  viaLineId?: number;
 };
 
 type GetStationsByNameData = {
@@ -171,9 +171,7 @@ const RouteSearchScreen = () => {
           fromStationGroupId: station.groupId,
         },
       });
-      const stations = dropEitherJunctionStation(
-        result.data?.stationsByName ?? []
-      );
+      const stations = result.data?.stationsByName ?? [];
 
       setSearchResults(stations);
     },
@@ -208,7 +206,11 @@ const RouteSearchScreen = () => {
       }));
 
       // Guard: ensure both lineId and stationId are present before calling the query
-      if (!selectedStation.groupId || !station?.groupId) {
+      if (
+        !selectedStation.groupId ||
+        !selectedStation.line?.id ||
+        !station?.groupId
+      ) {
         return;
       }
 
@@ -217,6 +219,7 @@ const RouteSearchScreen = () => {
           fromStationGroupId: station.groupId,
           toStationGroupId: selectedStation.groupId,
           pageSize: Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10),
+          viaLineId: selectedStation.line.id,
         },
       });
 
@@ -239,18 +242,17 @@ const RouteSearchScreen = () => {
         return;
       }
 
-      const firstTrainType =
+      const localTrainType =
         findLocalType(fetchedTrainTypes) ?? fetchedTrainTypes[0];
 
-      if (!firstTrainType?.groupId) {
+      if (!localTrainType?.groupId) {
         return;
       }
 
       const stationsByLineGroupIdRes = await fetchStationsByLineGroupId({
-        variables: { lineGroupId: firstTrainType?.groupId },
+        variables: { lineGroupId: localTrainType.groupId },
       });
       const stations = stationsByLineGroupIdRes.data?.lineGroupStations ?? [];
-
       setStationState((prev) => ({
         ...prev,
         pendingStations: stations,
@@ -258,7 +260,7 @@ const RouteSearchScreen = () => {
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes,
-        trainType: firstTrainType,
+        trainType: prev.trainType ?? localTrainType,
       }));
     },
     [
@@ -439,13 +441,7 @@ const RouteSearchScreen = () => {
       <SelectBoundModal
         visible={selectBoundModalVisible}
         onClose={() => {
-          // SelectBoundModalを閉じるだけで、選択状態はリセットしない
-          // (TrainTypeListModalに戻れるようにする)
           setSelectBoundModalVisible(false);
-          setNavigationState((prev) => ({
-            ...prev,
-            trainType: null,
-          }));
         }}
         onBoundSelect={() => {
           setSelectBoundModalVisible(false);
@@ -469,19 +465,6 @@ const RouteSearchScreen = () => {
         line={currentStationInRoutes?.line ?? null}
         destination={pendingWantedDestination}
         onClose={() => {
-          // キャンセル時のみリセット
-          setLineState((prev) => ({ ...prev, pendingLine: null }));
-          setStationState((prev) => ({
-            ...prev,
-            pendingStation: null,
-            pendingStations: [],
-          }));
-          setNavigationState((prev) => ({
-            ...prev,
-            trainType: null,
-            fetchedTrainTypes: [],
-            pendingWantedDestination: null,
-          }));
           setTrainTypeListModalVisible(false);
         }}
         onSelect={handleTrainTypeSelected}

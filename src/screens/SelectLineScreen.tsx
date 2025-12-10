@@ -404,6 +404,9 @@ const SelectLineScreen = () => {
         ...prev,
         pendingStation,
         pendingStations,
+        selectedDirection: null,
+        wantedDestination: null,
+        selectedBound: null,
       }));
       setLineState((prev) => ({
         ...prev,
@@ -411,6 +414,7 @@ const SelectLineScreen = () => {
       }));
       setNavigationState((prev) => ({
         ...prev,
+        pendingWantedDestination: null,
         fetchedTrainTypes: [],
         trainType: null,
       }));
@@ -497,8 +501,10 @@ const SelectLineScreen = () => {
 
       setStationState((prev) => ({
         ...prev,
+        selectedDirection: null,
         pendingStation: station,
         pendingStations: stations,
+        wantedDestination: null,
       }));
       setLineState((prev) => ({
         ...prev,
@@ -508,6 +514,7 @@ const SelectLineScreen = () => {
         ...prev,
         fetchedTrainTypes: [],
         trainType: null,
+        pendingWantedDestination: null,
       }));
     },
     [
@@ -614,21 +621,7 @@ const SelectLineScreen = () => {
 
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
-    setStationState((prev) => ({
-      ...prev,
-      pendingStation: null,
-      pendingStations: [],
-    }));
-    setLineState((prev) => ({
-      ...prev,
-      pendingLine: null,
-    }));
-    setNavigationState((prev) => ({
-      ...prev,
-      pendingWantedDestination: null,
-      trainType: null,
-    }));
-  }, [setLineState, setStationState, setNavigationState]);
+  }, []);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Line; index: number }) => {
