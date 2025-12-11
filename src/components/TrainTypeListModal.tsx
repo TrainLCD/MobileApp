@@ -141,11 +141,13 @@ export const TrainTypeListModal = ({
 
         const title = `${isJapanese ? item.name : item.nameRoman}`;
         const subtitle = isJapanese
-          ? `${Array.from(new Set(viaLines.map((l) => l.nameShort))).join('・')}${
-              viaLines.length ? '直通' : ''
-            }`
+          ? `${Array.from(new Set(viaLines.map((l) => l.nameShort))).join(
+              '・'
+            )}${viaLines.length ? '直通' : ''}`
           : viaLines.length
-            ? `Via ${Array.from(new Set(viaLines.map((l) => l.nameRoman))).join(', ')}`
+            ? `Via ${Array.from(new Set(viaLines.map((l) => l.nameRoman))).join(
+                ', '
+              )}`
             : '';
 
         return (
@@ -176,10 +178,21 @@ export const TrainTypeListModal = ({
   );
 
   const keyExtractor = useCallback(
-    (tt: TrainType, index: number) =>
-      tt.groupId?.toString() ?? tt.id?.toString() ?? index.toString(),
+    (tt: TrainType, index: number) => tt.id?.toString() ?? index.toString(),
     []
   );
+
+  const trainTypes = useMemo(() => {
+    const trainTypes = fetchedTrainTypes
+      .map((tt) => {
+        const nestedTrainType = tt.lines?.find((l) => l.id === line?.id)
+          ?.trainType as TrainType | undefined;
+        return { ...tt, ...nestedTrainType, id: tt.id };
+      })
+      .filter((tt) => tt) as TrainType[];
+
+    return trainTypes;
+  }, [fetchedTrainTypes, line?.id]);
 
   return (
     <CustomModal
@@ -217,7 +230,7 @@ export const TrainTypeListModal = ({
 
       <FlatList<TrainType>
         style={StyleSheet.absoluteFill}
-        data={fetchedTrainTypes}
+        data={trainTypes}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={EmptyLineSeparator}

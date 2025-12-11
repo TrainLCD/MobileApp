@@ -155,6 +155,7 @@ export type QueryRouteTypesArgs = {
   pageSize: InputMaybe<Scalars['Int']['input']>;
   pageToken: InputMaybe<Scalars['String']['input']>;
   toStationGroupId: Scalars['Int']['input'];
+  viaLineId: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryRoutesArgs = {
@@ -162,6 +163,7 @@ export type QueryRoutesArgs = {
   pageSize: InputMaybe<Scalars['Int']['input']>;
   pageToken: InputMaybe<Scalars['String']['input']>;
   toStationGroupId: Scalars['Int']['input'];
+  viaLineId: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryStationArgs = {
@@ -488,6 +490,21 @@ export type LineListItemFieldsFragment = {
     | undefined;
 };
 
+export type TinyTrainTypeFieldsFragment = {
+  __typename: 'TrainTypeNested';
+  id: number | null | undefined;
+  typeId: number | null | undefined;
+  groupId: number | null | undefined;
+  name: string | null | undefined;
+  nameKatakana: string | null | undefined;
+  nameRoman: string | null | undefined;
+  nameChinese: string | null | undefined;
+  nameKorean: string | null | undefined;
+  color: string | null | undefined;
+  direction: TrainDirection | null | undefined;
+  kind: TrainTypeKind | null | undefined;
+};
+
 export type LineNestedFieldsFragment = {
   __typename: 'LineNested';
   id: number | null | undefined;
@@ -547,6 +564,23 @@ export type LineNestedFieldsFragment = {
             }>
           | null
           | undefined;
+      }
+    | null
+    | undefined;
+  trainType:
+    | {
+        __typename: 'TrainTypeNested';
+        id: number | null | undefined;
+        typeId: number | null | undefined;
+        groupId: number | null | undefined;
+        name: string | null | undefined;
+        nameKatakana: string | null | undefined;
+        nameRoman: string | null | undefined;
+        nameChinese: string | null | undefined;
+        nameKorean: string | null | undefined;
+        color: string | null | undefined;
+        direction: TrainDirection | null | undefined;
+        kind: TrainTypeKind | null | undefined;
       }
     | null
     | undefined;
@@ -628,6 +662,23 @@ export type TrainTypeFieldsFragment = {
             }
           | null
           | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
+            }
+          | null
+          | undefined;
       }
     | null
     | undefined;
@@ -691,6 +742,23 @@ export type TrainTypeFieldsFragment = {
                   }>
                 | null
                 | undefined;
+            }
+          | null
+          | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
             }
           | null
           | undefined;
@@ -775,6 +843,23 @@ export type TrainTypeNestedFieldsFragment = {
             }
           | null
           | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
+            }
+          | null
+          | undefined;
       }
     | null
     | undefined;
@@ -838,6 +923,23 @@ export type TrainTypeNestedFieldsFragment = {
                   }>
                 | null
                 | undefined;
+            }
+          | null
+          | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
             }
           | null
           | undefined;
@@ -940,6 +1042,23 @@ export type StationFieldsFragment = {
             }
           | null
           | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
+            }
+          | null
+          | undefined;
       }
     | null
     | undefined;
@@ -1003,6 +1122,23 @@ export type StationFieldsFragment = {
                   }>
                 | null
                 | undefined;
+            }
+          | null
+          | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
             }
           | null
           | undefined;
@@ -1086,6 +1222,23 @@ export type StationFieldsFragment = {
                   }
                 | null
                 | undefined;
+              trainType:
+                | {
+                    __typename: 'TrainTypeNested';
+                    id: number | null | undefined;
+                    typeId: number | null | undefined;
+                    groupId: number | null | undefined;
+                    name: string | null | undefined;
+                    nameKatakana: string | null | undefined;
+                    nameRoman: string | null | undefined;
+                    nameChinese: string | null | undefined;
+                    nameKorean: string | null | undefined;
+                    color: string | null | undefined;
+                    direction: TrainDirection | null | undefined;
+                    kind: TrainTypeKind | null | undefined;
+                  }
+                | null
+                | undefined;
             }
           | null
           | undefined;
@@ -1149,6 +1302,23 @@ export type StationFieldsFragment = {
                         }>
                       | null
                       | undefined;
+                  }
+                | null
+                | undefined;
+              trainType:
+                | {
+                    __typename: 'TrainTypeNested';
+                    id: number | null | undefined;
+                    typeId: number | null | undefined;
+                    groupId: number | null | undefined;
+                    name: string | null | undefined;
+                    nameKatakana: string | null | undefined;
+                    nameRoman: string | null | undefined;
+                    nameChinese: string | null | undefined;
+                    nameKorean: string | null | undefined;
+                    color: string | null | undefined;
+                    direction: TrainDirection | null | undefined;
+                    kind: TrainTypeKind | null | undefined;
                   }
                 | null
                 | undefined;
@@ -1254,6 +1424,23 @@ export type StationNestedFieldsFragment = {
             }
           | null
           | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
+            }
+          | null
+          | undefined;
       }
     | null
     | undefined;
@@ -1317,6 +1504,23 @@ export type StationNestedFieldsFragment = {
                   }>
                 | null
                 | undefined;
+            }
+          | null
+          | undefined;
+        trainType:
+          | {
+              __typename: 'TrainTypeNested';
+              id: number | null | undefined;
+              typeId: number | null | undefined;
+              groupId: number | null | undefined;
+              name: string | null | undefined;
+              nameKatakana: string | null | undefined;
+              nameRoman: string | null | undefined;
+              nameChinese: string | null | undefined;
+              nameKorean: string | null | undefined;
+              color: string | null | undefined;
+              direction: TrainDirection | null | undefined;
+              kind: TrainTypeKind | null | undefined;
             }
           | null
           | undefined;
@@ -1400,6 +1604,23 @@ export type StationNestedFieldsFragment = {
                   }
                 | null
                 | undefined;
+              trainType:
+                | {
+                    __typename: 'TrainTypeNested';
+                    id: number | null | undefined;
+                    typeId: number | null | undefined;
+                    groupId: number | null | undefined;
+                    name: string | null | undefined;
+                    nameKatakana: string | null | undefined;
+                    nameRoman: string | null | undefined;
+                    nameChinese: string | null | undefined;
+                    nameKorean: string | null | undefined;
+                    color: string | null | undefined;
+                    direction: TrainDirection | null | undefined;
+                    kind: TrainTypeKind | null | undefined;
+                  }
+                | null
+                | undefined;
             }
           | null
           | undefined;
@@ -1463,6 +1684,23 @@ export type StationNestedFieldsFragment = {
                         }>
                       | null
                       | undefined;
+                  }
+                | null
+                | undefined;
+              trainType:
+                | {
+                    __typename: 'TrainTypeNested';
+                    id: number | null | undefined;
+                    typeId: number | null | undefined;
+                    groupId: number | null | undefined;
+                    name: string | null | undefined;
+                    nameKatakana: string | null | undefined;
+                    nameRoman: string | null | undefined;
+                    nameChinese: string | null | undefined;
+                    nameKorean: string | null | undefined;
+                    color: string | null | undefined;
+                    direction: TrainDirection | null | undefined;
+                    kind: TrainTypeKind | null | undefined;
                   }
                 | null
                 | undefined;
@@ -1575,6 +1813,23 @@ export type GetStationsNearbyQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -1638,6 +1893,23 @@ export type GetStationsNearbyQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -1721,6 +1993,23 @@ export type GetStationsNearbyQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -1784,6 +2073,23 @@ export type GetStationsNearbyQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -1896,6 +2202,23 @@ export type GetLineStationsQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -1959,6 +2282,23 @@ export type GetLineStationsQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -2042,6 +2382,23 @@ export type GetLineStationsQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -2105,6 +2462,23 @@ export type GetLineStationsQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2218,6 +2592,23 @@ export type GetStationsByNameQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -2281,6 +2672,23 @@ export type GetStationsByNameQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -2364,6 +2772,23 @@ export type GetStationsByNameQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -2427,6 +2852,23 @@ export type GetStationsByNameQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2538,6 +2980,23 @@ export type GetLineGroupStationsQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -2601,6 +3060,23 @@ export type GetLineGroupStationsQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -2684,6 +3160,23 @@ export type GetLineGroupStationsQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -2747,6 +3240,23 @@ export type GetLineGroupStationsQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2840,6 +3350,23 @@ export type GetStationTrainTypesQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -2903,6 +3430,23 @@ export type GetStationTrainTypesQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -3011,6 +3555,23 @@ export type GetStationsQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -3074,6 +3635,23 @@ export type GetStationsQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -3157,6 +3735,23 @@ export type GetStationsQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -3220,6 +3815,23 @@ export type GetStationsQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -3342,6 +3954,23 @@ export type GetRoutesQuery = {
                           }
                         | null
                         | undefined;
+                      trainType:
+                        | {
+                            __typename: 'TrainTypeNested';
+                            id: number | null | undefined;
+                            typeId: number | null | undefined;
+                            groupId: number | null | undefined;
+                            name: string | null | undefined;
+                            nameKatakana: string | null | undefined;
+                            nameRoman: string | null | undefined;
+                            nameChinese: string | null | undefined;
+                            nameKorean: string | null | undefined;
+                            color: string | null | undefined;
+                            direction: TrainDirection | null | undefined;
+                            kind: TrainTypeKind | null | undefined;
+                          }
+                        | null
+                        | undefined;
                     }
                   | null
                   | undefined;
@@ -3405,6 +4034,23 @@ export type GetRoutesQuery = {
                                 }>
                               | null
                               | undefined;
+                          }
+                        | null
+                        | undefined;
+                      trainType:
+                        | {
+                            __typename: 'TrainTypeNested';
+                            id: number | null | undefined;
+                            typeId: number | null | undefined;
+                            groupId: number | null | undefined;
+                            name: string | null | undefined;
+                            nameKatakana: string | null | undefined;
+                            nameRoman: string | null | undefined;
+                            nameChinese: string | null | undefined;
+                            nameKorean: string | null | undefined;
+                            color: string | null | undefined;
+                            direction: TrainDirection | null | undefined;
+                            kind: TrainTypeKind | null | undefined;
                           }
                         | null
                         | undefined;
@@ -3497,6 +4143,23 @@ export type GetRoutesQuery = {
                                 }
                               | null
                               | undefined;
+                            trainType:
+                              | {
+                                  __typename: 'TrainTypeNested';
+                                  id: number | null | undefined;
+                                  typeId: number | null | undefined;
+                                  groupId: number | null | undefined;
+                                  name: string | null | undefined;
+                                  nameKatakana: string | null | undefined;
+                                  nameRoman: string | null | undefined;
+                                  nameChinese: string | null | undefined;
+                                  nameKorean: string | null | undefined;
+                                  color: string | null | undefined;
+                                  direction: TrainDirection | null | undefined;
+                                  kind: TrainTypeKind | null | undefined;
+                                }
+                              | null
+                              | undefined;
                           }
                         | null
                         | undefined;
@@ -3569,6 +4232,23 @@ export type GetRoutesQuery = {
                                       }>
                                     | null
                                     | undefined;
+                                }
+                              | null
+                              | undefined;
+                            trainType:
+                              | {
+                                  __typename: 'TrainTypeNested';
+                                  id: number | null | undefined;
+                                  typeId: number | null | undefined;
+                                  groupId: number | null | undefined;
+                                  name: string | null | undefined;
+                                  nameKatakana: string | null | undefined;
+                                  nameRoman: string | null | undefined;
+                                  nameChinese: string | null | undefined;
+                                  nameKorean: string | null | undefined;
+                                  color: string | null | undefined;
+                                  direction: TrainDirection | null | undefined;
+                                  kind: TrainTypeKind | null | undefined;
                                 }
                               | null
                               | undefined;
@@ -3691,6 +4371,23 @@ export type GetConnectedRoutesQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -3754,6 +4451,23 @@ export type GetConnectedRoutesQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -3837,6 +4551,23 @@ export type GetConnectedRoutesQuery = {
                           }
                         | null
                         | undefined;
+                      trainType:
+                        | {
+                            __typename: 'TrainTypeNested';
+                            id: number | null | undefined;
+                            typeId: number | null | undefined;
+                            groupId: number | null | undefined;
+                            name: string | null | undefined;
+                            nameKatakana: string | null | undefined;
+                            nameRoman: string | null | undefined;
+                            nameChinese: string | null | undefined;
+                            nameKorean: string | null | undefined;
+                            color: string | null | undefined;
+                            direction: TrainDirection | null | undefined;
+                            kind: TrainTypeKind | null | undefined;
+                          }
+                        | null
+                        | undefined;
                     }
                   | null
                   | undefined;
@@ -3900,6 +4631,23 @@ export type GetConnectedRoutesQuery = {
                                 }>
                               | null
                               | undefined;
+                          }
+                        | null
+                        | undefined;
+                      trainType:
+                        | {
+                            __typename: 'TrainTypeNested';
+                            id: number | null | undefined;
+                            typeId: number | null | undefined;
+                            groupId: number | null | undefined;
+                            name: string | null | undefined;
+                            nameKatakana: string | null | undefined;
+                            nameRoman: string | null | undefined;
+                            nameChinese: string | null | undefined;
+                            nameKorean: string | null | undefined;
+                            color: string | null | undefined;
+                            direction: TrainDirection | null | undefined;
+                            kind: TrainTypeKind | null | undefined;
                           }
                         | null
                         | undefined;
@@ -4003,6 +4751,23 @@ export type GetRouteTypesQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -4066,6 +4831,23 @@ export type GetRouteTypesQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -4178,6 +4960,23 @@ export type GetStationQuery = {
                   }
                 | null
                 | undefined;
+              trainType:
+                | {
+                    __typename: 'TrainTypeNested';
+                    id: number | null | undefined;
+                    typeId: number | null | undefined;
+                    groupId: number | null | undefined;
+                    name: string | null | undefined;
+                    nameKatakana: string | null | undefined;
+                    nameRoman: string | null | undefined;
+                    nameChinese: string | null | undefined;
+                    nameKorean: string | null | undefined;
+                    color: string | null | undefined;
+                    direction: TrainDirection | null | undefined;
+                    kind: TrainTypeKind | null | undefined;
+                  }
+                | null
+                | undefined;
             }
           | null
           | undefined;
@@ -4241,6 +5040,23 @@ export type GetStationQuery = {
                         }>
                       | null
                       | undefined;
+                  }
+                | null
+                | undefined;
+              trainType:
+                | {
+                    __typename: 'TrainTypeNested';
+                    id: number | null | undefined;
+                    typeId: number | null | undefined;
+                    groupId: number | null | undefined;
+                    name: string | null | undefined;
+                    nameKatakana: string | null | undefined;
+                    nameRoman: string | null | undefined;
+                    nameChinese: string | null | undefined;
+                    nameKorean: string | null | undefined;
+                    color: string | null | undefined;
+                    direction: TrainDirection | null | undefined;
+                    kind: TrainTypeKind | null | undefined;
                   }
                 | null
                 | undefined;
@@ -4324,6 +5140,23 @@ export type GetStationQuery = {
                         }
                       | null
                       | undefined;
+                    trainType:
+                      | {
+                          __typename: 'TrainTypeNested';
+                          id: number | null | undefined;
+                          typeId: number | null | undefined;
+                          groupId: number | null | undefined;
+                          name: string | null | undefined;
+                          nameKatakana: string | null | undefined;
+                          nameRoman: string | null | undefined;
+                          nameChinese: string | null | undefined;
+                          nameKorean: string | null | undefined;
+                          color: string | null | undefined;
+                          direction: TrainDirection | null | undefined;
+                          kind: TrainTypeKind | null | undefined;
+                        }
+                      | null
+                      | undefined;
                   }
                 | null
                 | undefined;
@@ -4387,6 +5220,23 @@ export type GetStationQuery = {
                               }>
                             | null
                             | undefined;
+                        }
+                      | null
+                      | undefined;
+                    trainType:
+                      | {
+                          __typename: 'TrainTypeNested';
+                          id: number | null | undefined;
+                          typeId: number | null | undefined;
+                          groupId: number | null | undefined;
+                          name: string | null | undefined;
+                          nameKatakana: string | null | undefined;
+                          nameRoman: string | null | undefined;
+                          nameChinese: string | null | undefined;
+                          nameKorean: string | null | undefined;
+                          color: string | null | undefined;
+                          direction: TrainDirection | null | undefined;
+                          kind: TrainTypeKind | null | undefined;
                         }
                       | null
                       | undefined;
@@ -4515,6 +5365,23 @@ export type GetLineQuery = {
                         }
                       | null
                       | undefined;
+                    trainType:
+                      | {
+                          __typename: 'TrainTypeNested';
+                          id: number | null | undefined;
+                          typeId: number | null | undefined;
+                          groupId: number | null | undefined;
+                          name: string | null | undefined;
+                          nameKatakana: string | null | undefined;
+                          nameRoman: string | null | undefined;
+                          nameChinese: string | null | undefined;
+                          nameKorean: string | null | undefined;
+                          color: string | null | undefined;
+                          direction: TrainDirection | null | undefined;
+                          kind: TrainTypeKind | null | undefined;
+                        }
+                      | null
+                      | undefined;
                   }
                 | null
                 | undefined;
@@ -4578,6 +5445,23 @@ export type GetLineQuery = {
                               }>
                             | null
                             | undefined;
+                        }
+                      | null
+                      | undefined;
+                    trainType:
+                      | {
+                          __typename: 'TrainTypeNested';
+                          id: number | null | undefined;
+                          typeId: number | null | undefined;
+                          groupId: number | null | undefined;
+                          name: string | null | undefined;
+                          nameKatakana: string | null | undefined;
+                          nameRoman: string | null | undefined;
+                          nameChinese: string | null | undefined;
+                          nameKorean: string | null | undefined;
+                          color: string | null | undefined;
+                          direction: TrainDirection | null | undefined;
+                          kind: TrainTypeKind | null | undefined;
                         }
                       | null
                       | undefined;
@@ -4667,6 +5551,23 @@ export type GetLineQuery = {
                               }
                             | null
                             | undefined;
+                          trainType:
+                            | {
+                                __typename: 'TrainTypeNested';
+                                id: number | null | undefined;
+                                typeId: number | null | undefined;
+                                groupId: number | null | undefined;
+                                name: string | null | undefined;
+                                nameKatakana: string | null | undefined;
+                                nameRoman: string | null | undefined;
+                                nameChinese: string | null | undefined;
+                                nameKorean: string | null | undefined;
+                                color: string | null | undefined;
+                                direction: TrainDirection | null | undefined;
+                                kind: TrainTypeKind | null | undefined;
+                              }
+                            | null
+                            | undefined;
                         }
                       | null
                       | undefined;
@@ -4736,6 +5637,23 @@ export type GetLineQuery = {
                                     }>
                                   | null
                                   | undefined;
+                              }
+                            | null
+                            | undefined;
+                          trainType:
+                            | {
+                                __typename: 'TrainTypeNested';
+                                id: number | null | undefined;
+                                typeId: number | null | undefined;
+                                groupId: number | null | undefined;
+                                name: string | null | undefined;
+                                nameKatakana: string | null | undefined;
+                                nameRoman: string | null | undefined;
+                                nameChinese: string | null | undefined;
+                                nameKorean: string | null | undefined;
+                                color: string | null | undefined;
+                                direction: TrainDirection | null | undefined;
+                                kind: TrainTypeKind | null | undefined;
                               }
                             | null
                             | undefined;
@@ -4825,6 +5743,23 @@ export type GetLineQuery = {
                         }
                       | null
                       | undefined;
+                    trainType:
+                      | {
+                          __typename: 'TrainTypeNested';
+                          id: number | null | undefined;
+                          typeId: number | null | undefined;
+                          groupId: number | null | undefined;
+                          name: string | null | undefined;
+                          nameKatakana: string | null | undefined;
+                          nameRoman: string | null | undefined;
+                          nameChinese: string | null | undefined;
+                          nameKorean: string | null | undefined;
+                          color: string | null | undefined;
+                          direction: TrainDirection | null | undefined;
+                          kind: TrainTypeKind | null | undefined;
+                        }
+                      | null
+                      | undefined;
                   }
                 | null
                 | undefined;
@@ -4888,6 +5823,23 @@ export type GetLineQuery = {
                               }>
                             | null
                             | undefined;
+                        }
+                      | null
+                      | undefined;
+                    trainType:
+                      | {
+                          __typename: 'TrainTypeNested';
+                          id: number | null | undefined;
+                          typeId: number | null | undefined;
+                          groupId: number | null | undefined;
+                          name: string | null | undefined;
+                          nameKatakana: string | null | undefined;
+                          nameRoman: string | null | undefined;
+                          nameChinese: string | null | undefined;
+                          nameKorean: string | null | undefined;
+                          color: string | null | undefined;
+                          direction: TrainDirection | null | undefined;
+                          kind: TrainTypeKind | null | undefined;
                         }
                       | null
                       | undefined;
@@ -5042,6 +5994,23 @@ export type GetLinesByNameQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -5105,6 +6074,23 @@ export type GetLinesByNameQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -5188,6 +6174,23 @@ export type GetLinesByNameQuery = {
                           }
                         | null
                         | undefined;
+                      trainType:
+                        | {
+                            __typename: 'TrainTypeNested';
+                            id: number | null | undefined;
+                            typeId: number | null | undefined;
+                            groupId: number | null | undefined;
+                            name: string | null | undefined;
+                            nameKatakana: string | null | undefined;
+                            nameRoman: string | null | undefined;
+                            nameChinese: string | null | undefined;
+                            nameKorean: string | null | undefined;
+                            color: string | null | undefined;
+                            direction: TrainDirection | null | undefined;
+                            kind: TrainTypeKind | null | undefined;
+                          }
+                        | null
+                        | undefined;
                     }
                   | null
                   | undefined;
@@ -5251,6 +6254,23 @@ export type GetLinesByNameQuery = {
                                 }>
                               | null
                               | undefined;
+                          }
+                        | null
+                        | undefined;
+                      trainType:
+                        | {
+                            __typename: 'TrainTypeNested';
+                            id: number | null | undefined;
+                            typeId: number | null | undefined;
+                            groupId: number | null | undefined;
+                            name: string | null | undefined;
+                            nameKatakana: string | null | undefined;
+                            nameRoman: string | null | undefined;
+                            nameChinese: string | null | undefined;
+                            nameKorean: string | null | undefined;
+                            color: string | null | undefined;
+                            direction: TrainDirection | null | undefined;
+                            kind: TrainTypeKind | null | undefined;
                           }
                         | null
                         | undefined;
@@ -5340,6 +6360,23 @@ export type GetLinesByNameQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -5403,6 +6440,23 @@ export type GetLinesByNameQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
@@ -5540,6 +6594,23 @@ export type GetStationGroupStationsQuery = {
               }
             | null
             | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
         }
       | null
       | undefined;
@@ -5603,6 +6674,23 @@ export type GetStationGroupStationsQuery = {
                     }>
                   | null
                   | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
               }
             | null
             | undefined;
@@ -5686,6 +6774,23 @@ export type GetStationGroupStationsQuery = {
                     }
                   | null
                   | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
               }
             | null
             | undefined;
@@ -5749,6 +6854,23 @@ export type GetStationGroupStationsQuery = {
                           }>
                         | null
                         | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
                     }
                   | null
                   | undefined;
