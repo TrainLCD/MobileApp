@@ -24,6 +24,7 @@ import type {
 import { APP_THEME } from '~/models/Theme';
 import notifyState from '~/store/atoms/notify';
 import { isJapanese, translate } from '~/translation';
+import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
@@ -255,9 +256,9 @@ export const SelectBoundModal: React.FC<Props> = ({
           ? (boundStations[0]?.line ?? line)
           : boundStations[boundStations.length - 1]?.line;
       const trainTypeForCard =
-        (direction === 'INBOUND'
+        direction === 'INBOUND'
           ? boundStations[0]?.trainType
-          : boundStations[boundStations.length - 1]?.trainType) ?? trainType;
+          : boundStations[boundStations.length - 1]?.trainType;
 
       if (!lineForCard) {
         return <></>;
@@ -339,7 +340,6 @@ export const SelectBoundModal: React.FC<Props> = ({
       pendingWantedDestination,
       line,
       terminateByDestination,
-      trainType,
       loopLineDirectionText,
       normalLineDirectionText,
     ]
@@ -481,6 +481,11 @@ export const SelectBoundModal: React.FC<Props> = ({
     });
   }, [fetchedTrainTypes, trainType]);
 
+  const stationsWithoutPass = useMemo(
+    () => stations.filter((s) => !getIsPass(s)),
+    [stations]
+  );
+
   return (
     <CustomModal
       visible={visible}
@@ -566,7 +571,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       <RouteInfoModal
         visible={routeInfoModalVisible}
         trainType={trainType}
-        stations={stations}
+        stations={stationsWithoutPass}
         onClose={() => setRouteInfoModalVisible(false)}
         onSelect={handleStationSelected}
         loading={loading}
@@ -582,10 +587,6 @@ export const SelectBoundModal: React.FC<Props> = ({
         line={line}
         onClose={() => {
           setIsTrainTypeModalVisible(false);
-          setNavigationState((prev) => ({
-            ...prev,
-            trainType: null,
-          }));
         }}
         onSelect={(trainType) => {
           setIsTrainTypeModalVisible(false);

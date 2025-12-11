@@ -609,6 +609,7 @@ const HeaderJRKyushu: React.FC = () => {
                 stationNumber={currentStationNumber.stationNumber || ''}
                 threeLetterCode={threeLetterCode}
                 transformOrigin="top"
+                allowScaling
               />
             </View>
           ) : null}

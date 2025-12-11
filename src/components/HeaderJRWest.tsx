@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { LineType, TrainTypeKind } from '~/@types/graphql';
 import {
   useBoundText,
@@ -631,6 +631,10 @@ const HeaderJRWest: React.FC = () => {
                 stationNumber={currentStationNumber.stationNumber || ''}
                 threeLetterCode={threeLetterCode}
                 withDarkTheme
+                allowScaling
+                transformOrigin={
+                  Platform.OS === 'android' ? 'bottom' : undefined
+                }
               />
             </View>
           ) : null}

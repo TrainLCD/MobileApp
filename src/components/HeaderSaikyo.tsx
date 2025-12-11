@@ -526,6 +526,7 @@ const HeaderSaikyo: React.FC = () => {
               stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               allowScaling
+              transformOrigin={Platform.OS === 'android' ? 'bottom' : undefined}
             />
           ) : null}
           <View style={styles.stationNameWrapper}>
