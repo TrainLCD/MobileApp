@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
   useBoundText,
@@ -385,6 +385,8 @@ const HeaderJL = () => {
               stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               withDarkTheme
+              allowScaling
+              transformOrigin={Platform.OS === 'android' ? 'bottom' : undefined}
             />
           ) : null}
           <Typography

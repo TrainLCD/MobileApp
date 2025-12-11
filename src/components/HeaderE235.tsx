@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import {
   useBoundText,
@@ -384,6 +384,8 @@ const HeaderE235: React.FC<Props> = ({ isJO }: Props) => {
               stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               withDarkTheme
+              allowScaling
+              transformOrigin={Platform.OS === 'android' ? 'bottom' : undefined}
             />
           ) : null}
           <Typography
