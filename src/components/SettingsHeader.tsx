@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
-import { translate } from '~/translation';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -68,11 +67,12 @@ const styles = StyleSheet.create({
 });
 
 type Props = {
+  title: string;
   onLayout?: (event: LayoutChangeEvent) => void;
   scrollY: SharedValue<number>;
 };
 
-export const SettingsHeader = ({ onLayout, scrollY }: Props) => {
+export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
   const insets = useSafeAreaInsets();
 
@@ -144,7 +144,7 @@ export const SettingsHeader = ({ onLayout, scrollY }: Props) => {
               numberOfLines={1}
               adjustsFontSizeToFit
             >
-              {translate('settings')}
+              {title}
             </AnimatedTypography>
           </Animated.View>
           {/* Inline layout (fades in) */}
@@ -154,7 +154,7 @@ export const SettingsHeader = ({ onLayout, scrollY }: Props) => {
               numberOfLines={1}
               adjustsFontSizeToFit
             >
-              {translate('settings')}
+              {title}
             </Typography>
           </Animated.View>
         </View>
