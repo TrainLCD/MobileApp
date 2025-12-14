@@ -147,52 +147,50 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
 
-  const toThemeSettings = () => navigation.navigate('ThemeSettings' as never);
-  const toTTSSettings = () => navigation.navigate('TTSSettings' as never);
-  const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings' as never);
-  const toTuning = () => navigation.navigate('TuningSettings' as never);
-
-  const SETTINGS_SECTIONS: SettingsSection[] = [
-    {
-      key: 'personalize',
-      data: [
-        {
-          id: SETTING_ITEM_ID_MAP.personalize_theme,
-          title: translate('selectThemeTitle'),
-          color: '#FF9500',
-          onPress: toThemeSettings,
-        },
-        {
-          id: SETTING_ITEM_ID_MAP.personalize_tts,
-          title: translate('autoAnnounce'),
-          color: '#34C759',
-          onPress: toTTSSettings,
-        },
-        {
-          id: SETTING_ITEM_ID_MAP.personalize_languages,
-          title: translate('selectLanguagesTitle'),
-          color: '#007AFF',
-          onPress: toEnabledLanguagesSettings,
-        },
-      ].filter((dat) =>
-        isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
-      ), // Remove TTS setting in App Clip
-    },
-    {
-      key: 'forDevelopers',
-      data: isDevApp
-        ? [
-            {
-              id: SETTING_ITEM_ID_MAP.developer_tuning,
-              title: translate('tuning'),
-              color: '#5856D6',
-              onPress: toTuning,
-            },
-          ]
-        : ([] as SettingsSectionData[]),
-    },
-  ] as const;
+  const SETTINGS_SECTIONS: SettingsSection[] = useMemo(
+    () => [
+      {
+        key: 'personalize',
+        data: [
+          {
+            id: SETTING_ITEM_ID_MAP.personalize_theme,
+            title: translate('selectThemeTitle'),
+            color: '#FF9500',
+            onPress: () => navigation.navigate('ThemeSettings' as never),
+          },
+          {
+            id: SETTING_ITEM_ID_MAP.personalize_tts,
+            title: translate('autoAnnounce'),
+            color: '#34C759',
+            onPress: () => navigation.navigate('TTSSettings' as never),
+          },
+          {
+            id: SETTING_ITEM_ID_MAP.personalize_languages,
+            title: translate('selectLanguagesTitle'),
+            color: '#007AFF',
+            onPress: () =>
+              navigation.navigate('EnabledLanguagesSettings' as never),
+          },
+        ].filter((dat) =>
+          isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
+        ), // Remove TTS setting in App Clip
+      },
+      {
+        key: 'forDevelopers',
+        data: isDevApp
+          ? [
+              {
+                id: SETTING_ITEM_ID_MAP.developer_tuning,
+                title: translate('tuning'),
+                color: '#5856D6',
+                onPress: () => navigation.navigate('TuningSettings' as never),
+              },
+            ]
+          : ([] as SettingsSectionData[]),
+      },
+    ],
+    [navigation]
+  );
 
   const renderItem = useCallback(
     ({
