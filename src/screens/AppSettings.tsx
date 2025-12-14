@@ -22,19 +22,14 @@ import { APP_THEME } from '../models/Theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 
-type SettingItemId =
-  | 'personalize_theme'
-  | 'personalize_tts'
-  | 'personalize_languages'
-  | 'developer_tuning'
-  | string;
-
-const SETTING_ITEM_ID_MAP: Record<SettingItemId, string> = {
+const SETTING_ITEM_ID_MAP = {
   personalize_theme: 'personalize_theme',
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
   developer_tuning: 'developer_tuning',
 } as const;
+
+type SettingItemId = keyof typeof SETTING_ITEM_ID_MAP;
 
 type SettingsSectionData = {
   id: SettingItemId;
