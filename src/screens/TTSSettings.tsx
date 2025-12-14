@@ -49,12 +49,14 @@ const SettingsItem = ({
   isFirst,
   isLast,
   state,
+  disabled,
   onToggle,
 }: {
   item: SettingItem;
   isFirst: boolean;
   isLast: boolean;
   state: boolean;
+  disabled: boolean;
   onToggle: (event: GestureResponderEvent) => void;
 }) => (
   <View
@@ -76,8 +78,12 @@ const SettingsItem = ({
     <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
       {item.title}
     </Typography>
-    <TouchableOpacity onPress={onToggle}>
-      <StatePanel state={state} />
+    <TouchableOpacity
+      onPress={onToggle}
+      disabled={disabled}
+      style={{ opacity: disabled ? 0.5 : 1 }}
+    >
+      <StatePanel state={disabled ? false : state} />
     </TouchableOpacity>
   </View>
 );
@@ -242,6 +248,7 @@ const TTSSettingsScreen: React.FC = () => {
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
           state={state}
+          disabled={speechEnabled === false && item.id === 'enable_bg_tts'}
         />
       );
     },
