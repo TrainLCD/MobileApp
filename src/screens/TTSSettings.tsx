@@ -5,8 +5,8 @@ import React, { useCallback, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  Pressable,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
@@ -59,7 +59,11 @@ const SettingsItem = ({
   disabled: boolean;
   onToggle: (event: GestureResponderEvent) => void;
 }) => (
-  <View
+  <Pressable
+    accessibilityRole="switch"
+    accessibilityLabel={item.title}
+    accessibilityState={{ checked: state }}
+    onPress={onToggle}
     style={{
       flexDirection: 'row',
       alignItems: 'center',
@@ -76,14 +80,9 @@ const SettingsItem = ({
     <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
       {item.title}
     </Typography>
-    <TouchableOpacity
-      onPress={onToggle}
-      disabled={disabled}
-      style={{ opacity: disabled ? 0.5 : 1 }}
-    >
-      <StatePanel state={disabled ? false : state} />
-    </TouchableOpacity>
-  </View>
+
+    <StatePanel state={disabled ? false : state} />
+  </Pressable>
 );
 
 const TTSSettingsScreen: React.FC = () => {
