@@ -82,10 +82,12 @@ export const StatePanel = ({
   state,
   onText = 'ON',
   offText = 'OFF',
+  disabled,
 }: {
   state: boolean;
   onText?: string;
   offText?: string;
+  disabled?: boolean;
 }) => (
   <View
     style={[
@@ -93,6 +95,7 @@ export const StatePanel = ({
       {
         backgroundColor: state ? '#008ffe' : '#fff',
         borderColor: state ? '#008ffe' : '#aaa',
+        opacity: disabled ? 0.5 : 1,
       },
     ]}
   >

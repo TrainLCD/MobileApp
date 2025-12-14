@@ -81,7 +81,7 @@ const SettingsItem = ({
       {item.title}
     </Typography>
 
-    <StatePanel state={disabled ? false : state} />
+    <StatePanel state={disabled ? false : state} disabled={disabled} />
   </Pressable>
 );
 
