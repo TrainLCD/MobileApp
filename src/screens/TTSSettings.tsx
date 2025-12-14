@@ -65,7 +65,7 @@ const SettingsItem = ({
     <Pressable
       accessibilityRole="switch"
       accessibilityLabel={item.title}
-      accessibilityState={{ checked: state }}
+      accessibilityState={{ checked: state, disabled }}
       onPress={onToggle}
       disabled={disabled}
       style={{
