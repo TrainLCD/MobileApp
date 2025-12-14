@@ -110,36 +110,52 @@ const TTSSettingsScreen: React.FC = () => {
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
       const handleToggleTTS = async (flag: boolean) => {
-        const noticeConfirmed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.TTS_NOTICE
-        );
+        try {
+          const noticeConfirmed = await AsyncStorage.getItem(
+            ASYNC_STORAGE_KEYS.TTS_NOTICE
+          );
 
-        if (flag && noticeConfirmed === null) {
-          Alert.alert(translate('notice'), translate('ttsAlertText'), [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.TTS_NOTICE,
-                  'true'
-                );
+          if (flag && noticeConfirmed === null) {
+            Alert.alert(translate('notice'), translate('ttsAlertText'), [
+              {
+                text: translate('doNotShowAgain'),
+                style: 'cancel',
+                onPress: async (): Promise<void> => {
+                  try {
+                    await AsyncStorage.setItem(
+                      ASYNC_STORAGE_KEYS.TTS_NOTICE,
+                      'true'
+                    );
+                  } catch (error) {
+                    console.error('Failed to persist TTS notice flag', error);
+                    Alert.alert(
+                      translate('errorTitle'),
+                      translate('failedToSavePreference')
+                    );
+                  }
+                },
               },
-            },
-            {
-              text: 'OK',
-            },
-          ]);
-        }
+              {
+                text: 'OK',
+              },
+            ]);
+          }
 
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
-          flag ? 'true' : 'false'
-        );
-        setSpeechState((prev) => ({
-          ...prev,
-          enabled: flag,
-        }));
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
+            flag ? 'true' : 'false'
+          );
+          setSpeechState((prev) => ({
+            ...prev,
+            enabled: flag,
+          }));
+        } catch (error) {
+          console.error('Failed to toggle TTS setting', error);
+          Alert.alert(
+            translate('errorTitle'),
+            translate('failedToSavePreference')
+          );
+        }
       };
 
       const handleToggleBgTTS = async (flag: boolean) => {
@@ -147,36 +163,55 @@ const TTSSettingsScreen: React.FC = () => {
           return;
         }
 
-        const noticeConfirmed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
-        );
+        try {
+          const noticeConfirmed = await AsyncStorage.getItem(
+            ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
+          );
 
-        if (flag && noticeConfirmed === null) {
-          Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
-                  'true'
-                );
+          if (flag && noticeConfirmed === null) {
+            Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
+              {
+                text: translate('doNotShowAgain'),
+                style: 'cancel',
+                onPress: async (): Promise<void> => {
+                  try {
+                    await AsyncStorage.setItem(
+                      ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
+                      'true'
+                    );
+                  } catch (error) {
+                    console.error(
+                      'Failed to persist BG TTS notice flag',
+                      error
+                    );
+                    Alert.alert(
+                      translate('errorTitle'),
+                      translate('failedToSavePreference')
+                    );
+                  }
+                },
               },
-            },
-            {
-              text: 'OK',
-            },
-          ]);
-        }
+              {
+                text: 'OK',
+              },
+            ]);
+          }
 
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
-          flag ? 'true' : 'false'
-        );
-        setSpeechState((prev) => ({
-          ...prev,
-          backgroundEnabled: flag,
-        }));
+          await AsyncStorage.setItem(
+            ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
+            flag ? 'true' : 'false'
+          );
+          setSpeechState((prev) => ({
+            ...prev,
+            backgroundEnabled: flag,
+          }));
+        } catch (error) {
+          console.error('Failed to toggle background TTS setting', error);
+          Alert.alert(
+            translate('errorTitle'),
+            translate('failedToSavePreference')
+          );
+        }
       };
       const state = (() => {
         switch (item.id) {

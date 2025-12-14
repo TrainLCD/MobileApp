@@ -202,5 +202,6 @@
   "telemetrySettingWillPersist": "テレメトリ有効化は永続的に保持されます。",
   "personalize": "パーソナライズ",
   "forDevelopers": "開発者向け",
-  "toEnabled": "有効にする"
+  "toEnabled": "有効にする",
+  "failedToSavePreference": "設定の保存に失敗しました。もう一度お試しください。"
 }

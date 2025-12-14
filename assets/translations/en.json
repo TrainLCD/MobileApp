@@ -201,5 +201,6 @@
   "telemetrySettingWillPersist": "Enabling telemetry will be persisted.",
   "personalize": "Personalize",
   "forDevelopers": "Developers",
-  "toEnabled": "Enable"
+  "toEnabled": "Enable",
+  "failedToSavePreference": "Failed to save preference. Please try again."
 }
