@@ -75,10 +75,10 @@ const SettingsItem = ({
         paddingHorizontal: 24,
         paddingVertical: 16,
         backgroundColor: isLEDTheme ? '#333' : 'white',
-        borderTopLeftRadius: isFirst ? 12 : 0,
-        borderTopRightRadius: isFirst ? 12 : 0,
-        borderBottomLeftRadius: isLast ? 12 : 0,
-        borderBottomRightRadius: isLast ? 12 : 0,
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
       }}
     >
       <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
