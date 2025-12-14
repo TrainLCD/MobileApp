@@ -5,6 +5,7 @@ import {
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
+import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
 import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
@@ -86,6 +87,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="ThemeSettings"
           component={ThemeSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="TTSSettings"
+          component={TTSSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}

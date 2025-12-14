@@ -191,6 +191,8 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
               {station ? (
                 <AnimatedTypography
                   style={[styles.nowStation, animatedStationFont]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
                   {nowHeader.name ?? ''}
                 </AnimatedTypography>
@@ -205,10 +207,12 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
               <Typography style={styles.nowLabel}>
                 {nowHeader.label ?? ''}
               </Typography>
-              <Typography style={styles.nowStation}>
-                {isJapanese
-                  ? `${nowHeader.name ?? ''}`
-                  : (nowHeader.name ?? '')}
+              <Typography
+                style={styles.nowStation}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {nowHeader.name ?? ''}
               </Typography>
             </Animated.View>
           </View>

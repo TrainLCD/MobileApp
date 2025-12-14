@@ -98,6 +98,7 @@
   "bgAlertTitle": "Updating the nearest station",
   "bgAlertContent": "TrainLCD is updating the nearest station in the background.",
   "warning": "WARNING",
+  "autoAnnounce":"Auto Announcement",
   "autoAnnounceItemTitle": "Enable voice announcement",
   "selectLanguagesTitle": "Enabled languages",
   "autoModeSettings": "Auto mode",
@@ -197,5 +198,7 @@
   "canaryNotice": "This TrainLCD is a canary release.",
   "setBoundForSelectedStation": "Go to the selected station",
   "optInTelemetryTitle": "Enable telemetry",
-  "telemetrySettingWillPersist": "Enabling telemetry will be persisted."
+  "telemetrySettingWillPersist": "Enabling telemetry will be persisted.",
+  "personalize": "Personalize",
+  "forDevelopers": "Developers"
 }

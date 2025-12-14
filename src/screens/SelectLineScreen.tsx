@@ -110,7 +110,9 @@ const ListHeader = React.memo(
         isPresetsLoading={isPresetsLoading}
         onPress={onPress}
       />
-      <Heading style={styles.heading}>{headingTitle}</Heading>
+      <Heading style={styles.heading} singleLine>
+        {headingTitle}
+      </Heading>
     </>
   )
 );

@@ -9,6 +9,7 @@ import { NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
+import { CardChevron } from './CardChevron';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
@@ -247,16 +248,7 @@ export const CommonCard: React.FC<Props> = ({
         )}
       </View>
       <View style={styles.chevron}>
-        <Svg width={24} height={24} viewBox="0 0 24 24">
-          <Path
-            d="M8 5l8 7-8 7"
-            fill="none"
-            stroke="#fff"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <CardChevron />
       </View>
     </TouchableOpacity>
   );
