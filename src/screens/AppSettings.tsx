@@ -70,6 +70,8 @@ const SettingsItem = ({
   isLast: boolean;
   onPress?: () => void;
 }) => {
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
   const iconName = useMemo(() => {
     switch (item.id) {
       case 'personalize_theme':
@@ -94,12 +96,12 @@ const SettingsItem = ({
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: 'white',
+        backgroundColor: isLEDTheme ? '#333' : 'white',
         opacity: onPress ? 1 : 0.5,
-        borderTopLeftRadius: isFirst ? 12 : 0,
-        borderTopRightRadius: isFirst ? 12 : 0,
-        borderBottomLeftRadius: isLast ? 12 : 0,
-        borderBottomRightRadius: isLast ? 12 : 0,
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
         marginBottom: isLast ? 32 : 0,
       }}
     >
@@ -110,7 +112,7 @@ const SettingsItem = ({
             height: 44,
             backgroundColor: item.color,
             marginRight: 16,
-            borderRadius: 8,
+            borderRadius: isLEDTheme ? 0 : 8,
             overflow: 'hidden',
           }}
         >
