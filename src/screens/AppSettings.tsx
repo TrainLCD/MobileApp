@@ -86,12 +86,16 @@ const SettingsItem = ({
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole="button"
+      accessibilityLabel={item.title}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
         backgroundColor: 'white',
+        opacity: onPress ? 1 : 0.5,
         borderTopLeftRadius: isFirst ? 12 : 0,
         borderTopRightRadius: isFirst ? 12 : 0,
         borderBottomLeftRadius: isLast ? 12 : 0,
