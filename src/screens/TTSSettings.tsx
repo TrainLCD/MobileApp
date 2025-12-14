@@ -35,10 +35,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  list: {
-    borderRadius: 8,
-    flex: 1,
-  },
   screenBg: {
     backgroundColor: '#FAFAFA',
   },
@@ -278,7 +274,6 @@ const TTSSettingsScreen: React.FC = () => {
           data={SETTING_ITEMS}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
-            styles.list,
             headerHeight ? { marginTop: headerHeight } : null,
           ]}
           renderItem={renderItem}
