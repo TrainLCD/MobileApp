@@ -161,6 +161,7 @@ const TTSSettingsScreen: React.FC = () => {
 
       const handleToggleBgTTS = async (flag: boolean) => {
         if (isClip()) {
+          Alert.alert(translate('notice'), translate('bgTtsAppClipAlertText'));
           return;
         }
 
@@ -261,6 +262,7 @@ const TTSSettingsScreen: React.FC = () => {
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.FlatList
           data={SETTING_ITEMS}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={[
             styles.list,
             headerHeight ? { marginTop: headerHeight } : null,
