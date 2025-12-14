@@ -140,7 +140,7 @@ const AnimatedSelectionList = Animated.createAnimatedComponent(
 );
 
 const AppSettingsScreen: React.FC = () => {
-  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const scrollY = useSharedValue(0);
 
@@ -239,7 +239,7 @@ const AppSettingsScreen: React.FC = () => {
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.listContainerStyle,
-            nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
+            headerHeight ? { paddingTop: headerHeight } : null,
           ]}
           renderSectionHeader={renderSectionHeader}
           sections={SETTINGS_SECTIONS}
@@ -251,7 +251,7 @@ const AppSettingsScreen: React.FC = () => {
         />
       </SafeAreaView>
       <SettingsHeader
-        onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height + 32)}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
         scrollY={scrollY}
       />
       <FooterTabBar active="settings" />
