@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 8,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
   },
@@ -70,7 +70,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 16,
     borderWidth: 1,
   },
   stateIndicatorText: {
@@ -78,6 +77,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+export const StatePanel = ({
+  state,
+  onText = 'ON',
+  offText = 'OFF',
+}: {
+  state: boolean;
+  onText?: string;
+  offText?: string;
+}) => (
+  <View
+    style={[
+      styles.stateIndicator,
+      {
+        backgroundColor: state ? '#008ffe' : '#fff',
+        borderColor: state ? '#008ffe' : '#aaa',
+      },
+    ]}
+  >
+    <Typography
+      style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
+    >
+      {state ? onText : offText}
+    </Typography>
+  </View>
+);
 
 export const ToggleButton: React.FC<Props> = ({
   children,
@@ -109,24 +134,8 @@ export const ToggleButton: React.FC<Props> = ({
       >
         {children}
       </Typography>
-      <View
-        style={[
-          styles.stateIndicator,
-          {
-            backgroundColor: state ? '#008ffe' : '#fff',
-            borderColor: state ? '#008ffe' : '#aaa',
-          },
-        ]}
-      >
-        <Typography
-          style={[
-            styles.stateIndicatorText,
-            { color: state ? '#fff' : '#888' },
-          ]}
-        >
-          {state ? onText : offText}
-        </Typography>
-      </View>
+
+      <StatePanel state={!!state} onText={onText} offText={offText} />
     </TouchableOpacity>
   );
 };

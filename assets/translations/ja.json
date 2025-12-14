@@ -153,7 +153,7 @@
   "removeFromSavedRoutes": "保存済み経路から削除",
   "selectFirstStationTitle": "始発駅を選択してください",
   "longPressNotice": "画面を長押しするとメニューが開けます",
-  "autoAnnounceBackgroundTitle": "バックグラウンド音声を有効にする",
+  "autoAnnounceBackgroundTitle": "バックグラウンド再生",
   "loadingLocation": "位置情報を取得中です",
   "loadingAPI": "サーバーと通信中です",
   "routeSearchTitle": "経路を検索",
@@ -201,5 +201,6 @@
   "optInTelemetryTitle": "テレメトリを有効にする",
   "telemetrySettingWillPersist": "テレメトリ有効化は永続的に保持されます。",
   "personalize": "パーソナライズ",
-  "forDevelopers": "開発者向け"
+  "forDevelopers": "開発者向け",
+  "toEnabled": "有効にする"
 }

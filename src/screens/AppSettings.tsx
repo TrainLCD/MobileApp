@@ -251,6 +251,7 @@ const AppSettingsScreen: React.FC = () => {
         />
       </SafeAreaView>
       <SettingsHeader
+        title={translate('settings')}
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
         scrollY={scrollY}
       />
