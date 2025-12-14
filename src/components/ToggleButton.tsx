@@ -67,7 +67,6 @@ const styles = StyleSheet.create({
   stateIndicator: {
     width: 64,
     height: 32,
-    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -88,24 +87,29 @@ export const StatePanel = ({
   onText?: string;
   offText?: string;
   disabled?: boolean;
-}) => (
-  <View
-    style={[
-      styles.stateIndicator,
-      {
-        backgroundColor: state ? '#008ffe' : '#fff',
-        borderColor: state ? '#008ffe' : '#aaa',
-        opacity: disabled ? 0.5 : 1,
-      },
-    ]}
-  >
-    <Typography
-      style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
+}) => {
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  return (
+    <View
+      style={[
+        styles.stateIndicator,
+        {
+          backgroundColor: state ? '#008ffe' : '#fff',
+          borderColor: state ? '#008ffe' : '#aaa',
+          opacity: disabled ? 0.5 : 1,
+          borderRadius: isLEDTheme ? 0 : 8,
+        },
+      ]}
     >
-      {state ? onText : offText}
-    </Typography>
-  </View>
-);
+      <Typography
+        style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
+      >
+        {state ? onText : offText}
+      </Typography>
+    </View>
+  );
+};
 
 export const ToggleButton: React.FC<Props> = ({
   children,

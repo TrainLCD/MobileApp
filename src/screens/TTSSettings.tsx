@@ -58,33 +58,37 @@ const SettingsItem = ({
   state: boolean;
   disabled: boolean;
   onToggle: (event: GestureResponderEvent) => void;
-}) => (
-  <Pressable
-    accessibilityRole="switch"
-    accessibilityLabel={item.title}
-    accessibilityState={{ checked: state }}
-    onPress={onToggle}
-    disabled={disabled}
-    style={{
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 24,
-      paddingVertical: 16,
-      backgroundColor: 'white',
-      borderTopLeftRadius: isFirst ? 12 : 0,
-      borderTopRightRadius: isFirst ? 12 : 0,
-      borderBottomLeftRadius: isLast ? 12 : 0,
-      borderBottomRightRadius: isLast ? 12 : 0,
-    }}
-  >
-    <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
-      {item.title}
-    </Typography>
+}) => {
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-    <StatePanel state={disabled ? false : state} disabled={disabled} />
-  </Pressable>
-);
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={item.title}
+      accessibilityState={{ checked: state }}
+      onPress={onToggle}
+      disabled={disabled}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : 'white',
+        borderTopLeftRadius: isFirst ? 12 : 0,
+        borderTopRightRadius: isFirst ? 12 : 0,
+        borderBottomLeftRadius: isLast ? 12 : 0,
+        borderBottomRightRadius: isLast ? 12 : 0,
+      }}
+    >
+      <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
+        {item.title}
+      </Typography>
+
+      <StatePanel state={disabled ? false : state} disabled={disabled} />
+    </Pressable>
+  );
+};
 
 const TTSSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
