@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
@@ -60,8 +60,6 @@ const SettingsItem = ({
   onToggle: (event: GestureResponderEvent) => void;
 }) => (
   <View
-    accessibilityRole="button"
-    accessibilityLabel={item.title}
     style={{
       flexDirection: 'row',
       alignItems: 'center',
@@ -99,19 +97,16 @@ const TTSSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const SETTING_ITEMS: SettingItem[] = useMemo(
-    () => [
-      {
-        id: 'enable_tts',
-        title: translate('toEnabled'),
-      },
-      {
-        id: 'enable_bg_tts',
-        title: translate('autoAnnounceBackgroundTitle'),
-      },
-    ],
-    []
-  );
+  const SETTING_ITEMS: SettingItem[] = [
+    {
+      id: 'enable_tts',
+      title: translate('toEnabled'),
+    },
+    {
+      id: 'enable_bg_tts',
+      title: translate('autoAnnounceBackgroundTitle'),
+    },
+  ] as const;
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
