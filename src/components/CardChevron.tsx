@@ -9,7 +9,6 @@ export const CardChevron = ({ stroke, ...props }: SvgProps) => (
       strokeWidth={2.5}
       strokeLinecap="round"
       strokeLinejoin="round"
-      {...props}
     />
   </Svg>
 );
