@@ -199,15 +199,16 @@ const AppSettingsScreen: React.FC = () => {
     ({
       item,
       index,
+      section,
     }: SectionListRenderItemInfo<SettingsSectionData, SettingsSection>) => (
       <SettingsItem
         item={item}
         isFirst={index === 0}
-        isLast={index === SETTINGS_SECTIONS[0].data.length - 1}
+        isLast={index === section.data.length - 1}
         onPress={item.onPress}
       />
     ),
-    [SETTINGS_SECTIONS[0].data.length]
+    []
   );
   const keyExtractor = useCallback(
     (section: SettingsSectionData) => `key-${section.id}`,
