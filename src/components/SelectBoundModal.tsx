@@ -174,9 +174,6 @@ export const SelectBoundModal: React.FC<Props> = ({
         selectedDirection: direction,
         pendingStation: null,
         pendingStations: [],
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
         wantedDestination: null,
       }));
       onBoundSelect();
@@ -193,7 +190,6 @@ export const SelectBoundModal: React.FC<Props> = ({
       stations,
       onBoundSelect,
       getTerminatedStations,
-      setNavigationState,
     ]
   );
 
