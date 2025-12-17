@@ -28,7 +28,7 @@ type Props = {
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     elevation: 1,
     shadowColor: '#333',
     shadowOpacity: 0.25,

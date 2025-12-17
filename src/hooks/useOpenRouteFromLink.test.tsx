@@ -85,7 +85,6 @@ const createNavigationState = (
   firstStop: true,
   presetsFetched: false,
   presetRoutes: [],
-  pendingWantedDestination: null,
   ...overrides,
 });
 

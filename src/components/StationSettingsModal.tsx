@@ -34,14 +34,14 @@ const styles = StyleSheet.create({
   closeButtonText: { fontWeight: 'bold' },
   heading: { width: '100%' },
   lineText: { width: '100%', fontWeight: 'bold', fontSize: RFValue(12) },
-  gotoButton: { marginTop: 8 },
-  gotoButtonText: { fontWeight: 'bold' },
+  setAsTerminusButton: { marginTop: 8 },
 });
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   station: Station | null;
+  isSetAsTerminus: boolean;
   notificationModeEnabled: boolean;
   toggleNotificationModeEnabled: () => void;
   onDestinationSelected: () => void;
@@ -51,6 +51,7 @@ export const StationSettingsModal: React.FC<Props> = ({
   visible,
   onClose,
   station,
+  isSetAsTerminus,
   notificationModeEnabled,
   toggleNotificationModeEnabled,
   onDestinationSelected,
@@ -93,14 +94,14 @@ export const StationSettingsModal: React.FC<Props> = ({
           >
             {translate('enableNotificationMode')}
           </ToggleButton>
-          <Button
+          <ToggleButton
             outline
-            style={styles.gotoButton}
-            textStyle={styles.gotoButtonText}
-            onPress={onDestinationSelected}
+            onToggle={onDestinationSelected}
+            state={isSetAsTerminus}
+            style={styles.setAsTerminusButton}
           >
-            {translate('setBoundForSelectedStation')}
-          </Button>
+            {translate('setAsTerminus')}
+          </ToggleButton>
 
           <Button
             style={styles.closeButton}
