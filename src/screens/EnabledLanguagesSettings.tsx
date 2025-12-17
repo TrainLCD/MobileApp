@@ -143,7 +143,7 @@ const EnabledLanguagesSettings: React.FC = () => {
         );
       } catch (error) {
         console.error('Failed to save enabled languages:', error);
-        Alert.alert(translate('error'), translate('failedToSaveSettings'));
+        Alert.alert(translate('error'), translate('failedToSavePreference'));
       }
     },
     [enabledLanguages, setNavigation]
