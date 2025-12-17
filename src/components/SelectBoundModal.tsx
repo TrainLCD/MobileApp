@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import Toast from 'react-native-toast-message';
-import type { Station, TrainType } from '~/@types/graphql';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import {
@@ -253,6 +253,20 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
       }
 
+      const buildSubtitle = (
+        lineForCard: Line,
+        trainTypeForCard?: TrainType | null
+      ) => {
+        const lineName = isJapanese
+          ? lineForCard.nameShort
+          : lineForCard.nameRoman;
+        const trainTypeName = trainTypeForCard
+          ? isJapanese
+            ? trainTypeForCard.name
+            : trainTypeForCard.nameRoman
+          : '';
+        return `${lineName} ${!isLoopLine && trainTypeName ? trainTypeName : ''}`.trim();
+      };
       const finalStop =
         wantedDestination ??
         (direction === 'INBOUND'
@@ -280,10 +294,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           const title = isLoopLine
             ? loopLineDirectionText(direction)
             : normalLineDirectionText(boundStations);
-          const subtitle = isJapanese
-            ? `${lineForCard.nameShort} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.name}` : ''}`
-            : `${lineForCard.nameRoman} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.nameRoman}` : ''}`;
-
+          const subtitle = buildSubtitle(lineForCard, trainTypeForCard);
           return (
             <CommonCard
               line={lineForCard ?? line}
@@ -315,9 +326,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       const title = isLoopLine
         ? loopLineDirectionText(direction)
         : normalLineDirectionText(boundStations);
-      const subtitle = isJapanese
-        ? `${lineForCard.nameShort} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.name}` : ''}`
-        : `${lineForCard.nameRoman} ${!isLoopLine && trainTypeForCard ? `${trainTypeForCard.nameRoman}` : ''}`;
+      const subtitle = buildSubtitle(lineForCard, trainTypeForCard);
 
       return (
         <CommonCard
