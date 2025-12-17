@@ -264,7 +264,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           : boundStations[boundStations.length - 1]);
 
       const lineForCard = finalStop?.line;
-      const trainTypeForCard = finalStop.trainType;
+      const trainTypeForCard = finalStop?.trainType;
 
       if (!lineForCard) {
         return <></>;
