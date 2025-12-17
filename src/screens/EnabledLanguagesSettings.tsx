@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions, Link, useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
@@ -25,8 +25,15 @@ import { isDevApp } from '~/utils/isDevApp';
 import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
 import { useThemeStore } from '../hooks';
 
+const LANGUAGE_MAP = {
+  japanese: 'JA',
+  english: 'EN',
+  chinese: 'ZH',
+  korean: 'KO',
+} as const;
+
 type SettingItem = {
-  id: 'japanese' | 'english' | 'chinese' | 'korean';
+  id: keyof typeof LANGUAGE_MAP;
   title: string;
   nationalFlag: string;
   disabled?: boolean;
@@ -101,29 +108,33 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const SETTING_ITEMS: SettingItem[] = [
-    {
-      id: 'japanese',
-      title: translate('japanese'),
-      nationalFlag: '🇯🇵',
-      disabled: true,
-    },
-    {
-      id: 'english',
-      title: translate('english'),
-      nationalFlag: '🇺🇸',
-    },
-    {
-      id: 'chinese',
-      title: translate('chinese'),
-      nationalFlag: '🇨🇳',
-    },
-    {
-      id: 'korean',
-      title: translate('korean'),
-      nationalFlag: '🇰🇷',
-    },
-  ] as const;
+  const SETTING_ITEMS: SettingItem[] = useMemo(
+    () =>
+      [
+        {
+          id: 'japanese',
+          title: translate('japanese'),
+          nationalFlag: '🇯🇵',
+          disabled: true,
+        },
+        {
+          id: 'english',
+          title: translate('english'),
+          nationalFlag: '🇺🇸',
+        },
+        {
+          id: 'chinese',
+          title: translate('chinese'),
+          nationalFlag: '🇨🇳',
+        },
+        {
+          id: 'korean',
+          title: translate('korean'),
+          nationalFlag: '🇰🇷',
+        },
+      ] as const,
+    []
+  );
 
   const handleToggleLanguage = useCallback(
     async (language: AvailableLanguage) => {
@@ -143,7 +154,10 @@ const EnabledLanguagesSettings: React.FC = () => {
         );
       } catch (error) {
         console.error('Failed to save enabled languages:', error);
-        Alert.alert(translate('error'), translate('failedToSavePreference'));
+        Alert.alert(
+          translate('errorTitle'),
+          translate('failedToSavePreference')
+        );
       }
     },
     [enabledLanguages, setNavigation]
@@ -151,38 +165,16 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
-      const state = (() => {
-        switch (item.id) {
-          case 'japanese':
-            return enabledLanguages.includes('JA');
-          case 'english':
-            return enabledLanguages.includes('EN');
-          case 'chinese':
-            return enabledLanguages.includes('ZH');
-          case 'korean':
-            return enabledLanguages.includes('KO');
-          default:
-            return false;
-        }
-      })();
+      const languageCode = LANGUAGE_MAP[item.id];
+      const state = languageCode
+        ? enabledLanguages.includes(languageCode)
+        : false;
 
       const onToggle = () => {
-        switch (item.id) {
-          case 'japanese':
-            handleToggleLanguage('JA');
-            break;
-          case 'english':
-            handleToggleLanguage('EN');
-            break;
-          case 'chinese':
-            handleToggleLanguage('ZH');
-            break;
-          case 'korean':
-            handleToggleLanguage('KO');
-            break;
-          default:
-            break;
+        if (!languageCode) {
+          return;
         }
+        handleToggleLanguage(languageCode);
       };
 
       return (
