@@ -1,5 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
@@ -109,11 +109,11 @@ const RouteSearchScreen = () => {
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
 
-  const [{ station }, setStationState] = useAtom(stationState);
+  const [{ station, wantedDestination }, setStationState] =
+    useAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
   const { pendingLine } = lineAtom;
-  const [{ pendingWantedDestination }, setNavigationState] =
-    useAtom(navigationState);
 
   const scrollY = useSharedValue(0);
 
@@ -195,14 +195,11 @@ const RouteSearchScreen = () => {
       setStationState((prev) => ({
         ...prev,
         pendingStations: [],
+        wantedDestination: null,
       }));
       setLineState((prev) => ({
         ...prev,
         pendingLine: selectedStation.line ?? null,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        pendingWantedDestination: selectedStation,
       }));
 
       // Guard: ensure both lineId and stationId are present before calling the query
@@ -463,7 +460,7 @@ const RouteSearchScreen = () => {
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
         line={currentStationInRoutes?.line ?? null}
-        destination={pendingWantedDestination}
+        destination={wantedDestination}
         onClose={() => {
           setTrainTypeListModalVisible(false);
         }}

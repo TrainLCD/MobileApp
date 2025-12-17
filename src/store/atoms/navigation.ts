@@ -29,7 +29,6 @@ export interface NavigationState {
   firstStop: boolean;
   presetsFetched: boolean;
   presetRoutes: SavedRoute[];
-  pendingWantedDestination: Station | null;
 }
 
 export const initialNavigationState: NavigationState = {
@@ -46,7 +45,6 @@ export const initialNavigationState: NavigationState = {
   firstStop: true,
   presetsFetched: false,
   presetRoutes: [],
-  pendingWantedDestination: null,
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

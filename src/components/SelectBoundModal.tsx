@@ -84,7 +84,6 @@ type Props = {
   onClose: () => void;
   loading: boolean;
   error: Error | null;
-  terminateByDestination?: boolean;
   onTrainTypeSelect: (trainType: TrainType) => void;
   onBoundSelect: () => void;
 };
@@ -94,7 +93,6 @@ export const SelectBoundModal: React.FC<Props> = ({
   onClose,
   loading,
   error,
-  terminateByDestination,
   onTrainTypeSelect,
   onBoundSelect,
 }) => {
@@ -111,9 +109,13 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
-  const { pendingStation: station, pendingStations: stations } = stationAtom;
+  const {
+    pendingStation: station,
+    pendingStations: stations,
+    wantedDestination,
+  } = stationAtom;
   const [
-    { autoModeEnabled, trainType, pendingWantedDestination, fetchedTrainTypes },
+    { autoModeEnabled, trainType, fetchedTrainTypes },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
@@ -175,7 +177,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       }));
       setNavigationState((prev) => ({
         ...prev,
-        pendingWantedDestination: null,
+        wantedDestination: null,
       }));
       onBoundSelect();
       requestAnimationFrame(() => {
@@ -200,19 +202,28 @@ export const SelectBoundModal: React.FC<Props> = ({
     setIsStationSettingsModalVisible(true);
   }, []);
 
-  const normalLineDirectionText = useCallback((boundStations: Station[]) => {
-    if (isJapanese) {
-      return `${boundStations
-        .map((s) => s.name)
+  const normalLineDirectionText = useCallback(
+    (boundStations: Station[]) => {
+      if (wantedDestination) {
+        return isJapanese
+          ? `${wantedDestination.name}方面`
+          : `for ${wantedDestination.nameRoman}`;
+      }
+
+      if (isJapanese) {
+        return `${boundStations
+          .map((s) => s.name)
+          .slice(0, 2)
+          .join('・')}方面`;
+      }
+      const names = boundStations
         .slice(0, 2)
-        .join('・')}方面`;
-    }
-    const names = boundStations
-      .slice(0, 2)
-      .map((s) => s.nameRoman)
-      .filter(Boolean);
-    return names.length ? `for ${names.join(' and ')}` : '';
-  }, []);
+        .map((s) => s.nameRoman)
+        .filter(Boolean);
+      return names.length ? `for ${names.join(' and ')}` : '';
+    },
+    [wantedDestination]
+  );
 
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {
@@ -247,29 +258,24 @@ export const SelectBoundModal: React.FC<Props> = ({
       }
 
       const finalStop =
-        direction === 'INBOUND'
+        wantedDestination ??
+        (direction === 'INBOUND'
           ? boundStations[0]
-          : boundStations[boundStations.length - 1];
+          : boundStations[boundStations.length - 1]);
 
-      const lineForCard =
-        direction === 'INBOUND'
-          ? (boundStations[0]?.line ?? line)
-          : boundStations[boundStations.length - 1]?.line;
-      const trainTypeForCard =
-        direction === 'INBOUND'
-          ? boundStations[0]?.trainType
-          : boundStations[boundStations.length - 1]?.trainType;
+      const lineForCard = finalStop?.line;
+      const trainTypeForCard = finalStop.trainType;
 
       if (!lineForCard) {
         return <></>;
       }
 
-      if (pendingWantedDestination && !isLoopLine) {
+      if (wantedDestination && !isLoopLine) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
         );
         const wantedStationIndex = stations.findIndex(
-          (s) => s.groupId === pendingWantedDestination.groupId
+          (s) => s.groupId === wantedDestination.groupId
         );
         const dir: LineDirection =
           currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
@@ -286,11 +292,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             <CommonCard
               line={lineForCard ?? line}
               onPress={() =>
-                handleBoundSelected(
-                  pendingWantedDestination,
-                  dir,
-                  terminateByDestination
-                )
+                handleBoundSelected(wantedDestination, dir, !!wantedDestination)
               }
               title={title}
               subtitle={subtitle}
@@ -337,9 +339,8 @@ export const SelectBoundModal: React.FC<Props> = ({
       isLoopLine,
       station?.groupId,
       stations,
-      pendingWantedDestination,
+      wantedDestination,
       line,
-      terminateByDestination,
       loopLineDirectionText,
       normalLineDirectionText,
     ]
@@ -394,8 +395,8 @@ export const SelectBoundModal: React.FC<Props> = ({
         (isJapanese ? trainType.name : trainType.nameRoman) ?? '';
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
-        name: pendingWantedDestination
-          ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${pendingWantedDestination.name}ゆき` : `for ${pendingWantedDestination.nameRoman}`}`.trim()
+        name: wantedDestination
+          ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
           : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
         lineId: line.id ?? 0,
         trainTypeId: trainType?.groupId,
@@ -411,8 +412,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
 
     const destinationName = isJapanese
-      ? pendingWantedDestination?.name
-      : pendingWantedDestination?.nameRoman;
+      ? wantedDestination?.name
+      : wantedDestination?.nameRoman;
     const newRoute: SavedRouteWithoutTrainTypeInput = {
       hasTrainType: false,
 
@@ -434,7 +435,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     savedRoute,
     removeCurrentRoute,
     saveCurrentRoute,
-    pendingWantedDestination,
+    wantedDestination,
     line,
     trainType,
     stations,
@@ -590,6 +591,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         }}
         onSelect={(trainType) => {
           setIsTrainTypeModalVisible(false);
+          setStationState((prev) => ({ ...prev, wantedDestination: null }));
           onTrainTypeSelect(trainType);
         }}
       />
@@ -601,25 +603,19 @@ export const SelectBoundModal: React.FC<Props> = ({
           selectedStation?.id ?? -1
         )}
         toggleNotificationModeEnabled={toggleNotificationModeEnabled}
+        isSetAsTerminus={
+          wantedDestination?.groupId === selectedStation?.groupId
+        }
         onDestinationSelected={() => {
           if (selectedStation) {
-            setNavigationState((prev) => ({
+            setStationState((prev) => ({
               ...prev,
-              pendingWantedDestination: selectedStation,
+              wantedDestination:
+                prev.wantedDestination?.groupId === selectedStation.groupId
+                  ? null
+                  : selectedStation,
             }));
-            const currentStationIndex = stations.findIndex(
-              (s) => s.groupId === station?.groupId
-            );
-            const wantedStationIndex = stations.findIndex(
-              (s) => s.groupId === selectedStation.groupId
-            );
-            const dir: LineDirection =
-              currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
-
-            handleBoundSelected(selectedStation, dir, true);
           }
-          setIsStationSettingsModalVisible(false);
-          setRouteInfoModalVisible(false);
         }}
       />
     </CustomModal>
