@@ -101,7 +101,7 @@
   "warning": "警告",
   "autoAnnounce":"自動アナウンス",
   "autoAnnounceItemTitle": "自動アナウンスを使用する",
-  "selectLanguagesTitle": "表示する言語",
+  "displayLanguages": "表示言語",
   "autoModeSettings": "オートモード",
   "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。",
   "report": "フィードバック",
@@ -203,5 +203,10 @@
   "personalize": "パーソナライズ",
   "forDevelopers": "開発者向け",
   "toEnabled": "有効にする",
-  "failedToSavePreference": "設定の保存に失敗しました。もう一度お試しください。"
+  "failedToSavePreference": "設定の保存に失敗しました。もう一度お試しください。",
+  "japanese": "日本語",
+  "english": "英語(米国)",
+  "chinese": "中国語(簡体字)",
+  "korean": "韓国語",
+  "ttsLanguageSettings": "自動アナウンスの言語設定"
 }

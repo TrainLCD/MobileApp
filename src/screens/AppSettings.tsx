@@ -169,7 +169,7 @@ const AppSettingsScreen: React.FC = () => {
             },
             {
               id: SETTING_ITEM_ID_MAP.personalize_languages,
-              title: translate('selectLanguagesTitle'),
+              title: translate('displayLanguages'),
               color: '#007AFF',
               onPress: () =>
                 navigation.navigate('EnabledLanguagesSettings' as never),

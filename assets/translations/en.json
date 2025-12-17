@@ -100,7 +100,7 @@
   "warning": "WARNING",
   "autoAnnounce":"Auto Announcement",
   "autoAnnounceItemTitle": "Enable voice announcement",
-  "selectLanguagesTitle": "Enabled languages",
+  "displayLanguages": "Enabled languages",
   "autoModeSettings": "Auto mode",
   "autoModeInProgress": "Auto mode is enabled. In-app location will not affected by actual location changes.",
   "report": "Send a feedback",
@@ -202,5 +202,10 @@
   "personalize": "Personalize",
   "forDevelopers": "Developers",
   "toEnabled": "Enable",
-  "failedToSavePreference": "Failed to save preference. Please try again."
+  "failedToSavePreference": "Failed to save preference. Please try again.",
+  "japanese": "Japanese",
+  "english": "English (US)" ,
+  "chinese": "Chinese (Simplified)",
+  "korean": "Korean",
+  "ttsLanguageSettings": "Automatic announcement language settings"
 }
