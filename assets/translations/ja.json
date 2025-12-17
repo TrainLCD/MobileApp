@@ -207,5 +207,6 @@
   "japanese": "日本語",
   "english": "英語(米国)",
   "chinese": "中国語(簡体字)",
-  "korean": "韓国語"
+  "korean": "韓国語",
+  "ttsLanguageSettings": "自動アナウンスの言語設定"
 }

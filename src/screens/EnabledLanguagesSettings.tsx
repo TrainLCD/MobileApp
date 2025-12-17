@@ -240,7 +240,7 @@ const EnabledLanguagesSettings: React.FC = () => {
                     }}
                     action={CommonActions.navigate('TTSSettings' as never)}
                   >
-                    自動アナウンスの言語設定
+                    {translate('ttsLanguageSettings')}
                   </Link>
                 </View>
               ) : null}
