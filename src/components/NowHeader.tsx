@@ -23,6 +23,7 @@ import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
+import isTablet from '~/utils/isTablet';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
 
@@ -66,10 +67,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   nowLabel: {
-    fontSize: 24,
+    fontSize: isTablet ? 32 : 24,
   },
   nowStation: {
-    fontSize: 32,
+    fontSize: isTablet ? 44 : 32,
     fontWeight: 'bold',
   },
 });
@@ -125,7 +126,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     fontSize: interpolate(
       scrollY.value,
       [0, COLLAPSE_RANGE],
-      [32, 21],
+      isTablet ? [44, 32] : [32, 24],
       'clamp'
     ),
   }));
