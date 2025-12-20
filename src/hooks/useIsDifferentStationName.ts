@@ -38,7 +38,10 @@ export const useIsDifferentStationName = () => {
       }
 
       // nameだと市ヶ谷と市ケ谷の違い程度でも違うものとなってしまうのでよみがなで判別する
-      return station.nameKatakana !== line.station.nameKatakana;
+      return (
+        station.name !== line.station.name &&
+        station.nameKatakana !== line.station.nameKatakana
+      );
     },
     [isEn]
   );
