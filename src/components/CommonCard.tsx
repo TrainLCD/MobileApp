@@ -1,16 +1,9 @@
-import { Orientation } from 'expo-screen-orientation';
 import type React from 'react';
 import { useMemo } from 'react';
-import {
-  StyleSheet,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
-import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import isTablet from '~/utils/isTablet';
 import { NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark, useThemeStore } from '../hooks';
@@ -28,7 +21,6 @@ type Props = {
   subtitle?: string;
   disabled?: boolean;
   testID?: string;
-  enableGrid?: boolean;
   onPress?: () => void;
 };
 
@@ -160,7 +152,6 @@ export const CommonCard: React.FC<Props> = ({
   subtitle,
   disabled,
   testID,
-  enableGrid,
   onPress,
 }) => {
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
@@ -205,28 +196,13 @@ export const CommonCard: React.FC<Props> = ({
     targetStation?.stationNumbers?.[0]?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
 
-  const dim = useWindowDimensions();
-  const orientation = useDeviceOrientation();
-  const isPortraitOrientation = useMemo(
-    () =>
-      orientation === Orientation.PORTRAIT_UP ||
-      orientation === Orientation.PORTRAIT_DOWN,
-    [orientation]
-  );
-
   const additionalRootStyle = useMemo(
     () => ({
       backgroundColor: line.color ?? '#333',
       opacity: disabled ? 0.5 : 1,
       borderWidth: 0,
-      width:
-        enableGrid && isTablet
-          ? isPortraitOrientation
-            ? dim.width / 2.2
-            : dim.width / 3.25
-          : undefined,
     }),
-    [isPortraitOrientation, enableGrid, dim.width, disabled, line.color]
+    [disabled, line.color]
   );
 
   return (

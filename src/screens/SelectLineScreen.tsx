@@ -10,6 +10,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import Animated, {
+  LinearTransition,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -166,15 +167,6 @@ const SelectLineScreen = () => {
   const numColumns = useMemo(
     () => (isTablet ? (isPortraitOrientation ? 2 : 3) : 1),
     [isPortraitOrientation]
-  );
-  const columnWrapperStyle = useMemo(
-    () =>
-      isTablet
-        ? {
-            gap: 16,
-          }
-        : undefined,
-    []
   );
 
   const {
@@ -649,33 +641,6 @@ const SelectLineScreen = () => {
     setIsSelectBoundModalOpen(false);
   }, []);
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: Line; index: number }) => {
-      if (fetchStationsByLineIdLoading) {
-        return (
-          <SkeletonPlaceholder borderRadius={4} speed={1500}>
-            <SkeletonPlaceholder.Item width="100%" height={72} />
-          </SkeletonPlaceholder>
-        );
-      }
-
-      const stations = stationsCache[index] ?? [];
-
-      return (
-        <CommonCard
-          line={item}
-          onPress={() => handleLineSelected(item)}
-          stations={stations}
-          testID={generateLineTestId(item)}
-          enableGrid
-        />
-      );
-    },
-    [handleLineSelected, fetchStationsByLineIdLoading, stationsCache]
-  );
-
-  const keyExtractor = useCallback((l: Line) => String(l.id as number), []);
-
   const headingTitle = useMemo(() => {
     if (!station) return translate('selectLineTitle');
     const re = /\([^()]*\)/g;
@@ -705,26 +670,84 @@ const SelectLineScreen = () => {
     ]
   );
 
+  const renderLineCard = useCallback(
+    (line: Line, index: number) => {
+      if (fetchStationsByLineIdLoading) {
+        return (
+          <SkeletonPlaceholder borderRadius={4} speed={1500}>
+            <SkeletonPlaceholder.Item width="100%" height={72} />
+          </SkeletonPlaceholder>
+        );
+      }
+
+      return (
+        <CommonCard
+          line={line}
+          onPress={() => handleLineSelected(line)}
+          stations={stationsCache[index] ?? []}
+          testID={generateLineTestId(line)}
+        />
+      );
+    },
+    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
+  );
+
+  const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
+    if (!isTablet || count <= 0) {
+      return null;
+    }
+
+    return Array.from({ length: count }).map((_, i) => (
+      <Animated.View
+        layout={LinearTransition.springify()}
+        // biome-ignore lint/suspicious/noArrayIndexKey: プレースホルダーは静的で順序が変わらないため問題なし
+        key={`placeholder-${rowIndex}-${i}`}
+        style={{ flex: 1 }}
+      />
+    ));
+  }, []);
+
+  const renderLineRow = useCallback(
+    (rowLines: Line[], rowIndex: number) => {
+      return (
+        <>
+          {rowIndex > 0 && <EmptyLineSeparator />}
+          <Animated.View
+            layout={LinearTransition.springify()}
+            style={
+              isTablet
+                ? {
+                    flexDirection: 'row',
+                    gap: 16,
+                  }
+                : undefined
+            }
+          >
+            {rowLines.map((line, colIndex) => {
+              const index = rowIndex * numColumns + colIndex;
+              return (
+                <Animated.View
+                  layout={LinearTransition.springify()}
+                  key={line.id as number}
+                  style={isTablet ? { flex: 1 } : undefined}
+                >
+                  {renderLineCard(line, index)}
+                </Animated.View>
+              );
+            })}
+            {renderPlaceholders(rowIndex, numColumns - rowLines.length)}
+          </Animated.View>
+        </>
+      );
+    },
+    [numColumns, renderLineCard, renderPlaceholders]
+  );
+
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <Animated.ScrollView
           style={StyleSheet.absoluteFill}
-          data={stationLines}
-          extraData={stationsCache}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          ItemSeparatorComponent={EmptyLineSeparator}
-          ListEmptyComponent={nearbyStationLoading ? NearbyStationLoader : null}
-          ListHeaderComponent={
-            <ListHeader
-              headingTitle={headingTitle}
-              carouselData={carouselData}
-              isPresetsLoading={isPresetsLoading}
-              onPress={handlePresetPress}
-            />
-          }
-          ListFooterComponent={EmptyLineSeparator}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
@@ -732,10 +755,33 @@ const SelectLineScreen = () => {
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
             { paddingBottom: listPaddingBottom },
           ]}
-          columnWrapperStyle={columnWrapperStyle}
-          key={numColumns.toString()}
-          numColumns={numColumns}
-        />
+        >
+          <ListHeader
+            headingTitle={headingTitle}
+            carouselData={carouselData}
+            isPresetsLoading={isPresetsLoading}
+            onPress={handlePresetPress}
+          />
+          {nearbyStationLoading ? (
+            <NearbyStationLoader />
+          ) : (
+            Array.from({
+              length: Math.ceil(stationLines.length / numColumns),
+            }).map((_, rowIndex) => {
+              const rowLines = stationLines.slice(
+                rowIndex * numColumns,
+                (rowIndex + 1) * numColumns
+              );
+              const rowKey = rowLines.map((l) => l.id).join('-');
+              return (
+                <React.Fragment key={rowKey}>
+                  {renderLineRow(rowLines, rowIndex)}
+                </React.Fragment>
+              );
+            })
+          )}
+          <EmptyLineSeparator />
+        </Animated.ScrollView>
       </SafeAreaView>
       {/* 固定ヘッダー */}
       <NowHeader
