@@ -1,8 +1,4 @@
 language: ja-JP
 
-auto_review:
-  enabled: true
-  ignore_usernames: []
-
 reviews:
   request_changes_workflow: true
