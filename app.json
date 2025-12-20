@@ -22,7 +22,8 @@
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd.dev",
       "scheme": "CanaryTrainLCD",
-      "buildNumber": "2327"
+      "buildNumber": "2327",
+      "supportsTablet": true
     },
     "android": {
       "package": "me.tinykitten.trainlcd.dev",
