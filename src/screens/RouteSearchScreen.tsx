@@ -1,9 +1,11 @@
 import { useLazyQuery } from '@apollo/client/react';
+import { Orientation } from 'expo-screen-orientation';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import Animated, {
+  LinearTransition,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -18,6 +20,7 @@ import { NowHeader } from '~/components/NowHeader';
 import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -25,6 +28,7 @@ import {
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
 import navigationState from '~/store/atoms/navigation';
+import isTablet from '~/utils/isTablet';
 import { findLocalType } from '~/utils/trainTypeString';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
@@ -108,6 +112,17 @@ const RouteSearchScreen = () => {
   const [hasSearched, setHasSearched] = useState(false);
 
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const orientation = useDeviceOrientation();
+  const isPortraitOrientation = useMemo(
+    () =>
+      orientation === Orientation.PORTRAIT_UP ||
+      orientation === Orientation.PORTRAIT_DOWN,
+    [orientation]
+  );
+  const numColumns = useMemo(
+    () => (isTablet ? (isPortraitOrientation ? 2 : 3) : 1),
+    [isPortraitOrientation]
+  );
 
   const [{ station, wantedDestination }, setStationState] =
     useAtom(stationState);
@@ -272,8 +287,8 @@ const RouteSearchScreen = () => {
     ]
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: Station }) => {
+  const renderCard = useCallback(
+    (item: Station) => {
       const line = item.line;
 
       if (!line) return null;
@@ -294,6 +309,56 @@ const RouteSearchScreen = () => {
       );
     },
     [handleLineSelected]
+  );
+
+  const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
+    if (!isTablet || count <= 0) {
+      return null;
+    }
+
+    return Array.from({ length: count }).map((_, i) => (
+      <Animated.View
+        layout={LinearTransition.springify()}
+        // biome-ignore lint/suspicious/noArrayIndexKey: プレースホルダーは静的で順序が変わらないため問題なし
+        key={`placeholder-${rowIndex}-${i}`}
+        style={{ flex: 1 }}
+      />
+    ));
+  }, []);
+
+  const renderStationRow = useCallback(
+    (rowStations: Station[], rowIndex: number) => {
+      return (
+        <>
+          {rowIndex > 0 && <EmptyLineSeparator />}
+          <Animated.View
+            layout={LinearTransition.springify()}
+            style={
+              isTablet
+                ? {
+                    flexDirection: 'row',
+                    gap: 16,
+                  }
+                : undefined
+            }
+          >
+            {rowStations.map((item, colIndex) => {
+              return (
+                <Animated.View
+                  layout={LinearTransition.springify()}
+                  key={item.id ?? `station-${rowIndex}-${colIndex}`}
+                  style={isTablet ? { flex: 1 } : undefined}
+                >
+                  {renderCard(item)}
+                </Animated.View>
+              );
+            })}
+            {renderPlaceholders(rowIndex, numColumns - rowStations.length)}
+          </Animated.View>
+        </>
+      );
+    },
+    [numColumns, renderCard, renderPlaceholders]
   );
 
   const handleTrainTypeSelected = useCallback(
@@ -332,11 +397,6 @@ const RouteSearchScreen = () => {
     ]
   );
 
-  const keyExtractor = useCallback(
-    (s: Station, index: number) =>
-      s.id?.toString() ?? `fallback-${index}-${s.groupId ?? s.name}`,
-    []
-  );
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollY.value = e.contentOffset.y;
@@ -395,36 +455,48 @@ const RouteSearchScreen = () => {
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
-        <Animated.FlatList<Station>
+        <Animated.ScrollView
           style={StyleSheet.absoluteFill}
-          data={searchResults}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          ItemSeparatorComponent={EmptyLineSeparator}
-          ListEmptyComponent={
-            <EmptyResult
-              loading={byNameLoading || fetchRouteTypesLoading}
-              hasSearched={hasSearched}
-            />
-          }
-          ListHeaderComponent={
-            <View style={styles.listHeaderContainer}>
-              <View style={styles.searchBarContainer}>
-                <SearchBar onSearch={handleSearch} />
-              </View>
-              <Heading style={styles.searchResultHeading}>
-                {translate('searchResult')}
-              </Heading>
-            </View>
-          }
-          ListFooterComponent={EmptyLineSeparator}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.listContainerStyle,
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
           ]}
-        />
+        >
+          <View style={styles.listHeaderContainer}>
+            <View style={styles.searchBarContainer}>
+              <SearchBar onSearch={handleSearch} />
+            </View>
+            <Heading style={styles.searchResultHeading}>
+              {translate('searchResult')}
+            </Heading>
+          </View>
+
+          {!searchResults.length ? (
+            <EmptyResult
+              loading={byNameLoading || fetchRouteTypesLoading}
+              hasSearched={hasSearched}
+            />
+          ) : (
+            Array.from({
+              length: Math.ceil(searchResults.length / numColumns),
+            }).map((_, rowIndex) => {
+              const rowStations = searchResults.slice(
+                rowIndex * numColumns,
+                (rowIndex + 1) * numColumns
+              );
+              const rowKey = rowStations.map((s) => s.id).join('-');
+              return (
+                <React.Fragment key={rowKey}>
+                  {renderStationRow(rowStations, rowIndex)}
+                </React.Fragment>
+              );
+            })
+          )}
+
+          <EmptyLineSeparator />
+        </Animated.ScrollView>
       </SafeAreaView>
 
       <NowHeader
