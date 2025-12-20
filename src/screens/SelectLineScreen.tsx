@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Orientation } from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtom, useSetAtom } from 'jotai';
@@ -22,6 +23,7 @@ import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { gqlClient } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -29,6 +31,7 @@ import {
   GET_STATION_TRAIN_TYPES,
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
+import isTablet from '~/utils/isTablet';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
@@ -75,7 +78,10 @@ type GetStationTrainTypesVariables = {
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
-  listContainerStyle: { paddingBottom: 24, paddingHorizontal: 24 },
+  listContainerStyle: {
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+  },
   lineName: {
     fontSize: 14,
     fontWeight: 'bold',
@@ -150,6 +156,26 @@ const SelectLineScreen = () => {
   }, [footerHeight]);
 
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const orientation = useDeviceOrientation();
+  const isPortraitOrientation = useMemo(
+    () =>
+      orientation === Orientation.PORTRAIT_UP ||
+      orientation === Orientation.PORTRAIT_DOWN,
+    [orientation]
+  );
+  const numColumns = useMemo(
+    () => (isTablet ? (isPortraitOrientation ? 2 : 3) : 1),
+    [isPortraitOrientation]
+  );
+  const columnWrapperStyle = useMemo(
+    () =>
+      isTablet
+        ? {
+            gap: 16,
+          }
+        : undefined,
+    []
+  );
 
   const {
     stations: nearbyStations,
@@ -641,6 +667,7 @@ const SelectLineScreen = () => {
           onPress={() => handleLineSelected(item)}
           stations={stations}
           testID={generateLineTestId(item)}
+          enableGrid
         />
       );
     },
@@ -705,6 +732,9 @@ const SelectLineScreen = () => {
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
             { paddingBottom: listPaddingBottom },
           ]}
+          columnWrapperStyle={columnWrapperStyle}
+          key={numColumns.toString()}
+          numColumns={numColumns}
         />
       </SafeAreaView>
       {/* 固定ヘッダー */}
