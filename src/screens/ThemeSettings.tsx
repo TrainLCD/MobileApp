@@ -174,7 +174,7 @@ const ThemeSettingsScreen: React.FC = () => {
         style={[styles.root, currentTheme !== APP_THEME.LED && styles.screenBg]}
       >
         <Animated.FlatList
-          data={SETTING_ITEMS}
+          data={visibleItems}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
             headerHeight
