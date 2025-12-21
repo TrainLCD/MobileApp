@@ -1,0 +1,164 @@
+import { BlurView } from 'expo-blur';
+import { useMemo } from 'react';
+import {
+  type LayoutChangeEvent,
+  Platform,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from 'react-native';
+import Animated, {
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LED_THEME_BG_COLOR } from '~/constants';
+import { useThemeStore } from '~/hooks';
+import { APP_THEME } from '~/models/Theme';
+import Typography from './Typography';
+
+const styles = StyleSheet.create({
+  nowHeaderContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    zIndex: 10,
+  },
+  nowHeaderCard: {
+    position: 'relative',
+    width: '100%',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    overflow: 'hidden',
+    // iOS shadow
+    shadowColor: '#333',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  nowHeaderContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 10,
+  },
+  nowHeaderInline: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 10,
+  },
+  nowBar: {
+    marginBottom: 12,
+  },
+  nowLabel: {
+    fontSize: 24,
+  },
+  nowStation: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+});
+
+type Props = {
+  title: string;
+  onLayout?: (event: LayoutChangeEvent) => void;
+  scrollY: SharedValue<number>;
+};
+
+export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
+  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const insets = useSafeAreaInsets();
+
+  const AnimatedTypography = useMemo(
+    () => Animated.createAnimatedComponent(Typography),
+    []
+  );
+
+  const COLLAPSE_RANGE = 64;
+  const stackedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE * 0.5],
+      [1, 0],
+      'clamp'
+    ),
+  }));
+  const inlineStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+      [0, 0, 1],
+      'clamp'
+    ),
+  }));
+  const animatedStationFont = useAnimatedStyle(() => ({
+    fontSize: interpolate(
+      scrollY.value,
+      [0, COLLAPSE_RANGE],
+      [32, 21],
+      'clamp'
+    ),
+  }));
+
+  const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
+    const androidBGColor = isLEDTheme
+      ? LED_THEME_BG_COLOR
+      : 'rgba(250,250,250,0.9)';
+    return {
+      backgroundColor: Platform.OS === 'android' ? androidBGColor : undefined,
+      paddingTop: 32 + insets.top,
+    };
+  }, [insets.top, isLEDTheme]);
+
+  return (
+    <View style={styles.nowHeaderContainer}>
+      <View
+        style={[
+          styles.nowHeaderCard,
+          {
+            borderBottomLeftRadius: isLEDTheme ? 0 : 16,
+            borderBottomRightRadius: isLEDTheme ? 0 : 16,
+          },
+        ]}
+        onLayout={onLayout}
+      >
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            intensity={40}
+            tint={isLEDTheme ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
+        <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
+          {/* Stacked layout (fades out) */}
+          <Animated.View style={stackedStyle}>
+            <AnimatedTypography
+              style={[styles.nowStation, animatedStationFont]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {title}
+            </AnimatedTypography>
+          </Animated.View>
+          {/* Inline layout (fades in) */}
+          <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
+            <Typography
+              style={styles.nowStation}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {title}
+            </Typography>
+          </Animated.View>
+        </View>
+      </View>
+    </View>
+  );
+};

@@ -28,7 +28,7 @@ type Props = {
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     elevation: 1,
     shadowColor: '#333',
     shadowOpacity: 0.25,
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 8,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
   },
@@ -65,19 +65,53 @@ const styles = StyleSheet.create({
     color: '#008ffe',
   },
   stateIndicator: {
-    width: 64,
+    minWidth: 64,
+    maxWidth: 72,
     height: 32,
-    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 16,
     borderWidth: 1,
+    flex: 1,
   },
   stateIndicatorText: {
     fontSize: RFValue(14),
     fontWeight: 'bold',
   },
 });
+
+export const StatePanel = ({
+  state,
+  onText = 'ON',
+  offText = 'OFF',
+  disabled,
+}: {
+  state: boolean;
+  onText?: string;
+  offText?: string;
+  disabled?: boolean;
+}) => {
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  return (
+    <View
+      style={[
+        styles.stateIndicator,
+        {
+          backgroundColor: state ? '#008ffe' : '#fff',
+          borderColor: state ? '#008ffe' : '#aaa',
+          opacity: disabled ? 0.5 : 1,
+          borderRadius: isLEDTheme ? 0 : 8,
+        },
+      ]}
+    >
+      <Typography
+        style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
+      >
+        {state ? onText : offText}
+      </Typography>
+    </View>
+  );
+};
 
 export const ToggleButton: React.FC<Props> = ({
   children,
@@ -109,24 +143,8 @@ export const ToggleButton: React.FC<Props> = ({
       >
         {children}
       </Typography>
-      <View
-        style={[
-          styles.stateIndicator,
-          {
-            backgroundColor: state ? '#008ffe' : '#fff',
-            borderColor: state ? '#008ffe' : '#aaa',
-          },
-        ]}
-      >
-        <Typography
-          style={[
-            styles.stateIndicatorText,
-            { color: state ? '#fff' : '#888' },
-          ]}
-        >
-          {state ? onText : offText}
-        </Typography>
-      </View>
+
+      <StatePanel state={!!state} onText={onText} offText={offText} />
     </TouchableOpacity>
   );
 };

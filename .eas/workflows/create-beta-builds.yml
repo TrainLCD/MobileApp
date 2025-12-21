@@ -9,7 +9,7 @@ jobs:
     type: build
     params:
       platform: android
-      profile: development
+      profile: production
     steps:
       - uses: eas/checkout
       - name: Ensure EAS_PROJECT is beta
@@ -68,4 +68,4 @@ jobs:
     type: submit
     params:
       build_id: ${{ needs.build_android.outputs.build_id }}
-      profile: development
+      profile: production

@@ -3,12 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Orientation } from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtom, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import Animated, {
+  LinearTransition,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -22,6 +24,7 @@ import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { gqlClient } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -29,6 +32,7 @@ import {
   GET_STATION_TRAIN_TYPES,
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
+import isTablet from '~/utils/isTablet';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
@@ -75,7 +79,10 @@ type GetStationTrainTypesVariables = {
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
-  listContainerStyle: { paddingBottom: 24, paddingHorizontal: 24 },
+  listContainerStyle: {
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+  },
   lineName: {
     fontSize: 14,
     fontWeight: 'bold',
@@ -110,7 +117,9 @@ const ListHeader = React.memo(
         isPresetsLoading={isPresetsLoading}
         onPress={onPress}
       />
-      <Heading style={styles.heading}>{headingTitle}</Heading>
+      <Heading style={styles.heading} singleLine>
+        {headingTitle}
+      </Heading>
     </>
   )
 );
@@ -148,6 +157,17 @@ const SelectLineScreen = () => {
   }, [footerHeight]);
 
   const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const orientation = useDeviceOrientation();
+  const isPortraitOrientation = useMemo(
+    () =>
+      orientation === Orientation.PORTRAIT_UP ||
+      orientation === Orientation.PORTRAIT_DOWN,
+    [orientation]
+  );
+  const numColumns = useMemo(
+    () => (isTablet ? (isPortraitOrientation ? 2 : 3) : 1),
+    [isPortraitOrientation]
+  );
 
   const {
     stations: nearbyStations,
@@ -414,7 +434,6 @@ const SelectLineScreen = () => {
       }));
       setNavigationState((prev) => ({
         ...prev,
-        pendingWantedDestination: null,
         fetchedTrainTypes: [],
         trainType: null,
       }));
@@ -514,7 +533,6 @@ const SelectLineScreen = () => {
         ...prev,
         fetchedTrainTypes: [],
         trainType: null,
-        pendingWantedDestination: null,
       }));
     },
     [
@@ -623,32 +641,6 @@ const SelectLineScreen = () => {
     setIsSelectBoundModalOpen(false);
   }, []);
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: Line; index: number }) => {
-      if (fetchStationsByLineIdLoading) {
-        return (
-          <SkeletonPlaceholder borderRadius={4} speed={1500}>
-            <SkeletonPlaceholder.Item width="100%" height={72} />
-          </SkeletonPlaceholder>
-        );
-      }
-
-      const stations = stationsCache[index] ?? [];
-
-      return (
-        <CommonCard
-          line={item}
-          onPress={() => handleLineSelected(item)}
-          stations={stations}
-          testID={generateLineTestId(item)}
-        />
-      );
-    },
-    [handleLineSelected, fetchStationsByLineIdLoading, stationsCache]
-  );
-
-  const keyExtractor = useCallback((l: Line) => String(l.id as number), []);
-
   const headingTitle = useMemo(() => {
     if (!station) return translate('selectLineTitle');
     const re = /\([^()]*\)/g;
@@ -678,26 +670,84 @@ const SelectLineScreen = () => {
     ]
   );
 
+  const renderLineCard = useCallback(
+    (line: Line, index: number) => {
+      if (fetchStationsByLineIdLoading) {
+        return (
+          <SkeletonPlaceholder borderRadius={4} speed={1500}>
+            <SkeletonPlaceholder.Item width="100%" height={72} />
+          </SkeletonPlaceholder>
+        );
+      }
+
+      return (
+        <CommonCard
+          line={line}
+          onPress={() => handleLineSelected(line)}
+          stations={stationsCache[index] ?? []}
+          testID={generateLineTestId(line)}
+        />
+      );
+    },
+    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
+  );
+
+  const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
+    if (!isTablet || count <= 0) {
+      return null;
+    }
+
+    return Array.from({ length: count }).map((_, i) => (
+      <Animated.View
+        layout={LinearTransition.springify()}
+        // biome-ignore lint/suspicious/noArrayIndexKey: プレースホルダーは静的で順序が変わらないため問題なし
+        key={`placeholder-${rowIndex}-${i}`}
+        style={{ flex: 1 }}
+      />
+    ));
+  }, []);
+
+  const renderLineRow = useCallback(
+    (rowLines: Line[], rowIndex: number) => {
+      return (
+        <>
+          {rowIndex > 0 && <EmptyLineSeparator />}
+          <Animated.View
+            layout={LinearTransition.springify()}
+            style={
+              isTablet
+                ? {
+                    flexDirection: 'row',
+                    gap: 16,
+                  }
+                : undefined
+            }
+          >
+            {rowLines.map((line, colIndex) => {
+              const index = rowIndex * numColumns + colIndex;
+              return (
+                <Animated.View
+                  layout={LinearTransition.springify()}
+                  key={line.id as number}
+                  style={isTablet ? { flex: 1 } : undefined}
+                >
+                  {renderLineCard(line, index)}
+                </Animated.View>
+              );
+            })}
+            {renderPlaceholders(rowIndex, numColumns - rowLines.length)}
+          </Animated.View>
+        </>
+      );
+    },
+    [numColumns, renderLineCard, renderPlaceholders]
+  );
+
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <Animated.ScrollView
           style={StyleSheet.absoluteFill}
-          data={stationLines}
-          extraData={stationsCache}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          ItemSeparatorComponent={EmptyLineSeparator}
-          ListEmptyComponent={nearbyStationLoading ? NearbyStationLoader : null}
-          ListHeaderComponent={
-            <ListHeader
-              headingTitle={headingTitle}
-              carouselData={carouselData}
-              isPresetsLoading={isPresetsLoading}
-              onPress={handlePresetPress}
-            />
-          }
-          ListFooterComponent={EmptyLineSeparator}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
@@ -705,7 +755,33 @@ const SelectLineScreen = () => {
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
             { paddingBottom: listPaddingBottom },
           ]}
-        />
+        >
+          <ListHeader
+            headingTitle={headingTitle}
+            carouselData={carouselData}
+            isPresetsLoading={isPresetsLoading}
+            onPress={handlePresetPress}
+          />
+          {nearbyStationLoading ? (
+            <NearbyStationLoader />
+          ) : (
+            Array.from({
+              length: Math.ceil(stationLines.length / numColumns),
+            }).map((_, rowIndex) => {
+              const rowLines = stationLines.slice(
+                rowIndex * numColumns,
+                (rowIndex + 1) * numColumns
+              );
+              const rowKey = rowLines.map((l) => l.id).join('-');
+              return (
+                <React.Fragment key={rowKey}>
+                  {renderLineRow(rowLines, rowIndex)}
+                </React.Fragment>
+              );
+            })
+          )}
+          <EmptyLineSeparator />
+        </Animated.ScrollView>
       </SafeAreaView>
       {/* 固定ヘッダー */}
       <NowHeader

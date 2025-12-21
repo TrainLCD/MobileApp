@@ -1,61 +1,56 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useAtom } from 'jotai';
-import React, { useCallback } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { lighten } from 'polished';
+import React, { useCallback, useMemo, useState } from 'react';
+import type { SectionBase, SectionListRenderItemInfo } from 'react-native';
+import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import navigationState from '~/store/atoms/navigation';
-import Button from '../components/Button';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
-import { Heading } from '../components/Heading';
-import LEDThemeSwitch from '../components/LEDThemeSwitch';
-import Typography from '../components/Typography';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { CardChevron } from '~/components/CardChevron';
+import { Heading } from '~/components/Heading';
+import { SettingsHeader } from '~/components/SettingsHeader';
+import Typography from '~/components/Typography';
+import { isDevApp } from '~/utils/isDevApp';
+import FooterTabBar from '../components/FooterTabBar';
 import { useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
-import speechState from '../store/atoms/speech';
 import { translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
 import { RFValue } from '../utils/rfValue';
 
+const SETTING_ITEM_ID_MAP = {
+  personalize_theme: 'personalize_theme',
+  personalize_tts: 'personalize_tts',
+  personalize_languages: 'personalize_languages',
+  developer_tuning: 'developer_tuning',
+} as const;
+
+type SettingItemId = keyof typeof SETTING_ITEM_ID_MAP;
+
+type SettingsSectionData = {
+  id: SettingItemId;
+  title: string;
+  color: string;
+  onPress?: () => void;
+};
+
+interface SettingsSection extends SectionBase<SettingsSectionData> {
+  key: string;
+}
+
 const styles = StyleSheet.create({
-  rootPadding: {
-    paddingVertical: 24,
+  root: { paddingHorizontal: 24, flex: 1 },
+  screenBg: {
+    backgroundColor: '#FAFAFA',
   },
-  settingsItemHeading: {
-    fontSize: RFValue(14),
-    fontWeight: 'bold',
-    textAlign: 'center',
+  listContainerStyle: {
+    flex: 1,
+    marginHorizontal: 24,
   },
-  settingItemList: {
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    marginTop: 12,
-  },
-  settingItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  settingItems: {
-    width: '50%',
-    alignSelf: 'center',
-    alignItems: 'flex-start',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  bgTTSNotice: {
-    marginTop: 12,
-    fontWeight: 'bold',
-    fontSize: RFValue(12),
-    lineHeight: RFValue(18),
-  },
-  halfOpacity: {
-    opacity: 0.5,
-  },
-  mr: { marginRight: 16 },
   betaNotice: {
     fontSize: RFValue(12),
     fontWeight: 'bold',
@@ -64,238 +59,204 @@ const styles = StyleSheet.create({
   },
 });
 
+const SettingsItem = ({
+  item,
+  isFirst,
+  isLast,
+  onPress,
+}: {
+  item: SettingsSectionData;
+  isFirst: boolean;
+  isLast: boolean;
+  onPress?: () => void;
+}) => {
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+
+  const iconName = useMemo(() => {
+    switch (item.id) {
+      case 'personalize_theme':
+        return 'color-palette';
+      case 'personalize_tts':
+        return 'volume-high';
+      case 'personalize_languages':
+        return 'globe';
+      default:
+        return 'settings';
+    }
+  }, [item.id]);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole="button"
+      accessibilityLabel={item.title}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : 'white',
+        opacity: onPress ? 1 : 0.5,
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
+        marginBottom: isLast ? 32 : 0,
+      }}
+    >
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor: item.color,
+            marginRight: 16,
+            borderRadius: isLEDTheme ? 0 : 8,
+            overflow: 'hidden',
+          }}
+        >
+          <LinearGradient
+            colors={[item.color, lighten(0.1, item.color)]}
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Ionicons name={iconName} size={24} color="white" />
+          </LinearGradient>
+        </View>
+        <Typography style={{ fontSize: 21, fontWeight: 'bold' }}>
+          {item.title}
+        </Typography>
+      </View>
+
+      <CardChevron stroke="black" />
+    </TouchableOpacity>
+  );
+};
+
+const AnimatedSelectionList = Animated.createAnimatedComponent(
+  SectionList<SettingsSectionData, SettingsSection>
+);
+
 const AppSettingsScreen: React.FC = () => {
-  const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
-    useAtom(speechState);
-  const [{ enableLegacyAutoMode }, setNavigationState] =
-    useAtom(navigationState);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  const scrollY = useSharedValue(0);
+
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const navigation = useNavigation();
 
-  const insets = useSafeAreaInsets();
-
-  const onSpeechEnabledValueChange = useCallback(
-    async (flag: boolean) => {
-      const noticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.TTS_NOTICE
-      );
-      if (flag && noticeConfirmed === null) {
-        Alert.alert(translate('notice'), translate('ttsAlertText'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_NOTICE, 'true');
+  const SETTINGS_SECTIONS: SettingsSection[] = useMemo(
+    () =>
+      [
+        {
+          key: 'personalize',
+          data: [
+            {
+              id: SETTING_ITEM_ID_MAP.personalize_theme,
+              title: translate('selectThemeTitle'),
+              color: '#FF9500',
+              onPress: () => navigation.navigate('ThemeSettings' as never),
             },
-          },
-          {
-            text: 'OK',
-          },
-        ]);
-      }
-
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
-        flag ? 'true' : 'false'
-      );
-      setSpeechState((prev) => ({
-        ...prev,
-        enabled: flag,
-      }));
-    },
-    [setSpeechState]
+            {
+              id: SETTING_ITEM_ID_MAP.personalize_tts,
+              title: translate('autoAnnounce'),
+              color: '#34C759',
+              onPress: () => navigation.navigate('TTSSettings' as never),
+            },
+            {
+              id: SETTING_ITEM_ID_MAP.personalize_languages,
+              title: translate('displayLanguages'),
+              color: '#007AFF',
+              onPress: () =>
+                navigation.navigate('EnabledLanguagesSettings' as never),
+            },
+          ].filter((dat) =>
+            isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
+          ), // Remove TTS setting in App Clip
+        },
+        {
+          key: 'forDevelopers',
+          data: isDevApp
+            ? [
+                {
+                  id: SETTING_ITEM_ID_MAP.developer_tuning,
+                  title: translate('tuning'),
+                  color: '#5856D6',
+                  onPress: () => navigation.navigate('TuningSettings' as never),
+                },
+              ]
+            : ([] as SettingsSectionData[]),
+        },
+      ].filter((section) => section.data.length > 0),
+    [navigation]
   );
 
-  const onBackgroundAudioEnabledValueChange = useCallback(
-    async (flag: boolean) => {
-      if (isClip()) {
-        return;
-      }
-
-      const noticeConfirmed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
-      );
-
-      if (flag && noticeConfirmed === null) {
-        Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
-                'true'
-              );
-            },
-          },
-          {
-            text: 'OK',
-          },
-        ]);
-      }
-
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
-        flag ? 'true' : 'false'
-      );
-      setSpeechState((prev) => ({
-        ...prev,
-        backgroundEnabled: flag,
-      }));
-    },
-    [setSpeechState]
+  const renderItem = useCallback(
+    ({
+      item,
+      index,
+      section,
+    }: SectionListRenderItemInfo<SettingsSectionData, SettingsSection>) => (
+      <SettingsItem
+        item={item}
+        isFirst={index === 0}
+        isLast={index === section.data.length - 1}
+        onPress={item.onPress}
+      />
+    ),
+    []
+  );
+  const keyExtractor = useCallback(
+    (section: SettingsSectionData) => `key-${section.id}`,
+    []
   );
 
-  const toThemeSettings = () => navigation.navigate('ThemeSettings' as never);
-  const toEnabledLanguagesSettings = () =>
-    navigation.navigate('EnabledLanguagesSettings' as never);
-  const toTuning = () => navigation.navigate('TuningSettings' as never);
-  const onToggleLegacyAutoMode = useCallback(async () => {
-    await AsyncStorage.setItem(
-      ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED,
-      !enableLegacyAutoMode ? 'true' : 'false'
-    );
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
 
-    setNavigationState((prev) => ({
-      ...prev,
-      enableLegacyAutoMode: !prev.enableLegacyAutoMode,
-    }));
-  }, [setNavigationState, enableLegacyAutoMode]);
-
-  const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
+  const renderSectionHeader = useCallback(
+    (info: { section: SettingsSection }) => (
+      <Heading style={{ marginBottom: 24, fontSize: 21 }}>
+        {translate(info.section.key ?? '')}
+      </Heading>
+    ),
+    []
+  );
 
   return (
     <>
-      <ScrollView
-        contentContainerStyle={[
-          styles.rootPadding,
-          { paddingBottom: styles.rootPadding.paddingVertical + footerHeight },
-        ]}
-      >
-        <Heading>{translate('settings')}</Heading>
-
-        <View style={styles.settingItems}>
-          <View
-            style={[
-              styles.settingItem,
-              {
-                flexDirection: 'row',
-              },
-            ]}
-          >
-            {isLEDTheme ? (
-              <LEDThemeSwitch
-                style={styles.mr}
-                value={speechEnabled}
-                onValueChange={onSpeechEnabledValueChange}
-              />
-            ) : (
-              <Switch
-                style={styles.mr}
-                value={speechEnabled}
-                onValueChange={onSpeechEnabledValueChange}
-                ios_backgroundColor={'#fff'}
-              />
-            )}
-
-            <Typography style={styles.settingsItemHeading}>
-              {translate('autoAnnounceItemTitle')}
-            </Typography>
-          </View>
-          {speechEnabled ? (
-            <View
-              style={[
-                styles.settingItem,
-                isClip() && styles.halfOpacity,
-                {
-                  flexDirection: 'row',
-                  marginTop: 8,
-                },
-              ]}
-            >
-              {isLEDTheme ? (
-                <LEDThemeSwitch
-                  style={styles.mr}
-                  value={backgroundEnabled}
-                  onValueChange={onBackgroundAudioEnabledValueChange}
-                />
-              ) : (
-                <Switch
-                  style={styles.mr}
-                  value={backgroundEnabled}
-                  onValueChange={onBackgroundAudioEnabledValueChange}
-                />
-              )}
-              <Typography style={styles.settingsItemHeading}>
-                {translate('autoAnnounceBackgroundTitle')}
-              </Typography>
-            </View>
-          ) : null}
-
-          {speechEnabled && backgroundEnabled && !isClip() && (
-            <Typography style={styles.bgTTSNotice}>
-              {translate('bgTtsAlertText')}
+      <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
+        <AnimatedSelectionList
+          style={StyleSheet.absoluteFill}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={[
+            styles.listContainerStyle,
+            headerHeight ? { paddingTop: headerHeight } : null,
+          ]}
+          renderSectionHeader={renderSectionHeader}
+          sections={SETTINGS_SECTIONS}
+          ListFooterComponent={() => (
+            <Typography style={styles.betaNotice}>
+              {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
             </Typography>
           )}
-          {speechEnabled && isClip() && (
-            <Typography style={styles.bgTTSNotice}>
-              {translate('bgTtsAppClipAlertText')}
-            </Typography>
-          )}
-
-          <View
-            style={[
-              styles.settingItem,
-              {
-                flexDirection: 'row',
-                marginTop: 8,
-              },
-            ]}
-          >
-            {isLEDTheme ? (
-              <LEDThemeSwitch
-                style={styles.mr}
-                value={enableLegacyAutoMode}
-                onValueChange={onToggleLegacyAutoMode}
-              />
-            ) : (
-              <Switch
-                style={styles.mr}
-                value={enableLegacyAutoMode}
-                onValueChange={onToggleLegacyAutoMode}
-                ios_backgroundColor={'#fff'}
-              />
-            )}
-
-            <Typography style={styles.settingsItemHeading}>
-              {translate('legacyAutoModeTitle')}
-            </Typography>
-          </View>
-        </View>
-
-        <View style={styles.settingItemList}>
-          <View style={styles.settingItem}>
-            <Button onPress={toThemeSettings}>
-              {translate('selectThemeTitle')}
-            </Button>
-          </View>
-          <View style={styles.settingItem}>
-            <Button onPress={toEnabledLanguagesSettings}>
-              {translate('selectLanguagesTitle')}
-            </Button>
-          </View>
-
-          {isDevApp ? (
-            <View style={styles.settingItem}>
-              <Button onPress={toTuning}>{translate('tuning')}</Button>
-            </View>
-          ) : null}
-        </View>
-
-        <Typography style={styles.betaNotice}>
-          {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
-        </Typography>
-      </ScrollView>
+        />
+      </SafeAreaView>
+      <SettingsHeader
+        title={translate('settings')}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
+        scrollY={scrollY}
+      />
       <FooterTabBar active="settings" />
     </>
   );

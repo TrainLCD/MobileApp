@@ -9,6 +9,7 @@ import { NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark, useThemeStore } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { isJapanese } from '../translation';
+import { CardChevron } from './CardChevron';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
@@ -195,20 +196,22 @@ export const CommonCard: React.FC<Props> = ({
     targetStation?.stationNumbers?.[0]?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
 
+  const additionalRootStyle = useMemo(
+    () => ({
+      backgroundColor: line.color ?? '#333',
+      opacity: disabled ? 0.5 : 1,
+      borderWidth: 0,
+    }),
+    [disabled, line.color]
+  );
+
   return (
     <TouchableOpacity
       onPress={disabled ? undefined : onPress}
       activeOpacity={1}
       disabled={disabled}
       testID={testID}
-      style={[
-        styles.root,
-        {
-          backgroundColor: line.color ?? '#333',
-          opacity: disabled ? 0.5 : 1,
-          borderWidth: 0,
-        },
-      ]}
+      style={[styles.root, additionalRootStyle]}
     >
       <View style={styles.insetBorder} pointerEvents="none" />
       {mark ? (
@@ -247,16 +250,7 @@ export const CommonCard: React.FC<Props> = ({
         )}
       </View>
       <View style={styles.chevron}>
-        <Svg width={24} height={24} viewBox="0 0 24 24">
-          <Path
-            d="M8 5l8 7-8 7"
-            fill="none"
-            stroke="#fff"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <CardChevron />
       </View>
     </TouchableOpacity>
   );

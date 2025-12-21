@@ -22,8 +22,8 @@ import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import Typography from './Typography';
 
 const edgeOffset = isTablet ? 100 : 70;
-const barTerminalWidth = isTablet ? 41 : 27;
-const barHeight = isTablet ? 48 : 32;
+const barTerminalWidth = isTablet ? 55 : 27;
+const barHeight = isTablet ? 64 : 32;
 
 const styles = StyleSheet.create({
   container: {
@@ -90,13 +90,14 @@ const styles = StyleSheet.create({
     height: isTablet ? 50 : 24,
     backgroundColor: 'white',
     alignSelf: 'center',
-    top: isTablet ? 0 : 4,
+    top: isTablet ? 6 : 4,
     borderRadius: isTablet ? 25 : 15,
     zIndex: 9999,
   },
   trainTypeLeftContainer: {
     position: 'absolute',
-    top: 0,
+    top: isTablet ? 16 : 10,
+    marginRight: isTablet ? -8 : -13,
     borderLeftWidth: isTablet ? 32 : 20,
     borderRightWidth: isTablet ? 32 : 20,
     borderBottomWidth: isTablet ? 32 : 20,
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   },
   trainTypeLeft: {
     width: 128,
-    height: 48,
+    height: isTablet ? 64 : 48,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   },
   trainTypeRight: {
     width: 128,
-    height: 48,
+    height: isTablet ? 64 : 48,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     position: 'absolute',
-    top: isTablet ? 70 : 50,
+    top: isTablet ? 84 : 50,
     fontSize: RFValue(12),
     lineHeight: Platform.OS === 'android' ? RFValue(12) : undefined,
   },
@@ -653,12 +654,22 @@ const JOBars = ({
           {
             left: edgeOffset,
             width: barWidth,
+            height: isTablet ? 64 : 40,
             backgroundColor:
               (nextLine ? currentLine : trainType)?.color ?? 'transparent',
           },
         ]}
       />
-      <View style={styles.centerCircle} />
+      <View
+        style={[
+          styles.centerCircle,
+          {
+            width: isTablet ? 50 : 32,
+            height: isTablet ? 50 : 32,
+            borderRadius: isTablet ? 25 : 16,
+          },
+        ]}
+      />
       {/* Next line */}
       <View
         style={[
@@ -666,6 +677,7 @@ const JOBars = ({
           {
             right: edgeOffset + barTerminalWidth,
             width: rightBarWidth,
+            height: isTablet ? 64 : 40,
             backgroundColor:
               (nextLine ?? nextTrainType)?.color ?? 'transparent',
           },
@@ -677,7 +689,6 @@ const JOBars = ({
           styles.trainTypeLeftContainer,
           {
             right: isTablet ? edgeOffset + 16 : edgeOffset + 10,
-
             borderBottomColor:
               (nextLine ?? nextTrainType)?.color ?? 'transparent',
           },
@@ -692,6 +703,7 @@ const JOBars = ({
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
+            top: isTablet ? -8 : -5,
           },
         ]}
       >
@@ -741,6 +753,7 @@ const JOBars = ({
             width: isTablet ? 200 : 128,
             height: isTablet ? 80 : 48,
             borderRadius: 4,
+            top: isTablet ? -8 : -5,
           },
         ]}
       >
