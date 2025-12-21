@@ -65,11 +65,13 @@ const styles = StyleSheet.create({
     color: '#008ffe',
   },
   stateIndicator: {
-    width: 64,
+    minWidth: 64,
+    maxWidth: 72,
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
+    flex: 1,
   },
   stateIndicatorText: {
     fontSize: RFValue(14),

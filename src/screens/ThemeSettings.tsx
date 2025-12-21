@@ -1,62 +1,204 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemeList } from '~/components/ThemeList';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Alert,
+  type GestureResponderEvent,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
+import Button from '~/components/Button';
+import FooterTabBar from '~/components/FooterTabBar';
+import { SettingsHeader } from '~/components/SettingsHeader';
+import { StatePanel } from '~/components/ToggleButton';
+import Typography from '~/components/Typography';
+import { APP_THEME, type AppTheme } from '~/models/Theme';
+import { translate } from '~/translation';
+import { isDevApp } from '~/utils/isDevApp';
 import { getSettingsThemes } from '~/utils/theme';
-import FAB from '../components/FAB';
-import { Heading } from '../components/Heading';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import { ASYNC_STORAGE_KEYS, IN_USE_COLOR_MAP } from '../constants';
 import { useThemeStore } from '../hooks';
-import type { AppTheme } from '../models/Theme';
-import { translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
+import { LinearGradient } from 'expo-linear-gradient';
+import { lighten } from 'polished';
+
+type SettingItem = {
+  id: AppTheme;
+  title: string;
+  hidden: boolean;
+};
 
 const styles = StyleSheet.create({
-  rootPadding: {
-    marginTop: 12,
+  root: {
+    paddingHorizontal: 24,
+    flex: 1,
   },
-  listContainer: {
-    height: '100%',
-    paddingBottom: 96,
-    marginTop: 12,
+  screenBg: {
+    backgroundColor: '#FAFAFA',
   },
 });
 
-const ThemeSettingsScreen: React.FC = () => {
-  const theme = useThemeStore((state) => state);
+const SettingsItem = ({
+  item,
+  isFirst,
+  isLast,
+  state,
+  onToggle,
+}: {
+  item: SettingItem;
+  isFirst: boolean;
+  isLast: boolean;
+  state: boolean;
+  onToggle: (event: GestureResponderEvent) => void;
+}) => {
+  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const themeColor = IN_USE_COLOR_MAP[item.id];
 
-  const onThemeValueChange = useCallback((t: AppTheme) => {
-    useThemeStore.setState(t);
-  }, []);
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={item.title}
+      accessibilityState={{ checked: state }}
+      onPress={onToggle}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : 'white',
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
+      }}
+    >
+      <View
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: isLEDTheme ? 0 : 8,
+          overflow: 'hidden',
+          marginRight: 16,
+        }}
+      >
+        <LinearGradient
+          colors={[themeColor, lighten(0.1, themeColor)]}
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        />
+      </View>
+      <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
+        {item.title}
+      </Typography>
+
+      <StatePanel
+        state={state}
+        onText={translate('inUse')}
+        offText={translate('settings')}
+      />
+    </Pressable>
+  );
+};
+
+const ThemeSettingsScreen: React.FC = () => {
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  const scrollY = useSharedValue(0);
+
+  const currentTheme = useThemeStore((state) => state);
 
   const navigation = useNavigation();
-  const unlockedSettingsThemes = useMemo(() => {
-    const settingsThemes = getSettingsThemes();
-    return isDevApp ? settingsThemes : settingsThemes.filter((t) => !t.devOnly);
+
+  const SETTING_ITEMS: SettingItem[] = useMemo(() => {
+    const themes = getSettingsThemes();
+    return themes.map((theme) => ({
+      id: theme.value,
+      title: theme.label,
+      hidden: !isDevApp && theme.devOnly,
+    }));
   }, []);
 
-  const onPressBack = useCallback(async () => {
-    await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
-
-    if (navigation.canGoBack()) {
-      navigation.goBack();
+  const handleToggleThemeEnabled = useCallback(async (theme: AppTheme) => {
+    try {
+      await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
+      useThemeStore.setState(theme);
+    } catch (error) {
+      console.error('Failed to toggle background TTS setting', error);
+      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
-  }, [navigation, theme]);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: SettingItem; index: number }) => {
+      if (item.hidden) {
+        return null;
+      }
+
+      const state = currentTheme === item.id;
+
+      const onToggle = () => {
+        handleToggleThemeEnabled(item.id);
+      };
+
+      return (
+        <SettingsItem
+          item={item}
+          isFirst={index === 0}
+          isLast={index === SETTING_ITEMS.length - 1}
+          onToggle={onToggle}
+          state={state}
+        />
+      );
+    },
+    [handleToggleThemeEnabled, SETTING_ITEMS.length, currentTheme]
+  );
+
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
 
   return (
     <>
-      <SafeAreaView style={styles.rootPadding}>
-        <Heading>{translate('selectThemeTitle')}</Heading>
-        <View style={styles.listContainer}>
-          <ThemeList
-            data={unlockedSettingsThemes}
-            onSelect={onThemeValueChange}
-          />
-        </View>
-      </SafeAreaView>
-      <FAB onPress={onPressBack} icon="checkmark" />
+      <View
+        style={[styles.root, currentTheme !== APP_THEME.LED && styles.screenBg]}
+      >
+        <Animated.FlatList
+          data={SETTING_ITEMS}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={[
+            headerHeight
+              ? { marginTop: headerHeight, paddingBottom: headerHeight }
+              : null,
+          ]}
+          renderItem={renderItem}
+          onScroll={handleScroll}
+          ListFooterComponent={() => (
+            <Button
+              style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+              textStyle={{ fontWeight: 'bold' }}
+              onPress={() => navigation.goBack()}
+            >
+              OK
+            </Button>
+          )}
+        />
+      </View>
+      <SettingsHeader
+        title={translate('theme')}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
+        scrollY={scrollY}
+      />
+      <FooterTabBar active="settings" />
     </>
   );
 };
