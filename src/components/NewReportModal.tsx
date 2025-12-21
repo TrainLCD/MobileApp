@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import React, { useEffect, useMemo } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -102,6 +103,16 @@ const NewReportModal: React.FC<Props> = ({
     [description, descriptionLowerLimit]
   );
   const { widthScale } = useScale();
+
+  useEffect(() => {
+    ScreenOrientation.unlockAsync().catch(console.error);
+
+    return () => {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.LANDSCAPE
+      ).catch(console.error);
+    };
+  }, []);
 
   return (
     <CustomModal
