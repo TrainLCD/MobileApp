@@ -274,7 +274,9 @@ const TTSSettingsScreen: React.FC = () => {
           data={SETTING_ITEMS}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
-            headerHeight ? { marginTop: headerHeight } : null,
+            headerHeight
+              ? { marginTop: headerHeight, paddingBottom: headerHeight }
+              : null,
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}

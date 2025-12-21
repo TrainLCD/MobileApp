@@ -207,5 +207,6 @@
   "english": "English (US)" ,
   "chinese": "Chinese (Simplified)",
   "korean": "Korean",
-  "ttsLanguageSettings": "Automatic announcement language settings"
+  "ttsLanguageSettings": "Automatic announcement language settings",
+  "theme": "Theme"
 }
