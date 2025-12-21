@@ -131,7 +131,7 @@ const ThemeSettingsScreen: React.FC = () => {
       await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
       useThemeStore.setState(theme);
     } catch (error) {
-      console.error('Failed to toggle background TTS setting', error);
+      console.error('Failed to toggle theme setting', error);
       Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, []);
