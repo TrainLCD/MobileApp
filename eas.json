@@ -7,10 +7,10 @@
     "development": {
       "distribution": "store",
       "android": {
-        "gradleCommand": ":app:bundleDevRelease"
+        "gradleCommand": ":app:bundleProdRelease"
       },
       "ios": {
-        "scheme": "CanaryTrainLCD",
+        "scheme": "ProdTrainLCD",
         "buildConfiguration": "Release"
       }
     },
@@ -32,11 +32,11 @@
     "development": {
       "android": {
         "track": "internal",
-        "applicationId": "me.tinykitten.trainlcd.dev"
+        "applicationId": "me.tinykitten.trainlcd"
       },
       "ios": {
         "ascAppId": "6450133462",
-        "bundleIdentifier": "me.tinykitten.trainlcd.dev"
+        "bundleIdentifier": "me.tinykitten.trainlcd"
       }
     },
     "production": {
