@@ -146,7 +146,7 @@ const NewReportModal: React.FC<Props> = ({
           </View>
 
           <TextInput
-            autoFocus
+            autoFocus={Platform.OS === 'ios'}
             value={description}
             onChangeText={onDescriptionChange}
             multiline
