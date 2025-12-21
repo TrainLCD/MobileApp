@@ -126,6 +126,11 @@ const ThemeSettingsScreen: React.FC = () => {
     }));
   }, []);
 
+  const visibleItems = useMemo(
+    () => SETTING_ITEMS.filter((item) => !item.hidden),
+    [SETTING_ITEMS]
+  );
+
   const handleToggleThemeEnabled = useCallback(async (theme: AppTheme) => {
     try {
       await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
@@ -138,10 +143,6 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
-      if (item.hidden) {
-        return null;
-      }
-
       const state = currentTheme === item.id;
 
       const onToggle = () => {
@@ -152,13 +153,13 @@ const ThemeSettingsScreen: React.FC = () => {
         <SettingsItem
           item={item}
           isFirst={index === 0}
-          isLast={index === SETTING_ITEMS.length - 1}
+          isLast={index === visibleItems.length - 1}
           onToggle={onToggle}
           state={state}
         />
       );
     },
-    [handleToggleThemeEnabled, SETTING_ITEMS.length, currentTheme]
+    [handleToggleThemeEnabled, visibleItems.length, currentTheme]
   );
 
   const handleScroll = useAnimatedScrollHandler({
