@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { lighten } from 'polished';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
@@ -23,8 +25,6 @@ import { isDevApp } from '~/utils/isDevApp';
 import { getSettingsThemes } from '~/utils/theme';
 import { ASYNC_STORAGE_KEYS, IN_USE_COLOR_MAP } from '../constants';
 import { useThemeStore } from '../hooks';
-import { LinearGradient } from 'expo-linear-gradient';
-import { lighten } from 'polished';
 
 type SettingItem = {
   id: AppTheme;
