@@ -17,6 +17,7 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useFirstStop,
   useHeaderLangState,
   useHeaderStateText,
   useHeaderStationText,
@@ -164,6 +165,7 @@ const HeaderSaikyo: React.FC = () => {
   const isLast = useIsNextLastStop();
   const trainType = useCurrentTrainType();
   const boundStationNameList = useBoundText();
+  const firstStop = useFirstStop();
 
   const connectionText = useMemo(
     () =>
@@ -192,9 +194,14 @@ const HeaderSaikyo: React.FC = () => {
     currentStation,
     nextStation,
     headerLangState,
+    firstStop,
   });
 
-  const { stateText } = useHeaderStateText({ isLast, headerLangState });
+  const { stateText } = useHeaderStateText({
+    isLast,
+    headerLangState,
+    firstStop,
+  });
 
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
 

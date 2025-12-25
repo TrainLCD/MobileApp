@@ -28,7 +28,6 @@ describe('useHeaderLangState', () => {
   let navigationAtomValue: { headerState: string };
 
   beforeEach(() => {
-    jest.clearAllMocks();
     navigationAtomValue = { headerState: 'CURRENT' };
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === navigationState) {
@@ -36,6 +35,10 @@ describe('useHeaderLangState', () => {
       }
       throw new Error('unknown atom');
     });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('headerStateがアンダースコアを含まない場合JAを返す', async () => {

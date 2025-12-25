@@ -102,7 +102,7 @@ describe('useSimulationMode', () => {
 
     jest
       .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(null);
+      .mockReturnValue(undefined);
 
     jest
       .spyOn(useNextStationModule, 'useNextStation')
