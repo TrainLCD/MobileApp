@@ -32,3 +32,4 @@ export const useBarStyles = ({
 };
 
 export { useChevronPosition } from './useChevronPosition';
+export { useIncludesLongStationName } from './useIncludesLongStationName';

@@ -24,6 +24,7 @@ import {
 import {
   useBarStyles,
   useChevronPosition,
+  useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
@@ -125,13 +126,7 @@ const useStationRenderState = (
     [arrived, currentStationIndex, index, passed, station]
   );
 
-  const includesLongStationName = useMemo(
-    () =>
-      !!stations.filter(
-        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
-      ).length,
-    [stations]
-  );
+  const includesLongStationName = useIncludesLongStationName(stations);
 
   const showFutureBar = (arrived && currentStationIndex < index + 1) || !passed;
   const showChevron =

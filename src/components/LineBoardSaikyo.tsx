@@ -21,6 +21,7 @@ import { LineDot, StationName } from './LineBoard/shared/components';
 import {
   useBarStyles,
   useChevronPosition,
+  useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 
@@ -217,14 +218,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   } = useStationCellState(station, index, stations);
 
   const additionalChevronStyle = useChevronPosition(index, arrived, passed);
-
-  const includesLongStationName = useMemo(
-    () =>
-      !!stations.filter(
-        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
-      ).length,
-    [stations]
-  );
+  const includesLongStationName = useIncludesLongStationName(stations);
 
   const showChevron =
     (currentStationIndex < 1 && index === 0) || currentStationIndex === index;
