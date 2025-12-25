@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -24,6 +24,7 @@ import {
   StationName,
 } from './LineBoard/shared/components';
 import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
+import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import Typography from './Typography';
 
 type Props = {
@@ -32,74 +33,13 @@ type Props = {
   hasTerminus: boolean;
 };
 
-const styles = StyleSheet.create({
-  root: {
-    height: '100%',
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
-  bar: {
-    position: 'absolute',
-    bottom: isTablet ? -52 : 32,
-    height: isTablet ? 48 : 32,
-  },
-  barTerminal: {
-    position: 'absolute',
-  },
-  stationNameContainer: {
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    bottom: isTablet ? 84 : undefined,
-  },
-  stationName: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    marginLeft: 5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
-  },
+const localStyles = StyleSheet.create({
   splittedStationName: {
     marginLeft: 1,
-  },
-  stationNameHorizontal: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    transform: [{ rotate: '-55deg' }],
   },
   stationNameExtra: {
     fontSize: RFValue(10),
     fontWeight: 'bold',
-  },
-  grayColor: {
-    color: '#ccc',
-  },
-  stationArea: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
-    overflow: 'visible',
-  },
-  chevron: {
-    position: 'absolute',
-    zIndex: 9999,
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 48 : 32,
-    bottom: isTablet ? 198 : 32,
-  },
-  chevronArea: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
-  },
-  chevronAreaPass: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
-  },
-  chevronGradient: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
   },
   splittedStationNameWithExtraLang: {
     position: 'relative',
@@ -114,21 +54,9 @@ const styles = StyleSheet.create({
     bottom: isTablet ? 0 : 64,
     textAlign: 'center',
   },
-  marksContainer: { top: 38, position: 'absolute' },
-  nameCommon: {
-    marginBottom: isTablet ? undefined : 64,
-  },
-  longOrEnName: {
-    flex: 1,
-    width: '100%',
-    marginLeft: isTablet ? -24 : -16,
-    justifyContent: 'flex-end',
-  },
-  jaName: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
 });
+
+const styles = { ...commonLineBoardStyles, ...localStyles };
 
 interface StationNameCellProps {
   station: Station;

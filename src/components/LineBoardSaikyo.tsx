@@ -19,6 +19,7 @@ import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import { ChevronTY } from './ChevronTY';
 import { LineDot, StationName } from './LineBoard/shared/components';
 import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
+import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 
 interface Props {
   lineColors: (string | null | undefined)[];
@@ -26,27 +27,8 @@ interface Props {
   hasTerminus: boolean;
 }
 
-const styles = StyleSheet.create({
-  root: {
-    height: '100%',
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
-  bar: {
-    position: 'absolute',
-    bottom: isTablet ? -52 : 32,
-    height: isTablet ? 48 : 32,
-  },
-  barTerminal: {
-    position: 'absolute',
-  },
-  stationNameContainer: {
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    bottom: isTablet ? 84 : undefined,
-  },
+// Local style overrides specific to Saikyo
+const localStyles = StyleSheet.create({
   stationNameMapContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -65,17 +47,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-55deg' }],
     color: '#3a3a3a',
   },
-  grayColor: {
-    color: '#ccc',
-  },
-  stationArea: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
-    overflow: 'visible',
-  },
   chevron: {
     position: 'absolute',
     zIndex: 9999,
@@ -83,33 +54,9 @@ const styles = StyleSheet.create({
     height: isTablet ? 48 : 32,
     marginTop: isTablet ? -6 : -4,
   },
-  chevronArea: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
-  },
-  chevronAreaPass: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
-  },
-  chevronGradient: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-  },
-  marksContainer: { top: 38, position: 'absolute' },
-  nameCommon: {
-    marginBottom: isTablet ? undefined : 64,
-  },
-  longOrEnName: {
-    flex: 1,
-    width: '100%',
-    marginLeft: isTablet ? -24 : -16,
-    justifyContent: 'flex-end',
-  },
-  jaName: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
 });
+
+const styles = { ...commonLineBoardStyles, ...localStyles };
 
 interface StationNameCellProps {
   station: Station;
