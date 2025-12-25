@@ -7,8 +7,8 @@ import stationState from '../store/atoms/station';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 
 type UseHeaderStationTextOptions = {
-  currentStation: Station | null;
-  nextStation: Station | null;
+  currentStation: Station | null | undefined;
+  nextStation: Station | null | undefined;
   headerLangState: HeaderLangState;
   firstStop?: boolean;
 };
