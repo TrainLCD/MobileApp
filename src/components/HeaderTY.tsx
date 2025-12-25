@@ -23,19 +23,19 @@ import {
   useCurrentStation,
   useCurrentTrainType,
   useFirstStop,
+  useHeaderLangState,
+  useHeaderStationText,
+  useHeaderStateText,
   useIsNextLastStop,
   useLazyPrevious,
   useNextStation,
   useNumbering,
   usePrevious,
 } from '../hooks';
-import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
-import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
-import katakanaToHiragana from '../utils/kanaToHiragana';
 import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
@@ -164,152 +164,24 @@ const HeaderTY: React.FC = () => {
     [connectedLines]
   );
 
-  const headerLangState = useMemo(
-    () =>
-      headerState.split('_')[1]?.length
-        ? (headerState.split('_')[1] as HeaderLangState)
-        : ('JA' as HeaderLangState),
-    [headerState]
-  );
+  const headerLangState = useHeaderLangState();
   const boundText = useMemo(
     () => boundStationNameList[headerLangState],
     [boundStationNameList, headerLangState]
   );
 
-  const stationText = useMemo<string>(() => {
-    if (!selectedBound) {
-      return currentStation?.name ?? '';
-    }
-
-    if (firstStop) {
-      switch (headerLangState) {
-        case 'JA':
-          return selectedBound.name ?? '';
-        case 'KANA':
-          return katakanaToHiragana(selectedBound.nameKatakana ?? '');
-        case 'EN':
-          return selectedBound.nameRoman ?? '';
-        case 'ZH':
-          return selectedBound.nameChinese ?? '';
-        case 'KO':
-          return selectedBound.nameKorean ?? '';
-        default:
-      }
-    }
-
-    switch (headerState) {
-      case 'ARRIVING':
-        return nextStation?.name ?? '';
-      case 'ARRIVING_KANA':
-        return katakanaToHiragana(nextStation?.nameKatakana);
-      case 'ARRIVING_EN': {
-        return nextStation?.nameRoman ?? '';
-      }
-      case 'ARRIVING_ZH': {
-        return nextStation?.nameChinese ?? '';
-      }
-      case 'ARRIVING_KO': {
-        return nextStation?.nameKorean ?? '';
-      }
-      case 'CURRENT':
-        return currentStation?.name ?? '';
-      case 'CURRENT_KANA':
-        return katakanaToHiragana(currentStation?.nameKatakana);
-      case 'CURRENT_EN': {
-        return currentStation?.nameRoman ?? '';
-      }
-      case 'CURRENT_ZH': {
-        return currentStation?.nameChinese ?? '';
-      }
-      case 'CURRENT_KO': {
-        return currentStation?.nameKorean ?? '';
-      }
-      case 'NEXT': {
-        return nextStation?.name ?? '';
-      }
-      case 'NEXT_KANA':
-        return katakanaToHiragana(nextStation?.nameKatakana);
-      case 'NEXT_EN':
-        return nextStation?.nameRoman ?? '';
-      case 'NEXT_ZH':
-        return nextStation?.nameChinese ?? '';
-      case 'NEXT_KO':
-        return nextStation?.nameKorean ?? '';
-      default:
-        return '';
-    }
-  }, [
-    firstStop,
-    headerState,
-    nextStation,
-    selectedBound,
+  const stationText = useHeaderStationText({
     currentStation,
+    nextStation,
     headerLangState,
-  ]);
+    firstStop,
+  });
 
-  const stateText = useMemo<string>(() => {
-    if (firstStop && selectedBound) {
-      switch (headerLangState) {
-        case 'EN':
-          return 'For';
-        case 'ZH':
-          return '开往';
-        default:
-          return '';
-      }
-    }
-
-    if (!selectedBound) {
-      return translate('nowStoppingAt');
-    }
-    switch (headerState) {
-      case 'ARRIVING':
-        return translate(isLast ? 'soonLast' : 'soon');
-      case 'ARRIVING_KANA':
-        return translate(isLast ? 'soonKanaLast' : 'soon');
-      case 'ARRIVING_EN':
-        return translate(isLast ? 'soonEnLast' : 'soonEn');
-      case 'ARRIVING_ZH':
-        return translate(isLast ? 'soonZhLast' : 'soonZh');
-      case 'ARRIVING_KO':
-        return translate(isLast ? 'soonKoLast' : 'soonKo');
-      case 'CURRENT':
-        return translate('nowStoppingAt');
-      case 'CURRENT_KANA':
-        return translate('nowStoppingAt');
-      case 'CURRENT_EN':
-      case 'CURRENT_ZH':
-      case 'CURRENT_KO':
-        return '';
-      case 'NEXT':
-        return translate(isLast ? 'nextLast' : 'next');
-      case 'NEXT_KANA':
-        return translate(isLast ? 'nextKanaLast' : 'nextKana');
-      case 'NEXT_EN':
-        return translate(isLast ? 'nextEnLast' : 'nextEn');
-      case 'NEXT_ZH':
-        return translate(isLast ? 'nextZhLast' : 'nextZh');
-      case 'NEXT_KO':
-        return translate(isLast ? 'nextKoLast' : 'nextKo');
-      default:
-        return '';
-    }
-  }, [firstStop, headerState, isLast, selectedBound, headerLangState]);
-
-  const stateTextRight = useMemo<string>(() => {
-    if (firstStop && selectedBound) {
-      switch (headerLangState) {
-        case 'JA':
-        case 'KANA':
-          return 'ゆき';
-        case 'KO':
-          return '행';
-        default:
-          return '';
-      }
-    }
-    return '';
-  }, [firstStop, selectedBound, headerLangState]);
+  const { stateText, stateTextRight } = useHeaderStateText({
+    isLast,
+    headerLangState,
+    firstStop,
+  });
 
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
 
