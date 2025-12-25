@@ -46,7 +46,7 @@ describe('LineDot', () => {
     groupId: 1,
     name: '東京',
     stopCondition: 'ALL',
-  } as Station;
+  } as unknown as Station;
 
   const mockTransferLines: Line[] = [];
 
@@ -55,7 +55,10 @@ describe('LineDot', () => {
   });
 
   it('通過駅（getIsPass=true）の場合、PassChevronTYを表示する', () => {
-    const passStation = { ...mockStation, stopCondition: 'NOT' } as Station;
+    const passStation = {
+      ...mockStation,
+      stopCondition: 'NOT',
+    } as unknown as Station;
     const getIsPass = require('~/utils/isPass').default;
     (getIsPass as jest.Mock).mockReturnValue(true);
 
@@ -154,7 +157,7 @@ describe('LineDot', () => {
 
     const mockTransferLinesWithData: Line[] = [
       { id: 1, name: '中央線' },
-    ] as Line[];
+    ] as unknown as Line[];
 
     const { getByTestId } = render(
       <LineDot

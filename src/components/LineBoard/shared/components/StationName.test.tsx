@@ -40,7 +40,7 @@ describe('StationName', () => {
     groupId: 1,
     name: '東京',
     nameR: 'Tokyo',
-  } as Station;
+  } as unknown as Station;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -137,7 +137,9 @@ describe('StationName', () => {
       name: undefined,
     } as Station;
 
-    const { UNSAFE_root } = render(<StationName station={stationWithoutName} />);
+    const { UNSAFE_root } = render(
+      <StationName station={stationWithoutName} />
+    );
 
     // エラーなくレンダリングされることを確認
     expect(UNSAFE_root).toBeTruthy();
