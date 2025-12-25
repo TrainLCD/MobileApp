@@ -7,7 +7,9 @@ import {
   useCurrentLine,
   useInterval,
   useStationNumberIndexFunc,
+  useTransferLinesFromStation,
 } from '~/hooks';
+import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
 import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
