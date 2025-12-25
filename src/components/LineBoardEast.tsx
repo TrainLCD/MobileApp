@@ -21,7 +21,10 @@ import {
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
-import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
+import {
+  useBarStyles,
+  useChevronPosition,
+} from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles as styles } from './LineBoard/shared/styles/commonStyles';
 
 type Props = {
@@ -180,30 +183,6 @@ const renderBarGradients = ({
   return gradients;
 };
 
-const getAdditionalChevronStyle = (
-  index: number,
-  arrived: boolean,
-  passed: boolean,
-  widthScale: (v: number) => number
-) => {
-  if (!index) {
-    return arrived ? { left: widthScale(-14) } : null;
-  }
-  if (arrived) {
-    return {
-      left: widthScale(41.75 * index) - widthScale(14),
-    };
-  }
-  if (!passed) {
-    return {
-      left: widthScale(arrived ? 45 : 42 * index),
-    };
-  }
-  return {
-    left: widthScale(42 * index),
-  };
-};
-
 const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
@@ -239,11 +218,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
   const { widthScale } = useScale();
-
-  const additionalChevronStyle = useMemo(
-    () => getAdditionalChevronStyle(index, arrived, passed, widthScale),
-    [arrived, index, passed, widthScale]
-  );
+  const additionalChevronStyle = useChevronPosition(index, arrived, passed);
 
   const includesLongStationName = useMemo(
     () =>

@@ -23,7 +23,10 @@ import {
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
-import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
+import {
+  useBarStyles,
+  useChevronPosition,
+} from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import Typography from './Typography';
 
@@ -225,32 +228,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
   const { widthScale } = useScale();
-
-  const additionalChevronStyle = useMemo(() => {
-    // 最初の駅の場合
-    if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
-    }
-
-    // 到着済みの場合
-    if (arrived) {
-      return {
-        left: widthScale(41.75 * index) - widthScale(14),
-      };
-    }
-
-    // 通過していない場合
-    if (!passed) {
-      return {
-        left: widthScale(arrived ? 45 : 42 * index),
-      };
-    }
-
-    // デフォルト（通過済み）
-    return {
-      left: widthScale(42 * index),
-    };
-  }, [arrived, index, passed, widthScale]);
+  const additionalChevronStyle = useChevronPosition(index, arrived, passed);
 
   const includesLongStationName = useMemo(
     () =>

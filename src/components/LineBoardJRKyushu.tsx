@@ -21,7 +21,10 @@ import {
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
-import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
+import {
+  useBarStyles,
+  useChevronPosition,
+} from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
 
@@ -58,37 +61,6 @@ interface StationNameCellProps {
   hasTerminus: boolean;
   chevronColor: 'BLUE' | 'BLACK' | 'WHITE';
 }
-
-// Helper: Calculate chevron position based on station state
-const useChevronPosition = (
-  index: number,
-  arrived: boolean,
-  passed: boolean
-) => {
-  const { widthScale } = useScale();
-
-  return useMemo(() => {
-    if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
-    }
-
-    if (arrived) {
-      return {
-        left: widthScale(41.75 * index) - widthScale(14),
-      };
-    }
-
-    if (!passed) {
-      return {
-        left: widthScale(arrived ? 45 : 42 * index),
-      };
-    }
-
-    return {
-      left: widthScale(42 * index),
-    };
-  }, [arrived, index, passed, widthScale]);
-};
 
 // Helper: Determine if the bar should be split at current station
 const useBarSplitConfig = (

@@ -30,3 +30,5 @@ export const useBarStyles = ({
 
   return { left, width };
 };
+
+export { useChevronPosition } from './useChevronPosition';

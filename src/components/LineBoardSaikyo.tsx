@@ -18,7 +18,10 @@ import isTablet from '../utils/isTablet';
 import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import { ChevronTY } from './ChevronTY';
 import { LineDot, StationName } from './LineBoard/shared/components';
-import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
+import {
+  useBarStyles,
+  useChevronPosition,
+} from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 
 interface Props {
@@ -103,27 +106,6 @@ const useStationCellState = (
     transferLines,
     arrived,
   };
-};
-
-const useChevronPosition = (
-  index: number,
-  arrived: boolean,
-  passed: boolean
-) => {
-  const { widthScale } = useScale();
-
-  return useMemo(() => {
-    if (!index) {
-      return arrived ? { left: widthScale(-14) } : null;
-    }
-    if (arrived) {
-      return { left: widthScale(41.75 * index) - widthScale(14) };
-    }
-    if (!passed) {
-      return { left: widthScale(arrived ? 45 : 42 * index) };
-    }
-    return { left: widthScale(42 * index) };
-  }, [arrived, index, passed, widthScale]);
 };
 
 const isAtMidStation = (
