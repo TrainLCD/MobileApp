@@ -13,43 +13,17 @@ import { isEnAtom } from '~/store/selectors/isEn';
 import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChevronTY';
+import {
+  EmptyStationNameCell,
+  LineDot,
+  StationName,
+} from './LineBoard/shared/components';
+import { useBarStyles } from './LineBoard/shared/hooks/useBarStyles';
 import NumberingIcon from './NumberingIcon';
-import PadLineMarks from './PadLineMarks';
-import PassChevronTY from './PassChevronTY';
-import Typography from './Typography';
-
-const useBarStyles = ({
-  index,
-}: {
-  index?: number;
-}): { left: number; width: number } => {
-  const { widthScale } = useScale();
-
-  const left = useMemo(() => {
-    if (index === 0) {
-      return widthScale(-32);
-    }
-    return widthScale(-20);
-  }, [index, widthScale]);
-
-  const width = useMemo(() => {
-    if (isTablet) {
-      if (index === 0) {
-        return widthScale(200);
-      }
-      if (index === 1) {
-        return widthScale(61.75);
-      }
-    }
-    return widthScale(62);
-  }, [index, widthScale]);
-  return { left, width };
-};
 
 type Props = {
   lineColors: (string | null | undefined)[];
@@ -149,13 +123,6 @@ const styles = StyleSheet.create({
   },
 });
 
-interface StationNameProps {
-  station: Station;
-  en?: boolean;
-  horizontal?: boolean;
-  passed?: boolean;
-}
-
 interface StationNameCellProps {
   station: Station;
   index: number;
@@ -165,127 +132,6 @@ interface StationNameCellProps {
   hasTerminus: boolean;
   chevronColor: 'BLUE' | 'BLACK' | 'WHITE';
 }
-
-const StationName: React.FC<StationNameProps> = ({
-  station,
-  en,
-  horizontal,
-  passed,
-}: StationNameProps) => {
-  const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const dim = useWindowDimensions();
-
-  const horizontalAditionalStyle = useMemo(
-    () => ({
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom: isTablet ? dim.height / 9 : dim.height / 6,
-    }),
-    [dim.height]
-  );
-
-  if (en) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAditionalStyle,
-        ]}
-      >
-        {stationNameR}
-      </Typography>
-    );
-  }
-
-  if (horizontal) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAditionalStyle,
-        ]}
-      >
-        {station.name}
-      </Typography>
-    );
-  }
-
-  return (
-    <View style={styles.stationNameMapContainer}>
-      {station.name?.split('').map((c, j) => (
-        <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Typography>
-      ))}
-    </View>
-  );
-};
-
-type LineDotProps = {
-  station: Station;
-  shouldGrayscale: boolean;
-  transferLines: Line[];
-  arrived: boolean;
-  passed: boolean;
-};
-
-const LineDot: React.FC<LineDotProps> = ({
-  station,
-  shouldGrayscale,
-  transferLines,
-  arrived,
-  passed,
-}) => {
-  const { widthScale } = useScale();
-
-  if (getIsPass(station)) {
-    return (
-      <View style={styles.stationArea}>
-        <View
-          style={[
-            styles.chevronAreaPass,
-            {
-              marginLeft: isTablet ? 0 : widthScale(5),
-            },
-          ]}
-        >
-          <PassChevronTY />
-        </View>
-        <View style={styles.marksContainer}>
-          <PadLineMarks
-            shouldGrayscale={shouldGrayscale}
-            transferLines={transferLines}
-            station={station}
-          />
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.stationArea}>
-      <View style={styles.chevronArea}>
-        <LinearGradient
-          style={styles.chevronGradient}
-          colors={
-            passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
-          }
-        />
-      </View>
-      <View style={styles.marksContainer}>
-        <PadLineMarks
-          shouldGrayscale={shouldGrayscale}
-          transferLines={transferLines}
-          station={station}
-        />
-      </View>
-    </View>
-  );
-};
 
 // Helper: Calculate chevron position based on station state
 const useChevronPosition = (
@@ -620,57 +466,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         {showChevron ? <ChevronTY color={chevronColor} /> : null}
       </View>
     </>
-  );
-};
-
-type EmptyStationNameCellProps = {
-  lastLineColor: string;
-  isLast: boolean;
-  hasTerminus: boolean;
-};
-
-const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
-  lastLineColor: lastLineColorOriginal,
-  isLast,
-  hasTerminus,
-}: EmptyStationNameCellProps) => {
-  const lastLineColor = lastLineColorOriginal;
-  const { left: barLeft, width: barWidth } = useBarStyles({});
-
-  return (
-    <View style={styles.stationNameContainer}>
-      <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={[
-          styles.bar,
-          {
-            left: barLeft,
-          },
-        ]}
-      />
-      <LinearGradient
-        colors={
-          lastLineColor
-            ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
-            : ['#000000ff', '#000000bb']
-        }
-        style={[
-          styles.bar,
-          {
-            left: barLeft,
-            width: barWidth,
-          },
-        ]}
-      />
-      {isLast ? (
-        <BarTerminalEast
-          style={styles.barTerminal}
-          lineColor={lastLineColor}
-          hasTerminus={hasTerminus}
-        />
-      ) : null}
-    </View>
   );
 };
 
