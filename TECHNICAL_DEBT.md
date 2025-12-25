@@ -2,16 +2,17 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2025-12-25（LineBoard重複削減完了）
+**最終更新**: 2025-12-25（Header重複削減・型統一完了）
 
 ## 📊 概要
 
 ### プロジェクト統計
-- **総ファイル数**: 340個のTypeScript/TSXファイル
-- **本番コード**: 282ファイル
-- **テストファイル**: 37ファイル（カバレッジ: **約13%**）
+- **総ファイル数**: 343個のTypeScript/TSXファイル（+3、共通フック追加）
+- **本番コード**: 285ファイル（+3、共通フック追加）
+- **テストファイル**: 38ファイル（+1、useHeaderLangState.test.tsx追加）
+- **カバレッジ**: **約13%**
 - **コンポーネント数**: 118個
-- **カスタムフック数**: 72個
+- **カスタムフック数**: 75個（+3、Header系共通フック追加）
 - **スクリーン数**: 11個
 
 ---
@@ -26,7 +27,7 @@
 
 #### 問題の詳細
 
-類似機能を持つコンポーネントが大量に存在し、合計**約9,500行以上**のコード重複が発生しています（2025-12-25に465行削減済み）。
+類似機能を持つコンポーネントが大量に存在し、合計**約9,500行以上**のコード重複が発生しています（2025-12-25に746行削減済み：LineBoard 465行 + Header 281行）。
 
 ##### LineBoard系コンポーネント（9種類、4,669行）✨ **部分的に改善済み**
 ```text
@@ -61,18 +62,34 @@ src/components/LineBoard/shared/
 - 🔶 各LineBoardファイルのローカルスタイル定義（約80-100行/ファイル）をさらに共通化可能
 - 🔶 LineBoardWest, JO, LED, YamanotePadへの共通コンポーネント適用
 
-##### Header系コンポーネント（11種類、5,420行以上）
+##### Header系コンポーネント（11種類、5,420行以上）✨ **部分的に改善済み**
 ```text
-src/components/HeaderTokyoMetro.tsx   (660行)
+src/components/HeaderJRKyushu.tsx     (638行 → 約560行)
+src/components/HeaderTokyoMetro.tsx   (660行 → 約580行)
+src/components/HeaderTY.tsx           (633行 → 約555行)
+src/components/HeaderSaikyo.tsx       (585行 → 約510行)
 src/components/HeaderJRWest.tsx       (656行)
-src/components/HeaderJRKyushu.tsx     (638行)
-src/components/HeaderTY.tsx           (633行)
-src/components/HeaderSaikyo.tsx       (585行)
 src/components/HeaderJL.tsx           (409行)
 src/components/HeaderE235.tsx         (405行)
 src/components/HeaderLED.tsx
 ... (他4個)
+
+共通フック（新規作成）:
+src/hooks/
+  ├── useHeaderLangState.ts        (16行)
+  ├── useHeaderStationText.ts      (104行)
+  └── useHeaderStateText.ts        (93行)
 ```
+
+**達成済みの改善**（2025-12-25）:
+- ✅ 約281行のコード削減（共通フック3つを抽出）
+- ✅ 4ファイルで重複コードを共通化（HeaderSaikyo, HeaderTY, HeaderTokyoMetro, HeaderJRKyushu）
+- ✅ 型の統一：`Station | null | undefined` → `Station | undefined`（17ファイル）
+- ✅ テストカバレッジ向上：useHeaderLangState.test.tsx追加（7テストケース）
+
+**残りの改善余地**:
+- 🔶 残り7つのHeaderファイルへの共通フック適用
+- 🔶 各Headerファイルのローカルロジック（駅名表示、状態管理）をさらに共通化可能
 
 ##### NumberingIcon系コンポーネント（27種類）
 ```text
@@ -92,12 +109,14 @@ NumberingIcon.tsx
 
 #### 推奨アクション
 1. ~~**共通ロジックの抽出とカスタムフックへの移行**~~ ✅ **完了**（2025-12-25）
-   - ✅ LineDot、StationName、EmptyStationNameCellコンポーネントを共通化
-   - ✅ useBarStylesフックを共通化
-   - ✅ 共通スタイル定義を抽出
-2. **さらなるスタイル共通化**（進行中）
+   - ✅ **LineBoard系**: LineDot、StationName、EmptyStationNameCellコンポーネントを共通化
+   - ✅ **LineBoard系**: useBarStylesフックを共通化、共通スタイル定義を抽出
+   - ✅ **Header系**: useHeaderLangState、useHeaderStationText、useHeaderStateTextフックを共通化
+   - ✅ **型の統一**: `Station | null | undefined` → `Station | undefined`（17ファイル）
+2. **さらなる共通化の推進**（進行中）
    - 🔶 各LineBoardファイルのローカルスタイルを共通化
-   - 🔶 残り4つのLineBoardファイルへの適用
+   - 🔶 残り4つのLineBoardファイルへの共通コンポーネント適用
+   - 🔶 残り7つのHeaderファイルへの共通フック適用
 3. **テーマベースのpropsシステムに統一**（中期目標）
    - 各鉄道会社/路線のスタイルをテーマとして定義
    - 単一のHeader/LineBoard/NumberingIconコンポーネントに統合
@@ -107,12 +126,18 @@ NumberingIcon.tsx
 
 #### 期待される効果
 - **コード削減**: 5,000-7,000行（20-25%）
-  - ✅ **達成済み**: 465行削減（約9%）
-  - 🔶 **残り**: 追加で400-600行削減可能
+  - ✅ **達成済み**: 746行削減（約15%）
+    - LineBoard系: 465行削減
+    - Header系: 281行削減
+  - 🔶 **残り**: 追加で500-700行削減可能（残りのHeader/LineBoard適用）
 - **開発速度**: 新機能開発時間40%削減
-  - ✅ **一部達成**: 共通コンポーネントにより、4つのLineBoardで同時にバグ修正・機能追加が可能
+  - ✅ **一部達成**:
+    - 4つのLineBoardで共通コンポーネント使用により同時修正が可能
+    - 4つのHeaderで共通フック使用により同時修正が可能
 - **バグ削減**: 修正漏れのリスク大幅減少
   - ✅ **達成**: 重複コードが1箇所に集約され、修正漏れリスクが大幅減少
+- **型安全性の向上**:
+  - ✅ **達成**: `Station | null | undefined`の冗長な型定義を`Station | undefined`に統一（17ファイル）
 
 ---
 
@@ -125,9 +150,13 @@ NumberingIcon.tsx
 #### 現状
 ```text
 本番コード:     282ファイル
-テストファイル:  37ファイル
+テストファイル:  38ファイル（+1、2025-12-25）
 カバレッジ:     約13%
 ```
+
+**最近の改善**（2025-12-25）:
+- ✅ useHeaderLangState.test.tsx追加（7テストケース）
+- ✅ 既存テスト（useCurrentTrainType, useTransferLines）が型統一後も正常動作
 
 #### テストが存在しないクリティカルなコンポーネント
 - **9つのLineBoardコンポーネント**: テスト0個
@@ -571,8 +600,11 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 
 ### 1ヶ月以内
 - [x] LineBoardコンポーネントの共通化を開始 ✅ **完了**（2025-12-25）
+- [x] Header系コンポーネントの統一設計を開始 ✅ **完了**（2025-12-25）
+  - [x] 共通フック3つを作成（useHeaderLangState、useHeaderStationText、useHeaderStateText）
+  - [x] 4ファイルで共通フック適用完了
 - [ ] LineBoardの残り4ファイルへの共通コンポーネント適用
-- [ ] Header系コンポーネントの統一設計を開始
+- [ ] Headerの残り7ファイルへの共通フック適用
 - [ ] テストカバレッジ20%を達成（重要なフックから優先）
 - [ ] Firebase関連ライブラリのアップデート計画策定
 
@@ -598,7 +630,8 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 |------|----------|
 | 2025-12-25 | 初版作成（包括的な技術負債調査） |
 | 2025-12-25 | dayjsを1.11.19に更新完了 |
-| 2025-12-25 | LineBoard系コンポーネントの重複削減を実施（907行削減）<br>共通コンポーネント・フック・スタイルを抽出し、4ファイルで適用完了<br>スタイル共通化、useChevronPosition、useIncludesLongStationName抽出 |
+| 2025-12-25 | LineBoard系コンポーネントの重複削減を実施（465行削減）<br>共通コンポーネント・フック・スタイルを抽出し、4ファイルで適用完了<br>スタイル共通化、useChevronPosition、useIncludesLongStationName抽出 |
+| 2025-12-25 | Header系コンポーネントの重複削減を実施（281行削減）<br>共通フック3つを作成（useHeaderLangState、useHeaderStationText、useHeaderStateText）<br>4ファイルで共通フック適用完了（HeaderSaikyo、HeaderTY、HeaderTokyoMetro、HeaderJRKyushu）<br>型の統一：`Station \| null \| undefined` → `Station \| undefined`（17ファイル）<br>テスト追加：useHeaderLangState.test.tsx（7テストケース） |
 
 ---
 
