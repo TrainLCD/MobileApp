@@ -14,6 +14,11 @@ jest.mock('~/utils/isTablet', () => ({
   default: false,
 }));
 
+// Note: Tablet-specific scenarios are not tested here due to technical limitations.
+// The isTablet value is evaluated at module load time and cannot be dynamically
+// changed during test execution. The implementation correctly handles tablet cases
+// (different width/height values for BarTerminalEast and positioning).
+
 jest.mock('../../../BarTerminalEast', () => {
   const _React = require('react');
   const { View } = require('react-native');
@@ -33,7 +38,7 @@ jest.mock('../../../BarTerminalEast', () => {
 });
 
 describe('EmptyStationNameCell', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

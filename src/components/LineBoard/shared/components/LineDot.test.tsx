@@ -50,7 +50,7 @@ describe('LineDot', () => {
 
   const mockTransferLines: Line[] = [];
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

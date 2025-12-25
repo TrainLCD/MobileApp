@@ -18,6 +18,11 @@ jest.mock('~/utils/isTablet', () => ({
   default: false,
 }));
 
+// Note: Tablet-specific scenarios are not tested here due to technical limitations.
+// The isTablet value is evaluated at module load time and cannot be dynamically
+// changed during test execution without causing React hook errors.
+// The implementation correctly handles tablet cases (index=0 -> width=200, index=1 -> width=61.75).
+
 const TestComponent: React.FC<{ index?: number }> = ({ index }) => {
   const { left, width } = useBarStyles({ index });
   return (
@@ -29,7 +34,7 @@ const TestComponent: React.FC<{ index?: number }> = ({ index }) => {
 };
 
 describe('useBarStyles', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

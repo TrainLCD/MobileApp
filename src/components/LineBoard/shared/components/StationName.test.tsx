@@ -27,7 +27,7 @@ jest.mock('../../../Typography', () => {
       children: React.ReactNode;
       style?: unknown;
     }) => (
-      <Text style={style} {...props}>
+      <Text style={style} testID="typography-text" {...props}>
         {children}
       </Text>
     ),
@@ -42,7 +42,7 @@ describe('StationName', () => {
     nameR: 'Tokyo',
   } as unknown as Station;
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -71,18 +71,21 @@ describe('StationName', () => {
   });
 
   it('passed=true の場合、グレーアウトのスタイルが適用される', () => {
-    const { UNSAFE_getAllByType } = render(
+    const { getAllByTestId } = render(
       <StationName station={mockStation} en={true} passed={true} />
     );
 
-    const Text = require('react-native').Text;
-    const textElements = UNSAFE_getAllByType(Text);
+    const textElements = getAllByTestId('typography-text');
     const textElement = textElements[0];
 
-    // grayColor スタイルが適用されているか確認
-    expect(textElement.props.style).toContainEqual(
-      expect.objectContaining({ color: expect.anything() })
+    // grayColor スタイルが適用されているか確認（配列内にcolorプロパティを含むオブジェクトがある）
+    const flattenedStyles = Array.isArray(textElement.props.style)
+      ? textElement.props.style.flat()
+      : [textElement.props.style];
+    const hasColorStyle = flattenedStyles.some(
+      (s: unknown) => s && typeof s === 'object' && 'color' in s
     );
+    expect(hasColorStyle).toBe(true);
   });
 
   it('passed=false の場合、通常のスタイルが適用される', () => {
@@ -95,7 +98,7 @@ describe('StationName', () => {
 
   it('marginBottom を指定した場合、カスタムのマージンが適用される', () => {
     const customMargin = 50;
-    const { UNSAFE_getAllByType } = render(
+    const { getAllByTestId } = render(
       <StationName
         station={mockStation}
         horizontal={true}
@@ -103,14 +106,21 @@ describe('StationName', () => {
       />
     );
 
-    const Text = require('react-native').Text;
-    const textElements = UNSAFE_getAllByType(Text);
+    const textElements = getAllByTestId('typography-text');
     const textElement = textElements[0];
 
     // marginBottom がカスタム値になっているか確認
-    expect(textElement.props.style).toContainEqual(
-      expect.objectContaining({ marginBottom: customMargin })
+    const flattenedStyles = Array.isArray(textElement.props.style)
+      ? textElement.props.style.flat()
+      : [textElement.props.style];
+    const hasMarginBottom = flattenedStyles.some(
+      (s: unknown) =>
+        s &&
+        typeof s === 'object' &&
+        'marginBottom' in s &&
+        s.marginBottom === customMargin
     );
+    expect(hasMarginBottom).toBe(true);
   });
 
   it('駅名が長い場合も正しく1文字ずつ分割される', () => {
@@ -137,27 +147,47 @@ describe('StationName', () => {
       name: undefined,
     } as Station;
 
-    const { UNSAFE_root } = render(
-      <StationName station={stationWithoutName} />
-    );
-
     // エラーなくレンダリングされることを確認
-    expect(UNSAFE_root).toBeTruthy();
+    expect(() =>
+      render(<StationName station={stationWithoutName} />)
+    ).not.toThrow();
   });
 
   it('en=true かつ passed=true の場合、英語名がグレーアウトされる', () => {
-    const { getByText } = render(
+    const { getByText, getAllByTestId } = render(
       <StationName station={mockStation} en={true} passed={true} />
     );
 
     expect(getByText('Tokyo')).toBeTruthy();
+
+    // grayColor スタイルが適用されているか確認
+    const textElements = getAllByTestId('typography-text');
+    const textElement = textElements[0];
+    const flattenedStyles = Array.isArray(textElement.props.style)
+      ? textElement.props.style.flat()
+      : [textElement.props.style];
+    const hasColorStyle = flattenedStyles.some(
+      (s: unknown) => s && typeof s === 'object' && 'color' in s
+    );
+    expect(hasColorStyle).toBe(true);
   });
 
   it('horizontal=true かつ passed=true の場合、横書き駅名がグレーアウトされる', () => {
-    const { getByText } = render(
+    const { getByText, getAllByTestId } = render(
       <StationName station={mockStation} horizontal={true} passed={true} />
     );
 
     expect(getByText('東京')).toBeTruthy();
+
+    // grayColor スタイルが適用されているか確認
+    const textElements = getAllByTestId('typography-text');
+    const textElement = textElements[0];
+    const flattenedStyles = Array.isArray(textElement.props.style)
+      ? textElement.props.style.flat()
+      : [textElement.props.style];
+    const hasColorStyle = flattenedStyles.some(
+      (s: unknown) => s && typeof s === 'object' && 'color' in s
+    );
+    expect(hasColorStyle).toBe(true);
   });
 });

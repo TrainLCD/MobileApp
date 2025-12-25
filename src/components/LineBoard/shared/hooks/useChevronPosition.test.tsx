@@ -27,7 +27,7 @@ const TestComponent: React.FC<{
 };
 
 describe('useChevronPosition', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

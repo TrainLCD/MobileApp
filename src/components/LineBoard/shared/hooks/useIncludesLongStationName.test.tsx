@@ -10,7 +10,7 @@ const TestComponent: React.FC<{ stations: Station[] }> = ({ stations }) => {
 };
 
 describe('useIncludesLongStationName', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
