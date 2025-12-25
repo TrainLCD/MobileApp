@@ -40,6 +40,7 @@ export const useHeaderStationText = ({
         case 'KO':
           return selectedBound.nameKorean ?? '';
         default:
+          return selectedBound.name ?? '';
       }
     }
 

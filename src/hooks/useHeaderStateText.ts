@@ -13,7 +13,7 @@ type UseHeaderStateTextOptions = {
 
 type UseHeaderStateTextResult = {
   stateText: string;
-  stateTextRight?: string;
+  stateTextRight: string;
 };
 
 export const useHeaderStateText = ({
