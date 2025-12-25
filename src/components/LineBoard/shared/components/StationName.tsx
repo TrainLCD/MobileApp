@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import type React from 'react';
+import { useMemo } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import getStationNameR from '~/utils/getStationNameR';
@@ -27,7 +28,8 @@ export const StationName: React.FC<StationNameProps> = ({
   const horizontalAdditionalStyle = useMemo(
     () => ({
       width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom: marginBottom ?? (isTablet ? dim.height / 10 : dim.height / 6),
+      marginBottom:
+        marginBottom ?? (isTablet ? dim.height / 10 : dim.height / 6),
     }),
     [dim.height, marginBottom]
   );

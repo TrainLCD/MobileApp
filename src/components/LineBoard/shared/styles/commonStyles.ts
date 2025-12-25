@@ -1,6 +1,6 @@
 import { Platform, StyleSheet } from 'react-native';
-import { RFValue } from '~/utils/rfValue';
 import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 
 export const commonLineBoardStyles = StyleSheet.create({
   root: {

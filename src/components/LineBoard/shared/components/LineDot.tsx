@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
+import type React from 'react';
 import { View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { useScale } from '~/hooks/useScale';
