@@ -108,13 +108,13 @@ describe('useTransferLines', () => {
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
   let stationAtomValue: { arrived: boolean };
-  let currentStationValue: Station | null;
+  let currentStationValue: Station | undefined;
   let nextStationValue: Station | null;
 
   beforeEach(() => {
     jest.clearAllMocks();
     stationAtomValue = { arrived: false };
-    currentStationValue = null;
+    currentStationValue = undefined;
     nextStationValue = null;
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === stationState) {

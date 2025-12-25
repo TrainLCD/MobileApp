@@ -1,12 +1,13 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import type { Station } from '../@types/graphql';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 
 export const useCurrentStation = (
   skipPassStation = false,
   withTrainTypes = false
-) => {
+): Station | undefined => {
   const {
     stations,
     station: stationFromState,
@@ -34,13 +35,13 @@ export const useCurrentStation = (
 
     const curIndex = reversedStations.findIndex((s) => s.id === station?.id);
     if (curIndex === -1) {
-      return null;
+      return undefined;
     }
 
     const stationsFromRange = reversedStations
       .slice(0, curIndex)
       .filter((s) => (skipPassStation ? !getIsPass(s) : true));
-    return stationsFromRange[stationsFromRange.length - 1] ?? null;
+    return stationsFromRange[stationsFromRange.length - 1];
   }, [selectedDirection, skipPassStation, station?.id, stations]);
 
   if (skipPassStation || withTrainTypes) {
@@ -48,5 +49,6 @@ export const useCurrentStation = (
   }
 
   // NOTE: 路線が選択されていない場合stationはnullishになる
-  return station ?? stationFromState;
+  const result = station ?? stationFromState;
+  return result ? result : undefined;
 };
