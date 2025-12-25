@@ -29,7 +29,7 @@
 類似機能を持つコンポーネントが大量に存在し、合計**約9,500行以上**のコード重複が発生しています（2025-12-25に465行削減済み）。
 
 ##### LineBoard系コンポーネント（9種類、4,669行）✨ **部分的に改善済み**
-```
+```text
 src/components/LineBoardJRKyushu.tsx     (760行 → 約620行)
 src/components/LineBoardToei.tsx         (751行 → 約610行)
 src/components/LineBoardEast.tsx         (720行 → 約580行)
@@ -62,7 +62,7 @@ src/components/LineBoard/shared/
 - 🔶 LineBoardWest, JO, LED, YamanotePadへの共通コンポーネント適用
 
 ##### Header系コンポーネント（11種類、5,420行以上）
-```
+```text
 src/components/HeaderTokyoMetro.tsx   (660行)
 src/components/HeaderJRWest.tsx       (656行)
 src/components/HeaderJRKyushu.tsx     (638行)
@@ -75,7 +75,7 @@ src/components/HeaderLED.tsx
 ```
 
 ##### NumberingIcon系コンポーネント（27種類）
-```
+```text
 NumberingIconReversedSquareHorizontal.tsx
 NumberingIconKeihan.tsx
 NumberingIconIzuhakone.tsx
@@ -123,7 +123,7 @@ NumberingIcon.tsx
 **影響範囲**: 品質、リグレッション防止
 
 #### 現状
-```
+```text
 本番コード:     282ファイル
 テストファイル:  37ファイル
 カバレッジ:     約13%
@@ -159,7 +159,7 @@ NumberingIcon.tsx
 #### 古いバージョンのライブラリ
 
 ##### 🟠 計画的な更新が必要
-```json
+```javascript
 "@react-native-firebase/*": "^21.6.0"     // 最新: ^23.7.0 (メジャー2つ遅れ)
 "@react-native-community/cli": "^15.1.2"  // 最新: ^20.0.2 (メジャー5つ遅れ)
 "@sentry/react-native": "~7.2.0"          // 最新: ~7.8.0
