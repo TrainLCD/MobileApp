@@ -2,18 +2,18 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2025-12-25（LineBoard重複削減完了）
+**最終更新**: 2025-12-26（テストカバレッジ向上・Header系改善開始）
 
 ## 📊 概要
 
 ### プロジェクト統計
-- **総ファイル数**: 356個のTypeScript/TSXファイル
-- **本番コード**: 309ファイル
-- **テストファイル**: 47ファイル
-- **カバレッジ**: **約15%**
-- **コンポーネント数**: 121個
-- **カスタムフック数**: 75個
-- **スクリーン数**: 11個
+- **総ファイル数**: 347個のTypeScript/TSXファイル
+- **本番コード**: 297ファイル
+- **テストファイル**: 50ファイル
+- **カバレッジ**: **約17%**（最近のテスト拡充により向上）
+- **コンポーネント数**: 110個
+- **カスタムフック数**: 78個
+- **スクリーン数**: 9個
 
 ---
 
@@ -79,7 +79,7 @@ src/components/LineBoard/shared/
 - 🔶 各LineBoardファイルのローカルスタイル定義（約80-100行/ファイル）をさらに共通化可能
 - 🔶 LineBoardWest, JO, LED, YamanotePadへの共通コンポーネント適用
 
-##### Header系コンポーネント（11種類、5,420行以上）
+##### Header系コンポーネント（11種類、5,420行以上）✨ **改善開始**
 ```text
 src/components/HeaderTokyoMetro.tsx   (660行)
 src/components/HeaderJRWest.tsx       (656行)
@@ -90,7 +90,22 @@ src/components/HeaderJL.tsx           (409行)
 src/components/HeaderE235.tsx         (405行)
 src/components/HeaderLED.tsx
 ... (他4個)
+
+共通フック（新規作成）:
+src/hooks/
+  ├── useHeaderLangState.ts          (多言語状態管理)
+  ├── useHeaderStateText.ts          (状態テキスト生成)
+  └── useHeaderStationText.ts        (駅名テキスト生成)
+
+共通テストファイル（新規作成）:
+src/hooks/
+  └── useHeaderLangState.test.tsx    (テスト有り)
 ```
+
+**達成済みの改善**（2025-12-26）:
+- ✅ **3つの共通フックを作成**（useHeaderLangState、useHeaderStateText、useHeaderStationText）
+- ✅ **型の統一**: Station | undefinedに統一
+- ✅ **useHeaderLangStateのユニットテスト追加**
 
 ##### NumberingIcon系コンポーネント（27種類）
 ```text
@@ -146,27 +161,36 @@ NumberingIcon.tsx
 
 #### 現状
 ```text
-本番コード:     309ファイル
-テストファイル:  47ファイル
-カバレッジ:     約15%
+本番コード:     297ファイル
+テストファイル:  50ファイル
+カバレッジ:     約17%
 ```
 
-**最近の改善**（2025-12-25）:
-- ✅ LineBoard共通コンポーネント・フックのテスト追加（6ファイル、49テストケース）
+**最近の改善**（2025-12-25〜2025-12-26）:
+- ✅ **LineBoard共通コンポーネント・フックのテスト追加**（6ファイル、49テストケース）
+- ✅ **ビジネスクリティカルなフックのテスト追加**（6ファイル、38テストケース）
+  - useCurrentStation (6テスト)
+  - useCurrentLine (5テスト)
+  - useNextStation (10テスト)
+  - usePreviousStation (4テスト)
+  - useStoppingState (7テスト)
+  - useNearestStation (6テスト)
+- ✅ **Header共通フックのテスト追加**（useHeaderLangState）
 - ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、型安全なアサーション）
+- 📈 **合計87テストケースを追加**（カバレッジ13% → 17%に向上）
 
 #### テストが存在しないクリティカルなコンポーネント
-- **9つのLineBoardコンポーネント**: テスト0個
+- **9つのLineBoardコンポーネント**: テスト0個（共通コンポーネント・フックは✅）
 - **27つのNumberingIconコンポーネント**: テスト0個
 - **多くのHeader系コンポーネント**: 2個のみテスト有（HeaderE235、HeaderJL）
 - **重要な画面**: Main、SelectLineScreen等
 
 #### 推奨アクション
-1. **短期（1ヶ月）**: ビジネスクリティカルなロジックのテストを優先
-   - 状態管理（hooks）
+1. ~~**短期（1ヶ月）**: ビジネスクリティカルなロジックのテストを優先~~ ✅ **進行中**（2025-12-26）
+   - ✅ 状態管理（hooks）: useCurrentStation、useCurrentLine等にテスト追加済み
    - データ変換ロジック
-   - 位置情報処理
-2. **中期（3ヶ月）**: 最低30%のカバレッジを目標設定
+   - 位置情報処理: useNearestStationにテスト追加済み
+2. **中期（3ヶ月）**: 最低30%のカバレッジを目標設定（現在17%）
 3. **長期**: 新規コードには必ずテスト追加のルール化
 
 #### 期待される効果
@@ -184,11 +208,10 @@ NumberingIcon.tsx
 
 #### 古いバージョンのライブラリ
 
-##### 🔴 即時対応が必要
+##### ✅ 対応完了
 ```json
-"dayjs": "^1.10.7"  // 現在: 1.11.19+ (2021年版から更新なし)
+"dayjs": "^1.11.19"  // ✅ 最新版に更新済み（2025-12-26以前）
 ```
-**リスク**: セキュリティパッチ未適用、バグ修正未反映
 
 ##### 🟠 計画的な更新が必要
 ```javascript
@@ -199,7 +222,7 @@ NumberingIcon.tsx
 ```
 
 #### 推奨アクション
-1. **今週中**: `dayjs`を最新版にアップデート
+1. ~~**今週中**: `dayjs`を最新版にアップデート~~ ✅ **完了**（2025-12-26以前）
 2. **1ヶ月以内**: Firebase関連を計画的にアップデート（破壊的変更に注意）
 3. **継続的**: 四半期ごとの依存関係レビュープロセスの確立
 
@@ -357,7 +380,7 @@ switch (lineId) {
 
 #### 現状
 
-72個のカスタムフックが存在し、依存関係が複雑：
+78個のカスタムフックが存在し、依存関係が複雑：
 ```typescript
 useAfterNextStation, useAndroidWearable, useAnonymousUser,
 useAppleWatch, useAutoMode, useBadAccuracy, useBounds,
@@ -593,9 +616,10 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 ### 保守性
 | 項目 | 改善効果 |
 |------|----------|
-| テストカバレッジ 13% → 15%（達成済み） | **LineBoard共通部分の品質保証** ✅ |
-| テストカバレッジ 15% → 30%（目標） | **バグ検出率2倍** 🔶 |
+| テストカバレッジ 13% → 17%（達成済み） | **LineBoard・重要フックの品質保証** ✅ |
+| テストカバレッジ 17% → 30%（目標） | **バグ検出率2倍** 🔶 |
 | LineBoard共通化（達成済み） | **4ファイルで同時修正可能** ✅ |
+| Header共通フック作成（開始） | **保守性向上の基盤構築** ✅ |
 | 全コンポーネント統一（目標） | **新機能開発時間40%削減** 🔶 |
 
 ---
@@ -603,7 +627,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 ## 🎯 次のアクションアイテム
 
 ### 即時対応（今週中）
-- [ ] `dayjs`を最新版にアップデート
+- [x] `dayjs`を最新版にアップデート ✅ **完了**（2025-12-26以前）
 - [ ] `src/screens/Main.tsx:463`のTODOを具体化
 
 ### 1ヶ月以内
@@ -614,8 +638,14 @@ EXPERIMENTAL_TELEMETRY_TOKEN
   - [x] 49テストケース追加（6テストファイル）
   - [x] 907行のコード削減達成
 - [ ] LineBoardの残り4ファイルへの共通コンポーネント適用
-- [ ] Header系コンポーネントの統一設計を開始
-- [ ] テストカバレッジ20%を達成（重要なフックから優先）
+- [x] Header系コンポーネントの統一設計を開始 ✅ **開始**（2025-12-26）
+  - [x] 3つの共通フック作成（useHeaderLangState、useHeaderStateText、useHeaderStationText）
+  - [x] 型の統一（Station | undefined）
+  - [x] useHeaderLangStateのテスト追加
+- [x] テストカバレッジ17%を達成 ✅ **達成**（2025-12-26）
+  - [x] ビジネスクリティカルなフックのテスト追加（38テストケース）
+  - [x] LineBoard共通部分のテスト（49テストケース）
+- [ ] テストカバレッジ20%を目指して継続（次のマイルストーン）
 - [ ] Firebase関連ライブラリのアップデート計画策定
 
 ### 3ヶ月以内
@@ -640,6 +670,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 |------|----------|
 | 2025-12-25 | 初版作成（包括的な技術負債調査） |
 | 2025-12-25 | LineBoard系コンポーネントの重複削減を実施（907行削減）<br>共通コンポーネント3つ（LineDot、StationName、EmptyStationNameCell）を作成<br>共通フック3つ（useBarStyles、useChevronPosition、useIncludesLongStationName）を作成<br>包括的なテストカバレッジ（6ファイル、49テストケース）を追加<br>都営テーマの多言語対応を維持（StationNameToeiコンポーネント作成）<br>4ファイルで適用完了（LineBoardEast、Saikyo、JRKyushu、Toei） |
+| 2025-12-26 | プロジェクト統計を更新（ファイル数、テスト数、カバレッジを最新化）<br>**テストカバレッジ大幅向上**: 15% → 17%（38個の新規テストケース追加）<br>ビジネスクリティカルなフックのテスト追加（useCurrentStation、useCurrentLine、useNextStation等）<br>**Header系コンポーネントの改善開始**:共通フック3つ作成（useHeaderLangState、useHeaderStateText、useHeaderStationText）<br>型の統一（Station \| undefined）実施<br>**依存関係の更新**: dayjsを最新版（^1.11.19）に更新完了<br>次のアクションアイテムを進捗に応じて更新 |
 
 ---
 
