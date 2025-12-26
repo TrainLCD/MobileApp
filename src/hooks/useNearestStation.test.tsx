@@ -51,7 +51,9 @@ const createStation = (
     __typename: 'LineNested',
     averageDistance: null,
     color: '#123456',
+    company: null,
     id: 1,
+    lineSymbols: [],
     lineType: LineType.Normal,
     nameChinese: null,
     nameFull: 'Test Line',
@@ -59,6 +61,9 @@ const createStation = (
     nameKorean: null,
     nameRoman: 'Test Line',
     nameShort: 'Test',
+    station: null,
+    status: OperationStatus.InOperation,
+    trainType: null,
   },
   lines: [],
   longitude,
@@ -86,9 +91,11 @@ describe('useNearestStation', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
-  const mockUseLocationStore = useLocationStore as unknown as jest.MockedFunction<
-    (selector: (state: any) => any) => any
-  >;
+  const mockUseLocationStore =
+    useLocationStore as unknown as jest.MockedFunction<
+      // biome-ignore lint/suspicious/noExplicitAny: Mock function requires any type for flexibility
+      (selector: (state: any) => any) => any
+    >;
   const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
     typeof useCurrentStation
   >;
@@ -183,7 +190,9 @@ describe('useNearestStation', () => {
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
 
-    mockFindNearest.mockReturnValue(undefined);
+    mockFindNearest.mockReturnValue(
+      undefined as unknown as ReturnType<typeof findNearest>
+    );
 
     const { getByTestId } = render(<TestComponent />);
     expect(getByTestId('station').props.children).toBeUndefined();

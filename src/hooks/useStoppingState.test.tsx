@@ -44,7 +44,9 @@ const createStation = (
     __typename: 'LineNested',
     averageDistance: null,
     color: '#123456',
+    company: null,
     id: 1,
+    lineSymbols: [],
     lineType: LineType.Normal,
     nameChinese: null,
     nameFull: 'Test Line',
@@ -52,6 +54,9 @@ const createStation = (
     nameKorean: null,
     nameRoman: 'Test Line',
     nameShort: 'Test',
+    station: null,
+    status: OperationStatus.InOperation,
+    trainType: null,
   },
   lines: [],
   longitude: null,
@@ -156,7 +161,9 @@ describe('useStoppingState', () => {
 
     mockUseCurrentStation.mockReturnValue(currentStation);
     mockUseNextStation.mockReturnValue(nextStation);
-    mockGetIsPass.mockImplementation((s) => s?.stopCondition === StopCondition.Not);
+    mockGetIsPass.mockImplementation(
+      (s) => s?.stopCondition === StopCondition.Not
+    );
 
     const { getByTestId } = render(<TestComponent />);
     expect(getByTestId('state').props.children).toBe('NEXT');
@@ -190,7 +197,9 @@ describe('useStoppingState', () => {
 
     mockUseCurrentStation.mockReturnValue(currentStation);
     mockUseNextStation.mockReturnValue(nextStation);
-    mockGetIsPass.mockImplementation((s) => s?.stopCondition === StopCondition.Not);
+    mockGetIsPass.mockImplementation(
+      (s) => s?.stopCondition === StopCondition.Not
+    );
 
     const { getByTestId } = render(<TestComponent />);
     expect(getByTestId('state').props.children).toBe('NEXT');

@@ -4,7 +4,6 @@ import type React from 'react';
 import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
-import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { usePreviousStation } from './usePreviousStation';
@@ -46,7 +45,9 @@ const createStation = (
     __typename: 'LineNested',
     averageDistance: null,
     color: '#123456',
+    company: null,
     id: 1,
+    lineSymbols: [],
     lineType: LineType.Normal,
     nameChinese: null,
     nameFull: 'Test Line',
@@ -54,6 +55,9 @@ const createStation = (
     nameKorean: null,
     nameRoman: 'Test Line',
     nameShort: 'Test',
+    station: null,
+    status: OperationStatus.InOperation,
+    trainType: null,
   },
   lines: [],
   longitude: null,

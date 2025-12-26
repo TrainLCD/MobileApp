@@ -4,7 +4,6 @@ import type React from 'react';
 import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
-import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -51,7 +50,9 @@ const createStation = (
     __typename: 'LineNested',
     averageDistance: null,
     color: '#123456',
+    company: null,
     id: 1,
+    lineSymbols: [],
     lineType: LineType.Normal,
     nameChinese: null,
     nameFull: 'Test Line',
@@ -59,6 +60,9 @@ const createStation = (
     nameKorean: null,
     nameRoman: 'Test Line',
     nameShort: 'Test',
+    station: null,
+    status: OperationStatus.InOperation,
+    trainType: null,
   },
   lines: [],
   longitude: null,
@@ -101,8 +105,12 @@ describe('useNextStation', () => {
     jest.clearAllMocks();
     mockGetIsPass.mockReturnValue(false);
     mockUseLoopLine.mockReturnValue({
-      isLoopLine: false,
+      isYamanoteLine: false,
+      isOsakaLoopLine: false,
+      isMeijoLine: false,
       isOedoLine: false,
+      isLoopLine: false,
+      isPartiallyLoopLine: false,
       inboundStationsForLoopLine: [],
       outboundStationsForLoopLine: [],
     });
@@ -153,7 +161,9 @@ describe('useNextStation', () => {
     const station2 = createStation(2, 2, StopCondition.Not); // pass station
     const station3 = createStation(3, 3, StopCondition.All);
 
-    mockGetIsPass.mockImplementation((s) => s?.stopCondition === StopCondition.Not);
+    mockGetIsPass.mockImplementation(
+      (s) => s?.stopCondition === StopCondition.Not
+    );
 
     mockUseCurrentStation.mockReturnValue(station1);
 
@@ -174,7 +184,9 @@ describe('useNextStation', () => {
     const station2 = createStation(2, 2, StopCondition.Not); // pass station
     const station3 = createStation(3, 3, StopCondition.All);
 
-    mockGetIsPass.mockImplementation((s) => s?.stopCondition === StopCondition.Not);
+    mockGetIsPass.mockImplementation(
+      (s) => s?.stopCondition === StopCondition.Not
+    );
 
     mockUseCurrentStation.mockReturnValue(station1);
 
@@ -196,8 +208,12 @@ describe('useNextStation', () => {
     const station3 = createStation(3, 3);
 
     mockUseLoopLine.mockReturnValue({
-      isLoopLine: true,
+      isYamanoteLine: false,
+      isOsakaLoopLine: false,
+      isMeijoLine: false,
       isOedoLine: false,
+      isLoopLine: true,
+      isPartiallyLoopLine: false,
       inboundStationsForLoopLine: [station1, station2, station3],
       outboundStationsForLoopLine: [],
     });
@@ -223,8 +239,12 @@ describe('useNextStation', () => {
     const station3 = createStation(3, 3);
 
     mockUseLoopLine.mockReturnValue({
-      isLoopLine: true,
+      isYamanoteLine: false,
+      isOsakaLoopLine: false,
+      isMeijoLine: false,
       isOedoLine: false,
+      isLoopLine: true,
+      isPartiallyLoopLine: false,
       inboundStationsForLoopLine: [],
       outboundStationsForLoopLine: [station1, station2, station3],
     });
@@ -256,9 +276,7 @@ describe('useNextStation', () => {
       selectedDirection: 'INBOUND',
     });
 
-    const { getByTestId } = render(
-      <TestComponent originStation={station2} />
-    );
+    const { getByTestId } = render(<TestComponent originStation={station2} />);
     const result = JSON.parse(getByTestId('station').props.children as string);
 
     // Should use originStation (station2) instead of currentStation
