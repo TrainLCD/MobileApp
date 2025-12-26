@@ -11,6 +11,7 @@ import {
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
+import getStationNameR from '~/utils/getStationNameR';
 import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
@@ -18,11 +19,7 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
 import { ChevronTY } from './ChevronTY';
-import {
-  EmptyStationNameCell,
-  LineDot,
-  StationName,
-} from './LineBoard/shared/components';
+import { EmptyStationNameCell, LineDot } from './LineBoard/shared/components';
 import {
   useBarStyles,
   useChevronPosition,
@@ -61,6 +58,99 @@ const localStyles = StyleSheet.create({
 });
 
 const styles = { ...commonLineBoardStyles, ...localStyles };
+
+// Toei-specific StationName component with multi-language support
+interface StationNameToeiProps {
+  station: Station;
+  en?: boolean;
+  horizontal?: boolean;
+  passed?: boolean;
+}
+
+const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
+  station,
+  en,
+  horizontal,
+  passed,
+}) => {
+  const stationNameR = useMemo(() => getStationNameR(station), [station]);
+  const dim = useWindowDimensions();
+
+  const horizontalAdditionalStyle = useMemo(
+    () => ({
+      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
+    }),
+    [dim.height]
+  );
+
+  if (en) {
+    return (
+      <Typography
+        style={[
+          styles.stationNameHorizontal,
+          passed ? styles.grayColor : null,
+          horizontalAdditionalStyle,
+        ]}
+      >
+        {stationNameR}
+        {'\n'}
+        <Typography
+          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
+        >
+          {station.nameChinese ?? ''}
+        </Typography>
+      </Typography>
+    );
+  }
+
+  if (horizontal) {
+    return (
+      <Typography
+        style={[
+          styles.stationNameHorizontal,
+          passed ? styles.grayColor : null,
+          horizontalAdditionalStyle,
+        ]}
+      >
+        {station.name}
+        {'\n'}
+        <Typography
+          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
+        >
+          {station.nameKorean ?? ''}
+        </Typography>
+      </Typography>
+    );
+  }
+
+  return (
+    <View style={styles.splittedStationNameWithExtraLang}>
+      <View>
+        {(station.name ?? '').split('').map((c, j) => (
+          <Typography
+            style={[styles.stationName, passed ? styles.grayColor : null]}
+            key={`${station.id}-ja-${j}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+      <View style={styles.splittedStationName}>
+        {(station.nameKorean ?? '').split('').map((c, j) => (
+          <Typography
+            style={[styles.stationName, passed ? styles.grayColor : null]}
+            key={`${station.id}-ko-${j}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const StationNameToei = React.memo(StationNameToeiBase);
 
 interface StationNameCellProps {
   station: Station;
@@ -258,7 +348,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               : styles.jaName,
           ]}
         >
-          <StationName
+          <StationNameToei
             station={station}
             en={isEn}
             horizontal={includesLongStationName}
