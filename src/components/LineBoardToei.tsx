@@ -235,7 +235,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const dim = useWindowDimensions();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = useMemo(
-    () => getStationNumberIndex(currentStation),
+    () => getStationNumberIndex(currentStation ?? undefined),
     [currentStation, getStationNumberIndex]
   );
   const numberingObj = useMemo<StationNumber | undefined>(

@@ -109,7 +109,7 @@ export const useUpdateLiveActivities = (): void => {
   );
 
   const stoppedStationNumberingIndex = useMemo(
-    () => getStationNumberIndex(stoppedStation ?? null),
+    () => getStationNumberIndex(stoppedStation),
     [getStationNumberIndex, stoppedStation]
   );
   const stationNumber = useMemo(
@@ -120,7 +120,7 @@ export const useUpdateLiveActivities = (): void => {
   );
 
   const nextStationNumberingIndex = useMemo(
-    () => getStationNumberIndex(nextStation ?? null),
+    () => getStationNumberIndex(nextStation),
     [getStationNumberIndex, nextStation]
   );
   const nextStationNumber = useMemo(() => {
@@ -154,7 +154,7 @@ export const useUpdateLiveActivities = (): void => {
   );
 
   const currentStationNumberingIndex = useMemo(
-    () => getStationNumberIndex(currentStation ?? null),
+    () => getStationNumberIndex(currentStation),
     [currentStation, getStationNumberIndex]
   );
 
