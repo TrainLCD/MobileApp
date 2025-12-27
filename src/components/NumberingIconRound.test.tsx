@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconRound from './NumberingIconRound';
 
@@ -11,20 +10,14 @@ jest.mock('~/utils/isTablet', () => ({
 describe('NumberingIconRound', () => {
   it('通常サイズでレンダリングされる', () => {
     const { UNSAFE_root } = render(
-      <NumberingIconRound
-        lineColor="#ff0000"
-        stationNumber="JY-01"
-      />
+      <NumberingIconRound lineColor="#ff0000" stationNumber="JY-01" />
     );
     expect(UNSAFE_root).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {
     const { getByText } = render(
-      <NumberingIconRound
-        lineColor="#ff0000"
-        stationNumber="JY-01"
-      />
+      <NumberingIconRound lineColor="#ff0000" stationNumber="JY-01" />
     );
     expect(getByText('JY')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
@@ -54,10 +47,7 @@ describe('NumberingIconRound', () => {
 
   it('2文字のlineSymbolで正しくレンダリングされる', () => {
     const { getByText } = render(
-      <NumberingIconRound
-        lineColor="#ff0000"
-        stationNumber="KK-01"
-      />
+      <NumberingIconRound lineColor="#ff0000" stationNumber="KK-01" />
     );
     expect(getByText('KK')).toBeTruthy();
   });
@@ -75,10 +65,7 @@ describe('NumberingIconRound', () => {
 
   it('サブナンバーを含むstationNumberが正しく処理される', () => {
     const { getByText } = render(
-      <NumberingIconRound
-        lineColor="#ff0000"
-        stationNumber="JY-01-02"
-      />
+      <NumberingIconRound lineColor="#ff0000" stationNumber="JY-01-02" />
     );
     expect(getByText('JY')).toBeTruthy();
     expect(getByText('01-02')).toBeTruthy();

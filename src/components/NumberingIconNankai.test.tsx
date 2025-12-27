@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconNankai from './NumberingIconNankai';
 
@@ -9,12 +8,14 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 jest.mock('react-native-svg', () => {
-  const React = require('react');
+  const _React = require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: (props: any) => <View {...props} />,
-    Ellipse: (props: any) => <View {...props} testID="ellipse" />,
+    default: (props: unknown) => <View {...(props as object)} />,
+    Ellipse: (props: unknown) => (
+      <View {...(props as object)} testID="ellipse" />
+    ),
   };
 });
 

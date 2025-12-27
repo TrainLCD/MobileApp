@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import NumberingIconHankyu from './NumberingIconHankyu';
 
 jest.mock('~/utils/isTablet', () => ({
@@ -10,10 +9,7 @@ jest.mock('~/utils/isTablet', () => ({
 describe('NumberingIconHankyu', () => {
   it('正常にレンダリングされる', () => {
     const { getByText } = render(
-      <NumberingIconHankyu
-        lineColor="#ff6600"
-        stationNumber="HK-01"
-      />
+      <NumberingIconHankyu lineColor="#ff6600" stationNumber="HK-01" />
     );
     expect(getByText('HK')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
@@ -21,10 +17,7 @@ describe('NumberingIconHankyu', () => {
 
   it('stationNumberが正しく分割される', () => {
     const { getByText } = render(
-      <NumberingIconHankyu
-        lineColor="#ff6600"
-        stationNumber="HK-25"
-      />
+      <NumberingIconHankyu lineColor="#ff6600" stationNumber="HK-25" />
     );
     expect(getByText('HK')).toBeTruthy();
     expect(getByText('25')).toBeTruthy();
@@ -43,10 +36,7 @@ describe('NumberingIconHankyu', () => {
 
   it('lineColorがテキストカラーに適用される', () => {
     const { UNSAFE_root } = render(
-      <NumberingIconHankyu
-        lineColor="#ff6600"
-        stationNumber="HK-01"
-      />
+      <NumberingIconHankyu lineColor="#ff6600" stationNumber="HK-01" />
     );
     expect(UNSAFE_root).toBeTruthy();
   });

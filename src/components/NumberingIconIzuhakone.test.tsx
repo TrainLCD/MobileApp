@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconIzuhakone from './NumberingIconIzuhakone';
 
@@ -11,10 +10,7 @@ jest.mock('~/utils/isTablet', () => ({
 describe('NumberingIconIzuhakone', () => {
   it('通常サイズでレンダリングされる', () => {
     const { getByText } = render(
-      <NumberingIconIzuhakone
-        lineColor="#ff6600"
-        stationNumber="IZ-01"
-      />
+      <NumberingIconIzuhakone lineColor="#ff6600" stationNumber="IZ-01" />
     );
     expect(getByText('IZ')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
@@ -55,10 +51,7 @@ describe('NumberingIconIzuhakone', () => {
 
   it('lineSymbolとstationNumberが正しく分割される', () => {
     const { getByText } = render(
-      <NumberingIconIzuhakone
-        lineColor="#ff6600"
-        stationNumber="IZ-99"
-      />
+      <NumberingIconIzuhakone lineColor="#ff6600" stationNumber="IZ-99" />
     );
     expect(getByText('IZ')).toBeTruthy();
     expect(getByText('99')).toBeTruthy();

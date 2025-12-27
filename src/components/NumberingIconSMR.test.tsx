@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconSMR from './NumberingIconSMR';
 
@@ -11,10 +10,7 @@ jest.mock('~/utils/isTablet', () => ({
 describe('NumberingIconSMR', () => {
   it('withDarkTheme=falseでレンダリングされる', () => {
     const { getByText } = render(
-      <NumberingIconSMR
-        stationNumber="SM-01"
-        withDarkTheme={false}
-      />
+      <NumberingIconSMR stationNumber="SM-01" withDarkTheme={false} />
     );
     expect(getByText('SM')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
@@ -22,10 +18,7 @@ describe('NumberingIconSMR', () => {
 
   it('withDarkTheme=trueでレンダリングされる', () => {
     const { getByText } = render(
-      <NumberingIconSMR
-        stationNumber="SM-01"
-        withDarkTheme={true}
-      />
+      <NumberingIconSMR stationNumber="SM-01" withDarkTheme={true} />
     );
     expect(getByText('SM')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
@@ -66,10 +59,7 @@ describe('NumberingIconSMR', () => {
 
   it('stationNumberが正しく分割される', () => {
     const { getByText } = render(
-      <NumberingIconSMR
-        stationNumber="SM-23"
-        withDarkTheme={false}
-      />
+      <NumberingIconSMR stationNumber="SM-23" withDarkTheme={false} />
     );
     expect(getByText('SM')).toBeTruthy();
     expect(getByText('23')).toBeTruthy();

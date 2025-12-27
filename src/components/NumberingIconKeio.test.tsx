@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import NumberingIconKeio from './NumberingIconKeio';
 
 jest.mock('~/utils/isTablet', () => ({

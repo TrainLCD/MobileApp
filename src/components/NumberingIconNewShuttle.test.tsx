@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import NumberingIconNewShuttle from './NumberingIconNewShuttle';
 
 jest.mock('~/utils/isTablet', () => ({
@@ -8,11 +7,13 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 jest.mock('./Hexagon', () => {
-  const React = require('react');
+  const _React = require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: (props: any) => <View {...props} testID="hexagon" />,
+    default: (props: unknown) => (
+      <View {...(props as object)} testID="hexagon" />
+    ),
   };
 });
 

@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconReversedRound from './NumberingIconReversedRound';
 
@@ -59,10 +58,7 @@ describe('NumberingIconReversedRound', () => {
 
   it('サブナンバーを含むstationNumberが正しく処理される', () => {
     const { getByText } = render(
-      <NumberingIconReversedRound
-        lineColor="#ff0000"
-        stationNumber="M-01-02"
-      />
+      <NumberingIconReversedRound lineColor="#ff0000" stationNumber="M-01-02" />
     );
     expect(getByText('M')).toBeTruthy();
     expect(getByText('01-02')).toBeTruthy();

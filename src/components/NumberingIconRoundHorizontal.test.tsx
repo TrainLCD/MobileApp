@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconRoundHorizontal from './NumberingIconRoundHorizontal';
 
@@ -51,10 +50,7 @@ describe('NumberingIconRoundHorizontal', () => {
 
   it('2文字のlineSymbolで正しくレンダリングされる', () => {
     const { getByText } = render(
-      <NumberingIconRoundHorizontal
-        lineColor="#00ff00"
-        stationNumber="SS-01"
-      />
+      <NumberingIconRoundHorizontal lineColor="#00ff00" stationNumber="SS-01" />
     );
     expect(getByText('SS01')).toBeTruthy();
   });

@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconReversedRoundHorizontal from './NumberingIconReversedRoundHorizontal';
 

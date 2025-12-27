@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import NumberingIconReversedSquareWest from './NumberingIconReversedSquareWest';
 
 jest.mock('~/utils/isTablet', () => ({

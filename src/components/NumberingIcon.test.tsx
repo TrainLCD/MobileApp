@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIcon from './NumberingIcon';
 

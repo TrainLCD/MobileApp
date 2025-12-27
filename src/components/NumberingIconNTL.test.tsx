@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import NumberingIconNTL from './NumberingIconNTL';
 
 jest.mock('~/utils/isTablet', () => ({
@@ -9,9 +8,7 @@ jest.mock('~/utils/isTablet', () => ({
 
 describe('NumberingIconNTL', () => {
   it('正常にレンダリングされる', () => {
-    const { getByText } = render(
-      <NumberingIconNTL stationNumber="NT-01" />
-    );
+    const { getByText } = render(<NumberingIconNTL stationNumber="NT-01" />);
     expect(getByText('NT')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
   });
@@ -24,9 +21,7 @@ describe('NumberingIconNTL', () => {
   });
 
   it('stationNumberが正しく分割される', () => {
-    const { getByText } = render(
-      <NumberingIconNTL stationNumber="NT-22" />
-    );
+    const { getByText } = render(<NumberingIconNTL stationNumber="NT-22" />);
     expect(getByText('NT')).toBeTruthy();
     expect(getByText('22')).toBeTruthy();
   });

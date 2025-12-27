@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconKeihan from './NumberingIconKeihan';
 
@@ -10,9 +9,7 @@ jest.mock('~/utils/isTablet', () => ({
 
 describe('NumberingIconKeihan', () => {
   it('通常サイズでレンダリングされる', () => {
-    const { getByText } = render(
-      <NumberingIconKeihan stationNumber="KH-01" />
-    );
+    const { getByText } = render(<NumberingIconKeihan stationNumber="KH-01" />);
     expect(getByText('KH')).toBeTruthy();
     expect(getByText('01')).toBeTruthy();
   });
@@ -45,9 +42,7 @@ describe('NumberingIconKeihan', () => {
   });
 
   it('stationNumberが正しく分割される', () => {
-    const { getByText } = render(
-      <NumberingIconKeihan stationNumber="KH-42" />
-    );
+    const { getByText } = render(<NumberingIconKeihan stationNumber="KH-42" />);
     expect(getByText('KH')).toBeTruthy();
     expect(getByText('42')).toBeTruthy();
   });
