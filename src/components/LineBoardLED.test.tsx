@@ -1,7 +1,6 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
-import { StopCondition } from '~/@types/graphql';
 import type { Line, Station } from '~/@types/graphql';
+import { StopCondition } from '~/@types/graphql';
 import LineBoardLED from './LineBoardLED';
 
 // モック設定

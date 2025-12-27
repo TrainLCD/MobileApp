@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import { APP_THEME } from '~/models/Theme';
 import LineBoard from './LineBoard';
 
@@ -65,7 +64,7 @@ describe('LineBoard', () => {
   const LineBoardToei = require('./LineBoardToei').default;
   const LineBoardWest = require('./LineBoardWest').default;
   const LineBoardSaikyo = require('./LineBoardSaikyo').default;
-  const LineBoardYamanotePad = require('./LineBoardYamanotePad').default;
+  const _LineBoardYamanotePad = require('./LineBoardYamanotePad').default;
   const LineBoardJO = require('./LineBoardJO').default;
   const LineBoardLED = require('./LineBoardLED').default;
   const LineBoardJRKyushu = require('./LineBoardJRKyushu').default;

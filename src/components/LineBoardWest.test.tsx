@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import type { Line, Station } from '~/@types/graphql';
 import LineBoardWest from './LineBoardWest';
 
@@ -94,7 +93,10 @@ describe('LineBoardWest', () => {
 
   it('正しくレンダリングされる', () => {
     const { container } = render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(container).toBeTruthy();
   });
@@ -108,28 +110,40 @@ describe('LineBoardWest', () => {
       stations: mockStations,
     });
     const { container } = render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(container.children.length).toBe(0);
   });
 
   it('barが正しい色で表示される', () => {
     const { container } = render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(container).toBeTruthy();
   });
 
   it('barTerminalが正しく表示される', () => {
     const { container } = render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(container).toBeTruthy();
   });
 
   it('各駅のStationNameCellが正しくレンダリングされる', () => {
     const { container } = render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(container).toBeTruthy();
   });
@@ -159,7 +173,10 @@ describe('LineBoardWest', () => {
       stations: mockStations,
     });
     render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(ChevronJRWest).toHaveBeenCalled();
   });
@@ -185,7 +202,10 @@ describe('LineBoardWest', () => {
   it('PadLineMarksが正しく表示される', () => {
     const PadLineMarks = require('./PadLineMarks').default;
     render(
-      <LineBoardWest stations={mockStations} lineColors={['#00a7db', '#00a7db']} />
+      <LineBoardWest
+        stations={mockStations}
+        lineColors={['#00a7db', '#00a7db']}
+      />
     );
     expect(PadLineMarks).toHaveBeenCalled();
   });

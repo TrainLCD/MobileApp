@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import type { Line, Station } from '~/@types/graphql';
 import LineBoardJO from './LineBoardJO';
 
@@ -107,7 +106,10 @@ describe('LineBoardJO', () => {
 
   it('正しくレンダリングされる', () => {
     const { container } = render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(container).toBeTruthy();
   });
@@ -119,7 +121,10 @@ describe('LineBoardJO', () => {
       selectedLine: null,
     });
     const { container } = render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(container.children.length).toBe(0);
   });
@@ -131,7 +136,10 @@ describe('LineBoardJO', () => {
       selectedLine: mockLine,
     });
     render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(JOCurrentArrowEdge).toHaveBeenCalled();
   });
@@ -143,14 +151,20 @@ describe('LineBoardJO', () => {
       selectedLine: mockLine,
     });
     render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(ChevronJO).toHaveBeenCalled();
   });
 
   it('barのスタイルが正しく適用される', () => {
     const { container } = render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(container).toBeTruthy();
   });
@@ -165,14 +179,20 @@ describe('LineBoardJO', () => {
 
   it('barTerminalが正しい位置に表示される', () => {
     const { container } = render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(container).toBeTruthy();
   });
 
   it('各駅のStationNameCellが正しくレンダリングされる', () => {
     const { container } = render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(container).toBeTruthy();
   });
@@ -187,7 +207,10 @@ describe('LineBoardJO', () => {
 
   it('barDotが各駅に表示される', () => {
     const { container } = render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(container).toBeTruthy();
   });
@@ -197,7 +220,10 @@ describe('LineBoardJO', () => {
     getIsPass.mockReturnValue(true);
     const PassChevronTY = require('./PassChevronTY').default;
     render(
-      <LineBoardJO stations={mockStations} lineColors={['#9acd32', '#9acd32']} />
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
     );
     expect(PassChevronTY).toHaveBeenCalled();
   });

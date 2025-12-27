@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react-native';
-import React from 'react';
 import type { Line, Station } from '~/@types/graphql';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 
