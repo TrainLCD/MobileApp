@@ -138,17 +138,17 @@ NumberingIconTWR.tsx
 
 共通テストファイル（新規作成、124テストケース）:
 src/components/
-  ├── NumberingIcon.test.tsx                           (12 tests)
-  ├── NumberingIconRound.test.tsx                      (7 tests)
+  ├── NumberingIcon.test.tsx                           (11 tests)
+  ├── NumberingIconRound.test.tsx                      (6 tests)
   ├── NumberingIconSquare.test.tsx                     (6 tests)
   ├── NumberingIconHalfSquare.test.tsx                 (7 tests)
-  ├── NumberingIconHankyu.test.tsx                     (4 tests)
-  ├── NumberingIconHanshin.test.tsx                    (4 tests)
+  ├── NumberingIconHankyu.test.tsx                     (3 tests)
+  ├── NumberingIconHanshin.test.tsx                    (3 tests)
   ├── NumberingIconIzuhakone.test.tsx                  (5 tests)
   ├── NumberingIconKeihan.test.tsx                     (5 tests)
-  ├── NumberingIconKeikyu.test.tsx                     (4 tests)
-  ├── NumberingIconKeio.test.tsx                       (4 tests)
-  ├── NumberingIconKeisei.test.tsx                     (5 tests)
+  ├── NumberingIconKeikyu.test.tsx                     (3 tests)
+  ├── NumberingIconKeio.test.tsx                       (3 tests)
+  ├── NumberingIconKeisei.test.tsx                     (4 tests)
   ├── NumberingIconKintetsu.test.tsx                   (5 tests)
   ├── NumberingIconMonochromeRound.test.tsx            (3 tests)
   ├── NumberingIconNankai.test.tsx                     (4 tests)
@@ -156,14 +156,14 @@ src/components/
   ├── NumberingIconNTL.test.tsx                        (3 tests)
   ├── NumberingIconOdakyu.test.tsx                     (4 tests)
   ├── NumberingIconReversedRound.test.tsx              (6 tests)
-  ├── NumberingIconReversedRoundHorizontal.test.tsx    (5 tests)
+  ├── NumberingIconReversedRoundHorizontal.test.tsx    (6 tests)
   ├── NumberingIconReversedSquare.test.tsx             (6 tests)
   ├── NumberingIconReversedSquareHorizontal.test.tsx   (5 tests)
   ├── NumberingIconReversedSquareWest.test.tsx         (4 tests)
   ├── NumberingIconRoundHorizontal.test.tsx            (5 tests)
   ├── NumberingIconSanyo.test.tsx                      (5 tests)
   ├── NumberingIconSMR.test.tsx                        (6 tests)
-  └── NumberingIconTWR.test.tsx                        (4 tests)
+  └── NumberingIconTWR.test.tsx                        (3 tests)
 ```
 
 **達成済みの改善**（2025-12-27）:
