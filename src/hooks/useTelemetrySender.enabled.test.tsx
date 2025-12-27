@@ -44,7 +44,7 @@ jest.mock('~/hooks/useTelemetryEnabled', () => ({
   useTelemetryEnabled: jest.fn(),
 }));
 jest.mock('~/utils/native/android/gnssModule', () => ({
-  subscribeGnss: jest.fn((callback) => {
+  subscribeGnss: jest.fn((_callback) => {
     // No-op for tests
     return () => {};
   }),
@@ -52,6 +52,7 @@ jest.mock('~/utils/native/android/gnssModule', () => ({
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <Provider
+    // @ts-expect-error - initialValues is valid for jotai Provider but types are not up to date
     initialValues={[
       [
         stationState,
@@ -211,10 +212,9 @@ describe('useTelemetrySender', () => {
         accuracyHistory: [],
       })
     );
-    renderHook(
-      () => useTelemetrySender(false, 'ws://example.com:8080'),
-      { wrapper }
-    );
+    renderHook(() => useTelemetrySender(false, 'ws://example.com:8080'), {
+      wrapper,
+    });
 
     expect(mockWebSocketSend).not.toHaveBeenCalled();
   });
