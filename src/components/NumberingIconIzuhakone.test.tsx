@@ -43,14 +43,15 @@ describe('NumberingIconIzuhakone', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconIzuhakone
         lineColor="#ff6600"
         stationNumber="IZ-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('IZ')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('lineSymbolとstationNumberが正しく分割される', () => {

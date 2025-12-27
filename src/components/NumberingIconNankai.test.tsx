@@ -44,14 +44,15 @@ describe('NumberingIconNankai', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconNankai
         lineColor="#0066cc"
         stationNumber="NK-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('NK')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {

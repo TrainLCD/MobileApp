@@ -20,14 +20,15 @@ describe('NumberingIconTWR', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconTWR
         lineColor="#ff00cc"
         stationNumber="R-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('R')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {
@@ -36,12 +37,5 @@ describe('NumberingIconTWR', () => {
     );
     expect(getByText('R')).toBeTruthy();
     expect(getByText('13')).toBeTruthy();
-  });
-
-  it('lineColorがbackgroundColorに適用される', () => {
-    const { UNSAFE_root } = render(
-      <NumberingIconTWR lineColor="#00ffaa" stationNumber="R-01" />
-    );
-    expect(UNSAFE_root).toBeTruthy();
   });
 });

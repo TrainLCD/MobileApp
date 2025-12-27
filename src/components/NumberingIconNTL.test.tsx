@@ -18,10 +18,11 @@ describe('NumberingIconNTL', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconNTL stationNumber="NT-01" withOutline={true} />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('NT')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {

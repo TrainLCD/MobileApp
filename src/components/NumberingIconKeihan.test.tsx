@@ -39,10 +39,11 @@ describe('NumberingIconKeihan', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconKeihan stationNumber="KH-01" withOutline={true} />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('KH')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {

@@ -28,20 +28,14 @@ describe('NumberingIconKeikyu', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconKeikyu
         lineColor="#0066cc"
         stationNumber="KK-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
-  });
-
-  it('lineColorがborderColorに適用される', () => {
-    const { UNSAFE_root } = render(
-      <NumberingIconKeikyu lineColor="#ff0000" stationNumber="KK-01" />
-    );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('KK')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 });

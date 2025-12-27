@@ -47,25 +47,27 @@ describe('NumberingIconReversedSquare', () => {
   });
 
   it('darkText=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconReversedSquare
         lineColor="#ffff00"
         stationNumber="E-01"
         darkText={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('E')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconReversedSquare
         lineColor="#0000ff"
         stationNumber="E-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('E')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {

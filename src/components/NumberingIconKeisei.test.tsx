@@ -40,20 +40,14 @@ describe('NumberingIconKeisei', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconKeisei
         lineColor="#0066ff"
         stationNumber="KS-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
-  });
-
-  it('lineColorがテキストカラーに適用される', () => {
-    const { UNSAFE_root } = render(
-      <NumberingIconKeisei lineColor="#0066ff" stationNumber="KS-01" />
-    );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('KS')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 });

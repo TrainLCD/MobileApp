@@ -19,10 +19,10 @@ describe('NumberingIconMonochromeRound', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconMonochromeRound stationNumber="01" withOutline={true} />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('異なるstationNumberでレンダリングされる', () => {

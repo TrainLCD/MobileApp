@@ -50,14 +50,15 @@ describe('NumberingIconReversedRound', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconReversedRound
         lineColor="#ff0000"
         stationNumber="M-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('M')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('サブナンバーを含むstationNumberが正しく処理される', () => {

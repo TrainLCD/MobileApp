@@ -28,20 +28,14 @@ describe('NumberingIconHanshin', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHanshin
         lineColor="#0066cc"
         stationNumber="HS-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
-  });
-
-  it('lineColorがテキストカラーに適用される', () => {
-    const { UNSAFE_root } = render(
-      <NumberingIconHanshin lineColor="#0066cc" stationNumber="HS-01" />
-    );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('HS')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 });

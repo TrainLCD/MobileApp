@@ -50,18 +50,19 @@ describe('NumberingIconSquare', () => {
   });
 
   it('allowScaling=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconSquare
         lineColor="#00ff00"
         stationNumber="G-01"
         allowScaling={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('G')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconSquare
         lineColor="#00ff00"
         stationNumber="G-01"
@@ -69,11 +70,12 @@ describe('NumberingIconSquare', () => {
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('G')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('transformOriginプロップが渡される', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconSquare
         lineColor="#00ff00"
         stationNumber="G-01"
@@ -81,6 +83,7 @@ describe('NumberingIconSquare', () => {
         transformOrigin="top"
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('G')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 });
