@@ -80,7 +80,7 @@ describe('LineBoardJO', () => {
     id: 1,
     name: '山手線',
     color: '#9acd32',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -108,13 +108,13 @@ describe('LineBoardJO', () => {
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('lineがnullの場合、nullを返す', () => {
@@ -123,13 +123,13 @@ describe('LineBoardJO', () => {
       arrived: true,
       selectedLine: null,
     });
-    const { container } = render(
+    const result = render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(container.children.length).toBe(0);
+    expect(result.toJSON()).toBeNull();
   });
 
   it('arrived=trueの場合、JOCurrentArrowEdgeが表示される', () => {
@@ -163,59 +163,59 @@ describe('LineBoardJO', () => {
   });
 
   it('barのスタイルが正しく適用される', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('駅数が8未満の場合、空の配列で埋められる', () => {
     const singleStation = [mockStations[0]];
-    const { container } = render(
+    const result = render(
       <LineBoardJO stations={singleStation} lineColors={['#9acd32']} />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('barTerminalが正しい位置に表示される', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('各駅のStationNameCellが正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('lineColorsが正しく反映される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const { container } = render(
+    const result = render(
       <LineBoardJO stations={mockStations} lineColors={customColors} />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('barDotが各駅に表示される', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('通過駅の場合、PassChevronTYが表示される', () => {

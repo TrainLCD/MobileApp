@@ -61,7 +61,7 @@ describe('LineBoardSaikyo', () => {
     id: 1,
     name: '埼京線',
     color: '#00ac9a',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -88,14 +88,14 @@ describe('LineBoardSaikyo', () => {
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardSaikyo
         stations={mockStations}
         lineColors={['#00ac9a', '#00ac9a']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('StationNameコンポーネントが各駅に対してレンダリングされる', () => {
@@ -145,32 +145,32 @@ describe('LineBoardSaikyo', () => {
     );
     expect(BarTerminalSaikyo).toHaveBeenCalledWith(
       expect.objectContaining({ hasTerminus: true }),
-      {}
+      undefined
     );
   });
 
   it('駅数が8未満の場合、空の配列で埋められる', () => {
     const singleStation = [mockStations[0]];
-    const { container } = render(
+    const result = render(
       <LineBoardSaikyo
         stations={singleStation}
         lineColors={['#00ac9a']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const { container } = render(
+    const result = render(
       <LineBoardSaikyo
         stations={mockStations}
         lineColors={customColors}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('chevronの色が交互に切り替わる', () => {
@@ -186,24 +186,24 @@ describe('LineBoardSaikyo', () => {
   });
 
   it('空の駅がある場合でもエラーなくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardSaikyo
         stations={[mockStations[0]]}
         lineColors={['#00ac9a']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('barGradientsが正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardSaikyo
         stations={mockStations}
         lineColors={['#00ac9a', '#00ac9a']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 });

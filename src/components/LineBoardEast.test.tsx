@@ -62,7 +62,7 @@ describe('LineBoardEast', () => {
     id: 1,
     name: '山手線',
     color: '#9acd32',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -89,14 +89,14 @@ describe('LineBoardEast', () => {
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardEast
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('空の駅の場合、EmptyStationNameCellがレンダリングされる', () => {
@@ -123,7 +123,7 @@ describe('LineBoardEast', () => {
     );
     expect(BarTerminalEast).toHaveBeenCalledWith(
       expect.objectContaining({ hasTerminus: true }),
-      {}
+      undefined
     );
   });
 
@@ -178,14 +178,14 @@ describe('LineBoardEast', () => {
 
   it('stationsが8つ未満の場合、空のセルで埋められる', () => {
     const singleStation = [mockStations[0]];
-    const { container } = render(
+    const result = render(
       <LineBoardEast
         stations={singleStation}
         lineColors={['#9acd32']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('lineColorsが正しく適用される', () => {

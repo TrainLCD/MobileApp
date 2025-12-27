@@ -66,7 +66,7 @@ describe('LineBoardWest', () => {
     id: 1,
     name: 'JR神戸線',
     color: '#00a7db',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -86,22 +86,23 @@ describe('LineBoardWest', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useAtomValue.mockReturnValue({
-      selectedLine: mockLine,
+      leftStations: mockStations,
       arrived: true,
       approaching: false,
       stations: mockStations,
+      selectedLine: mockLine,
     });
     useCurrentLine.mockReturnValue(mockLine);
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardWest
         stations={mockStations}
         lineColors={['#00a7db', '#00a7db']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('lineがnullの場合、nullを返す', () => {
@@ -112,64 +113,65 @@ describe('LineBoardWest', () => {
       approaching: false,
       stations: mockStations,
     });
-    const { container } = render(
+    const result = render(
       <LineBoardWest
         stations={mockStations}
         lineColors={['#00a7db', '#00a7db']}
       />
     );
-    expect(container.children.length).toBe(0);
+    expect(result.toJSON()).toBeNull();
   });
 
   it('barが正しい色で表示される', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardWest
         stations={mockStations}
         lineColors={['#00a7db', '#00a7db']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('barTerminalが正しく表示される', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardWest
         stations={mockStations}
         lineColors={['#00a7db', '#00a7db']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('各駅のStationNameCellが正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardWest
         stations={mockStations}
         lineColors={['#00a7db', '#00a7db']}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('駅数が8未満の場合、空の配列で埋められる', () => {
     const singleStation = [mockStations[0]];
-    const { container } = render(
+    const result = render(
       <LineBoardWest stations={singleStation} lineColors={['#00a7db']} />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const { container } = render(
+    const result = render(
       <LineBoardWest stations={mockStations} lineColors={customColors} />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('arrived状態でChevronが表示される', () => {
     const { ChevronJRWest } = require('./ChevronJRWest');
     useAtomValue.mockReturnValue({
+      leftStations: mockStations,
       selectedLine: mockLine,
       arrived: false,
       approaching: false,
@@ -196,10 +198,10 @@ describe('LineBoardWest', () => {
         ],
       } as Station,
     ];
-    const { container } = render(
+    const result = render(
       <LineBoardWest stations={stationsWithNumbers} lineColors={['#00a7db']} />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('PadLineMarksが正しく表示される', () => {

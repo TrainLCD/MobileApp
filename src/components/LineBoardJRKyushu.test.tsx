@@ -67,7 +67,7 @@ describe('LineBoardJRKyushu', () => {
     id: 1,
     name: '鹿児島本線',
     color: '#f60',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -110,14 +110,14 @@ describe('LineBoardJRKyushu', () => {
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJRKyushu
         stations={mockStations}
         lineColors={['#f60', '#f60']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('StationNameコンポーネントが各駅に対してレンダリングされる', () => {
@@ -179,7 +179,7 @@ describe('LineBoardJRKyushu', () => {
     );
     expect(BarTerminalEast).toHaveBeenCalledWith(
       expect.objectContaining({ hasTerminus: true }),
-      {}
+      undefined
     );
   });
 
@@ -197,14 +197,14 @@ describe('LineBoardJRKyushu', () => {
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const { container } = render(
+    const result = render(
       <LineBoardJRKyushu
         stations={mockStations}
         lineColors={customColors}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('chevronの色が交互に切り替わる', () => {
@@ -259,14 +259,14 @@ describe('LineBoardJRKyushu', () => {
   });
 
   it('barGradientsが正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardJRKyushu
         stations={mockStations}
         lineColors={['#f60', '#f60']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('threeLetterCodeが正しくNumberingIconに渡される', () => {
@@ -282,7 +282,7 @@ describe('LineBoardJRKyushu', () => {
       expect.objectContaining({
         threeLetterCode: 'HKT',
       }),
-      {}
+      undefined
     );
   });
 });

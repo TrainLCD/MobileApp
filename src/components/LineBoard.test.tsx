@@ -152,7 +152,7 @@ describe('LineBoard', () => {
     render(<LineBoard hasTerminus={true} />);
     expect(LineBoardEast).toHaveBeenCalledWith(
       expect.objectContaining({ hasTerminus: true }),
-      {}
+      undefined
     );
   });
 
@@ -173,7 +173,7 @@ describe('LineBoard', () => {
           expect.objectContaining({ name: '駅0' }),
         ]),
       }),
-      {}
+      undefined
     );
   });
 });

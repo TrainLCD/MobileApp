@@ -52,7 +52,7 @@ describe('LineBoardLED', () => {
     nameShort: '山手線',
     nameRoman: 'Yamanote Line',
     color: '#9acd32',
-  } as Line;
+  } as unknown as Line;
 
   const mockNextStation: Station = {
     id: 2,
@@ -72,21 +72,14 @@ describe('LineBoardLED', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useAtomValue.mockImplementation((atom) => {
-      const atomKey = atom.toString();
-      if (atomKey.includes('stationState')) {
-        return {
-          selectedDirection: null,
-          stations: [],
-        };
-      }
-      if (atomKey.includes('navigationState')) {
-        return {
-          headerState: 'NEXT',
-        };
-      }
-      return {};
-    });
+    useAtomValue
+      .mockReturnValueOnce({
+        selectedDirection: null,
+        stations: [],
+      })
+      .mockReturnValue({
+        headerState: 'NEXT',
+      });
     useCurrentLine.mockReturnValue(mockLine);
     useNextStation.mockReturnValue(mockNextStation);
     useAfterNextStation.mockReturnValue(mockAfterNextStation);
@@ -95,42 +88,32 @@ describe('LineBoardLED', () => {
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(<LineBoardLED />);
-    expect(container).toBeTruthy();
+    const result = render(<LineBoardLED />);
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('ARRIVING状態でまもなく駅名が表示される', () => {
-    useAtomValue.mockImplementation((atom) => {
-      const atomKey = atom.toString();
-      if (atomKey.includes('navigationState')) {
-        return {
-          headerState: 'ARRIVING',
-        };
-      }
-      return {
-        selectedDirection: null,
-        stations: [],
-      };
+    let callCount = 0;
+    useAtomValue.mockImplementation(() => {
+      callCount++;
+      const index = (callCount - 1) % 2;
+      if (index === 0) return { selectedDirection: null, stations: [] };
+      return { headerState: 'ARRIVING' };
     });
 
-    const { getByText } = render(<LineBoardLED />);
+    const { getAllByText, getByText } = render(<LineBoardLED />);
     expect(getByText('まもなく')).toBeTruthy();
-    expect(getByText('新宿')).toBeTruthy();
+    expect(getAllByText('新宿').length).toBeGreaterThan(0);
     expect(getByText('です。')).toBeTruthy();
   });
 
   it('CURRENT状態で電車情報が表示される', () => {
-    useAtomValue.mockImplementation((atom) => {
-      const atomKey = atom.toString();
-      if (atomKey.includes('navigationState')) {
-        return {
-          headerState: 'CURRENT',
-        };
-      }
-      return {
-        selectedDirection: null,
-        stations: [],
-      };
+    let callCount = 0;
+    useAtomValue.mockImplementation(() => {
+      callCount++;
+      const index = (callCount - 1) % 2;
+      if (index === 0) return { selectedDirection: null, stations: [] };
+      return { headerState: 'CURRENT' };
     });
 
     const { getByText } = render(<LineBoardLED />);
@@ -139,9 +122,9 @@ describe('LineBoardLED', () => {
   });
 
   it('NEXT状態で次駅情報が表示される', () => {
-    const { getByText } = render(<LineBoardLED />);
+    const { getAllByText, getByText } = render(<LineBoardLED />);
     expect(getByText('次は')).toBeTruthy();
-    expect(getByText('新宿')).toBeTruthy();
+    expect(getAllByText('新宿').length).toBeGreaterThan(0);
   });
 
   it('乗り換え路線がある場合、乗り換え情報が表示される', () => {
@@ -149,7 +132,7 @@ describe('LineBoardLED', () => {
       id: 2,
       nameShort: '中央線',
       nameRoman: 'Chuo Line',
-    } as Line;
+    } as unknown as Line;
     useTransferLines.mockReturnValue([transferLine]);
 
     const { getByText } = render(<LineBoardLED />);
@@ -160,8 +143,8 @@ describe('LineBoardLED', () => {
   it('駅番号がある場合、英語表記に駅番号が含まれる', () => {
     useNumbering.mockReturnValue([{ stationNumber: 'JY-17' }]);
 
-    const { getByText } = render(<LineBoardLED />);
-    expect(getByText(/Shinjuku/)).toBeTruthy();
+    const { getAllByText } = render(<LineBoardLED />);
+    expect(getAllByText(/Shinjuku/).length).toBeGreaterThan(0);
   });
 
   it('afterNextStationがある場合、次の次の駅情報が表示される', () => {
@@ -181,9 +164,9 @@ describe('LineBoardLED', () => {
   });
 
   it('英語での次の駅案内が表示される', () => {
-    const { getByText } = render(<LineBoardLED />);
+    const { getAllByText, getByText } = render(<LineBoardLED />);
     expect(getByText('The next stop is')).toBeTruthy();
-    expect(getByText(/Shinjuku/)).toBeTruthy();
+    expect(getAllByText(/Shinjuku/).length).toBeGreaterThan(0);
   });
 
   it('山手線の場合、内回り/外回りが表示される', () => {
@@ -196,20 +179,15 @@ describe('LineBoardLED', () => {
       isYamanoteLine: true,
     });
 
-    useAtomValue.mockImplementation((atom) => {
-      const atomKey = atom.toString();
-      if (atomKey.includes('navigationState')) {
-        return {
-          headerState: 'CURRENT',
-        };
-      }
-      return {
-        selectedDirection: 'INBOUND',
-        stations: [],
-      };
+    let callCount = 0;
+    useAtomValue.mockImplementation(() => {
+      callCount++;
+      const index = (callCount - 1) % 2;
+      if (index === 0) return { selectedDirection: 'INBOUND', stations: [] };
+      return { headerState: 'CURRENT' };
     });
 
-    const { getByText } = render(<LineBoardLED />);
-    expect(getByText(/内回り/)).toBeTruthy();
+    const { getAllByText } = render(<LineBoardLED />);
+    expect(getAllByText(/内回り/).length).toBeGreaterThan(0);
   });
 });

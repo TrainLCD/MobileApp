@@ -75,7 +75,7 @@ describe('LineBoardToei', () => {
     id: 1,
     name: '都営浅草線',
     color: '#ed6d00',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -118,14 +118,14 @@ describe('LineBoardToei', () => {
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardToei
         stations={mockStations}
         lineColors={['#ed6d00', '#ed6d00']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('駅番号が正しく表示される', () => {
@@ -175,7 +175,7 @@ describe('LineBoardToei', () => {
     );
     expect(BarTerminalEast).toHaveBeenCalledWith(
       expect.objectContaining({ hasTerminus: true }),
-      {}
+      undefined
     );
   });
 
@@ -193,14 +193,14 @@ describe('LineBoardToei', () => {
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const { container } = render(
+    const result = render(
       <LineBoardToei
         stations={mockStations}
         lineColors={customColors}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('chevronの色が交互に切り替わる', () => {
@@ -235,13 +235,13 @@ describe('LineBoardToei', () => {
   });
 
   it('barGradientsが正しくレンダリングされる', () => {
-    const { container } = render(
+    const result = render(
       <LineBoardToei
         stations={mockStations}
         lineColors={['#ed6d00', '#ed6d00']}
         hasTerminus={false}
       />
     );
-    expect(container).toBeTruthy();
+    expect(result.toJSON()).toBeTruthy();
   });
 });

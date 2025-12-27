@@ -41,7 +41,7 @@ describe('LineBoardYamanotePad', () => {
     id: 1,
     name: '山手線',
     color: '#9acd32',
-  } as Line;
+  } as unknown as Line;
 
   const mockStations: Station[] = [
     {
@@ -84,25 +84,22 @@ describe('LineBoardYamanotePad', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useAtomValue.mockImplementation((atom) => {
-      if (atom === require('~/store/selectors/isEn').isEnAtom) {
-        return false;
-      }
-      return {
+    useAtomValue
+      .mockReturnValueOnce({
         station: mockStations[0],
         arrived: true,
+      })
+      .mockReturnValueOnce({
         selectedLine: mockLine,
-      };
-    });
+      })
+      .mockReturnValue(false); // isEn
     useCurrentLine.mockReturnValue(mockLine);
     useNextStation.mockReturnValue(mockStations[1]);
   });
 
   it('正しくレンダリングされる', () => {
-    const { container } = render(
-      <LineBoardYamanotePad stations={mockStations} />
-    );
-    expect(container).toBeTruthy();
+    const result = render(<LineBoardYamanotePad stations={mockStations} />);
+    expect(result.toJSON()).toBeTruthy();
   });
 
   it('PadArchコンポーネントが呼び出される', () => {
@@ -112,32 +109,27 @@ describe('LineBoardYamanotePad', () => {
 
   it('lineがnullの場合、nullを返す', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockImplementation((atom) => {
-      if (atom === require('~/store/selectors/isEn').isEnAtom) {
-        return false;
-      }
-      return {
+    useAtomValue
+      .mockReturnValueOnce({
         station: mockStations[0],
         arrived: true,
+      })
+      .mockReturnValueOnce({
         selectedLine: null,
-      };
-    });
-    const { container } = render(
-      <LineBoardYamanotePad stations={mockStations} />
-    );
-    expect(container.children.length).toBe(0);
+      })
+      .mockReturnValue(false);
+    const result = render(<LineBoardYamanotePad stations={mockStations} />);
+    expect(result.toJSON()).toBeNull();
   });
 
   it('arrived=trueの場合、正しい駅数がPadArchに渡される', () => {
-    useAtomValue.mockImplementation((atom) => {
-      if (atom === require('~/store/selectors/isEn').isEnAtom) {
-        return false;
-      }
-      return {
-        station: mockStations[0],
-        arrived: true,
-        selectedLine: mockLine,
-      };
+    let callCount = 0;
+    useAtomValue.mockImplementation(() => {
+      callCount++;
+      const index = (callCount - 1) % 3;
+      if (index === 0) return { station: mockStations[0], arrived: true };
+      if (index === 1) return { selectedLine: mockLine };
+      return false;
     });
     render(<LineBoardYamanotePad stations={mockStations} />);
     expect(PadArch).toHaveBeenCalledWith(
@@ -145,21 +137,20 @@ describe('LineBoardYamanotePad', () => {
         arrived: true,
         line: mockLine,
       }),
-      {}
+      undefined
     );
   });
 
   it('arrived=falseの場合、駅数が1つ減らされる', () => {
-    useAtomValue.mockImplementation((atom) => {
-      if (atom === require('~/store/selectors/isEn').isEnAtom) {
-        return false;
-      }
-      return {
+    useAtomValue
+      .mockReturnValueOnce({
         station: mockStations[0],
         arrived: false,
+      })
+      .mockReturnValueOnce({
         selectedLine: mockLine,
-      };
-    });
+      })
+      .mockReturnValue(false);
     render(<LineBoardYamanotePad stations={mockStations} />);
     expect(PadArch).toHaveBeenCalled();
   });
@@ -170,7 +161,7 @@ describe('LineBoardYamanotePad', () => {
       expect.objectContaining({
         numberingInfo: expect.any(Array),
       }),
-      {}
+      undefined
     );
   });
 
@@ -180,27 +171,25 @@ describe('LineBoardYamanotePad', () => {
       expect.objectContaining({
         lineMarks: expect.any(Array),
       }),
-      {}
+      undefined
     );
   });
 
   it('isEnプロップが正しく渡される', () => {
-    useAtomValue.mockImplementation((atom) => {
-      if (atom === require('~/store/selectors/isEn').isEnAtom) {
-        return true;
-      }
-      return {
-        station: mockStations[0],
-        arrived: true,
-        selectedLine: mockLine,
-      };
+    let callCount = 0;
+    useAtomValue.mockImplementation(() => {
+      callCount++;
+      const index = (callCount - 1) % 3;
+      if (index === 0) return { station: mockStations[0], arrived: true };
+      if (index === 1) return { selectedLine: mockLine };
+      return true; // isEn = true
     });
     render(<LineBoardYamanotePad stations={mockStations} />);
     expect(PadArch).toHaveBeenCalledWith(
       expect.objectContaining({
         isEn: true,
       }),
-      {}
+      undefined
     );
   });
 
@@ -220,7 +209,7 @@ describe('LineBoardYamanotePad', () => {
     const { useTransferLines } = require('~/hooks');
     const mockTransferLines = [
       { id: 2, name: '中央線', color: '#f00' },
-    ] as Line[];
+    ] as unknown as Line[];
     useTransferLines.mockReturnValue(mockTransferLines);
 
     render(<LineBoardYamanotePad stations={mockStations} />);
@@ -228,7 +217,7 @@ describe('LineBoardYamanotePad', () => {
       expect.objectContaining({
         transferLines: mockTransferLines,
       }),
-      {}
+      undefined
     );
   });
 });
