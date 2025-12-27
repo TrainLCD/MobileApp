@@ -44,15 +44,26 @@ describe('NumberingIconReversedRoundHorizontal', () => {
     expect(getByText('A')).toBeTruthy();
   });
 
+  it('LARGEサイズでレンダリングされる', () => {
+    const { getByText } = render(
+      <NumberingIconReversedRoundHorizontal
+        lineColor="#00ff00"
+        stationNumber="A-01"
+        size={NUMBERING_ICON_SIZE.LARGE}
+      />
+    );
+    expect(getByText('A01')).toBeTruthy();
+  });
+
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconReversedRoundHorizontal
         lineColor="#00ff00"
         stationNumber="A-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('A01')).toBeTruthy();
   });
 
   it('lineSymbolとstationNumberが連結される', () => {

@@ -42,14 +42,14 @@ describe('NumberingIconRoundHorizontal', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconRoundHorizontal
         lineColor="#00ff00"
         stationNumber="S-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('S01')).toBeTruthy();
   });
 
   it('2文字のlineSymbolで正しくレンダリングされる', () => {

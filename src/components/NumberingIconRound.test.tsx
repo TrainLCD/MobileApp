@@ -13,13 +13,6 @@ describe('NumberingIconRound', () => {
   });
 
   it('通常サイズでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
-      <NumberingIconRound lineColor="#ff0000" stationNumber="JY-01" />
-    );
-    expect(UNSAFE_root).toBeTruthy();
-  });
-
-  it('stationNumberが正しく分割される', () => {
     const { getByText } = render(
       <NumberingIconRound lineColor="#ff0000" stationNumber="JY-01" />
     );
@@ -57,14 +50,15 @@ describe('NumberingIconRound', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconRound
         lineColor="#ff0000"
         stationNumber="JY-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('JY')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('サブナンバーを含むstationNumberが正しく処理される', () => {

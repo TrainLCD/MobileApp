@@ -45,14 +45,14 @@ describe('NumberingIconReversedSquareHorizontal', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconReversedSquareHorizontal
         lineColor="#ff00ff"
         stationNumber="F-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('F01')).toBeTruthy();
   });
 
   it('lineSymbolとstationNumberが連結される', () => {

@@ -32,14 +32,16 @@ describe('NumberingIconNewShuttle', () => {
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText, getByTestId } = render(
       <NumberingIconNewShuttle
         lineColor="#ff00cc"
         stationNumber="NS-01"
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('NS')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
+    expect(getByTestId('hexagon')).toBeTruthy();
   });
 
   it('stationNumberが正しく分割される', () => {
