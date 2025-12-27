@@ -7,6 +7,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconReversedSquareWest', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('darkText=falseでレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconReversedSquareWest

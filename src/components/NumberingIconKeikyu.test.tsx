@@ -7,6 +7,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconKeikyu', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('正常にレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconKeikyu lineColor="#0066cc" stationNumber="KK-01" />

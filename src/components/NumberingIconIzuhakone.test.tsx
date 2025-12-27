@@ -8,6 +8,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconIzuhakone', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('通常サイズでレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconIzuhakone lineColor="#ff6600" stationNumber="IZ-01" />

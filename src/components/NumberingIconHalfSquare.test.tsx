@@ -8,6 +8,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconHalfSquare', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('通常サイズでレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconHalfSquare

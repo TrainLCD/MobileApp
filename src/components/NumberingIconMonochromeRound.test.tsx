@@ -7,6 +7,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconMonochromeRound', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('正常にレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconMonochromeRound stationNumber="01" />

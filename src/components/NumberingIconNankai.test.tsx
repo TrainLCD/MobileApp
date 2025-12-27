@@ -20,6 +20,10 @@ jest.mock('react-native-svg', () => {
 });
 
 describe('NumberingIconNankai', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('通常サイズでレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconNankai lineColor="#0066cc" stationNumber="NK-01" />

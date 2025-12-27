@@ -8,6 +8,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconRound', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('通常サイズでレンダリングされる', () => {
     const { UNSAFE_root } = render(
       <NumberingIconRound lineColor="#ff0000" stationNumber="JY-01" />

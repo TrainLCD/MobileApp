@@ -8,6 +8,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIcon', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('ROUND shapeでレンダリングされる', () => {
     const { UNSAFE_root } = render(
       <NumberingIcon

@@ -7,6 +7,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconHanshin', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('正常にレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconHanshin lineColor="#0066cc" stationNumber="HS-01" />

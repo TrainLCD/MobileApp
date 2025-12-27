@@ -7,6 +7,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconNTL', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('正常にレンダリングされる', () => {
     const { getByText } = render(<NumberingIconNTL stationNumber="NT-01" />);
     expect(getByText('NT')).toBeTruthy();

@@ -18,6 +18,10 @@ jest.mock('./Hexagon', () => {
 });
 
 describe('NumberingIconNewShuttle', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('正常にレンダリングされる', () => {
     const { getByText, getByTestId } = render(
       <NumberingIconNewShuttle lineColor="#ff00cc" stationNumber="NS-01" />

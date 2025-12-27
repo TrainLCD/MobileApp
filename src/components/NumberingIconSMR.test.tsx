@@ -8,6 +8,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconSMR', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('withDarkTheme=falseでレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconSMR stationNumber="SM-01" withDarkTheme={false} />

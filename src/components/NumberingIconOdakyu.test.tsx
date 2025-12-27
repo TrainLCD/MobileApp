@@ -7,6 +7,10 @@ jest.mock('~/utils/isTablet', () => ({
 }));
 
 describe('NumberingIconOdakyu', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('hakone=falseでレンダリングされる', () => {
     const { getByText } = render(
       <NumberingIconOdakyu stationNumber="OH-01" hakone={false} />
