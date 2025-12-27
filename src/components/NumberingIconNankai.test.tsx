@@ -1,0 +1,59 @@
+import { render } from '@testing-library/react-native';
+import React from 'react';
+import { NUMBERING_ICON_SIZE } from '~/constants';
+import NumberingIconNankai from './NumberingIconNankai';
+
+jest.mock('~/utils/isTablet', () => ({
+  __esModule: true,
+  default: false,
+}));
+
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: (props: any) => <View {...props} />,
+    Ellipse: (props: any) => <View {...props} testID="ellipse" />,
+  };
+});
+
+describe('NumberingIconNankai', () => {
+  it('通常サイズでレンダリングされる', () => {
+    const { getByText } = render(
+      <NumberingIconNankai lineColor="#0066cc" stationNumber="NK-01" />
+    );
+    expect(getByText('NK')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
+  });
+
+  it('SMALLサイズでレンダリングされる', () => {
+    const { getByText } = render(
+      <NumberingIconNankai
+        lineColor="#0066cc"
+        stationNumber="NK-01"
+        size={NUMBERING_ICON_SIZE.SMALL}
+      />
+    );
+    expect(getByText('NK')).toBeTruthy();
+  });
+
+  it('withOutline=trueでレンダリングされる', () => {
+    const { UNSAFE_root } = render(
+      <NumberingIconNankai
+        lineColor="#0066cc"
+        stationNumber="NK-01"
+        withOutline={true}
+      />
+    );
+    expect(UNSAFE_root).toBeTruthy();
+  });
+
+  it('stationNumberが正しく分割される', () => {
+    const { getByText } = render(
+      <NumberingIconNankai lineColor="#0066cc" stationNumber="NK-42" />
+    );
+    expect(getByText('NK')).toBeTruthy();
+    expect(getByText('42')).toBeTruthy();
+  });
+});
