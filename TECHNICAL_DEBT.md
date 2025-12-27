@@ -167,19 +167,22 @@ src/components/
 ```
 
 **達成済みの改善**（2025-12-27）:
-- ✅ **26個全コンポーネントのユニットテスト追加**（131テストケース）
+- ✅ **26個全コンポーネントのユニットテスト追加**（130テストケース）
 - ✅ **包括的なテストカバレッジ**：各コンポーネントの主要機能をテスト
   - コンポーネントレンダリング
   - Props処理（lineColor, stationNumber, size, withOutline等）
   - StationNumberのパースと分割処理
-  - サイズバリアント（SMALL, MEDIUM, デフォルト）
+  - サイズバリアント（SMALL, MEDIUM, LARGE, デフォルト）
   - 特殊ケース（darkText, hakone, withDarkTheme等）
 - ✅ **Biome lintエラー0件**：コード品質基準を完全準拠
-- ✅ **全テストパス**：26テストスイート、131テストケース全て成功
+- ✅ **全テストパス**：26テストスイート、130テストケース全て成功
 - ✅ **CodeRabbit指摘対応完了**（PR #4797）
   - 全26テストファイルに`afterEach(() => { jest.clearAllMocks() })`を追加
+  - Weak assertions修正：`UNSAFE_root.toBeTruthy()`を具体的な`getByText()`検証に置換
+  - withOutlineテストの改善：実際のレンダリング内容を検証
+  - LARGEサイズバリアントのテスト追加（ReversedRoundHorizontal）
+  - 冗長・意味のないテストケースを削除
   - プロジェクトコーディングガイドライン完全準拠
-  - テスト間の適切なクリーンアップを保証
 
 #### 影響
 - バグ修正時に複数箇所の修正が必要
@@ -240,13 +243,14 @@ src/components/
   - useStoppingState (7テスト)
   - useNearestStation (6テスト)
 - ✅ **Header共通フックのテスト追加**（useHeaderLangState）
-- ✅ **NumberingIcon系全26コンポーネントのテスト追加**（26ファイル、131テストケース）✨ **NEW**
-- ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、型安全なアサーション）
-- 📈 **合計218テストケースを追加**（カバレッジ13% → 20%に向上）
+- ✅ **NumberingIcon系全26コンポーネントのテスト追加**（26ファイル、130テストケース）✨ **NEW**
+- ✅ **CodeRabbit指摘対応完了**（weak assertions修正、withOutlineテスト改善、サイズバリアント追加）
+- ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、具体的な検証アサーション）
+- 📈 **合計217テストケースを追加**（カバレッジ13% → 20%に向上）
 
 #### テストが存在しないクリティカルなコンポーネント
 - **9つのLineBoardコンポーネント**: テスト0個（共通コンポーネント・フックは✅）
-- ~~**27つのNumberingIconコンポーネント**: テスト0個~~ → ✅ **完了**（26ファイル、131テストケース追加）
+- ~~**27つのNumberingIconコンポーネント**: テスト0個~~ → ✅ **完了**（26ファイル、130テストケース追加）
 - **多くのHeader系コンポーネント**: 2個のみテスト有（HeaderE235、HeaderJL）
 - **重要な画面**: Main、SelectLineScreen等
 
@@ -741,7 +745,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-25 | 初版作成（包括的な技術負債調査） |
 | 2025-12-25 | LineBoard系コンポーネントの重複削減を実施（907行削減）<br>共通コンポーネント3つ（LineDot、StationName、EmptyStationNameCell）を作成<br>共通フック3つ（useBarStyles、useChevronPosition、useIncludesLongStationName）を作成<br>包括的なテストカバレッジ（6ファイル、49テストケース）を追加<br>都営テーマの多言語対応を維持（StationNameToeiコンポーネント作成）<br>4ファイルで適用完了（LineBoardEast、Saikyo、JRKyushu、Toei） |
 | 2025-12-26 | プロジェクト統計を更新（ファイル数、テスト数、カバレッジを最新化）<br>**テストカバレッジ大幅向上**: 15% → 17%（38個の新規テストケース追加）<br>ビジネスクリティカルなフックのテスト追加（useCurrentStation、useCurrentLine、useNextStation等）<br>**Header系コンポーネントの改善開始**:共通フック3つ作成（useHeaderLangState、useHeaderStateText、useHeaderStationText）<br>型の統一（Station \| undefined）実施<br>**依存関係の更新**: dayjsを最新版（^1.11.19）に更新完了<br>次のアクションアイテムを進捗に応じて更新 |
-| 2025-12-27 | **NumberingIcon系コンポーネントのテスト完全追加**<br>**テストカバレッジ大幅向上**: 17% → 20%（131個の新規テストケース追加）<br>全26個のNumberingIconコンポーネントに包括的なユニットテスト追加<br>各コンポーネントのレンダリング、Props処理、サイズバリアント、特殊ケースをテスト<br>Biome lintエラー完全解消（未使用import削除、any型をunknown型に置換）<br>**CodeRabbit指摘対応完了**（PR #4797）: 全26テストファイルにafterEachフック追加、プロジェクトガイドライン準拠<br>プロジェクト統計を更新（テストファイル50 → 76、カバレッジ17% → 20%）<br>次のマイルストーンをテストカバレッジ25%に設定 |
+| 2025-12-27 | **NumberingIcon系コンポーネントのテスト完全追加**<br>**テストカバレッジ大幅向上**: 17% → 20%（130個の新規テストケース追加）<br>全26個のNumberingIconコンポーネントに包括的なユニットテスト追加<br>各コンポーネントのレンダリング、Props処理、サイズバリアント、特殊ケースをテスト<br>Biome lintエラー完全解消（未使用import削除、any型をunknown型に置換）<br>**CodeRabbit指摘対応完了**（PR #4797）: <br>　- afterEachフック追加（全26ファイル）<br>　- Weak assertions修正（UNSAFE_root → getByText）<br>　- withOutlineテスト改善（実際のコンテンツ検証）<br>　- LARGEサイズバリアントテスト追加<br>　- 冗長テストケース削除<br>プロジェクト統計を更新（テストファイル50 → 76、カバレッジ17% → 20%）<br>次のマイルストーンをテストカバレッジ25%に設定 |
 
 ---
 
