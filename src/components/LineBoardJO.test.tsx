@@ -98,13 +98,16 @@ describe('LineBoardJO', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
     useAtomValue.mockReturnValue({
       arrived: true,
       selectedLine: mockLine,
     });
     useCurrentLine.mockReturnValue(mockLine);
     useCurrentStation.mockReturnValue(mockStations[0]);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('正しくレンダリングされる', () => {

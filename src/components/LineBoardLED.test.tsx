@@ -71,7 +71,6 @@ describe('LineBoardLED', () => {
   } as Station;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     let callCount = 0;
     useAtomValue.mockImplementation(() => {
       callCount++;
@@ -84,6 +83,10 @@ describe('LineBoardLED', () => {
     useAfterNextStation.mockReturnValue(mockAfterNextStation);
     useTransferLines.mockReturnValue([]);
     useNumbering.mockReturnValue([null]);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('正しくレンダリングされる', () => {

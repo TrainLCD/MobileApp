@@ -73,7 +73,6 @@ describe('LineBoard', () => {
   const LineBoardJRKyushu = require('./LineBoardJRKyushu').default;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     useCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
@@ -85,6 +84,10 @@ describe('LineBoard', () => {
         { id: 1, groupId: 1, name: '東京', line: { id: 1, color: '#ff0000' } },
       ],
     });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('TOKYO_METRO テーマで LineBoardEast をレンダリングする', () => {

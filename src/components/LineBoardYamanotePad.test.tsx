@@ -86,7 +86,6 @@ describe('LineBoardYamanotePad', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
     let callCount = 0;
     useAtomValue.mockImplementation(() => {
       callCount++;
@@ -97,6 +96,10 @@ describe('LineBoardYamanotePad', () => {
     });
     useCurrentLine.mockReturnValue(mockLine);
     useNextStation.mockReturnValue(mockStations[1]);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('正しくレンダリングされる', () => {

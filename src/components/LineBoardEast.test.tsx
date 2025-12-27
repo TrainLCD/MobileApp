@@ -80,12 +80,15 @@ describe('LineBoardEast', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
     useAtomValue.mockReturnValue({
       station: mockStations[0],
       arrived: true,
     });
     useCurrentLine.mockReturnValue(mockLine);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('正しくレンダリングされる', () => {
