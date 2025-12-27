@@ -1,4 +1,5 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { getIdToken } from '@react-native-firebase/auth';
 import {
   getDownloadURL,
   getStorage,
@@ -93,7 +94,7 @@ export const useFeedback = (
 
         const feedbackId = Crypto.randomUUID();
 
-        const idToken = await user?.getIdToken();
+        const idToken = await getIdToken(user);
 
         let imageUrl: string | null = null;
         if (screenShotBase64) {
