@@ -139,7 +139,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
       <View style={styles.splittedStationName}>
         {(station.nameKorean ?? '').split('').map((c, j) => (
           <Typography
-            style={[styles.stationName, passed ? styles.grayColor : null]}
+            style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
             key={`${station.id}-ko-${j}`}
           >
             {c}
