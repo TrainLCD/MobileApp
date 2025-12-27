@@ -136,7 +136,7 @@ NumberingIconSanyo.tsx
 NumberingIconSMR.tsx
 NumberingIconTWR.tsx
 
-共通テストファイル（新規作成、131テストケース）:
+共通テストファイル（新規作成、124テストケース）:
 src/components/
   ├── NumberingIcon.test.tsx                           (12 tests)
   ├── NumberingIconRound.test.tsx                      (7 tests)
@@ -167,7 +167,7 @@ src/components/
 ```
 
 **達成済みの改善**（2025-12-27）:
-- ✅ **26個全コンポーネントのユニットテスト追加**（130テストケース）
+- ✅ **26個全コンポーネントのユニットテスト追加**（124テストケース）
 - ✅ **包括的なテストカバレッジ**：各コンポーネントの主要機能をテスト
   - コンポーネントレンダリング
   - Props処理（lineColor, stationNumber, size, withOutline等）
@@ -175,7 +175,7 @@ src/components/
   - サイズバリアント（SMALL, MEDIUM, LARGE, デフォルト）
   - 特殊ケース（darkText, hakone, withDarkTheme等）
 - ✅ **Biome lintエラー0件**：コード品質基準を完全準拠
-- ✅ **全テストパス**：26テストスイート、130テストケース全て成功
+- ✅ **全テストパス**：26テストスイート、124テストケース全て成功
 - ✅ **CodeRabbit指摘対応完了**（PR #4797）
   - 全26テストファイルに`afterEach(() => { jest.clearAllMocks() })`を追加
   - Weak assertions修正：`UNSAFE_root.toBeTruthy()`を具体的な`getByText()`検証に置換
@@ -243,14 +243,14 @@ src/components/
   - useStoppingState (7テスト)
   - useNearestStation (6テスト)
 - ✅ **Header共通フックのテスト追加**（useHeaderLangState）
-- ✅ **NumberingIcon系全26コンポーネントのテスト追加**（26ファイル、130テストケース）✨ **NEW**
+- ✅ **NumberingIcon系全26コンポーネントのテスト追加**（26ファイル、124テストケース）✨ **NEW**
 - ✅ **CodeRabbit指摘対応完了**（weak assertions修正、withOutlineテスト改善、サイズバリアント追加）
 - ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、具体的な検証アサーション）
 - 📈 **合計217テストケースを追加**（カバレッジ13% → 20%に向上）
 
 #### テストが存在しないクリティカルなコンポーネント
 - **9つのLineBoardコンポーネント**: テスト0個（共通コンポーネント・フックは✅）
-- ~~**27つのNumberingIconコンポーネント**: テスト0個~~ → ✅ **完了**（26ファイル、130テストケース追加）
+- ~~**27つのNumberingIconコンポーネント**: テスト0個~~ → ✅ **完了**（26ファイル、124テストケース追加）
 - **多くのHeader系コンポーネント**: 2個のみテスト有（HeaderE235、HeaderJL）
 - **重要な画面**: Main、SelectLineScreen等
 
@@ -716,7 +716,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 - [x] テストカバレッジ20%を達成 ✅ **達成**（2025-12-27）
   - [x] ビジネスクリティカルなフックのテスト追加（38テストケース）
   - [x] LineBoard共通部分のテスト（49テストケース）
-  - [x] NumberingIcon系全26コンポーネントのテスト（131テストケース）
+  - [x] NumberingIcon系全26コンポーネントのテスト（124テストケース）
 - [ ] テストカバレッジ25%を目指して継続（次のマイルストーン）
   - [ ] Header系コンポーネントのテスト追加
   - [ ] LineBoard系コンポーネントのテスト追加
