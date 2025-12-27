@@ -5,6 +5,9 @@ import LineBoardYamanotePad from './LineBoardYamanotePad';
 // モック設定
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
+  atom: jest.fn((val) => ({ init: val })),
+  useAtom: jest.fn((val) => [val, jest.fn()]),
+  useSetAtom: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('~/hooks', () => ({
