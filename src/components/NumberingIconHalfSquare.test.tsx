@@ -26,7 +26,7 @@ describe('NumberingIconHalfSquare', () => {
   });
 
   it('withRadius=trueでborderRadiusが適用される', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHalfSquare
         lineColor="#0000ff"
         stationNumber="C-01"
@@ -34,11 +34,12 @@ describe('NumberingIconHalfSquare', () => {
         darkText={false}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('C')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('withRadius=falseでborderRadiusが0になる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHalfSquare
         lineColor="#0000ff"
         stationNumber="C-01"
@@ -46,11 +47,12 @@ describe('NumberingIconHalfSquare', () => {
         darkText={false}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('C')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('darkText=trueでダークテキストが適用される', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHalfSquare
         lineColor="#ffff00"
         stationNumber="C-01"
@@ -58,11 +60,12 @@ describe('NumberingIconHalfSquare', () => {
         darkText={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('C')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 
   it('SMALLサイズでNumberingIconReversedSquareを使用する', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHalfSquare
         lineColor="#0000ff"
         stationNumber="C-01"
@@ -71,11 +74,11 @@ describe('NumberingIconHalfSquare', () => {
         size={NUMBERING_ICON_SIZE.SMALL}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('C')).toBeTruthy();
   });
 
   it('MEDIUMサイズでNumberingIconReversedSquareを使用する', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHalfSquare
         lineColor="#0000ff"
         stationNumber="C-01"
@@ -84,11 +87,11 @@ describe('NumberingIconHalfSquare', () => {
         size={NUMBERING_ICON_SIZE.MEDIUM}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('C')).toBeTruthy();
   });
 
   it('withOutline=trueでレンダリングされる', () => {
-    const { UNSAFE_root } = render(
+    const { getByText } = render(
       <NumberingIconHalfSquare
         lineColor="#0000ff"
         stationNumber="C-01"
@@ -97,6 +100,7 @@ describe('NumberingIconHalfSquare', () => {
         withOutline={true}
       />
     );
-    expect(UNSAFE_root).toBeTruthy();
+    expect(getByText('C')).toBeTruthy();
+    expect(getByText('01')).toBeTruthy();
   });
 });
