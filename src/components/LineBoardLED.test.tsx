@@ -72,14 +72,13 @@ describe('LineBoardLED', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useAtomValue
-      .mockReturnValueOnce({
-        selectedDirection: null,
-        stations: [],
-      })
-      .mockReturnValue({
-        headerState: 'NEXT',
-      });
+    let callCount = 0;
+    useAtomValue.mockImplementation(() => {
+      callCount++;
+      const index = (callCount - 1) % 2;
+      if (index === 0) return { selectedDirection: null, stations: [] };
+      return { headerState: 'NEXT' };
+    });
     useCurrentLine.mockReturnValue(mockLine);
     useNextStation.mockReturnValue(mockNextStation);
     useAfterNextStation.mockReturnValue(mockAfterNextStation);
