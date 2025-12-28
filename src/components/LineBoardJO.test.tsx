@@ -72,6 +72,12 @@ jest.mock('./Typography', () => {
   };
 });
 
+jest.mock('./LineBoard/shared/components', () => ({
+  EmptyStationNameCell: jest.fn(() => null),
+  LineDot: jest.fn(() => null),
+  StationName: jest.fn(() => null),
+}));
+
 describe('LineBoardJO', () => {
   const { useAtomValue } = require('jotai');
   const { useCurrentLine, useCurrentStation } = require('~/hooks');
@@ -176,7 +182,7 @@ describe('LineBoardJO', () => {
     expect(result.toJSON()).toBeTruthy();
   });
 
-  it('駅数が8未満の場合、空の配列で埋められる', () => {
+  it('駅数が8未満の場合でもエラーなくレンダリングされる', () => {
     const singleStation = [mockStations[0]];
     const result = render(
       <LineBoardJO stations={singleStation} lineColors={['#9acd32']} />

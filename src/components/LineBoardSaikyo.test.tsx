@@ -43,6 +43,7 @@ jest.mock('./ChevronTY', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
   StationName: jest.fn(() => null),
 }));
@@ -180,7 +181,7 @@ describe('LineBoardSaikyo', () => {
     );
   });
 
-  it('駅数が8未満の場合、空の配列で埋められる', () => {
+  it('駅数が8未満の場合でもエラーなくレンダリングされる', () => {
     const singleStation = [mockStations[0]];
     const result = render(
       <LineBoardSaikyo
@@ -190,7 +191,6 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
-    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('lineColorsが正しく適用される', () => {

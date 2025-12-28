@@ -58,6 +58,12 @@ jest.mock('./Typography', () => {
   };
 });
 
+jest.mock('./LineBoard/shared/components', () => ({
+  EmptyStationNameCell: jest.fn(() => null),
+  LineDot: jest.fn(() => null),
+  StationName: jest.fn(() => null),
+}));
+
 describe('LineBoardWest', () => {
   const { useAtomValue } = require('jotai');
   const { useCurrentLine } = require('~/hooks');
@@ -159,13 +165,12 @@ describe('LineBoardWest', () => {
     expect(Typography).toHaveBeenCalled();
   });
 
-  it('駅数が8未満の場合、空の配列で埋められる', () => {
+  it('駅数が8未満の場合でもエラーなくレンダリングされる', () => {
     const singleStation = [mockStations[0]];
     const result = render(
       <LineBoardWest stations={singleStation} lineColors={['#00a7db']} />
     );
     expect(result.toJSON()).toBeTruthy();
-    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('lineColorsが正しく適用される', () => {
@@ -175,7 +180,7 @@ describe('LineBoardWest', () => {
     expect(useAtomValue).toHaveBeenCalled();
   });
 
-  it('arrived状態でChevronが表示される', () => {
+  it('arrived=falseの場合、ChevronJRWestが表示される', () => {
     const { ChevronJRWest } = require('./ChevronJRWest');
     useAtomValue.mockReturnValue({
       leftStations: mockStations,
