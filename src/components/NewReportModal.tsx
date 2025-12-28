@@ -1,5 +1,5 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -95,10 +95,26 @@ const NewReportModal: React.FC<Props> = ({
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const [localDescription, setLocalDescription] = useState(description);
+
+  // モーダルが開かれたときに親の値で初期化
+  useEffect(() => {
+    if (visible) {
+      setLocalDescription(description);
+    }
+  }, [visible, description]);
+
+  const handleChangeText = useCallback(
+    (text: string) => {
+      setLocalDescription(text);
+      onDescriptionChange(text);
+    },
+    [onDescriptionChange]
+  );
 
   const needsLeftCount = useMemo(
-    () => description.trim().length - descriptionLowerLimit,
-    [description, descriptionLowerLimit]
+    () => localDescription.trim().length - descriptionLowerLimit,
+    [localDescription, descriptionLowerLimit]
   );
   const { widthScale } = useScale();
 
@@ -146,10 +162,12 @@ const NewReportModal: React.FC<Props> = ({
 
           {needsLeftCount < 0 ? (
             <Typography style={styles.charCount}>
-              あと{Math.abs(needsLeftCount)}文字必要です
+              {translate('remainingCharacters', { count: -needsLeftCount })}
             </Typography>
           ) : (
-            <Typography style={styles.charCount}>送信可能です</Typography>
+            <Typography style={styles.charCount}>
+              {translate('sendable')}
+            </Typography>
           )}
         </View>
 

@@ -209,5 +209,7 @@
   "chinese": "中国語(簡体字)",
   "korean": "韓国語",
   "ttsLanguageSettings": "自動アナウンスの言語設定",
-  "theme": "テーマ"
+  "theme": "テーマ",
+  "remainingCharacters": "あと%{count}文字必要です",
+  "sendable": "送信可能です"
 }
