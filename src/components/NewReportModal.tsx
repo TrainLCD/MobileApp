@@ -1,10 +1,11 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   TextInput,
+  type TextInput as TextInputType,
   View,
 } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
@@ -25,9 +26,7 @@ type Props = {
   visible: boolean;
   sending: boolean;
   onClose: () => void;
-  onSubmit: () => void;
-  description: string;
-  onDescriptionChange: (text: string) => void;
+  onSubmit: (description: string) => void;
   descriptionLowerLimit: number;
 };
 
@@ -89,33 +88,33 @@ const NewReportModal: React.FC<Props> = ({
   sending,
   onClose,
   onSubmit,
-  description,
-  onDescriptionChange,
   descriptionLowerLimit,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-  const [localDescription, setLocalDescription] = useState(description);
+  const textInputRef = useRef<TextInputType>(null);
+  const textRef = useRef('');
+  const [charCount, setCharCount] = useState(0);
 
-  // モーダルが開かれたときに親の値で初期化
+  // モーダルが開かれたときに初期化
   useEffect(() => {
     if (visible) {
-      setLocalDescription(description);
+      textRef.current = '';
+      setCharCount(0);
+      textInputRef.current?.clear();
     }
-  }, [visible, description]);
+  }, [visible]);
 
-  const handleChangeText = useCallback(
-    (text: string) => {
-      setLocalDescription(text);
-      onDescriptionChange(text);
-    },
-    [onDescriptionChange]
-  );
+  const handleChangeText = useCallback((text: string) => {
+    textRef.current = text;
+    setCharCount(text.trim().length);
+  }, []);
 
-  const needsLeftCount = useMemo(
-    () => localDescription.trim().length - descriptionLowerLimit,
-    [localDescription, descriptionLowerLimit]
-  );
+  const handleSubmit = useCallback(() => {
+    onSubmit(textRef.current);
+  }, [onSubmit]);
+
+  const needsLeftCount = charCount - descriptionLowerLimit;
   const { widthScale } = useScale();
 
   useEffect(() => {
@@ -172,9 +171,10 @@ const NewReportModal: React.FC<Props> = ({
         </View>
 
         <TextInput
+          ref={textInputRef}
           autoFocus={Platform.OS === 'ios'}
-          value={description}
-          onChangeText={onDescriptionChange}
+          defaultValue=""
+          onChangeText={handleChangeText}
           multiline
           style={[
             styles.textInput,
@@ -207,10 +207,8 @@ const NewReportModal: React.FC<Props> = ({
               width: widthScale(64),
             },
           ]}
-          disabled={
-            description.trim().length < descriptionLowerLimit || sending
-          }
-          onPress={onSubmit}
+          disabled={charCount < descriptionLowerLimit || sending}
+          onPress={handleSubmit}
         >
           {sending
             ? translate('reportSendInProgress')
