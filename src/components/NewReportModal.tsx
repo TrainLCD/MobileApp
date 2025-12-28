@@ -101,6 +101,7 @@ const NewReportModal: React.FC<Props> = ({
     if (visible) {
       textRef.current = '';
       setCharCount(0);
+      textInputRef.current?.clear();
     }
   }, [visible]);
 
