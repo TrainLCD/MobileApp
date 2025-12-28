@@ -83,7 +83,7 @@ describe('LineBoardJRKyushu', () => {
           stationNumber: 'JK-01',
         },
       ],
-    } as Station,
+    } as unknown as Station,
     {
       id: 2,
       groupId: 2,
@@ -97,7 +97,7 @@ describe('LineBoardJRKyushu', () => {
           stationNumber: 'JK-02',
         },
       ],
-    } as Station,
+    } as unknown as Station,
   ];
 
   beforeEach(() => {
@@ -133,6 +133,7 @@ describe('LineBoardJRKyushu', () => {
       />
     );
     expect(StationName).toHaveBeenCalled();
+    expect(StationName).toHaveBeenCalledTimes(mockStations.length);
   });
 
   it('LineDotコンポーネントが各駅に対してレンダリングされる', () => {
@@ -145,6 +146,7 @@ describe('LineBoardJRKyushu', () => {
       />
     );
     expect(LineDot).toHaveBeenCalled();
+    expect(LineDot).toHaveBeenCalledTimes(mockStations.length);
   });
 
   it('NumberingIconコンポーネントが駅番号付きの駅に対してレンダリングされる', () => {
@@ -157,6 +159,7 @@ describe('LineBoardJRKyushu', () => {
       />
     );
     expect(NumberingIcon).toHaveBeenCalled();
+    expect(NumberingIcon).toHaveBeenCalledTimes(mockStations.length);
   });
 
   it('ChevronTYコンポーネントが表示される', () => {
@@ -169,6 +172,7 @@ describe('LineBoardJRKyushu', () => {
       />
     );
     expect(ChevronTY).toHaveBeenCalled();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('hasTerminus=trueの場合、BarTerminalEastが正しく表示される', () => {
@@ -200,14 +204,15 @@ describe('LineBoardJRKyushu', () => {
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const result = render(
+    render(
       <LineBoardJRKyushu
         stations={mockStations}
         lineColors={customColors}
         hasTerminus={false}
       />
     );
-    expect(result.toJSON()).toBeTruthy();
+    expect(useCurrentLine).toHaveBeenCalled();
+    expect(useAtomValue).toHaveBeenCalled();
   });
 
   it('chevronの色が交互に切り替わる', () => {
@@ -227,7 +232,7 @@ describe('LineBoardJRKyushu', () => {
       {
         ...mockStations[0],
         stationNumbers: undefined,
-      } as Station,
+      } as unknown as Station,
     ];
     const NumberingIcon = require('./NumberingIcon').default;
     NumberingIcon.mockClear();
@@ -262,14 +267,16 @@ describe('LineBoardJRKyushu', () => {
   });
 
   it('barGradientsが正しくレンダリングされる', () => {
-    const result = render(
+    const { useBarStyles } = require('./LineBoard/shared/hooks/useBarStyles');
+    render(
       <LineBoardJRKyushu
         stations={mockStations}
         lineColors={['#f60', '#f60']}
         hasTerminus={false}
       />
     );
-    expect(result.toJSON()).toBeTruthy();
+    expect(useBarStyles).toHaveBeenCalled();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('threeLetterCodeが正しくNumberingIconに渡される', () => {

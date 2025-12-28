@@ -111,6 +111,7 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(StationName).toHaveBeenCalled();
+    expect(StationName).toHaveBeenCalledTimes(mockStations.length);
   });
 
   it('LineDotコンポーネントが各駅に対してレンダリングされる', () => {
@@ -123,6 +124,7 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(LineDot).toHaveBeenCalled();
+    expect(LineDot).toHaveBeenCalledTimes(mockStations.length);
   });
 
   it('ChevronTYコンポーネントが表示される', () => {
@@ -135,6 +137,7 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(ChevronTY).toHaveBeenCalled();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('hasTerminus=trueの場合、BarTerminalSaikyoが正しく表示される', () => {
@@ -162,18 +165,20 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const result = render(
+    render(
       <LineBoardSaikyo
         stations={mockStations}
         lineColors={customColors}
         hasTerminus={false}
       />
     );
-    expect(result.toJSON()).toBeTruthy();
+    expect(useCurrentLine).toHaveBeenCalled();
+    expect(useAtomValue).toHaveBeenCalled();
   });
 
   it('chevronの色が交互に切り替わる', () => {
@@ -189,24 +194,28 @@ describe('LineBoardSaikyo', () => {
   });
 
   it('空の駅がある場合でもエラーなくレンダリングされる', () => {
-    const result = render(
+    const { StationName } = require('./LineBoard/shared/components');
+    render(
       <LineBoardSaikyo
         stations={[mockStations[0]]}
         lineColors={['#00ac9a']}
         hasTerminus={false}
       />
     );
-    expect(result.toJSON()).toBeTruthy();
+    expect(StationName).toHaveBeenCalled();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('barGradientsが正しくレンダリングされる', () => {
-    const result = render(
+    const { useBarStyles } = require('./LineBoard/shared/hooks/useBarStyles');
+    render(
       <LineBoardSaikyo
         stations={mockStations}
         lineColors={['#00ac9a', '#00ac9a']}
         hasTerminus={false}
       />
     );
-    expect(result.toJSON()).toBeTruthy();
+    expect(useBarStyles).toHaveBeenCalled();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 });
