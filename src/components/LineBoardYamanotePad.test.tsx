@@ -213,8 +213,8 @@ describe('LineBoardYamanotePad', () => {
   it('transferLinesが正しく渡される', () => {
     const { useTransferLines } = require('~/hooks');
     const mockTransferLines = [
-      { id: 2, name: '中央線', color: '#f00' },
-    ] as unknown as Line[];
+      { __typename: 'Line', id: 2, nameShort: '中央線', color: '#f00' },
+    ] as Line[];
     useTransferLines.mockReturnValue(mockTransferLines);
 
     render(<LineBoardYamanotePad stations={mockStations} />);
