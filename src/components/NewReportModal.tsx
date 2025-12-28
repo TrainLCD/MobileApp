@@ -26,9 +26,7 @@ type Props = {
   visible: boolean;
   sending: boolean;
   onClose: () => void;
-  onSubmit: () => void;
-  description: string;
-  onDescriptionChange: (text: string) => void;
+  onSubmit: (description: string) => void;
   descriptionLowerLimit: number;
 };
 
@@ -90,23 +88,21 @@ const NewReportModal: React.FC<Props> = ({
   sending,
   onClose,
   onSubmit,
-  description,
-  onDescriptionChange,
   descriptionLowerLimit,
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const textInputRef = useRef<TextInputType>(null);
-  const textRef = useRef(description);
-  const [charCount, setCharCount] = useState(description.trim().length);
+  const textRef = useRef('');
+  const [charCount, setCharCount] = useState(0);
 
   // モーダルが開かれたときに初期化
   useEffect(() => {
     if (visible) {
-      textRef.current = description;
-      setCharCount(description.trim().length);
+      textRef.current = '';
+      setCharCount(0);
     }
-  }, [visible, description]);
+  }, [visible]);
 
   const handleChangeText = useCallback((text: string) => {
     textRef.current = text;
@@ -114,9 +110,8 @@ const NewReportModal: React.FC<Props> = ({
   }, []);
 
   const handleSubmit = useCallback(() => {
-    onDescriptionChange(textRef.current);
-    onSubmit();
-  }, [onDescriptionChange, onSubmit]);
+    onSubmit(textRef.current);
+  }, [onSubmit]);
 
   const needsLeftCount = charCount - descriptionLowerLimit;
   const { widthScale } = useScale();
@@ -177,7 +172,7 @@ const NewReportModal: React.FC<Props> = ({
         <TextInput
           ref={textInputRef}
           autoFocus={Platform.OS === 'ios'}
-          defaultValue={description}
+          defaultValue=""
           onChangeText={handleChangeText}
           multiline
           style={[

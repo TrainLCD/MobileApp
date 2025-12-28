@@ -50,7 +50,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setTuning = useSetAtom(tuningState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
-  const [reportDescription, setReportDescription] = useState('');
   const [screenShotBase64, setScreenShotBase64] = useState('');
 
   useCheckStoreVersion();
@@ -382,73 +381,74 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 
   const handleNewReportModalClose = useCallback(() => {
-    setReportDescription('');
     setScreenShotBase64('');
     setReportModalShow(false);
   }, []);
 
-  const handleReportSend = useCallback(() => {
-    if (reportDescription.length < descriptionLowerLimit) {
+  const handleReportSend = useCallback(
+    (description: string) => {
+      if (description.trim().length < descriptionLowerLimit) {
+        Alert.alert(
+          translate('errorTitle'),
+          translate('feedbackCharactersCountNotReached', {
+            lowerLimit: descriptionLowerLimit,
+          })
+        );
+        return;
+      }
+
+      const captureError = (err: unknown) =>
+        Effect.sync(() => {
+          console.error(err);
+          setSendingReport(false);
+          Alert.alert(translate('errorTitle'), translate('reportError'));
+        });
+
       Alert.alert(
-        translate('errorTitle'),
-        translate('feedbackCharactersCountNotReached', {
-          lowerLimit: descriptionLowerLimit,
-        })
-      );
-      return;
-    }
-
-    const captureError = (err: unknown) =>
-      Effect.sync(() => {
-        console.error(err);
-        setSendingReport(false);
-        Alert.alert(translate('errorTitle'), translate('reportError'));
-      });
-
-    Alert.alert(
-      translate('announcementTitle'),
-      translate('reportConfirmText'),
-      [
-        {
-          text: translate('agree'),
-          style: 'destructive',
-          onPress: () => {
-            setSendingReport(true);
-            pipe(
-              Effect.tryPromise({
-                try: () =>
-                  sendReport({
-                    reportType: 'feedback',
-                    description: reportDescription.trim(),
-                    screenShotBase64,
-                  }),
-                catch: captureError,
-              }),
-              Effect.andThen(() => {
-                setSendingReport(false);
-                Alert.alert(
-                  translate('announcementTitle'),
-                  translate('reportSuccessText')
-                );
-                handleNewReportModalClose();
-              }),
-              Effect.runPromise
-            );
+        translate('announcementTitle'),
+        translate('reportConfirmText'),
+        [
+          {
+            text: translate('agree'),
+            style: 'destructive',
+            onPress: () => {
+              setSendingReport(true);
+              pipe(
+                Effect.tryPromise({
+                  try: () =>
+                    sendReport({
+                      reportType: 'feedback',
+                      description: description.trim(),
+                      screenShotBase64,
+                    }),
+                  catch: captureError,
+                }),
+                Effect.andThen(() => {
+                  setSendingReport(false);
+                  Alert.alert(
+                    translate('announcementTitle'),
+                    translate('reportSuccessText')
+                  );
+                  handleNewReportModalClose();
+                }),
+                Effect.runPromise
+              );
+            },
           },
-        },
-        {
-          text: translate('disagree'),
-          style: 'cancel',
-        },
-      ]
-    );
-  }, [
-    descriptionLowerLimit,
-    handleNewReportModalClose,
-    reportDescription,
-    screenShotBase64,
-    sendReport,
-  ]);
+          {
+            text: translate('disagree'),
+            style: 'cancel',
+          },
+        ]
+      );
+    },
+    [
+      descriptionLowerLimit,
+      handleNewReportModalClose,
+      screenShotBase64,
+      sendReport,
+    ]
+  );
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -467,8 +467,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           visible={reportModalShow}
           sending={sendingReport}
           onClose={handleNewReportModalClose}
-          description={reportDescription}
-          onDescriptionChange={setReportDescription}
           onSubmit={handleReportSend}
           descriptionLowerLimit={descriptionLowerLimit}
         />
