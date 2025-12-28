@@ -72,10 +72,11 @@ describe('LineBoardToei', () => {
   const { useCurrentLine } = require('~/hooks');
 
   const mockLine: Line = {
+    __typename: 'Line',
     id: 1,
-    name: '都営浅草線',
+    nameShort: '都営浅草線',
     color: '#ed6d00',
-  } as unknown as Line;
+  } as Line;
 
   const mockStations: Station[] = [
     {

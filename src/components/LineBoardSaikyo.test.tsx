@@ -58,10 +58,11 @@ describe('LineBoardSaikyo', () => {
   const { useCurrentLine } = require('~/hooks');
 
   const mockLine: Line = {
+    __typename: 'Line',
     id: 1,
-    name: '埼京線',
+    nameShort: '埼京線',
     color: '#00ac9a',
-  } as unknown as Line;
+  } as Line;
 
   const mockStations: Station[] = [
     {

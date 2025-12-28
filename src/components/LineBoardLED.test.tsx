@@ -47,12 +47,12 @@ describe('LineBoardLED', () => {
   } = require('~/hooks');
 
   const mockLine: Line = {
+    __typename: 'Line',
     id: 1,
-    name: '山手線',
     nameShort: '山手線',
     nameRoman: 'Yamanote Line',
     color: '#9acd32',
-  } as unknown as Line;
+  } as Line;
 
   const mockNextStation: Station = {
     id: 2,

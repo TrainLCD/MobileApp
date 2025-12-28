@@ -63,10 +63,11 @@ describe('LineBoardWest', () => {
   const { useCurrentLine } = require('~/hooks');
 
   const mockLine: Line = {
+    __typename: 'Line',
     id: 1,
-    name: 'JR神戸線',
+    nameShort: 'JR神戸線',
     color: '#00a7db',
-  } as unknown as Line;
+  } as Line;
 
   const mockStations: Station[] = [
     {

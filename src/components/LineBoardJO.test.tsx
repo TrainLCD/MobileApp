@@ -77,10 +77,11 @@ describe('LineBoardJO', () => {
   const { useCurrentLine, useCurrentStation } = require('~/hooks');
 
   const mockLine: Line = {
+    __typename: 'Line',
     id: 1,
-    name: '山手線',
+    nameShort: '山手線',
     color: '#9acd32',
-  } as unknown as Line;
+  } as Line;
 
   const mockStations: Station[] = [
     {
