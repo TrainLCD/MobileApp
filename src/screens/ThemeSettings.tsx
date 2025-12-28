@@ -6,6 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -162,6 +163,17 @@ const ThemeSettingsScreen: React.FC = () => {
     [handleToggleThemeEnabled, visibleItems.length, currentTheme]
   );
 
+  const keyExtractor = useCallback((item: SettingItem) => item.id, []);
+
+  const getItemLayout = useCallback(
+    (_data: ArrayLike<SettingItem> | null | undefined, index: number) => ({
+      length: 76,
+      offset: 76 * index,
+      index,
+    }),
+    []
+  );
+
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollY.value = e.contentOffset.y;
@@ -175,7 +187,9 @@ const ThemeSettingsScreen: React.FC = () => {
       >
         <Animated.FlatList
           data={visibleItems}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyExtractor}
+          getItemLayout={getItemLayout}
+          removeClippedSubviews={Platform.OS === 'android'}
           contentContainerStyle={[
             headerHeight
               ? { marginTop: headerHeight, paddingBottom: headerHeight }

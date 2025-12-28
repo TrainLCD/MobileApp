@@ -5,6 +5,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -191,6 +192,17 @@ const EnabledLanguagesSettings: React.FC = () => {
     [enabledLanguages, handleToggleLanguage, SETTING_ITEMS.length]
   );
 
+  const keyExtractor = useCallback((item: SettingItem) => item.id, []);
+
+  const getItemLayout = useCallback(
+    (_data: ArrayLike<SettingItem> | null | undefined, index: number) => ({
+      length: 76,
+      offset: 76 * index,
+      index,
+    }),
+    []
+  );
+
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollY.value = e.contentOffset.y;
@@ -202,7 +214,9 @@ const EnabledLanguagesSettings: React.FC = () => {
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.FlatList
           data={SETTING_ITEMS}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyExtractor}
+          getItemLayout={getItemLayout}
+          removeClippedSubviews={Platform.OS === 'android'}
           contentContainerStyle={[
             headerHeight
               ? { marginTop: headerHeight, paddingBottom: headerHeight }
