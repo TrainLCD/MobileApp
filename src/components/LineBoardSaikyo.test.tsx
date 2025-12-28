@@ -214,7 +214,7 @@ describe('LineBoardSaikyo', () => {
     );
   });
 
-  it('chevronの色が交互に切り替わる', () => {
+  it('useIntervalフックが1秒間隔で呼ばれる', () => {
     const { useInterval } = require('~/hooks');
     render(
       <LineBoardSaikyo

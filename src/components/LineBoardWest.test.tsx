@@ -193,7 +193,7 @@ describe('LineBoardWest', () => {
     expect(ChevronJRWest).toHaveBeenCalled();
   });
 
-  it('駅番号情報が正しく表示される', () => {
+  it('駅番号情報を持つ駅でもエラーなくレンダリングされる', () => {
     const stationsWithNumbers: Station[] = [
       {
         ...mockStations[0],
