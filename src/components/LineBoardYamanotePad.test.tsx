@@ -138,13 +138,14 @@ describe('LineBoardYamanotePad', () => {
       return false;
     });
     render(<LineBoardYamanotePad stations={mockStations} />);
-    expect(PadArch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        arrived: true,
-        line: mockLine,
-      }),
-      undefined
+    const callArgs = PadArch.mock.calls[0][0];
+    expect(callArgs.arrived).toBe(true);
+    expect(callArgs.line).toBe(mockLine);
+    expect(callArgs.stations).toHaveLength(6);
+    const definedStations = callArgs.stations.filter(
+      (s: Station | undefined) => s !== undefined
     );
+    expect(definedStations).toHaveLength(mockStations.length);
   });
 
   it('arrived=falseの場合、駅数が1つ減らされる', () => {
@@ -157,7 +158,13 @@ describe('LineBoardYamanotePad', () => {
       return false;
     });
     render(<LineBoardYamanotePad stations={mockStations} />);
-    expect(PadArch).toHaveBeenCalled();
+    const callArgs = PadArch.mock.calls[0][0];
+    expect(callArgs.arrived).toBe(false);
+    expect(callArgs.stations).toHaveLength(6);
+    const definedStations = callArgs.stations.filter(
+      (s: Station | undefined) => s !== undefined
+    );
+    expect(definedStations).toHaveLength(mockStations.length - 1);
   });
 
   it('numberingInfoが正しく生成される', () => {
