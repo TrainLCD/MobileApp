@@ -173,8 +173,8 @@ const NewReportModal: React.FC<Props> = ({
 
         <TextInput
           autoFocus={Platform.OS === 'ios'}
-          defaultValue={localDescription}
-          onChangeText={handleChangeText}
+          value={description}
+          onChangeText={onDescriptionChange}
           multiline
           style={[
             styles.textInput,
@@ -208,7 +208,7 @@ const NewReportModal: React.FC<Props> = ({
             },
           ]}
           disabled={
-            localDescription.trim().length < descriptionLowerLimit || sending
+            description.trim().length < descriptionLowerLimit || sending
           }
           onPress={onSubmit}
         >
