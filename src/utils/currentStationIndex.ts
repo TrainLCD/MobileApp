@@ -2,7 +2,7 @@ import type { Station } from '~/@types/graphql';
 
 const getCurrentStationIndex = (
   stations: Station[],
-  nearestStation: Station | null
+  nearestStation: Station | undefined
 ): number => {
   const index = stations.findIndex((s) => s.id === nearestStation?.id);
   if (index !== -1) {

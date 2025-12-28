@@ -118,6 +118,7 @@ export const CustomModal: React.FC<Props> = ({
               contentContainerStyle,
               animatedContentStyle,
             ]}
+            pointerEvents="auto"
           >
             {children}
           </Animated.View>

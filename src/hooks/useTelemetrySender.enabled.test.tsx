@@ -1,8 +1,13 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { Provider } from 'jotai';
+import { useCurrentLine } from '~/hooks/useCurrentLine';
+import { useCurrentStation } from '~/hooks/useCurrentStation';
+import { useIsPassing } from '~/hooks/useIsPassing';
 import { useLocationStore } from '~/hooks/useLocationStore';
+import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
+import stationState from '~/store/atoms/station';
 
 const TELEMETRY_MAX_QUEUE_SIZE = 1000;
 const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
@@ -15,6 +20,10 @@ jest.mock('expo-network', () => ({
 jest.mock('~/utils/telemetryConfig', () => ({
   isTelemetryEnabledByBuild: true,
 }));
+jest.mock('react-native-dotenv', () => ({
+  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: 'ws://example.com:8080',
+  EXPERIMENTAL_TELEMETRY_TOKEN: 'test-token',
+}));
 jest.mock('~/hooks/useLocationStore', () => ({
   useLocationStore: jest.fn(),
 }));
@@ -22,9 +31,48 @@ jest.mock('~/constants/telemetry', () => ({
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 }));
+jest.mock('~/hooks/useCurrentLine', () => ({
+  useCurrentLine: jest.fn(),
+}));
+jest.mock('~/hooks/useCurrentStation', () => ({
+  useCurrentStation: jest.fn(),
+}));
+jest.mock('~/hooks/useIsPassing', () => ({
+  useIsPassing: jest.fn(),
+}));
+jest.mock('~/hooks/useTelemetryEnabled', () => ({
+  useTelemetryEnabled: jest.fn(),
+}));
+jest.mock('~/utils/native/android/gnssModule', () => ({
+  subscribeGnss: jest.fn((_callback) => {
+    // No-op for tests
+    return () => {};
+  }),
+}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider>{children}</Provider>
+  <Provider
+    // @ts-expect-error - initialValues is valid for jotai Provider but types are not up to date
+    initialValues={[
+      [
+        stationState,
+        {
+          arrived: false,
+          approaching: false,
+          station: null,
+          stations: [],
+          stationsCache: [],
+          pendingStation: null,
+          pendingStations: [],
+          selectedDirection: null,
+          selectedBound: null,
+          wantedDestination: null,
+        },
+      ],
+    ]}
+  >
+    {children}
+  </Provider>
 );
 
 let mockWebSocketSend: jest.Mock;
@@ -37,6 +85,9 @@ describe('useTelemetrySender', () => {
       send: mockWebSocketSend,
       close: jest.fn(),
       readyState: 1, // WebSocket.OPEN
+      onopen: null,
+      onclose: null,
+      onerror: null,
     };
     (global as any).WebSocket = jest.fn(() => mockWebSocket);
     (global as any).WebSocket.OPEN = 1;
@@ -56,6 +107,12 @@ describe('useTelemetrySender', () => {
         })
     );
 
+    // Mock hooks that useTelemetrySender depends on
+    (useCurrentLine as jest.Mock).mockReturnValue({ id: 11302 });
+    (useCurrentStation as jest.Mock).mockReturnValue({ id: 1130224 });
+    (useIsPassing as jest.Mock).mockReturnValue(false);
+    (useTelemetryEnabled as jest.Mock).mockReturnValue(true);
+
     jest.useFakeTimers();
   });
 
@@ -65,8 +122,17 @@ describe('useTelemetrySender', () => {
     jest.useRealTimers();
   });
 
-  test.skip('should send log when WebSocket is open', async () => {
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+  test('should send log when WebSocket is open', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'ws://example.com:8080'),
+      { wrapper }
+    );
+
+    // Trigger WebSocket onopen
+    await act(async () => {
+      mockWebSocket.onopen?.();
+      await Promise.resolve();
+    });
 
     await act(async () => {
       result.current.sendLog('Test log from the app', 'info');
@@ -76,16 +142,34 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         expect(mockWebSocketSend).toHaveBeenCalled();
-        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-        expect(message.type).toBe('app');
+        const calls = mockWebSocketSend.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          const message = JSON.parse(call[0]);
+          return message.log?.message === 'Test log from the app';
+        });
+        expect(logCall).toBeDefined();
+        const message = JSON.parse(logCall[0]);
+        expect(message.type).toBe('log');
         expect(message.log.message).toBe('Test log from the app');
       },
       { timeout: 2000 }
     );
   });
 
-  test.skip('should throttle log sending within 1s', async () => {
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+  test('should throttle log sending within 1s', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'ws://example.com:8080'),
+      { wrapper }
+    );
+
+    // Trigger WebSocket onopen
+    await act(async () => {
+      mockWebSocket.onopen?.();
+      await Promise.resolve();
+    });
+
+    // Clear the initial connection message
+    mockWebSocketSend.mockClear();
 
     await act(async () => {
       result.current.sendLog('First');
@@ -95,12 +179,12 @@ describe('useTelemetrySender', () => {
 
     await waitFor(
       () => {
-        expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
+        expect(mockWebSocketSend).toHaveBeenCalledTimes(2);
       },
       { timeout: 2000 }
     );
 
-    // スロットリング時間を過ぎた後に2回目のメッセージが送信されることを確認
+    // スロットリング時間を過ぎた後に3回目のメッセージが送信されることを確認
     act(() => {
       jest.advanceTimersByTime(TELEMETRY_THROTTLE_MS);
       result.current.sendLog('Third');
@@ -108,7 +192,7 @@ describe('useTelemetrySender', () => {
 
     await waitFor(
       () => {
-        expect(mockWebSocketSend).toHaveBeenCalledTimes(2);
+        expect(mockWebSocketSend).toHaveBeenCalledTimes(3);
       },
       { timeout: 2000 }
     );
@@ -128,15 +212,20 @@ describe('useTelemetrySender', () => {
         accuracyHistory: [],
       })
     );
-    renderHook(() => useTelemetrySender(), { wrapper });
+    renderHook(() => useTelemetrySender(false, 'ws://example.com:8080'), {
+      wrapper,
+    });
 
     expect(mockWebSocketSend).not.toHaveBeenCalled();
   });
 
-  test.skip('should enqueue message if WebSocket is not open', async () => {
-    mockWebSocket.readyState = WebSocket.CONNECTING;
+  test('should enqueue message if WebSocket is not open', async () => {
+    mockWebSocket.readyState = (global as any).WebSocket.CONNECTING;
 
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'ws://example.com:8080'),
+      { wrapper }
+    );
 
     act(() => {
       result.current.sendLog('Queued message');
@@ -145,7 +234,7 @@ describe('useTelemetrySender', () => {
     expect(mockWebSocketSend).not.toHaveBeenCalled();
 
     await act(async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
+      mockWebSocket.readyState = (global as any).WebSocket.OPEN;
       mockWebSocket.onopen?.();
       await Promise.resolve(); // イベントループ1回分回す
     });
@@ -153,14 +242,20 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         expect(mockWebSocketSend).toHaveBeenCalled();
-        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
+        const calls = mockWebSocketSend.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          const message = JSON.parse(call[0]);
+          return message.log?.message === 'Queued message';
+        });
+        expect(logCall).toBeDefined();
+        const message = JSON.parse(logCall[0]);
         expect(message.log.message).toBe('Queued message');
       },
       { timeout: 2000 }
     );
   });
 
-  test.skip('should not connect with invalid WebSocket URL', () => {
+  test('should not connect with invalid WebSocket URL', () => {
     const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     renderHook(() => useTelemetrySender(false, 'invalid-url'), { wrapper });
     expect(spy).toHaveBeenCalledWith('Invalid WebSocket URL');

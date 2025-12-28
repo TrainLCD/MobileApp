@@ -41,7 +41,7 @@ export const useRefreshLeftStations = (): void => {
     // 通過駅を通過する際に駅情報のアプデを行わない
     if (
       (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) &&
-      getIsPass(normalStation)
+      getIsPass(normalStation ?? undefined)
     ) {
       const stations =
         selectedDirection === 'INBOUND'

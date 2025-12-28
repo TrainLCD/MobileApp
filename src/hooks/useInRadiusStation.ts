@@ -12,8 +12,9 @@ export const useInRadiusStation = (radius: number) => {
   const latitude = locationState?.location?.coords.latitude;
   const longitude = locationState?.location?.coords.longitude;
 
-  const [latestMatchedStation, setLatestMatchedStation] =
-    useState<Station | null>(station);
+  const [latestMatchedStation, setLatestMatchedStation] = useState<
+    Station | undefined
+  >(station ?? undefined);
 
   useEffect(() => {
     if (latitude == null || longitude == null) {

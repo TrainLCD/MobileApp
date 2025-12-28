@@ -11,7 +11,7 @@ type Option = {
 };
 
 export const useTransferLinesFromStation = (
-  station: Station | null,
+  station: Station | undefined,
   option?: Option
 ): Line[] => {
   const { omitRepeatingLine, omitJR } = option ?? {

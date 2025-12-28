@@ -17,7 +17,7 @@ export const useTransferLines = (options?: Option): Line[] => {
     () =>
       arrived && currentStation && !getIsPass(currentStation)
         ? currentStation
-        : (nextStation ?? null),
+        : nextStation,
     [arrived, currentStation, nextStation]
   );
 

@@ -123,10 +123,10 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const lineFg = isLEDTheme ? '#CCCCCC' : '#666666';
   const metaFg = isLEDTheme ? '#CCCCCC' : '#666666';
 
-  const leftCode = getStationPrimaryCode(from);
-  const rightCode = getStationPrimaryCode(to);
-  const leftName = getStationName(from);
-  const rightName = getStationName(to);
+  const leftCode = getStationPrimaryCode(from ?? undefined);
+  const rightCode = getStationPrimaryCode(to ?? undefined);
+  const leftName = getStationName(from ?? undefined);
+  const rightName = getStationName(to ?? undefined);
   const leftLine: Line | null = (from?.line as Line) ?? from?.line ?? null;
   const rightLine: Line | null = (to?.line as Line) ?? to?.line ?? null;
   const leftMark = useMemo(

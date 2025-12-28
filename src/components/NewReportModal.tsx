@@ -1,10 +1,8 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   TextInput,
   View,
@@ -97,10 +95,26 @@ const NewReportModal: React.FC<Props> = ({
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const [localDescription, setLocalDescription] = useState(description);
+
+  // モーダルが開かれたときに親の値で初期化
+  useEffect(() => {
+    if (visible) {
+      setLocalDescription(description);
+    }
+  }, [visible, description]);
+
+  const handleChangeText = useCallback(
+    (text: string) => {
+      setLocalDescription(text);
+      onDescriptionChange(text);
+    },
+    [onDescriptionChange]
+  );
 
   const needsLeftCount = useMemo(
-    () => description.trim().length - descriptionLowerLimit,
-    [description, descriptionLowerLimit]
+    () => localDescription.trim().length - descriptionLowerLimit,
+    [localDescription, descriptionLowerLimit]
   );
   const { widthScale } = useScale();
 
@@ -140,72 +154,72 @@ const NewReportModal: React.FC<Props> = ({
       ]}
       dismissOnBackdropPress={!sending}
     >
-      <Pressable onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={styles.header}>
-            <Heading>{translate('report')}</Heading>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.header}>
+          <Heading>{translate('report')}</Heading>
 
-            {needsLeftCount < 0 ? (
-              <Typography style={styles.charCount}>
-                あと{Math.abs(needsLeftCount)}文字必要です
-              </Typography>
-            ) : (
-              <Typography style={styles.charCount}>送信可能です</Typography>
-            )}
-          </View>
+          {needsLeftCount < 0 ? (
+            <Typography style={styles.charCount}>
+              {translate('remainingCharacters', { count: -needsLeftCount })}
+            </Typography>
+          ) : (
+            <Typography style={styles.charCount}>
+              {translate('sendable')}
+            </Typography>
+          )}
+        </View>
 
-          <TextInput
-            autoFocus={Platform.OS === 'ios'}
-            value={description}
-            onChangeText={onDescriptionChange}
-            multiline
-            style={[
-              styles.textInput,
-              {
-                color: isLEDTheme ? '#fff' : '#000',
-                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-              },
-            ]}
-            placeholder={translate('reportPlaceholder', {
-              lowerLimit: descriptionLowerLimit,
-            })}
-          />
-        </KeyboardAvoidingView>
-        <Typography
+        <TextInput
+          autoFocus={Platform.OS === 'ios'}
+          value={description}
+          onChangeText={onDescriptionChange}
+          multiline
           style={[
-            styles.caution,
+            styles.textInput,
             {
-              color: isLEDTheme ? '#fff' : '#555',
-              lineHeight: Platform.select({ ios: RFValue(18) }),
+              color: isLEDTheme ? '#fff' : '#000',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             },
           ]}
+          placeholder={translate('reportPlaceholder', {
+            lowerLimit: descriptionLowerLimit,
+          })}
+        />
+      </KeyboardAvoidingView>
+      <Typography
+        style={[
+          styles.caution,
+          {
+            color: isLEDTheme ? '#fff' : '#555',
+            lineHeight: Platform.select({ ios: RFValue(18) }),
+          },
+        ]}
+      >
+        {translate('reportCaution')}
+      </Typography>
+      <View style={styles.buttonContainer}>
+        <Button
+          style={[
+            styles.button,
+            {
+              width: widthScale(64),
+            },
+          ]}
+          disabled={
+            description.trim().length < descriptionLowerLimit || sending
+          }
+          onPress={onSubmit}
         >
-          {translate('reportCaution')}
-        </Typography>
-        <View style={styles.buttonContainer}>
-          <Button
-            style={[
-              styles.button,
-              {
-                width: widthScale(64),
-              },
-            ]}
-            disabled={
-              description.trim().length < descriptionLowerLimit || sending
-            }
-            onPress={onSubmit}
-          >
-            {sending
-              ? translate('reportSendInProgress')
-              : translate('reportSend')}
-          </Button>
-          <Button disabled={sending} style={styles.button} onPress={onClose}>
-            {translate('cancel')}
-          </Button>
-        </View>
-      </Pressable>
+          {sending
+            ? translate('reportSendInProgress')
+            : translate('reportSend')}
+        </Button>
+        <Button disabled={sending} style={styles.button} onPress={onClose}>
+          {translate('cancel')}
+        </Button>
+      </View>
     </CustomModal>
   );
 };
