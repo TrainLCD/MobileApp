@@ -113,6 +113,14 @@ describe('LineBoardSaikyo', () => {
     );
     expect(StationName).toHaveBeenCalled();
     expect(StationName).toHaveBeenCalledTimes(mockStations.length);
+    expect(StationName).toHaveBeenCalledWith(
+      expect.objectContaining({
+        station: expect.objectContaining({
+          name: expect.any(String),
+        }),
+      }),
+      undefined
+    );
   });
 
   it('LineDotコンポーネントが各駅に対してレンダリングされる', () => {
@@ -126,6 +134,16 @@ describe('LineBoardSaikyo', () => {
     );
     expect(LineDot).toHaveBeenCalled();
     expect(LineDot).toHaveBeenCalledTimes(mockStations.length);
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        station: expect.objectContaining({
+          name: expect.any(String),
+        }),
+        arrived: expect.any(Boolean),
+        passed: expect.any(Boolean),
+      }),
+      undefined
+    );
   });
 
   it('ChevronTYコンポーネントが表示される', () => {
@@ -138,6 +156,12 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(ChevronTY).toHaveBeenCalled();
+    expect(ChevronTY).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: expect.any(String),
+      }),
+      undefined
+    );
     expect(useCurrentLine).toHaveBeenCalled();
   });
 
@@ -170,6 +194,7 @@ describe('LineBoardSaikyo', () => {
   });
 
   it('lineColorsが正しく適用される', () => {
+    const { LineDot } = require('./LineBoard/shared/components');
     const customColors = ['#ff0000', '#00ff00'];
     render(
       <LineBoardSaikyo
@@ -180,6 +205,13 @@ describe('LineBoardSaikyo', () => {
     );
     expect(useCurrentLine).toHaveBeenCalled();
     expect(useAtomValue).toHaveBeenCalled();
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        station: expect.any(Object),
+        arrived: expect.any(Boolean),
+      }),
+      undefined
+    );
   });
 
   it('chevronの色が交互に切り替わる', () => {
@@ -204,6 +236,14 @@ describe('LineBoardSaikyo', () => {
       />
     );
     expect(StationName).toHaveBeenCalled();
+    expect(StationName).toHaveBeenCalledWith(
+      expect.objectContaining({
+        station: expect.objectContaining({
+          name: mockStations[0].name,
+        }),
+      }),
+      undefined
+    );
     expect(useCurrentLine).toHaveBeenCalled();
   });
 
