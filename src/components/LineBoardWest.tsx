@@ -459,7 +459,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const hasPassStationInRegion = useHasPassStationInRegion(
     allStations,
     stationInLoop,
-    nextStation ?? null
+    nextStation
   );
 
   const includesLongStationName = useMemo(

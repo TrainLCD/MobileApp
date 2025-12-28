@@ -48,7 +48,8 @@ export const useGetLineMark = () => {
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       };
 
-      const numberingIndex = getNumberingIndex(line.station ?? null, line) ?? 0;
+      const numberingIndex =
+        getNumberingIndex(line.station ?? undefined, line) ?? 0;
 
       if (numberingIndex === -1) {
         return lineMarkMap;

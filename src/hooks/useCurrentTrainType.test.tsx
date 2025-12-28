@@ -200,14 +200,14 @@ describe('useCurrentTrainType', () => {
 
   let stationAtomValue: { stations: Station[] };
   let navigationAtomValue: { trainType: TrainType | null };
-  let currentStationValue: Station | null;
+  let currentStationValue: Station | undefined;
   let currentLineValue: Line | null;
 
   beforeEach(() => {
     jest.clearAllMocks();
     stationAtomValue = { stations: [] };
     navigationAtomValue = { trainType: null };
-    currentStationValue = null;
+    currentStationValue = undefined;
     currentLineValue = createLine();
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === stationState) {

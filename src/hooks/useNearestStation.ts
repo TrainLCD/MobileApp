@@ -7,7 +7,7 @@ import { useCurrentStation } from './useCurrentStation';
 import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
-export const useNearestStation = (): Station | null => {
+export const useNearestStation = (): Station | undefined => {
   const latitude = useLocationStore(
     (state) => state?.location?.coords.latitude
   );
@@ -18,9 +18,9 @@ export const useNearestStation = (): Station | null => {
   const currentStation = useCurrentStation(false);
   const nextStation = useNextStation(false);
 
-  const nearestStation = useMemo<Station | null>(() => {
+  const nearestStation = useMemo<Station | undefined>(() => {
     if (latitude == null || longitude == null) {
-      return null;
+      return undefined;
     }
 
     const validStations = stations.filter(
@@ -38,10 +38,10 @@ export const useNearestStation = (): Station | null => {
             longitude: sta.longitude as number,
           }))
         ) as { latitude: number; longitude: number })
-      : null;
+      : undefined;
 
     if (!nearestCoordinates) {
-      return null;
+      return undefined;
     }
 
     const nearestStations = validStations.filter(
@@ -53,9 +53,7 @@ export const useNearestStation = (): Station | null => {
     return (
       nearestStations.find(
         (s) => s.id === currentStation?.id || s.id === nextStation?.id
-      ) ??
-      nearestStations[0] ??
-      null
+      ) ?? nearestStations[0]
     );
   }, [latitude, longitude, stations, currentStation, nextStation]);
 

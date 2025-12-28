@@ -1,3 +1,4 @@
+import { getIdToken } from '@react-native-firebase/auth';
 import type { AudioPlayer } from 'expo-audio';
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { File, Paths } from 'expo-file-system';
@@ -216,7 +217,12 @@ export const useTTS = (): void => {
     };
 
     try {
-      const idToken = await user?.getIdToken();
+      if (!user) {
+        console.error('[useTTS] User is not available');
+        return null;
+      }
+
+      const idToken = await getIdToken(user);
 
       const response = await fetch(ttsApiUrl, {
         headers: {
