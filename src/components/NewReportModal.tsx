@@ -1,12 +1,11 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   TextInput,
+  type TextInput as TextInputType,
   View,
 } from 'react-native';
 import { hasNotch } from 'react-native-device-info';
@@ -97,11 +96,29 @@ const NewReportModal: React.FC<Props> = ({
 }: Props) => {
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const textInputRef = useRef<TextInputType>(null);
+  const textRef = useRef(description);
+  const [charCount, setCharCount] = useState(description.trim().length);
 
-  const needsLeftCount = useMemo(
-    () => description.trim().length - descriptionLowerLimit,
-    [description, descriptionLowerLimit]
-  );
+  // モーダルが開かれたときに初期化
+  useEffect(() => {
+    if (visible) {
+      textRef.current = description;
+      setCharCount(description.trim().length);
+    }
+  }, [visible, description]);
+
+  const handleChangeText = useCallback((text: string) => {
+    textRef.current = text;
+    setCharCount(text.trim().length);
+  }, []);
+
+  const handleSubmit = useCallback(() => {
+    onDescriptionChange(textRef.current);
+    onSubmit();
+  }, [onDescriptionChange, onSubmit]);
+
+  const needsLeftCount = charCount - descriptionLowerLimit;
   const { widthScale } = useScale();
 
   useEffect(() => {
@@ -140,72 +157,69 @@ const NewReportModal: React.FC<Props> = ({
       ]}
       dismissOnBackdropPress={!sending}
     >
-      <Pressable onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={styles.header}>
-            <Heading>{translate('report')}</Heading>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.header}>
+          <Heading>{translate('report')}</Heading>
 
-            {needsLeftCount < 0 ? (
-              <Typography style={styles.charCount}>
-                あと{Math.abs(needsLeftCount)}文字必要です
-              </Typography>
-            ) : (
-              <Typography style={styles.charCount}>送信可能です</Typography>
-            )}
-          </View>
+          {needsLeftCount < 0 ? (
+            <Typography style={styles.charCount}>
+              あと{Math.abs(needsLeftCount)}文字必要です
+            </Typography>
+          ) : (
+            <Typography style={styles.charCount}>送信可能です</Typography>
+          )}
+        </View>
 
-          <TextInput
-            autoFocus={Platform.OS === 'ios'}
-            value={description}
-            onChangeText={onDescriptionChange}
-            multiline
-            style={[
-              styles.textInput,
-              {
-                color: isLEDTheme ? '#fff' : '#000',
-                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-              },
-            ]}
-            placeholder={translate('reportPlaceholder', {
-              lowerLimit: descriptionLowerLimit,
-            })}
-          />
-        </KeyboardAvoidingView>
-        <Typography
+        <TextInput
+          ref={textInputRef}
+          autoFocus={Platform.OS === 'ios'}
+          defaultValue={description}
+          onChangeText={handleChangeText}
+          multiline
           style={[
-            styles.caution,
+            styles.textInput,
             {
-              color: isLEDTheme ? '#fff' : '#555',
-              lineHeight: Platform.select({ ios: RFValue(18) }),
+              color: isLEDTheme ? '#fff' : '#000',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             },
           ]}
+          placeholder={translate('reportPlaceholder', {
+            lowerLimit: descriptionLowerLimit,
+          })}
+        />
+      </KeyboardAvoidingView>
+      <Typography
+        style={[
+          styles.caution,
+          {
+            color: isLEDTheme ? '#fff' : '#555',
+            lineHeight: Platform.select({ ios: RFValue(18) }),
+          },
+        ]}
+      >
+        {translate('reportCaution')}
+      </Typography>
+      <View style={styles.buttonContainer}>
+        <Button
+          style={[
+            styles.button,
+            {
+              width: widthScale(64),
+            },
+          ]}
+          disabled={charCount < descriptionLowerLimit || sending}
+          onPress={handleSubmit}
         >
-          {translate('reportCaution')}
-        </Typography>
-        <View style={styles.buttonContainer}>
-          <Button
-            style={[
-              styles.button,
-              {
-                width: widthScale(64),
-              },
-            ]}
-            disabled={
-              description.trim().length < descriptionLowerLimit || sending
-            }
-            onPress={onSubmit}
-          >
-            {sending
-              ? translate('reportSendInProgress')
-              : translate('reportSend')}
-          </Button>
-          <Button disabled={sending} style={styles.button} onPress={onClose}>
-            {translate('cancel')}
-          </Button>
-        </View>
-      </Pressable>
+          {sending
+            ? translate('reportSendInProgress')
+            : translate('reportSend')}
+        </Button>
+        <Button disabled={sending} style={styles.button} onPress={onClose}>
+          {translate('cancel')}
+        </Button>
+      </View>
     </CustomModal>
   );
 };
