@@ -165,10 +165,12 @@ const NewReportModal: React.FC<Props> = ({
 
           {needsLeftCount < 0 ? (
             <Typography style={styles.charCount}>
-              あと{Math.abs(needsLeftCount)}文字必要です
+              {translate('remainingCharacters', { count: -needsLeftCount })}
             </Typography>
           ) : (
-            <Typography style={styles.charCount}>送信可能です</Typography>
+            <Typography style={styles.charCount}>
+              {translate('sendable')}
+            </Typography>
           )}
         </View>
 

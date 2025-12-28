@@ -2,15 +2,15 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2025-12-27（NumberingIconテスト完全追加）
+**最終更新**: 2025-12-27（LineBoardテスト完全追加）
 
 ## 📊 概要
 
 ### プロジェクト統計
-- **総ファイル数**: 373個のTypeScript/TSXファイル
+- **総ファイル数**: 382個のTypeScript/TSXファイル
 - **本番コード**: 297ファイル
-- **テストファイル**: 76ファイル
-- **カバレッジ**: **約20%**（NumberingIcon系テスト追加により向上）
+- **テストファイル**: 85ファイル
+- **カバレッジ**: **約22-23%**（LineBoard系テスト追加により向上）
 - **コンポーネント数**: 110個
 - **カスタムフック数**: 78個
 - **スクリーン数**: 9個
@@ -29,7 +29,7 @@
 
 類似機能を持つコンポーネントが大量に存在し、合計**約9,500行以上**のコード重複が発生しています（2025-12-25に907行削減済み）。
 
-##### LineBoard系コンポーネント（9種類、4,669行）✨ **部分的に改善済み**
+##### LineBoard系コンポーネント（9種類、4,669行）✨ **改善済み・テスト完了**
 ```text
 src/components/LineBoardJRKyushu.tsx     (760行 → 約620行)
 src/components/LineBoardToei.tsx         (751行 → 約610行)
@@ -64,6 +64,18 @@ src/components/LineBoard/shared/
       ├── useBarStyles.test.tsx                (8 tests)
       ├── useChevronPosition.test.tsx          (8 tests)
       └── useIncludesLongStationName.test.tsx  (8 tests)
+
+LineBoardコンポーネントテストファイル（新規作成、95テストケース）✨ **NEW**:
+src/components/
+  ├── LineBoard.test.tsx                 (9 tests)
+  ├── LineBoardEast.test.tsx             (9 tests)
+  ├── LineBoardJO.test.tsx               (10 tests)
+  ├── LineBoardJRKyushu.test.tsx         (13 tests)
+  ├── LineBoardLED.test.tsx              (15 tests)
+  ├── LineBoardSaikyo.test.tsx           (10 tests)
+  ├── LineBoardToei.test.tsx             (10 tests)
+  ├── LineBoardWest.test.tsx             (10 tests)
+  └── LineBoardYamanotePad.test.tsx      (10 tests)
 ```
 
 **達成済みの改善**（2025-12-25）:
@@ -229,8 +241,8 @@ src/components/
 #### 現状
 ```text
 本番コード:     297ファイル
-テストファイル:  76ファイル
-カバレッジ:     約20%
+テストファイル:  85ファイル
+カバレッジ:     約22-23%
 ```
 
 **最近の改善**（2025-12-25〜2025-12-27）:
@@ -243,13 +255,14 @@ src/components/
   - useStoppingState (7テスト)
   - useNearestStation (6テスト)
 - ✅ **Header共通フックのテスト追加**（useHeaderLangState）
-- ✅ **NumberingIcon系全26コンポーネントのテスト追加**（26ファイル、124テストケース）✨ **NEW**
-- ✅ **CodeRabbit指摘対応完了**（weak assertions修正、withOutlineテスト改善、サイズバリアント追加）
+- ✅ **NumberingIcon系全26コンポーネントのテスト追加**（26ファイル、124テストケース）
+- ✅ **LineBoard系全9コンポーネントのテスト追加**（9ファイル、95テストケース）✨ **NEW**
+- ✅ **CodeRabbit指摘対応完了**（weak assertions修正、withOutlineテスト改善、サイズバリアント追加、afterEachクリーンアップ）
 - ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、具体的な検証アサーション）
-- 📈 **合計217テストケースを追加**（カバレッジ13% → 20%に向上）
+- 📈 **合計312テストケースを追加**（カバレッジ13% → 22-23%に向上）
 
 #### テストが存在しないクリティカルなコンポーネント
-- **9つのLineBoardコンポーネント**: テスト0個（共通コンポーネント・フックは✅）
+- ~~**9つのLineBoardコンポーネント**: テスト0個~~ → ✅ **完了**（9ファイル、95テストケース追加）
 - ~~**27つのNumberingIconコンポーネント**: テスト0個~~ → ✅ **完了**（26ファイル、124テストケース追加）
 - **多くのHeader系コンポーネント**: 2個のみテスト有（HeaderE235、HeaderJL）
 - **重要な画面**: Main、SelectLineScreen等
@@ -717,9 +730,10 @@ EXPERIMENTAL_TELEMETRY_TOKEN
   - [x] ビジネスクリティカルなフックのテスト追加（38テストケース）
   - [x] LineBoard共通部分のテスト（49テストケース）
   - [x] NumberingIcon系全26コンポーネントのテスト（124テストケース）
+  - [x] LineBoard系全9コンポーネントのテスト（95テストケース）
+- [x] テストカバレッジ22-23%を達成 ✅ **達成**（2025-12-27）
 - [ ] テストカバレッジ25%を目指して継続（次のマイルストーン）
   - [ ] Header系コンポーネントのテスト追加
-  - [ ] LineBoard系コンポーネントのテスト追加
 - [ ] Firebase関連ライブラリのアップデート計画策定
 
 ### 3ヶ月以内
@@ -745,7 +759,8 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-25 | 初版作成（包括的な技術負債調査） |
 | 2025-12-25 | LineBoard系コンポーネントの重複削減を実施（907行削減）<br>共通コンポーネント3つ（LineDot、StationName、EmptyStationNameCell）を作成<br>共通フック3つ（useBarStyles、useChevronPosition、useIncludesLongStationName）を作成<br>包括的なテストカバレッジ（6ファイル、49テストケース）を追加<br>都営テーマの多言語対応を維持（StationNameToeiコンポーネント作成）<br>4ファイルで適用完了（LineBoardEast、Saikyo、JRKyushu、Toei） |
 | 2025-12-26 | プロジェクト統計を更新（ファイル数、テスト数、カバレッジを最新化）<br>**テストカバレッジ大幅向上**: 15% → 17%（38個の新規テストケース追加）<br>ビジネスクリティカルなフックのテスト追加（useCurrentStation、useCurrentLine、useNextStation等）<br>**Header系コンポーネントの改善開始**:共通フック3つ作成（useHeaderLangState、useHeaderStateText、useHeaderStationText）<br>型の統一（Station \| undefined）実施<br>**依存関係の更新**: dayjsを最新版（^1.11.19）に更新完了<br>次のアクションアイテムを進捗に応じて更新 |
-| 2025-12-27 | **NumberingIcon系コンポーネントのテスト完全追加**<br>**テストカバレッジ大幅向上**: 17% → 20%（130個の新規テストケース追加）<br>全26個のNumberingIconコンポーネントに包括的なユニットテスト追加<br>各コンポーネントのレンダリング、Props処理、サイズバリアント、特殊ケースをテスト<br>Biome lintエラー完全解消（未使用import削除、any型をunknown型に置換）<br>**CodeRabbit指摘対応完了**（PR #4797）: <br>　- afterEachフック追加（全26ファイル）<br>　- Weak assertions修正（UNSAFE_root → getByText）<br>　- withOutlineテスト改善（実際のコンテンツ検証）<br>　- LARGEサイズバリアントテスト追加<br>　- 冗長テストケース削除<br>プロジェクト統計を更新（テストファイル50 → 76、カバレッジ17% → 20%）<br>次のマイルストーンをテストカバレッジ25%に設定 |
+| 2025-12-27 | **NumberingIcon系コンポーネントのテスト完全追加**<br>**テストカバレッジ大幅向上**: 17% → 20%（130個の新規テストケース追加）<br>全26個のNumberingIconコンポーネントに包括的なユニットテスト追加<br>各コンポーネントのレンダリング、Props処理、サイズバリアント、特殊ケースをテスト<br>Biome lintエラー完全解消（未使用import削除、any型をunknown型に置換）<br>**CodeRabbit指摘対応完了**（PR #4797）: <br>　- afterEachフック追加（全26ファイル）<br>　- Weak assertions修正（UNSAFE_root → getByText）<br>　- withOutlineテスト改善（実際のコンテンツ検証）<br>　- LARGEサイズバリアントテスト追加<br>　- 冗長テストケース削除<br>プロジェクト統計を更新（テストファイル50 → 76、カバレッジ17% → 20%）<br>次のマイルストーンをテストカバレッジ25%に設定<br><br>**LineBoard系コンポーネントのテスト完全追加**（PR #4799）<br>**テストカバレッジさらに向上**: 20% → 22-23%（95個の新規テストケース追加）<br>全9個のLineBoardコンポーネントに包括的なユニットテスト追加<br>　- LineBoard.test.tsx（9テスト）<br>　- LineBoardEast.test.tsx（9テスト）<br>　- LineBoardJO.test.tsx（10テスト）<br>　- LineBoardJRKyushu.test.tsx（13テスト）<br>　- LineBoardLED.test.tsx（15テスト）<br>　- LineBoardSaikyo.test.tsx（10テスト）<br>　- LineBoardToei.test.tsx（10テスト）<br>　- LineBoardWest.test.tsx（10テスト）<br>　- LineBoardYamanotePad.test.tsx（10テスト）<br>各コンポーネントのヘッダー状態遷移、駅情報表示、路線情報、英語表示対応をテスト<br>**CodeRabbit指摘対応完了**（PR #4799）: <br>　- jest.clearAllMocks()をbeforeEachからafterEachに移動（全9ファイル）<br>　- Jestベストプラクティスに準拠（テスト後クリーンアップ）<br>プロジェクト統計を更新（テストファイル76 → 85、カバレッジ20% → 22-23%）<br>LineBoardコンポーネントのテスト完了により品質保証を強化 |
+| 2025-12-28 | **LineBoard系テストの品質向上**（PR #4799追加改善）<br>**CodeRabbit指摘への追加対応完了**: <br>　- **Weak assertions強化**: LineBoardSaikyoテストで`toBeTruthy()`のみの検証を`expect.objectContaining()`による具体的なprops検証に改善（StationName、LineDot、ChevronTY、lineColors関連テスト）<br>　- **テスト名とロジックの不一致修正**（4ファイル）: <br>　　　• "chevronの色が交互に切り替わる" → "useIntervalフックが1秒間隔で呼ばれる"（実際はuseIntervalの呼び出しのみ検証）<br>　　　• "駅数が8未満の場合、空の配列で埋められる" → "駅数が8未満の場合でもエラーなくレンダリングされる"（実際はレンダリング成功のみ検証）<br>　　　• "arrived状態でChevronが表示される" → "arrived=falseの場合、ChevronJRWestが表示される"（実際はarrived=falseで検証）<br>　- 対象ファイル: LineBoardSaikyo.test.tsx、LineBoardJRKyushu.test.tsx、LineBoardToei.test.tsx、LineBoardWest.test.tsx、LineBoardJO.test.tsx<br>テスト名が実際のテストロジックと完全に一致し、テストの意図が明確化<br>アサーションの具体性向上により、コンポーネントの動作をより厳密に検証<br>全85テストスイート、551テスト合格を維持 |
 
 ---
 

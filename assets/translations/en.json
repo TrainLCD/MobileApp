@@ -208,5 +208,7 @@
   "chinese": "Chinese (Simplified)",
   "korean": "Korean",
   "ttsLanguageSettings": "Automatic announcement language settings",
-  "theme": "Theme"
+  "theme": "Theme",
+  "remainingCharacters": "%{count} more characters required",
+  "sendable": "You can send"
 }
