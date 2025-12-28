@@ -133,6 +133,7 @@ describe('LineBoardWest', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('barTerminalが正しく表示される', () => {
@@ -143,16 +144,18 @@ describe('LineBoardWest', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
+    expect(useAtomValue).toHaveBeenCalled();
   });
 
   it('各駅のStationNameCellが正しくレンダリングされる', () => {
-    const result = render(
+    const Typography = require('./Typography').default;
+    render(
       <LineBoardWest
         stations={mockStations}
         lineColors={['#00a7db', '#00a7db']}
       />
     );
-    expect(result.toJSON()).toBeTruthy();
+    expect(Typography).toHaveBeenCalled();
   });
 
   it('駅数が8未満の場合、空の配列で埋められる', () => {
@@ -161,14 +164,14 @@ describe('LineBoardWest', () => {
       <LineBoardWest stations={singleStation} lineColors={['#00a7db']} />
     );
     expect(result.toJSON()).toBeTruthy();
+    expect(useCurrentLine).toHaveBeenCalled();
   });
 
   it('lineColorsが正しく適用される', () => {
     const customColors = ['#ff0000', '#00ff00'];
-    const result = render(
-      <LineBoardWest stations={mockStations} lineColors={customColors} />
-    );
-    expect(result.toJSON()).toBeTruthy();
+    render(<LineBoardWest stations={mockStations} lineColors={customColors} />);
+    expect(useCurrentLine).toHaveBeenCalled();
+    expect(useAtomValue).toHaveBeenCalled();
   });
 
   it('arrived状態でChevronが表示される', () => {
@@ -209,6 +212,7 @@ describe('LineBoardWest', () => {
 
   it('PadLineMarksが正しく表示される', () => {
     const PadLineMarks = require('./PadLineMarks').default;
+    const { useGetLineMark } = require('~/hooks');
     render(
       <LineBoardWest
         stations={mockStations}
@@ -216,5 +220,6 @@ describe('LineBoardWest', () => {
       />
     );
     expect(PadLineMarks).toHaveBeenCalled();
+    expect(useGetLineMark).toHaveBeenCalled();
   });
 });
