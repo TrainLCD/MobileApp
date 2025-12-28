@@ -74,13 +74,13 @@ describe('LineBoardWest', () => {
       groupId: 1,
       name: '大阪',
       line: mockLine,
-    } as Station,
+    } as unknown as Station,
     {
       id: 2,
       groupId: 2,
       name: '三ノ宮',
       line: mockLine,
-    } as Station,
+    } as unknown as Station,
   ];
 
   beforeEach(() => {
@@ -202,7 +202,7 @@ describe('LineBoardWest', () => {
             stationNumber: 'JR-A01',
           },
         ],
-      } as Station,
+      } as unknown as Station,
     ];
     const result = render(
       <LineBoardWest stations={stationsWithNumbers} lineColors={['#00a7db']} />

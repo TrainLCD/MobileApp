@@ -60,7 +60,7 @@ describe('LineBoardLED', () => {
     name: '新宿',
     nameRoman: 'Shinjuku',
     stopCondition: StopCondition.All,
-  } as Station;
+  } as unknown as Station;
 
   const mockAfterNextStation: Station = {
     id: 3,
@@ -68,7 +68,7 @@ describe('LineBoardLED', () => {
     name: '渋谷',
     nameRoman: 'Shibuya',
     stationNumbers: [{ stationNumber: 'JY-20' }],
-  } as Station;
+  } as unknown as Station;
 
   beforeEach(() => {
     let callCount = 0;

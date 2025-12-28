@@ -91,7 +91,7 @@ describe('LineBoardToei', () => {
           stationNumber: 'A-10',
         },
       ],
-    } as Station,
+    } as unknown as Station,
     {
       id: 2,
       groupId: 2,
@@ -105,7 +105,7 @@ describe('LineBoardToei', () => {
           stationNumber: 'A-11',
         },
       ],
-    } as Station,
+    } as unknown as Station,
   ];
 
   beforeEach(() => {

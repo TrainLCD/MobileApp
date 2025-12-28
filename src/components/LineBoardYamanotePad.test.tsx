@@ -58,7 +58,7 @@ describe('LineBoardYamanotePad', () => {
           stationNumber: 'JY-01',
         },
       ],
-    } as Station,
+    } as unknown as Station,
     {
       id: 2,
       groupId: 2,
@@ -70,7 +70,7 @@ describe('LineBoardYamanotePad', () => {
           stationNumber: 'JY-02',
         },
       ],
-    } as Station,
+    } as unknown as Station,
     {
       id: 3,
       groupId: 3,
@@ -82,7 +82,7 @@ describe('LineBoardYamanotePad', () => {
           stationNumber: 'JY-03',
         },
       ],
-    } as Station,
+    } as unknown as Station,
   ];
 
   beforeEach(() => {

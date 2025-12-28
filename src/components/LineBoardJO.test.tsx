@@ -88,13 +88,13 @@ describe('LineBoardJO', () => {
       groupId: 1,
       name: '東京',
       line: mockLine,
-    } as Station,
+    } as unknown as Station,
     {
       id: 2,
       groupId: 2,
       name: '品川',
       line: mockLine,
-    } as Station,
+    } as unknown as Station,
   ];
 
   beforeEach(() => {

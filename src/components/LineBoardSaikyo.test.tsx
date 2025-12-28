@@ -69,13 +69,13 @@ describe('LineBoardSaikyo', () => {
       groupId: 1,
       name: '大宮',
       line: mockLine,
-    } as Station,
+    } as unknown as Station,
     {
       id: 2,
       groupId: 2,
       name: '新宿',
       line: mockLine,
-    } as Station,
+    } as unknown as Station,
   ];
 
   beforeEach(() => {
