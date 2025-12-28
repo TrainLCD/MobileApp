@@ -215,6 +215,8 @@ describe('LineBoardYamanotePad', () => {
 
     render(<LineBoardYamanotePad stations={manyStations} />);
     expect(PadArch).toHaveBeenCalled();
+    const callArgs = PadArch.mock.calls[0][0];
+    expect(callArgs.stations).toHaveLength(6);
   });
 
   it('transferLinesが正しく渡される', () => {
