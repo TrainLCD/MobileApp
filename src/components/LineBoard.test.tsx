@@ -67,7 +67,6 @@ describe('LineBoard', () => {
   const LineBoardToei = require('./LineBoardToei').default;
   const LineBoardWest = require('./LineBoardWest').default;
   const LineBoardSaikyo = require('./LineBoardSaikyo').default;
-  const _LineBoardYamanotePad = require('./LineBoardYamanotePad').default;
   const LineBoardJO = require('./LineBoardJO').default;
   const LineBoardLED = require('./LineBoardLED').default;
   const LineBoardJRKyushu = require('./LineBoardJRKyushu').default;
@@ -170,13 +169,9 @@ describe('LineBoard', () => {
     useThemeStore.mockReturnValue(APP_THEME.TY);
     render(<LineBoard />);
 
-    expect(LineBoardEast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stations: expect.arrayContaining([
-          expect.objectContaining({ name: '駅0' }),
-        ]),
-      }),
-      undefined
-    );
+    const callArgs = LineBoardEast.mock.calls[0][0];
+    expect(callArgs.stations).toHaveLength(8);
+    expect(callArgs.stations[0]).toMatchObject({ name: '駅0' });
+    expect(callArgs.stations[7]).toMatchObject({ name: '駅7' });
   });
 });
