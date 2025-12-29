@@ -41,9 +41,7 @@ const styles = StyleSheet.create({
   modalView: {
     paddingVertical: 32,
     width: '100%',
-    borderRadius: 0,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
   },
   textInput: {
     borderWidth: 1,
