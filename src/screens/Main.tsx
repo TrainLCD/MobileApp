@@ -1,8 +1,9 @@
+import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -12,9 +13,15 @@ import React, {
 } from 'react';
 import { Alert, Linking, Platform, Pressable, StyleSheet } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { LineType, type Station, StopCondition } from '~/@types/graphql';
+import {
+  LineType,
+  type Station,
+  StopCondition,
+  type TrainType,
+} from '~/@types/graphql';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
+import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
   useAutoMode,
@@ -39,7 +46,12 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import {
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+} from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
+import lineState from '~/store/atoms/line';
 import tuningState from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
@@ -55,16 +67,35 @@ import stationState from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
 
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
 const MainScreen: React.FC = () => {
   const [isRotated, setIsRotated] = useState(false);
+  const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
 
   const theme = useThemeStore();
   const isLEDTheme = theme === APP_THEME.LED;
 
-  const [{ stations, selectedDirection, arrived }, _setStationState] =
+  const [{ stations, selectedDirection, arrived }, setStationState] =
     useAtom(stationState);
   const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
@@ -81,8 +112,55 @@ const MainScreen: React.FC = () => {
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
+  const [
+    fetchStationsByLineGroupId,
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
+
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
+
+  const handleCloseSelectBoundModal = useCallback(() => {
+    setIsSelectBoundModalOpen(false);
+    ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.LANDSCAPE
+    ).catch(console.error);
+  }, []);
+
+  const handleTrainTypeSelect = useCallback(
+    async (trainType: TrainType) => {
+      if (trainType.groupId == null) return;
+      const res = await fetchStationsByLineGroupId({
+        variables: {
+          lineGroupId: trainType.groupId,
+        },
+      });
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations: res.data?.lineGroupStations ?? [],
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        trainType,
+      }));
+    },
+    [fetchStationsByLineGroupId, setStationState, setNavigationState]
+  );
 
   const hasTerminus = useMemo((): boolean => {
     if (
@@ -436,16 +514,30 @@ const MainScreen: React.FC = () => {
     f();
   }, [isRotated]);
 
-  const changeOperatingLine = useCallback(async (selectedStation: Station) => {
-    const selectedLine = selectedStation.line;
-    if (!selectedLine) {
-      return;
-    }
-    // TODO: 実装し直す
-    if (isDevApp) {
-      Alert.alert('Unimplemented', 'This feature is not implemented yet.');
-    }
-  }, []);
+  const changeOperatingLine = useCallback(
+    async (selectedStation: Station) => {
+      const selectedLine = selectedStation.line;
+      if (!selectedStation.id || !selectedLine?.id) {
+        return;
+      }
+
+      await ScreenOrientation.unlockAsync().catch(console.error);
+
+      setIsSelectBoundModalOpen(true);
+
+      const { data } = await fetchStationsByLineId({
+        variables: { lineId: selectedLine.id, stationId: selectedStation.id },
+      });
+
+      setLineState((prev) => ({ ...prev, pendingLine: selectedLine }));
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation: selectedStation,
+        pendingStations: data?.lineStations ?? [],
+      }));
+    },
+    [setStationState, setLineState, fetchStationsByLineId]
+  );
 
   const handleTransferPress = useCallback(
     (selectedStation?: Station) => {
@@ -540,6 +632,19 @@ const MainScreen: React.FC = () => {
         <Header />
         {inner}
       </Pressable>
+
+      <SelectBoundModal
+        visible={isSelectBoundModalOpen}
+        onClose={handleCloseSelectBoundModal}
+        onBoundSelect={handleCloseSelectBoundModal}
+        onTrainTypeSelect={handleTrainTypeSelect}
+        loading={
+          fetchStationsByLineGroupIdLoading || fetchStationsByLineIdLoading
+        }
+        error={
+          fetchStationsByLineGroupIdError || fetchStationsByLineIdError || null
+        }
+      />
 
       {isDevApp && devOverlayEnabled && <DevOverlay />}
     </>
