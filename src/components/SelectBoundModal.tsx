@@ -176,6 +176,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         pendingStations: [],
         wantedDestination: null,
       }));
+      setNavigationState((prev) => ({ ...prev, leftStations: [] }));
       onBoundSelect();
       requestAnimationFrame(() => {
         navigation.navigate('Main' as never);
@@ -187,6 +188,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       line,
       setLineState,
       setStationState,
+      setNavigationState,
       stations,
       onBoundSelect,
       getTerminatedStations,
