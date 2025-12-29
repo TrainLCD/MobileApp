@@ -186,7 +186,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           url: urlString,
           type: 'image/png',
         };
-        return Share.open(options);
+
+        ScreenOrientation.unlockAsync().catch(console.error);
+
+        return Share.open(options).finally(() => {
+          ScreenOrientation.lockAsync(
+            ScreenOrientation.OrientationLock.LANDSCAPE
+          ).catch(console.error);
+        });
       }),
       Effect.runPromise
     );
