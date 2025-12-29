@@ -1,8 +1,10 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   TextInput,
   type TextInput as TextInputType,
@@ -156,19 +158,21 @@ const NewReportModal: React.FC<Props> = ({
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.header}>
-          <Heading>{translate('report')}</Heading>
+        <Pressable onPress={Keyboard.dismiss}>
+          <View style={styles.header}>
+            <Heading>{translate('report')}</Heading>
 
-          {needsLeftCount < 0 ? (
-            <Typography style={styles.charCount}>
-              {translate('remainingCharacters', { count: -needsLeftCount })}
-            </Typography>
-          ) : (
-            <Typography style={styles.charCount}>
-              {translate('sendable')}
-            </Typography>
-          )}
-        </View>
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                {translate('remainingCharacters', { count: -needsLeftCount })}
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>
+                {translate('sendable')}
+              </Typography>
+            )}
+          </View>
+        </Pressable>
 
         <TextInput
           ref={textInputRef}
@@ -188,17 +192,19 @@ const NewReportModal: React.FC<Props> = ({
           })}
         />
       </KeyboardAvoidingView>
-      <Typography
-        style={[
-          styles.caution,
-          {
-            color: isLEDTheme ? '#fff' : '#555',
-            lineHeight: Platform.select({ ios: RFValue(18) }),
-          },
-        ]}
-      >
-        {translate('reportCaution')}
-      </Typography>
+      <Pressable onPress={Keyboard.dismiss}>
+        <Typography
+          style={[
+            styles.caution,
+            {
+              color: isLEDTheme ? '#fff' : '#555',
+              lineHeight: Platform.select({ ios: RFValue(18) }),
+            },
+          ]}
+        >
+          {translate('reportCaution')}
+        </Typography>
+      </Pressable>
       <View style={styles.buttonContainer}>
         <Button
           style={[
