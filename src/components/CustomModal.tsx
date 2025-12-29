@@ -118,7 +118,7 @@ export const CustomModal: React.FC<Props> = ({
         />
         <Toast />
 
-        {avoidKeyboard && Platform.OS === 'ios' ? (
+        {avoidKeyboard ? (
           <KeyboardAvoidingView
             style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
             behavior="padding"
