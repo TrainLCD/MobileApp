@@ -5,6 +5,7 @@ import { Effect, pipe } from 'effect';
 import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
@@ -133,6 +134,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       Effect.andThen((base64) => {
         setScreenShotBase64(base64);
         setReportModalShow(true);
+        return ScreenOrientation.unlockAsync();
       }),
       Effect.runPromise
     );
@@ -383,6 +385,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleNewReportModalClose = useCallback(() => {
     setScreenShotBase64('');
     setReportModalShow(false);
+
+    ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.LANDSCAPE
+    ).catch(console.error);
   }, []);
 
   const handleReportSend = useCallback(

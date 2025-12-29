@@ -104,7 +104,9 @@
   "autoModeSettings": "Auto mode",
   "autoModeInProgress": "Auto mode is enabled. In-app location will not affected by actual location changes.",
   "report": "Send a feedback",
-  "reportCaution": "Screenshots will be sent automatically. No personally identifiable information (such as location) will be sent.",
+  "reportModalTitle": "Send a feedback",
+  "reportBodyTitle": "Report content",
+  "reportCaution": "Screenshots will be sent automatically.\nNo personally identifiable information (such as location) will be sent.",
   "reportSend": "Send",
   "reportSendInProgress": "Sending...",
   "reportError": "Sorry, your feedback submission did not complete successfully. Please try again a few moments later.",
@@ -210,5 +212,8 @@
   "ttsLanguageSettings": "Automatic announcement language settings",
   "theme": "Theme",
   "remainingCharacters": "%{count} more characters required",
-  "sendable": "You can send"
+  "sendable": "You can send",
+  "confirmDiscardTitle": "Discard input?",
+  "confirmDiscardMessage": "Your input will not be saved.",
+  "discard": "Discard"
 }
