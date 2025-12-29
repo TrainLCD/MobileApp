@@ -1,7 +1,14 @@
 import { Portal } from '@gorhom/portal';
 import React, { useEffect, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Animated, {
   cancelAnimation,
   createAnimatedComponent,
@@ -23,6 +30,7 @@ type Props = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   animationDuration?: number;
   testID?: string;
+  avoidKeyboard?: boolean;
 };
 
 const ANIMATION_DURATION = 180;
@@ -38,6 +46,7 @@ export const CustomModal: React.FC<Props> = ({
   contentContainerStyle,
   animationDuration = ANIMATION_DURATION,
   testID,
+  avoidKeyboard = false,
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
@@ -109,21 +118,40 @@ export const CustomModal: React.FC<Props> = ({
         />
         <Toast />
 
-        <View
-          style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
-          pointerEvents="box-none"
-        >
-          <Animated.View
-            style={[
-              styles.content,
-              contentContainerStyle,
-              animatedContentStyle,
-            ]}
-            pointerEvents="auto"
+        {avoidKeyboard ? (
+          <KeyboardAvoidingView
+            style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            pointerEvents="box-none"
           >
-            {children}
-          </Animated.View>
-        </View>
+            <Animated.View
+              style={[
+                styles.content,
+                contentContainerStyle,
+                animatedContentStyle,
+              ]}
+              pointerEvents="auto"
+            >
+              {children}
+            </Animated.View>
+          </KeyboardAvoidingView>
+        ) : (
+          <View
+            style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+            pointerEvents="box-none"
+          >
+            <Animated.View
+              style={[
+                styles.content,
+                contentContainerStyle,
+                animatedContentStyle,
+              ]}
+              pointerEvents="auto"
+            >
+              {children}
+            </Animated.View>
+          </View>
+        )}
       </View>
     </Portal>
   );
