@@ -1,7 +1,7 @@
 import { Portal } from '@gorhom/portal';
 import React, { useEffect, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   createAnimatedComponent,
@@ -81,6 +81,7 @@ export const CustomModal: React.FC<Props> = ({
   }, [animationDuration, opacity, visible]);
 
   const handleBackdropPress = () => {
+    Keyboard.dismiss();
     if (dismissOnBackdropPress) {
       onClose?.();
     }
@@ -104,7 +105,7 @@ export const CustomModal: React.FC<Props> = ({
             backdropStyle,
             animatedBackdropStyle,
           ]}
-          onPress={dismissOnBackdropPress ? handleBackdropPress : undefined}
+          onPress={handleBackdropPress}
         />
         <Toast />
 
