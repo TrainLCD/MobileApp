@@ -5,6 +5,7 @@ import { Effect, pipe } from 'effect';
 import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
@@ -50,7 +51,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setTuning = useSetAtom(tuningState);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
-  const [reportDescription, setReportDescription] = useState('');
   const [screenShotBase64, setScreenShotBase64] = useState('');
 
   useCheckStoreVersion();
@@ -134,6 +134,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       Effect.andThen((base64) => {
         setScreenShotBase64(base64);
         setReportModalShow(true);
+        return ScreenOrientation.unlockAsync();
       }),
       Effect.runPromise
     );
@@ -167,7 +168,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           catch: captureError,
         })
       ),
-      Effect.andThen((base64) => {
+      Effect.andThen(async (base64) => {
         const urlString = `data:image/jpeg;base64,${base64}`;
 
         const message = isJapanese
@@ -185,7 +186,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           url: urlString,
           type: 'image/png',
         };
-        return Share.open(options);
+        await ScreenOrientation.unlockAsync().catch(console.error);
+        await Share.open(options).catch(console.warn);
+        return ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        ).catch(console.error);
       }),
       Effect.runPromise
     );
@@ -382,73 +387,78 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 
   const handleNewReportModalClose = useCallback(() => {
-    setReportDescription('');
     setScreenShotBase64('');
     setReportModalShow(false);
+
+    ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.LANDSCAPE
+    ).catch(console.error);
   }, []);
 
-  const handleReportSend = useCallback(() => {
-    if (reportDescription.length < descriptionLowerLimit) {
+  const handleReportSend = useCallback(
+    (description: string) => {
+      if (description.trim().length < descriptionLowerLimit) {
+        Alert.alert(
+          translate('errorTitle'),
+          translate('feedbackCharactersCountNotReached', {
+            lowerLimit: descriptionLowerLimit,
+          })
+        );
+        return;
+      }
+
+      const captureError = (err: unknown) =>
+        Effect.sync(() => {
+          console.error(err);
+          setSendingReport(false);
+          Alert.alert(translate('errorTitle'), translate('reportError'));
+        });
+
       Alert.alert(
-        translate('errorTitle'),
-        translate('feedbackCharactersCountNotReached', {
-          lowerLimit: descriptionLowerLimit,
-        })
-      );
-      return;
-    }
-
-    const captureError = (err: unknown) =>
-      Effect.sync(() => {
-        console.error(err);
-        setSendingReport(false);
-        Alert.alert(translate('errorTitle'), translate('reportError'));
-      });
-
-    Alert.alert(
-      translate('announcementTitle'),
-      translate('reportConfirmText'),
-      [
-        {
-          text: translate('agree'),
-          style: 'destructive',
-          onPress: () => {
-            setSendingReport(true);
-            pipe(
-              Effect.tryPromise({
-                try: () =>
-                  sendReport({
-                    reportType: 'feedback',
-                    description: reportDescription.trim(),
-                    screenShotBase64,
-                  }),
-                catch: captureError,
-              }),
-              Effect.andThen(() => {
-                setSendingReport(false);
-                Alert.alert(
-                  translate('announcementTitle'),
-                  translate('reportSuccessText')
-                );
-                handleNewReportModalClose();
-              }),
-              Effect.runPromise
-            );
+        translate('announcementTitle'),
+        translate('reportConfirmText'),
+        [
+          {
+            text: translate('agree'),
+            style: 'destructive',
+            onPress: () => {
+              setSendingReport(true);
+              pipe(
+                Effect.tryPromise({
+                  try: () =>
+                    sendReport({
+                      reportType: 'feedback',
+                      description: description.trim(),
+                      screenShotBase64,
+                    }),
+                  catch: captureError,
+                }),
+                Effect.andThen(() => {
+                  setSendingReport(false);
+                  Alert.alert(
+                    translate('announcementTitle'),
+                    translate('reportSuccessText')
+                  );
+                  handleNewReportModalClose();
+                }),
+                Effect.runPromise
+              );
+            },
           },
-        },
-        {
-          text: translate('disagree'),
-          style: 'cancel',
-        },
-      ]
-    );
-  }, [
-    descriptionLowerLimit,
-    handleNewReportModalClose,
-    reportDescription,
-    screenShotBase64,
-    sendReport,
-  ]);
+          {
+            text: translate('disagree'),
+            style: 'cancel',
+          },
+        ]
+      );
+    },
+    [
+      descriptionLowerLimit,
+      handleNewReportModalClose,
+      screenShotBase64,
+      sendReport,
+    ]
+  );
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
@@ -467,8 +477,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           visible={reportModalShow}
           sending={sendingReport}
           onClose={handleNewReportModalClose}
-          description={reportDescription}
-          onDescriptionChange={setReportDescription}
           onSubmit={handleReportSend}
           descriptionLowerLimit={descriptionLowerLimit}
         />

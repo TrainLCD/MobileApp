@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     textAlign: 'center',
     color: '#fff',
+    fontWeight: 'bold',
   },
   outlinedButton: {
     borderColor: '#008ffe',

@@ -105,7 +105,9 @@
   "autoModeSettings": "オートモード",
   "autoModeInProgress": "オートモードで動作中です。実際の位置情報の変化は反映されません。",
   "report": "フィードバック",
-  "reportCaution": "スクリーンショットは自動的に送信されます。個人を特定できるような情報（位置情報など）は送信されません。",
+  "reportModalTitle": "フィードバックを送信",
+  "reportBodyTitle": "報告内容",
+  "reportCaution": "スクリーンショットは自動的に送信されます。\n個人を特定できるような情報（位置情報など）は送信されません。",
   "reportSend": "送信",
   "reportSendInProgress": "送信中...",
   "reportError": "大変申し訳ありませんが、正常にフィードバック送信が完了しませんでした。しばらく経ってからもう一度お試しください。",
@@ -211,5 +213,8 @@
   "ttsLanguageSettings": "自動アナウンスの言語設定",
   "theme": "テーマ",
   "remainingCharacters": "あと%{count}文字必要です",
-  "sendable": "送信可能です"
+  "sendable": "送信可能です",
+  "confirmDiscardTitle": "入力内容を破棄しますか？",
+  "confirmDiscardMessage": "入力した内容は保存されません。",
+  "discard": "破棄"
 }
