@@ -164,10 +164,10 @@ const NewReportModal: React.FC<Props> = ({
       ]}
       dismissOnBackdropPress={!sending}
     >
-      <Pressable onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable onPress={Keyboard.dismiss}>
           <Heading style={styles.title}>
             {translate('reportModalTitle')}
           </Heading>
@@ -205,34 +205,35 @@ const NewReportModal: React.FC<Props> = ({
               </Typography>
             )}
           </View>
-        </KeyboardAvoidingView>
-        <Typography
-          style={[
-            styles.caution,
-            {
-              color: isLEDTheme ? '#fff' : '#000',
-              lineHeight: Platform.select({ ios: RFValue(14) }),
-            },
-          ]}
-        >
-          {translate('reportCaution')}
-        </Typography>
-        <View style={styles.buttonContainer}>
-          <Button disabled={sending} onPress={handleClose} outline>
-            {translate('close')}
-          </Button>
 
-          <Button
-            style={styles.sendButton}
-            disabled={charCount < descriptionLowerLimit || sending}
-            onPress={handleSubmit}
+          <Typography
+            style={[
+              styles.caution,
+              {
+                color: isLEDTheme ? '#fff' : '#000',
+                lineHeight: Platform.select({ ios: RFValue(14) }),
+              },
+            ]}
           >
-            {sending
-              ? translate('reportSendInProgress')
-              : translate('reportSend')}
-          </Button>
-        </View>
-      </Pressable>
+            {translate('reportCaution')}
+          </Typography>
+          <View style={styles.buttonContainer}>
+            <Button disabled={sending} onPress={handleClose} outline>
+              {translate('close')}
+            </Button>
+
+            <Button
+              style={styles.sendButton}
+              disabled={charCount < descriptionLowerLimit || sending}
+              onPress={handleSubmit}
+            >
+              {sending
+                ? translate('reportSendInProgress')
+                : translate('reportSend')}
+            </Button>
+          </View>
+        </Pressable>
+      </KeyboardAvoidingView>
     </CustomModal>
   );
 };
