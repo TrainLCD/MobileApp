@@ -1,8 +1,10 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   TextInput,
   type TextInput as TextInputType,
@@ -153,71 +155,73 @@ const NewReportModal: React.FC<Props> = ({
       ]}
       dismissOnBackdropPress={!sending}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={styles.header}>
-          <Heading>{translate('report')}</Heading>
-
-          {needsLeftCount < 0 ? (
-            <Typography style={styles.charCount}>
-              {translate('remainingCharacters', { count: -needsLeftCount })}
-            </Typography>
-          ) : (
-            <Typography style={styles.charCount}>
-              {translate('sendable')}
-            </Typography>
-          )}
-        </View>
-
-        <TextInput
-          ref={textInputRef}
-          autoFocus={Platform.OS === 'ios'}
-          defaultValue=""
-          onChangeText={handleChangeText}
-          multiline
-          style={[
-            styles.textInput,
-            {
-              color: isLEDTheme ? '#fff' : '#000',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            },
-          ]}
-          placeholder={translate('reportPlaceholder', {
-            lowerLimit: descriptionLowerLimit,
-          })}
-        />
-      </KeyboardAvoidingView>
-      <Typography
-        style={[
-          styles.caution,
-          {
-            color: isLEDTheme ? '#fff' : '#555',
-            lineHeight: Platform.select({ ios: RFValue(18) }),
-          },
-        ]}
-      >
-        {translate('reportCaution')}
-      </Typography>
-      <View style={styles.buttonContainer}>
-        <Button
-          style={[
-            styles.button,
-            {
-              width: widthScale(64),
-            },
-          ]}
-          disabled={charCount < descriptionLowerLimit || sending}
-          onPress={handleSubmit}
+      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          {sending
-            ? translate('reportSendInProgress')
-            : translate('reportSend')}
-        </Button>
-        <Button disabled={sending} style={styles.button} onPress={onClose}>
-          {translate('cancel')}
-        </Button>
-      </View>
+          <View style={styles.header}>
+            <Heading>{translate('report')}</Heading>
+
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                {translate('remainingCharacters', { count: -needsLeftCount })}
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>
+                {translate('sendable')}
+              </Typography>
+            )}
+          </View>
+
+          <TextInput
+            ref={textInputRef}
+            autoFocus={Platform.OS === 'ios'}
+            defaultValue=""
+            onChangeText={handleChangeText}
+            multiline
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : '#000',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
+            placeholder={translate('reportPlaceholder', {
+              lowerLimit: descriptionLowerLimit,
+            })}
+          />
+        </KeyboardAvoidingView>
+        <Typography
+          style={[
+            styles.caution,
+            {
+              color: isLEDTheme ? '#fff' : '#555',
+              lineHeight: Platform.select({ ios: RFValue(18) }),
+            },
+          ]}
+        >
+          {translate('reportCaution')}
+        </Typography>
+        <View style={styles.buttonContainer}>
+          <Button
+            style={[
+              styles.button,
+              {
+                width: widthScale(64),
+              },
+            ]}
+            disabled={charCount < descriptionLowerLimit || sending}
+            onPress={handleSubmit}
+          >
+            {sending
+              ? translate('reportSendInProgress')
+              : translate('reportSend')}
+          </Button>
+          <Button disabled={sending} style={styles.button} onPress={onClose}>
+            {translate('cancel')}
+          </Button>
+        </View>
+      </Pressable>
     </CustomModal>
   );
 };
