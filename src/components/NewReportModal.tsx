@@ -1,6 +1,6 @@
-import * as ScreenOrientation from 'expo-screen-orientation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -10,14 +10,10 @@ import {
   type TextInput as TextInputType,
   View,
 } from 'react-native';
-import { hasNotch } from 'react-native-device-info';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { useThemeStore } from '~/hooks';
-import { useScale } from '~/hooks/useScale';
 import { APP_THEME } from '~/models/Theme';
 import { translate } from '~/translation';
-import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -34,54 +30,65 @@ type Props = {
 
 const styles = StyleSheet.create({
   modalContainer: {
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     width: '100%',
     height: '100%',
+    padding: 0,
+  },
+  backdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
   },
   modalView: {
     paddingVertical: 32,
-    height: !isTablet ? '100%' : undefined,
     width: '100%',
+    borderRadius: 0,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   textInput: {
     borderWidth: 1,
     borderColor: '#aaa',
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     width: '100%',
     fontSize: RFValue(14),
-    marginVertical: 16,
+    marginTop: 8,
     textAlignVertical: 'top',
-    minHeight: '25%',
+    borderRadius: 8,
   },
   caution: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(11),
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 8,
+    marginTop: 12,
+    color: '#555',
   },
   buttonContainer: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    padding: 8,
-    marginTop: 8,
+    marginTop: 32,
+    gap: 16,
   },
-  button: {
-    marginTop: 8,
-    marginHorizontal: 8,
+  sendButton: {
+    width: 150,
   },
   charCount: {
-    position: 'absolute',
-    right: 0,
     fontWeight: 'bold',
     textAlign: 'right',
-    color: '#555555',
+    color: '#555',
+    marginTop: 4,
+    fontSize: RFValue(11),
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+  title: {
+    textAlign: 'left',
+  },
+  modalContent: {
+    marginTop: 21,
+  },
+  subtitle: {
+    textAlign: 'left',
+    fontSize: RFValue(14),
   },
 });
 
@@ -92,7 +99,6 @@ const NewReportModal: React.FC<Props> = ({
   onSubmit,
   descriptionLowerLimit,
 }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
   const textInputRef = useRef<TextInputType>(null);
   const textRef = useRef('');
@@ -116,51 +122,78 @@ const NewReportModal: React.FC<Props> = ({
     onSubmit(textRef.current);
   }, [onSubmit]);
 
+  const handleClose = useCallback(() => {
+    const hasInput = textRef.current.trim().length > 0;
+
+    if (hasInput) {
+      Alert.alert(
+        translate('confirmDiscardTitle'),
+        translate('confirmDiscardMessage'),
+        [
+          {
+            text: translate('cancel'),
+            style: 'cancel',
+          },
+          {
+            text: translate('discard'),
+            style: 'destructive',
+            onPress: onClose,
+          },
+        ]
+      );
+    } else {
+      onClose();
+    }
+  }, [onClose]);
+
   const needsLeftCount = charCount - descriptionLowerLimit;
-  const { widthScale } = useScale();
-
-  useEffect(() => {
-    ScreenOrientation.unlockAsync().catch(console.error);
-
-    return () => {
-      ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE
-      ).catch(console.error);
-    };
-  }, []);
 
   return (
     <CustomModal
       visible={visible}
-      onClose={onClose}
-      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      onClose={handleClose}
       containerStyle={styles.modalContainer}
+      backdropStyle={styles.backdrop}
       contentContainerStyle={[
         styles.modalView,
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          paddingLeft: hasNotch() ? safeAreaLeft : 32,
-          paddingRight: hasNotch() ? safeAreaRight : 32,
+          paddingLeft: 32,
+          paddingRight: 32,
         },
-        isTablet
-          ? {
-              width: '80%',
-              shadowOpacity: 0.25,
-              shadowColor: '#333',
-              borderRadius: 16,
-            }
-          : {
-              borderRadius: 8,
-            },
       ]}
       dismissOnBackdropPress={!sending}
     >
-      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+      <Pressable onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.header}>
-            <Heading>{translate('report')}</Heading>
+          <Heading style={styles.title}>
+            {translate('reportModalTitle')}
+          </Heading>
+
+          <View style={styles.modalContent}>
+            <Heading style={styles.subtitle}>
+              {translate('reportBodyTitle')}
+            </Heading>
+
+            <TextInput
+              ref={textInputRef}
+              autoFocus={Platform.OS === 'ios'}
+              defaultValue=""
+              onChangeText={handleChangeText}
+              multiline
+              style={[
+                styles.textInput,
+                {
+                  color: isLEDTheme ? '#fff' : '#000',
+                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                },
+              ]}
+              placeholder={translate('reportPlaceholder', {
+                lowerLimit: descriptionLowerLimit,
+              })}
+            />
 
             {needsLeftCount < 0 ? (
               <Typography style={styles.charCount}>
@@ -172,53 +205,31 @@ const NewReportModal: React.FC<Props> = ({
               </Typography>
             )}
           </View>
-
-          <TextInput
-            ref={textInputRef}
-            autoFocus={Platform.OS === 'ios'}
-            defaultValue=""
-            onChangeText={handleChangeText}
-            multiline
-            style={[
-              styles.textInput,
-              {
-                color: isLEDTheme ? '#fff' : '#000',
-                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-              },
-            ]}
-            placeholder={translate('reportPlaceholder', {
-              lowerLimit: descriptionLowerLimit,
-            })}
-          />
         </KeyboardAvoidingView>
         <Typography
           style={[
             styles.caution,
             {
-              color: isLEDTheme ? '#fff' : '#555',
-              lineHeight: Platform.select({ ios: RFValue(18) }),
+              color: isLEDTheme ? '#fff' : '#000',
+              lineHeight: Platform.select({ ios: RFValue(14) }),
             },
           ]}
         >
           {translate('reportCaution')}
         </Typography>
         <View style={styles.buttonContainer}>
+          <Button disabled={sending} onPress={handleClose} outline>
+            {translate('close')}
+          </Button>
+
           <Button
-            style={[
-              styles.button,
-              {
-                width: widthScale(64),
-              },
-            ]}
+            style={styles.sendButton}
             disabled={charCount < descriptionLowerLimit || sending}
             onPress={handleSubmit}
           >
             {sending
               ? translate('reportSendInProgress')
               : translate('reportSend')}
-          </Button>
-          <Button disabled={sending} style={styles.button} onPress={onClose}>
-            {translate('cancel')}
           </Button>
         </View>
       </Pressable>
