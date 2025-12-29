@@ -168,7 +168,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           catch: captureError,
         })
       ),
-      Effect.andThen((base64) => {
+      Effect.andThen(async (base64) => {
         const urlString = `data:image/jpeg;base64,${base64}`;
 
         const message = isJapanese
@@ -186,14 +186,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           url: urlString,
           type: 'image/png',
         };
-
-        ScreenOrientation.unlockAsync().catch(console.error);
-
-        return Share.open(options).finally(() => {
-          ScreenOrientation.lockAsync(
-            ScreenOrientation.OrientationLock.LANDSCAPE
-          ).catch(console.error);
-        });
+        await ScreenOrientation.unlockAsync().catch(console.error);
+        await Share.open(options).catch(console.warn);
+        return ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        ).catch(console.error);
       }),
       Effect.runPromise
     );
