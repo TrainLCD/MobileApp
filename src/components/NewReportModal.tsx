@@ -13,6 +13,7 @@ import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { useThemeStore } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -41,7 +42,10 @@ const styles = StyleSheet.create({
   modalView: {
     paddingVertical: 32,
     width: '100%',
-    borderRadius: 16,
+    // iPhoneのみ全方位に角丸を設定(KeyboardAvoidingViewでの見栄え関係)
+    borderRadius: !isTablet && Platform.OS === 'ios' ? 16 : 0,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   textInput: {
     borderWidth: 1,
