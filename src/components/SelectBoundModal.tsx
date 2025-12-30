@@ -115,7 +115,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     wantedDestination,
   } = stationAtom;
   const [
-    { autoModeEnabled, trainType, fetchedTrainTypes },
+    { autoModeEnabled, trainType, fetchedTrainTypes, pendingTrainType },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
@@ -176,7 +176,11 @@ export const SelectBoundModal: React.FC<Props> = ({
         pendingStations: [],
         wantedDestination: null,
       }));
-      setNavigationState((prev) => ({ ...prev, leftStations: [] }));
+      setNavigationState((prev) => ({
+        ...prev,
+        leftStations: [],
+        trainType: pendingTrainType,
+      }));
       onBoundSelect();
       requestAnimationFrame(() => {
         navigation.navigate('Main' as never);
@@ -185,11 +189,12 @@ export const SelectBoundModal: React.FC<Props> = ({
     [
       navigation,
       station,
+      stations,
       line,
+      pendingTrainType,
       setLineState,
       setStationState,
       setNavigationState,
-      stations,
       onBoundSelect,
       getTerminatedStations,
     ]
@@ -397,16 +402,16 @@ export const SelectBoundModal: React.FC<Props> = ({
       ? `${stations[0]?.name ?? ''}〜${stations[stations.length - 1]?.name ?? ''}`
       : `${stations[0]?.nameRoman ?? ''} - ${stations[stations.length - 1]?.nameRoman ?? ''}`;
 
-    if (trainType?.groupId) {
+    if (pendingTrainType?.groupId) {
       const trainTypeName =
-        (isJapanese ? trainType.name : trainType.nameRoman) ?? '';
+        (isJapanese ? pendingTrainType.name : pendingTrainType.nameRoman) ?? '';
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
         name: wantedDestination
           ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
           : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
         lineId: line.id ?? 0,
-        trainTypeId: trainType?.groupId,
+        trainTypeId: pendingTrainType?.groupId,
         createdAt: new Date(),
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
@@ -444,7 +449,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     saveCurrentRoute,
     wantedDestination,
     line,
-    trainType,
+    pendingTrainType,
     stations,
   ]);
 
@@ -478,16 +483,16 @@ export const SelectBoundModal: React.FC<Props> = ({
       return translate('trainTypesNotExist');
     }
 
-    if (!trainType) {
+    if (!pendingTrainType) {
       return translate('trainTypeSettings');
     }
 
     return translate('trainTypeIs', {
       trainTypeName: isJapanese
-        ? (trainType.name ?? '')
-        : (trainType.nameRoman ?? ''),
+        ? (pendingTrainType.name ?? '')
+        : (pendingTrainType.nameRoman ?? ''),
     });
-  }, [fetchedTrainTypes, trainType]);
+  }, [fetchedTrainTypes, pendingTrainType]);
 
   const stationsWithoutPass = useMemo(
     () => stations.filter((s) => !getIsPass(s)),
@@ -578,7 +583,7 @@ export const SelectBoundModal: React.FC<Props> = ({
 
       <RouteInfoModal
         visible={routeInfoModalVisible}
-        trainType={trainType}
+        trainType={pendingTrainType}
         stations={stationsWithoutPass}
         onClose={() => setRouteInfoModalVisible(false)}
         onSelect={handleStationSelected}
