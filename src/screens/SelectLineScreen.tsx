@@ -594,7 +594,7 @@ const SelectLineScreen = () => {
 
       setNavigationState((prev) => ({
         ...prev,
-        trainType: station.trainType ?? null,
+        pendingTrainType: station.trainType ?? null,
         fetchedTrainTypes: trainTypes,
       }));
     },

@@ -135,7 +135,7 @@ describe('useOpenRouteFromLink', () => {
     return { mockFetchByGroup, mockFetchByLine };
   };
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
