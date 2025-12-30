@@ -384,7 +384,7 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   11326: { signPath: require('../assets/marks/jre/je_g.webp') }, // 京葉線
   11305: { signPath: require('../assets/marks/jre/jm_g.webp') }, // 武蔵野線
   11333: { signPath: require('../assets/marks/jre/js_g.webp') }, // 湘南新宿ライン
-  11504: { signPath: require('../assets/marks/jre/jt.webp') }, // 伊東線
+  11504: { signPath: require('../assets/marks/jre/jt_g.webp') }, // 伊東線
   99336: { signPath: require('../assets/marks/tokyomonorail/mo_g.webp') }, // 東京モノレール
   99337: { signPath: require('../assets/marks/twr/r_g.webp') }, // りんかい線
   // 西武線
@@ -393,7 +393,7 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   22003: { signPath: require('../assets/marks/seibu/si_g.webp') }, // 有楽町線
   22004: { signPath: require('../assets/marks/seibu/si_g.webp') }, // 豊島線
   22005: { signPath: require('../assets/marks/seibu/si_g.webp') }, // 狭山線
-  22006: { signPath: require('../assets/marks/seibu/sy.webp') }, // 西武山口線
+  22006: { signPath: require('../assets/marks/seibu/sy_g.webp') }, // 西武山口線
   22007: { signPath: require('../assets/marks/seibu/ss_g.webp') }, // 新宿線
   22008: { signPath: require('../assets/marks/seibu/ss_g.webp') }, // 拝島線
   22009: { signPath: require('../assets/marks/seibu/sk_g.webp') }, // 西武園線
