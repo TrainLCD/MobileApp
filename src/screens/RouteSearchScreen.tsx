@@ -272,7 +272,7 @@ const RouteSearchScreen = () => {
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes,
-        trainType: prev.trainType ?? localTrainType,
+        pendingTrainType: prev.pendingTrainType ?? localTrainType,
       }));
     },
     [
@@ -369,7 +369,7 @@ const RouteSearchScreen = () => {
 
       setNavigationState((prev) => ({
         ...prev,
-        trainType,
+        pendingTrainType: trainType,
       }));
 
       fetchStationsByLineGroupIdClient.cache.evict({

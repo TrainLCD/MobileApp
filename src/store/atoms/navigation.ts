@@ -15,6 +15,7 @@ export type LoopItem = (SavedRoute & { stations: Station[] }) & {
 
 export interface NavigationState {
   leftStations: Station[];
+  pendingTrainType: TrainType | null;
   trainType: TrainType | null;
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
@@ -33,6 +34,7 @@ export interface NavigationState {
 
 export const initialNavigationState: NavigationState = {
   headerState: (isJapanese ? 'CURRENT' : 'CURRENT_EN') as HeaderTransitionState,
+  pendingTrainType: null,
   trainType: null,
   bottomState: 'LINE' as BottomTransitionState,
   leftStations: [],
