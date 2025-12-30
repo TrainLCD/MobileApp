@@ -79,10 +79,9 @@ const getLineSymbolImageWithColor = (line: Line): LineSymbolImage | null => {
     case 11229: // JR常磐線(取手～いわき)
       return { signPath: require('../assets/marks/jre/jj.webp') };
     case 11320: // JR常磐線(上野～取手)
-      return {
-        signPath: require('../assets/marks/jre/jl.webp'),
-        subSignPath: require('../assets/marks/jre/jj.webp'),
-      };
+      return { signPath: require('../assets/marks/jre/jj.webp') };
+    case 11344: // JR常磐線(緩行線)
+      return { signPath: require('../assets/marks/jre/jl.webp') };
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je.webp') };
     case 11305: // 武蔵野線
@@ -597,10 +596,9 @@ const getLineSymbolImageGrayscaleImage = (
     case 11321: // 埼京線
       return { signPath: require('../assets/marks/jre/ja_g.webp') };
     case 11320: // 常磐線
-      return {
-        signPath: require('../assets/marks/jre/jl_g.webp'),
-        subSignPath: require('../assets/marks/jre/jj_g.webp'),
-      };
+      return { signPath: require('../assets/marks/jre/jl_g.webp') };
+    case 11344: // JR常磐線(緩行線)
+      return { signPath: require('../assets/marks/jre/jj_g.webp') };
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je_g.webp') };
     case 11305: // 武蔵野線
