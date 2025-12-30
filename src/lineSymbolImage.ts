@@ -379,8 +379,9 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   11323: { signPath: require('../assets/marks/jre/ju_g.webp') }, // 高崎線
   11343: { signPath: require('../assets/marks/jre/ju_g.webp') }, // 上野東京ライン
   11321: { signPath: require('../assets/marks/jre/ja_g.webp') }, // 埼京線
-  11320: { signPath: require('../assets/marks/jre/jl_g.webp') }, // 常磐線
-  11344: { signPath: require('../assets/marks/jre/jj_g.webp') }, // JR常磐線(緩行線)
+  11229: { signPath: require('../assets/marks/jre/jj_g.webp') }, // JR常磐線(取手～いわき)
+  11320: { signPath: require('../assets/marks/jre/jj_g.webp') }, // JR常磐線(上野～取手)
+  11344: { signPath: require('../assets/marks/jre/jl_g.webp') }, // JR常磐線(緩行線)
   11326: { signPath: require('../assets/marks/jre/je_g.webp') }, // 京葉線
   11305: { signPath: require('../assets/marks/jre/jm_g.webp') }, // 武蔵野線
   11333: { signPath: require('../assets/marks/jre/js_g.webp') }, // 湘南新宿ライン
@@ -436,7 +437,8 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   // 相鉄
   29001: { signPath: require('../assets/marks/sotetsu/so_g.webp') }, // 本線
   29002: { signPath: require('../assets/marks/sotetsu/so_g.webp') }, // いずみ野線
-  29003: { signPath: require('../assets/marks/sotetsu/so_g.webp') }, // 新横浜線
+  29003: { signPath: require('../assets/marks/sotetsu/so_g.webp') }, // 相鉄・JR直通線
+  29004: { signPath: require('../assets/marks/sotetsu/so_g.webp') }, // 新横浜線
   // 横浜市交通局
   99316: {
     signPath: require('../assets/marks/yokohamamunicipal/b_g.webp'),
