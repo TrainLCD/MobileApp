@@ -596,10 +596,9 @@ const getLineSymbolImageGrayscaleImage = (
     case 11321: // 埼京線
       return { signPath: require('../assets/marks/jre/ja_g.webp') };
     case 11320: // 常磐線
-      return {
-        signPath: require('../assets/marks/jre/jl_g.webp'),
-        subSignPath: require('../assets/marks/jre/jj_g.webp'),
-      };
+      return { signPath: require('../assets/marks/jre/jl_g.webp') };
+    case 11344: // JR常磐線(緩行線)
+      return { signPath: require('../assets/marks/jre/jj_g.webp') };
     case 11326: // 京葉線
       return { signPath: require('../assets/marks/jre/je_g.webp') };
     case 11305: // 武蔵野線
