@@ -65,14 +65,14 @@ export const useOpenRouteFromLink = () => {
       setLineState((prev) => ({ ...prev, selectedLine: line }));
       setNavigationState((prev) => ({
         ...prev,
-        trainType: (station.trainType ?? null) as TrainType | null,
+        pendingTrainType: (station.trainType ?? null) as TrainType | null,
         leftStations: [],
         stationForHeader: station,
       }));
       setStationState((prev) => ({
         ...prev,
-        station,
-        stations,
+        pendingStation: station,
+        pendingStations: stations,
         selectedDirection: direction,
         selectedBound:
           direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],

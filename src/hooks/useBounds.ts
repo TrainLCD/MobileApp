@@ -20,7 +20,7 @@ export const useBounds = (
   directionalStops: Station[];
 } => {
   const { selectedDirection, selectedBound } = useAtomValue(stationState);
-  const { trainType } = useAtomValue(navigationState);
+  const { pendingTrainType } = useAtomValue(navigationState);
   const currentStation = useCurrentStation();
 
   const {
@@ -71,7 +71,7 @@ export const useBounds = (
       return [oedoLineInboundStops, oedoLineOutboundStops];
     }
 
-    if (!trainType || getIsLocal(trainType)) {
+    if (!pendingTrainType || getIsLocal(pendingTrainType)) {
       if (isLoopLine) {
         return [inboundStationsForLoopLine, outboundStationsForLoopLine];
       }
@@ -85,7 +85,7 @@ export const useBounds = (
     stations,
     outboundStationsForLoopLine,
     isOedoLine,
-    trainType,
+    pendingTrainType,
   ]);
 
   const directionalStops = useMemo(() => {
