@@ -49,6 +49,7 @@ import {
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
+  GET_STATION_TRAIN_TYPES,
 } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
@@ -82,6 +83,14 @@ type GetLineStationsData = {
 type GetLineStationsVariables = {
   lineId: number;
   stationId?: number;
+};
+
+type GetStationTrainTypesData = {
+  stationTrainTypes: TrainType[];
+};
+
+type GetStationTrainTypesVariables = {
+  stationId: number;
 };
 
 const MainScreen: React.FC = () => {
@@ -130,6 +139,13 @@ const MainScreen: React.FC = () => {
     },
   ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
+  );
+
+  const [
+    fetchTrainTypes,
+    { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
+  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
+    GET_STATION_TRAIN_TYPES
   );
 
   const currentStationRef = useRef(currentStation);
@@ -529,7 +545,18 @@ const MainScreen: React.FC = () => {
         variables: { lineId: selectedLine.id, stationId: selectedStation.id },
       });
 
-      setNavigationState((prev) => ({ ...prev, pendingTrainType: null }));
+      const fetchedTrainTypesData = await fetchTrainTypes({
+        variables: {
+          stationId: selectedStation.id as number,
+        },
+      });
+      const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
+
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingTrainType: null,
+        fetchedTrainTypes: trainTypes,
+      }));
       setLineState((prev) => ({ ...prev, pendingLine: selectedLine }));
       setStationState((prev) => ({
         ...prev,
@@ -537,7 +564,13 @@ const MainScreen: React.FC = () => {
         pendingStations: data?.lineStations ?? [],
       }));
     },
-    [setStationState, setLineState, fetchStationsByLineId, setNavigationState]
+    [
+      setStationState,
+      setLineState,
+      fetchStationsByLineId,
+      setNavigationState,
+      fetchTrainTypes,
+    ]
   );
 
   const handleTransferPress = useCallback(
@@ -640,10 +673,15 @@ const MainScreen: React.FC = () => {
         onBoundSelect={handleCloseSelectBoundModal}
         onTrainTypeSelect={handleTrainTypeSelect}
         loading={
-          fetchStationsByLineGroupIdLoading || fetchStationsByLineIdLoading
+          fetchStationsByLineGroupIdLoading ||
+          fetchStationsByLineIdLoading ||
+          fetchTrainTypesLoading
         }
         error={
-          fetchStationsByLineGroupIdError || fetchStationsByLineIdError || null
+          fetchStationsByLineGroupIdError ||
+          fetchStationsByLineIdError ||
+          fetchTrainTypesError ||
+          null
         }
       />
 
