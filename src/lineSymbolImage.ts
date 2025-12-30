@@ -700,7 +700,7 @@ export const getLineSymbolImage = (
     return lineMark;
   }
   const lineMarkGrayscale = getLineSymbolImageGrayscaleImage(line);
-  if (!lineMark) {
+  if (!lineMarkGrayscale) {
     return null;
   }
   return lineMarkGrayscale;
