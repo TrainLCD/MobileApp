@@ -42,6 +42,7 @@ export const gqlClient = new ApolloClient({
       StationNested: { keyFields: false },
       TrainTypeNested: { keyFields: false },
       TrainType: { keyFields: false },
+      Station: { keyFields: false },
     },
   }),
 });

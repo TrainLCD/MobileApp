@@ -415,15 +415,15 @@ const SelectLineScreen = () => {
       const result = await fetchStationsByLineId({
         variables: { lineId, stationId: lineStationId },
       });
-      const pendingStations = result.data?.lineStations ?? [];
+      const fetchedStations = result.data?.lineStations ?? [];
 
       const pendingStation =
-        pendingStations.find((s) => s.id === lineStationId) ?? null;
+        fetchedStations.find((s) => s.id === lineStationId) ?? null;
 
       setStationState((prev) => ({
         ...prev,
         pendingStation,
-        pendingStations,
+        pendingStations: fetchedStations,
         selectedDirection: null,
         wantedDestination: null,
         selectedBound: null,
@@ -436,6 +436,7 @@ const SelectLineScreen = () => {
         ...prev,
         fetchedTrainTypes: [],
         trainType: null,
+        pendingTrainType: null,
       }));
 
       if (line.station?.hasTrainTypes) {
@@ -446,7 +447,7 @@ const SelectLineScreen = () => {
         });
         const fetchedTrainTypes = result.data?.stationTrainTypes ?? [];
         const designatedTrainTypeId =
-          pendingStations.find((s) => s.id === lineStationId)?.trainType?.id ??
+          fetchedStations.find((s) => s.id === lineStationId)?.trainType?.id ??
           null;
         const designatedTrainType =
           fetchedTrainTypes.find((tt) => tt.id === designatedTrainTypeId) ??
@@ -454,7 +455,7 @@ const SelectLineScreen = () => {
         setNavigationState((prev) => ({
           ...prev,
           fetchedTrainTypes,
-          trainType: designatedTrainType as TrainType | null,
+          pendingTrainType: designatedTrainType as TrainType | null,
         }));
       }
     },
@@ -481,7 +482,7 @@ const SelectLineScreen = () => {
       }));
       setNavigationState((prev) => ({
         ...prev,
-        trainType,
+        pendingTrainType: trainType,
       }));
     },
     [fetchStationsByLineGroupId, setStationState, setNavigationState]
@@ -529,20 +530,8 @@ const SelectLineScreen = () => {
         ...prev,
         pendingLine: (station.line as Line) ?? null,
       }));
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: [],
-        trainType: null,
-      }));
     },
-    [
-      fetchStationsByLineId,
-      latitude,
-      longitude,
-      setNavigationState,
-      setStationState,
-      setLineState,
-    ]
+    [fetchStationsByLineId, latitude, longitude, setStationState, setLineState]
   );
 
   // PresetCard押下時のモーダル表示ロジック
@@ -594,11 +583,6 @@ const SelectLineScreen = () => {
       setLineState((prev) => ({
         ...prev,
         pendingLine: station?.line ?? null,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: [],
-        trainType: null,
       }));
 
       const fetchedTrainTypesData = await fetchTrainTypes({

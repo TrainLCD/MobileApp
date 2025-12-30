@@ -4,7 +4,6 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   View,
