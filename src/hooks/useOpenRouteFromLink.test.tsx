@@ -85,6 +85,7 @@ const createNavigationState = (
   firstStop: true,
   presetsFetched: false,
   presetRoutes: [],
+  pendingTrainType: null,
   ...overrides,
 });
 
@@ -134,7 +135,7 @@ describe('useOpenRouteFromLink', () => {
     return { mockFetchByGroup, mockFetchByLine };
   };
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -171,14 +172,14 @@ describe('useOpenRouteFromLink', () => {
 
     const stationSetter = mockSetStationState.mock.calls[0][0];
     const stationResult = stationSetter(createStationState());
-    expect(stationResult.station?.groupId).toBe(1);
-    expect(stationResult.stations).toEqual(stations);
+    expect(stationResult.pendingStation?.groupId).toBe(1);
+    expect(stationResult.pendingStations).toEqual(stations);
     expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
     expect(stationResult.selectedBound?.groupId).toBe(2);
 
     const navigationSetter = mockSetNavigationState.mock.calls[0][0];
     const navigationResult = navigationSetter(createNavigationState());
-    expect(navigationResult.trainType?.typeId).toBe('local');
+    expect(navigationResult.pendingTrainType?.typeId).toBe('local');
     expect(navigationResult.stationForHeader?.groupId).toBe(1);
 
     const lineSetter = mockSetLineState.mock.calls[0][0];

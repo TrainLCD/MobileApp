@@ -156,7 +156,7 @@ const MainScreen: React.FC = () => {
       }));
       setNavigationState((prev) => ({
         ...prev,
-        trainType,
+        pendingTrainType: trainType,
       }));
     },
     [fetchStationsByLineGroupId, setStationState, setNavigationState]
@@ -529,6 +529,7 @@ const MainScreen: React.FC = () => {
         variables: { lineId: selectedLine.id, stationId: selectedStation.id },
       });
 
+      setNavigationState((prev) => ({ ...prev, pendingTrainType: null }));
       setLineState((prev) => ({ ...prev, pendingLine: selectedLine }));
       setStationState((prev) => ({
         ...prev,
@@ -536,7 +537,7 @@ const MainScreen: React.FC = () => {
         pendingStations: data?.lineStations ?? [],
       }));
     },
-    [setStationState, setLineState, fetchStationsByLineId]
+    [setStationState, setLineState, fetchStationsByLineId, setNavigationState]
   );
 
   const handleTransferPress = useCallback(
