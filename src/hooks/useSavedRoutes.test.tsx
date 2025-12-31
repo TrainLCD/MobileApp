@@ -44,11 +44,14 @@ const withJotaiProvider = (store: ReturnType<typeof createStore>) =>
 
 describe('useSavedRoutes', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockIdCounter = 0;
     mockDb.execAsync.mockResolvedValue();
     mockDb.getAllAsync.mockResolvedValue([]);
     mockDb.runAsync.mockResolvedValue();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('initialization', () => {

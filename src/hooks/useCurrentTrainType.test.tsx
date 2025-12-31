@@ -204,7 +204,6 @@ describe('useCurrentTrainType', () => {
   let currentLineValue: Line | null;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     stationAtomValue = { stations: [] };
     navigationAtomValue = { trainType: null };
     currentStationValue = undefined;
@@ -221,6 +220,10 @@ describe('useCurrentTrainType', () => {
     mockUseCurrentStation.mockImplementation(() => currentStationValue);
     mockUseCurrentLine.mockImplementation(() => currentLineValue);
     mockGetIsPass.mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('現在駅の種別をそのまま返す', () => {

@@ -100,10 +100,6 @@ describe('useNearestStation', () => {
     typeof findNearest
   >;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });

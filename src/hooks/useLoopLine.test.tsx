@@ -51,9 +51,11 @@ const TestComponent: React.FC<{
 
 describe('useLoopLine', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     (getIsLocal as jest.Mock).mockReturnValue(true);
-    // useAtomValue はテストごとに必要量だけ上書きする
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('山手線で環状線として検出し、主要駅2件ずつを返す', () => {

@@ -20,7 +20,7 @@ const TestComponent: React.FC = () => {
 };
 
 describe('useDeviceOrientation フック', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
