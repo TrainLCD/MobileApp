@@ -26,9 +26,9 @@ jest.mock('~/hooks', () => ({
 
 // Mock utils
 jest.mock('~/utils/accuracyChart', () => ({
-  generateAccuracyChart: jest.fn((history: number[]) => {
+  generateAccuracyChart: jest.fn((history: number[] | null | undefined) => {
     // Mock implementation that returns AccuracyBlock[] format
-    if (history.length === 0) {
+    if (!history || history.length === 0) {
       return [];
     }
     return history.map((_accuracy) => ({
@@ -40,6 +40,10 @@ jest.mock('~/utils/accuracyChart', () => ({
 
 jest.mock('~/utils/telemetryConfig', () => ({
   isTelemetryEnabledByBuild: true,
+}));
+
+jest.mock('~/hooks/useTelemetryEnabled', () => ({
+  useTelemetryEnabled: jest.fn(() => true),
 }));
 
 // Import mocked hooks for type safety
@@ -62,7 +66,7 @@ describe('DevOverlay', () => {
     jest.clearAllMocks();
 
     // Default mock implementations for useAtomValue
-    // locationAtom, accuracyHistoryAtom, telemetryEnabledAtomの順で呼ばれる
+    // locationAtom, accuracyHistoryAtomの順で呼ばれる (useTelemetryEnabledは別途モック済み)
     mockUseAtomValue
       .mockReturnValueOnce({
         coords: {
@@ -70,10 +74,7 @@ describe('DevOverlay', () => {
           accuracy: 15,
         },
       }) // locationAtom
-      .mockReturnValueOnce([10, 15, 20]) // accuracyHistoryAtom
-      .mockReturnValue({
-        telemetryEnabled: true,
-      }); // その他
+      .mockReturnValue([10, 15, 20]); // accuracyHistoryAtom
 
     mockUseDistanceToNextStation.mockReturnValue('500');
     mockUseNextStation.mockReturnValue({
@@ -201,8 +202,7 @@ describe('DevOverlay', () => {
         .mockReturnValueOnce({
           coords: { speed: 10, accuracy: 15 },
         }) // locationAtom
-        .mockReturnValueOnce(null) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(null); // accuracyHistoryAtom
 
       expect(() => {
         render(<DevOverlay />);

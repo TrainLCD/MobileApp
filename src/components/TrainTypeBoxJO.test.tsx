@@ -6,6 +6,7 @@ import TrainTypeBoxJO from './TrainTypeBoxJO';
 // Mock dependencies
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => ({ headerState: 'HEADER_JA' })),
+  atom: jest.fn((val) => ({ init: val })),
 }));
 
 jest.mock('../store/atoms/navigation', () => ({

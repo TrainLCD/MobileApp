@@ -59,7 +59,7 @@ const useTTSTextWithJotaiAndNumbering = (
 };
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider>{children}</Provider>
+  <Provider store={store}>{children}</Provider>
 );
 
 const setupMockUseNextStation = (station: Station) =>

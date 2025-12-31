@@ -31,22 +31,9 @@ jest.mock('~/hooks/useCurrentLine', () => ({
   useCurrentLine: jest.fn(() => ({ id: 1 })),
 }));
 
-jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: jest
-    .fn()
-    .mockImplementation((selector: (state: any) => any) =>
-      selector({
-        location: {
-          coords: {
-            latitude: 35,
-            longitude: 139,
-            accuracy: 5,
-            speed: 10,
-          },
-        },
-        accuracyHistory: [5],
-      })
-    ),
+jest.mock('~/store/atoms/location', () => ({
+  locationAtom: { init: null },
+  accuracyHistoryAtom: { init: [] },
 }));
 
 describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {

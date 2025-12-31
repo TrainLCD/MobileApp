@@ -194,7 +194,9 @@ describe('useTelemetrySender', () => {
   });
 
   test('should not send telemetry if coordinates are null', () => {
-    (useAtomValue as jest.Mock).mockReturnValue(null);
+    (useAtomValue as jest.Mock)
+      .mockReturnValueOnce(null) // locationAtom (coords will be undefined)
+      .mockReturnValue({ arrived: false, approaching: false }); // stationState
     renderHook(() => useTelemetrySender(false, 'ws://example.com:8080'), {
       wrapper,
     });
