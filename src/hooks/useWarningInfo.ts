@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Effect, pipe } from 'effect';
 import { useForegroundPermissions } from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -65,29 +64,24 @@ export const useWarningInfo = () => {
   }, [isInternetAvailable]);
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() =>
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED)
-      ),
-      Effect.andThen((longPressNoticeDismissed) => {
-        setLongPressNoticeDismissed(longPressNoticeDismissed === 'true');
-      }),
-      Effect.runPromise
-    );
-
-    pipe(
-      Effect.promise(() =>
+    const loadSettings = async () => {
+      const [
+        longPressNoticeDismissedValue,
+        alwaysPermNotGrantedDismissedValue,
+      ] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED),
         AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
-        )
-      ),
-      Effect.andThen((isAlwaysPermissionNotGrantedDismissed) => {
-        setIsAlwaysPermissionNotGrantedDismissed(
-          isAlwaysPermissionNotGrantedDismissed === 'true'
-        );
-      }),
-      Effect.runPromise
-    );
+        ),
+      ]);
+
+      setLongPressNoticeDismissed(longPressNoticeDismissedValue === 'true');
+      setIsAlwaysPermissionNotGrantedDismissed(
+        alwaysPermNotGrantedDismissedValue === 'true'
+      );
+    };
+
+    loadSettings();
   }, []);
 
   const warningInfo = useMemo(() => {
@@ -182,14 +176,9 @@ export const useWarningInfo = () => {
     setScreenshotTaken(false);
 
     if (!longPressNoticeDismissed) {
-      pipe(
-        Effect.promise(() =>
-          AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
-            'true'
-          )
-        ),
-        Effect.runPromise
+      AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
+        'true'
       );
     }
   }, [longPressNoticeDismissed]);
