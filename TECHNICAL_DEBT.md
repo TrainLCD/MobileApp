@@ -2,7 +2,7 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2025-12-31（Header系テスト拡充）
+**最終更新**: 2025-12-31（zustand削除・jotai統一）
 
 ## 📊 概要
 
@@ -394,24 +394,25 @@ src/components/
 
 ---
 
-### 5. 状態管理の混在
+### 5. 状態管理の混在 ✅ **解決済み**
 
-**深刻度**: 🟠 高
-**推定工数**: 2-3週間
+**深刻度**: 🟢 解決済み（以前は🟠高）
+**推定工数**: ~~2-3週間~~ → 完了
 **影響範囲**: 保守性、学習コスト
 
-#### 問題の詳細
+#### 問題の詳細（解決済み）
 
-2つの異なる状態管理ライブラリが混在：
+~~2つの異なる状態管理ライブラリが混在~~ → **Jotaiに統一完了**
 
-##### Zustand: 3箇所のみで使用
+##### ~~Zustand: 3箇所のみで使用~~ → ✅ **削除済み**（2025-12-31）
 ```typescript
-src/hooks/useTuningStore.ts
-src/hooks/useThemeStore.ts
-src/hooks/useLocationStore.ts
+// 以下のファイルは全て削除され、Jotaiに移行完了:
+// src/hooks/useTuningStore.ts → 削除（使用箇所なし）
+// src/hooks/useThemeStore.ts → src/store/atoms/theme.ts に移行
+// src/hooks/useLocationStore.ts → src/store/atoms/location.ts に移行（以前に完了）
 ```
 
-##### Jotai: 107ファイルで使用（主要な状態管理）
+##### Jotai: 110+ファイルで使用（唯一の状態管理ライブラリ）
 ```typescript
 src/store/atoms/station.ts
 src/store/atoms/line.ts
@@ -420,18 +421,28 @@ src/store/atoms/notify.ts
 src/store/atoms/speech.ts
 src/store/atoms/tuning.ts
 src/store/atoms/auth.ts
+src/store/atoms/theme.ts      // ✅ NEW: themeAtom, isLEDThemeAtom
+src/store/atoms/location.ts   // ✅ NEW: locationAtom, accuracyHistoryAtom
 src/store/selectors/isEn.ts
 ```
 
-#### 影響
-- 状態管理の一貫性がない
-- 新規開発者がどちらを使うべきか混乱
-- デバッグが困難（2つのDevToolsを使用）
+#### 達成済みの改善（2025-12-31）
+- ✅ **zustand依存を完全削除**: package.jsonから削除
+- ✅ **useThemeStore → themeAtom**: 40+ファイルで更新
+- ✅ **useLocationStore → locationAtom**: React外部からの状態更新も対応
+- ✅ **派生atom追加**: `isLEDThemeAtom`で`theme === APP_THEME.LED`パターンを簡略化
+- ✅ **テストファイル更新**: jotaiモックに統一
+- ✅ **lint/typecheck通過**: 全て成功
 
-#### 推奨アクション
-1. 状態管理を**Jotaiに統一**（Zustandの使用は最小限）
-2. 状態管理のガイドライン文書を作成
-3. Zustandで管理している3つの状態をJotaiに移行検討
+#### ~~影響~~ → 解決済み
+- ~~状態管理の一貫性がない~~ → ✅ Jotaiに統一
+- ~~新規開発者がどちらを使うべきか混乱~~ → ✅ Jotaiのみ使用
+- ~~デバッグが困難（2つのDevToolsを使用）~~ → ✅ Jotai DevToolsのみ
+
+#### ~~推奨アクション~~ → 完了
+1. ~~状態管理を**Jotaiに統一**~~ ✅ **完了**
+2. 状態管理のガイドライン文書を作成（任意）
+3. ~~Zustandで管理している3つの状態をJotaiに移行~~ ✅ **完了**
 
 ---
 
@@ -776,7 +787,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 
 ### 3ヶ月以内
 - [x] パフォーマンス最適化（メモ化導入） ✅ **完了**（2025-12-31、757箇所以上で使用中）
-- [ ] 状態管理の統一計画策定
+- [x] 状態管理の統一 ✅ **完了**（2025-12-31、zustand削除・Jotai統一）
 - [ ] テストカバレッジ30%達成
 
 ### 6ヶ月以内
@@ -799,7 +810,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-26 | プロジェクト統計を更新（ファイル数、テスト数、カバレッジを最新化）<br>**テストカバレッジ大幅向上**: 15% → 17%（38個の新規テストケース追加）<br>ビジネスクリティカルなフックのテスト追加（useCurrentStation、useCurrentLine、useNextStation等）<br>**Header系コンポーネントの改善開始**:共通フック3つ作成（useHeaderLangState、useHeaderStateText、useHeaderStationText）<br>型の統一（Station \| undefined）実施<br>**依存関係の更新**: dayjsを最新版（^1.11.19）に更新完了<br>次のアクションアイテムを進捗に応じて更新 |
 | 2025-12-27 | **NumberingIcon系コンポーネントのテスト完全追加**<br>**テストカバレッジ大幅向上**: 17% → 20%（130個の新規テストケース追加）<br>全26個のNumberingIconコンポーネントに包括的なユニットテスト追加<br>各コンポーネントのレンダリング、Props処理、サイズバリアント、特殊ケースをテスト<br>Biome lintエラー完全解消（未使用import削除、any型をunknown型に置換）<br>**CodeRabbit指摘対応完了**（PR #4797）: <br>　- afterEachフック追加（全26ファイル）<br>　- Weak assertions修正（UNSAFE_root → getByText）<br>　- withOutlineテスト改善（実際のコンテンツ検証）<br>　- LARGEサイズバリアントテスト追加<br>　- 冗長テストケース削除<br>プロジェクト統計を更新（テストファイル50 → 76、カバレッジ17% → 20%）<br>次のマイルストーンをテストカバレッジ25%に設定<br><br>**LineBoard系コンポーネントのテスト完全追加**（PR #4799）<br>**テストカバレッジさらに向上**: 20% → 22-23%（95個の新規テストケース追加）<br>全9個のLineBoardコンポーネントに包括的なユニットテスト追加<br>　- LineBoard.test.tsx（9テスト）<br>　- LineBoardEast.test.tsx（9テスト）<br>　- LineBoardJO.test.tsx（10テスト）<br>　- LineBoardJRKyushu.test.tsx（13テスト）<br>　- LineBoardLED.test.tsx（15テスト）<br>　- LineBoardSaikyo.test.tsx（10テスト）<br>　- LineBoardToei.test.tsx（10テスト）<br>　- LineBoardWest.test.tsx（10テスト）<br>　- LineBoardYamanotePad.test.tsx（10テスト）<br>各コンポーネントのヘッダー状態遷移、駅情報表示、路線情報、英語表示対応をテスト<br>**CodeRabbit指摘対応完了**（PR #4799）: <br>　- jest.clearAllMocks()をbeforeEachからafterEachに移動（全9ファイル）<br>　- Jestベストプラクティスに準拠（テスト後クリーンアップ）<br>プロジェクト統計を更新（テストファイル76 → 85、カバレッジ20% → 22-23%）<br>LineBoardコンポーネントのテスト完了により品質保証を強化 |
 | 2025-12-28 | **LineBoard系テストの品質向上**（PR #4799追加改善）<br>**CodeRabbit指摘への追加対応完了**: <br>　- **Weak assertions強化**: LineBoardSaikyoテストで`toBeTruthy()`のみの検証を`expect.objectContaining()`による具体的なprops検証に改善（StationName、LineDot、ChevronTY、lineColors関連テスト）<br>　- **テスト名とロジックの不一致修正**（4ファイル）: <br>　　　• "chevronの色が交互に切り替わる" → "useIntervalフックが1秒間隔で呼ばれる"（実際はuseIntervalの呼び出しのみ検証）<br>　　　• "駅数が8未満の場合、空の配列で埋められる" → "駅数が8未満の場合でもエラーなくレンダリングされる"（実際はレンダリング成功のみ検証）<br>　　　• "arrived状態でChevronが表示される" → "arrived=falseの場合、ChevronJRWestが表示される"（実際はarrived=falseで検証）<br>　- 対象ファイル: LineBoardSaikyo.test.tsx、LineBoardJRKyushu.test.tsx、LineBoardToei.test.tsx、LineBoardWest.test.tsx、LineBoardJO.test.tsx<br>テスト名が実際のテストロジックと完全に一致し、テストの意図が明確化<br>アサーションの具体性向上により、コンポーネントの動作をより厳密に検証<br>全85テストスイート、551テスト合格を維持 |
-| 2025-12-31 | **依存関係の更新遅延を解消**<br>負債ドキュメントに記載の3パッケージを最新版に更新:<br>　- @react-native-community/cli: ^15.1.2 → ^20.0.2<br>　- @sentry/react-native: ~7.2.0 → ~7.8.0<br>　- effect: ^3.16.12 → ^3.19.13<br>lint、typecheck、test全てパスを確認（555テスト合格）<br>計画的な更新が必要なパッケージが0件に<br><br>**FlatListの最適化完了**<br>　- `removeClippedSubviews`を5ファイルに追加（Android）: Transfers.tsx、TransfersYamanote.tsx、StationSearchModal.tsx、RouteInfoModal.tsx、TrainTypeListModal.tsx<br>　- `SelectLineScreenPresets.tsx`のメモ化改善: renderItem、keyExtractor、onScroll、ListEmptyComponentをuseCallback/useMemoでラップ、ItemSeparatorComponentをReact.memoでラップ<br>FlatListの最適化によりAndroidでのスクロールパフォーマンスが向上<br><br>**iOS依存関係の更新** (chore/bump-deps)<br>　- @react-native-community/cli: Expo SDK 54への移行に伴い削除<br>　- 各種パッケージを最新版に更新<br><br>**Header系コンポーネントのテスト完全追加**<br>**テストカバレッジ向上**: 22-23% → 24-25%（108個の新規テストケース追加）<br>全9個のHeaderコンポーネントに包括的なユニットテスト追加:<br>　- Header.test.tsx（13テスト）: テーマに基づくHeaderコンポーネント選択<br>　- HeaderLED.test.tsx（12テスト）: LED表示のヘッダー状態遷移<br>　- HeaderTokyoMetro.test.tsx（14テスト）: 東京メトロスタイルのアニメーション・状態<br>　- HeaderJRWest.test.tsx（26テスト）: JR西日本スタイル、多言語対応、列車種別<br>　- HeaderJRKyushu.test.tsx（14テスト）: JR九州スタイルの状態遷移<br>　- HeaderTY.test.tsx（15テスト）: 東急スタイルのダークテーマ<br>　- HeaderSaikyo.test.tsx（14テスト）: 埼京線スタイル、時計表示、路線色<br>各コンポーネントのレンダリング、ヘッダー状態遷移、終点駅・始発駅対応、多言語対応をテスト<br>プロジェクト統計を更新（テストファイル85 → 92、テストケース555 → 663、カバレッジ22-23% → 24-25%）<br>全92テストスイート、663テスト合格を確認 |
+| 2025-12-31 | **依存関係の更新遅延を解消**<br>負債ドキュメントに記載の3パッケージを最新版に更新:<br>　- @react-native-community/cli: ^15.1.2 → ^20.0.2<br>　- @sentry/react-native: ~7.2.0 → ~7.8.0<br>　- effect: ^3.16.12 → ^3.19.13<br>lint、typecheck、test全てパスを確認（555テスト合格）<br>計画的な更新が必要なパッケージが0件に<br><br>**FlatListの最適化完了**<br>　- `removeClippedSubviews`を5ファイルに追加（Android）: Transfers.tsx、TransfersYamanote.tsx、StationSearchModal.tsx、RouteInfoModal.tsx、TrainTypeListModal.tsx<br>　- `SelectLineScreenPresets.tsx`のメモ化改善: renderItem、keyExtractor、onScroll、ListEmptyComponentをuseCallback/useMemoでラップ、ItemSeparatorComponentをReact.memoでラップ<br>FlatListの最適化によりAndroidでのスクロールパフォーマンスが向上<br><br>**iOS依存関係の更新** (chore/bump-deps)<br>　- @react-native-community/cli: Expo SDK 54への移行に伴い削除<br>　- 各種パッケージを最新版に更新<br><br>**Header系コンポーネントのテスト完全追加**<br>**テストカバレッジ向上**: 22-23% → 24-25%（108個の新規テストケース追加）<br>全9個のHeaderコンポーネントに包括的なユニットテスト追加:<br>　- Header.test.tsx（13テスト）: テーマに基づくHeaderコンポーネント選択<br>　- HeaderLED.test.tsx（12テスト）: LED表示のヘッダー状態遷移<br>　- HeaderTokyoMetro.test.tsx（14テスト）: 東京メトロスタイルのアニメーション・状態<br>　- HeaderJRWest.test.tsx（26テスト）: JR西日本スタイル、多言語対応、列車種別<br>　- HeaderJRKyushu.test.tsx（14テスト）: JR九州スタイルの状態遷移<br>　- HeaderTY.test.tsx（15テスト）: 東急スタイルのダークテーマ<br>　- HeaderSaikyo.test.tsx（14テスト）: 埼京線スタイル、時計表示、路線色<br>各コンポーネントのレンダリング、ヘッダー状態遷移、終点駅・始発駅対応、多言語対応をテスト<br>プロジェクト統計を更新（テストファイル85 → 92、テストケース555 → 663、カバレッジ22-23% → 24-25%）<br>全92テストスイート、663テスト合格を確認<br><br>**状態管理をJotaiに統一 (zustand完全削除)**<br>　- zustand依存をpackage.jsonから削除<br>　- useThemeStore → themeAtom (src/store/atoms/theme.ts) に移行<br>　- useLocationStore → locationAtom (src/store/atoms/location.ts) に移行（以前に完了）<br>　- useTuningStore → 使用箇所なしのため削除<br>　- 派生atom `isLEDThemeAtom` を追加（theme === APP_THEME.LED パターンを簡略化）<br>　- 40+ファイルでuseThemeStoreをuseAtomValue(themeAtom)に更新<br>　- テストファイル5つをjotaiモックに更新<br>　- Permitted.tsxでsetTheme依存関係を修正<br>状態管理の混在問題を完全解決、保守性と学習コストが大幅改善 |
 
 ---
 

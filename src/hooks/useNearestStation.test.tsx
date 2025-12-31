@@ -6,18 +6,17 @@ import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
 import { useCurrentStation } from './useCurrentStation';
-import { useLocationStore } from './useLocationStore';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 
 jest.mock('jotai', () => ({
   __esModule: true,
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
-}));
-
-jest.mock('./useLocationStore', () => ({
-  useLocationStore: jest.fn(),
+  atom: jest.fn((initialValue) => initialValue),
+  createStore: jest.fn(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+  })),
 }));
 
 jest.mock('./useCurrentStation', () => ({
@@ -91,11 +90,6 @@ describe('useNearestStation', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
-  const mockUseLocationStore =
-    useLocationStore as unknown as jest.MockedFunction<
-      // biome-ignore lint/suspicious/noExplicitAny: Mock function requires any type for flexibility
-      (selector: (state: any) => any) => any
-    >;
   const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
     typeof useCurrentStation
   >;
@@ -119,20 +113,17 @@ describe('useNearestStation', () => {
     const station2 = createStation(2, 2, 35.690921, 139.700258);
     const station3 = createStation(3, 3, 35.658517, 139.701334);
 
-    mockUseLocationStore.mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: 35.690921,
-            longitude: 139.700258,
-          },
+    // locationAtom, then stationState
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.690921,
+          longitude: 139.700258,
         },
-      })
-    );
-
-    mockUseAtomValue.mockReturnValue({
-      stations: [station1, station2, station3],
-    });
+      }) // locationAtom
+      .mockReturnValue({
+        stations: [station1, station2, station3],
+      }); // stationState
 
     mockUseCurrentStation.mockReturnValue(station1);
     mockUseNextStation.mockReturnValue(station2);
@@ -149,20 +140,11 @@ describe('useNearestStation', () => {
   });
 
   it('緯度経度がnullの場合、undefinedを返す', () => {
-    mockUseLocationStore.mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: null,
-            longitude: null,
-          },
-        },
-      })
-    );
-
-    mockUseAtomValue.mockReturnValue({
-      stations: [],
-    });
+    mockUseAtomValue
+      .mockReturnValueOnce(null) // locationAtom
+      .mockReturnValue({
+        stations: [],
+      }); // stationState
 
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
@@ -172,20 +154,16 @@ describe('useNearestStation', () => {
   });
 
   it('駅リストが空の場合、undefinedを返す', () => {
-    mockUseLocationStore.mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: 35.681236,
-            longitude: 139.767125,
-          },
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.681236,
+          longitude: 139.767125,
         },
-      })
-    );
-
-    mockUseAtomValue.mockReturnValue({
-      stations: [],
-    });
+      }) // locationAtom
+      .mockReturnValue({
+        stations: [],
+      }); // stationState
 
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
@@ -203,20 +181,16 @@ describe('useNearestStation', () => {
     const station2 = createStation(2, 2, 35.690921, 139.700258); // valid
     const station3 = createStation(3, 3, 35.658517, null); // invalid
 
-    mockUseLocationStore.mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: 35.690921,
-            longitude: 139.700258,
-          },
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.690921,
+          longitude: 139.700258,
         },
-      })
-    );
-
-    mockUseAtomValue.mockReturnValue({
-      stations: [station1, station2, station3],
-    });
+      }) // locationAtom
+      .mockReturnValue({
+        stations: [station1, station2, station3],
+      }); // stationState
 
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
@@ -238,20 +212,16 @@ describe('useNearestStation', () => {
     const station2 = createStation(2, 2, 35.690921, 139.700258);
     const station3 = createStation(3, 3, 35.690921, 139.700258); // same coords as station2
 
-    mockUseLocationStore.mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: 35.690921,
-            longitude: 139.700258,
-          },
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.690921,
+          longitude: 139.700258,
         },
-      })
-    );
-
-    mockUseAtomValue.mockReturnValue({
-      stations: [station1, station2, station3],
-    });
+      }) // locationAtom
+      .mockReturnValue({
+        stations: [station1, station2, station3],
+      }); // stationState
 
     mockUseCurrentStation.mockReturnValue(station1);
     mockUseNextStation.mockReturnValue(station3);
@@ -273,20 +243,16 @@ describe('useNearestStation', () => {
     const station2 = createStation(2, 2, 35.690921, 139.700258);
     const station3 = createStation(3, 3, 35.690921, 139.700258); // same coords
 
-    mockUseLocationStore.mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: 35.690921,
-            longitude: 139.700258,
-          },
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.690921,
+          longitude: 139.700258,
         },
-      })
-    );
-
-    mockUseAtomValue.mockReturnValue({
-      stations: [station1, station2, station3],
-    });
+      }) // locationAtom
+      .mockReturnValue({
+        stations: [station1, station2, station3],
+      }); // stationState
 
     mockUseCurrentStation.mockReturnValue(station1);
     mockUseNextStation.mockReturnValue(undefined);

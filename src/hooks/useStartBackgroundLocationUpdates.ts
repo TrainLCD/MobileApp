@@ -2,11 +2,11 @@ import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
+import { setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
-import { setLocation } from './useLocationStore';
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();

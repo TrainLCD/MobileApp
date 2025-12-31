@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StackActions, useNavigation } from '@react-navigation/native';
+import { useAtomValue } from 'jotai';
 import {
   ActivityIndicator,
   Linking,
@@ -7,8 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -59,7 +59,7 @@ const Loading = ({
   linkType?: 'serverStatus' | 'searchStation';
 }) => {
   const navigation = useNavigation();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <View

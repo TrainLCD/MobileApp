@@ -1,6 +1,8 @@
+import { useAtomValue } from 'jotai';
 import React from 'react';
-import { useCurrentStation, useThemeStore } from '~/hooks';
+import { useCurrentStation } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
+import { themeAtom } from '~/store/atoms/theme';
 import HeaderE235 from './HeaderE235';
 import HeaderJL from './HeaderJL';
 import HeaderJRKyushu from './HeaderJRKyushu';
@@ -11,7 +13,7 @@ import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
 
 const Header = () => {
-  const theme = useThemeStore((state) => state);
+  const theme = useAtomValue(themeAtom);
   const station = useCurrentStation();
 
   if (!station) {

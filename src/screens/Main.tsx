@@ -38,7 +38,6 @@ import {
   useSimulationMode,
   useStartBackgroundLocationUpdates,
   useTelemetrySender,
-  useThemeStore,
   useTransferLines,
   useTransitionHeaderState,
   useTTS,
@@ -53,6 +52,7 @@ import {
 } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
+import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
@@ -97,8 +97,8 @@ const MainScreen: React.FC = () => {
   const [isRotated, setIsRotated] = useState(false);
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
 
-  const theme = useThemeStore();
-  const isLEDTheme = theme === APP_THEME.LED;
+  const theme = useAtomValue(themeAtom);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const [{ stations, selectedDirection, arrived }, setStationState] =
     useAtom(stationState);

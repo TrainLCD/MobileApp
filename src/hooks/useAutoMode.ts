@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import getCenter from 'geolib/es/getCenter';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import {
   AUTO_MODE_RUNNING_DURATION,
@@ -12,7 +13,6 @@ import { AUTO_MODE_RUNNING_SPEED } from '../constants/threshold';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
-import { setLocation } from './useLocationStore';
 import { useLoopLine } from './useLoopLine';
 import { useValueRef } from './useValueRef';
 

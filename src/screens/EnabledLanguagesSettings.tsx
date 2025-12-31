@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions, Link, useNavigation } from '@react-navigation/native';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
@@ -19,12 +19,11 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
 import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
-import { useThemeStore } from '../hooks';
 
 const LANGUAGE_MAP = {
   japanese: 'JA',
@@ -65,7 +64,7 @@ const SettingsItem = ({
   disabled: boolean;
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <Pressable
@@ -104,7 +103,7 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const scrollY = useSharedValue(0);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const [{ enabledLanguages }, setNavigation] = useAtom(navigationState);
 
   const navigation = useNavigation();

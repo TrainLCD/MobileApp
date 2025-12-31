@@ -1,11 +1,11 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE } from '~/constants';
-import { useThemeStore } from '~/hooks';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import { getStationName, getStationPrimaryCode } from '~/utils/station';
@@ -109,7 +109,7 @@ const BrokenIcon = () => (
 );
 
 const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
-  const isLEDTheme = useThemeStore((st) => st === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
 
   const containerStyle = useMemo(

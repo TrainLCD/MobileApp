@@ -10,11 +10,11 @@ import {
   useCurrentStation,
   useCurrentTrainType,
   useNextTrainType,
-  useThemeStore,
 } from '~/hooks';
 import { RFValue } from '~/utils/rfValue';
 import { getIsLocal } from '~/utils/trainTypeString';
 import stationState from '../store/atoms/station';
+import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import truncateTrainType from '../utils/truncateTrainType';
 import { BarTerminalEast } from './BarTerminalEast';
@@ -887,7 +887,7 @@ const HeadingEn = React.memo(
 const TypeChangeNotify: React.FC = () => {
   const { selectedDirection, stations, selectedBound } =
     useAtomValue(stationState);
-  const theme = useThemeStore();
+  const theme = useAtomValue(themeAtom);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();

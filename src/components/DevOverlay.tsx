@@ -1,12 +1,10 @@
 import * as Application from 'expo-application';
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import {
-  useDistanceToNextStation,
-  useLocationStore,
-  useNextStation,
-} from '~/hooks';
+import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
+import { accuracyHistoryAtom, locationAtom } from '~/store/atoms/location';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
 
@@ -30,13 +28,10 @@ const styles = StyleSheet.create({
 });
 
 const DevOverlay: React.FC = () => {
-  const speed = useLocationStore((state) => state?.location?.coords.speed);
-  const accuracy = useLocationStore(
-    (state) => state?.location?.coords.accuracy
-  );
-  const accuracyHistory = useLocationStore(
-    (state) => state?.accuracyHistory ?? []
-  );
+  const location = useAtomValue(locationAtom);
+  const speed = location?.coords?.speed;
+  const accuracy = location?.coords?.accuracy;
+  const accuracyHistory = useAtomValue(accuracyHistoryAtom);
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation();
   const isTelemetryEnabled = useTelemetryEnabled();

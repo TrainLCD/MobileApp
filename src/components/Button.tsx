@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import {
   type GestureResponderEvent,
@@ -7,8 +8,7 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import type { ButtonTestId } from '~/test/e2e';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -72,7 +72,7 @@ const Button: React.FC<Props> = ({
   disabled,
   testID,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <TouchableOpacity

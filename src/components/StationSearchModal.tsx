@@ -1,4 +1,5 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
+import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo } from 'react';
 import { Alert, FlatList, Platform, StyleSheet, View } from 'react-native';
@@ -10,12 +11,12 @@ import type {
 } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
-import { useLocationStore, useThemeStore } from '~/hooks';
 import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
-import { APP_THEME } from '~/models/Theme';
+import { locationAtom } from '~/store/atoms/location';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import Button from './Button';
@@ -116,14 +117,11 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
-  const latitude = useLocationStore(
-    (state) => state?.location?.coords.latitude
-  );
-  const longitude = useLocationStore(
-    (state) => state?.location?.coords.longitude
-  );
+  const location = useAtomValue(locationAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
 
   const {
