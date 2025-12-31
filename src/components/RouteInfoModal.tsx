@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Platform, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -172,6 +172,7 @@ export const RouteInfoModal = ({
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
         style={styles.flatList}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>

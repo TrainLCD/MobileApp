@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Platform, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -236,6 +236,7 @@ export const TrainTypeListModal = ({
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>
