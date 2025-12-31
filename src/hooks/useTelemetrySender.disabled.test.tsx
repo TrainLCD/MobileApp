@@ -32,8 +32,8 @@ jest.mock('~/hooks/useCurrentLine', () => ({
 }));
 
 jest.mock('~/store/atoms/location', () => ({
-  locationAtom: { init: null },
-  accuracyHistoryAtom: { init: [] },
+  locationAtom: null,
+  accuracyHistoryAtom: [],
 }));
 
 describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
