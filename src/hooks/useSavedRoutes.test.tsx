@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { createStore, Provider as JotaiProvider } from 'jotai';
+import { Provider as JotaiProvider } from 'jotai';
+import { createStore } from 'jotai/vanilla';
 import type { ReactNode } from 'react';
 import type {
   SavedRoute,

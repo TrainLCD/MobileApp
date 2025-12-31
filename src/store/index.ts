@@ -1,4 +1,4 @@
-import { createStore } from 'jotai';
+import { createStore } from 'jotai/vanilla';
 
 // React外部からatomにアクセスするためのstoreインスタンス
 // TaskManagerなどのコールバックから状態を更新する際に使用
