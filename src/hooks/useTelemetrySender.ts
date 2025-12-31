@@ -97,8 +97,9 @@ export const useTelemetrySender = (
 
   const coords = useAtomValue(locationAtom)?.coords;
 
+  const stationStateValue = useAtomValue(stationState);
   const { arrived: arrivedFromState, approaching: approachingFromState } =
-    useAtomValue(stationState);
+    stationStateValue ?? { arrived: false, approaching: false };
   const isTelemetryEnabled = useTelemetryEnabled();
 
   const passing = useIsPassing();

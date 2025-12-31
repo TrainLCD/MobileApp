@@ -9,7 +9,7 @@ jest.mock('jotai', () => ({
     headerLangState: 'JA',
     headerState: 'CURRENT',
   })),
-  atom: jest.fn((val) => ({ init: val })),
+  atom: jest.fn((val) => val),
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({

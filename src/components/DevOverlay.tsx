@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
 
 const DevOverlay: React.FC = () => {
   const location = useAtomValue(locationAtom);
-  const speed = location?.coords.speed;
-  const accuracy = location?.coords.accuracy;
+  const speed = location?.coords?.speed;
+  const accuracy = location?.coords?.accuracy;
   const accuracyHistory = useAtomValue(accuracyHistoryAtom);
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation();

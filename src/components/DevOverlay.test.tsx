@@ -63,8 +63,6 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 
 describe('DevOverlay', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-
     // Default mock implementations for useAtomValue
     // locationAtom, accuracyHistoryAtomの順で呼ばれる (useTelemetryEnabledは別途モック済み)
     mockUseAtomValue
@@ -82,6 +80,10 @@ describe('DevOverlay', () => {
       name: 'テスト駅',
       nameRoman: 'Test Station',
     } as Station);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('基本的なレンダリング', () => {

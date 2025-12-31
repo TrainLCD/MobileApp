@@ -96,10 +96,16 @@ describe('useTelemetrySender', () => {
     (global as any).WebSocket.OPEN = 1;
     (global as any).WebSocket.CONNECTING = 0;
     (useAtomValue as jest.Mock).mockReturnValue({
-      latitude: 35.0,
-      longitude: 139.0,
-      accuracy: 5,
-      speed: 10,
+      coords: {
+        latitude: 35.0,
+        longitude: 139.0,
+        accuracy: 5,
+        speed: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+      },
+      timestamp: Date.now(),
     });
 
     // Mock hooks that useTelemetrySender depends on
