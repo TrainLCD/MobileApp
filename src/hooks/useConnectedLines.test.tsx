@@ -90,7 +90,6 @@ describe('useConnectedLines', () => {
   let currentLineValue: Line | null;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     stationAtomValue = {
       selectedBound: null,
       selectedDirection: 'INBOUND',
@@ -104,6 +103,10 @@ describe('useConnectedLines', () => {
       throw new Error('unknown atom');
     });
     mockUseCurrentLine.mockImplementation(() => currentLineValue);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('selectedBound が無い場合は空配列を返す', () => {

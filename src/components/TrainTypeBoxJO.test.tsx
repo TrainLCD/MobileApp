@@ -86,7 +86,7 @@ describe('TrainTypeBoxJO', () => {
     lines: null,
   };
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

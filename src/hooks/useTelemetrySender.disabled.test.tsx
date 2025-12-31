@@ -59,6 +59,7 @@ describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
   afterEach(() => {
     consoleErrorSpy.mockRestore();
     consoleWarnSpy.mockRestore();
+    jest.clearAllMocks();
   });
 
   it('does not open websocket or send data', async () => {

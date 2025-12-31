@@ -81,7 +81,6 @@ describe('useCurrentStation', () => {
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     mockGetIsPass.mockReturnValue(false);
   });
 

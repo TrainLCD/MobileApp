@@ -22,7 +22,7 @@ const mockUseAtomValue = useAtomValue as jest.MockedFunction<
 >;
 
 describe('useFetchCurrentLocationOnce', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

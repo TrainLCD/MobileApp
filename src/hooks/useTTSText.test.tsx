@@ -68,7 +68,6 @@ const setupMockUseNextStation = (station: Station) =>
 describe('Without trainType & With numbering', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.clearAllMocks();
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
     require('~/hooks/useNumbering').useNumbering.mockReturnValue([
       {
