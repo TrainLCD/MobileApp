@@ -13,11 +13,11 @@ import {
   useCurrentStation,
   useGetLineMark,
   useNextStation,
-  useThemeStore,
   useTransferLines,
 } from '../hooks';
-import { APP_THEME, type AppTheme } from '../models/Theme';
+import type { AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
@@ -82,7 +82,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines();
   const nextStation = useNextStation();
   const getLineMarkFunc = useGetLineMark();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),

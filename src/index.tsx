@@ -21,6 +21,7 @@ import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
+import { store } from './store';
 import { setI18nConfig } from './translation';
 
 SplashScreen.preventAutoHideAsync();
@@ -79,7 +80,7 @@ const App: React.FC = () => {
         <GestureHandlerRootView>
           <ApolloProvider client={gqlClient}>
             <ActionSheetProvider>
-              <Provider>
+              <Provider store={store}>
                 <NavigationContainer>
                   <DeepLinkProvider>
                     <PortalProvider>

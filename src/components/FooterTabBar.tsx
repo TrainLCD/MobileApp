@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 type FooterTab = 'home' | 'search' | 'settings';
 
@@ -54,7 +54,7 @@ type Props = {
 const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const iconColor = useMemo(
     () => ({

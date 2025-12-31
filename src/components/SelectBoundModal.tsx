@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -13,7 +13,6 @@ import {
   useGetStationsWithTermination,
   useLoopLine,
   useSavedRoutes,
-  useThemeStore,
 } from '~/hooks';
 import { directionToDirectionName, type LineDirection } from '~/models/Bound';
 import type {
@@ -21,8 +20,8 @@ import type {
   SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
-import { APP_THEME } from '~/models/Theme';
 import notifyState from '~/store/atoms/notify';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
@@ -127,7 +126,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     bounds: [inboundStations, outboundStations],
   } = useBounds(stations);
   const getTerminatedStations = useGetStationsWithTermination();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const {
     isInitialized: isRoutesDBInitialized,

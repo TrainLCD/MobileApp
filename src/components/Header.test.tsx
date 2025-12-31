@@ -1,16 +1,23 @@
 import { render } from '@testing-library/react-native';
+import { useAtomValue } from 'jotai';
 import { APP_THEME } from '~/models/Theme';
 import Header from './Header';
 
 // Mock dependencies
 const mockUseCurrentStation = jest.fn();
-const mockUseThemeStore = jest.fn();
+
+jest.mock('jotai', () => ({
+  useAtomValue: jest.fn(),
+  atom: jest.fn((initialValue) => initialValue),
+}));
 
 jest.mock('~/hooks', () => ({
   useCurrentStation: () => mockUseCurrentStation(),
-  useThemeStore: (selector: (state: unknown) => unknown) =>
-    selector(mockUseThemeStore()),
 }));
+
+const mockUseAtomValue = useAtomValue as jest.MockedFunction<
+  typeof useAtomValue
+>;
 
 // Mock all Header components
 jest.mock('./HeaderTokyoMetro', () => {
@@ -114,6 +121,10 @@ describe('Header', () => {
     mockUseCurrentStation.mockReturnValue(mockStation);
   });
 
+  const setTheme = (theme: string) => {
+    mockUseAtomValue.mockReturnValue(theme);
+  };
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -121,7 +132,7 @@ describe('Header', () => {
   describe('renders null when station is not available', () => {
     it('should return null when currentStation is undefined', () => {
       mockUseCurrentStation.mockReturnValue(undefined);
-      mockUseThemeStore.mockReturnValue(APP_THEME.TOKYO_METRO);
+      setTheme(APP_THEME.TOKYO_METRO);
 
       const { toJSON } = render(<Header />);
       expect(toJSON()).toBeNull();
@@ -129,7 +140,7 @@ describe('Header', () => {
 
     it('should return null when currentStation is null', () => {
       mockUseCurrentStation.mockReturnValue(null);
-      mockUseThemeStore.mockReturnValue(APP_THEME.YAMANOTE);
+      setTheme(APP_THEME.YAMANOTE);
 
       const { toJSON } = render(<Header />);
       expect(toJSON()).toBeNull();
@@ -138,7 +149,7 @@ describe('Header', () => {
 
   describe('theme-based header selection', () => {
     it('should render HeaderTokyoMetro for TOKYO_METRO theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.TOKYO_METRO);
+      setTheme(APP_THEME.TOKYO_METRO);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderTokyoMetro')).toBeTruthy();
@@ -146,7 +157,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderTokyoMetro for TOEI theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.TOEI);
+      setTheme(APP_THEME.TOEI);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderTokyoMetro')).toBeTruthy();
@@ -154,7 +165,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderJRWest for JR_WEST theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.JR_WEST);
+      setTheme(APP_THEME.JR_WEST);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderJRWest')).toBeTruthy();
@@ -162,7 +173,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderE235 with isJO=false for YAMANOTE theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.YAMANOTE);
+      setTheme(APP_THEME.YAMANOTE);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderE235')).toBeTruthy();
@@ -170,7 +181,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderE235 with isJO=true for JO theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.JO);
+      setTheme(APP_THEME.JO);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderE235')).toBeTruthy();
@@ -178,7 +189,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderTY for TY theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.TY);
+      setTheme(APP_THEME.TY);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderTY')).toBeTruthy();
@@ -186,7 +197,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderSaikyo for SAIKYO theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.SAIKYO);
+      setTheme(APP_THEME.SAIKYO);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderSaikyo')).toBeTruthy();
@@ -194,7 +205,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderLED for LED theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.LED);
+      setTheme(APP_THEME.LED);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderLED')).toBeTruthy();
@@ -202,7 +213,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderJL for JL theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.JL);
+      setTheme(APP_THEME.JL);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderJL')).toBeTruthy();
@@ -210,7 +221,7 @@ describe('Header', () => {
     });
 
     it('should render HeaderJRKyushu for JR_KYUSHU theme', () => {
-      mockUseThemeStore.mockReturnValue(APP_THEME.JR_KYUSHU);
+      setTheme(APP_THEME.JR_KYUSHU);
 
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderJRKyushu')).toBeTruthy();
@@ -218,7 +229,7 @@ describe('Header', () => {
     });
 
     it('should return null for unknown theme', () => {
-      mockUseThemeStore.mockReturnValue('UNKNOWN_THEME');
+      setTheme('UNKNOWN_THEME');
 
       const { toJSON } = render(<Header />);
       expect(toJSON()).toBeNull();

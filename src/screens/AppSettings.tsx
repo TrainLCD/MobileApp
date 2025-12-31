@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue } from 'jotai';
 import { lighten } from 'polished';
 import React, { useCallback, useMemo, useState } from 'react';
 import type { SectionBase, SectionListRenderItemInfo } from 'react-native';
@@ -17,8 +18,7 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import { isDevApp } from '~/utils/isDevApp';
 import FooterTabBar from '../components/FooterTabBar';
-import { useThemeStore } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 
@@ -70,7 +70,7 @@ const SettingsItem = ({
   isLast: boolean;
   onPress?: () => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const iconName = useMemo(() => {
     switch (item.id) {
@@ -146,7 +146,7 @@ const AppSettingsScreen: React.FC = () => {
 
   const scrollY = useSharedValue(0);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
 
   const SETTINGS_SECTIONS: SettingsSection[] = useMemo(

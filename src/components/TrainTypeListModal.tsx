@@ -5,9 +5,8 @@ import { FlatList, Platform, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -84,7 +83,7 @@ export const TrainTypeListModal = ({
 }: Props) => {
   const { fetchedTrainTypes } = useAtomValue(navigationState);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const title = useMemo(() => {
     if (!destination) {

@@ -55,7 +55,7 @@ const TestComponent: React.FC<Props> = ({ destination, stations }) => {
 };
 
 describe('useGetStationsWithTermination', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

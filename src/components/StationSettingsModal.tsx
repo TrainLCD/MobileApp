@@ -1,13 +1,13 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
-import { APP_THEME } from '~/models/Theme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
-import { useThemeStore } from '../hooks';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import { CustomModal } from './CustomModal';
 import { ToggleButton } from './ToggleButton';
@@ -56,7 +56,7 @@ export const StationSettingsModal: React.FC<Props> = ({
   toggleNotificationModeEnabled,
   onDestinationSelected,
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <CustomModal

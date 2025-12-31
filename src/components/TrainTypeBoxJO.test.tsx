@@ -6,6 +6,7 @@ import TrainTypeBoxJO from './TrainTypeBoxJO';
 // Mock dependencies
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => ({ headerState: 'HEADER_JA' })),
+  atom: jest.fn((initialValue) => initialValue),
 }));
 
 jest.mock('../store/atoms/navigation', () => ({
@@ -85,7 +86,7 @@ describe('TrainTypeBoxJO', () => {
     lines: null,
   };
 
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { createStore, Provider as JotaiProvider } from 'jotai';
+import { Provider as JotaiProvider } from 'jotai';
+import { createStore } from 'jotai/vanilla';
 import type { ReactNode } from 'react';
 import type {
   SavedRoute,
@@ -43,11 +44,14 @@ const withJotaiProvider = (store: ReturnType<typeof createStore>) =>
 
 describe('useSavedRoutes', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockIdCounter = 0;
     mockDb.execAsync.mockResolvedValue();
     mockDb.getAllAsync.mockResolvedValue([]);
     mockDb.runAsync.mockResolvedValue();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('initialization', () => {

@@ -4,7 +4,7 @@ import * as TaskManager from 'expo-task-manager';
 import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
-import { setLocation } from './src/hooks';
+import { setLocation } from './src/store/atoms/location';
 
 Sentry.init({
   dsn: SENTRY_DSN,

@@ -95,10 +95,6 @@ describe('useCurrentLine', () => {
     typeof useCurrentStation
   >;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });

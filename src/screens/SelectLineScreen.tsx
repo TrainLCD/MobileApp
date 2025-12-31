@@ -1,12 +1,11 @@
 import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import Animated, {
@@ -36,18 +35,13 @@ import isTablet from '~/utils/isTablet';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
-import {
-  setLocation,
-  useFetchCurrentLocationOnce,
-  useFetchNearbyStation,
-  useLocationStore,
-  useThemeStore,
-} from '../hooks';
+import { useFetchCurrentLocationOnce, useFetchNearbyStation } from '../hooks';
 import { useSavedRoutes } from '../hooks/useSavedRoutes';
-import { APP_THEME } from '../models/Theme';
 import lineStateAtom from '../store/atoms/line';
+import { locationAtom, setLocation } from '../store/atoms/location';
 import navigationState, { type LoopItem } from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
 import { SelectLineScreenPresets } from './SelectLineScreenPresets';
@@ -142,12 +136,9 @@ const SelectLineScreen = () => {
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
 
-  const latitude = useLocationStore(
-    (state) => state?.location?.coords.latitude
-  );
-  const longitude = useLocationStore(
-    (state) => state?.location?.coords.longitude
-  );
+  const location = useAtomValue(locationAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
@@ -156,7 +147,7 @@ const SelectLineScreen = () => {
     return (flattened?.paddingBottom ?? 24) + footerHeight;
   }, [footerHeight]);
 
-  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const orientation = useDeviceOrientation();
   const isPortraitOrientation = useMemo(
     () =>
@@ -284,19 +275,14 @@ const SelectLineScreen = () => {
   }, [routes]);
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() =>
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
-      ),
-      Effect.andThen((hasStartedLocationUpdates) => {
-        if (hasStartedLocationUpdates) {
-          return Effect.promise(() =>
-            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-          );
-        }
-      }),
-      Effect.runPromise
-    );
+    const stopLocationUpdates = async () => {
+      const hasStartedLocationUpdates =
+        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStartedLocationUpdates) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    };
+    stopLocationUpdates();
   }, []);
 
   const updateStationsCache = useCallback(
@@ -374,27 +360,25 @@ const SelectLineScreen = () => {
   }, [station, updateStationsCache]);
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() =>
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED)
-      ),
-      Effect.andThen((firstLaunchPassed) => {
-        if (firstLaunchPassed === null) {
-          Alert.alert(translate('notice'), translate('firstAlertText'), [
-            {
-              text: 'OK',
-              onPress: (): void => {
-                AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                  'true'
-                );
-              },
+    const checkFirstLaunch = async () => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
+      );
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                'true'
+              );
             },
-          ]);
-        }
-      }),
-      Effect.runPromise
-    );
+          },
+        ]);
+      }
+    };
+    checkFirstLaunch();
   }, []);
 
   useEffect(() => {

@@ -1,9 +1,9 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
-import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
@@ -11,7 +11,6 @@ import { useCurrentStation } from './useCurrentStation';
 import { useInterval } from './useInterval';
 import { useIsPassing } from './useIsPassing';
 import { useNextStation } from './useNextStation';
-import { useThemeStore } from './useThemeStore';
 import { useValueRef } from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
@@ -19,7 +18,7 @@ type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
 
 export const useTransitionHeaderState = (): void => {
   const { arrived, approaching, selectedBound } = useAtomValue(stationState);
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const [
     {
       headerState,

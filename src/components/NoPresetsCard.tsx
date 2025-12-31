@@ -1,8 +1,8 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import Typography from './Typography';
 
@@ -48,7 +48,7 @@ const NoPresetsIcon: React.FC = () => (
 type Props = { text?: string; icon?: React.ReactNode };
 
 const NoPresetsCardBase: React.FC<Props> = ({ text, icon }) => {
-  const isLEDTheme = useThemeStore((st) => st === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const containerStyle = useMemo(
     () => [
