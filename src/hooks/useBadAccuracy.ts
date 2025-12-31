@@ -10,7 +10,7 @@ export const useBadAccuracy = (): boolean => {
     if (!accuracy) {
       return false;
     }
-    if ((accuracy || 0) > BAD_ACCURACY_THRESHOLD) {
+    if (accuracy > BAD_ACCURACY_THRESHOLD) {
       return true;
     }
     return false;
