@@ -32,14 +32,20 @@ export const useStartBackgroundLocationUpdates = () => {
             },
           });
         } catch (error) {
-          console.warn('バックグラウンド位置情報の更新開始に失敗しました:', error);
+          console.warn(
+            'バックグラウンド位置情報の更新開始に失敗しました:',
+            error
+          );
         }
       })();
     }
 
     return () => {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
-        console.warn('バックグラウンド位置情報の更新停止に失敗しました:', error);
+        console.warn(
+          'バックグラウンド位置情報の更新停止に失敗しました:',
+          error
+        );
       });
     };
   }, [autoModeEnabled, bgPermGranted]);
