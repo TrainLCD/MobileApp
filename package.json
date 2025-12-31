@@ -24,7 +24,6 @@
     "@gorhom/portal": "^1.0.14",
     "@holiday-jp/holiday_jp": "^2.5.1",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-community/cli": "^15.1.2",
     "@react-native-firebase/analytics": "^23.7.0",
     "@react-native-firebase/app": "^23.7.0",
     "@react-native-firebase/auth": "^23.7.0",
@@ -33,9 +32,9 @@
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.3.1",
-    "@sentry/react-native": "~7.2.0",
+    "@sentry/react-native": "~7.8.0",
     "dayjs": "^1.11.19",
-    "effect": "^3.16.12",
+    "effect": "^3.19.13",
     "expo": "~54.0.21",
     "expo-application": "~7.0.7",
     "expo-asset": "~12.0.9",
@@ -146,5 +145,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.0.62"
+  "version": "10.0.63"
 }

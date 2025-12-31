@@ -1,7 +1,7 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, Platform, StyleSheet, View } from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
@@ -247,6 +247,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           <EmptyResult
             loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
