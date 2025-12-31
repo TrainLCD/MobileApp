@@ -394,7 +394,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
         return (
           <EmptyStationNameCell
             lastLineColor={lineColors.at(-1) || line?.color || '#fff'}
-            key={i}
+            key={`empty-${i}`}
             isLast={isLast}
             hasTerminus={hasTerminus}
           />
