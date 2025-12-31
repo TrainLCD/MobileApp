@@ -2,7 +2,7 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2025-12-27（LineBoardテスト完全追加）
+**最終更新**: 2025-12-31（lineSymbolImage.ts改善、Firebase更新完了）
 
 ## 📊 概要
 
@@ -11,8 +11,8 @@
 - **本番コード**: 297ファイル
 - **テストファイル**: 85ファイル
 - **カバレッジ**: **約22-23%**（LineBoard系テスト追加により向上）
-- **コンポーネント数**: 110個
-- **カスタムフック数**: 78個
+- **コンポーネント数**: 107個
+- **カスタムフック数**: 79個
 - **スクリーン数**: 9個
 
 ---
@@ -292,13 +292,14 @@ src/components/
 #### 古いバージョンのライブラリ
 
 ##### ✅ 対応完了
+
 ```json
-"dayjs": "^1.11.19"  // ✅ 最新版に更新済み（2025-12-26以前）
+"dayjs": "^1.11.19"              // ✅ 最新版に更新済み（2025-12-26以前）
+"@react-native-firebase/*": "^23.7.0"  // ✅ 最新版に更新済み（2025-12-31確認）
 ```
 
 ##### 🟠 計画的な更新が必要
 ```javascript
-"@react-native-firebase/*": "^21.6.0"     // 最新: ^23.7.0 (メジャー2つ遅れ)
 "@react-native-community/cli": "^15.1.2"  // 最新: ^20.0.2 (メジャー5つ遅れ)
 "@sentry/react-native": "~7.2.0"          // 最新: ~7.8.0
 "effect": "^3.16.12"                      // 最新: ^3.19.13
@@ -306,7 +307,7 @@ src/components/
 
 #### 推奨アクション
 1. ~~**今週中**: `dayjs`を最新版にアップデート~~ ✅ **完了**（2025-12-26以前）
-2. **1ヶ月以内**: Firebase関連を計画的にアップデート（破壊的変更に注意）
+2. ~~**1ヶ月以内**: Firebase関連を計画的にアップデート~~ ✅ **完了**（^23.7.0に更新済み）
 3. **継続的**: 四半期ごとの依存関係レビュープロセスの確立
 
 ---
@@ -419,32 +420,40 @@ src/__fixtures__/station.ts          (7,698行) - テストデータ
 src/@types/graphql.d.ts              (6,884行) - 自動生成
 src/hooks/useTTSText.ts              (1,199行) - ビジネスロジック
 src/components/TypeChangeNotify.tsx  (1,089行) - コンポーネント
-src/lineSymbolImage.ts               (1,069行) - 設定ファイル
+src/lineSymbolImage.ts                 (707行) - 設定ファイル ✅ 改善済み
 src/screens/SelectLineScreen.tsx       (817行) - 画面
 src/screens/Main.tsx                   (568行) - 画面
 ```
 
-#### 特に問題: `src/lineSymbolImage.ts`（1,069行）
+#### ✅ 改善完了: `src/lineSymbolImage.ts`（1,069行 → 707行、362行削減）
 
-巨大なswitch-case文で路線IDから画像パスをハードコーディング：
+**2025-12-31に改善完了**（PR #4862）
+
+以前の問題だったswitch-case文をオブジェクト（`Record<number, LineSymbolImage>`）に変換：
 ```typescript
+// Before: 巨大なswitch-case文
 switch (lineId) {
   case 11101:
     return require('./assets/numbering/JR/line_symbol_jr_east_tokaido.png');
-  case 11102:
-    return require('./assets/numbering/JR/line_symbol_jr_east_yamanote.png');
   // ... 1000行以上続く
 }
+
+// After: オブジェクトマッピング ✅
+const LINE_SYMBOL_IMAGE_WITH_COLOR: Record<number, LineSymbolImage> = {
+  11301: { signPath: require('../assets/marks/jre/jt.webp') },
+  11302: { signPath: require('../assets/marks/jre/jy.webp') },
+  // ...
+};
 ```
 
-#### 推奨アクション
-1. **`lineSymbolImage.ts`をJSONマッピングファイルに変換**（最優先）
-   ```json
-   {
-     "11101": "./assets/numbering/JR/line_symbol_jr_east_tokaido.png",
-     "11102": "./assets/numbering/JR/line_symbol_jr_east_yamanote.png"
-   }
-   ```
+**達成済みの改善**:
+- ✅ **362行のコード削減**（約34%削減）
+- ✅ **コードの可読性向上**: switch-caseからオブジェクト形式へ
+- ✅ **保守性の向上**: 新しい路線の追加がより簡潔に
+- ✅ **型安全性の向上**: `Record<number, LineSymbolImage>`で型定義
+
+#### 推奨アクション（残り）
+1. ~~**`lineSymbolImage.ts`をJSONマッピングファイルに変換**~~ ✅ **完了**（オブジェクト形式に改善済み）
 2. **`useTTSText.ts`を複数の小さなフックに分割**
    - `useTTSTextStation.ts`
    - `useTTSTextTransfer.ts`
@@ -734,7 +743,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 - [x] テストカバレッジ22-23%を達成 ✅ **達成**（2025-12-27）
 - [ ] テストカバレッジ25%を目指して継続（次のマイルストーン）
   - [ ] Header系コンポーネントのテスト追加
-- [ ] Firebase関連ライブラリのアップデート計画策定
+- [x] Firebase関連ライブラリのアップデート計画策定 ✅ **完了**（^23.7.0に更新済み）
 
 ### 3ヶ月以内
 - [ ] パフォーマンス最適化（メモ化導入）
@@ -743,7 +752,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 
 ### 6ヶ月以内
 - [ ] コンポーネント重複の完全解消
-- [ ] `lineSymbolImage.ts`のデータ化
+- [x] `lineSymbolImage.ts`のデータ化 ✅ **完了**（2025-12-31、PR #4862）
 - [ ] カスタムフックの整理とドキュメント化
 
 ### 12ヶ月以内
