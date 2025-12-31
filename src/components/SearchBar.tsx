@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useAtomValue } from 'jotai';
 import { useMemo, useState } from 'react';
 import {
   Platform,
@@ -8,8 +9,7 @@ import {
   View,
 } from 'react-native';
 import { FONTS } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
 const styles = StyleSheet.create({
@@ -56,7 +56,7 @@ type Props = {
 
 export const SearchBar = ({ onSearch, nameSearch }: Props) => {
   const [searchText, setSearchText] = useState('');
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {

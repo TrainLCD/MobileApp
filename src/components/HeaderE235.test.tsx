@@ -8,6 +8,7 @@ jest.mock('jotai', () => ({
     headerLangState: 'JA',
     headerState: 'CURRENT',
   })),
+  atom: jest.fn((val) => val),
 }));
 
 jest.mock('react-native-reanimated', () => {

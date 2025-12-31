@@ -31,9 +31,12 @@ describe('useTelemetryEnabled', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
     mockIsTelemetryEnabledByBuild = true;
     setAtomValues();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('build フラグで無効化されているときは false を返す', () => {

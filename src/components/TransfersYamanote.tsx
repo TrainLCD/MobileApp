@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
+  Platform,
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
@@ -153,6 +154,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
         renderItem={renderTransferLine}
         contentContainerStyle={styles.transferList}
         numColumns={2}
+        removeClippedSubviews={Platform.OS === 'android'}
       />
     </TouchableOpacity>
   );

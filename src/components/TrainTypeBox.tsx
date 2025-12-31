@@ -17,11 +17,11 @@ import {
   useNextLine,
   useNextTrainType,
   usePrevious,
-  useThemeStore,
 } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
+import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
@@ -81,7 +81,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
-  const theme = useThemeStore();
+  const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
 
   const textOpacityAnim = useSharedValue(0);

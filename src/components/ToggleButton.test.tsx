@@ -2,13 +2,10 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import { ToggleButton } from './ToggleButton';
 
-// Mock dependencies
+// Mock jotai
 jest.mock('jotai', () => ({
+  useAtomValue: jest.fn(() => false), // isLEDThemeAtom returns false by default
   atom: jest.fn((initialValue) => initialValue),
-}));
-
-jest.mock('../hooks', () => ({
-  useThemeStore: jest.fn(() => 'TOKYO_METRO'),
 }));
 
 describe('ToggleButton', () => {

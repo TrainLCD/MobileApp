@@ -1,13 +1,12 @@
-import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
+import { setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
-import { setLocation } from './useLocationStore';
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
@@ -19,9 +18,9 @@ export const useStartBackgroundLocationUpdates = () => {
     }
 
     if (AppState.currentState === 'active') {
-      pipe(
-        Effect.promise(() =>
-          Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      (async () => {
+        try {
+          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             ...LOCATION_TASK_OPTIONS,
             // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
             // OtherNavigationは必須
@@ -31,14 +30,23 @@ export const useStartBackgroundLocationUpdates = () => {
               notificationBody: translate('bgAlertContent'),
               killServiceOnDestroy: true,
             },
-          })
-        ),
-        Effect.runPromise
-      );
+          });
+        } catch (error) {
+          console.warn(
+            'バックグラウンド位置情報の更新開始に失敗しました:',
+            error
+          );
+        }
+      })();
     }
 
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
+        console.warn(
+          'バックグラウンド位置情報の更新停止に失敗しました:',
+          error
+        );
+      });
     };
   }, [autoModeEnabled, bgPermGranted]);
 
@@ -50,12 +58,14 @@ export const useStartBackgroundLocationUpdates = () => {
     }
 
     (async () => {
-      watchPositionSub = await pipe(
-        Effect.promise(() =>
-          Location.watchPositionAsync(LOCATION_TASK_OPTIONS, setLocation)
-        ),
-        Effect.runPromise
-      );
+      try {
+        watchPositionSub = await Location.watchPositionAsync(
+          LOCATION_TASK_OPTIONS,
+          setLocation
+        );
+      } catch (error) {
+        console.warn('位置情報の監視開始に失敗しました:', error);
+      }
     })();
 
     return () => {

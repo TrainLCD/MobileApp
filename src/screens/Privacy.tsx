@@ -14,7 +14,8 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/Button';
 import Typography from '../components/Typography';
-import { setLocation, useFetchCurrentLocationOnce } from '../hooks';
+import { useFetchCurrentLocationOnce } from '../hooks';
+import { setLocation } from '../store/atoms/location';
 import { isJapanese, translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 

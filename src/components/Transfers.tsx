@@ -1,17 +1,23 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import {
   useCurrentStation,
   useGetLineMark,
   useNextStation,
-  useThemeStore,
   useTransferLines,
 } from '../hooks';
-import { APP_THEME, type AppTheme } from '../models/Theme';
+import type { AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
@@ -76,7 +82,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines();
   const nextStation = useNextStation();
   const getLineMarkFunc = useGetLineMark();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const station = useMemo(
     () => (arrived ? currentStation : nextStation),
@@ -287,6 +293,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         data={lines}
         keyExtractor={(l) => (l.id ?? 0).toString()}
         renderItem={renderTransferLine}
+        removeClippedSubviews={Platform.OS === 'android'}
       />
     </TouchableOpacity>
   );

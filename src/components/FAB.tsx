@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { useMemo } from 'react';
 import {
@@ -7,8 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import type { GlyphNames } from '~/@types/ionicons';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 interface Props {
   icon: GlyphNames;
@@ -43,7 +43,7 @@ const FAB: React.FC<Props> = ({
   icon,
   secondary,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const bgColor = useMemo(() => {
     if (isLEDTheme) {
       return '#212121';

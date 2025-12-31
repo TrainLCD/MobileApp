@@ -30,7 +30,7 @@ const TestComponent: React.FC<{ stations: Station[] }> = ({ stations }) => {
 };
 
 describe('useBounds フック', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

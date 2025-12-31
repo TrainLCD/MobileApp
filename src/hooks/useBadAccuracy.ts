@@ -1,17 +1,16 @@
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import { locationAtom } from '~/store/atoms/location';
 import { BAD_ACCURACY_THRESHOLD } from '../constants';
-import { useLocationStore } from './useLocationStore';
 
 export const useBadAccuracy = (): boolean => {
-  const accuracy = useLocationStore(
-    (state) => state?.location?.coords.accuracy
-  );
+  const accuracy = useAtomValue(locationAtom)?.coords.accuracy;
 
   return useMemo(() => {
     if (!accuracy) {
       return false;
     }
-    if ((accuracy || 0) > BAD_ACCURACY_THRESHOLD) {
+    if (accuracy > BAD_ACCURACY_THRESHOLD) {
       return true;
     }
     return false;
