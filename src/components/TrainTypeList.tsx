@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
@@ -8,8 +9,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Line, TrainType } from '~/@types/graphql';
-import { useCurrentLine, useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { useCurrentLine } from '~/hooks';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -133,7 +134,7 @@ export const TrainTypeList = ({
   data: TrainType[];
   onSelect: (item: TrainType) => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {

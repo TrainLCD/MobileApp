@@ -20,15 +20,8 @@ jest.mock('expo-application', () => ({
 
 // Mock hooks
 jest.mock('~/hooks', () => ({
-  useLocationStore: jest.fn(),
   useDistanceToNextStation: jest.fn(),
   useNextStation: jest.fn(),
-  // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-  useThemeStore: jest.fn((selector: any) => {
-    // Return a default theme value
-    const state = 'TY';
-    return selector ? selector(state) : state;
-  }),
 }));
 
 // Mock utils
@@ -50,19 +43,12 @@ jest.mock('~/utils/telemetryConfig', () => ({
 }));
 
 // Import mocked hooks for type safety
-import {
-  useDistanceToNextStation,
-  useLocationStore,
-  useNextStation,
-} from '~/hooks';
+import { useDistanceToNextStation, useNextStation } from '~/hooks';
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
 >;
 
-const mockUseLocationStore = useLocationStore as jest.MockedFunction<
-  typeof useLocationStore
->;
 const mockUseDistanceToNextStation =
   useDistanceToNextStation as jest.MockedFunction<
     typeof useDistanceToNextStation
@@ -75,24 +61,19 @@ describe('DevOverlay', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockUseAtomValue.mockReturnValue({
-      telemetryEnabled: true,
-    });
-
-    // Default mock implementations
-    // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-    mockUseLocationStore.mockImplementation((selector: any) => {
-      const state = {
-        location: {
-          coords: {
-            speed: 10,
-            accuracy: 15,
-          },
+    // Default mock implementations for useAtomValue
+    // locationAtom, accuracyHistoryAtom, telemetryEnabledAtomの順で呼ばれる
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          speed: 10,
+          accuracy: 15,
         },
-        accuracyHistory: [10, 15, 20],
-      };
-      return selector(state);
-    });
+      }) // locationAtom
+      .mockReturnValueOnce([10, 15, 20]) // accuracyHistoryAtom
+      .mockReturnValue({
+        telemetryEnabled: true,
+      }); // その他
 
     mockUseDistanceToNextStation.mockReturnValue('500');
     mockUseNextStation.mockReturnValue({
@@ -150,14 +131,11 @@ describe('DevOverlay', () => {
 
   describe('エッジケース', () => {
     it('位置情報がnullの場合にクラッシュしない', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: null,
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce(null) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       expect(() => {
         render(<DevOverlay />);
@@ -165,76 +143,52 @@ describe('DevOverlay', () => {
     });
 
     it('速度がnullの場合に0km/hを表示する', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: null,
-              accuracy: 15,
-            },
-          },
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: null, accuracy: 15 },
+        }) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 0km/h')).toBeTruthy();
     });
 
     it('速度が負の値の場合に0km/hを表示する', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: -5,
-              accuracy: 15,
-            },
-          },
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: -5, accuracy: 15 },
+        }) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 0km/h')).toBeTruthy();
     });
 
     it('精度がnullの場合に空文字を表示する', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: 10,
-              accuracy: null,
-            },
-          },
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: 10, accuracy: null },
+        }) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Accuracy: m')).toBeTruthy();
     });
 
     it('accuracyHistoryが空配列の場合にクラッシュしない', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: 10,
-              accuracy: 15,
-            },
-          },
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: 10, accuracy: 15 },
+        }) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       expect(() => {
         render(<DevOverlay />);
@@ -242,19 +196,13 @@ describe('DevOverlay', () => {
     });
 
     it('accuracyHistoryがnullの場合にクラッシュしない', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: 10,
-              accuracy: 15,
-            },
-          },
-          accuracyHistory: null,
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: 10, accuracy: 15 },
+        }) // locationAtom
+        .mockReturnValueOnce(null) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       expect(() => {
         render(<DevOverlay />);
@@ -286,38 +234,26 @@ describe('DevOverlay', () => {
 
   describe('速度計算のロジック', () => {
     it('速度が0の場合に0km/hを表示する', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: 0,
-              accuracy: 15,
-            },
-          },
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: 0, accuracy: 15 },
+        }) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 0km/h')).toBeTruthy();
     });
 
     it('速度が正の小数値の場合に正しく変換する', () => {
-      // biome-ignore lint/suspicious/noExplicitAny: テストのモックではセレクター関数の型が不明なため
-      mockUseLocationStore.mockImplementation((selector: any) => {
-        const state = {
-          location: {
-            coords: {
-              speed: 13.89, // 約50 km/h
-              accuracy: 15,
-            },
-          },
-          accuracyHistory: [],
-        };
-        return selector(state);
-      });
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: 13.89, accuracy: 15 }, // 約50 km/h
+        }) // locationAtom
+        .mockReturnValueOnce([]) // accuracyHistoryAtom
+        .mockReturnValue({ telemetryEnabled: true });
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 50km/h')).toBeTruthy();

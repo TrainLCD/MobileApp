@@ -6,13 +6,14 @@ import type { Station } from '~/@types/graphql';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
 import { useNextStation } from '~/hooks/useNextStation';
-import { useThemeStore } from '~/hooks/useThemeStore';
 import { useTTSText } from '~/hooks/useTTSText';
 import type { LineDirection } from '~/models/Bound';
 import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
 import type { AppTheme } from '~/models/Theme';
+import { store } from '~/store';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
+import { themeAtom } from '~/store/atoms/theme';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNumbering', () => ({
@@ -40,7 +41,7 @@ const useTTSTextWithJotaiAndNumbering = (
     const arrived = headerState === 'CURRENT';
     const approaching = headerState === 'ARRIVING';
 
-    useThemeStore.setState(theme);
+    store.set(themeAtom, theme);
     setStationState((prev) => ({
       ...prev,
       station,

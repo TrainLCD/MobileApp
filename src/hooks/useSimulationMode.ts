@@ -13,6 +13,8 @@ import {
   LOCATION_TASK_NAME,
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
+import { store } from '~/store';
+import { locationAtom, setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
@@ -21,7 +23,6 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
-import { setLocation, useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
 export const useSimulationMode = (): void => {
@@ -168,7 +169,7 @@ export const useSimulationMode = (): void => {
       if (!nextStation) {
         segmentIndexRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
-        const prev = useLocationStore.getState().location;
+        const prev = store.get(locationAtom);
         if (
           prev &&
           firstStation?.latitude != null &&
@@ -187,7 +188,7 @@ export const useSimulationMode = (): void => {
         return;
       }
 
-      const prev = useLocationStore.getState().location;
+      const prev = store.get(locationAtom);
       if (
         !prev ||
         nextStation.latitude == null ||

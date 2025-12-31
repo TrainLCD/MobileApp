@@ -12,6 +12,7 @@ import {
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
 } from '~/constants/telemetry';
+import { locationAtom } from '~/store/atoms/location';
 import {
   type GnssState,
   subscribeGnss,
@@ -20,7 +21,6 @@ import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useIsPassing } from './useIsPassing';
-import { useLocationStore } from './useLocationStore';
 import { useTelemetryEnabled } from './useTelemetryEnabled';
 
 const MovingState = z.enum(['arrived', 'approaching', 'passing', 'moving']);
@@ -95,7 +95,7 @@ export const useTelemetrySender = (
     }
   }, []);
 
-  const coords = useLocationStore((state) => state?.location?.coords);
+  const coords = useAtomValue(locationAtom)?.coords;
 
   const { arrived: arrivedFromState, approaching: approachingFromState } =
     useAtomValue(stationState);

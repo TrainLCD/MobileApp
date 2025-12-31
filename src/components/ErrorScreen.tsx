@@ -1,11 +1,11 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
+import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { STATUS_URL } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -68,7 +68,7 @@ const ErrorScreen: React.FC<Props> = ({
     () => navigation.dispatch(StackActions.replace('FakeStation')),
     [navigation]
   );
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <SafeAreaView

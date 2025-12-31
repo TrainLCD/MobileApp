@@ -1,4 +1,5 @@
 import { BlurView } from 'expo-blur';
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import {
   type LayoutChangeEvent,
@@ -14,8 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -73,7 +73,7 @@ type Props = {
 };
 
 export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
-  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
 
   const AnimatedTypography = useMemo(

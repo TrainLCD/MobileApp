@@ -1,17 +1,25 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { useAtomValue } from 'jotai';
 
 jest.mock('expo-location', () => ({
   getCurrentPositionAsync: jest.fn(),
   Accuracy: { Balanced: 'Balanced' },
 }));
 
-jest.mock('./useLocationStore', () => ({
-  useLocationStore: jest.fn(),
-}));
+jest.mock('jotai', () => {
+  const actual = jest.requireActual('jotai');
+  return {
+    ...actual,
+    useAtomValue: jest.fn(),
+  };
+});
 
 import * as Location from 'expo-location';
 import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
-import { useLocationStore } from './useLocationStore';
+
+const mockUseAtomValue = useAtomValue as jest.MockedFunction<
+  typeof useAtomValue
+>;
 
 describe('useFetchCurrentLocationOnce', () => {
   beforeEach(() => {
@@ -23,10 +31,7 @@ describe('useFetchCurrentLocationOnce', () => {
       coords: { latitude: 35.0, longitude: 139.0 },
       timestamp: 1,
     } as unknown as Location.LocationObject;
-    const mockedUseLocationStore = useLocationStore as unknown as jest.Mock;
-    mockedUseLocationStore.mockImplementation((selector) =>
-      selector({ location: lastKnown, accuracyHistory: [] })
-    );
+    mockUseAtomValue.mockReturnValue(lastKnown);
 
     const { result } = renderHook(() => useFetchCurrentLocationOnce());
 
@@ -39,10 +44,7 @@ describe('useFetchCurrentLocationOnce', () => {
   });
 
   it('lastKnown が無い場合は getCurrentPositionAsync を呼び結果を返す', async () => {
-    const mockedUseLocationStore = useLocationStore as unknown as jest.Mock;
-    mockedUseLocationStore.mockImplementation((selector) =>
-      selector({ location: null, accuracyHistory: [] })
-    );
+    mockUseAtomValue.mockReturnValue(null);
     const pos = {
       coords: { latitude: 35.681236, longitude: 139.767125 },
       timestamp: 1730000000000,
@@ -65,10 +67,7 @@ describe('useFetchCurrentLocationOnce', () => {
   });
 
   it('getCurrentPositionAsync が失敗したら error を設定して reject する', async () => {
-    const mockedUseLocationStore = useLocationStore as unknown as jest.Mock;
-    mockedUseLocationStore.mockImplementation((selector) =>
-      selector({ location: null, accuracyHistory: [] })
-    );
+    mockUseAtomValue.mockReturnValue(null);
     const err = new Error('denied');
     (Location.getCurrentPositionAsync as jest.Mock).mockRejectedValue(err);
 

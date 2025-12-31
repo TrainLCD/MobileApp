@@ -27,13 +27,13 @@ import {
   useCheckStoreVersion,
   useCurrentLine,
   useFeedback,
-  useThemeStore,
   useWarningInfo,
 } from '../hooks';
 import type { AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
+import { themeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';
@@ -48,6 +48,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setTuning = useSetAtom(tuningState);
+  const setTheme = useSetAtom(themeAtom);
   const [reportModalShow, setReportModalShow] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
@@ -286,7 +287,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       ]);
 
       if (prevThemeKey) {
-        useThemeStore.setState(prevThemeKey as AppTheme);
+        setTheme(prevThemeKey as AppTheme);
       }
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -322,7 +323,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     };
 
     loadSettings();
-  }, [setNavigation, setSpeech, setTuning]);
+  }, [setNavigation, setSpeech, setTuning, setTheme]);
 
   useEffect(() => {
     const { remove } = addScreenshotListener(() => {

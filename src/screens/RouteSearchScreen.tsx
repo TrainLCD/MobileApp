@@ -1,6 +1,6 @@
 import { useLazyQuery } from '@apollo/client/react';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
@@ -30,10 +30,9 @@ import {
 import navigationState from '~/store/atoms/navigation';
 import isTablet from '~/utils/isTablet';
 import { findLocalType } from '~/utils/trainTypeString';
-import { useThemeStore } from '../hooks';
-import { APP_THEME } from '../models/Theme';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 
 type GetRouteTypesData = {
@@ -111,7 +110,7 @@ const RouteSearchScreen = () => {
   const [searchResults, setSearchResults] = useState<Station[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const orientation = useDeviceOrientation();
   const isPortraitOrientation = useMemo(
     () =>
