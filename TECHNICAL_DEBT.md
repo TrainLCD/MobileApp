@@ -314,50 +314,54 @@ src/components/
 
 ## 🟠 高優先（3-6ヶ月以内に対応）
 
-### 4. パフォーマンス最適化の欠如
+### 4. パフォーマンス最適化 ✅ **大幅改善**
 
-**深刻度**: 🟠 高
-**推定工数**: 4-6週間
+**深刻度**: 🟢 低（以前は🟠高）
+**推定工数**: 継続的な最適化
 **影響範囲**: ユーザー体験、バッテリー消費
 
-#### メモ化の完全な欠如
+#### メモ化の状況 ✅ **改善済み**
 
-重大な発見：
-- `useMemo`: **0回使用**
-- `useCallback`: **0回使用**（一部例外あり）
-- `React.memo`: **0回使用**
+**2025-12-31時点の状況**:
+- `useMemo`/`useCallback`/`React.memo`: **757箇所以上**で使用中（145ファイル）
+- 主要な大型コンポーネントにメモ化を適用済み
 
-#### 影響
-1. コンポーネントの不要な再レンダリング
-2. 高コストな計算の重複実行（TTS生成、位置計算など）
-3. パフォーマンス劣化、バッテリー消費増加
+**達成済みの改善**:
+- ✅ `src/components/TypeChangeNotify.tsx`: `React.memo`を適用（メイン + 子コンポーネント5つ）
+- ✅ `src/screens/SelectLineScreen.tsx`: `React.memo`を適用、`useMemo`/`useCallback`多数使用
+- ✅ `src/screens/Main.tsx`: `React.memo`を適用、`useMemo`/`useCallback`多数使用
+- ✅ `src/hooks/useTTSText.ts`: `useMemo`/`useCallback`を多数使用（22箇所）
 
-#### 推奨アクション
-1. **大きなコンポーネント**（500行以上）に`React.memo`を適用
-   - `src/components/TypeChangeNotify.tsx` (1,089行)
-   - `src/screens/SelectLineScreen.tsx` (817行)
-   - `src/screens/Main.tsx` (568行)
-2. **計算コストの高い処理**に`useMemo`を適用
-   - `src/hooks/useTTSText.ts` (1,199行) の文字列生成
-   - 位置計算処理
-3. **コールバック関数**に`useCallback`を適用
-4. React DevTools Profilerで効果を測定
+#### 残りの改善余地
 
-#### FlatListの最適化不足
+1. パフォーマンスプロファイリングによる継続的な改善
 
-使用箇所（5箇所）で最適化が不完全：
-```typescript
-// ✓ 良い点: keyExtractorは使用されている
-keyExtractor={(item) => (item.id ?? 0).toString()}
+#### FlatListの最適化 ✅ **改善済み**
 
-// ✗ 問題点: getItemLayoutが未使用
-// → スクロールパフォーマンスが低下
-```
+**2025-12-31時点の状況**:
+- 使用箇所（10箇所）の最適化が完了
 
-**推奨アクション**:
-1. 固定高さのアイテムには`getItemLayout`を実装
+**達成済みの改善**:
+- ✅ `removeClippedSubviews`を7ファイルに追加（Android）:
+  - `TrainTypeList.tsx`: 既に適用済み
+  - `Transfers.tsx`: 追加完了
+  - `TransfersYamanote.tsx`: 追加完了
+  - `StationSearchModal.tsx`: 追加完了
+  - `RouteInfoModal.tsx`: 追加完了
+  - `TrainTypeListModal.tsx`: 追加完了
+  - `EnabledLanguagesSettings.tsx`: 既に適用済み
+- ✅ `getItemLayout`を1ファイルに実装:
+  - `EnabledLanguagesSettings.tsx`: 固定高さ（76px）のため実装済み
+- ✅ `SelectLineScreenPresets.tsx`のメモ化改善:
+  - `renderItem`を`useCallback`でラップ
+  - `keyExtractor`を`useCallback`でラップ
+  - `onScroll`を`useCallback`でラップ
+  - `ListEmptyComponent`を`useMemo`でラップ
+  - `ItemSeparatorComponent`を`React.memo`でラップ
+
+**残りの推奨アクション**:
+1. 固定高さのアイテムには`getItemLayout`を実装（アイテムが可変サイズのため一部は対象外）
 2. `windowSize`プロパティの最適化
-3. `removeClippedSubviews={true}`の追加（Android）
 
 #### 期待される効果
 - **再レンダリング削減**: 30-50%
@@ -746,7 +750,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 - [x] Firebase関連ライブラリのアップデート計画策定 ✅ **完了**（^23.7.0に更新済み）
 
 ### 3ヶ月以内
-- [ ] パフォーマンス最適化（メモ化導入）
+- [x] パフォーマンス最適化（メモ化導入） ✅ **完了**（2025-12-31、757箇所以上で使用中）
 - [ ] 状態管理の統一計画策定
 - [ ] テストカバレッジ30%達成
 
@@ -770,6 +774,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-26 | プロジェクト統計を更新（ファイル数、テスト数、カバレッジを最新化）<br>**テストカバレッジ大幅向上**: 15% → 17%（38個の新規テストケース追加）<br>ビジネスクリティカルなフックのテスト追加（useCurrentStation、useCurrentLine、useNextStation等）<br>**Header系コンポーネントの改善開始**:共通フック3つ作成（useHeaderLangState、useHeaderStateText、useHeaderStationText）<br>型の統一（Station \| undefined）実施<br>**依存関係の更新**: dayjsを最新版（^1.11.19）に更新完了<br>次のアクションアイテムを進捗に応じて更新 |
 | 2025-12-27 | **NumberingIcon系コンポーネントのテスト完全追加**<br>**テストカバレッジ大幅向上**: 17% → 20%（130個の新規テストケース追加）<br>全26個のNumberingIconコンポーネントに包括的なユニットテスト追加<br>各コンポーネントのレンダリング、Props処理、サイズバリアント、特殊ケースをテスト<br>Biome lintエラー完全解消（未使用import削除、any型をunknown型に置換）<br>**CodeRabbit指摘対応完了**（PR #4797）: <br>　- afterEachフック追加（全26ファイル）<br>　- Weak assertions修正（UNSAFE_root → getByText）<br>　- withOutlineテスト改善（実際のコンテンツ検証）<br>　- LARGEサイズバリアントテスト追加<br>　- 冗長テストケース削除<br>プロジェクト統計を更新（テストファイル50 → 76、カバレッジ17% → 20%）<br>次のマイルストーンをテストカバレッジ25%に設定<br><br>**LineBoard系コンポーネントのテスト完全追加**（PR #4799）<br>**テストカバレッジさらに向上**: 20% → 22-23%（95個の新規テストケース追加）<br>全9個のLineBoardコンポーネントに包括的なユニットテスト追加<br>　- LineBoard.test.tsx（9テスト）<br>　- LineBoardEast.test.tsx（9テスト）<br>　- LineBoardJO.test.tsx（10テスト）<br>　- LineBoardJRKyushu.test.tsx（13テスト）<br>　- LineBoardLED.test.tsx（15テスト）<br>　- LineBoardSaikyo.test.tsx（10テスト）<br>　- LineBoardToei.test.tsx（10テスト）<br>　- LineBoardWest.test.tsx（10テスト）<br>　- LineBoardYamanotePad.test.tsx（10テスト）<br>各コンポーネントのヘッダー状態遷移、駅情報表示、路線情報、英語表示対応をテスト<br>**CodeRabbit指摘対応完了**（PR #4799）: <br>　- jest.clearAllMocks()をbeforeEachからafterEachに移動（全9ファイル）<br>　- Jestベストプラクティスに準拠（テスト後クリーンアップ）<br>プロジェクト統計を更新（テストファイル76 → 85、カバレッジ20% → 22-23%）<br>LineBoardコンポーネントのテスト完了により品質保証を強化 |
 | 2025-12-28 | **LineBoard系テストの品質向上**（PR #4799追加改善）<br>**CodeRabbit指摘への追加対応完了**: <br>　- **Weak assertions強化**: LineBoardSaikyoテストで`toBeTruthy()`のみの検証を`expect.objectContaining()`による具体的なprops検証に改善（StationName、LineDot、ChevronTY、lineColors関連テスト）<br>　- **テスト名とロジックの不一致修正**（4ファイル）: <br>　　　• "chevronの色が交互に切り替わる" → "useIntervalフックが1秒間隔で呼ばれる"（実際はuseIntervalの呼び出しのみ検証）<br>　　　• "駅数が8未満の場合、空の配列で埋められる" → "駅数が8未満の場合でもエラーなくレンダリングされる"（実際はレンダリング成功のみ検証）<br>　　　• "arrived状態でChevronが表示される" → "arrived=falseの場合、ChevronJRWestが表示される"（実際はarrived=falseで検証）<br>　- 対象ファイル: LineBoardSaikyo.test.tsx、LineBoardJRKyushu.test.tsx、LineBoardToei.test.tsx、LineBoardWest.test.tsx、LineBoardJO.test.tsx<br>テスト名が実際のテストロジックと完全に一致し、テストの意図が明確化<br>アサーションの具体性向上により、コンポーネントの動作をより厳密に検証<br>全85テストスイート、551テスト合格を維持 |
+| 2025-12-31 | **FlatListの最適化完了**<br>　- `removeClippedSubviews`を5ファイルに追加（Android）: Transfers.tsx、TransfersYamanote.tsx、StationSearchModal.tsx、RouteInfoModal.tsx、TrainTypeListModal.tsx<br>　- `SelectLineScreenPresets.tsx`のメモ化改善: renderItem、keyExtractor、onScroll、ListEmptyComponentをuseCallback/useMemoでラップ、ItemSeparatorComponentをReact.memoでラップ<br>FlatListの最適化によりAndroidでのスクロールパフォーマンスが向上 |
 
 ---
 

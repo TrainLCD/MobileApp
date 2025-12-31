@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import {
   FlatList,
+  type ListRenderItem,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Pressable,
@@ -27,6 +28,8 @@ const styles = StyleSheet.create({
   itemSeparator: { width: CARD_GAP },
   contentContainer: { paddingHorizontal: 0, marginBottom: 48 },
 });
+
+const ItemSeparator = React.memo(() => <View style={styles.itemSeparator} />);
 
 export const SelectLineScreenPresets = ({
   carouselData,
@@ -84,62 +87,76 @@ export const SelectLineScreenPresets = ({
     [loopData, ITEM_SIZE]
   );
 
+  const keyExtractor = useCallback((item: LoopItem) => item.__k, []);
+
+  const renderItem: ListRenderItem<LoopItem> = useCallback(
+    ({ item }) => (
+      <View style={{ width: cardWidth }}>
+        <View style={styles.horizontalMargin}>
+          <Pressable onPress={() => item.stations.length > 0 && onPress(item)}>
+            <PresetCard
+              title={item.name}
+              from={item.stations[0]}
+              to={item.stations.at(-1)}
+            />
+          </Pressable>
+        </View>
+      </View>
+    ),
+    [cardWidth, onPress]
+  );
+
+  const listEmptyComponent = useMemo(
+    () =>
+      isPresetsLoading ? (
+        <SkeletonPlaceholder borderRadius={4} speed={1500}>
+          <SkeletonPlaceholder.Item
+            width={cardWidth - 48}
+            height={160}
+            style={styles.horizontalMargin}
+          />
+        </SkeletonPlaceholder>
+      ) : (
+        <View
+          style={{
+            width: cardWidth,
+          }}
+        >
+          <View style={styles.horizontalMargin}>
+            <NoPresetsCard />
+          </View>
+        </View>
+      ),
+    [isPresetsLoading, cardWidth]
+  );
+
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!carouselData.length) return;
+      const x = e.nativeEvent.contentOffset.x;
+      carouselOffsetRef.current = x;
+      const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
+      const logicalIndex =
+        ((rawIndex % carouselData.length) + carouselData.length) %
+        carouselData.length;
+      currentLogicalIndexRef.current = logicalIndex;
+    },
+    [ITEM_SIZE, carouselData.length]
+  );
+
   return (
     <View style={styles.root}>
       <FlatList<LoopItem>
         ref={listRef}
         horizontal
         data={loopData}
-        keyExtractor={(item) => item.__k}
-        ListEmptyComponent={() =>
-          isPresetsLoading ? (
-            <SkeletonPlaceholder borderRadius={4} speed={1500}>
-              <SkeletonPlaceholder.Item
-                width={cardWidth - 48}
-                height={160}
-                style={styles.horizontalMargin}
-              />
-            </SkeletonPlaceholder>
-          ) : (
-            <View
-              style={{
-                width: cardWidth,
-              }}
-            >
-              <View style={styles.horizontalMargin}>
-                <NoPresetsCard />
-              </View>
-            </View>
-          )
-        }
-        renderItem={({ item }) => (
-          <View style={{ width: cardWidth }}>
-            <View style={styles.horizontalMargin}>
-              <Pressable
-                onPress={() => item.stations.length > 0 && onPress(item)}
-              >
-                <PresetCard
-                  title={item.name}
-                  from={item.stations[0]}
-                  to={item.stations.at(-1)}
-                />
-              </Pressable>
-            </View>
-          </View>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+        keyExtractor={keyExtractor}
+        ListEmptyComponent={listEmptyComponent}
+        renderItem={renderItem}
+        ItemSeparatorComponent={ItemSeparator}
         showsHorizontalScrollIndicator={false}
         snapToOffsets={snapOffsets}
-        onScroll={(e) => {
-          if (!carouselData.length) return;
-          const x = e.nativeEvent.contentOffset.x;
-          carouselOffsetRef.current = x;
-          const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
-          const logicalIndex =
-            ((rawIndex % carouselData.length) + carouselData.length) %
-            carouselData.length;
-          currentLogicalIndexRef.current = logicalIndex;
-        }}
+        onScroll={handleScroll}
         onMomentumScrollEnd={handleMomentumEnd}
         decelerationRate="fast"
         snapToAlignment="start"

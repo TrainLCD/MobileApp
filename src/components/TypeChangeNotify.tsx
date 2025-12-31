@@ -177,7 +177,7 @@ const useBarWidth = () => {
   return Math.max(0, dim.width / 2 - edgeOffset);
 };
 
-const MetroBars = ({
+const MetroBars = React.memo(function MetroBars({
   currentLine,
   nextLine,
   trainType,
@@ -187,7 +187,7 @@ const MetroBars = ({
   nextLine: Line;
   trainType: TrainType;
   nextTrainType: TrainType;
-}) => {
+}) {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
@@ -404,9 +404,9 @@ const MetroBars = ({
       </View>
     </View>
   );
-};
+});
 
-const SaikyoBars = ({
+const SaikyoBars = React.memo(function SaikyoBars({
   currentLine,
   nextLine,
   trainType,
@@ -416,7 +416,7 @@ const SaikyoBars = ({
   nextLine: Line;
   trainType: TrainType;
   nextTrainType: TrainType;
-}) => {
+}) {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
@@ -628,9 +628,9 @@ const SaikyoBars = ({
       </View>
     </View>
   );
-};
+});
 
-const JOBars = ({
+const JOBars = React.memo(function JOBars({
   currentLine,
   nextLine,
   trainType,
@@ -640,7 +640,7 @@ const JOBars = ({
   nextLine: Line;
   trainType: TrainType;
   nextTrainType: TrainType;
-}) => {
+}) {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
@@ -796,7 +796,7 @@ const JOBars = ({
       </View>
     </View>
   );
-};
+});
 
 const HeadingJa = React.memo(
   ({
