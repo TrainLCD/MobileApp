@@ -725,7 +725,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 
 ### 即時対応（今週中）
 - [x] `dayjs`を最新版にアップデート ✅ **完了**（2025-12-26以前）
-- [ ] `src/screens/Main.tsx:463`のTODOを具体化
+- [x] `src/screens/Main.tsx:463`のTODOを具体化
 
 ### 1ヶ月以内
 - [x] LineBoardコンポーネントの共通化を開始 ✅ **完了**（2025-12-25）
