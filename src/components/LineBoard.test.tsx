@@ -6,7 +6,7 @@ import LineBoard from './LineBoard';
 // モック設定
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
-  atom: jest.fn((val) => ({ init: val })),
+  atom: jest.fn((initialValue) => initialValue),
   useAtom: jest.fn((val) => [val, jest.fn()]),
   useSetAtom: jest.fn(() => jest.fn()),
 }));

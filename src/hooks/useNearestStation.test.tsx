@@ -12,7 +12,7 @@ import { useNextStation } from './useNextStation';
 jest.mock('jotai', () => ({
   __esModule: true,
   useAtomValue: jest.fn(),
-  atom: jest.fn((val) => ({ init: val })),
+  atom: jest.fn((initialValue) => initialValue),
   createStore: jest.fn(() => ({
     get: jest.fn(),
     set: jest.fn(),

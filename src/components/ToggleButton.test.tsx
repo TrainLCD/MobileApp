@@ -5,7 +5,7 @@ import { ToggleButton } from './ToggleButton';
 // Mock jotai
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => false), // isLEDThemeAtom returns false by default
-  atom: jest.fn((val) => ({ init: val })),
+  atom: jest.fn((initialValue) => initialValue),
 }));
 
 describe('ToggleButton', () => {

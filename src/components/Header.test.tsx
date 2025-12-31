@@ -8,7 +8,7 @@ const mockUseCurrentStation = jest.fn();
 
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
-  atom: jest.fn((val) => ({ init: val })),
+  atom: jest.fn((initialValue) => initialValue),
 }));
 
 jest.mock('~/hooks', () => ({
