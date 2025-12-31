@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -21,11 +22,11 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
+import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
 import { getSettingsThemes } from '~/utils/theme';
 import { ASYNC_STORAGE_KEYS, IN_USE_COLOR_MAP } from '../constants';
-import { useThemeStore } from '../hooks';
 
 type SettingItem = {
   id: AppTheme;
@@ -56,7 +57,7 @@ const SettingsItem = ({
   state: boolean;
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const themeColor = IN_USE_COLOR_MAP[item.id];
 
   return (
@@ -114,7 +115,8 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const scrollY = useSharedValue(0);
 
-  const currentTheme = useThemeStore((state) => state);
+  const currentTheme = useAtomValue(themeAtom);
+  const setTheme = useSetAtom(themeAtom);
 
   const navigation = useNavigation();
 
@@ -132,15 +134,21 @@ const ThemeSettingsScreen: React.FC = () => {
     [SETTING_ITEMS]
   );
 
-  const handleToggleThemeEnabled = useCallback(async (theme: AppTheme) => {
-    try {
-      await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
-      useThemeStore.setState(theme);
-    } catch (error) {
-      console.error('Failed to toggle theme setting', error);
-      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
-    }
-  }, []);
+  const handleToggleThemeEnabled = useCallback(
+    async (theme: AppTheme) => {
+      try {
+        await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
+        setTheme(theme);
+      } catch (error) {
+        console.error('Failed to toggle theme setting', error);
+        Alert.alert(
+          translate('errorTitle'),
+          translate('failedToSavePreference')
+        );
+      }
+    },
+    [setTheme]
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {

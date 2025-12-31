@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -6,8 +7,8 @@ import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
 import { NUMBERING_ICON_SIZE } from '../constants';
-import { useBounds, useGetLineMark, useThemeStore } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { useBounds, useGetLineMark } from '../hooks';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese } from '../translation';
 import { CardChevron } from './CardChevron';
 import TransferLineMark from './TransferLineMark';
@@ -154,7 +155,7 @@ export const CommonCard: React.FC<Props> = ({
   testID,
   onPress,
 }) => {
-  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
   const mark = useMemo(() => getLineMark({ line }), [getLineMark, line]);
   const { bounds } = useBounds(stations);

@@ -1,22 +1,6 @@
 // __tests__/useSimulationMode.test.ts
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 
-jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: {
-    setState: jest.fn(),
-  },
-}));
-
-jest.mock('~/hooks/useNextStation', () => ({
-  __esModule: true,
-  useNextStation: jest.fn(),
-}));
-
-jest.mock('~/hooks/useInRadiusStation', () => ({
-  __esModule: true,
-  useInRadiusStation: jest.fn(),
-}));
-
 describe('generateTrainSpeedProfile', () => {
   it('returns a non-empty array ending in 0', () => {
     const profile = generateTrainSpeedProfile({

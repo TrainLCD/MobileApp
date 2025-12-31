@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
 import {
   type LayoutChangeEvent,
@@ -18,10 +18,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { StationSearchModal } from './StationSearchModal';
@@ -87,7 +86,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
   const setStationAtom = useSetAtom(stationState);
   const setNavigationAtom = useSetAtom(navigationState);
 
-  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
 
   const AnimatedTypography = useMemo(

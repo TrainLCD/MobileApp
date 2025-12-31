@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -10,8 +11,7 @@ import {
   View,
 } from 'react-native';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -100,7 +100,7 @@ const NewReportModal: React.FC<Props> = ({
   onSubmit,
   descriptionLowerLimit,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const textInputRef = useRef<TextInputType>(null);
   const textRef = useRef('');
   const [charCount, setCharCount] = useState(0);

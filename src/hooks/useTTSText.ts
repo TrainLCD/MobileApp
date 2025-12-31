@@ -4,6 +4,7 @@ import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
+import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { useAfterNextStation } from './useAfterNextStation';
@@ -19,7 +20,6 @@ import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useStoppingState } from './useStoppingState';
-import { useThemeStore } from './useThemeStore';
 import { useTransferLines } from './useTransferLines';
 
 const EMPTY_TTS_TEXT = {
@@ -39,7 +39,7 @@ export const useTTSText = (
   firstSpeech = true,
   enabled = false
 ): [string, string] | undefined[] => {
-  const theme = useThemeStore();
+  const theme = useAtomValue(themeAtom);
 
   const { selectedBound: selectedBoundOrigin, stations } =
     useAtomValue(stationState);

@@ -4,6 +4,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
+import { locationAtom } from '~/store/atoms/location';
 import {
   ARRIVED_MAXIMUM_SPEED,
   BAD_ACCURACY_THRESHOLD,
@@ -15,7 +16,6 @@ import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useCanGoForward } from './useCanGoForward';
-import { useLocationStore } from './useLocationStore';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
@@ -36,17 +36,11 @@ Notifications.setNotificationHandler({
 export const useRefreshStation = (): void => {
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
-  const latitude = useLocationStore(
-    (state) => state?.location?.coords.latitude
-  );
-  const longitude = useLocationStore(
-    (state) => state?.location?.coords.longitude
-  );
-  const speed =
-    useLocationStore((state) => state?.location?.coords.speed) ?? -1;
-  const accuracy = useLocationStore(
-    (state) => state?.location?.coords.accuracy
-  );
+  const location = useAtomValue(locationAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
+  const speed = location?.coords.speed ?? -1;
+  const accuracy = location?.coords.accuracy;
 
   const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);

@@ -1,9 +1,10 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useCurrentStation, useThemeStore } from '../hooks';
+import { useCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
+import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import LineBoardEast from './LineBoardEast';
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
 });
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
-  const theme = useThemeStore((state) => state);
+  const theme = useAtomValue(themeAtom);
   const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
 

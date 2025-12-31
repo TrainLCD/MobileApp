@@ -112,7 +112,6 @@ describe('useTransferLines', () => {
   let nextStationValue: Station | null;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     stationAtomValue = { arrived: false };
     currentStationValue = undefined;
     nextStationValue = null;
@@ -126,6 +125,10 @@ describe('useTransferLines', () => {
     mockUseNextStation.mockImplementation(() => nextStationValue ?? undefined);
     mockUseTransferLinesFromStation.mockReturnValue([]);
     mockGetIsPass.mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('到着済みかつ停車駅なら現在駅の乗換情報を返す', () => {

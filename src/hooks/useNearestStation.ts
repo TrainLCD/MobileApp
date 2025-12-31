@@ -2,18 +2,15 @@ import findNearest from 'geolib/es/findNearest';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
+import { locationAtom } from '~/store/atoms/location';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
-import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
 export const useNearestStation = (): Station | undefined => {
-  const latitude = useLocationStore(
-    (state) => state?.location?.coords.latitude
-  );
-  const longitude = useLocationStore(
-    (state) => state?.location?.coords.longitude
-  );
+  const location = useAtomValue(locationAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
   const { stations } = useAtomValue(stationState);
   const currentStation = useCurrentStation(false);
   const nextStation = useNextStation(false);

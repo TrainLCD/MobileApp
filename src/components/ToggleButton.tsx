@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import {
   type GestureResponderEvent,
@@ -8,8 +9,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -90,7 +90,7 @@ export const StatePanel = ({
   offText?: string;
   disabled?: boolean;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <View
@@ -123,7 +123,7 @@ export const ToggleButton: React.FC<Props> = ({
   onText = 'ON',
   offText = 'OFF',
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <TouchableOpacity

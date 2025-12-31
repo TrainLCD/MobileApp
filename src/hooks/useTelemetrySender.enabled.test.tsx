@@ -1,10 +1,9 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { Provider } from 'jotai';
+import { Provider, useAtomValue } from 'jotai';
 import { useCurrentLine } from '~/hooks/useCurrentLine';
 import { useCurrentStation } from '~/hooks/useCurrentStation';
 import { useIsPassing } from '~/hooks/useIsPassing';
-import { useLocationStore } from '~/hooks/useLocationStore';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 import stationState from '~/store/atoms/station';
@@ -24,9 +23,13 @@ jest.mock('react-native-dotenv', () => ({
   EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: 'ws://example.com:8080',
   EXPERIMENTAL_TELEMETRY_TOKEN: 'test-token',
 }));
-jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: jest.fn(),
-}));
+jest.mock('jotai', () => {
+  const actual = jest.requireActual('jotai');
+  return {
+    ...actual,
+    useAtomValue: jest.fn(),
+  };
+});
 jest.mock('~/constants/telemetry', () => ({
   TELEMETRY_MAX_QUEUE_SIZE,
   TELEMETRY_THROTTLE_MS,
@@ -92,20 +95,18 @@ describe('useTelemetrySender', () => {
     (global as any).WebSocket = jest.fn(() => mockWebSocket);
     (global as any).WebSocket.OPEN = 1;
     (global as any).WebSocket.CONNECTING = 0;
-    (useLocationStore as unknown as jest.Mock).mockImplementation(
-      (selector: (state: any) => any) =>
-        selector({
-          location: {
-            coords: {
-              latitude: 35.0,
-              longitude: 139.0,
-              accuracy: 5,
-              speed: 10,
-            },
-          },
-          accuracyHistory: [5],
-        })
-    );
+    (useAtomValue as jest.Mock).mockReturnValue({
+      coords: {
+        latitude: 35.0,
+        longitude: 139.0,
+        accuracy: 5,
+        speed: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+      },
+      timestamp: Date.now(),
+    });
 
     // Mock hooks that useTelemetrySender depends on
     (useCurrentLine as jest.Mock).mockReturnValue({ id: 11302 });
@@ -199,19 +200,9 @@ describe('useTelemetrySender', () => {
   });
 
   test('should not send telemetry if coordinates are null', () => {
-    (useLocationStore as unknown as jest.Mock).mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: null,
-            longitude: null,
-            accuracy: null,
-            speed: null,
-          },
-        },
-        accuracyHistory: [],
-      })
-    );
+    (useAtomValue as jest.Mock)
+      .mockReturnValueOnce(null) // locationAtom (coords will be undefined)
+      .mockReturnValue({ arrived: false, approaching: false }); // stationState
     renderHook(() => useTelemetrySender(false, 'ws://example.com:8080'), {
       wrapper,
     });

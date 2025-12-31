@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useState } from 'react';
 import {
   Alert,
@@ -19,11 +19,10 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { APP_THEME } from '~/models/Theme';
 import speechState from '~/store/atoms/speech';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { ASYNC_STORAGE_KEYS } from '../constants';
-import { useThemeStore } from '../hooks';
 
 type SettingItem = {
   id: 'enable_tts' | 'enable_bg_tts';
@@ -55,7 +54,7 @@ const SettingsItem = ({
   disabled: boolean;
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <Pressable
@@ -91,7 +90,7 @@ const TTSSettingsScreen: React.FC = () => {
 
   const scrollY = useSharedValue(0);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
     useAtom(speechState);
 

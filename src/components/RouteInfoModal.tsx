@@ -1,12 +1,11 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Platform, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import isTablet from '~/utils/isTablet';
@@ -94,7 +93,7 @@ export const RouteInfoModal = ({
   onSelect,
   onClose,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const { pendingLine } = useAtomValue(lineState);
   const lineName = isJapanese
@@ -172,6 +171,7 @@ export const RouteInfoModal = ({
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
         style={styles.flatList}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>
