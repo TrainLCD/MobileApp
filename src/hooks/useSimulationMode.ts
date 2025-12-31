@@ -1,4 +1,3 @@
-import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
@@ -82,19 +81,15 @@ export const useSimulationMode = (): void => {
       return;
     }
 
-    pipe(
-      Effect.promise(() =>
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
-      ),
-      Effect.andThen((hasStarted) => {
-        if (hasStarted) {
-          return Effect.promise(() =>
-            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-          );
-        }
-      }),
-      Effect.runPromise
-    );
+    const stopLocationUpdates = async () => {
+      const hasStarted =
+        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStarted) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    };
+
+    stopLocationUpdates();
   }, [enabled]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ

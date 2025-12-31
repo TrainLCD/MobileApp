@@ -1,6 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
@@ -284,19 +283,14 @@ const SelectLineScreen = () => {
   }, [routes]);
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() =>
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
-      ),
-      Effect.andThen((hasStartedLocationUpdates) => {
-        if (hasStartedLocationUpdates) {
-          return Effect.promise(() =>
-            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-          );
-        }
-      }),
-      Effect.runPromise
-    );
+    const stopLocationUpdates = async () => {
+      const hasStartedLocationUpdates =
+        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStartedLocationUpdates) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    };
+    stopLocationUpdates();
   }, []);
 
   const updateStationsCache = useCallback(
@@ -374,27 +368,25 @@ const SelectLineScreen = () => {
   }, [station, updateStationsCache]);
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() =>
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED)
-      ),
-      Effect.andThen((firstLaunchPassed) => {
-        if (firstLaunchPassed === null) {
-          Alert.alert(translate('notice'), translate('firstAlertText'), [
-            {
-              text: 'OK',
-              onPress: (): void => {
-                AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                  'true'
-                );
-              },
+    const checkFirstLaunch = async () => {
+      const firstLaunchPassed = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
+      );
+      if (firstLaunchPassed === null) {
+        Alert.alert(translate('notice'), translate('firstAlertText'), [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                'true'
+              );
             },
-          ]);
-        }
-      }),
-      Effect.runPromise
-    );
+          },
+        ]);
+      }
+    };
+    checkFirstLaunch();
   }, []);
 
   useEffect(() => {

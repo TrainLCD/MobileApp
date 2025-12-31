@@ -1,4 +1,3 @@
-import { Effect, pipe } from 'effect';
 import * as Linking from 'expo-linking';
 import { useCallback, useEffect } from 'react';
 import { useOpenRouteFromLink } from './useOpenRouteFromLink';
@@ -39,15 +38,13 @@ export const useDeepLink = () => {
   );
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() => Linking.getInitialURL()),
-      Effect.andThen((initialUrl) => {
-        if (initialUrl) {
-          handleParsedUrl(Linking.parse(initialUrl));
-        }
-      }),
-      Effect.runPromise
-    );
+    const checkInitialUrl = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        handleParsedUrl(Linking.parse(initialUrl));
+      }
+    };
+    checkInitialUrl();
   }, [handleParsedUrl]);
 
   useEffect(() => {

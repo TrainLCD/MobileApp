@@ -1,7 +1,6 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
-import { Effect, pipe } from 'effect';
 import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
@@ -70,12 +69,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     container: { width: '100%', height: '100%' },
   });
 
-  const handleReport = useCallback(() => {
-    const captureError = (err: unknown) =>
-      Effect.sync(() => {
-        console.error(err);
-        Alert.alert(translate('errorTitle'), String(err));
-      });
+  const handleReport = useCallback(async () => {
+    const captureError = (err: unknown) => {
+      console.error(err);
+      Alert.alert(translate('errorTitle'), String(err));
+    };
 
     if (!isAppLatest) {
       const appStoreUrl = Platform.select({
@@ -94,13 +92,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           {
             text: translate('updateApp'),
             style: 'destructive',
-            onPress: () => {
-              Effect.runPromise(
-                Effect.tryPromise({
-                  try: () => Linking.openURL(appStoreUrl),
-                  catch: captureError,
-                })
-              );
+            onPress: async () => {
+              try {
+                await Linking.openURL(appStoreUrl);
+              } catch (err) {
+                captureError(err);
+              }
             },
           },
           {
@@ -117,30 +114,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
 
-    pipe(
-      Effect.tryPromise({
-        try: viewShotCapture,
-        catch: captureError,
-      }),
-      Effect.andThen((capturedURI) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = new File(capturedURI);
-            return file.base64();
-          },
-          catch: captureError,
-        })
-      ),
-      Effect.andThen((base64) => {
-        setScreenShotBase64(base64);
-        setReportModalShow(true);
-        return ScreenOrientation.unlockAsync();
-      }),
-      Effect.runPromise
-    );
+    try {
+      const capturedURI = await viewShotCapture();
+      const file = new File(capturedURI);
+      const base64 = file.base64();
+      setScreenShotBase64(base64);
+      setReportModalShow(true);
+      await ScreenOrientation.unlockAsync();
+    } catch (err) {
+      captureError(err);
+    }
   }, [isAppLatest]);
 
-  const handleShare = useCallback(() => {
+  const handleShare = useCallback(async () => {
     const captureError = (err: unknown) => {
       console.error(err);
       if (err instanceof Error && err.message === 'User did not share') {
@@ -154,50 +140,39 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       return;
     }
 
-    pipe(
-      Effect.tryPromise({
-        try: () => viewShotCapture(),
-        catch: captureError,
-      }),
-      Effect.andThen((capturedURI) =>
-        Effect.tryPromise({
-          try: async () => {
-            const file = new File(capturedURI);
-            return file.base64();
-          },
-          catch: captureError,
-        })
-      ),
-      Effect.andThen(async (base64) => {
-        const urlString = `data:image/jpeg;base64,${base64}`;
+    try {
+      const capturedURI = await viewShotCapture();
+      const file = new File(capturedURI);
+      const base64 = file.base64();
+      const urlString = `data:image/jpeg;base64,${base64}`;
 
-        const message = isJapanese
-          ? `${currentLine.nameShort?.replace(
-              parenthesisRegexp,
-              ''
-            )}で移動中です！ #TrainLCD https://trainlcd.app`
-          : `I'm riding ${currentLine.nameRoman?.replace(
-              parenthesisRegexp,
-              ''
-            )} with #TrainLCD https://trainlcd.app`;
-        const options = {
-          title: 'TrainLCD',
-          message,
-          url: urlString,
-          type: 'image/png',
-        };
-        await ScreenOrientation.unlockAsync().catch(console.error);
-        await Share.open(options).catch(console.warn);
-        return ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE
-        ).catch(console.error);
-      }),
-      Effect.runPromise
-    );
+      const message = isJapanese
+        ? `${currentLine.nameShort?.replace(
+            parenthesisRegexp,
+            ''
+          )}で移動中です！ #TrainLCD https://trainlcd.app`
+        : `I'm riding ${currentLine.nameRoman?.replace(
+            parenthesisRegexp,
+            ''
+          )} with #TrainLCD https://trainlcd.app`;
+      const options = {
+        title: 'TrainLCD',
+        message,
+        url: urlString,
+        type: 'image/png',
+      };
+      await ScreenOrientation.unlockAsync().catch(console.error);
+      await Share.open(options).catch(console.warn);
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.LANDSCAPE
+      ).catch(console.error);
+    } catch (err) {
+      captureError(err);
+    }
   }, [currentLine]);
 
   const onLongPress = useCallback(
-    ({
+    async ({
       nativeEvent,
     }: {
       nativeEvent: {
@@ -212,82 +187,74 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const captureError = (err: unknown) => {
-        Effect.sync(() => {
-          console.error(err);
-          Alert.alert(translate('errorTitle'), String(err));
-        });
-      };
+      try {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (err) {
+        console.error(err);
+        Alert.alert(translate('errorTitle'), String(err));
+        return;
+      }
 
-      pipe(
-        Effect.tryPromise({
-          try: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
-          catch: captureError,
-        }),
-        Effect.andThen(() => {
-          const options =
-            Platform.select({
-              ios: [
-                translate('back'),
-                translate('share'),
-                translate('report'),
-                translate('cancel'),
-              ],
-              android: [
-                translate('share'),
-                translate('report'),
-                translate('cancel'),
-              ],
-            }) ?? [];
+      const options =
+        Platform.select({
+          ios: [
+            translate('back'),
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+          android: [
+            translate('share'),
+            translate('report'),
+            translate('cancel'),
+          ],
+        }) ?? [];
 
-          showActionSheetWithOptions(
-            {
-              options,
-              destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
-              cancelButtonIndex: options.length - 1,
-            },
-            (buttonIndex) => {
-              switch (buttonIndex) {
-                // iOS: back, Android: share
-                case 0:
-                  if (Platform.OS === 'ios') {
-                    navigation.dispatch(
-                      StackActions.replace('MainStack', {
-                        screen: 'SelectLine',
-                      })
-                    );
-                    break;
-                  }
-                  handleShare();
-                  break;
-                // iOS: share, Android: feedback
-                case 1:
-                  if (Platform.OS === 'ios') {
-                    handleShare();
-                    break;
-                  }
-                  handleReport();
-                  break;
-                // iOS: feedback, Android: cancel
-                case 2: {
-                  if (Platform.OS === 'ios') {
-                    handleReport();
-                    break;
-                  }
-                  break;
-                }
-                // iOS: cancel, Android: will be not passed here
-                case 3: {
-                  break;
-                }
-                // iOS, Android: will be not passed here
-                default:
-                  break;
+      showActionSheetWithOptions(
+        {
+          options,
+          destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
+          cancelButtonIndex: options.length - 1,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            // iOS: back, Android: share
+            case 0:
+              if (Platform.OS === 'ios') {
+                navigation.dispatch(
+                  StackActions.replace('MainStack', {
+                    screen: 'SelectLine',
+                  })
+                );
+                break;
               }
+              handleShare();
+              break;
+            // iOS: share, Android: feedback
+            case 1:
+              if (Platform.OS === 'ios') {
+                handleShare();
+                break;
+              }
+              handleReport();
+              break;
+            // iOS: feedback, Android: cancel
+            case 2: {
+              if (Platform.OS === 'ios') {
+                handleReport();
+                break;
+              }
+              break;
             }
-          );
-        }),
-        Effect.runPromise
+            // iOS: cancel, Android: will be not passed here
+            case 3: {
+              break;
+            }
+            // iOS, Android: will be not passed here
+            default:
+              break;
+          }
+        }
       );
     },
     [
@@ -301,67 +268,60 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 
   useEffect(() => {
-    const getItemFromAsyncStorage = (key: string) =>
-      Effect.tryPromise({
-        try: () => AsyncStorage.getItem(key),
-        catch: () => null,
-      });
+    const loadSettings = async () => {
+      const [
+        prevThemeKey,
+        enabledLanguagesStr,
+        speechEnabledStr,
+        bgTTSEnabledStr,
+        legacyAutoModeEnabledStr,
+        telemetryEnabledStr,
+      ] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
+      ]);
 
-    Effect.all([
-      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
-      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
-      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
-      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
-      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED),
-      getItemFromAsyncStorage(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
-    ]).pipe(
-      Effect.map(
-        ([
-          prevThemeKey,
-          enabledLanguagesStr,
-          speechEnabledStr,
-          bgTTSEnabledStr,
-          legacyAutoModeEnabledStr,
-          telemetryEnabledStr,
-        ]) => {
-          if (prevThemeKey) {
-            useThemeStore.setState(prevThemeKey as AppTheme);
-          }
-          if (enabledLanguagesStr) {
-            setNavigation((prev) => ({
-              ...prev,
-              enabledLanguages:
-                JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
-            }));
-          }
-          if (speechEnabledStr) {
-            setSpeech((prev) => ({
-              ...prev,
-              enabled: speechEnabledStr === 'true',
-            }));
-          }
-          if (bgTTSEnabledStr) {
-            setSpeech((prev) => ({
-              ...prev,
-              backgroundEnabled: bgTTSEnabledStr === 'true',
-            }));
-          }
-          if (legacyAutoModeEnabledStr) {
-            setNavigation((prev) => ({
-              ...prev,
-              enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
-            }));
-          }
-          if (telemetryEnabledStr) {
-            setTuning((prev) => ({
-              ...prev,
-              telemetryEnabled: telemetryEnabledStr === 'true',
-            }));
-          }
-        }
-      ),
-      Effect.runPromise
-    );
+      if (prevThemeKey) {
+        useThemeStore.setState(prevThemeKey as AppTheme);
+      }
+      if (enabledLanguagesStr) {
+        setNavigation((prev) => ({
+          ...prev,
+          enabledLanguages:
+            JSON.parse(enabledLanguagesStr) || ALL_AVAILABLE_LANGUAGES,
+        }));
+      }
+      if (speechEnabledStr) {
+        setSpeech((prev) => ({
+          ...prev,
+          enabled: speechEnabledStr === 'true',
+        }));
+      }
+      if (bgTTSEnabledStr) {
+        setSpeech((prev) => ({
+          ...prev,
+          backgroundEnabled: bgTTSEnabledStr === 'true',
+        }));
+      }
+      if (legacyAutoModeEnabledStr) {
+        setNavigation((prev) => ({
+          ...prev,
+          enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
+        }));
+      }
+      if (telemetryEnabledStr) {
+        setTuning((prev) => ({
+          ...prev,
+          telemetryEnabled: telemetryEnabledStr === 'true',
+        }));
+      }
+    };
+
+    loadSettings();
   }, [setNavigation, setSpeech, setTuning]);
 
   useEffect(() => {
@@ -407,13 +367,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const captureError = (err: unknown) =>
-        Effect.sync(() => {
-          console.error(err);
-          setSendingReport(false);
-          Alert.alert(translate('errorTitle'), translate('reportError'));
-        });
-
       Alert.alert(
         translate('announcementTitle'),
         translate('reportConfirmText'),
@@ -421,28 +374,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           {
             text: translate('agree'),
             style: 'destructive',
-            onPress: () => {
+            onPress: async () => {
               setSendingReport(true);
-              pipe(
-                Effect.tryPromise({
-                  try: () =>
-                    sendReport({
-                      reportType: 'feedback',
-                      description: description.trim(),
-                      screenShotBase64,
-                    }),
-                  catch: captureError,
-                }),
-                Effect.andThen(() => {
-                  setSendingReport(false);
-                  Alert.alert(
-                    translate('announcementTitle'),
-                    translate('reportSuccessText')
-                  );
-                  handleNewReportModalClose();
-                }),
-                Effect.runPromise
-              );
+              try {
+                await sendReport({
+                  reportType: 'feedback',
+                  description: description.trim(),
+                  screenShotBase64,
+                });
+                setSendingReport(false);
+                Alert.alert(
+                  translate('announcementTitle'),
+                  translate('reportSuccessText')
+                );
+                handleNewReportModalClose();
+              } catch (err) {
+                console.error(err);
+                setSendingReport(false);
+                Alert.alert(translate('errorTitle'), translate('reportError'));
+              }
             },
           },
           {
