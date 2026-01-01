@@ -1,5 +1,4 @@
 language: ja-JP
-profile: assertive
-
 reviews:
+  profile: assertive
   request_changes_workflow: true
