@@ -670,7 +670,7 @@ export const useBusTTSText = (
             afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.`
+                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -692,7 +692,7 @@ export const useBusTTSText = (
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
-          }${isNextStopTerminus ? ' The last stop.' : ''}${
+          }${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ` Thank you for using the ${station?.line?.company?.nameEnglishShort ?? ''}.`
               : ''
