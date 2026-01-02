@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { Line } from '~/@types/graphql';
+import { type Line, TransportType } from '~/@types/graphql';
 import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
@@ -60,6 +60,9 @@ const TransferLineMark: React.FC<Props> = ({
   stationNumber,
   threeLetterCode,
 }: Props) => {
+  const isBus = line?.transportType === TransportType.Bus;
+  const busSymbol = line?.nameShort?.replace(/[０-９]/g, '').at(0) ?? '';
+
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
   const dim = useMemo(
     () => (size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize),
@@ -190,10 +193,14 @@ const TransferLineMark: React.FC<Props> = ({
             shouldGrayscale ? fadedLineColor : color || (line?.color ?? '#000')
           }
           stationNumber={
-            stationNumber ??
-            `${
-              mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
-            }-00`
+            isBus
+              ? busSymbol
+              : (stationNumber ??
+                `${
+                  mark.signShape === MARK_SHAPE.JR_UNION
+                    ? 'JR'
+                    : mark.sign || ''
+                }-00`)
           }
           threeLetterCode={threeLetterCode}
           size={size}

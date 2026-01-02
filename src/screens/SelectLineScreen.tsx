@@ -650,6 +650,7 @@ const SelectLineScreen = () => {
 
       return (
         <CommonCard
+          targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
           stations={stationsCache[index] ?? []}

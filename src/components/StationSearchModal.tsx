@@ -167,6 +167,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
       return (
         <CommonCard
+          targetStation={item}
           line={line}
           title={title}
           subtitle={subtitle}

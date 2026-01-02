@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '~/@types/graphql';
+import { type Line, type Station, TransportType } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
-import { NUMBERING_ICON_SIZE } from '../constants';
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark } from '../hooks';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese } from '../translation';
@@ -52,6 +52,12 @@ const styles = StyleSheet.create({
     width: isTablet ? 52.5 : 35,
     height: isTablet ? 52.5 : 35,
     marginRight: 12,
+  },
+  withoutMark: {
+    width: isTablet ? 52.5 : 35,
+    height: isTablet ? 52.5 : 35,
+    marginRight: 12,
+    transform: [{ scale: 0.5 }],
   },
   numberingIconContainer: {
     flex: 1,
@@ -160,6 +166,8 @@ export const CommonCard: React.FC<Props> = ({
   const mark = useMemo(() => getLineMark({ line }), [getLineMark, line]);
   const { bounds } = useBounds(stations);
 
+  const isBus = line?.transportType === TransportType.Bus;
+
   const [inboundText, outboundText] = useMemo(() => {
     if (!stations?.length) {
       // フォールバックは何も表示しない
@@ -184,13 +192,11 @@ export const CommonCard: React.FC<Props> = ({
     return [format(inbound), format(outbound)];
   }, [bounds, stations]);
 
-  const titleOrLineName = useMemo(
-    () =>
-      isJapanese
-        ? (title ?? line.nameShort ?? '')
-        : (title ?? line.nameRoman ?? ''),
-    [title, line.nameShort, line.nameRoman]
-  );
+  const titleOrLineName = useMemo(() => {
+    return isJapanese
+      ? (title ?? line.nameShort ?? '')
+      : (title ?? line.nameRoman ?? '');
+  }, [title, line.nameShort, line.nameRoman]);
 
   const targetStationNumber = targetStation?.stationNumbers?.[0]?.stationNumber;
   const targetStationColor =
@@ -238,7 +244,23 @@ export const CommonCard: React.FC<Props> = ({
           />
         </View>
       ) : (
-        <View style={styles.markPlaceholder} />
+        <View style={styles.withoutMark}>
+          <TransferLineMark
+            line={line}
+            mark={{
+              sign: '',
+              signShape: MARK_SHAPE.ROUND,
+            }}
+            size={NUMBERING_ICON_SIZE.LARGE}
+            withOutline
+            withDarkTheme={isLEDTheme}
+            stationNumber={
+              isBus ? (line.nameShort ?? '') : (targetStationNumber ?? '')
+            }
+            color={targetStationColor ?? line.color ?? undefined}
+            threeLetterCode={targetStationThreeLetterCode}
+          />
+        </View>
       )}
       <View style={styles.texts}>
         <Typography style={styles.title} numberOfLines={1}>

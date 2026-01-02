@@ -31,6 +31,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
   },
+  signOnly: {
+    color: '#221714',
+    fontSize: isTablet ? 32 * 1.5 : 32,
+    lineHeight: isTablet ? 32 * 1.5 : 32,
+    textAlign: 'center',
+    fontFamily: FONTS.FuturaLTPro,
+    fontWeight: 'bold',
+  },
   lineSymbol: {
     color: '#221714',
     fontSize: isTablet ? 24 * 1.5 : 24,
