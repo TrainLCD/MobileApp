@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import type { Station } from '~/@types/graphql';
+import type { Maybe, Station } from '~/@types/graphql';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
@@ -51,13 +51,8 @@ export const useBusTTSText = (
   const stoppingState = useStoppingState();
 
   const replaceJapaneseText = useCallback(
-    (
-      name: string | undefined | null,
-      nameKatakana: string | undefined | null
-    ) =>
-      !name || !nameKatakana
-        ? `<sub alias="かくえきていしゃ">各駅停車</sub>`
-        : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
+    (name: Maybe<string>, nameKatakana: Maybe<string>) =>
+      `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
   );
 
