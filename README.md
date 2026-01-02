@@ -268,6 +268,10 @@ For professional support or custom development, please contact the maintainers.
 - Special thanks to the Japanese railway companies for providing inspiration
 - The open-source community for the excellent tools and libraries
 
+## Data Sources
+
+- Bus-related data provided by [Tokyo Metropolitan Bureau of Transportation (Toei)](https://www.kotsu.metro.tokyo.jp/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
