@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderTY from './HeaderTY';
 
 // Mock dependencies
@@ -96,6 +97,22 @@ jest.mock('~/hooks', () => ({
   useHeaderStationText: jest.fn(() => 'Test Station'),
   useLazyPrevious: jest.fn((value) => value),
   usePrevious: jest.fn((value) => value),
+  useHeaderAnimation: jest.fn(() => ({
+    prevStationText: '',
+    prevStateText: '',
+    prevStateTextRight: '',
+    prevBoundText: '',
+    prevConnectionText: '',
+    prevIsJapaneseState: true,
+    stateTopAnimatedStyles: {},
+    stateBottomAnimatedStyles: {},
+    topNameAnimatedAnchorStyle: {},
+    bottomNameAnimatedAnchorStyle: {},
+    topNameAnimatedStyles: {},
+    bottomNameAnimatedStyles: {},
+    boundTopAnimatedStyles: {},
+    boundBottomAnimatedStyles: {},
+  })),
 }));
 
 jest.mock('~/utils/isTablet', () => ({
@@ -133,12 +150,12 @@ describe('HeaderTY', () => {
   describe('Component rendering', () => {
     it('should render without crashing', () => {
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
     it('should render TrainTypeBox with isTY prop', () => {
-      const { getByTestId } = render(<HeaderTY />);
+      const { getByTestId } = render(<HeaderTY {...createMockHeaderProps()} />);
       expect(getByTestId('TrainTypeBox')).toBeTruthy();
     });
   });
@@ -160,7 +177,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -180,7 +197,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -200,7 +217,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -223,7 +240,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -246,7 +263,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -274,7 +291,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -299,7 +316,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -324,7 +341,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -346,7 +363,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -367,14 +384,23 @@ describe('HeaderTY', () => {
         return {};
       });
 
-      const { getByTestId } = render(<HeaderTY />);
+      const { getByTestId } = render(
+        <HeaderTY
+          {...createMockHeaderProps({
+            currentStationNumber: {
+              __typename: 'StationNumber',
+              stationNumber: 'TY01',
+              lineSymbolShape: 'ROUND',
+              lineSymbol: 'TY',
+              lineSymbolColor: '#FF0000',
+            },
+          })}
+        />
+      );
       expect(getByTestId('NumberingIcon')).toBeTruthy();
     });
 
     it('should not render numbering icon when station number is missing', () => {
-      const { useNumbering } = require('~/hooks');
-      useNumbering.mockReturnValue([null, null]);
-
       const { useAtomValue } = require('jotai');
       useAtomValue.mockImplementation((atom: unknown) => {
         if (atom === require('~/store/atoms/station').default) {
@@ -389,7 +415,11 @@ describe('HeaderTY', () => {
         return {};
       });
 
-      const { queryByTestId } = render(<HeaderTY />);
+      const { queryByTestId } = render(
+        <HeaderTY
+          {...createMockHeaderProps({ currentStationNumber: undefined })}
+        />
+      );
       expect(queryByTestId('NumberingIcon')).toBeNull();
     });
   });
@@ -411,7 +441,7 @@ describe('HeaderTY', () => {
       });
 
       expect(() => {
-        render(<HeaderTY />);
+        render(<HeaderTY {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });

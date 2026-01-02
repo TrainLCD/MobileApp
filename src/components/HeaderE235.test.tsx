@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { createMockHeaderE235Props } from '~/__fixtures__/headerProps';
 import HeaderE235 from './HeaderE235';
 
 // Mock dependencies
@@ -130,13 +131,13 @@ describe('HeaderE235', () => {
   describe('Component rendering', () => {
     it('should render without crashing with isJO=false', () => {
       expect(() => {
-        render(<HeaderE235 isJO={false} />);
+        render(<HeaderE235 {...createMockHeaderE235Props({ isJO: false })} />);
       }).not.toThrow();
     });
 
     it('should render without crashing with isJO=true', () => {
       expect(() => {
-        render(<HeaderE235 isJO={true} />);
+        render(<HeaderE235 {...createMockHeaderE235Props({ isJO: true })} />);
       }).not.toThrow();
     });
   });

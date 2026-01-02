@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
 import { TrainTypeKind } from '~/@types/graphql';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderJRWest from './HeaderJRWest';
 
 // Mock dependencies
@@ -158,7 +159,7 @@ describe('HeaderJRWest', () => {
   describe('Component rendering', () => {
     it('should render without crashing', () => {
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -177,7 +178,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -194,7 +195,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -211,7 +212,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -228,7 +229,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -245,7 +246,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -268,7 +269,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -291,7 +292,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -308,7 +309,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -325,7 +326,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -342,7 +343,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -359,7 +360,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -373,7 +374,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -385,7 +386,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -397,7 +398,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -409,7 +410,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -421,7 +422,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -433,7 +434,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -445,7 +446,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -457,7 +458,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -469,7 +470,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -481,7 +482,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -503,7 +504,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -528,7 +529,9 @@ describe('HeaderJRWest', () => {
         return {};
       });
 
-      const { getByTestId } = render(<HeaderJRWest />);
+      const { getByTestId } = render(
+        <HeaderJRWest {...createMockHeaderProps()} />
+      );
       expect(getByTestId('TransferLineMark')).toBeTruthy();
     });
   });
@@ -547,7 +550,7 @@ describe('HeaderJRWest', () => {
       });
 
       expect(() => {
-        render(<HeaderJRWest />);
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
