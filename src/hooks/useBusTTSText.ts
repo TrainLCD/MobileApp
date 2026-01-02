@@ -57,20 +57,12 @@ export const useBusTTSText = (
   );
 
   const currentLine = useMemo(
-    () =>
-      currentLineOrigin && {
-        ...currentLineOrigin,
-        nameRoman: currentLineOrigin?.nameRoman,
-      },
+    () => currentLineOrigin ?? null,
     [currentLineOrigin]
   );
 
   const selectedBound = useMemo(
-    () =>
-      selectedBoundOrigin && {
-        ...selectedBoundOrigin,
-        nameRoman: selectedBoundOrigin?.nameRoman,
-      },
+    () => selectedBoundOrigin ?? null,
     [selectedBoundOrigin]
   );
 
