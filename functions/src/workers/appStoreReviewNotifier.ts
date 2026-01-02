@@ -1,6 +1,6 @@
-import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { Storage } from '@google-cloud/storage';
 import dayjs from 'dayjs';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import type { DiscordEmbed } from '../models/common';
 
 type AppStoreReview = {
@@ -66,7 +66,7 @@ function deepGet(obj: unknown, path: string): unknown {
 function labelOf(v: unknown, d = ''): string {
   if (typeof v === 'string') return v;
   if (v && typeof v === 'object' && 'label' in (v as JsonObj)) {
-    const lv = (v as JsonObj)['label'];
+    const lv = (v as JsonObj).label;
     if (typeof lv === 'string') return lv;
   }
   return d;
@@ -131,11 +131,13 @@ export const __test_parseAppStoreJson = parseAppStoreJson;
 async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
   if (!reviews.length) return;
   // 10件ずつバッチ送信
-  const chunk = <T>(arr: T[], size: number) =>
-    arr.reduce<T[][]>(
-      (a, _, i) => (i % size ? a : [...a, arr.slice(i, i + size)]),
-      []
-    );
+  const chunk = <T>(arr: T[], size: number): T[][] => {
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
+  };
   const batches = chunk(reviews, 10);
   for (const group of batches) {
     const embeds: DiscordEmbed[] = group.map((r) => {

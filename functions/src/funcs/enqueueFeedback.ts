@@ -1,6 +1,6 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import type { Report } from '../models/feedback';
 import { PubSub } from '@google-cloud/pubsub';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import type { Report } from '../models/feedback';
 
 const pubsub = new PubSub();
 const TOPIC = process.env.PUBSUB_TOPIC ?? 'feedback-triage';
