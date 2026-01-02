@@ -6,7 +6,6 @@ import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import { useCurrentLine } from './useCurrentLine';
 
 type UseHeaderStationTextOptions = {
   currentStation: Station | undefined;
@@ -24,8 +23,7 @@ export const useHeaderStationText = ({
   const { headerState } = useAtomValue(navigationState);
   const { selectedBound } = useAtomValue(stationState);
 
-  const currentLine = useCurrentLine();
-  const isBus = currentLine?.transportType === TransportType.Bus;
+  const isBus = currentStation?.line?.transportType === TransportType.Bus;
 
   const rawText = useMemo<string>(() => {
     if (!selectedBound) {

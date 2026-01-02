@@ -3,7 +3,7 @@ import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { TransportType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
-import { useCurrentLine, useCurrentStation } from '../hooks';
+import { useCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
@@ -36,8 +36,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useAtomValue(themeAtom);
   const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
-  const currentLine = useCurrentLine();
-  const isBus = currentLine?.transportType === TransportType.Bus;
+  const isBus = station?.line?.transportType === TransportType.Bus;
 
   const slicedLeftStations = useMemo(
     () =>
