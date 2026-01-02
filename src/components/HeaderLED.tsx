@@ -64,19 +64,19 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
   const dim = useWindowDimensions();
 
   const [stateText, setStateText] = useState('');
-  const [stationText, setStationText] = useState(station?.name || '');
+  const [stationText, setStationText] = useState(station?.name ?? '');
 
   useEffect(() => {
     if (!selectedBound && station) {
       setStateText('');
-      setStationText(station.name || '');
+      setStationText(station.name ?? '');
     }
 
     switch (headerState) {
       case 'ARRIVING':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonLast' : 'soon'));
-          setStationText(nextStation.name || '');
+          setStationText(nextStation.name ?? '');
         }
         break;
       case 'ARRIVING_KANA':
@@ -88,13 +88,13 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
       case 'ARRIVING_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'soonEnLast' : 'soonEn'));
-          setStationText(nextStation?.nameRoman ?? '');
+          setStationText(nextStation.nameRoman ?? '');
         }
         break;
       case 'CURRENT':
         if (station) {
           setStateText(translate('nowStoppingAt'));
-          setStationText(station.name || '');
+          setStationText(station.name ?? '');
         }
         break;
       case 'CURRENT_KANA':
@@ -106,13 +106,13 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
       case 'CURRENT_EN':
         if (station) {
           setStateText('');
-          setStationText(station?.nameRoman ?? '');
+          setStationText(station.nameRoman ?? '');
         }
         break;
       case 'NEXT':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextLast' : 'next'));
-          setStationText(nextStation.name || '');
+          setStationText(nextStation.name ?? '');
         }
         break;
       case 'NEXT_KANA':
@@ -124,7 +124,7 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
       case 'NEXT_EN':
         if (nextStation) {
           setStateText(translate(isLast ? 'nextEnLast' : 'nextEn'));
-          setStationText(nextStation?.nameRoman ?? '');
+          setStationText(nextStation.nameRoman ?? '');
         }
         break;
       default:
