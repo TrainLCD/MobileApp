@@ -13,7 +13,10 @@ jest.mock('@google-cloud/storage', () => {
       return [Buffer.from(v)];
     }
     async save(data: string | Buffer) {
-      store.set(this.key, typeof data === 'string' ? data : data.toString('utf8'));
+      store.set(
+        this.key,
+        typeof data === 'string' ? data : data.toString('utf8')
+      );
     }
   }
   class Bucket {
@@ -46,7 +49,8 @@ describe('appStoreReviewNotifier (JSON only)', () => {
     process.env.REVIEWS_DEBUG = '1';
     process.env.DISCORD_REVIEW_WEBHOOK_URL = 'https://discord.test/webhook';
     process.env.APPSTORE_REVIEW_FEED_URL = 'https://example.test/rss.json';
-    process.env.APPSTORE_REVIEW_STATE_GCS_URI = 'gs://test-bucket/states/appstore.json';
+    process.env.APPSTORE_REVIEW_STATE_GCS_URI =
+      'gs://test-bucket/states/appstore.json';
   });
   let prevEnv: NodeJS.ProcessEnv;
   afterEach(() => {
@@ -99,7 +103,9 @@ describe('appStoreReviewNotifier (JSON only)', () => {
     const saved = gcsStore.get('test-bucket/states/appstore.json');
     expect(saved).toBeTruthy();
     const json = JSON.parse(String(saved));
-    expect(new Date(json.lastUpdated).toISOString()).toBe('2025-09-04T10:00:00.000Z');
+    expect(new Date(json.lastUpdated).toISOString()).toBe(
+      '2025-09-04T10:00:00.000Z'
+    );
     expect(Array.isArray(json.lastIds)).toBe(true);
   });
 
@@ -107,7 +113,10 @@ describe('appStoreReviewNotifier (JSON only)', () => {
     // 事前にstateを最新にしておく
     gcsStore.set(
       'test-bucket/states/appstore.json',
-      JSON.stringify({ lastUpdated: '2025-09-05T00:00:00.000Z', lastIds: ['rX'] })
+      JSON.stringify({
+        lastUpdated: '2025-09-05T00:00:00.000Z',
+        lastIds: ['rX'],
+      })
     );
 
     const feedJson = JSON.stringify({
