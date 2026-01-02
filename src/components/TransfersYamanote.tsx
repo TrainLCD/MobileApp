@@ -125,9 +125,11 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
                 <Typography style={styles.lineName}>
                   {line.nameShort?.replace(parenthesisRegexp, '')}
                 </Typography>
-                <Typography style={styles.lineNameEn}>
-                  {line.nameRoman?.replace(parenthesisRegexp, '')}
-                </Typography>
+                {line.nameRoman ? (
+                  <Typography style={styles.lineNameEn}>
+                    {line.nameRoman.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
               </TouchableOpacity>
             </View>
           </View>

@@ -151,6 +151,7 @@ export const TrainTypeListModal = ({
 
         return (
           <CommonCard
+            targetStation={line.station ?? undefined}
             line={line}
             title={title}
             subtitle={subtitle}
@@ -166,6 +167,7 @@ export const TrainTypeListModal = ({
 
       return (
         <CommonCard
+          targetStation={line.station ?? undefined}
           line={line}
           title={title}
           subtitle={subtitle}

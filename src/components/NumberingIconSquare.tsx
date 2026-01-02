@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: Platform.OS === 'ios' ? 4 : 0,
+    color: '#231e1f',
   },
   stationNumber: {
     lineHeight: isTablet ? 32 * 1.5 : 32,
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
     marginTop: -4,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
+    color: '#231e1f',
   },
 });
 
