@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderSaikyo from './HeaderSaikyo';
 
 // Mock dependencies
@@ -99,6 +100,22 @@ jest.mock('~/hooks', () => ({
   useHeaderStationText: jest.fn(() => 'Test Station'),
   useLazyPrevious: jest.fn((value) => value),
   usePrevious: jest.fn((value) => value),
+  useHeaderAnimation: jest.fn(() => ({
+    prevStationText: '',
+    prevStateText: '',
+    prevStateTextRight: '',
+    prevBoundText: '',
+    prevConnectionText: '',
+    prevIsJapaneseState: true,
+    stateTopAnimatedStyles: {},
+    stateBottomAnimatedStyles: {},
+    topNameAnimatedAnchorStyle: {},
+    bottomNameAnimatedAnchorStyle: {},
+    topNameAnimatedStyles: {},
+    bottomNameAnimatedStyles: {},
+    boundTopAnimatedStyles: {},
+    boundBottomAnimatedStyles: {},
+  })),
 }));
 
 jest.mock('~/utils/isTablet', () => ({
@@ -143,17 +160,21 @@ describe('HeaderSaikyo', () => {
   describe('Component rendering', () => {
     it('should render without crashing', () => {
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
     it('should render TrainTypeBoxSaikyo', () => {
-      const { getByTestId } = render(<HeaderSaikyo />);
+      const { getByTestId } = render(
+        <HeaderSaikyo {...createMockHeaderProps()} />
+      );
       expect(getByTestId('TrainTypeBoxSaikyo')).toBeTruthy();
     });
 
     it('should render Clock component', () => {
-      const { getByTestId } = render(<HeaderSaikyo />);
+      const { getByTestId } = render(
+        <HeaderSaikyo {...createMockHeaderProps()} />
+      );
       expect(getByTestId('Clock')).toBeTruthy();
     });
   });
@@ -175,7 +196,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -195,7 +216,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -215,7 +236,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -238,7 +259,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -261,7 +282,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -289,7 +310,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -314,7 +335,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -339,7 +360,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -361,7 +382,7 @@ describe('HeaderSaikyo', () => {
       });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -382,14 +403,23 @@ describe('HeaderSaikyo', () => {
         return {};
       });
 
-      const { getByTestId } = render(<HeaderSaikyo />);
+      const { getByTestId } = render(
+        <HeaderSaikyo
+          {...createMockHeaderProps({
+            currentStationNumber: {
+              __typename: 'StationNumber',
+              stationNumber: 'JA01',
+              lineSymbolShape: 'ROUND',
+              lineSymbol: 'JA',
+              lineSymbolColor: '#00ac9a',
+            },
+          })}
+        />
+      );
       expect(getByTestId('NumberingIcon')).toBeTruthy();
     });
 
     it('should not render numbering icon when station number is missing', () => {
-      const { useNumbering } = require('~/hooks');
-      useNumbering.mockReturnValue([null, null]);
-
       const { useAtomValue } = require('jotai');
       useAtomValue.mockImplementation((atom: unknown) => {
         if (atom === require('~/store/atoms/station').default) {
@@ -404,7 +434,11 @@ describe('HeaderSaikyo', () => {
         return {};
       });
 
-      const { queryByTestId } = render(<HeaderSaikyo />);
+      const { queryByTestId } = render(
+        <HeaderSaikyo
+          {...createMockHeaderProps({ currentStationNumber: undefined })}
+        />
+      );
       expect(queryByTestId('NumberingIcon')).toBeNull();
     });
   });
@@ -415,7 +449,7 @@ describe('HeaderSaikyo', () => {
       useCurrentLine.mockReturnValue({ id: 1, color: '#FF0000' });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -424,7 +458,7 @@ describe('HeaderSaikyo', () => {
       useCurrentLine.mockReturnValue({ id: 1, color: null });
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -433,7 +467,7 @@ describe('HeaderSaikyo', () => {
       useCurrentLine.mockReturnValue(null);
 
       expect(() => {
-        render(<HeaderSaikyo />);
+        render(<HeaderSaikyo {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });

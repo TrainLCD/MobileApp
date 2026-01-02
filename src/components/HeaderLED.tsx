@@ -1,17 +1,9 @@
-import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useNumbering } from '~/hooks';
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants';
-import {
-  useCurrentStation,
-  useIsNextLastStop,
-  useNextStation,
-  useNumbering,
-} from '../hooks';
-import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
 import { translate } from '../translation';
+import type { CommonHeaderProps } from './Header.types';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -56,16 +48,19 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderLED = () => {
-  const station = useCurrentStation();
-  const nextStation = useNextStation();
-  const isLast = useIsNextLastStop();
+const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
+  const {
+    currentStation: station,
+    nextStation,
+    isLast,
+    selectedBound,
+    headerState,
+  } = props;
+
+  // HeaderLEDは現在駅と次駅両方のナンバリングが必要
   const [nextStationNumber] = useNumbering();
   const [currentStationNumber] = useNumbering(true);
   const dim = useWindowDimensions();
-
-  const { selectedBound } = useAtomValue(stationState);
-  const { headerState } = useAtomValue(navigationState);
 
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name || '');
@@ -143,13 +138,7 @@ const HeaderLED = () => {
     return dim.height / 1.5;
   }, [selectedBound, dim.height]);
 
-  const headerLangState = useMemo(
-    () =>
-      headerState.split('_')[1]?.length
-        ? (headerState.split('_')[1] as HeaderLangState)
-        : ('JA' as HeaderLangState),
-    [headerState]
-  );
+  const { headerLangState } = props;
 
   const stationTextBlocks = useMemo(
     () =>
