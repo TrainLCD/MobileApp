@@ -67,6 +67,7 @@ export type Line = {
   station: Maybe<StationNested>;
   status: Maybe<OperationStatus>;
   trainType: Maybe<TrainTypeNested>;
+  transportType: Maybe<TransportType>;
 };
 
 export type LineNested = {
@@ -86,6 +87,7 @@ export type LineNested = {
   station: Maybe<StationNested>;
   status: Maybe<OperationStatus>;
   trainType: Maybe<TrainTypeNested>;
+  transportType: Maybe<TransportType>;
 };
 
 export type LineSymbol = {
@@ -141,6 +143,7 @@ export type QueryLineGroupStationsArgs = {
 };
 
 export type QueryLineStationsArgs = {
+  directionId: InputMaybe<Scalars['Int']['input']>;
   lineId: Scalars['Int']['input'];
   stationId: InputMaybe<Scalars['Int']['input']>;
 };
@@ -186,12 +189,14 @@ export type QueryStationsByNameArgs = {
   fromStationGroupId: InputMaybe<Scalars['Int']['input']>;
   limit: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
+  transportType: InputMaybe<TransportType>;
 };
 
 export type QueryStationsNearbyArgs = {
   latitude: Scalars['Float']['input'];
   limit: InputMaybe<Scalars['Int']['input']>;
   longitude: Scalars['Float']['input'];
+  transportType: InputMaybe<TransportType>;
 };
 
 export type Route = {
@@ -237,6 +242,7 @@ export type Station = {
   stopCondition: Maybe<StopCondition>;
   threeLetterCode: Maybe<Scalars['String']['output']>;
   trainType: Maybe<TrainTypeNested>;
+  transportType: Maybe<TransportType>;
 };
 
 export type StationNested = {
@@ -264,6 +270,7 @@ export type StationNested = {
   stopCondition: Maybe<StopCondition>;
   threeLetterCode: Maybe<Scalars['String']['output']>;
   trainType: Maybe<TrainTypeNested>;
+  transportType: Maybe<TransportType>;
 };
 
 export type StationNumber = {
@@ -331,6 +338,12 @@ export type TrainTypeNested = {
   nameRoman: Maybe<Scalars['String']['output']>;
   typeId: Maybe<Scalars['Int']['output']>;
 };
+
+export enum TransportType {
+  Bus = 'Bus',
+  Rail = 'Rail',
+  TransportTypeUnspecified = 'TransportTypeUnspecified',
+}
 
 export type CompanyFieldsFragment = {
   __typename: 'Company';
@@ -4668,6 +4681,7 @@ export type GetRouteTypesQueryVariables = Exact<{
   toStationGroupId: Scalars['Int']['input'];
   pageSize: InputMaybe<Scalars['Int']['input']>;
   pageToken: InputMaybe<Scalars['String']['input']>;
+  viaLineId: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 export type GetRouteTypesQuery = {

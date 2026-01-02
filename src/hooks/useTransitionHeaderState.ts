@@ -1,5 +1,6 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
+import type { Station } from '~/@types/graphql';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -15,6 +16,56 @@ import { useValueRef } from './useValueRef';
 
 type HeaderState = 'CURRENT' | 'NEXT' | 'ARRIVING';
 type HeaderLangState = 'JA' | 'KANA' | 'EN' | 'ZH' | 'KO';
+
+/**
+ * 指定した言語で駅名が利用可能かチェック
+ */
+const hasStationTextForLang = (
+  station: Station | undefined,
+  lang: HeaderLangState
+): boolean => {
+  if (!station) {
+    return false;
+  }
+  switch (lang) {
+    case 'JA':
+      return !!station.name;
+    case 'KANA':
+      return !!station.nameKatakana;
+    case 'EN':
+      return !!station.nameRoman;
+    case 'ZH':
+      return !!station.nameChinese;
+    case 'KO':
+      return !!station.nameKorean;
+    default:
+      return false;
+  }
+};
+
+/**
+ * 次に利用可能な言語を取得（駅名が空の言語はスキップ）
+ */
+const getNextAvailableLang = (
+  currentLang: HeaderLangState,
+  enabledLanguages: string[],
+  targetStation: Station | undefined
+): HeaderLangState | null => {
+  const currentIndex = enabledLanguages.indexOf(
+    currentLang !== 'KANA' ? currentLang : 'JA'
+  );
+
+  // 現在の言語から後ろを順に探す
+  for (let i = currentIndex + 1; i < enabledLanguages.length; i++) {
+    const lang = enabledLanguages[i] as HeaderLangState;
+    if (hasStationTextForLang(targetStation, lang)) {
+      return lang;
+    }
+  }
+
+  // 見つからなければnull（JAに戻る）
+  return null;
+};
 
 export const useTransitionHeaderState = (): void => {
   const { arrived, approaching, selectedBound } = useAtomValue(stationState);
@@ -101,11 +152,17 @@ export const useTransitionHeaderState = (): void => {
       )[0] as HeaderState;
       const currentHeaderStateLang =
         (headerStateRef.current.split('_')[1] as HeaderLangState) || 'JA';
-      const currentLangIndex = enabledLanguages.indexOf(
-        currentHeaderStateLang !== 'KANA' ? currentHeaderStateLang : 'JA'
+
+      // ヘッダー状態に応じてチェック対象の駅を決定
+      const targetStation =
+        currentHeaderState === 'CURRENT' ? station : nextStation;
+
+      // 駅名が存在する次の言語を取得（空の言語はスキップ）
+      const nextLang = getNextAvailableLang(
+        currentHeaderStateLang,
+        enabledLanguages,
+        targetStation
       );
-      const nextLang =
-        currentLangIndex !== -1 ? enabledLanguages[currentLangIndex + 1] : null;
 
       switch (currentHeaderState) {
         case 'ARRIVING': {
@@ -241,6 +298,7 @@ export const useTransitionHeaderState = (): void => {
       selectedBound,
       setNavigation,
       showNextExpression,
+      station,
     ]),
     headerTransitionInterval
   );

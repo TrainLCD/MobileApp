@@ -1,8 +1,8 @@
 import { enqueueFeedback } from './funcs/enqueueFeedback';
 import { tts } from './funcs/tts';
 import { ttsCachePubSub } from './funcs/ttsCachePubSub';
-import { feedbackTriageWorker } from './workers/feedback';
 import { appStoreReviewNotifier } from './workers/appStoreReviewNotifier';
+import { feedbackTriageWorker } from './workers/feedback';
 import { googlePlayReviewNotifier } from './workers/googlePlayReviews';
 
 exports.tts = tts;

@@ -1,8 +1,9 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { TrainType } from '~/@types/graphql';
+import { type TrainType, TransportType } from '~/@types/graphql';
 import { japaneseRegexp, parenthesisRegexp } from '~/constants';
+import { useCurrentLine } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
 import { translate } from '~/translation';
@@ -51,10 +52,13 @@ const TrainTypeBoxJL: React.FC<Props> = ({
   trainTypeColor = '#000',
 }: Props) => {
   const { headerState } = useAtomValue(navigationState);
+  const currentLine = useCurrentLine();
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
   }, [headerState]);
+
+  const isBus = currentLine?.transportType === TransportType.Bus;
 
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
@@ -83,7 +87,12 @@ const TrainTypeBoxJL: React.FC<Props> = ({
     trainType?.nameKorean || translate('localKo')
   );
 
+  const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
+
   const trainTypeName = useMemo(() => {
+    if (isBus) {
+      return lineNameJa?.split('\n')[0]?.trim();
+    }
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR?.split('\n')[0]?.trim();
@@ -95,7 +104,9 @@ const TrainTypeBoxJL: React.FC<Props> = ({
         return trainTypeNameJa?.split('\n')[0]?.trim();
     }
   }, [
+    isBus,
     headerLangState,
+    lineNameJa,
     trainTypeNameJa,
     trainTypeNameKo,
     trainTypeNameR,

@@ -63,6 +63,7 @@ const createStation = (
     station: null,
     status: OperationStatus.InOperation,
     trainType: null,
+    transportType: null,
   },
   lines: [],
   longitude,
@@ -79,6 +80,7 @@ const createStation = (
   stopCondition: StopCondition.All,
   threeLetterCode: null,
   trainType: null,
+  transportType: null,
 });
 
 const TestComponent: React.FC = () => {
