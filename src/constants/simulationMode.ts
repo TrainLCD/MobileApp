@@ -1,5 +1,11 @@
 import { LineType, TrainTypeKind } from '~/@types/graphql';
 
+// バスの速度パラメータ（都営バス基準）
+// 都市部での実運用を考慮
+export const BUS_MAX_SPEED_IN_M_S = 11.11111111111; // 40km/h
+export const BUS_MAX_ACCEL_IN_M_S = 1.2; // 1.2 m/s² - 立ち客を考慮した緩やかな加速
+export const BUS_MAX_DECEL_IN_M_S = 1.3; // 1.3 m/s² - 乗客の安全を考慮した減速
+
 // 路線種別による最高速度
 export const LINE_TYPE_MAX_SPEEDS_IN_M_S: Record<LineType, number> = {
   [LineType.BulletTrain]: 88.88888889, // 320km/h
