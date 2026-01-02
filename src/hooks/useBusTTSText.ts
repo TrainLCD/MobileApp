@@ -33,7 +33,7 @@ const EMPTY_TTS_TEXT = {
 export const useBusTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | undefined[] => {
+): [string, string] | [] => {
   const theme = useAtomValue(themeAtom);
 
   const { selectedBound: selectedBoundOrigin, stations } =
