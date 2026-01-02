@@ -1,10 +1,8 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Alert,
   Linking,
   Platform,
   StyleSheet,
@@ -19,15 +17,17 @@ import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
-import navigationState from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
-import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
 
 const LICENSE_MAP = {
   ekidata_jp: 'ekidata_jp',
   toei: 'toei',
+  firebase: 'firebase',
+  rxjs: 'rxjs',
+  roboto: 'roboto',
+  other_oss: 'other_oss',
 } as const;
 
 type LicenseItem = {
@@ -104,6 +104,23 @@ const LicenseHolder = ({
 };
 
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
+const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
+const MIT_URL = 'https://opensource.org/licenses/MIT';
+
+const getLicenseInfo = (
+  license: string
+): { url: string; name: string } | null => {
+  if (license.includes('Apache')) {
+    return { url: APACHE_2_URL, name: 'Apache License 2.0' };
+  }
+  if (license.includes('MIT')) {
+    return { url: MIT_URL, name: 'MIT License' };
+  }
+  if (license.includes('CC BY')) {
+    return { url: CC_BY_URL, name: 'CC BY 4.0' };
+  }
+  return null;
+};
 
 const Licenses: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -111,7 +128,6 @@ const Licenses: React.FC = () => {
   const scrollY = useSharedValue(0);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const [{ enabledLanguages }, setNavigation] = useAtom(navigationState);
 
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
@@ -135,6 +151,38 @@ const Licenses: React.FC = () => {
             license: translate('ccby'),
             devOnly: true,
           },
+          {
+            id: 'firebase',
+            title: 'Firebase',
+            icon: '🔥',
+            href: 'https://firebase.google.com/',
+            license: 'Apache License 2.0',
+            devOnly: false,
+          },
+          {
+            id: 'rxjs',
+            title: 'RxJS',
+            icon: '⚡',
+            href: 'https://rxjs.dev/',
+            license: 'Apache License 2.0',
+            devOnly: false,
+          },
+          {
+            id: 'roboto',
+            title: 'Roboto Font',
+            icon: '🔤',
+            href: 'https://fonts.google.com/specimen/Roboto',
+            license: 'Apache License 2.0',
+            devOnly: false,
+          },
+          {
+            id: 'other_oss',
+            title: translate('otherOss'),
+            icon: '📦',
+            href: MIT_URL,
+            license: 'MIT License',
+            devOnly: false,
+          },
         ] as const
       ).filter((it) => (isDevApp ? true : !it.devOnly)),
     []
@@ -142,8 +190,10 @@ const Licenses: React.FC = () => {
 
   const handlePressLicenseItem = useCallback(
     (item: LicenseItem) => {
-      if (item.id === 'toei') {
-        const options = [translate('toei'), 'CC BY 4.0', translate('cancel')];
+      const licenseInfo = item.license ? getLicenseInfo(item.license) : null;
+
+      if (licenseInfo) {
+        const options = [item.title, licenseInfo.name, translate('cancel')];
         const cancelButtonIndex = 2;
 
         showActionSheetWithOptions(
@@ -155,7 +205,7 @@ const Licenses: React.FC = () => {
             if (selectedIndex === 0) {
               Linking.openURL(item.href);
             } else if (selectedIndex === 1) {
-              Linking.openURL(CC_BY_URL);
+              Linking.openURL(licenseInfo.url);
             }
           }
         );
@@ -164,33 +214,6 @@ const Licenses: React.FC = () => {
       }
     },
     [showActionSheetWithOptions]
-  );
-
-  const _handleToggleLanguage = useCallback(
-    async (language: AvailableLanguage) => {
-      const newEnabledLanguages = enabledLanguages.includes(language)
-        ? enabledLanguages.filter((lang) => lang !== language)
-        : [...enabledLanguages, language];
-
-      setNavigation((prev) => ({
-        ...prev,
-        enabledLanguages: newEnabledLanguages,
-      }));
-
-      try {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES,
-          JSON.stringify(newEnabledLanguages)
-        );
-      } catch (error) {
-        console.error('Failed to save enabled languages:', error);
-        Alert.alert(
-          translate('errorTitle'),
-          translate('failedToSavePreference')
-        );
-      }
-    },
-    [enabledLanguages, setNavigation]
   );
 
   const renderItem = useCallback(
