@@ -148,7 +148,11 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Ryogoku/gi,
       '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
     )
-    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');
+    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>')
+    // 都営バスを想定
+    .replace(/.Sta\./gi, ' Station')
+    .replace(/.Univ\./gi, ' University')
+    .replace(/.Hp\./gi, ' Hospital');
 
   if (ssmlEn.trim().length === 0) {
     throw new HttpsError(

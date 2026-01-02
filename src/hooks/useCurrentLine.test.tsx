@@ -36,6 +36,7 @@ const createLine = (id: number, nameShort: string): Line => ({
   station: null,
   status: OperationStatus.InOperation,
   trainType: null,
+  transportType: null,
 });
 
 const createStation = (id: number, groupId: number, line: Line): Station => ({
@@ -64,6 +65,7 @@ const createStation = (id: number, groupId: number, line: Line): Station => ({
     station: null,
     status: OperationStatus.InOperation,
     trainType: null,
+    transportType: null,
   },
   lines: [],
   longitude: null,
@@ -80,6 +82,7 @@ const createStation = (id: number, groupId: number, line: Line): Station => ({
   stopCondition: StopCondition.All,
   threeLetterCode: null,
   trainType: null,
+  transportType: null,
 });
 
 const TestComponent: React.FC = () => {

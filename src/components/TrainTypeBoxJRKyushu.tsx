@@ -8,9 +8,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import type { TrainType } from '~/@types/graphql';
+import { type TrainType, TransportType } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
-import { useLazyPrevious, usePrevious } from '../hooks';
+import { useCurrentLine, useLazyPrevious, usePrevious } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import tuningState from '../store/atoms/tuning';
@@ -63,8 +63,11 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
 
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
+  const currentLine = useCurrentLine();
 
   const textOpacityAnim = useSharedValue(0);
+
+  const isBus = currentLine?.transportType === TransportType.Bus;
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
@@ -97,7 +100,12 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
     trainType?.nameKorean || translate('localKo')
   );
 
+  const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
+
   const trainTypeName = useMemo(() => {
+    if (isBus) {
+      return lineNameJa;
+    }
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR;
@@ -109,7 +117,9 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
         return trainTypeNameJa;
     }
   }, [
+    isBus,
     headerLangState,
+    lineNameJa,
     trainTypeNameJa,
     trainTypeNameKo,
     trainTypeNameR,
