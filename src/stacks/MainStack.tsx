@@ -4,6 +4,7 @@ import {
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import Licenses from '~/screens/Licenses';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
@@ -17,7 +18,6 @@ import ThemeSettings from '../screens/ThemeSettings';
 import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
-import Licenses from '~/screens/Licenses';
 
 const Stack = createNativeStackNavigator();
 

@@ -22,8 +22,8 @@ import Typography from '~/components/Typography';
 import navigationState from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
 import { isDevApp } from '~/utils/isDevApp';
+import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
 
 const LICENSE_MAP = {
   ekidata_jp: 'ekidata_jp',
@@ -166,7 +166,7 @@ const Licenses: React.FC = () => {
     [showActionSheetWithOptions]
   );
 
-  const handleToggleLanguage = useCallback(
+  const _handleToggleLanguage = useCallback(
     async (language: AvailableLanguage) => {
       const newEnabledLanguages = enabledLanguages.includes(language)
         ? enabledLanguages.filter((lang) => lang !== language)
