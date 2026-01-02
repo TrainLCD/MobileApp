@@ -40,6 +40,7 @@ const mkStation = (groupId: number, id: number = groupId): StationType => ({
   hasTrainTypes: undefined,
   line: undefined,
   trainType: undefined,
+  transportType: undefined,
 });
 
 const TestComponent: React.FC<Props> = ({ destination, stations }) => {

@@ -4,6 +4,7 @@ import {
   LineType,
   OperationStatus,
   StopCondition,
+  TransportType,
 } from '~/@types/graphql';
 
 export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
@@ -28,9 +29,11 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
   lineType: LineType.Subway,
   status: OperationStatus.InOperation,
   trainType: undefined,
+  transportType: TransportType.Rail,
   station: {
     __typename: 'StationNested',
     lines: [],
+    transportType: TransportType.Rail,
     stationNumbers: [
       {
         __typename: 'StationNumber',
@@ -93,9 +96,11 @@ export const RYOMO_LINE: Line = {
   lineType: LineType.Normal,
   status: OperationStatus.InOperation,
   trainType: undefined,
+  transportType: TransportType.Rail,
   station: {
     __typename: 'StationNested',
     lines: [],
+    transportType: TransportType.Rail,
     stationNumbers: [],
     id: 1134101,
     groupId: 1131816,

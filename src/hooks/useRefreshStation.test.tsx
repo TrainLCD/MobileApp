@@ -51,6 +51,7 @@ const mockStation: Station = {
   hasTrainTypes: undefined,
   line: undefined,
   trainType: undefined,
+  transportType: undefined,
 };
 
 describe('useRefreshStation', () => {

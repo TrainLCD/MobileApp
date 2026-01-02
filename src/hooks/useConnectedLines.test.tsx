@@ -44,6 +44,7 @@ const createLine = (
   station: null,
   status: OperationStatus.InOperation,
   trainType: null,
+  transportType: null,
   ...overrides,
 });
 
@@ -72,6 +73,7 @@ const createStation = (id: number, line: Line): Station => ({
   stopCondition: StopCondition.All,
   threeLetterCode: null,
   trainType: null,
+  transportType: null,
 });
 
 describe('useConnectedLines', () => {

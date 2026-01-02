@@ -56,6 +56,7 @@ export const LINE_FRAGMENT = gql`
       nameChinese
       nameKorean
       hasTrainTypes
+      transportType
       stationNumbers {
         ...StationNumberFields
       }
@@ -68,6 +69,7 @@ export const LINE_FRAGMENT = gql`
     nameChinese
     nameKorean
     status
+    transportType
   }
 `;
 
@@ -162,6 +164,7 @@ export const LINE_NESTED_FRAGMENT = gql`
     nameChinese
     nameKorean
     status
+    transportType
   }
 `;
 
@@ -235,6 +238,7 @@ export const STATION_FRAGMENT = gql`
     distance
     hasTrainTypes
     stopCondition
+    transportType
     stationNumbers {
       ...StationNumberFields
     }
@@ -274,6 +278,7 @@ export const STATION_NESTED_FRAGMENT = gql`
     distance
     hasTrainTypes
     stopCondition
+    transportType
     stationNumbers {
       ...StationNumberFields
     }
