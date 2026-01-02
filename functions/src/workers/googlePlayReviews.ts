@@ -1,11 +1,11 @@
-import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { Storage } from '@google-cloud/storage';
-import { GoogleAuth } from 'google-auth-library';
 import {
   androidpublisher,
-  androidpublisher_v3,
+  type androidpublisher_v3,
 } from '@googleapis/androidpublisher';
 import dayjs from 'dayjs';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { GoogleAuth } from 'google-auth-library';
 import type { DiscordEmbed } from '../models/common';
 
 type ReviewState = {
@@ -192,7 +192,7 @@ export async function runGooglePlayReviewJob() {
 
   // 2) レビューの取得（ページング）
   const all: PlayReview[] = [];
-  let token: string | undefined = undefined;
+  let token: string | undefined;
   for (let page = 0; page < 10; page++) {
     try {
       const response = (await api.reviews.list({

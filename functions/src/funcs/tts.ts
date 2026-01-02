@@ -1,8 +1,8 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { createHash } from 'node:crypto';
-import { normalizeRomanText } from '../utils/normalize';
-import * as admin from 'firebase-admin';
 import { PubSub } from '@google-cloud/pubsub';
+import * as admin from 'firebase-admin';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { normalizeRomanText } from '../utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -45,12 +45,12 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     // 一丁目で終わる駅
     .replace(
-      /\-itchome/gi,
+      /-itchome/gi,
       `<phoneme alphabet="ipa" ph="itt͡ɕoːme">いっちょうめ</phoneme>`
     )
     // 新宿三丁目など
     .replace(
-      /\-sanchome/gi,
+      /-sanchome/gi,
       ' <phoneme alphabet="ipa" ph="sant͡ɕoːme">さんちょうめ</phoneme>'
     )
     // 宇部
