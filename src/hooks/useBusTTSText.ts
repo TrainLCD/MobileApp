@@ -583,7 +583,7 @@ export const useBusTTSText = (
             afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.`
+                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
