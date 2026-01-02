@@ -1,10 +1,12 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Station } from '~/@types/graphql';
+import { type Station, TransportType } from '~/@types/graphql';
+import { parenthesisRegexp } from '~/constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import katakanaToHiragana from '../utils/kanaToHiragana';
+import { useCurrentLine } from './useCurrentLine';
 
 type UseHeaderStationTextOptions = {
   currentStation: Station | undefined;
@@ -22,7 +24,10 @@ export const useHeaderStationText = ({
   const { headerState } = useAtomValue(navigationState);
   const { selectedBound } = useAtomValue(stationState);
 
-  return useMemo<string>(() => {
+  const currentLine = useCurrentLine();
+  const isBus = currentLine?.transportType === TransportType.Bus;
+
+  const rawText = useMemo<string>(() => {
     if (!selectedBound) {
       return currentStation?.name ?? '';
     }
@@ -101,4 +106,6 @@ export const useHeaderStationText = ({
     firstStop,
     headerLangState,
   ]);
+
+  return isBus ? rawText.replace(parenthesisRegexp, '') : rawText;
 };
