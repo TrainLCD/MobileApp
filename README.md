@@ -34,6 +34,7 @@ This app recreates the authentic experience of Japanese train travel by displayi
 - [Architecture](#architecture)
 - [Support](#support)
 - [Join our Community](#join-our-community)
+- [Data Sources](#data-sources)
 - [Contributors](#contributors-)
 - [Related Projects](#related-projects)
 - [License](#license)
@@ -271,6 +272,7 @@ For professional support or custom development, please contact the maintainers.
 ## Data Sources
 
 - Bus-related data provided by [Tokyo Metropolitan Bureau of Transportation (Toei)](https://www.kotsu.metro.tokyo.jp/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- Station data provided by [駅データ.jp](https://www.ekidata.jp/)
 
 ## Contributors ✨
 
