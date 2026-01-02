@@ -38,7 +38,7 @@ const EMPTY_TTS_TEXT = {
 export const useTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | undefined[] => {
+): [string, string] | [] => {
   const theme = useAtomValue(themeAtom);
 
   const { selectedBound: selectedBoundOrigin, stations } =
@@ -103,20 +103,12 @@ export const useTTSText = (
   );
 
   const currentLine = useMemo(
-    () =>
-      currentLineOrigin && {
-        ...currentLineOrigin,
-        nameRoman: currentLineOrigin?.nameRoman,
-      },
+    () => currentLineOrigin ?? null,
     [currentLineOrigin]
   );
 
   const selectedBound = useMemo(
-    () =>
-      selectedBoundOrigin && {
-        ...selectedBoundOrigin,
-        nameRoman: selectedBoundOrigin?.nameRoman,
-      },
+    () => selectedBoundOrigin ?? null,
     [selectedBoundOrigin]
   );
 
@@ -157,7 +149,7 @@ export const useTTSText = (
   const boundForEn = useMemo(
     () =>
       isLoopLine
-        ? `${loopLineBoundEn?.boundFor.replaceAll('&', ' and ')}`
+        ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
         : `${directionalStops?.map((s) => s?.nameRoman).join(' and ')}`,
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
@@ -886,7 +878,7 @@ export const useTTSText = (
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.`
+                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -1074,7 +1066,7 @@ export const useTTSText = (
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.`
+                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -1103,8 +1095,6 @@ export const useTTSText = (
           ARRIVING: `We will soon be arriving at ${
             nextStation?.nameRoman
           }${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${nextStationNumberText}. ${
-            isNextStopTerminus ? 'The last stop.' : ''
-          } ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
