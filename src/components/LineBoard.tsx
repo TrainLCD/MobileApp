@@ -42,6 +42,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     () =>
       leftStations.slice(0, 8).map((sta) => ({
         ...sta,
+        name: isBus ? sta.name?.replace(parenthesisRegexp, '') : sta.name,
         nameRoman: isBus
           ? sta.nameRoman?.replace(parenthesisRegexp, '')
           : sta.nameRoman,
