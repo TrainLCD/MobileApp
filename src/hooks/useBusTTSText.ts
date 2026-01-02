@@ -99,7 +99,7 @@ export const useBusTTSText = (
   const boundForEn = useMemo(
     () =>
       isLoopLine
-        ? `${loopLineBoundEn?.boundFor.replaceAll('&', ' and ')}`
+        ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
         : `${directionalStops?.map((s) => s?.nameRoman).join(' and ')}`,
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
