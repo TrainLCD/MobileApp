@@ -17,6 +17,7 @@ import ThemeSettings from '../screens/ThemeSettings';
 import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
+import Licenses from '~/screens/Licenses';
 
 const Stack = createNativeStackNavigator();
 
@@ -102,6 +103,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="RouteSearch"
           component={RouteSearchScreen}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="Licenses"
+          component={Licenses}
         />
       </Stack.Navigator>
     </Permitted>
