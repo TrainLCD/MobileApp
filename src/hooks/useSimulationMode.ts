@@ -26,7 +26,6 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
-import { useNextStation } from './useNextStation';
 
 export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
@@ -77,7 +76,6 @@ export const useSimulationMode = (): void => {
   }, [isBus, currentLineType, trainType]);
 
   const station = useInRadiusStation(maxSpeed / 2);
-  const nextStation = useNextStation(false);
 
   const maybeRevsersedStations = useMemo(
     () =>
@@ -185,7 +183,18 @@ export const useSimulationMode = (): void => {
 
   const step = useCallback(
     (speed: number) => {
-      if (!nextStation) {
+      // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
+      const stationsWithoutPass = maybeRevsersedStations.filter(
+        (s) => !getIsPass(s)
+      );
+      const currentSegmentStation =
+        maybeRevsersedStations[segmentIndexRef.current];
+      const currentSegmentStopIndex = stationsWithoutPass.findIndex(
+        (s) => s.id === currentSegmentStation?.id
+      );
+      const targetStation = stationsWithoutPass[currentSegmentStopIndex + 1];
+
+      if (!targetStation) {
         segmentIndexRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         const prev = store.get(locationAtom);
@@ -210,8 +219,8 @@ export const useSimulationMode = (): void => {
       const prev = store.get(locationAtom);
       if (
         !prev ||
-        nextStation.latitude == null ||
-        nextStation.longitude == null
+        targetStation.latitude == null ||
+        targetStation.longitude == null
       ) {
         return;
       }
@@ -222,8 +231,8 @@ export const useSimulationMode = (): void => {
           longitude: prev.coords.longitude,
         },
         {
-          latitude: nextStation.latitude,
-          longitude: nextStation.longitude,
+          latitude: targetStation.latitude,
+          longitude: targetStation.longitude,
         }
       );
 
@@ -248,7 +257,7 @@ export const useSimulationMode = (): void => {
         },
       });
     },
-    [nextStation, maybeRevsersedStations]
+    [maybeRevsersedStations]
   );
 
   useEffect(() => {
