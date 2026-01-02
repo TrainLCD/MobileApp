@@ -55,6 +55,7 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
     isLast,
     selectedBound,
     headerState,
+    headerLangState,
   } = props;
 
   // HeaderLEDは現在駅と次駅両方のナンバリングが必要
@@ -137,8 +138,6 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
     }
     return dim.height / 1.5;
   }, [selectedBound, dim.height]);
-
-  const { headerLangState } = props;
 
   const stationTextBlocks = useMemo(
     () =>
