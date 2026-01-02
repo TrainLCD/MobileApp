@@ -1,6 +1,8 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { TransportType } from '~/@types/graphql';
+import { parenthesisRegexp } from '~/constants';
 import { useCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -34,10 +36,17 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useAtomValue(themeAtom);
   const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
+  const isBus = station?.line?.transportType === TransportType.Bus;
 
   const slicedLeftStations = useMemo(
-    () => leftStations.slice(0, 8),
-    [leftStations]
+    () =>
+      leftStations.slice(0, 8).map((sta) => ({
+        ...sta,
+        nameRoman: isBus
+          ? sta.nameRoman?.replace(parenthesisRegexp, '')
+          : sta.nameRoman,
+      })),
+    [leftStations, isBus]
   );
 
   const currentStationIndex = useMemo(
