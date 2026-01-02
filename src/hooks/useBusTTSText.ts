@@ -720,6 +720,7 @@ export const useBusTTSText = (
       nextStation?.nameRoman,
       selectedBound,
       viaStation,
+      station?.line?.company?.nameEnglishShort,
     ]);
 
   const jaText = useMemo(() => {
