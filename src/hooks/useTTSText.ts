@@ -189,10 +189,14 @@ export const useTTSText = (
 
   const connectedLines = useMemo(
     () =>
-      connectedLinesOrigin?.map((l) => ({
-        ...l,
-        nameRoman: l.nameRoman,
-      })),
+      connectedLinesOrigin
+        ?.filter(
+          (l) => l.station?.transportType && l.station.transportType === 'Rail'
+        )
+        ?.map((l) => ({
+          ...l,
+          nameRoman: l.nameRoman,
+        })),
     [connectedLinesOrigin]
   );
 

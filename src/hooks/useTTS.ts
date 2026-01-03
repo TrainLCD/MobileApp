@@ -5,12 +5,9 @@ import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
-import { TransportType } from '~/@types/graphql';
 import speechState from '../store/atoms/speech';
 import { isDevApp } from '../utils/isDevApp';
-import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
-import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
 import { useTTSCache } from './useTTSCache';
 import { useTTSText } from './useTTSText';
@@ -58,18 +55,11 @@ const base64ToUint8Array = (input: string): Uint8Array => {
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled } = useAtomValue(speechState);
-  const currentLine = useCurrentLine();
-
   const firstSpeechRef = useRef(true);
   const playingRef = useRef(false);
   const isLoadableRef = useRef(true);
   const { store, getByText } = useTTSCache();
-  const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
-  const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
-  const ttsText =
-    currentLine?.transportType === TransportType.Bus
-      ? busTTSText
-      : trainTTSText;
+  const ttsText = useTTSText(firstSpeechRef.current, enabled);
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
 
