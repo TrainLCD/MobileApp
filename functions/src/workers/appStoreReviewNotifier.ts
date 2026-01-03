@@ -1,6 +1,6 @@
-import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { Storage } from '@google-cloud/storage';
 import dayjs from 'dayjs';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import type { DiscordEmbed } from '../models/common';
 
 type AppStoreReview = {
@@ -21,7 +21,9 @@ type ReviewState = {
 
 const storage = new Storage();
 
-function parseGsUri(uri: string | undefined | null): { bucket: string; file: string } | null {
+function parseGsUri(
+  uri: string | undefined | null
+): { bucket: string; file: string } | null {
   if (!uri) return null;
   const m = uri.match(/^gs:\/\/([^/]+)\/(.+)$/);
   if (!m) return null;
@@ -50,7 +52,6 @@ async function saveState(uri: string | undefined | null, state: ReviewState) {
     .save(JSON.stringify(state), { contentType: 'application/json' });
 }
 
-
 type JsonObj = Record<string, unknown>;
 
 function deepGet(obj: unknown, path: string): unknown {
@@ -65,7 +66,7 @@ function deepGet(obj: unknown, path: string): unknown {
 function labelOf(v: unknown, d = ''): string {
   if (typeof v === 'string') return v;
   if (v && typeof v === 'object' && 'label' in (v as JsonObj)) {
-    const lv = (v as JsonObj)['label'];
+    const lv = (v as JsonObj).label;
     if (typeof lv === 'string') return lv;
   }
   return d;
@@ -100,11 +101,23 @@ function parseAppStoreJson(jsonText: string): AppStoreReview[] {
       const content = labelOf(deepGet(e, 'content'));
       const ratingStr = labelOf(deepGet(e, 'im:rating'));
       const version = labelOf(deepGet(e, 'im:version')) || undefined;
-      const author = labelOf(deepGet(e, 'author.name')) || labelOf(deepGet(e, 'author')) || undefined;
+      const author =
+        labelOf(deepGet(e, 'author.name')) ||
+        labelOf(deepGet(e, 'author')) ||
+        undefined;
       const url = hrefOf(deepGet(e, 'link')) || id;
       if (!id || !updated) continue;
       const rating = Number(ratingStr) || 0;
-      reviews.push({ id, updated, title, content, rating, version, author, url });
+      reviews.push({
+        id,
+        updated,
+        title,
+        content,
+        rating,
+        version,
+        author,
+        url,
+      });
     }
     return reviews;
   } catch {
@@ -118,7 +131,13 @@ export const __test_parseAppStoreJson = parseAppStoreJson;
 async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
   if (!reviews.length) return;
   // 10件ずつバッチ送信
-  const chunk = <T,>(arr: T[], size: number) => arr.reduce<T[][]>((a, _, i) => (i % size ? a : [...a, arr.slice(i, i + size)]), []);
+  const chunk = <T>(arr: T[], size: number): T[][] => {
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
+  };
   const batches = chunk(reviews, 10);
   for (const group of batches) {
     const embeds: DiscordEmbed[] = group.map((r) => {
@@ -134,7 +153,10 @@ async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
           { name: '本文', value: contentVal },
           { name: 'バージョン', value: r.version || '不明' },
           { name: '投稿者', value: r.author || '不明' },
-          { name: '投稿日', value: dayjs(r.updated).format('YYYY/MM/DD HH:mm:ss') },
+          {
+            name: '投稿日',
+            value: dayjs(r.updated).format('YYYY/MM/DD HH:mm:ss'),
+          },
           { name: 'リンク', value: r.url || r.id },
         ],
       };
@@ -156,7 +178,8 @@ export async function runAppStoreReviewJob() {
   const debug = process.env.REVIEWS_DEBUG === '1';
   const dryRun = process.env.REVIEWS_DRY_RUN === '1';
   const forceCount = Number(process.env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
-  const defaultUrl = 'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
+  const defaultUrl =
+    'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
   const appStoreUrl = process.env.APPSTORE_REVIEW_FEED_URL || defaultUrl;
   const stateUri = process.env.APPSTORE_REVIEW_STATE_GCS_URI; // e.g. gs://<bucket>/states/appstore-reviews.json
   const discordWebhook = process.env.DISCORD_REVIEW_WEBHOOK_URL;
@@ -169,7 +192,11 @@ export async function runAppStoreReviewJob() {
   }
 
   if (debug) {
-    console.log('[AppStoreJob] start', { hasStateUri: Boolean(stateUri), hasWebhook: Boolean(discordWebhook), appStoreUrl });
+    console.log('[AppStoreJob] start', {
+      hasStateUri: Boolean(stateUri),
+      hasWebhook: Boolean(discordWebhook),
+      appStoreUrl,
+    });
   }
 
   // 1) Load last state
@@ -177,7 +204,10 @@ export async function runAppStoreReviewJob() {
   const lastUpdated = state.lastUpdated ? dayjs(state.lastUpdated) : null;
   const lastIds = new Set(state.lastIds ?? []);
   if (debug) {
-    console.log('[AppStoreJob] loaded state', { lastUpdated: state.lastUpdated ?? null, lastIdsSize: lastIds.size });
+    console.log('[AppStoreJob] loaded state', {
+      lastUpdated: state.lastUpdated ?? null,
+      lastIdsSize: lastIds.size,
+    });
   }
 
   // 2) JSONフィードを取得（UA付与 + タイムアウト）
@@ -196,8 +226,13 @@ export async function runAppStoreReviewJob() {
   const t = await r.text();
   if (debug) {
     type MaybeHeaders = { get(name: string): string | null };
-    const ct = (r.headers as MaybeHeaders | undefined)?.get('content-type') ?? '';
-    console.log('[AppStoreJob] json fetched', { url: appStoreUrl, contentType: ct, preview: t.slice(0, 200).replace(/\s+/g, ' ') });
+    const ct =
+      (r.headers as MaybeHeaders | undefined)?.get('content-type') ?? '';
+    console.log('[AppStoreJob] json fetched', {
+      url: appStoreUrl,
+      contentType: ct,
+      preview: t.slice(0, 200).replace(/\s+/g, ' '),
+    });
   }
   const items = parseAppStoreJson(t);
   if (debug) console.log('[AppStoreJob] json parsed', { count: items.length });
@@ -219,7 +254,10 @@ export async function runAppStoreReviewJob() {
       .sort((a, b) => dayjs(a.updated).valueOf() - dayjs(b.updated).valueOf())
       .slice(-Math.max(1, forceCount));
     if (debug) {
-      console.log('[AppStoreJob] force mode enabled', { forceCount, actual: postTargets.length });
+      console.log('[AppStoreJob] force mode enabled', {
+        forceCount,
+        actual: postTargets.length,
+      });
     }
   }
 
@@ -229,20 +267,39 @@ export async function runAppStoreReviewJob() {
 
   // 4) Post to Discord
   if (dryRun) {
-    console.log('[AppStoreJob] DRY_RUN on. Will post (skipped):', postTargets.map((r) => ({ id: r.id, rating: r.rating, updated: r.updated })).slice(0, 5));
+    console.log(
+      '[AppStoreJob] DRY_RUN on. Will post (skipped):',
+      postTargets
+        .map((r) => ({ id: r.id, rating: r.rating, updated: r.updated }))
+        .slice(0, 5)
+    );
   } else {
     await postToDiscord(discordWebhook, postTargets);
   }
 
   // 5) Update state
   if (items.length) {
-    const newest = items.reduce((p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p), items[0]);
+    const newest = items.reduce(
+      (p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p),
+      items[0]
+    );
     const updatedIds = [
-      ...Array.from(new Set([...(state.lastIds ?? []).slice(-20), ...items.slice(0, 5).map((r) => r.id)])),
+      ...Array.from(
+        new Set([
+          ...(state.lastIds ?? []).slice(-20),
+          ...items.slice(0, 5).map((r) => r.id),
+        ])
+      ),
     ].slice(-40);
-    await saveState(stateUri, { lastUpdated: newest.updated, lastIds: updatedIds });
+    await saveState(stateUri, {
+      lastUpdated: newest.updated,
+      lastIds: updatedIds,
+    });
     if (debug) {
-      console.log('[AppStoreJob] state saved', { lastUpdated: newest.updated, lastIds: updatedIds.length });
+      console.log('[AppStoreJob] state saved', {
+        lastUpdated: newest.updated,
+        lastIds: updatedIds.length,
+      });
     }
   }
 }

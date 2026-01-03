@@ -57,6 +57,7 @@ const createLine = (
   station: null,
   status: OperationStatus.InOperation,
   trainType: null,
+  transportType: null,
   ...overrides,
 });
 
@@ -88,6 +89,7 @@ const createStation = (
   stopCondition: StopCondition.All,
   threeLetterCode: null,
   trainType: null,
+  transportType: null,
   ...overrides,
 });
 

@@ -97,6 +97,7 @@ const createLine = (
     station: stationValue,
     status: OperationStatus.InOperation,
     trainType: trainTypeValue,
+    transportType: null,
     ...rest,
   };
 };
@@ -182,6 +183,7 @@ const createStation = (
     stopCondition: StopCondition.All,
     threeLetterCode: null,
     trainType: trainTypeValue,
+    transportType: null,
     ...rest,
   };
 };

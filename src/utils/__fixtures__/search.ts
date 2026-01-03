@@ -4,6 +4,7 @@ import {
   OperationStatus,
   type Station,
   StopCondition,
+  TransportType,
 } from '~/@types/graphql';
 
 /**
@@ -40,6 +41,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 4,
@@ -68,6 +70,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: true,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // Hanshin - groupId 3500109
   {
@@ -97,6 +100,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 25,
@@ -125,6 +129,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: true,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // Unique station - groupId 3500111
   {
@@ -154,6 +159,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 25,
@@ -182,6 +188,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: true,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
 ];
 
@@ -214,6 +221,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 1,
@@ -242,6 +250,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 陸前落合 (Miyagi) - unique name
   {
@@ -271,6 +280,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 2,
@@ -299,6 +309,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 落合川 (Tokyo) - unique name
   {
@@ -328,6 +339,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 156,
@@ -356,6 +368,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 美作落合 (Okayama) - unique name
   {
@@ -385,6 +398,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 4,
@@ -413,6 +427,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 備後落合 (Hiroshima) - unique name
   {
@@ -442,6 +457,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 4,
@@ -470,6 +486,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 下落合 (Tokyo) - unique name
   {
@@ -499,6 +516,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 23,
@@ -527,6 +545,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 落合 (Tokyo) - prefectureId 13
   {
@@ -556,6 +575,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 18,
@@ -584,6 +604,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 落合南長崎 (Tokyo) - unique name
   {
@@ -613,6 +634,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 19,
@@ -641,5 +663,6 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
 ];

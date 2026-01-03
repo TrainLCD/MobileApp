@@ -1,39 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { parenthesisRegexp, STATION_NAME_FONT_SIZE } from '../constants';
-import {
-  useBoundText,
-  useConnectedLines,
-  useCurrentLine,
-  useCurrentStation,
-  useCurrentTrainType,
-  useFirstStop,
-  useHeaderLangState,
-  useHeaderStateText,
-  useHeaderStationText,
-  useIsNextLastStop,
-  useLazyPrevious,
-  useNextStation,
-  useNumbering,
-  usePrevious,
-} from '../hooks';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import tuningState from '../store/atoms/tuning';
+import { STATION_NAME_FONT_SIZE } from '../constants';
+import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
-import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
+import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
@@ -151,232 +126,42 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   </View>
 );
 
-const HeaderSaikyo: React.FC = () => {
-  const currentStation = useCurrentStation();
-  const currentLine = useCurrentLine();
-  const nextStation = useNextStation();
-
-  const [fadeOutFinished, setFadeOutFinished] = useState(false);
-  const { selectedBound, arrived } = useAtomValue(stationState);
-  const { headerState } = useAtomValue(navigationState);
-  const { headerTransitionDelay } = useAtomValue(tuningState);
-
-  const connectedLines = useConnectedLines();
-  const isLast = useIsNextLastStop();
-  const trainType = useCurrentTrainType();
-  const boundStationNameList = useBoundText();
-  const firstStop = useFirstStop();
-
-  const connectionText = useMemo(
-    () =>
-      connectedLines
-        ?.map((l) => l.nameShort?.replace(parenthesisRegexp, ''))
-        .slice(0, 2)
-        .join('・'),
-    [connectedLines]
-  );
-
-  const nameFadeAnim = useSharedValue<number>(1);
-  const topNameScaleYAnim = useSharedValue<number>(0);
-  const stateOpacityAnim = useSharedValue<number>(0);
-  const boundOpacityAnim = useSharedValue<number>(0);
-  const bottomNameScaleYAnim = useSharedValue<number>(1);
-
-  const { right: safeAreaRight } = useSafeAreaInsets();
-  const headerLangState = useHeaderLangState();
-
-  const boundText = useMemo(
-    () => boundStationNameList[headerLangState],
-    [boundStationNameList, headerLangState]
-  );
-
-  const stationText = useHeaderStationText({
-    currentStation,
-    nextStation,
-    headerLangState,
-    firstStop,
-  });
-
-  const { stateText } = useHeaderStateText({
-    isLast,
-    headerLangState,
-    firstStop,
-  });
-
-  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
-
-  const prevStationText = usePrevious(stationText);
-  const prevStateText = usePrevious(stateText);
-  const prevBoundText = usePrevious(boundText);
-  const prevConnectionText = usePrevious(connectionText);
-
-  const isJapaneseState = useMemo(
-    () => headerLangState === 'JA' || headerLangState === 'KANA',
-    [headerLangState]
-  );
-
-  const prevBoundIsDifferent = useMemo(
-    () => prevBoundText !== boundText,
-    [boundText, prevBoundText]
-  );
-
-  const fadeIn = useCallback(() => {
-    if (!selectedBound) {
-      if (prevHeaderState === headerState) {
-        topNameScaleYAnim.value = 0;
-        nameFadeAnim.value = 1;
-        bottomNameScaleYAnim.value = 1;
-        stateOpacityAnim.value = 0;
-        setFadeOutFinished(true);
-      }
-      return;
-    }
-
-    const handleFinish = (finished: boolean | undefined) => {
-      if (finished) {
-        setFadeOutFinished(true);
-      }
-    };
-
-    if (prevHeaderState !== headerState) {
-      topNameScaleYAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-      nameFadeAnim.value = withTiming(
-        1,
-        {
-          duration: headerTransitionDelay,
-          easing: Easing.linear,
-        },
-        (finished) => runOnJS(handleFinish)(finished)
-      );
-      bottomNameScaleYAnim.value = withTiming(1, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-      stateOpacityAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-    }
-    if (prevBoundIsDifferent) {
-      boundOpacityAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-    }
-  }, [
-    bottomNameScaleYAnim,
-    boundOpacityAnim,
+const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
+  const {
+    currentLine,
+    selectedBound,
     headerState,
     headerTransitionDelay,
-    nameFadeAnim,
-    prevBoundIsDifferent,
-    prevHeaderState,
+    stationText,
+    stateText,
+    boundText,
+    currentStationNumber,
+    threeLetterCode,
+    numberingColor,
+    trainType,
+    connectedLines,
+    connectionText,
+    isJapaneseState,
+  } = props;
+
+  const animation = useHeaderAnimation({
     selectedBound,
-    stateOpacityAnim,
-    topNameScaleYAnim,
-  ]);
-
-  const fadeOut = useCallback((): void => {
-    if (!selectedBound) {
-      return;
-    }
-
-    nameFadeAnim.value = 0;
-    topNameScaleYAnim.value = 1;
-    stateOpacityAnim.value = 1;
-    boundOpacityAnim.value = 1;
-    bottomNameScaleYAnim.value = 0;
-  }, [
-    selectedBound,
-    nameFadeAnim,
-    topNameScaleYAnim,
-    stateOpacityAnim,
-    boundOpacityAnim,
-    bottomNameScaleYAnim,
-  ]);
-
-  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
-
-  const fade = useCallback(() => {
-    fadeOut();
-    fadeIn();
-  }, [fadeIn, fadeOut]);
-
-  useEffect(() => {
-    setFadeOutFinished(!selectedBound);
-    fade();
-  }, [fade, selectedBound]);
-
-  const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.value,
-  }));
-
-  const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.value,
-  }));
-
-  const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    const transform = {
-      transform: [
-        {
-          scaleY: 1 - topNameScaleYAnim.value,
-        },
-      ],
-    };
-
-    return transform;
+    headerState,
+    headerTransitionDelay,
+    stationText,
+    stateText,
+    stateTextRight: '',
+    boundText,
+    connectionText,
+    isJapaneseState,
   });
 
-  const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    const transform = {
-      transform: [
-        {
-          scaleY: topNameScaleYAnim.value,
-        },
-      ],
-    };
-    return transform;
-  });
-
-  const topNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: nameFadeAnim.value,
-    };
-  });
-
-  const bottomNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: 1 - nameFadeAnim.value,
-    };
-  });
-
-  const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.value,
-  }));
-
-  const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: boundOpacityAnim.value,
-  }));
-
-  const [currentStationNumber, threeLetterCode] = useNumbering();
-  const lineColor = useMemo(() => currentLine?.color, [currentLine]);
-  const numberingColor = useMemo(
-    () =>
-      getNumberingColor(
-        arrived,
-        currentStationNumber,
-        nextStation,
-        currentLine
-      ),
-    [arrived, currentStationNumber, currentLine, nextStation]
-  );
+  const { right: safeAreaRight } = useSafeAreaInsets();
+  const lineColor = currentLine?.color ?? '#00ac9a';
 
   return (
     <View>
-      <HeaderBar height={15} lineColor={lineColor || '#00ac9a'} />
+      <HeaderBar height={15} lineColor={lineColor} />
       <View style={styles.topBar} />
       <LinearGradient
         colors={['#aaa', '#fcfcfc']}
@@ -384,13 +169,13 @@ const HeaderSaikyo: React.FC = () => {
         style={styles.gradientRoot}
       >
         <View style={styles.headerTexts}>
-          <TrainTypeBox
-            lineColor={lineColor || '#00ac9a'}
-            trainType={trainType}
-          />
+          <TrainTypeBox lineColor={lineColor} trainType={trainType} />
           <View style={styles.boundWrapper}>
             <Animated.Text
-              style={[boundTopAnimatedStyles, styles.boundTextContainer]}
+              style={[
+                animation.boundTopAnimatedStyles,
+                styles.boundTextContainer,
+              ]}
             >
               <Text style={styles.connectedLines}>
                 {connectedLines?.length && isJapaneseState
@@ -401,32 +186,35 @@ const HeaderSaikyo: React.FC = () => {
             </Animated.Text>
 
             <Animated.Text
-              style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
+              style={[
+                animation.boundBottomAnimatedStyles,
+                styles.boundTextContainer,
+              ]}
             >
               <Text style={styles.connectedLines}>
-                {connectedLines?.length && prevIsJapaneseState
-                  ? `${prevConnectionText}直通 `
+                {connectedLines?.length && animation.prevIsJapaneseState
+                  ? `${animation.prevConnectionText}直通 `
                   : null}
               </Text>
-              <Text style={styles.boundText}>{prevBoundText}</Text>
+              <Text style={styles.boundText}>{animation.prevBoundText}</Text>
             </Animated.Text>
           </View>
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
             <Animated.Text
-              style={[stateTopAnimatedStyles, styles.state]}
+              style={[animation.stateTopAnimatedStyles, styles.state]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
               {stateText}
             </Animated.Text>
             <Animated.Text
-              style={[stateBottomAnimatedStyles, styles.state]}
+              style={[animation.stateBottomAnimatedStyles, styles.state]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
-              {prevStateText}
+              {animation.prevStateText}
             </Animated.Text>
           </View>
 
@@ -446,9 +234,9 @@ const HeaderSaikyo: React.FC = () => {
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                  topNameAnimatedStyles,
+                  animation.topNameAnimatedStyles,
                   styles.stationName,
-                  topNameAnimatedAnchorStyle,
+                  animation.topNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
                     transformOrigin: 'top',
@@ -464,16 +252,16 @@ const HeaderSaikyo: React.FC = () => {
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                  bottomNameAnimatedStyles,
+                  animation.bottomNameAnimatedStyles,
                   styles.stationName,
-                  bottomNameAnimatedAnchorStyle,
+                  animation.bottomNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
                     transformOrigin: 'bottom',
                   },
                 ]}
               >
-                {prevStationText}
+                {animation.prevStationText}
               </Animated.Text>
             </View>
           </View>
@@ -488,7 +276,7 @@ const HeaderSaikyo: React.FC = () => {
           ]}
         />
       </LinearGradient>
-      <HeaderBar height={5} lineColor={lineColor || '#00ac9a'} />
+      <HeaderBar height={5} lineColor={lineColor} />
     </View>
   );
 };

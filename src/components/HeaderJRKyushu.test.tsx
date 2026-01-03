@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderJRKyushu from './HeaderJRKyushu';
 
 // Mock dependencies
@@ -96,6 +97,22 @@ jest.mock('~/hooks', () => ({
   useHeaderStationText: jest.fn(() => 'Test Station'),
   useLazyPrevious: jest.fn((value) => value),
   usePrevious: jest.fn((value) => value),
+  useHeaderAnimation: jest.fn(() => ({
+    prevStationText: '',
+    prevStateText: '',
+    prevStateTextRight: '',
+    prevBoundText: '',
+    prevConnectionText: '',
+    prevIsJapaneseState: true,
+    stateTopAnimatedStyles: {},
+    stateBottomAnimatedStyles: {},
+    topNameAnimatedAnchorStyle: {},
+    bottomNameAnimatedAnchorStyle: {},
+    topNameAnimatedStyles: {},
+    bottomNameAnimatedStyles: {},
+    boundTopAnimatedStyles: {},
+    boundBottomAnimatedStyles: {},
+  })),
 }));
 
 jest.mock('~/utils/isTablet', () => ({
@@ -133,12 +150,14 @@ describe('HeaderJRKyushu', () => {
   describe('Component rendering', () => {
     it('should render without crashing', () => {
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
     it('should render TrainTypeBoxJRKyushu', () => {
-      const { getByTestId } = render(<HeaderJRKyushu />);
+      const { getByTestId } = render(
+        <HeaderJRKyushu {...createMockHeaderProps()} />
+      );
       expect(getByTestId('TrainTypeBoxJRKyushu')).toBeTruthy();
     });
   });
@@ -160,7 +179,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -180,7 +199,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -200,7 +219,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -223,7 +242,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -246,7 +265,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -274,7 +293,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -299,7 +318,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -324,7 +343,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -346,7 +365,7 @@ describe('HeaderJRKyushu', () => {
       });
 
       expect(() => {
-        render(<HeaderJRKyushu />);
+        render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -367,14 +386,23 @@ describe('HeaderJRKyushu', () => {
         return {};
       });
 
-      const { getByTestId } = render(<HeaderJRKyushu />);
+      const { getByTestId } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({
+            currentStationNumber: {
+              __typename: 'StationNumber',
+              stationNumber: 'JK01',
+              lineSymbolShape: 'ROUND',
+              lineSymbol: 'JK',
+              lineSymbolColor: '#E50012',
+            },
+          })}
+        />
+      );
       expect(getByTestId('NumberingIcon')).toBeTruthy();
     });
 
     it('should not render numbering icon when station number is missing', () => {
-      const { useNumbering } = require('~/hooks');
-      useNumbering.mockReturnValue([null, null]);
-
       const { useAtomValue } = require('jotai');
       useAtomValue.mockImplementation((atom: unknown) => {
         if (atom === require('~/store/atoms/station').default) {
@@ -389,7 +417,11 @@ describe('HeaderJRKyushu', () => {
         return {};
       });
 
-      const { queryByTestId } = render(<HeaderJRKyushu />);
+      const { queryByTestId } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({ currentStationNumber: undefined })}
+        />
+      );
       expect(queryByTestId('NumberingIcon')).toBeNull();
     });
   });

@@ -1,8 +1,8 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { createHash } from 'node:crypto';
-import { normalizeRomanText } from '../utils/normalize';
-import * as admin from 'firebase-admin';
 import { PubSub } from '@google-cloud/pubsub';
+import * as admin from 'firebase-admin';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { normalizeRomanText } from '../utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -45,12 +45,12 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     // 一丁目で終わる駅
     .replace(
-      /\-itchome/gi,
+      /-itchome/gi,
       `<phoneme alphabet="ipa" ph="itt͡ɕoːme">いっちょうめ</phoneme>`
     )
     // 新宿三丁目など
     .replace(
-      /\-sanchome/gi,
+      /-sanchome/gi,
       ' <phoneme alphabet="ipa" ph="sant͡ɕoːme">さんちょうめ</phoneme>'
     )
     // 宇部
@@ -148,7 +148,11 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Ryogoku/gi,
       '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
     )
-    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');
+    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>')
+    // 都営バスを想定
+    .replace(/.Sta\./gi, ' Station')
+    .replace(/.Univ\./gi, ' University')
+    .replace(/.Hp\./gi, ' Hospital');
 
   if (ssmlEn.trim().length === 0) {
     throw new HttpsError(

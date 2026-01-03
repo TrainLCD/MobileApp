@@ -294,6 +294,7 @@ const RouteSearchScreen = () => {
 
       return (
         <CommonCard
+          targetStation={item}
           line={line}
           title={
             isJapanese ? item.name || undefined : item.nameRoman || undefined
