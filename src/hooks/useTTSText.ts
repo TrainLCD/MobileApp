@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import type { Station } from '~/@types/graphql';
+import { type Station, TransportType } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
@@ -95,10 +95,9 @@ export const useTTSText = (
 
   const transferLines = useMemo(
     () =>
-      transferLinesOriginal.map((l) => ({
-        ...l,
-        nameRoman: l.nameRoman,
-      })),
+      transferLinesOriginal.filter(
+        (l) => l.station?.transportType === TransportType.Rail
+      ),
     [transferLinesOriginal]
   );
 
@@ -189,10 +188,9 @@ export const useTTSText = (
 
   const connectedLines = useMemo(
     () =>
-      connectedLinesOrigin?.map((l) => ({
-        ...l,
-        nameRoman: l.nameRoman,
-      })),
+      connectedLinesOrigin?.filter(
+        (l) => l.station?.transportType === TransportType.Rail
+      ),
     [connectedLinesOrigin]
   );
 
