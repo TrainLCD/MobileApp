@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import type { TrainType } from '~/@types/graphql';
+import { type TrainType, TransportType } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
@@ -96,6 +96,8 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     return headerState.split('_')[1] as HeaderLangState;
   }, [headerState]);
 
+  const isBus = currentLine?.transportType === TransportType.Bus;
+
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -126,7 +128,12 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       (isTY ? translate('tyLocalKo') : translate('localKo'))
   );
 
+  const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
+
   const trainTypeName = useMemo(() => {
+    if (isBus) {
+      return lineNameJa;
+    }
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR;
@@ -138,7 +145,9 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         return trainTypeNameJa;
     }
   }, [
+    isBus,
     headerLangState,
+    lineNameJa,
     trainTypeNameJa,
     trainTypeNameKo,
     trainTypeNameR,

@@ -11,13 +11,16 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import { isDevApp } from '~/utils/isDevApp';
-import FooterTabBar from '../components/FooterTabBar';
+import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
@@ -26,6 +29,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_theme: 'personalize_theme',
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
+  about_app_licenses: 'about_app_licenses',
   developer_tuning: 'developer_tuning',
 } as const;
 
@@ -48,14 +52,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   listContainerStyle: {
-    flex: 1,
+    flexGrow: 1,
     marginHorizontal: 24,
+    marginTop: 24,
   },
   betaNotice: {
     fontSize: RFValue(12),
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 32,
+    marginBottom: 24,
   },
 });
 
@@ -80,8 +85,12 @@ const SettingsItem = ({
         return 'volume-high';
       case 'personalize_languages':
         return 'globe';
-      default:
+      case 'about_app_licenses':
+        return 'key';
+      case 'developer_tuning':
         return 'settings';
+      default:
+        return 'help';
     }
   }, [item.id]);
 
@@ -145,6 +154,7 @@ const AppSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const scrollY = useSharedValue(0);
+  const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
@@ -177,6 +187,17 @@ const AppSettingsScreen: React.FC = () => {
           ].filter((dat) =>
             isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
           ), // Remove TTS setting in App Clip
+        },
+        {
+          key: 'aboutApp',
+          data: [
+            {
+              id: SETTING_ITEM_ID_MAP.about_app_licenses,
+              title: translate('license'),
+              color: '#333',
+              onPress: () => navigation.navigate('Licenses' as never),
+            },
+          ],
         },
         {
           key: 'forDevelopers',
@@ -242,6 +263,7 @@ const AppSettingsScreen: React.FC = () => {
           contentContainerStyle={[
             styles.listContainerStyle,
             headerHeight ? { paddingTop: headerHeight } : null,
+            { paddingBottom: FOOTER_BASE_HEIGHT + safeAreaBottom },
           ]}
           renderSectionHeader={renderSectionHeader}
           sections={SETTINGS_SECTIONS}
@@ -254,7 +276,7 @@ const AppSettingsScreen: React.FC = () => {
       </SafeAreaView>
       <SettingsHeader
         title={translate('settings')}
-        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
         scrollY={scrollY}
       />
       <FooterTabBar active="settings" />

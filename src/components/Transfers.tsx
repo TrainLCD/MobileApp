@@ -190,9 +190,11 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                 <Typography style={styles.lineName}>
                   {line.nameShort?.replace(parenthesisRegexp, '')}
                 </Typography>
-                <Typography style={styles.lineNameEn}>
-                  {line.nameRoman?.replace(parenthesisRegexp, '')}
-                </Typography>
+                {line.nameRoman ? (
+                  <Typography style={styles.lineNameEn}>
+                    {line.nameRoman.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
                 {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
                   <Typography style={styles.lineNameEn}>
                     {`${line.nameChinese.replace(

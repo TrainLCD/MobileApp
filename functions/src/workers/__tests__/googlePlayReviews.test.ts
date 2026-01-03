@@ -13,7 +13,10 @@ jest.mock('@google-cloud/storage', () => {
       return [Buffer.from(v)];
     }
     async save(data: string | Buffer) {
-      store.set(this.key, typeof data === 'string' ? data : data.toString('utf8'));
+      store.set(
+        this.key,
+        typeof data === 'string' ? data : data.toString('utf8')
+      );
     }
   }
   class Bucket {
@@ -52,7 +55,8 @@ describe('googlePlayReviewNotifier', () => {
     fetchMock.mockReset();
     listMock.mockReset();
     process.env.DISCORD_REVIEW_WEBHOOK_URL = 'https://discord.test/webhook';
-    process.env.GOOGLEPLAY_REVIEW_STATE_GCS_URI = 'gs://test-bucket/states/googleplay.json';
+    process.env.GOOGLEPLAY_REVIEW_STATE_GCS_URI =
+      'gs://test-bucket/states/googleplay.json';
     process.env.GOOGLE_PLAY_PACKAGE_NAME = 'me.tinykitten.trainlcd';
   });
 
@@ -107,7 +111,9 @@ describe('googlePlayReviewNotifier', () => {
     const saved = gcsStore.get('test-bucket/states/googleplay.json');
     expect(saved).toBeTruthy();
     const json = JSON.parse(String(saved));
-    expect(new Date(json.lastUpdated).toISOString()).toBe(new Date(1756960800 * 1000).toISOString());
+    expect(new Date(json.lastUpdated).toISOString()).toBe(
+      new Date(1756960800 * 1000).toISOString()
+    );
     expect(Array.isArray(json.lastIds)).toBe(true);
   });
 

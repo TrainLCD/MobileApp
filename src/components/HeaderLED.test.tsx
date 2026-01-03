@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderLED from './HeaderLED';
 
 // Mock dependencies
@@ -87,14 +88,14 @@ describe('HeaderLED', () => {
   describe('Component rendering', () => {
     it('should render without crashing', () => {
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
     it('should render with station name', () => {
-      const { getByText } = render(<HeaderLED />);
+      const { getByText } = render(<HeaderLED {...createMockHeaderProps()} />);
       // Station name is split into individual characters for Japanese
-      expect(getByText('T')).toBeTruthy();
+      expect(getByText('新')).toBeTruthy();
     });
   });
 
@@ -112,7 +113,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -129,7 +130,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -146,7 +147,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -163,7 +164,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -180,7 +181,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -197,7 +198,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -214,7 +215,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -231,7 +232,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
 
@@ -248,7 +249,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -270,7 +271,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });
@@ -289,7 +290,7 @@ describe('HeaderLED', () => {
       });
 
       expect(() => {
-        render(<HeaderLED />);
+        render(<HeaderLED {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });

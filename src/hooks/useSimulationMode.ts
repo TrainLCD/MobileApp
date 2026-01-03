@@ -5,8 +5,11 @@ import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { LineType } from '~/@types/graphql';
+import { LineType, TransportType } from '~/@types/graphql';
 import {
+  BUS_MAX_ACCEL_IN_M_S,
+  BUS_MAX_DECEL_IN_M_S,
+  BUS_MAX_SPEED_IN_M_S,
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
   LINE_TYPE_MAX_SPEEDS_IN_M_S,
@@ -23,7 +26,6 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
-import { useNextStation } from './useNextStation';
 
 export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
@@ -48,7 +50,16 @@ export const useSimulationMode = (): void => {
     [currentLine]
   );
 
+  const isBus = useMemo(
+    () => currentLine?.transportType === TransportType.Bus,
+    [currentLine]
+  );
+
   const maxSpeed = useMemo<number>(() => {
+    if (isBus) {
+      return BUS_MAX_SPEED_IN_M_S;
+    }
+
     if (currentLineType === LineType.BulletTrain) {
       return LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain];
     }
@@ -62,10 +73,9 @@ export const useSimulationMode = (): void => {
     }
 
     return defaultMaxSpeed;
-  }, [currentLineType, trainType]);
+  }, [isBus, currentLineType, trainType]);
 
   const station = useInRadiusStation(maxSpeed / 2);
-  const nextStation = useNextStation(false);
 
   const maybeRevsersedStations = useMemo(
     () =>
@@ -142,11 +152,18 @@ export const useSimulationMode = (): void => {
 
       const distanceForNextStation = getPathLength(points);
 
+      const accel = isBus
+        ? BUS_MAX_ACCEL_IN_M_S
+        : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
+      const decel = isBus
+        ? BUS_MAX_DECEL_IN_M_S
+        : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
+
       const speedProfile = generateTrainSpeedProfile({
         distance: distanceForNextStation,
         maxSpeed,
-        accel: LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType],
-        decel: LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType],
+        accel,
+        decel,
         interval: 1,
       });
 
@@ -166,7 +183,18 @@ export const useSimulationMode = (): void => {
 
   const step = useCallback(
     (speed: number) => {
-      if (!nextStation) {
+      // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
+      const stationsWithoutPass = maybeRevsersedStations.filter(
+        (s) => !getIsPass(s)
+      );
+      const currentSegmentStation =
+        maybeRevsersedStations[segmentIndexRef.current];
+      const currentSegmentStopIndex = stationsWithoutPass.findIndex(
+        (s) => s.id === currentSegmentStation?.id
+      );
+      const targetStation = stationsWithoutPass[currentSegmentStopIndex + 1];
+
+      if (!targetStation) {
         segmentIndexRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         const prev = store.get(locationAtom);
@@ -191,8 +219,8 @@ export const useSimulationMode = (): void => {
       const prev = store.get(locationAtom);
       if (
         !prev ||
-        nextStation.latitude == null ||
-        nextStation.longitude == null
+        targetStation.latitude == null ||
+        targetStation.longitude == null
       ) {
         return;
       }
@@ -203,8 +231,8 @@ export const useSimulationMode = (): void => {
           longitude: prev.coords.longitude,
         },
         {
-          latitude: nextStation.latitude,
-          longitude: nextStation.longitude,
+          latitude: targetStation.latitude,
+          longitude: targetStation.longitude,
         }
       );
 
@@ -229,7 +257,7 @@ export const useSimulationMode = (): void => {
         },
       });
     },
-    [nextStation, maybeRevsersedStations]
+    [maybeRevsersedStations]
   );
 
   useEffect(() => {

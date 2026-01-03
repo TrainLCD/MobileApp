@@ -4,6 +4,7 @@ import {
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import Licenses from '~/screens/Licenses';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
@@ -102,6 +103,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="RouteSearch"
           component={RouteSearchScreen}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="Licenses"
+          component={Licenses}
         />
       </Stack.Navigator>
     </Permitted>

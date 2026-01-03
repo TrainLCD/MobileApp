@@ -98,7 +98,7 @@
   "bgAlertTitle": "Updating the nearest station",
   "bgAlertContent": "TrainLCD is updating the nearest station in the background.",
   "warning": "WARNING",
-  "autoAnnounce":"Auto Announcement",
+  "autoAnnounce": "Auto Announcement",
   "autoAnnounceItemTitle": "Enable voice announcement",
   "displayLanguages": "Enabled languages",
   "autoModeSettings": "Auto mode",
@@ -206,7 +206,7 @@
   "toEnabled": "Enable",
   "failedToSavePreference": "Failed to save preference. Please try again.",
   "japanese": "Japanese",
-  "english": "English (US)" ,
+  "english": "English (US)",
   "chinese": "Chinese (Simplified)",
   "korean": "Korean",
   "ttsLanguageSettings": "Automatic announcement language settings",
@@ -215,5 +215,12 @@
   "sendable": "You can send",
   "confirmDiscardTitle": "Discard input?",
   "confirmDiscardMessage": "Your input will not be saved.",
-  "discard": "Discard"
+  "discard": "Discard",
+  "aboutApp": "About the App",
+  "license": "Licenses",
+  "ekidatajp": "Ekidata.jp",
+  "toei": "Bureau of Transportation, Tokyo Metropolitan Government",
+  "ccby": "CC BY 4.0 (Data has been modified)",
+  "otherOss": "Other Open Source Software",
+  "toeiBusStopsNearby": "Nearby bus routes (Toei Bus)"
 }

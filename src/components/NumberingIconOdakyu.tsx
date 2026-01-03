@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet ? 22 * 1.5 : 22,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: Platform.select({ android: -2, ios: -4 }),
+    marginTop: Platform.select({ android: -2, ios: 8 }),
     letterSpacing: -1,
   },
   stationNumber: {

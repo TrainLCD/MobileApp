@@ -1,10 +1,11 @@
 import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import { APP_THEME } from '~/models/Theme';
 import Header from './Header';
 
 // Mock dependencies
-const mockUseCurrentStation = jest.fn();
+const mockUseHeaderCommonData = jest.fn();
 
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
@@ -12,7 +13,7 @@ jest.mock('jotai', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
-  useCurrentStation: () => mockUseCurrentStation(),
+  useHeaderCommonData: () => mockUseHeaderCommonData(),
 }));
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -108,17 +109,12 @@ jest.mock('./HeaderJRKyushu', () => {
   };
 });
 
-const mockStation = {
-  id: 1,
-  name: 'Test Station',
-  nameRoman: 'Test Station',
-  nameKatakana: 'テストステーション',
-};
+const mockCommonData = createMockHeaderProps();
 
 describe('Header', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCurrentStation.mockReturnValue(mockStation);
+    mockUseHeaderCommonData.mockReturnValue(mockCommonData);
   });
 
   const setTheme = (theme: string) => {
@@ -130,16 +126,16 @@ describe('Header', () => {
   });
 
   describe('renders null when station is not available', () => {
-    it('should return null when currentStation is undefined', () => {
-      mockUseCurrentStation.mockReturnValue(undefined);
+    it('should return null when useHeaderCommonData returns null', () => {
+      mockUseHeaderCommonData.mockReturnValue(null);
       setTheme(APP_THEME.TOKYO_METRO);
 
       const { toJSON } = render(<Header />);
       expect(toJSON()).toBeNull();
     });
 
-    it('should return null when currentStation is null', () => {
-      mockUseCurrentStation.mockReturnValue(null);
+    it('should return null when commonData is null', () => {
+      mockUseHeaderCommonData.mockReturnValue(null);
       setTheme(APP_THEME.YAMANOTE);
 
       const { toJSON } = render(<Header />);

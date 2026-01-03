@@ -24,6 +24,8 @@ export { useFirstStop } from './useFirstStop';
 export { useGetLineMark } from './useGetLineMark';
 export { useGetStationsWithTermination } from './useGetStationsWithTermination';
 export { useHasPassStationInRegion } from './useHasPassStationInRegion';
+export { useHeaderAnimation } from './useHeaderAnimation';
+export { useHeaderCommonData } from './useHeaderCommonData';
 export { useHeaderLangState } from './useHeaderLangState';
 export { useHeaderStateText } from './useHeaderStateText';
 export { useHeaderStationText } from './useHeaderStationText';
