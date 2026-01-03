@@ -4,6 +4,7 @@ import {
   OperationStatus,
   type Station,
   StopCondition,
+  TransportType,
 } from '~/@types/graphql';
 
 export const TOEI_SHINJUKU_LINE_STATIONS: Station[] = [
@@ -788,6 +789,7 @@ export const TOEI_SHINJUKU_LINE_STATIONS: Station[] = [
           status: OperationStatus.InOperation,
           stopCondition: StopCondition.All,
           hasTrainTypes: true,
+          transportType: TransportType.Rail,
         },
         company: {
           id: 18,
@@ -842,6 +844,7 @@ export const TOEI_SHINJUKU_LINE_STATIONS: Station[] = [
           status: OperationStatus.InOperation,
           stopCondition: StopCondition.All,
           hasTrainTypes: true,
+          transportType: TransportType.Rail,
         },
         company: {
           id: 18,
