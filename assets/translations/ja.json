@@ -222,5 +222,6 @@
   "ekidatajp": "駅データ.jp",
   "toei": "東京都交通局",
   "ccby": "CC BY 4.0(加工して利用)",
-  "otherOss": "その他オープンソースソフトウェア"
+  "otherOss": "その他オープンソースソフトウェア",
+  "toeiBusStopsNearby": "周辺のバス路線（都営バス）"
 }

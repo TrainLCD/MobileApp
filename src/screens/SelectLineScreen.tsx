@@ -18,7 +18,13 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
+import {
+  type Line,
+  type LineNested,
+  type Station,
+  type TrainType,
+  TransportType,
+} from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
@@ -84,6 +90,12 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  busHeading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 32,
     marginBottom: 16,
   },
   screenBg: {
@@ -173,7 +185,14 @@ const SelectLineScreen = () => {
 
   const stationLines = useMemo<Line[]>(() => {
     return (station?.lines ?? []).filter(
-      (line): line is LineNested => line?.id != null
+      (line): line is LineNested =>
+        line?.id != null && line.transportType === TransportType.Rail
+    );
+  }, [station?.lines]);
+  const busesLines = useMemo<Line[]>(() => {
+    return (station?.lines ?? []).filter(
+      (line): line is LineNested =>
+        line?.id != null && line.transportType === TransportType.Bus
     );
   }, [station?.lines]);
 
@@ -609,7 +628,7 @@ const SelectLineScreen = () => {
     setIsSelectBoundModalOpen(false);
   }, []);
 
-  const headingTitle = useMemo(() => {
+  const headingTitleForRailway = useMemo(() => {
     if (!station) return translate('selectLineTitle');
     const re = /\([^()]*\)/g;
     const baseNameJa = (station.name ?? '').replace(re, '');
@@ -725,29 +744,56 @@ const SelectLineScreen = () => {
             { paddingBottom: listPaddingBottom },
           ]}
         >
-          <ListHeader
-            headingTitle={headingTitle}
-            carouselData={carouselData}
-            isPresetsLoading={isPresetsLoading}
-            onPress={handlePresetPress}
-          />
           {nearbyStationLoading ? (
             <NearbyStationLoader />
           ) : (
-            Array.from({
-              length: Math.ceil(stationLines.length / numColumns),
-            }).map((_, rowIndex) => {
-              const rowLines = stationLines.slice(
-                rowIndex * numColumns,
-                (rowIndex + 1) * numColumns
-              );
-              const rowKey = rowLines.map((l) => l.id).join('-');
-              return (
-                <React.Fragment key={rowKey}>
-                  {renderLineRow(rowLines, rowIndex)}
-                </React.Fragment>
-              );
-            })
+            <>
+              <ListHeader
+                headingTitle={headingTitleForRailway}
+                carouselData={carouselData}
+                isPresetsLoading={isPresetsLoading}
+                onPress={handlePresetPress}
+              />
+              {Array.from({
+                length: Math.ceil(stationLines.length / numColumns),
+              }).map((_, rowIndex) => {
+                const rowLines = stationLines.slice(
+                  rowIndex * numColumns,
+                  (rowIndex + 1) * numColumns
+                );
+                const rowKey = rowLines.map((l) => l.id).join('-');
+                return (
+                  <React.Fragment key={rowKey}>
+                    {renderLineRow(rowLines, rowIndex)}
+                  </React.Fragment>
+                );
+              })}
+
+              {busesLines.length > 0 && (
+                <>
+                  <Heading style={styles.busHeading} singleLine>
+                    {translate('toeiBusStopsNearby')}
+                  </Heading>
+                  {Array.from({
+                    length: Math.ceil(busesLines.length / numColumns),
+                  }).map((_, rowIndex) => {
+                    const rowLines = busesLines.slice(
+                      rowIndex * numColumns,
+                      (rowIndex + 1) * numColumns
+                    );
+                    const rowKey = rowLines.map((l) => l.id).join('-');
+                    return (
+                      <React.Fragment key={rowKey}>
+                        {renderLineRow(
+                          rowLines,
+                          rowIndex + stationLines.length
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </>
+              )}
+            </>
           )}
           <EmptyLineSeparator />
         </Animated.ScrollView>
