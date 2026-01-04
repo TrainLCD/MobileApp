@@ -19,6 +19,7 @@ import { locationAtom } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { filterBusLinesForNonBusStation } from '~/utils/line';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
@@ -157,7 +158,8 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
-      const { line, lines } = item;
+      const { line, lines: linesRaw } = item;
+      const lines = filterBusLinesForNonBusStation(line, linesRaw);
       if (!line) return null;
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
