@@ -47,7 +47,7 @@ export const useTTSText = (
   const currentLineOrigin = useCurrentLine();
 
   const connectedLinesOrigin = useConnectedLines();
-  const transferLinesOriginal = useTransferLines();
+  const transferLines = useTransferLines();
   const currentTrainTypeOrigin = useCurrentTrainType();
   const loopLineBoundJa = useLoopLineBound(false);
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
@@ -91,14 +91,6 @@ export const useTTSText = (
         ? `<sub alias="かくえきていしゃ">各駅停車</sub>`
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
-  );
-
-  const transferLines = useMemo(
-    () =>
-      transferLinesOriginal.filter(
-        (l) => l.station?.transportType === TransportType.Rail
-      ),
-    [transferLinesOriginal]
   );
 
   const currentLine = useMemo(
