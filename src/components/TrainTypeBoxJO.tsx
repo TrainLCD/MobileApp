@@ -1,13 +1,14 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { type TrainType, TransportType } from '~/@types/graphql';
+import type { TrainType } from '~/@types/graphql';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
 import { useCurrentLine } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
+import { isBusLine } from '../utils/line';
 import { getIsLocal, getIsRapid } from '../utils/trainTypeString';
 import truncateTrainType from '../utils/truncateTrainType';
 import Typography from './Typography';
@@ -47,7 +48,7 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
     return headerState.split('_')[1] as HeaderLangState;
   }, [headerState]);
 
-  const isBus = currentLine?.transportType === TransportType.Bus;
+  const isBus = isBusLine(currentLine);
 
   const localTypeText = useMemo(() => {
     switch (headerLangState) {

@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { grayscale } from 'polished';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { type Line, TransportType } from '~/@types/graphql';
+import type { Line } from '~/@types/graphql';
 import {
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
@@ -11,6 +11,7 @@ import {
 } from '../constants';
 import type { LineMark } from '../models/LineMark';
 import isTablet from '../utils/isTablet';
+import { isBusLine } from '../utils/line';
 import NumberingIcon from './NumberingIcon';
 
 interface Props {
@@ -60,7 +61,7 @@ const TransferLineMark: React.FC<Props> = ({
   stationNumber,
   threeLetterCode,
 }: Props) => {
-  const isBus = line?.transportType === TransportType.Bus;
+  const isBus = isBusLine(line);
   const busSymbol = line?.nameShort?.replace(/[０-９]/g, '').at(0) ?? '';
 
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
