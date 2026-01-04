@@ -19,6 +19,7 @@ import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
+import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
@@ -216,13 +217,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop]);
 
-  const includesLongStationName = useMemo(
-    () =>
-      !!stations.filter(
-        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
-      ).length,
-    [stations]
-  );
+  const includesLongStationName = useIncludesLongStationName(stations);
 
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = getStationNumberIndex(stationInLoop);

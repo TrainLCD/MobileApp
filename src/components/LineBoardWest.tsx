@@ -31,6 +31,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { ChevronJRWest } from './ChevronJRWest';
+import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
 
@@ -462,13 +463,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     nextStation
   );
 
-  const includesLongStationName = useMemo(
-    () =>
-      !!stations.filter(
-        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
-      ).length,
-    [stations]
-  );
+  const includesLongStationName = useIncludesLongStationName(stations);
 
   const paddingBottom = useMemo(() => {
     if (isTablet) {
