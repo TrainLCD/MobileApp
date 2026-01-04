@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -24,6 +25,7 @@ export const useTransferLinesFromStation = (
   const transferLines = useMemo(
     () =>
       station?.lines
+        ?.filter((line) => !isBusLine(line))
         ?.filter((line) => line.id !== station.line?.id)
         // カッコを除いて路線名が同じということは、
         // データ上の都合で路線が分かれているだけなので除外する

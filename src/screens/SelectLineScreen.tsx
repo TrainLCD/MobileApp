@@ -18,13 +18,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import {
-  type Line,
-  type LineNested,
-  type Station,
-  type TrainType,
-  TransportType,
-} from '~/@types/graphql';
+import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
@@ -38,6 +32,7 @@ import {
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
@@ -185,14 +180,12 @@ const SelectLineScreen = () => {
 
   const stationLines = useMemo<Line[]>(() => {
     return (station?.lines ?? []).filter(
-      (line): line is LineNested =>
-        line?.id != null && line.transportType === TransportType.Rail
+      (line): line is LineNested => line?.id != null && !isBusLine(line)
     );
   }, [station?.lines]);
   const busesLines = useMemo<Line[]>(() => {
     return (station?.lines ?? []).filter(
-      (line): line is LineNested =>
-        line?.id != null && line.transportType === TransportType.Bus
+      (line): line is LineNested => line?.id != null && isBusLine(line)
     );
   }, [station?.lines]);
 

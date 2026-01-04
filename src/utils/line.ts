@@ -34,3 +34,17 @@ export const getNextStationLinesWithoutCurrentLine = (
   forceStationIndex?: number
 ): Line[] =>
   filterWithoutCurrentLine(stations, selectedLine, forceStationIndex ?? 1);
+
+/**
+ * バス停以外の駅ではバス路線を除外してフィルタリングする
+ * バス停の場合はすべての路線を表示
+ */
+export const filterBusLinesForNonBusStation = <
+  T extends Pick<Line, 'transportType'>,
+>(
+  currentLine: Pick<Line, 'transportType'> | null | undefined,
+  lines: T[] | null | undefined
+): T[] => {
+  if (!lines) return [];
+  return lines.filter((l) => isBusLine(currentLine) || !isBusLine(l));
+};
