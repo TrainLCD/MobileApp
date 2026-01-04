@@ -3,6 +3,7 @@ import type React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
@@ -57,6 +58,7 @@ export const StationSettingsModal: React.FC<Props> = ({
   onDestinationSelected,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const isBus = isBusLine(station?.line);
 
   return (
     <CustomModal
@@ -83,7 +85,7 @@ export const StationSettingsModal: React.FC<Props> = ({
         </Typography>
         <Heading style={styles.heading}>
           {isJapanese ? station?.name : station?.nameRoman}
-          {translate('station')}
+          {isBus ? '' : translate('station')}
         </Heading>
 
         <View style={styles.buttonsContainer}>
