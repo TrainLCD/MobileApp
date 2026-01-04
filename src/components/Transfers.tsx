@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
-import { isBusLine } from '~/utils/line';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import {
   useCurrentStation,
@@ -140,7 +139,6 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       if (!station) {
         return null;
       }
-      const isBus = isBusLine(line);
       const lineMark = getLineMarkFunc({
         line,
       });
@@ -254,21 +252,22 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   }}
                 >
                   <Typography style={styles.lineName}>
-                    {`${line.station?.name?.replace(parenthesisRegexp, '')}${isBus ? '' : '駅'}`}
+                    {`${line.station?.name?.replace(parenthesisRegexp, '')}駅`}
                   </Typography>
                   <Typography style={styles.lineNameEn}>
                     {`${(line.station?.nameRoman ?? '').replace(
                       parenthesisRegexp,
                       ''
-                    )}${isBus ? '' : ' Sta.'}`}
+                    )} Sta.`}
                   </Typography>
                   <Typography style={styles.lineNameEn}>
                     {`${(line.station?.nameChinese ?? '').replace(
                       parenthesisRegexp,
                       ''
-                    )}${isBus ? '' : '站'} / ${(
-                      line.station?.nameKorean ?? ''
-                    ).replace(parenthesisRegexp, '')}${isBus ? '' : '역'}`}
+                    )}站 / ${(line.station?.nameKorean ?? '').replace(
+                      parenthesisRegexp,
+                      ''
+                    )}역`}
                   </Typography>
                 </TouchableOpacity>
               )}
