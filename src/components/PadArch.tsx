@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
@@ -185,6 +186,8 @@ const Transfers: React.FC<TransfersProps> = ({
   lineMarks,
   isEn,
 }: TransfersProps) => {
+  const isBus = isBusLine(station?.line);
+
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
       transferLines.map((l, i) => {
@@ -228,7 +231,7 @@ const Transfers: React.FC<TransfersProps> = ({
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
           <Typography style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameRoman} Station`}
+            {`${station?.nameRoman}${isBus ? '' : ' Station'}`}
           </Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
@@ -241,7 +244,7 @@ const Transfers: React.FC<TransfersProps> = ({
           }
         >
           <Typography style={styles.transfersCurrentStationName}>
-            {`${station?.name ?? ''}駅`}
+            {`${station?.name ?? ''}${isBus ? '' : '駅'}`}
           </Typography>
           <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>

@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { type TrainType, TransportType } from '~/@types/graphql';
+import type { TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
@@ -25,6 +25,7 @@ import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
+import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
 import Typography from './Typography';
 
@@ -96,7 +97,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     return headerState.split('_')[1] as HeaderLangState;
   }, [headerState]);
 
-  const isBus = currentLine?.transportType === TransportType.Bus;
+  const isBus = isBusLine(currentLine);
 
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
