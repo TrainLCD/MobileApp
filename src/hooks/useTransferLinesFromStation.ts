@@ -4,19 +4,22 @@ import type { Line, Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
+import { isBusLine } from '~/utils/line';
 
 type Option = {
   omitRepeatingLine?: boolean;
   omitJR?: boolean;
+  hideBuses?: boolean;
 };
 
 export const useTransferLinesFromStation = (
   station: Station | undefined,
   option?: Option
 ): Line[] => {
-  const { omitRepeatingLine, omitJR } = option ?? {
+  const { omitRepeatingLine, omitJR, hideBuses } = option ?? {
     omitRepeatingLine: false,
     omitJR: false,
+    hideBuses: true,
   };
 
   const { stations } = useAtomValue(stationState);
@@ -24,6 +27,7 @@ export const useTransferLinesFromStation = (
   const transferLines = useMemo(
     () =>
       station?.lines
+        ?.filter((line) => !(hideBuses && isBusLine(line)))
         ?.filter((line) => line.id !== station.line?.id)
         // カッコを除いて路線名が同じということは、
         // データ上の都合で路線が分かれているだけなので除外する
@@ -71,6 +75,7 @@ export const useTransferLinesFromStation = (
       station?.line?.nameShort,
       station?.lines,
       stations,
+      hideBuses,
     ]
   );
 

@@ -7,7 +7,11 @@ import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
-type Option = { omitRepeatingLine?: boolean; omitJR?: boolean };
+type Option = {
+  omitRepeatingLine?: boolean;
+  omitJR?: boolean;
+  hideBuses?: boolean;
+};
 
 export const useTransferLines = (options?: Option): Line[] => {
   const { arrived } = useAtomValue(stationState);
@@ -21,14 +25,16 @@ export const useTransferLines = (options?: Option): Line[] => {
     [arrived, currentStation, nextStation]
   );
 
-  const { omitRepeatingLine, omitJR } = options ?? {
+  const { omitRepeatingLine, omitJR, hideBuses } = options ?? {
     omitRepeatingLines: false,
     omitJR: false,
+    hideBuses: true,
   };
 
   const transferLines = useTransferLinesFromStation(targetStation, {
     omitRepeatingLine,
     omitJR,
+    hideBuses,
   });
 
   return transferLines;

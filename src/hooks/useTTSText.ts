@@ -47,7 +47,7 @@ export const useTTSText = (
   const currentLineOrigin = useCurrentLine();
 
   const connectedLinesOrigin = useConnectedLines();
-  const transferLinesOriginal = useTransferLines();
+  const transferLinesOriginal = useTransferLines({ hideBuses: false });
   const currentTrainTypeOrigin = useCurrentTrainType();
   const loopLineBoundJa = useLoopLineBound(false);
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
