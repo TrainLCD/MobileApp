@@ -18,13 +18,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import {
-  type Line,
-  type LineNested,
-  type Station,
-  type TrainType,
-  TransportType,
-} from '~/@types/graphql';
+import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
@@ -191,8 +185,7 @@ const SelectLineScreen = () => {
   }, [station?.lines]);
   const busesLines = useMemo<Line[]>(() => {
     return (station?.lines ?? []).filter(
-      (line): line is LineNested =>
-        line?.id != null && line.transportType === TransportType.Bus
+      (line): line is LineNested => line?.id != null && isBusLine(line)
     );
   }, [station?.lines]);
 

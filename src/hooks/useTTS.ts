@@ -5,7 +5,7 @@ import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
-import { TransportType } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import speechState from '../store/atoms/speech';
 import { isDevApp } from '../utils/isDevApp';
 import { useBusTTSText } from './useBusTTSText';
@@ -66,10 +66,8 @@ export const useTTS = (): void => {
   const { store, getByText } = useTTSCache();
   const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
   const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
-  const ttsText =
-    currentLine?.transportType === TransportType.Bus
-      ? busTTSText
-      : trainTTSText;
+  const isBus = isBusLine(currentLine);
+  const ttsText = isBus ? busTTSText : trainTTSText;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
 
