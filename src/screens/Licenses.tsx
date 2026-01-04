@@ -149,7 +149,7 @@ const Licenses: React.FC = () => {
             icon: '🚌',
             href: 'https://www.kotsu.metro.tokyo.jp/',
             license: translate('ccby'),
-            devOnly: true,
+            devOnly: false,
           },
           {
             id: 'firebase',
