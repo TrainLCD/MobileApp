@@ -231,7 +231,7 @@ const Transfers: React.FC<TransfersProps> = ({
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
           <Typography style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameRoman} Station`}
+            {`${station?.nameRoman}${isBus ? '' : ' Station'}`}
           </Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
