@@ -38,6 +38,7 @@ import {
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
@@ -185,8 +186,7 @@ const SelectLineScreen = () => {
 
   const stationLines = useMemo<Line[]>(() => {
     return (station?.lines ?? []).filter(
-      (line): line is LineNested =>
-        line?.id != null && line.transportType === TransportType.Rail
+      (line): line is LineNested => line?.id != null && !isBusLine(line)
     );
   }, [station?.lines]);
   const busesLines = useMemo<Line[]>(() => {
