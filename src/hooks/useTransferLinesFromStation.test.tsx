@@ -2,14 +2,13 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Line, Station } from '~/@types/graphql';
+import type { Line, LineNested, Station } from '~/@types/graphql';
 import {
   LineType,
   OperationStatus,
   StopCondition,
   TransportType,
 } from '~/@types/graphql';
-import type { LineNested } from '~/@types/graphql.d';
 import stationState from '../store/atoms/station';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
@@ -24,7 +23,6 @@ type TestComponentProps = {
   options?: {
     omitRepeatingLine?: boolean;
     omitJR?: boolean;
-    hideBuses?: boolean;
   };
 };
 
@@ -108,13 +106,11 @@ describe('useTransferLinesFromStation', () => {
   });
 
   it('station が undefined の場合は空配列を返す', () => {
-    const { getByTestId } = render(
-      <TestComponent station={undefined} options={{ hideBuses: true }} />
-    );
+    const { getByTestId } = render(<TestComponent station={undefined} />);
     expect(getByTestId('transferLines').props.children).toBe('[]');
   });
 
-  it('デフォルトでバス路線を除外する', () => {
+  it('バス路線を除外する', () => {
     const currentLine = createLineNested({ id: 1, nameShort: '中央線' });
     const railLine = createLineNested({
       id: 2,
@@ -141,63 +137,6 @@ describe('useTransferLinesFromStation', () => {
     expect(lines.find((l: Line) => l.id === 3)).toBeUndefined();
   });
 
-  it('hideBuses: false を指定するとバス路線も含める', () => {
-    const currentLine = createLineNested({ id: 1, nameShort: '中央線' });
-    const railLine = createLineNested({
-      id: 2,
-      nameShort: '山手線',
-      transportType: TransportType.Rail,
-    });
-    const busLine = createLineNested({
-      id: 3,
-      nameShort: 'バス',
-      transportType: TransportType.Bus,
-    });
-    const station = createStation(100, {
-      line: currentLine,
-      lines: [currentLine, railLine, busLine],
-    });
-    stationAtomValue.stations = [station];
-
-    const { getByTestId } = render(
-      <TestComponent station={station} options={{ hideBuses: false }} />
-    );
-    const lines = JSON.parse(
-      getByTestId('transferLines').props.children as string
-    );
-
-    expect(lines.map((l: Line) => l.id)).toEqual([2, 3]);
-  });
-
-  it('hideBuses: true を明示的に指定してもバス路線を除外する', () => {
-    const currentLine = createLineNested({ id: 1, nameShort: '中央線' });
-    const railLine = createLineNested({
-      id: 2,
-      nameShort: '山手線',
-      transportType: TransportType.Rail,
-    });
-    const busLine = createLineNested({
-      id: 3,
-      nameShort: 'バス',
-      transportType: TransportType.Bus,
-    });
-    const station = createStation(100, {
-      line: currentLine,
-      lines: [currentLine, railLine, busLine],
-    });
-    stationAtomValue.stations = [station];
-
-    const { getByTestId } = render(
-      <TestComponent station={station} options={{ hideBuses: true }} />
-    );
-    const lines = JSON.parse(
-      getByTestId('transferLines').props.children as string
-    );
-
-    expect(lines.map((l: Line) => l.id)).toEqual([2]);
-    expect(lines.find((l: Line) => l.id === 3)).toBeUndefined();
-  });
-
   it('現在路線は除外する', () => {
     const currentLine = createLineNested({ id: 1, nameShort: '中央線' });
     const otherLine = createLineNested({ id: 2, nameShort: '山手線' });
@@ -207,9 +146,7 @@ describe('useTransferLinesFromStation', () => {
     });
     stationAtomValue.stations = [station];
 
-    const { getByTestId } = render(
-      <TestComponent station={station} options={{ hideBuses: true }} />
-    );
+    const { getByTestId } = render(<TestComponent station={station} />);
     const lines = JSON.parse(
       getByTestId('transferLines').props.children as string
     );
@@ -234,9 +171,7 @@ describe('useTransferLinesFromStation', () => {
     });
     stationAtomValue.stations = [station];
 
-    const { getByTestId } = render(
-      <TestComponent station={station} options={{ hideBuses: true }} />
-    );
+    const { getByTestId } = render(<TestComponent station={station} />);
     const lines = JSON.parse(
       getByTestId('transferLines').props.children as string
     );

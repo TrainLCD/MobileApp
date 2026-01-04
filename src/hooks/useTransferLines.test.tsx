@@ -31,7 +31,7 @@ jest.mock('../utils/isPass', () => ({
 }));
 
 const TestComponent: React.FC<{
-  options?: { omitJR?: boolean; hideBuses?: boolean };
+  options?: { omitJR?: boolean };
 }> = ({ options }) => {
   const lines = useTransferLines(options);
   return <Text testID="transferLines">{JSON.stringify(lines)}</Text>;
@@ -149,9 +149,8 @@ describe('useTransferLines', () => {
     expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(
       currentStation,
       {
-        omitRepeatingLine: undefined,
+        omitRepeatingLine: false,
         omitJR: false,
-        hideBuses: true,
       }
     );
     expect(getByTestId('transferLines').props.children).toContain('metro');
@@ -172,7 +171,6 @@ describe('useTransferLines', () => {
       {
         omitRepeatingLine: undefined,
         omitJR: true,
-        hideBuses: undefined,
       }
     );
   });
@@ -185,53 +183,8 @@ describe('useTransferLines', () => {
     render(<TestComponent />);
 
     expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(nextStation, {
-      omitRepeatingLine: undefined,
+      omitRepeatingLine: false,
       omitJR: false,
-      hideBuses: true,
     });
-  });
-
-  it('hideBuses: falseを指定するとバス路線も含めて渡す', () => {
-    const currentStation = createStation(30);
-    const transferLines = [
-      createLine({ id: 200, nameShort: 'metro' }),
-      createLine({ id: 201, nameShort: 'bus' }),
-    ];
-    stationAtomValue.arrived = true;
-    currentStationValue = currentStation;
-    nextStationValue = createStation(31);
-    mockUseTransferLinesFromStation.mockReturnValue(transferLines);
-
-    const { getByTestId } = render(
-      <TestComponent options={{ hideBuses: false }} />
-    );
-
-    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(
-      currentStation,
-      {
-        omitRepeatingLine: undefined,
-        omitJR: undefined,
-        hideBuses: false,
-      }
-    );
-    expect(getByTestId('transferLines').props.children).toContain('bus');
-  });
-
-  it('hideBuses: trueを明示的に指定するとバス路線を除外する', () => {
-    const currentStation = createStation(40);
-    stationAtomValue.arrived = true;
-    currentStationValue = currentStation;
-    nextStationValue = createStation(41);
-
-    render(<TestComponent options={{ hideBuses: true }} />);
-
-    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(
-      currentStation,
-      {
-        omitRepeatingLine: undefined,
-        omitJR: undefined,
-        hideBuses: true,
-      }
-    );
   });
 });
