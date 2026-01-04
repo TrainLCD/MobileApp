@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { type TrainType, TransportType } from '~/@types/graphql';
+import type { TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
 import { useCurrentLine, useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
@@ -17,6 +17,7 @@ import navigationState from '~/store/atoms/navigation';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
 import Typography from './Typography';
@@ -85,7 +86,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const textOpacityAnim = useSharedValue(0);
 
-  const isBus = currentLine?.transportType === TransportType.Bus;
+  const isBus = isBusLine(currentLine);
 
   const trainTypeColor = useMemo(() => {
     if (getIsLocal(trainType)) {

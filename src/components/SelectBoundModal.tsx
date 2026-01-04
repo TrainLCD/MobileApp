@@ -25,6 +25,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import lineState from '../store/atoms/line';
@@ -498,6 +499,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     [stations]
   );
 
+  const isBus = isBusLine(line);
+
   return (
     <CustomModal
       visible={visible}
@@ -540,7 +543,9 @@ export const SelectBoundModal: React.FC<Props> = ({
 
           <View style={styles.stopsContainer}>
             <Button outline onPress={() => setRouteInfoModalVisible(true)}>
-              {translate('viewStopStations')}
+              {isBus
+                ? translate('viewBusStops')
+                : translate('viewStopStations')}
             </Button>
 
             <Button

@@ -5,7 +5,7 @@ import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { LineType, TransportType } from '~/@types/graphql';
+import { LineType } from '~/@types/graphql';
 import {
   BUS_MAX_ACCEL_IN_M_S,
   BUS_MAX_DECEL_IN_M_S,
@@ -23,6 +23,7 @@ import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { isBusLine } from '../utils/line';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
@@ -50,10 +51,7 @@ export const useSimulationMode = (): void => {
     [currentLine]
   );
 
-  const isBus = useMemo(
-    () => currentLine?.transportType === TransportType.Bus,
-    [currentLine]
-  );
+  const isBus = useMemo(() => isBusLine(currentLine), [currentLine]);
 
   const maxSpeed = useMemo<number>(() => {
     if (isBus) {

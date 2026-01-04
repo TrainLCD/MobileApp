@@ -1,4 +1,9 @@
 import type { Line, Station } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
+
+export const isBusLine = (
+  line: Pick<Line, 'transportType'> | null | undefined
+): boolean => line?.transportType === TransportType.Bus;
 
 export const filterWithoutCurrentLine = (
   stations: Station[],
