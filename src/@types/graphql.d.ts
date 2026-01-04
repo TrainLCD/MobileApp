@@ -140,14 +140,12 @@ export type QueryLineArgs = {
 
 export type QueryLineGroupStationsArgs = {
   lineGroupId: Scalars['Int']['input'];
-  transportType: InputMaybe<TransportType>;
 };
 
 export type QueryLineStationsArgs = {
   directionId: InputMaybe<Scalars['Int']['input']>;
   lineId: Scalars['Int']['input'];
   stationId: InputMaybe<Scalars['Int']['input']>;
-  transportType: InputMaybe<TransportType>;
 };
 
 export type QueryLinesByNameArgs = {
@@ -173,12 +171,10 @@ export type QueryRoutesArgs = {
 
 export type QueryStationArgs = {
   id: Scalars['Int']['input'];
-  transportType: InputMaybe<TransportType>;
 };
 
 export type QueryStationGroupStationsArgs = {
   groupId: Scalars['Int']['input'];
-  transportType: InputMaybe<TransportType>;
 };
 
 export type QueryStationTrainTypesArgs = {
@@ -187,7 +183,6 @@ export type QueryStationTrainTypesArgs = {
 
 export type QueryStationsArgs = {
   ids: Array<Scalars['Int']['input']>;
-  transportType: InputMaybe<TransportType>;
 };
 
 export type QueryStationsByNameArgs = {
@@ -347,7 +342,6 @@ export type TrainTypeNested = {
 export enum TransportType {
   Bus = 'Bus',
   Rail = 'Rail',
-  RailAndBus = 'RailAndBus',
   TransportTypeUnspecified = 'TransportTypeUnspecified',
 }
 
@@ -394,7 +388,6 @@ export type LineDetailFieldsFragment = {
   nameChinese: string | null | undefined;
   nameKorean: string | null | undefined;
   status: OperationStatus | null | undefined;
-  transportType: TransportType | null | undefined;
   company:
     | {
         __typename: 'Company';
@@ -431,7 +424,6 @@ export type LineDetailFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         hasTrainTypes: boolean | null | undefined;
-        transportType: TransportType | null | undefined;
         stationNumbers:
           | Array<{
               __typename: 'StationNumber';
@@ -539,7 +531,6 @@ export type LineNestedFieldsFragment = {
   nameChinese: string | null | undefined;
   nameKorean: string | null | undefined;
   status: OperationStatus | null | undefined;
-  transportType: TransportType | null | undefined;
   company:
     | {
         __typename: 'Company';
@@ -635,7 +626,6 @@ export type TrainTypeFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -719,7 +709,6 @@ export type TrainTypeFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -818,7 +807,6 @@ export type TrainTypeNestedFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -902,7 +890,6 @@ export type TrainTypeNestedFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -995,7 +982,6 @@ export type StationFieldsFragment = {
   distance: number | null | undefined;
   hasTrainTypes: boolean | null | undefined;
   stopCondition: StopCondition | null | undefined;
-  transportType: TransportType | null | undefined;
   stationNumbers:
     | Array<{
         __typename: 'StationNumber';
@@ -1020,7 +1006,6 @@ export type StationFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -1104,7 +1089,6 @@ export type StationFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -1202,7 +1186,6 @@ export type StationFieldsFragment = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               status: OperationStatus | null | undefined;
-              transportType: TransportType | null | undefined;
               company:
                 | {
                     __typename: 'Company';
@@ -1286,7 +1269,6 @@ export type StationFieldsFragment = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               status: OperationStatus | null | undefined;
-              transportType: TransportType | null | undefined;
               company:
                 | {
                     __typename: 'Company';
@@ -1382,7 +1364,6 @@ export type StationNestedFieldsFragment = {
   distance: number | null | undefined;
   hasTrainTypes: boolean | null | undefined;
   stopCondition: StopCondition | null | undefined;
-  transportType: TransportType | null | undefined;
   stationNumbers:
     | Array<{
         __typename: 'StationNumber';
@@ -1407,7 +1388,6 @@ export type StationNestedFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -1491,7 +1471,6 @@ export type StationNestedFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
@@ -1589,7 +1568,6 @@ export type StationNestedFieldsFragment = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               status: OperationStatus | null | undefined;
-              transportType: TransportType | null | undefined;
               company:
                 | {
                     __typename: 'Company';
@@ -1673,7 +1651,6 @@ export type StationNestedFieldsFragment = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               status: OperationStatus | null | undefined;
-              transportType: TransportType | null | undefined;
               company:
                 | {
                     __typename: 'Company';
@@ -1776,7 +1753,6 @@ export type GetStationsNearbyQuery = {
     distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -1801,7 +1777,6 @@ export type GetStationsNearbyQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -1885,7 +1860,6 @@ export type GetStationsNearbyQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -1983,7 +1957,6 @@ export type GetStationsNearbyQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -2067,7 +2040,6 @@ export type GetStationsNearbyQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -2170,7 +2142,6 @@ export type GetLineStationsQuery = {
     distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -2195,7 +2166,6 @@ export type GetLineStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -2279,7 +2249,6 @@ export type GetLineStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -2377,7 +2346,6 @@ export type GetLineStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -2461,7 +2429,6 @@ export type GetLineStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -2565,7 +2532,6 @@ export type GetStationsByNameQuery = {
     distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -2590,7 +2556,6 @@ export type GetStationsByNameQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -2674,7 +2639,6 @@ export type GetStationsByNameQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -2772,7 +2736,6 @@ export type GetStationsByNameQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -2856,7 +2819,6 @@ export type GetStationsByNameQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -2958,7 +2920,6 @@ export type GetLineGroupStationsQuery = {
     distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -2983,7 +2944,6 @@ export type GetLineGroupStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -3067,7 +3027,6 @@ export type GetLineGroupStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -3165,7 +3124,6 @@ export type GetLineGroupStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -3249,7 +3207,6 @@ export type GetLineGroupStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -3357,7 +3314,6 @@ export type GetStationTrainTypesQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -3441,7 +3397,6 @@ export type GetStationTrainTypesQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -3540,7 +3495,6 @@ export type GetStationsQuery = {
     distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -3565,7 +3519,6 @@ export type GetStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -3649,7 +3602,6 @@ export type GetStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -3747,7 +3699,6 @@ export type GetStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -3831,7 +3782,6 @@ export type GetStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -3944,7 +3894,6 @@ export type GetRoutesQuery = {
                 distance: number | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
                 stopCondition: StopCondition | null | undefined;
-                transportType: TransportType | null | undefined;
                 stationNumbers:
                   | Array<{
                       __typename: 'StationNumber';
@@ -3969,7 +3918,6 @@ export type GetRoutesQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       status: OperationStatus | null | undefined;
-                      transportType: TransportType | null | undefined;
                       company:
                         | {
                             __typename: 'Company';
@@ -4053,7 +4001,6 @@ export type GetRoutesQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       status: OperationStatus | null | undefined;
-                      transportType: TransportType | null | undefined;
                       company:
                         | {
                             __typename: 'Company';
@@ -4151,7 +4098,6 @@ export type GetRoutesQuery = {
                             nameChinese: string | null | undefined;
                             nameKorean: string | null | undefined;
                             status: OperationStatus | null | undefined;
-                            transportType: TransportType | null | undefined;
                             company:
                               | {
                                   __typename: 'Company';
@@ -4244,7 +4190,6 @@ export type GetRoutesQuery = {
                             nameChinese: string | null | undefined;
                             nameKorean: string | null | undefined;
                             status: OperationStatus | null | undefined;
-                            transportType: TransportType | null | undefined;
                             company:
                               | {
                                   __typename: 'Company';
@@ -4366,7 +4311,6 @@ export type GetConnectedRoutesQuery = {
           distance: number | null | undefined;
           hasTrainTypes: boolean | null | undefined;
           stopCondition: StopCondition | null | undefined;
-          transportType: TransportType | null | undefined;
           stationNumbers:
             | Array<{
                 __typename: 'StationNumber';
@@ -4391,7 +4335,6 @@ export type GetConnectedRoutesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -4475,7 +4418,6 @@ export type GetConnectedRoutesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -4573,7 +4515,6 @@ export type GetConnectedRoutesQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       status: OperationStatus | null | undefined;
-                      transportType: TransportType | null | undefined;
                       company:
                         | {
                             __typename: 'Company';
@@ -4657,7 +4598,6 @@ export type GetConnectedRoutesQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       status: OperationStatus | null | undefined;
-                      transportType: TransportType | null | undefined;
                       company:
                         | {
                             __typename: 'Company';
@@ -4776,7 +4716,6 @@ export type GetRouteTypesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -4860,7 +4799,6 @@ export type GetRouteTypesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -4963,7 +4901,6 @@ export type GetStationQuery = {
         distance: number | null | undefined;
         hasTrainTypes: boolean | null | undefined;
         stopCondition: StopCondition | null | undefined;
-        transportType: TransportType | null | undefined;
         stationNumbers:
           | Array<{
               __typename: 'StationNumber';
@@ -4988,7 +4925,6 @@ export type GetStationQuery = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               status: OperationStatus | null | undefined;
-              transportType: TransportType | null | undefined;
               company:
                 | {
                     __typename: 'Company';
@@ -5072,7 +5008,6 @@ export type GetStationQuery = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               status: OperationStatus | null | undefined;
-              transportType: TransportType | null | undefined;
               company:
                 | {
                     __typename: 'Company';
@@ -5170,7 +5105,6 @@ export type GetStationQuery = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     status: OperationStatus | null | undefined;
-                    transportType: TransportType | null | undefined;
                     company:
                       | {
                           __typename: 'Company';
@@ -5254,7 +5188,6 @@ export type GetStationQuery = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     status: OperationStatus | null | undefined;
-                    transportType: TransportType | null | undefined;
                     company:
                       | {
                           __typename: 'Company';
@@ -5351,7 +5284,6 @@ export type GetLineQuery = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         status: OperationStatus | null | undefined;
-        transportType: TransportType | null | undefined;
         station:
           | {
               __typename: 'StationNested';
@@ -5362,7 +5294,6 @@ export type GetLineQuery = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               hasTrainTypes: boolean | null | undefined;
-              transportType: TransportType | null | undefined;
               nameKatakana: string | null | undefined;
               threeLetterCode: string | null | undefined;
               latitude: number | null | undefined;
@@ -5399,7 +5330,6 @@ export type GetLineQuery = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     status: OperationStatus | null | undefined;
-                    transportType: TransportType | null | undefined;
                     company:
                       | {
                           __typename: 'Company';
@@ -5483,7 +5413,6 @@ export type GetLineQuery = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     status: OperationStatus | null | undefined;
-                    transportType: TransportType | null | undefined;
                     company:
                       | {
                           __typename: 'Company';
@@ -5581,7 +5510,6 @@ export type GetLineQuery = {
                           nameChinese: string | null | undefined;
                           nameKorean: string | null | undefined;
                           status: OperationStatus | null | undefined;
-                          transportType: TransportType | null | undefined;
                           company:
                             | {
                                 __typename: 'Company';
@@ -5671,7 +5599,6 @@ export type GetLineQuery = {
                           nameChinese: string | null | undefined;
                           nameKorean: string | null | undefined;
                           status: OperationStatus | null | undefined;
-                          transportType: TransportType | null | undefined;
                           company:
                             | {
                                 __typename: 'Company';
@@ -5781,7 +5708,6 @@ export type GetLineQuery = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     status: OperationStatus | null | undefined;
-                    transportType: TransportType | null | undefined;
                     company:
                       | {
                           __typename: 'Company';
@@ -5865,7 +5791,6 @@ export type GetLineQuery = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     status: OperationStatus | null | undefined;
-                    transportType: TransportType | null | undefined;
                     company:
                       | {
                           __typename: 'Company';
@@ -5998,7 +5923,6 @@ export type GetLinesByNameQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           hasTrainTypes: boolean | null | undefined;
-          transportType: TransportType | null | undefined;
           nameKatakana: string | null | undefined;
           threeLetterCode: string | null | undefined;
           latitude: number | null | undefined;
@@ -6035,7 +5959,6 @@ export type GetLinesByNameQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -6119,7 +6042,6 @@ export type GetLinesByNameQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -6217,7 +6139,6 @@ export type GetLinesByNameQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       status: OperationStatus | null | undefined;
-                      transportType: TransportType | null | undefined;
                       company:
                         | {
                             __typename: 'Company';
@@ -6301,7 +6222,6 @@ export type GetLinesByNameQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       status: OperationStatus | null | undefined;
-                      transportType: TransportType | null | undefined;
                       company:
                         | {
                             __typename: 'Company';
@@ -6405,7 +6325,6 @@ export type GetLinesByNameQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -6489,7 +6408,6 @@ export type GetLinesByNameQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -6617,7 +6535,6 @@ export type GetStationGroupStationsQuery = {
     distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -6642,7 +6559,6 @@ export type GetStationGroupStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -6726,7 +6642,6 @@ export type GetStationGroupStationsQuery = {
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
           status: OperationStatus | null | undefined;
-          transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
@@ -6824,7 +6739,6 @@ export type GetStationGroupStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
@@ -6908,7 +6822,6 @@ export type GetStationGroupStationsQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 status: OperationStatus | null | undefined;
-                transportType: TransportType | null | undefined;
                 company:
                   | {
                       __typename: 'Company';
