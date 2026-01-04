@@ -4,8 +4,9 @@ import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
-import { type Line, type Station, TransportType } from '~/@types/graphql';
+import type { Line, Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark } from '../hooks';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -166,7 +167,7 @@ export const CommonCard: React.FC<Props> = ({
   const mark = useMemo(() => getLineMark({ line }), [getLineMark, line]);
   const { bounds } = useBounds(stations);
 
-  const isBus = line?.transportType === TransportType.Bus;
+  const isBus = isBusLine(line);
 
   const [inboundText, outboundText] = useMemo(() => {
     if (!stations?.length) {
