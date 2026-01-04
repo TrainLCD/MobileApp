@@ -19,24 +19,24 @@
 
 ## 🔴 最重要（1-3ヶ月以内に対応）
 
-### 1. コンポーネントの大規模な重複
+### 1. コンポーネントの大規模な重複 ✨ **大幅改善**
 
-**深刻度**: 🔴 最高
-**推定工数**: 8-12週間
+**深刻度**: 🟡 中（以前は🔴最高）
+**推定工数**: 残り2-4週間（以前は8-12週間）
 **影響範囲**: 保守性、開発速度、バグ発生率
 
 #### 問題の詳細
 
-類似機能を持つコンポーネントが大量に存在し、合計**約9,500行以上**のコード重複が発生しています（2025-12-25に907行削減済み）。
+類似機能を持つコンポーネントが大量に存在していましたが、LineBoard系・Header系の共通化により**約3,000行以上のコード削減**を達成。残りはNumberingIcon系の統一が主な課題です。
 
 ##### LineBoard系コンポーネント（9種類、4,669行）✨ **改善済み・テスト完了**
 ```text
 src/components/LineBoardJRKyushu.tsx     (760行 → 約620行)
 src/components/LineBoardToei.tsx         (751行 → 約610行)
 src/components/LineBoardEast.tsx         (720行 → 約580行)
-src/components/LineBoardWest.tsx         (621行 → 616行) ✅ useIncludesLongStationName適用
+src/components/LineBoardWest.tsx         (621行 → 510行) ✅ ローカルスタイル共通化完了
 src/components/LineBoardSaikyo.tsx       (592行 → 約450行)
-src/components/LineBoardJO.tsx           (482行 → 477行) ✅ useIncludesLongStationName適用
+src/components/LineBoardJO.tsx           (482行 → 383行) ✅ ローカルスタイル共通化完了
 src/components/LineBoardLED.tsx          (396行) - 構造が異なるため適用対象外
 src/components/LineBoardYamanotePad.tsx  - PadArch委譲のため適用対象外
 src/components/LineBoard.tsx
@@ -52,7 +52,7 @@ src/components/LineBoard/shared/
   │   ├── useChevronPosition.ts           (24行)
   │   └── useIncludesLongStationName.ts   (12行)
   └── styles/
-      └── commonStyles.ts                 (89行)
+      └── commonStyles.ts                 (314行) ✅ West/JO用バリアント追加
 
 共通テストファイル（新規作成、49テストケース）:
 src/components/LineBoard/shared/
@@ -79,17 +79,20 @@ src/components/
 ```
 
 **達成済みの改善**（2025-12-25〜2026-01-05）:
-- ✅ **約917行のコード削減**（共通コンポーネント・フック・スタイルの抽出）
+- ✅ **約1,119行のコード削減**（共通コンポーネント・フック・スタイルの抽出）
 - ✅ **6ファイルで重複コードを共通化**（LineBoardEast, Saikyo, JRKyushu, Toei, West, JO）
 - ✅ **共通コンポーネント3つを作成**（LineDot, StationName, EmptyStationNameCell）
 - ✅ **共通フック3つを作成**（useBarStyles, useChevronPosition, useIncludesLongStationName）
 - ✅ **LineBoardWest, JOにuseIncludesLongStationNameフックを適用**（2026-01-05）
+- ✅ **LineBoardWest, JOのローカルスタイル定義を共通化**（2026-01-05、約200行削減）
+  - LineBoardWest: 617行 → 510行（107行削減）
+  - LineBoardJO: 478行 → 383行（95行削減）
+  - commonStyles.ts: 89行 → 314行（West/JO用バリアント追加）
 - ✅ **包括的なテストカバレッジ**：49テストケース（6テストファイル）を追加
 - ✅ **都営テーマの多言語対応を維持**：StationNameToeiコンポーネントで韓国語・中国語表示を保持
 - ✅ **保守性の向上**：バグ修正・機能追加が1箇所で完結
 
 **残りの改善余地**:
-- 🔶 各LineBoardファイルのローカルスタイル定義（約80-100行/ファイル）をさらに共通化可能
 - ℹ️ LineBoardLED: LEDマーキー表示でテキストベースのため、共通コンポーネント（LineDot, StationName等）の適用対象外
 - ℹ️ LineBoardYamanotePad: PadArchコンポーネントに委譲しているため、共通コンポーネントの適用対象外
 
@@ -240,9 +243,9 @@ src/components/
    - ✅ 共通スタイル定義を抽出
    - ✅ 49テストケースを追加（共通コンポーネント・フックの包括的なテスト）
    - ✅ 都営テーマの多言語対応を維持（StationNameToeiコンポーネント）
-2. **さらなるスタイル共通化**（進行中）
-   - 🔶 各LineBoardファイルのローカルスタイルを共通化
-   - 🔶 残り4つのLineBoardファイルへの適用
+2. ~~**さらなるスタイル共通化**~~ ✅ **完了**（2026-01-05）
+   - ✅ LineBoardWest/JOのローカルスタイルを共通化（約200行削減）
+   - ✅ commonStyles.tsに25個のWest/JO用バリアントを追加
 3. **テーマベースのpropsシステムに統一**（中期目標）
    - 各鉄道会社/路線のスタイルをテーマとして定義
    - 単一のHeader/LineBoard/NumberingIconコンポーネントに統合
@@ -252,8 +255,8 @@ src/components/
 
 #### 期待される効果
 - **コード削減**: 5,000-7,000行（20-25%）
-  - ✅ **達成済み**: 907行削減（約19%）
-  - 🔶 **残り**: 追加で400-600行削減可能（残り4つのLineBoardファイル適用）
+  - ✅ **達成済み**: 約1,119行削減（LineBoardコンポーネント共通化）
+  - ✅ **追加達成**: LineBoardWest/JOのローカルスタイル共通化で約200行削減
 - **開発速度**: 新機能開発時間40%削減
   - ✅ **一部達成**: 共通コンポーネントにより、4つのLineBoardで同時にバグ修正・機能追加が可能
 - **バグ削減**: 修正漏れのリスク大幅減少
@@ -745,7 +748,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 ### コード削減
 | 項目 | 削減量 |
 |------|--------|
-| LineBoard共通化（達成済み） | **-907行** ✅ |
+| LineBoard共通化（達成済み） | **-1,119行** ✅ |
 | Header系共通化（達成済み） | **-1,800行（純減約677行）** ✅ |
 | NumberingIcon統一（未実施） | **-2,000〜3,000行** 🔶 |
 | その他重複ロジック削減 | **-1,000〜2,000行** 🔶 |
@@ -834,7 +837,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-28 | **LineBoard系テストの品質向上**（PR #4799追加改善）<br>**CodeRabbit指摘への追加対応完了**: <br>　- **Weak assertions強化**: LineBoardSaikyoテストで`toBeTruthy()`のみの検証を`expect.objectContaining()`による具体的なprops検証に改善（StationName、LineDot、ChevronTY、lineColors関連テスト）<br>　- **テスト名とロジックの不一致修正**（4ファイル）: <br>　　　• "chevronの色が交互に切り替わる" → "useIntervalフックが1秒間隔で呼ばれる"（実際はuseIntervalの呼び出しのみ検証）<br>　　　• "駅数が8未満の場合、空の配列で埋められる" → "駅数が8未満の場合でもエラーなくレンダリングされる"（実際はレンダリング成功のみ検証）<br>　　　• "arrived状態でChevronが表示される" → "arrived=falseの場合、ChevronJRWestが表示される"（実際はarrived=falseで検証）<br>　- 対象ファイル: LineBoardSaikyo.test.tsx、LineBoardJRKyushu.test.tsx、LineBoardToei.test.tsx、LineBoardWest.test.tsx、LineBoardJO.test.tsx<br>テスト名が実際のテストロジックと完全に一致し、テストの意図が明確化<br>アサーションの具体性向上により、コンポーネントの動作をより厳密に検証<br>全85テストスイート、551テスト合格を維持 |
 | 2025-12-31 | **依存関係の更新遅延を解消**<br>負債ドキュメントに記載の3パッケージを最新版に更新:<br>　- @react-native-community/cli: ^15.1.2 → ^20.0.2<br>　- @sentry/react-native: ~7.2.0 → ~7.8.0<br>　- effect: ^3.16.12 → ^3.19.13<br>lint、typecheck、test全てパスを確認（555テスト合格）<br>計画的な更新が必要なパッケージが0件に<br><br>**FlatListの最適化完了**<br>　- `removeClippedSubviews`を5ファイルに追加（Android）: Transfers.tsx、TransfersYamanote.tsx、StationSearchModal.tsx、RouteInfoModal.tsx、TrainTypeListModal.tsx<br>　- `SelectLineScreenPresets.tsx`のメモ化改善: renderItem、keyExtractor、onScroll、ListEmptyComponentをuseCallback/useMemoでラップ、ItemSeparatorComponentをReact.memoでラップ<br>FlatListの最適化によりAndroidでのスクロールパフォーマンスが向上<br><br>**iOS依存関係の更新** (chore/bump-deps)<br>　- @react-native-community/cli: Expo SDK 54への移行に伴い削除<br>　- 各種パッケージを最新版に更新<br><br>**Header系コンポーネントのテスト完全追加**<br>**テストカバレッジ向上**: 22-23% → 24-25%（108個の新規テストケース追加）<br>全9個のHeaderコンポーネントに包括的なユニットテスト追加:<br>　- Header.test.tsx（13テスト）: テーマに基づくHeaderコンポーネント選択<br>　- HeaderLED.test.tsx（12テスト）: LED表示のヘッダー状態遷移<br>　- HeaderTokyoMetro.test.tsx（14テスト）: 東京メトロスタイルのアニメーション・状態<br>　- HeaderJRWest.test.tsx（26テスト）: JR西日本スタイル、多言語対応、列車種別<br>　- HeaderJRKyushu.test.tsx（14テスト）: JR九州スタイルの状態遷移<br>　- HeaderTY.test.tsx（15テスト）: 東急スタイルのダークテーマ<br>　- HeaderSaikyo.test.tsx（14テスト）: 埼京線スタイル、時計表示、路線色<br>各コンポーネントのレンダリング、ヘッダー状態遷移、終点駅・始発駅対応、多言語対応をテスト<br>プロジェクト統計を更新（テストファイル85 → 92、テストケース555 → 663、カバレッジ22-23% → 24-25%）<br>全92テストスイート、663テスト合格を確認<br><br>**状態管理をJotaiに統一 (zustand完全削除)**<br>　- zustand依存をpackage.jsonから削除<br>　- useThemeStore → themeAtom (src/store/atoms/theme.ts) に移行<br>　- useLocationStore → locationAtom (src/store/atoms/location.ts) に移行（以前に完了）<br>　- useTuningStore → 使用箇所なしのため削除<br>　- 派生atom `isLEDThemeAtom` を追加（theme === APP_THEME.LED パターンを簡略化）<br>　- 40+ファイルでuseThemeStoreをuseAtomValue(themeAtom)に更新<br>　- テストファイル5つをjotaiモックに更新<br>　- Permitted.tsxでsetTheme依存関係を修正<br>状態管理の混在問題を完全解決、保守性と学習コストが大幅改善 |
 | 2026-01-02 | **Header系コンポーネントの構造大幅改善**<br>**約1,800行のコード削減**（純減約677行）を達成:<br>　- HeaderTokyoMetro.tsx: 660行 → 306行（354行削減）<br>　- HeaderJRKyushu.tsx: 638行 → 287行（351行削減）<br>　- HeaderTY.tsx: 633行 → 293行（340行削減）<br>　- HeaderSaikyo.tsx: 585行 → 284行（301行削減）<br>　- HeaderE235.tsx: 405行 → 239行（166行削減）<br>　- HeaderJL.tsx: 409行 → 246行（163行削減）<br>　- HeaderJRWest.tsx: 656行 → 535行（121行削減）<br><br>**新しい共通フック・ファイルを作成**:<br>　- useHeaderAnimation.ts（206行）: アニメーションロジックを共通化<br>　- useHeaderCommonData.ts（123行）: 共通データ取得ロジックを集約<br>　- Header.types.ts（72行）: 共通型定義を作成<br>　- useTransitionHeaderState.ts: 機能拡張<br><br>**データ上に存在しない英中韓駅名のスキップ対応**<br>多言語表示の堅牢性が向上、駅データにない言語を自動スキップ<br><br>**テストケース増加**: Header系テスト108 → 128テストケース<br>全92テストスイート、663テスト合格を維持<br>コード削減目標約25%を達成 |
-| 2026-01-05 | **プロジェクト統計を更新**<br>　- 総ファイル数: 382 → 398個<br>　- 本番コード: 297 → 302ファイル<br>　- テストファイル: 92 → 96個<br>　- コンポーネント数: 107 → 110個<br>　- スクリーン数: 9 → 10個（Licenses.tsx追加）<br><br>**テストカバレッジ大幅向上確認**<br>　- カバレッジ: 24-25% → 約81%（Lines coverage）<br>　- テストケース: 663 → 742個<br>　- テストスイート: 92 → 96個<br><br>**都営バス対応機能追加**（2026-01-02〜01-05）<br>　- 駅リストでバス停以外はバス停の乗換案内を隠す機能<br>　- 座標検索クエリからtransportType: TransportType.Rail削除<br>　- 都営バス対応UI改善<br>　- isBusLineヘルパー実装<br>　- 路線リストに都営バス見出し追加<br>　- バスの乗換案内はTTSで流さない機能<br>　- useBusTTSText.test.tsx追加<br><br>**ライセンス画面追加**<br>　- Licenses.tsx新規作成（スクリーン数9 → 10）<br>　- READMEにライセンス表示追加<br>　- prodでも都営交通ライセンス表示<br><br>**その他改善**<br>　- 縦画面向けのナンバリング改修<br>　- SelectBoundModal.test.tsx追加<br><br>**LineBoardの残りファイルへの共通フック適用**<br>　- LineBoardWest.tsx: useIncludesLongStationNameフックを適用（621行 → 616行、5行削減）<br>　- LineBoardJO.tsx: useIncludesLongStationNameフックを適用（482行 → 477行、5行削減）<br>　- LineBoardLED, YamanotePadは構造が異なるため適用対象外と判断<br>　　（LED: マーキーテキスト表示、YamanotePad: PadArchに委譲）<br>　- 合計約917行のコード削減達成（6ファイルで共通化完了） |
+| 2026-01-05 | **プロジェクト統計を更新**<br>　- 総ファイル数: 382 → 398個<br>　- 本番コード: 297 → 302ファイル<br>　- テストファイル: 92 → 96個<br>　- コンポーネント数: 107 → 110個<br>　- スクリーン数: 9 → 10個（Licenses.tsx追加）<br><br>**テストカバレッジ大幅向上確認**<br>　- カバレッジ: 24-25% → 約81%（Lines coverage）<br>　- テストケース: 663 → 742個<br>　- テストスイート: 92 → 96個<br><br>**都営バス対応機能追加**（2026-01-02〜01-05）<br>　- 駅リストでバス停以外はバス停の乗換案内を隠す機能<br>　- 座標検索クエリからtransportType: TransportType.Rail削除<br>　- 都営バス対応UI改善<br>　- isBusLineヘルパー実装<br>　- 路線リストに都営バス見出し追加<br>　- バスの乗換案内はTTSで流さない機能<br>　- useBusTTSText.test.tsx追加<br><br>**ライセンス画面追加**<br>　- Licenses.tsx新規作成（スクリーン数9 → 10）<br>　- READMEにライセンス表示追加<br>　- prodでも都営交通ライセンス表示<br><br>**その他改善**<br>　- 縦画面向けのナンバリング改修<br>　- SelectBoundModal.test.tsx追加<br><br>**LineBoardの残りファイルへの共通フック適用**<br>　- LineBoardWest.tsx: useIncludesLongStationNameフックを適用（621行 → 616行、5行削減）<br>　- LineBoardJO.tsx: useIncludesLongStationNameフックを適用（482行 → 477行、5行削減）<br>　- LineBoardLED, YamanotePadは構造が異なるため適用対象外と判断<br>　　（LED: マーキーテキスト表示、YamanotePad: PadArchに委譲）<br>　- 合計約917行のコード削減達成（6ファイルで共通化完了）<br><br>**LineBoardWest/JOのローカルスタイル共通化**<br>　- LineBoardWest.tsx: 617行 → 510行（107行削減）<br>　　　• ローカルStyleSheet.create（110行）を削除<br>　　　• commonLineBoardStylesのバリアントを使用<br>　- LineBoardJO.tsx: 478行 → 383行（95行削減）<br>　　　• ローカルStyleSheet.create（102行）を8行に縮小<br>　　　• commonLineBoardStylesとマージして使用<br>　- commonStyles.ts: 89行 → 314行（25個のWest/JO用バリアント追加）<br>　　　• BAR_BOTTOM_WEST, BAR_BOTTOM_JO, BAR_TERMINAL_BOTTOM_JO定数<br>　　　• rootWestJO, barWest, barJO, barTerminalWest, barTerminalJO<br>　　　• stationNameWrapper, stationNameWrapperJO<br>　　　• stationNameContainerWestJO, stationNameContainerJO<br>　　　• stationNameWest, stationNameJO, stationNameEn, stationNameEnJO<br>　　　• chevronWest, chevronJO, lineDotWest, lineDotJO<br>　　　• arrivedLineDotWest, arrivedLineDotJO, topBarWest, passMarkWest<br>　　　• numberingContainerWest, numberingTextWest, barDotJO, passChevronJO等<br>　- 合計約1,119行のコード削減達成（LineBoardコンポーネント全体） |
 
 ---
 
