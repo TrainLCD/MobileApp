@@ -1,10 +1,10 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
-import { isBusLine } from '~/utils/line';
 
 type Option = {
   omitRepeatingLine?: boolean;

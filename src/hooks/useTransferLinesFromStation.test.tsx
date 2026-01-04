@@ -3,13 +3,13 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
-import type { LineNested } from '~/@types/graphql.d';
 import {
   LineType,
   OperationStatus,
   StopCondition,
   TransportType,
 } from '~/@types/graphql';
+import type { LineNested } from '~/@types/graphql.d';
 import stationState from '../store/atoms/station';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
@@ -33,9 +33,7 @@ const TestComponent: React.FC<TestComponentProps> = ({ station, options }) => {
   return <Text testID="transferLines">{JSON.stringify(lines)}</Text>;
 };
 
-const createLineNested = (
-  overrides: Partial<LineNested> = {}
-): LineNested => ({
+const createLineNested = (overrides: Partial<LineNested> = {}): LineNested => ({
   __typename: 'LineNested',
   averageDistance: null,
   color: '#123456',
