@@ -749,12 +749,14 @@ const SelectLineScreen = () => {
             <NearbyStationLoader />
           ) : (
             <>
-              <ListHeader
-                headingTitle={headingTitleForRailway}
-                carouselData={carouselData}
-                isPresetsLoading={isPresetsLoading}
-                onPress={handlePresetPress}
-              />
+              {stationLines.length > 0 && (
+                <ListHeader
+                  headingTitle={headingTitleForRailway}
+                  carouselData={carouselData}
+                  isPresetsLoading={isPresetsLoading}
+                  onPress={handlePresetPress}
+                />
+              )}
               {Array.from({
                 length: Math.ceil(stationLines.length / numColumns),
               }).map((_, rowIndex) => {
