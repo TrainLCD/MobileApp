@@ -127,6 +127,7 @@ describe('useFetchNearbyStation', () => {
       await hookRef.current?.fetchByCoords({
         latitude: 35.681236,
         longitude: 139.767125,
+        limit: 1,
         transportType: TransportType.Bus,
       });
     });
@@ -135,6 +136,7 @@ describe('useFetchNearbyStation', () => {
       variables: {
         latitude: 35.681236,
         longitude: 139.767125,
+        limit: 1,
         transportType: TransportType.Bus,
       },
     });
