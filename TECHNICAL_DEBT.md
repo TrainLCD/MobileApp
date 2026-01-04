@@ -2,18 +2,18 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2026-01-02（Header系コンポーネント構造改善・約1,800行削減）
+**最終更新**: 2026-01-05（統計更新・都営バス対応・ライセンス画面追加反映）
 
 ## 📊 概要
 
 ### プロジェクト統計
-- **総ファイル数**: 382個のTypeScript/TSXファイル
-- **本番コード**: 297ファイル
-- **テストファイル**: 92ファイル
-- **カバレッジ**: **約24-25%**（Header系テスト追加により向上）
-- **コンポーネント数**: 107個
-- **カスタムフック数**: 79個
-- **スクリーン数**: 9個
+- **総ファイル数**: 398個のTypeScript/TSXファイル
+- **本番コード**: 302ファイル
+- **テストファイル**: 96ファイル
+- **カバレッジ**: **約81%**（Lines coverage、742テストケース）
+- **コンポーネント数**: 110個
+- **カスタムフック数**: 78個
+- **スクリーン数**: 10個
 
 ---
 
@@ -261,17 +261,19 @@ src/components/
 
 ---
 
-### 2. テストカバレッジの不足
+### 2. テストカバレッジの状況 ✅ **大幅改善**
 
-**深刻度**: 🔴 最高
-**推定工数**: 継続的（3-6ヶ月）
+**深刻度**: 🟢 良好（以前は🔴最高）
+**推定工数**: 継続的な改善
 **影響範囲**: 品質、リグレッション防止
 
 #### 現状
 ```text
-本番コード:     297ファイル
-テストファイル:  92ファイル
-カバレッジ:     約24-25%
+本番コード:     302ファイル
+テストファイル:  96ファイル
+カバレッジ:     約81%（Lines coverage）
+テストケース:   742個
+テストスイート: 96個
 ```
 
 **最近の改善**（2025-12-25〜2025-12-31）:
@@ -289,7 +291,9 @@ src/components/
 - ✅ **Header系全9コンポーネントのテスト追加**（9ファイル、108テストケース）✨ **NEW**
 - ✅ **CodeRabbit指摘対応完了**（weak assertions修正、withOutlineテスト改善、サイズバリアント追加、afterEachクリーンアップ）
 - ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、具体的な検証アサーション）
-- 📈 **合計420テストケースを追加**（カバレッジ13% → 24-25%に向上）
+- ✅ **都営バスTTSテスト追加**（useBusTTSText.test.tsx）
+- ✅ **SelectBoundModalテスト追加**（SelectBoundModal.test.tsx）
+- 📈 **合計742テストケース**（カバレッジ約81%に向上）
 
 #### テストが存在しないクリティカルなコンポーネント
 - ~~**9つのLineBoardコンポーネント**: テスト0個~~ → ✅ **完了**（9ファイル、95テストケース追加）
@@ -298,18 +302,18 @@ src/components/
 - **重要な画面**: Main、SelectLineScreen等
 
 #### 推奨アクション
-1. ~~**短期（1ヶ月）**: ビジネスクリティカルなロジックのテストを優先~~ ✅ **大幅進捗**（2025-12-27）
+1. ~~**短期（1ヶ月）**: ビジネスクリティカルなロジックのテストを優先~~ ✅ **完了**（2025-12-27）
    - ✅ 状態管理（hooks）: useCurrentStation、useCurrentLine等にテスト追加済み
    - ✅ UI コンポーネント: NumberingIcon系26コンポーネントにテスト追加済み
-   - データ変換ロジック
-   - 位置情報処理: useNearestStationにテスト追加済み
-2. **中期（3ヶ月）**: 最低30%のカバレッジを目標設定（現在20%）
-3. **長期**: 新規コードには必ずテスト追加のルール化
+   - ✅ データ変換ロジック: 複数のutilsにテスト追加済み
+   - ✅ 位置情報処理: useNearestStationにテスト追加済み
+2. ~~**中期（3ヶ月）**: 最低30%のカバレッジを目標設定~~ ✅ **大幅超過達成**（約81%）
+3. **継続**: 新規コードには必ずテスト追加のルール維持・カバレッジ80%以上を維持
 
-#### 期待される効果
-- **バグ検出率**: 2倍
-- **リグレッション防止**: CI/CDでの自動検知
-- **リファクタリングの安全性向上**
+#### 達成された効果
+- ✅ **バグ検出率**: 大幅向上（カバレッジ81%達成）
+- ✅ **リグレッション防止**: CI/CDでの自動検知が有効
+- ✅ **リファクタリングの安全性向上**: 742テストケースで担保
 
 ---
 
@@ -754,9 +758,9 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 ### 保守性
 | 項目 | 改善効果 |
 |------|----------|
-| テストカバレッジ 13% → 24-25%（達成済み） | **LineBoard・重要フック・NumberingIcon・Headerの品質保証** ✅ |
+| テストカバレッジ 約81%達成 | **LineBoard・重要フック・NumberingIcon・Headerの品質保証** ✅ |
 | Header系共通化（達成済み） | **7コンポーネントで同時修正可能、約1,800行削減** ✅ |
-| テストカバレッジ 25% → 30%（目標） | **バグ検出率2倍** 🔶 |
+| テストカバレッジ 80%以上を維持（達成済み） | **バグ検出率大幅向上、742テストケース** ✅ |
 | LineBoard共通化（達成済み） | **4ファイルで同時修正可能** ✅ |
 | NumberingIcon全26コンポーネントにテスト追加（達成済み） | **品質保証完了、リグレッション防止** ✅ |
 | Header全9コンポーネントにテスト追加（達成済み） | **品質保証完了、リグレッション防止** ✅ |
@@ -793,13 +797,16 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 - [x] テストカバレッジ22-23%を達成 ✅ **達成**（2025-12-27）
 - [x] テストカバレッジ24-25%を達成 ✅ **達成**（2025-12-31）
   - [x] Header系コンポーネントのテスト追加（9ファイル、108テストケース）
-- [ ] テストカバレッジ30%を目指して継続（次のマイルストーン）
+- [x] テストカバレッジ30%を達成 ✅ **大幅超過達成**（約81%、2026-01-05確認）
+  - [x] 都営バスTTSテスト追加（useBusTTSText.test.tsx）
+  - [x] SelectBoundModalテスト追加
+  - [x] 742テストケース達成
 - [x] Firebase関連ライブラリのアップデート計画策定 ✅ **完了**（^23.7.0に更新済み）
 
 ### 3ヶ月以内
 - [x] パフォーマンス最適化（メモ化導入） ✅ **完了**（2025-12-31、757箇所以上で使用中）
 - [x] 状態管理の統一 ✅ **完了**（2025-12-31、zustand削除・Jotai統一）
-- [ ] テストカバレッジ30%達成
+- [x] テストカバレッジ30%達成 ✅ **大幅超過達成**（約81%）
 
 ### 6ヶ月以内
 - [ ] コンポーネント重複の完全解消
@@ -823,6 +830,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-28 | **LineBoard系テストの品質向上**（PR #4799追加改善）<br>**CodeRabbit指摘への追加対応完了**: <br>　- **Weak assertions強化**: LineBoardSaikyoテストで`toBeTruthy()`のみの検証を`expect.objectContaining()`による具体的なprops検証に改善（StationName、LineDot、ChevronTY、lineColors関連テスト）<br>　- **テスト名とロジックの不一致修正**（4ファイル）: <br>　　　• "chevronの色が交互に切り替わる" → "useIntervalフックが1秒間隔で呼ばれる"（実際はuseIntervalの呼び出しのみ検証）<br>　　　• "駅数が8未満の場合、空の配列で埋められる" → "駅数が8未満の場合でもエラーなくレンダリングされる"（実際はレンダリング成功のみ検証）<br>　　　• "arrived状態でChevronが表示される" → "arrived=falseの場合、ChevronJRWestが表示される"（実際はarrived=falseで検証）<br>　- 対象ファイル: LineBoardSaikyo.test.tsx、LineBoardJRKyushu.test.tsx、LineBoardToei.test.tsx、LineBoardWest.test.tsx、LineBoardJO.test.tsx<br>テスト名が実際のテストロジックと完全に一致し、テストの意図が明確化<br>アサーションの具体性向上により、コンポーネントの動作をより厳密に検証<br>全85テストスイート、551テスト合格を維持 |
 | 2025-12-31 | **依存関係の更新遅延を解消**<br>負債ドキュメントに記載の3パッケージを最新版に更新:<br>　- @react-native-community/cli: ^15.1.2 → ^20.0.2<br>　- @sentry/react-native: ~7.2.0 → ~7.8.0<br>　- effect: ^3.16.12 → ^3.19.13<br>lint、typecheck、test全てパスを確認（555テスト合格）<br>計画的な更新が必要なパッケージが0件に<br><br>**FlatListの最適化完了**<br>　- `removeClippedSubviews`を5ファイルに追加（Android）: Transfers.tsx、TransfersYamanote.tsx、StationSearchModal.tsx、RouteInfoModal.tsx、TrainTypeListModal.tsx<br>　- `SelectLineScreenPresets.tsx`のメモ化改善: renderItem、keyExtractor、onScroll、ListEmptyComponentをuseCallback/useMemoでラップ、ItemSeparatorComponentをReact.memoでラップ<br>FlatListの最適化によりAndroidでのスクロールパフォーマンスが向上<br><br>**iOS依存関係の更新** (chore/bump-deps)<br>　- @react-native-community/cli: Expo SDK 54への移行に伴い削除<br>　- 各種パッケージを最新版に更新<br><br>**Header系コンポーネントのテスト完全追加**<br>**テストカバレッジ向上**: 22-23% → 24-25%（108個の新規テストケース追加）<br>全9個のHeaderコンポーネントに包括的なユニットテスト追加:<br>　- Header.test.tsx（13テスト）: テーマに基づくHeaderコンポーネント選択<br>　- HeaderLED.test.tsx（12テスト）: LED表示のヘッダー状態遷移<br>　- HeaderTokyoMetro.test.tsx（14テスト）: 東京メトロスタイルのアニメーション・状態<br>　- HeaderJRWest.test.tsx（26テスト）: JR西日本スタイル、多言語対応、列車種別<br>　- HeaderJRKyushu.test.tsx（14テスト）: JR九州スタイルの状態遷移<br>　- HeaderTY.test.tsx（15テスト）: 東急スタイルのダークテーマ<br>　- HeaderSaikyo.test.tsx（14テスト）: 埼京線スタイル、時計表示、路線色<br>各コンポーネントのレンダリング、ヘッダー状態遷移、終点駅・始発駅対応、多言語対応をテスト<br>プロジェクト統計を更新（テストファイル85 → 92、テストケース555 → 663、カバレッジ22-23% → 24-25%）<br>全92テストスイート、663テスト合格を確認<br><br>**状態管理をJotaiに統一 (zustand完全削除)**<br>　- zustand依存をpackage.jsonから削除<br>　- useThemeStore → themeAtom (src/store/atoms/theme.ts) に移行<br>　- useLocationStore → locationAtom (src/store/atoms/location.ts) に移行（以前に完了）<br>　- useTuningStore → 使用箇所なしのため削除<br>　- 派生atom `isLEDThemeAtom` を追加（theme === APP_THEME.LED パターンを簡略化）<br>　- 40+ファイルでuseThemeStoreをuseAtomValue(themeAtom)に更新<br>　- テストファイル5つをjotaiモックに更新<br>　- Permitted.tsxでsetTheme依存関係を修正<br>状態管理の混在問題を完全解決、保守性と学習コストが大幅改善 |
 | 2026-01-02 | **Header系コンポーネントの構造大幅改善**<br>**約1,800行のコード削減**（純減約677行）を達成:<br>　- HeaderTokyoMetro.tsx: 660行 → 306行（354行削減）<br>　- HeaderJRKyushu.tsx: 638行 → 287行（351行削減）<br>　- HeaderTY.tsx: 633行 → 293行（340行削減）<br>　- HeaderSaikyo.tsx: 585行 → 284行（301行削減）<br>　- HeaderE235.tsx: 405行 → 239行（166行削減）<br>　- HeaderJL.tsx: 409行 → 246行（163行削減）<br>　- HeaderJRWest.tsx: 656行 → 535行（121行削減）<br><br>**新しい共通フック・ファイルを作成**:<br>　- useHeaderAnimation.ts（206行）: アニメーションロジックを共通化<br>　- useHeaderCommonData.ts（123行）: 共通データ取得ロジックを集約<br>　- Header.types.ts（72行）: 共通型定義を作成<br>　- useTransitionHeaderState.ts: 機能拡張<br><br>**データ上に存在しない英中韓駅名のスキップ対応**<br>多言語表示の堅牢性が向上、駅データにない言語を自動スキップ<br><br>**テストケース増加**: Header系テスト108 → 128テストケース<br>全92テストスイート、663テスト合格を維持<br>コード削減目標約25%を達成 |
+| 2026-01-05 | **プロジェクト統計を更新**<br>　- 総ファイル数: 382 → 398個<br>　- 本番コード: 297 → 302ファイル<br>　- テストファイル: 92 → 96個<br>　- コンポーネント数: 107 → 110個<br>　- スクリーン数: 9 → 10個（Licenses.tsx追加）<br><br>**テストカバレッジ大幅向上確認**<br>　- カバレッジ: 24-25% → 約81%（Lines coverage）<br>　- テストケース: 663 → 742個<br>　- テストスイート: 92 → 96個<br><br>**都営バス対応機能追加**（2026-01-02〜01-05）<br>　- 駅リストでバス停以外はバス停の乗換案内を隠す機能<br>　- 座標検索クエリからtransportType: TransportType.Rail削除<br>　- 都営バス対応UI改善<br>　- isBusLineヘルパー実装<br>　- 路線リストに都営バス見出し追加<br>　- バスの乗換案内はTTSで流さない機能<br>　- useBusTTSText.test.tsx追加<br><br>**ライセンス画面追加**<br>　- Licenses.tsx新規作成（スクリーン数9 → 10）<br>　- READMEにライセンス表示追加<br>　- prodでも都営交通ライセンス表示<br><br>**その他改善**<br>　- 縦画面向けのナンバリング改修<br>　- SelectBoundModal.test.tsx追加 |
 
 ---
 
