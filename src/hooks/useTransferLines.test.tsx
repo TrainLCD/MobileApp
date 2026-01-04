@@ -30,9 +30,9 @@ jest.mock('../utils/isPass', () => ({
   default: jest.fn(),
 }));
 
-const TestComponent: React.FC<{ options?: { omitJR?: boolean } }> = ({
-  options,
-}) => {
+const TestComponent: React.FC<{
+  options?: { omitJR?: boolean };
+}> = ({ options }) => {
   const lines = useTransferLines(options);
   return <Text testID="transferLines">{JSON.stringify(lines)}</Text>;
 };
@@ -149,7 +149,7 @@ describe('useTransferLines', () => {
     expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(
       currentStation,
       {
-        omitRepeatingLine: undefined,
+        omitRepeatingLine: false,
         omitJR: false,
       }
     );
@@ -183,7 +183,7 @@ describe('useTransferLines', () => {
     render(<TestComponent />);
 
     expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(nextStation, {
-      omitRepeatingLine: undefined,
+      omitRepeatingLine: false,
       omitJR: false,
     });
   });
