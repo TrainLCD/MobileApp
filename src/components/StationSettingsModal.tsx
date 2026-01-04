@@ -3,6 +3,7 @@ import type React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
@@ -12,7 +13,6 @@ import { isJapanese, translate } from '../translation';
 import { CustomModal } from './CustomModal';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
-import { isBusLine } from '~/utils/line';
 
 const styles = StyleSheet.create({
   contentView: {

@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
@@ -27,7 +28,6 @@ import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
-import { isBusLine } from '~/utils/line';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 

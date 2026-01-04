@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import {
   useCurrentStation,
@@ -25,7 +26,6 @@ import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import { TransfersHeading } from './TransfersHeading';
 import Typography from './Typography';
-import { isBusLine } from '~/utils/line';
 
 interface Props {
   onPress: (station?: Station) => void;

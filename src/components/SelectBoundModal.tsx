@@ -25,6 +25,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import lineState from '../store/atoms/line';
@@ -36,7 +37,6 @@ import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
-import { isBusLine } from '~/utils/line';
 
 const styles = StyleSheet.create({
   contentView: {
