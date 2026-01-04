@@ -25,6 +25,7 @@ import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import { TransfersHeading } from './TransfersHeading';
 import Typography from './Typography';
+import { isBusLine } from '~/utils/line';
 
 interface Props {
   onPress: (station?: Station) => void;
@@ -139,6 +140,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       if (!station) {
         return null;
       }
+      const isBus = isBusLine(line);
       const lineMark = getLineMarkFunc({
         line,
       });
@@ -252,22 +254,21 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   }}
                 >
                   <Typography style={styles.lineName}>
-                    {`${line.station?.name?.replace(parenthesisRegexp, '')}駅`}
+                    {`${line.station?.name?.replace(parenthesisRegexp, '')}${isBus ? '' : '駅'}`}
                   </Typography>
                   <Typography style={styles.lineNameEn}>
                     {`${(line.station?.nameRoman ?? '').replace(
                       parenthesisRegexp,
                       ''
-                    )} Sta.`}
+                    )}${isBus ? '' : ' Sta.'}`}
                   </Typography>
                   <Typography style={styles.lineNameEn}>
                     {`${(line.station?.nameChinese ?? '').replace(
                       parenthesisRegexp,
                       ''
-                    )}站 / ${(line.station?.nameKorean ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )}역`}
+                    )}${isBus ? '' : '站'} / ${(
+                      line.station?.nameKorean ?? ''
+                    ).replace(parenthesisRegexp, '')}${isBus ? '' : '역'}`}
                   </Typography>
                 </TouchableOpacity>
               )}

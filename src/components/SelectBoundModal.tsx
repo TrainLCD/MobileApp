@@ -36,6 +36,7 @@ import { RouteInfoModal } from './RouteInfoModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
+import { isBusLine } from '~/utils/line';
 
 const styles = StyleSheet.create({
   contentView: {
@@ -498,6 +499,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     [stations]
   );
 
+  const isBus = isBusLine(line);
+
   return (
     <CustomModal
       visible={visible}
@@ -540,7 +543,9 @@ export const SelectBoundModal: React.FC<Props> = ({
 
           <View style={styles.stopsContainer}>
             <Button outline onPress={() => setRouteInfoModalVisible(true)}>
-              {translate('viewStopStations')}
+              {isBus
+                ? translate('viewBusStops')
+                : translate('viewStopStations')}
             </Button>
 
             <Button

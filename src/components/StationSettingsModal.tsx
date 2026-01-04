@@ -12,6 +12,7 @@ import { isJapanese, translate } from '../translation';
 import { CustomModal } from './CustomModal';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
+import { isBusLine } from '~/utils/line';
 
 const styles = StyleSheet.create({
   contentView: {
@@ -57,6 +58,7 @@ export const StationSettingsModal: React.FC<Props> = ({
   onDestinationSelected,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const isBus = isBusLine(station?.line);
 
   return (
     <CustomModal
@@ -83,7 +85,7 @@ export const StationSettingsModal: React.FC<Props> = ({
         </Typography>
         <Heading style={styles.heading}>
           {isJapanese ? station?.name : station?.nameRoman}
-          {translate('station')}
+          {isBus ? '' : translate('station')}
         </Heading>
 
         <View style={styles.buttonsContainer}>

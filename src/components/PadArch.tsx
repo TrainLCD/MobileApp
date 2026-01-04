@@ -27,6 +27,7 @@ import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
+import { isBusLine } from '~/utils/line';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 
@@ -185,6 +186,8 @@ const Transfers: React.FC<TransfersProps> = ({
   lineMarks,
   isEn,
 }: TransfersProps) => {
+  const isBus = isBusLine(station?.line);
+
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
       transferLines.map((l, i) => {
@@ -241,7 +244,7 @@ const Transfers: React.FC<TransfersProps> = ({
           }
         >
           <Typography style={styles.transfersCurrentStationName}>
-            {`${station?.name ?? ''}駅`}
+            {`${station?.name ?? ''}${isBus ? '' : '駅'}`}
           </Typography>
           <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
