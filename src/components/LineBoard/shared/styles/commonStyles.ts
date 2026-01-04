@@ -223,13 +223,6 @@ export const commonLineBoardStyles = StyleSheet.create({
     overflow: 'visible',
     borderRadius: 24,
   },
-  // Line dot variant for JO style
-  lineDotJO: {
-    height: isTablet ? 48 : 28,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -70 : 54,
-  },
   // Arrived line dot for West style
   arrivedLineDotWest: {
     backgroundColor: 'crimson',
