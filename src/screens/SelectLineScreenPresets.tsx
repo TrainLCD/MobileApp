@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
   root: { marginHorizontal: -24 },
   horizontalMargin: { marginHorizontal: 24 },
   itemSeparator: { width: CARD_GAP },
-  contentContainer: { paddingHorizontal: 0, marginBottom: 48 },
+  contentContainer: { paddingHorizontal: 0, paddingTop: 8, marginBottom: 48 },
 });
 
 const ItemSeparator = React.memo(() => <View style={styles.itemSeparator} />);
