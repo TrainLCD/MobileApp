@@ -1,6 +1,6 @@
 import { Portal } from '@gorhom/portal';
 import { useAtomValue } from 'jotai';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Keyboard,
@@ -18,11 +18,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import type { ToastConfigParams } from 'react-native-toast-message';
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
-import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import { RFValue } from '~/utils/rfValue';
 
 type Props = {
   visible: boolean;
@@ -55,62 +51,6 @@ export const CustomModal: React.FC<Props> = ({
   const [isMounted, setIsMounted] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-
-  const toastConfig = useMemo(() => {
-    const getToastStyle = (ledColor: string, defaultColor: string) => ({
-      borderLeftColor: isLEDTheme ? ledColor : defaultColor,
-      borderLeftWidth: 16,
-      backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#333',
-      borderRadius: isLEDTheme ? 0 : 6,
-    });
-
-    const contentContainerStyle = {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-    };
-
-    const text1Style = {
-      color: '#fff',
-      fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-      fontSize: RFValue(14),
-    };
-
-    const text2Style = {
-      color: '#ccc',
-      fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-      fontSize: RFValue(11),
-    };
-
-    return {
-      success: (props: ToastConfigParams<unknown>) => (
-        <BaseToast
-          {...props}
-          style={getToastStyle('#4caf50', '#69c779')}
-          contentContainerStyle={contentContainerStyle}
-          text1Style={text1Style}
-          text2Style={text2Style}
-        />
-      ),
-      error: (props: ToastConfigParams<unknown>) => (
-        <ErrorToast
-          {...props}
-          style={getToastStyle('#f44336', '#fe6161')}
-          contentContainerStyle={contentContainerStyle}
-          text1Style={text1Style}
-          text2Style={text2Style}
-        />
-      ),
-      info: (props: ToastConfigParams<unknown>) => (
-        <BaseToast
-          {...props}
-          style={getToastStyle('#2196f3', '#3498db')}
-          contentContainerStyle={contentContainerStyle}
-          text1Style={text1Style}
-          text2Style={text2Style}
-        />
-      ),
-    };
-  }, [isLEDTheme]);
 
   const animatedBackdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -177,7 +117,6 @@ export const CustomModal: React.FC<Props> = ({
           ]}
           onPress={handleBackdropPress}
         />
-        <Toast config={toastConfig} />
 
         {avoidKeyboard ? (
           <KeyboardAvoidingView

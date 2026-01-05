@@ -4,7 +4,6 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import Toast from 'react-native-toast-message';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
 import { LED_THEME_BG_COLOR } from '~/constants';
@@ -27,6 +26,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
+import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -379,8 +379,8 @@ export const SelectBoundModal: React.FC<Props> = ({
               await removeCurrentRoute(savedRoute.id);
               setSavedRoute(null);
 
-              Toast.show({
-                type: 'success',
+              showToast({
+                type: 'error',
                 text1: translate('routeDeletedText'),
               });
             },
@@ -415,7 +415,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
 
-      Toast.show({
+      showToast({
         type: 'success',
         text1: translate('routeSavedText'),
       });
@@ -438,7 +438,7 @@ export const SelectBoundModal: React.FC<Props> = ({
 
     setSavedRoute(await saveCurrentRoute(newRoute));
 
-    Toast.show({
+    showToast({
       type: 'success',
       text1: translate('routeSavedText'),
     });
