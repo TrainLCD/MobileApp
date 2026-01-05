@@ -534,8 +534,20 @@ const SelectLineScreen = () => {
         ...prev,
         pendingLine: (station.line as Line) ?? null,
       }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+        pendingTrainType: null,
+      }));
     },
-    [fetchStationsByLineId, latitude, longitude, setStationState, setLineState]
+    [
+      fetchStationsByLineId,
+      latitude,
+      longitude,
+      setStationState,
+      setLineState,
+      setNavigationState,
+    ]
   );
 
   // PresetCard押下時のモーダル表示ロジック
@@ -581,8 +593,10 @@ const SelectLineScreen = () => {
 
       setStationState((prev) => ({
         ...prev,
+        selectedDirection: null,
         pendingStation: station,
         pendingStations: stations,
+        wantedDestination: null,
       }));
       setLineState((prev) => ({
         ...prev,

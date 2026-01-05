@@ -115,7 +115,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     wantedDestination,
   } = stationAtom;
   const [
-    { autoModeEnabled, trainType, fetchedTrainTypes, pendingTrainType },
+    { autoModeEnabled, fetchedTrainTypes, pendingTrainType },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
@@ -141,10 +141,10 @@ export const SelectBoundModal: React.FC<Props> = ({
 
     const route = findSavedRoute({
       lineId: line.id ?? 0,
-      trainTypeId: trainType?.groupId ?? null,
+      trainTypeId: pendingTrainType?.groupId ?? null,
     });
     setSavedRoute(route ?? null);
-  }, [findSavedRoute, line, trainType?.groupId, isRoutesDBInitialized]);
+  }, [findSavedRoute, line, pendingTrainType?.groupId, isRoutesDBInitialized]);
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === station?.groupId
