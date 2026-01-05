@@ -380,7 +380,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               setSavedRoute(null);
 
               showToast({
-                type: 'success',
+                type: 'error',
                 text1: translate('routeDeletedText'),
               });
             },
