@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
   },
   columnsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 8,
   },
   colLeft: {
@@ -52,7 +51,6 @@ const styles = StyleSheet.create({
   },
   colCenter: {
     width: 48, // gap(8) + arrow(32) + gap(8)
-    justifyContent: 'center',
     alignItems: 'center',
   },
   arrowShift: {
@@ -66,8 +64,6 @@ const styles = StyleSheet.create({
   lineItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    minWidth: 0,
   },
   lineText: {
     fontSize: RFValue(11),
