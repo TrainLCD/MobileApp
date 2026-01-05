@@ -35,6 +35,11 @@ export const gqlClient = new ApolloClient({
     batchMax: 20,
     batchInterval: 5,
     includeExtensions: false,
+    batchKey: (operation) => {
+      const context = operation.getContext();
+      const batchGroup = context.batchGroup ?? 'default';
+      return `${uri}:${batchGroup}`;
+    },
   }),
   cache: new InMemoryCache({
     typePolicies: {
