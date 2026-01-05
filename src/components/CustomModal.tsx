@@ -223,6 +223,9 @@ export const CustomModal: React.FC<Props> = ({
             <Animated.View
               style={[
                 styles.content,
+                {
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
