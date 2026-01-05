@@ -471,5 +471,47 @@ describe('useSavedRoutes', () => {
       // trainTypeId: 30 で検索 → 該当なし
       expect(result.current.find({ lineId: 300, trainTypeId: 30 })).toBeNull();
     });
+
+    it('trainTypeId が指定されている場合、lineId が異なっても trainTypeId で経路を見つける', async () => {
+      // JR神戸線（lineId: 500）でサンライズ出雲（trainTypeId: 50）を保存
+      // 東海道線（lineId: 600）から検索しても見つかるべき
+      const sunriseLine: SavedRoute = {
+        id: 'sunrise-route',
+        hasTrainType: true,
+        lineId: 500, // JR神戸線のID
+        trainTypeId: 50, // サンライズ出雲のgroupId
+        name: 'サンライズ出雲',
+        createdAt: new Date('2025-01-08T00:00:00.000Z'),
+      };
+
+      const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetRoutes: [sunriseLine],
+      });
+      const { result } = renderHook(
+        () => require('./useSavedRoutes').useSavedRoutes(),
+        {
+          wrapper: withJotaiProvider(store),
+        }
+      );
+
+      await waitFor(() =>
+        expect(store.get(navigationState).presetsFetched).toBe(true)
+      );
+
+      // 同じlineIdで検索 → 見つかる
+      expect(result.current.find({ lineId: 500, trainTypeId: 50 })).toBe(
+        sunriseLine
+      );
+
+      // 異なるlineId（東海道線）で検索しても trainTypeId で見つかる
+      expect(result.current.find({ lineId: 600, trainTypeId: 50 })).toBe(
+        sunriseLine
+      );
+
+      // 異なるtrainTypeIdでは見つからない
+      expect(result.current.find({ lineId: 500, trainTypeId: 99 })).toBeNull();
+    });
   });
 });
