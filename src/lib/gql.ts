@@ -33,7 +33,7 @@ export const gqlClient = new ApolloClient({
   link: new BatchHttpLink({
     uri,
     batchMax: 20,
-    batchInterval: 20,
+    batchInterval: 5,
     includeExtensions: false,
   }),
   cache: new InMemoryCache({
