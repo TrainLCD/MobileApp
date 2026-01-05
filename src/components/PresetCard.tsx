@@ -7,6 +7,7 @@ import { NUMBERING_ICON_SIZE } from '~/constants';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getStationName, getStationPrimaryCode } from '~/utils/station';
 import { NoPresetsCard } from './NoPresetsCard';
@@ -113,6 +114,13 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
       {
         backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC',
         borderRadius: isLEDTheme ? 0 : 8,
+        ...(isTablet
+          ? {}
+          : {
+              height: 156,
+              paddingTop: 16,
+              paddingBottom: 10,
+            }),
       },
     ],
     [isLEDTheme]
