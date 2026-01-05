@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
