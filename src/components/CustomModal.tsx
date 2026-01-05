@@ -1,5 +1,6 @@
 import { Portal } from '@gorhom/portal';
-import React, { useEffect, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Keyboard,
@@ -17,7 +18,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Toast from 'react-native-toast-message';
+import type { ToastConfigParams } from 'react-native-toast-message';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { RFValue } from '~/utils/rfValue';
 
 type Props = {
   visible: boolean;
@@ -49,6 +54,79 @@ export const CustomModal: React.FC<Props> = ({
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+
+  const toastConfig = useMemo(
+    () => ({
+      success: (props: ToastConfigParams<unknown>) => (
+        <BaseToast
+          {...props}
+          style={{
+            borderLeftColor: isLEDTheme ? '#4caf50' : '#69c779',
+            borderLeftWidth: 16,
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#333',
+            borderRadius: isLEDTheme ? 0 : 6,
+          }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 12 }}
+          text1Style={{
+            color: '#fff',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            fontSize: RFValue(14),
+          }}
+          text2Style={{
+            color: '#ccc',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            fontSize: RFValue(11),
+          }}
+        />
+      ),
+      error: (props: ToastConfigParams<unknown>) => (
+        <ErrorToast
+          {...props}
+          style={{
+            borderLeftColor: isLEDTheme ? '#f44336' : '#fe6161',
+            borderLeftWidth: 16,
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#333',
+            borderRadius: isLEDTheme ? 0 : 6,
+          }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 12 }}
+          text1Style={{
+            color: '#fff',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            fontSize: RFValue(14),
+          }}
+          text2Style={{
+            color: '#ccc',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            fontSize: RFValue(11),
+          }}
+        />
+      ),
+      info: (props: ToastConfigParams<unknown>) => (
+        <BaseToast
+          {...props}
+          style={{
+            borderLeftColor: isLEDTheme ? '#2196f3' : '#3498db',
+            borderLeftWidth: 16,
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#333',
+            borderRadius: isLEDTheme ? 0 : 6,
+          }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 12 }}
+          text1Style={{
+            color: '#fff',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            fontSize: RFValue(14),
+          }}
+          text2Style={{
+            color: '#ccc',
+            fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            fontSize: RFValue(11),
+          }}
+        />
+      ),
+    }),
+    [isLEDTheme]
+  );
 
   const animatedBackdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -115,7 +193,7 @@ export const CustomModal: React.FC<Props> = ({
           ]}
           onPress={handleBackdropPress}
         />
-        <Toast />
+        <Toast config={toastConfig} />
 
         {avoidKeyboard ? (
           <KeyboardAvoidingView
@@ -126,6 +204,9 @@ export const CustomModal: React.FC<Props> = ({
             <Animated.View
               style={[
                 styles.content,
+                {
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
@@ -168,7 +249,6 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     maxWidth: 720,
-    borderRadius: 8,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,

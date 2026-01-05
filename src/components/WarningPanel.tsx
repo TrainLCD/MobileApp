@@ -1,4 +1,5 @@
 import { Orientation } from 'expo-screen-orientation';
+import { useAtomValue } from 'jotai';
 import React from 'react';
 import {
   type GestureResponderEvent,
@@ -7,6 +8,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -45,7 +47,6 @@ const WarningPanel: React.FC<Props> = ({
       bottom: 24,
       padding: 16,
       zIndex: 9999,
-      borderRadius: 4,
       opacity: 0.9,
     },
     message: {
@@ -62,6 +63,7 @@ const WarningPanel: React.FC<Props> = ({
 
   const dim = useWindowDimensions();
   const orientation = useDeviceOrientation();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <Pressable
@@ -77,6 +79,7 @@ const WarningPanel: React.FC<Props> = ({
               orientation === Orientation.LANDSCAPE_RIGHT)
               ? dim.width / 2
               : dim.width - 48,
+          borderRadius: isLEDTheme ? 0 : 4,
         },
       ]}
     >
