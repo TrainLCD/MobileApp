@@ -7,6 +7,7 @@ import { NUMBERING_ICON_SIZE } from '~/constants';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getStationName, getStationPrimaryCode } from '~/utils/station';
 import { NoPresetsCard } from './NoPresetsCard';
@@ -23,7 +24,6 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: 180,
-    borderRadius: 8,
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 14,
@@ -43,7 +43,6 @@ const styles = StyleSheet.create({
   },
   columnsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 8,
   },
   colLeft: {
@@ -53,7 +52,6 @@ const styles = StyleSheet.create({
   },
   colCenter: {
     width: 48, // gap(8) + arrow(32) + gap(8)
-    justifyContent: 'center',
     alignItems: 'center',
   },
   arrowShift: {
@@ -67,8 +65,6 @@ const styles = StyleSheet.create({
   lineItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    minWidth: 0,
   },
   lineText: {
     fontSize: RFValue(11),
@@ -115,7 +111,17 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const containerStyle = useMemo(
     () => [
       styles.root,
-      { backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC' },
+      {
+        backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC',
+        borderRadius: isLEDTheme ? 0 : 8,
+        ...(isTablet
+          ? {}
+          : {
+              height: 156,
+              paddingTop: 16,
+              paddingBottom: 10,
+            }),
+      },
     ],
     [isLEDTheme]
   );

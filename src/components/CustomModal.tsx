@@ -1,4 +1,5 @@
 import { Portal } from '@gorhom/portal';
+import { useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
@@ -17,7 +18,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Toast from 'react-native-toast-message';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 type Props = {
   visible: boolean;
@@ -49,6 +50,7 @@ export const CustomModal: React.FC<Props> = ({
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const animatedBackdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -115,7 +117,6 @@ export const CustomModal: React.FC<Props> = ({
           ]}
           onPress={handleBackdropPress}
         />
-        <Toast />
 
         {avoidKeyboard ? (
           <KeyboardAvoidingView
@@ -126,6 +127,9 @@ export const CustomModal: React.FC<Props> = ({
             <Animated.View
               style={[
                 styles.content,
+                {
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
@@ -142,6 +146,9 @@ export const CustomModal: React.FC<Props> = ({
             <Animated.View
               style={[
                 styles.content,
+                {
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
@@ -168,7 +175,6 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     maxWidth: 720,
-    borderRadius: 8,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,

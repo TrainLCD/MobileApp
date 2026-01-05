@@ -4,7 +4,6 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import Toast from 'react-native-toast-message';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
 import { LED_THEME_BG_COLOR } from '~/constants';
@@ -27,6 +26,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
+import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     paddingVertical: 24,
-    borderRadius: 8,
     minHeight: 256,
   },
   stopsContainer: { gap: 14, marginTop: 24 },
@@ -115,7 +114,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     wantedDestination,
   } = stationAtom;
   const [
-    { autoModeEnabled, trainType, fetchedTrainTypes, pendingTrainType },
+    { autoModeEnabled, fetchedTrainTypes, pendingTrainType },
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
@@ -141,10 +140,10 @@ export const SelectBoundModal: React.FC<Props> = ({
 
     const route = findSavedRoute({
       lineId: line.id ?? 0,
-      trainTypeId: trainType?.groupId ?? null,
+      trainTypeId: pendingTrainType?.groupId ?? null,
     });
     setSavedRoute(route ?? null);
-  }, [findSavedRoute, line, trainType?.groupId, isRoutesDBInitialized]);
+  }, [findSavedRoute, line, pendingTrainType?.groupId, isRoutesDBInitialized]);
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === station?.groupId
@@ -380,8 +379,8 @@ export const SelectBoundModal: React.FC<Props> = ({
               await removeCurrentRoute(savedRoute.id);
               setSavedRoute(null);
 
-              Toast.show({
-                type: 'success',
+              showToast({
+                type: 'error',
                 text1: translate('routeDeletedText'),
               });
             },
@@ -416,7 +415,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       };
       setSavedRoute(await saveCurrentRoute(newRoute));
 
-      Toast.show({
+      showToast({
         type: 'success',
         text1: translate('routeSavedText'),
       });
@@ -439,7 +438,7 @@ export const SelectBoundModal: React.FC<Props> = ({
 
     setSavedRoute(await saveCurrentRoute(newRoute));
 
-    Toast.show({
+    showToast({
       type: 'success',
       text1: translate('routeSavedText'),
     });
@@ -510,13 +509,14 @@ export const SelectBoundModal: React.FC<Props> = ({
         styles.contentView,
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          borderRadius: isLEDTheme ? 0 : 8,
         },
         isTablet && {
           width: '80%',
           maxHeight: '90%',
           shadowOpacity: 0.25,
           shadowColor: '#333',
-          borderRadius: 16,
+          borderRadius: isLEDTheme ? 0 : 16,
         },
       ]}
     >

@@ -6,7 +6,13 @@ import { Orientation } from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import Animated, {
   LinearTransition,
@@ -98,33 +104,6 @@ const styles = StyleSheet.create({
   },
 });
 
-type ListHeaderProps = {
-  headingTitle: string;
-  carouselData: LoopItem[];
-  isPresetsLoading: boolean;
-  onPress: (route: SavedRoute) => void;
-};
-
-const ListHeader = React.memo(
-  ({
-    headingTitle,
-    carouselData,
-    isPresetsLoading,
-    onPress,
-  }: ListHeaderProps) => (
-    <>
-      <SelectLineScreenPresets
-        carouselData={carouselData}
-        isPresetsLoading={isPresetsLoading}
-        onPress={onPress}
-      />
-      <Heading style={styles.heading} singleLine>
-        {headingTitle}
-      </Heading>
-    </>
-  )
-);
-
 const NearbyStationLoader = () => (
   <SkeletonPlaceholder borderRadius={4} speed={1500}>
     <SkeletonPlaceholder.Item width="100%" height={72} />
@@ -139,6 +118,8 @@ const SelectLineScreen = () => {
   const [stationAtomState, setStationState] = useAtom(stationState);
   const [, setLineState] = useAtom(lineStateAtom);
   const { station: stationFromAtom, stationsCache } = stationAtomState;
+  const stationsCacheRef = useRef(stationsCache);
+  stationsCacheRef.current = stationsCache;
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -526,8 +507,20 @@ const SelectLineScreen = () => {
         ...prev,
         pendingLine: (station.line as Line) ?? null,
       }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+        pendingTrainType: null,
+      }));
     },
-    [fetchStationsByLineId, latitude, longitude, setStationState, setLineState]
+    [
+      fetchStationsByLineId,
+      latitude,
+      longitude,
+      setStationState,
+      setLineState,
+      setNavigationState,
+    ]
   );
 
   // PresetCard押下時のモーダル表示ロジック
@@ -573,8 +566,10 @@ const SelectLineScreen = () => {
 
       setStationState((prev) => ({
         ...prev,
+        selectedDirection: null,
         pendingStation: station,
         pendingStations: stations,
+        wantedDestination: null,
       }));
       setLineState((prev) => ({
         ...prev,
@@ -665,12 +660,12 @@ const SelectLineScreen = () => {
           targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
-          stations={stationsCache[index] ?? []}
+          stations={stationsCacheRef.current[index] ?? []}
           testID={generateLineTestId(line)}
         />
       );
     },
-    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
+    [fetchStationsByLineIdLoading, handleLineSelected]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
@@ -741,13 +736,15 @@ const SelectLineScreen = () => {
             <NearbyStationLoader />
           ) : (
             <>
+              <SelectLineScreenPresets
+                carouselData={carouselData}
+                isPresetsLoading={isPresetsLoading}
+                onPress={handlePresetPress}
+              />
               {stationLines.length > 0 && (
-                <ListHeader
-                  headingTitle={headingTitleForRailway}
-                  carouselData={carouselData}
-                  isPresetsLoading={isPresetsLoading}
-                  onPress={handlePresetPress}
-                />
+                <Heading style={styles.heading} singleLine>
+                  {headingTitleForRailway}
+                </Heading>
               )}
               {Array.from({
                 length: Math.ceil(stationLines.length / numColumns),

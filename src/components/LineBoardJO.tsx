@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -16,9 +16,13 @@ import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
-import { RFValue } from '../utils/rfValue';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
+import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
+import {
+  BAR_BOTTOM_JO,
+  commonLineBoardStyles,
+} from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
 import PassChevronTY from './PassChevronTY';
@@ -34,118 +38,17 @@ const useBarWidth = () => {
   return isTablet ? (dim.width - 120) / 8 : (dim.width - 96) / 7.835;
 };
 
-const barBottom = (() => {
-  if (isTablet) return 32;
-  return 48;
-})();
-
-const barTerminalBottom = (() => {
-  if (isTablet) return 48;
-  return 58;
-})();
-
-const styles = StyleSheet.create({
+// Local style overrides specific to JO
+const localStyles = StyleSheet.create({
   root: {
     flex: 1,
     height: '100%',
     bottom: isTablet ? '40%' : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
-  stoppingChevron: {
-    position: 'absolute',
-    bottom: barBottom,
-  },
-  chevron: {
-    position: 'absolute',
-    bottom: barBottom,
-  },
-  bar: {
-    position: 'absolute',
-    bottom: barBottom,
-    height: isTablet ? 64 : 40,
-  },
-  barDot: {
-    position: 'absolute',
-    bottom: barBottom + 16,
-    width: 32,
-    height: 32,
-    zIndex: 1,
-    borderRadius: 32,
-  },
-  barTerminal: {
-    bottom: barTerminalBottom,
-    position: 'absolute',
-    width: 0,
-    height: 0,
-    borderStyle: 'solid',
-    borderLeftWidth: isTablet ? 32 : 20,
-    borderRightWidth: isTablet ? 32 : 20,
-    borderBottomWidth: isTablet ? 32 : 20,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    transform: [{ rotate: '90deg' }],
-  },
-  stationNameWrapper: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  stationNameContainer: {
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    bottom: isTablet ? 110 : undefined,
-    paddingBottom: isTablet ? undefined : 96,
-  },
-  stationName: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    marginLeft: 12,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
-  },
-  stationNameEn: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    transform: [{ rotate: '-55deg' }],
-    marginBottom: 90,
-    marginLeft: -32,
-    width: 250,
-  },
-  verticalStationName: {
-    marginBottom: 0,
-  },
-  grayColor: {
-    color: '#ccc',
-  },
-  lineDot: {
-    height: isTablet ? 48 : 28,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -70 : 54,
-  },
-  arrivedLineDot: {
-    width: isTablet ? 48 : 28,
-    height: isTablet ? 48 : 28,
-    borderRadius: 22,
-    position: 'absolute',
-    left: 2,
-    top: 2,
-  },
-  passChevron: {
-    width: isTablet ? 48 : 28,
-    height: isTablet ? 48 : 28,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -70 : 54,
-  },
-  numberingIconContainer: {
-    position: 'absolute',
-    bottom: -155,
-    left: isTablet ? -16 : -32,
-    transform: [{ scale: 0.3 }],
-  },
-  padLineMarksContainer: {
-    position: 'absolute',
-  },
 });
+
+const styles = { ...commonLineBoardStyles, ...localStyles };
 
 interface StationNameProps {
   station: Station;
@@ -165,7 +68,7 @@ const StationName: React.FC<StationNameProps> = ({
   if (en) {
     return (
       <Typography
-        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
+        style={[styles.stationNameEnJO, passed ? styles.grayColor : null]}
       >
         {stationNameR}
       </Typography>
@@ -174,17 +77,17 @@ const StationName: React.FC<StationNameProps> = ({
   if (horizontal) {
     return (
       <Typography
-        style={[styles.stationNameEn, passed ? styles.grayColor : null]}
+        style={[styles.stationNameEnJO, passed ? styles.grayColor : null]}
       >
         {station.name}
       </Typography>
     );
   }
   return (
-    <View style={styles.verticalStationName}>
+    <View style={styles.verticalStationNameJO}>
       {station.name?.split('').map((c, j) => (
         <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
+          style={[styles.stationNameJO, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
         >
           {c}
@@ -216,13 +119,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const isPass = useMemo(() => getIsPass(stationInLoop), [stationInLoop]);
 
-  const includesLongStationName = useMemo(
-    () =>
-      !!stations.filter(
-        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
-      ).length,
-    [stations]
-  );
+  const includesLongStationName = useIncludesLongStationName(stations);
 
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = getStationNumberIndex(stationInLoop);
@@ -245,7 +142,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   return (
     <View
       style={[
-        styles.stationNameContainer,
+        styles.stationNameContainerJO,
         {
           width: dim.width / 9,
         },
@@ -258,7 +155,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         passed={isPass}
       />
 
-      <View style={styles.numberingIconContainer}>
+      <View style={styles.numberingIconContainerJO}>
         {numberingObj &&
         isTablet &&
         hasNumberedStation &&
@@ -273,7 +170,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
 
-      <View style={[styles.padLineMarksContainer, { top: dim.height - 80 }]}>
+      <View style={[styles.padLineMarksContainerJO, { top: dim.height - 80 }]}>
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={transferLines}
@@ -340,9 +237,13 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const getBottom = useCallback(
     (index: number) => {
       if (isTablet) {
-        return index <= currentStationIndex ? barBottom + 24 : barBottom + 16;
+        return index <= currentStationIndex
+          ? BAR_BOTTOM_JO + 24
+          : BAR_BOTTOM_JO + 16;
       }
-      return index <= currentStationIndex ? barBottom + 12 : barBottom + 5;
+      return index <= currentStationIndex
+        ? BAR_BOTTOM_JO + 12
+        : BAR_BOTTOM_JO + 5;
     },
     [currentStationIndex]
   );
@@ -358,7 +259,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           <View
             key={`${lc}${i.toString()}`}
             style={[
-              styles.bar,
+              styles.barJO,
               {
                 width: barWidth,
                 left: barWidth * i,
@@ -380,7 +281,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           />
           <View
             style={[
-              styles.bar,
+              styles.barJO,
               {
                 left: barWidth * i,
                 backgroundColor: (() => {
@@ -402,7 +303,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           {getIsPass(stations[i]) ? (
             <View
               style={[
-                styles.barDot,
+                styles.barDotJO,
                 {
                   left: getLeft(i),
                   bottom: getBottom(i),
@@ -416,7 +317,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
           ) : (
             <View
               style={[
-                styles.barDot,
+                styles.barDotJO,
                 {
                   backgroundColor:
                     stations.length <= i ? 'transparent' : 'white',
@@ -434,7 +335,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
       {arrived ? (
         <View
           style={[
-            styles.stoppingChevron,
+            styles.chevronJO,
             { left: barWidth * (currentStationIndex + 1) },
           ]}
         >
@@ -446,7 +347,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
       ) : (
         <View
           style={[
-            styles.chevron,
+            styles.chevronJO,
             { left: barWidth * (currentStationIndex + 1) - 32 },
           ]}
         >
@@ -456,7 +357,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
 
       <View
         style={[
-          styles.barTerminal,
+          styles.barTerminalJO,
           {
             borderBottomColor: line.color
               ? lineColors.at(-1) || line.color
@@ -467,7 +368,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
       />
       <View
         style={[
-          styles.stationNameWrapper,
+          styles.stationNameWrapperJO,
           {
             marginLeft: barWidth / 2.5,
           },
