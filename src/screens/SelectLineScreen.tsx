@@ -6,7 +6,13 @@ import { Orientation } from 'expo-screen-orientation';
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import Animated, {
   LinearTransition,
@@ -139,6 +145,8 @@ const SelectLineScreen = () => {
   const [stationAtomState, setStationState] = useAtom(stationState);
   const [, setLineState] = useAtom(lineStateAtom);
   const { station: stationFromAtom, stationsCache } = stationAtomState;
+  const stationsCacheRef = useRef(stationsCache);
+  stationsCacheRef.current = stationsCache;
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -665,12 +673,12 @@ const SelectLineScreen = () => {
           targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
-          stations={stationsCache[index] ?? []}
+          stations={stationsCacheRef.current[index] ?? []}
           testID={generateLineTestId(line)}
         />
       );
     },
-    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
+    [fetchStationsByLineIdLoading, handleLineSelected]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
