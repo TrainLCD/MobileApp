@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
+import { useMemo } from 'react';
 import {
   type GestureResponderEvent,
   type StyleProp,
@@ -9,6 +10,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -45,10 +47,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   buttonLED: {
-    paddingVertical: 8,
-    paddingHorizontal: isTablet ? 18 : 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 1,
+    shadowColor: '#333',
+    shadowOpacity: 0.25,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowRadius: 4,
     borderWidth: 1,
     borderColor: '#fff',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     flexDirection: 'row',
   },
   text: {
@@ -58,16 +70,15 @@ const styles = StyleSheet.create({
   outlinedButton: {
     borderColor: '#008ffe',
     borderWidth: 1,
-    backgroundColor: '#fff',
   },
   outlinedButtonText: {
     fontWeight: 'bold',
     color: '#008ffe',
   },
   stateIndicator: {
-    minWidth: 64,
-    maxWidth: 72,
-    height: 32,
+    minWidth: isTablet ? 96 : 64,
+    maxWidth: isTablet ? 108 : 72,
+    height: isTablet ? 40 : 32,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -92,18 +103,26 @@ export const StatePanel = ({
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
+  const styleIndicatorStyle: StyleProp<ViewStyle> = useMemo(
+    () =>
+      isLEDTheme
+        ? {
+            backgroundColor: state ? '#008ffe' : LED_THEME_BG_COLOR,
+            borderColor: state ? '#008ffe' : '#fff',
+            opacity: disabled ? 0.5 : 1,
+            borderRadius: 0,
+          }
+        : {
+            backgroundColor: state ? '#008ffe' : '#fff',
+            borderColor: state ? '#008ffe' : '#aaa',
+            opacity: disabled ? 0.5 : 1,
+            borderRadius: 8,
+          },
+    [isLEDTheme, state, disabled]
+  );
+
   return (
-    <View
-      style={[
-        styles.stateIndicator,
-        {
-          backgroundColor: state ? '#008ffe' : '#fff',
-          borderColor: state ? '#008ffe' : '#aaa',
-          opacity: disabled ? 0.5 : 1,
-          borderRadius: isLEDTheme ? 0 : 8,
-        },
-      ]}
-    >
+    <View style={[styles.stateIndicator, styleIndicatorStyle]}>
       <Typography
         style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
       >
@@ -131,9 +150,14 @@ export const ToggleButton: React.FC<Props> = ({
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {
-          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#008ffe',
         },
-        outline && styles.outlinedButton,
+        outline && [
+          styles.outlinedButton,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ],
         style,
       ]}
     >

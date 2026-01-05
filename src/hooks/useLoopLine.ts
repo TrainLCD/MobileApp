@@ -64,19 +64,19 @@ export const useLoopLine = (
     [line, stations]
   );
 
-  const majorStationIds = useMemo(() => {
+  const majorStationIdSet = useMemo(() => {
     if (isYamanoteLine) {
-      return YAMANOTE_LINE_MAJOR_STATIONS_ID.sort((a, b) => a - b);
+      return new Set(YAMANOTE_LINE_MAJOR_STATIONS_ID);
     }
     if (isOsakaLoopLine) {
-      return OSAKA_LOOP_LINE_MAJOR_STATIONS_ID.sort((a, b) => a - b);
+      return new Set(OSAKA_LOOP_LINE_MAJOR_STATIONS_ID);
     }
 
     if (isMeijoLine) {
-      return MEIJO_LINE_MAJOR_STATIONS_ID.sort((a, b) => a - b);
+      return new Set(MEIJO_LINE_MAJOR_STATIONS_ID);
     }
 
-    return [];
+    return new Set<number>();
   }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine]);
 
   const isLoopLine = useMemo((): boolean => {
@@ -107,19 +107,28 @@ export const useLoopLine = (
     );
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
+    const seenGroupIds = new Set<number>();
     const majorStations = [
       ...reversedStations.slice(currentStationIndex),
       ...reversedStations.slice(0, currentStationIndex),
-    ]
-      .filter(
-        (s) =>
-          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
-      )
-      .filter((s) => s.groupId !== station.groupId)
-      .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
+    ].filter((s) => {
+      if (s.id === undefined || s.id === null || !majorStationIdSet.has(s.id)) {
+        return false;
+      }
+      if (s.groupId === station.groupId) {
+        return false;
+      }
+      if (s.groupId != null && seenGroupIds.has(s.groupId)) {
+        return false;
+      }
+      if (s.groupId != null) {
+        seenGroupIds.add(s.groupId);
+      }
+      return true;
+    });
 
     return majorStations.slice(0, 2);
-  }, [isLoopLine, majorStationIds, station, stations]);
+  }, [isLoopLine, majorStationIdSet, station, stations]);
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
@@ -131,19 +140,28 @@ export const useLoopLine = (
     );
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
+    const seenGroupIds = new Set<number>();
     const majorStations = [
       ...stations.slice(currentStationIndex),
       ...stations.slice(0, currentStationIndex),
-    ]
-      .filter(
-        (s) =>
-          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
-      )
-      .filter((s) => s.groupId !== station.groupId)
-      .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
+    ].filter((s) => {
+      if (s.id === undefined || s.id === null || !majorStationIdSet.has(s.id)) {
+        return false;
+      }
+      if (s.groupId === station.groupId) {
+        return false;
+      }
+      if (s.groupId != null && seenGroupIds.has(s.groupId)) {
+        return false;
+      }
+      if (s.groupId != null) {
+        seenGroupIds.add(s.groupId);
+      }
+      return true;
+    });
 
     return majorStations.slice(0, 2);
-  }, [isLoopLine, majorStationIds, station, stations]);
+  }, [isLoopLine, majorStationIdSet, station, stations]);
 
   return {
     isYamanoteLine,

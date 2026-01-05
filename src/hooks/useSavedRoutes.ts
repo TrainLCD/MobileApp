@@ -99,13 +99,20 @@ export const useSavedRoutes = () => {
       lineId: number | null;
       trainTypeId: number | null;
     }): SavedRoute | null => {
-      return (
-        routes.find((r) =>
-          r.hasTrainType
-            ? r.trainTypeId === trainTypeId && r.lineId === lineId
-            : r.lineId === lineId
-        ) ?? null
-      );
+      if (trainTypeId !== null) {
+        // 種別指定で検索する場合、trainTypeId（lineGroupId）のみで一意に識別できる
+        // lineIdは経路の中間駅で異なる可能性があるため比較しない
+        return (
+          routes.find((r) => r.hasTrainType && r.trainTypeId === trainTypeId) ??
+          null
+        );
+      }
+      // trainTypeId === null の場合は lineId が必須
+      if (lineId === null) {
+        return null;
+      }
+      // lineId が一致し、hasTrainType: false の経路を検索
+      return routes.find((r) => r.lineId === lineId && !r.hasTrainType) ?? null;
     },
     [routes]
   );

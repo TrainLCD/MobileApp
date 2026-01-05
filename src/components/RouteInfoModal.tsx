@@ -43,7 +43,6 @@ const styles = StyleSheet.create({
     height: 72,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 24,
   },
   closeButton: { width: '100%' },
@@ -57,7 +56,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 21,
-    backgroundColor: '#fff',
   },
   subtitle: { width: '100%', fontSize: 16 },
   title: {
@@ -160,7 +158,14 @@ export const RouteInfoModal = ({
         },
       ]}
     >
-      <View style={styles.headerContainer}>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ]}
+      >
         <Typography style={styles.boldTypography}>{lineName}</Typography>
         <Heading>{trainTypeName}</Heading>
       </View>
@@ -182,7 +187,14 @@ export const RouteInfoModal = ({
           ) : null
         }
       />
-      <View style={styles.closeButtonContainer}>
+      <View
+        style={[
+          styles.closeButtonContainer,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ]}
+      >
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}

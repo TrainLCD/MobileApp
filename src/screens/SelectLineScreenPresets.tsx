@@ -12,6 +12,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { PresetCard } from '~/components/PresetCard';
+import isTablet from '~/utils/isTablet';
 import type { LoopItem } from '../store/atoms/navigation';
 
 type Props = {
@@ -22,11 +23,21 @@ type Props = {
 
 const CARD_GAP = 12;
 
+const CARD_HEIGHT = isTablet ? 180 : 156;
+const VERTICAL_PADDING = isTablet ? 8 : 4;
+
 const styles = StyleSheet.create({
-  root: { marginHorizontal: -24 },
+  root: {
+    marginHorizontal: -24,
+    marginTop: -16,
+    marginBottom: 32,
+    height: CARD_HEIGHT + VERTICAL_PADDING * 2,
+  },
   horizontalMargin: { marginHorizontal: 24 },
   itemSeparator: { width: CARD_GAP },
-  contentContainer: { paddingHorizontal: 0, marginBottom: 48 },
+  contentContainer: {
+    paddingVertical: VERTICAL_PADDING,
+  },
 });
 
 const ItemSeparator = React.memo(() => <View style={styles.itemSeparator} />);
@@ -109,13 +120,16 @@ export const SelectLineScreenPresets = ({
   const listEmptyComponent = useMemo(
     () =>
       isPresetsLoading ? (
-        <SkeletonPlaceholder borderRadius={4} speed={1500}>
-          <SkeletonPlaceholder.Item
-            width={cardWidth - 48}
-            height={160}
-            style={styles.horizontalMargin}
-          />
-        </SkeletonPlaceholder>
+        <View style={{ width: cardWidth }}>
+          <View style={styles.horizontalMargin}>
+            <SkeletonPlaceholder borderRadius={isTablet ? 8 : 4} speed={1500}>
+              <SkeletonPlaceholder.Item
+                width={cardWidth - 48}
+                height={CARD_HEIGHT}
+              />
+            </SkeletonPlaceholder>
+          </View>
+        </View>
       ) : (
         <View
           style={{
@@ -161,6 +175,7 @@ export const SelectLineScreenPresets = ({
         decelerationRate="fast"
         snapToAlignment="start"
         disableIntervalMomentum
+        style={{ height: CARD_HEIGHT }}
         contentContainerStyle={styles.contentContainer}
       />
     </View>
