@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: 180,
-    borderRadius: 8,
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 14,
@@ -115,7 +114,10 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const containerStyle = useMemo(
     () => [
       styles.root,
-      { backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC' },
+      {
+        backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC',
+        borderRadius: isLEDTheme ? 0 : 8,
+      },
     ],
     [isLEDTheme]
   );

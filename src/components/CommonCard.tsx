@@ -29,7 +29,6 @@ type Props = {
 const styles = StyleSheet.create({
   root: {
     height: 72,
-    borderRadius: 8,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -45,7 +44,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 8,
     borderColor: '#fff',
     borderWidth: 1,
   },
@@ -219,9 +217,23 @@ export const CommonCard: React.FC<Props> = ({
       activeOpacity={1}
       disabled={disabled}
       testID={testID}
-      style={[styles.root, additionalRootStyle]}
+      style={[
+        styles.root,
+        {
+          borderRadius: isLEDTheme ? 0 : 8,
+        },
+        additionalRootStyle,
+      ]}
     >
-      <View style={styles.insetBorder} pointerEvents="none" />
+      <View
+        style={[
+          styles.insetBorder,
+          {
+            borderRadius: isLEDTheme ? 0 : 8,
+          },
+        ]}
+        pointerEvents="none"
+      />
       {mark ? (
         <View
           style={[

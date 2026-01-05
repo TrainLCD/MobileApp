@@ -346,7 +346,21 @@ describe('useSavedRoutes', () => {
       ).toBe(withTrainType);
     });
 
-    it('trainTypeId が不一致でも lineId が一致すればルートを返す', async () => {
+    it('trainTypeId が指定されている場合、hasTrainType: false のルートは返さない', async () => {
+      const { result, store } = renderWithPresetRoutes();
+      await waitFor(() =>
+        expect(store.get(navigationState).presetsFetched).toBe(true)
+      );
+      // trainTypeId を指定して検索した場合、hasTrainType: false のルートは一致しない
+      expect(
+        result.current.find({
+          lineId: withoutTrainType.lineId,
+          trainTypeId: 999,
+        })
+      ).toBeNull();
+    });
+
+    it('trainTypeId が null の場合、hasTrainType: false のルートを返す', async () => {
       const { result, store } = renderWithPresetRoutes();
       await waitFor(() =>
         expect(store.get(navigationState).presetsFetched).toBe(true)
@@ -354,7 +368,7 @@ describe('useSavedRoutes', () => {
       expect(
         result.current.find({
           lineId: withoutTrainType.lineId,
-          trainTypeId: 999,
+          trainTypeId: null,
         })
       ).toBe(withoutTrainType);
     });
@@ -367,6 +381,95 @@ describe('useSavedRoutes', () => {
       expect(
         result.current.find({ lineId: 9999, trainTypeId: 8888 })
       ).toBeNull();
+    });
+
+    it('trainTypeId が指定されている場合、hasTrainType: true でも trainTypeId が一致しなければ null を返す', async () => {
+      const { result, store } = renderWithPresetRoutes();
+      await waitFor(() =>
+        expect(store.get(navigationState).presetsFetched).toBe(true)
+      );
+      // lineId は一致するが trainTypeId が異なる
+      expect(
+        result.current.find({
+          lineId: withTrainType.lineId,
+          trainTypeId: 999, // 実際の trainTypeId は 7
+        })
+      ).toBeNull();
+    });
+
+    it('trainTypeId が null の場合、hasTrainType: true のルートは返さない', async () => {
+      const { result, store } = renderWithPresetRoutes();
+      await waitFor(() =>
+        expect(store.get(navigationState).presetsFetched).toBe(true)
+      );
+      // lineId は一致するが trainTypeId: null で検索
+      expect(
+        result.current.find({
+          lineId: withTrainType.lineId,
+          trainTypeId: null,
+        })
+      ).toBeNull();
+    });
+
+    it('同じ lineId で異なる trainTypeId の経路が複数ある場合、正しい経路を返す', async () => {
+      const route1: SavedRoute = {
+        id: 'route-1',
+        hasTrainType: true,
+        lineId: 300,
+        trainTypeId: 10,
+        name: 'Route 1',
+        createdAt: new Date('2025-01-05T00:00:00.000Z'),
+      };
+      const route2: SavedRoute = {
+        id: 'route-2',
+        hasTrainType: true,
+        lineId: 300,
+        trainTypeId: 20,
+        name: 'Route 2',
+        createdAt: new Date('2025-01-06T00:00:00.000Z'),
+      };
+      const routeNoTrainType: SavedRoute = {
+        id: 'route-3',
+        hasTrainType: false,
+        lineId: 300,
+        trainTypeId: null,
+        name: 'Route 3 (no train type)',
+        createdAt: new Date('2025-01-07T00:00:00.000Z'),
+      };
+
+      const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetRoutes: [route1, route2, routeNoTrainType],
+      });
+      const { result } = renderHook(
+        () => require('./useSavedRoutes').useSavedRoutes(),
+        {
+          wrapper: withJotaiProvider(store),
+        }
+      );
+
+      await waitFor(() =>
+        expect(store.get(navigationState).presetsFetched).toBe(true)
+      );
+
+      // trainTypeId: 10 で検索 → route1 を返す
+      expect(result.current.find({ lineId: 300, trainTypeId: 10 })).toBe(
+        route1
+      );
+
+      // trainTypeId: 20 で検索 → route2 を返す
+      expect(result.current.find({ lineId: 300, trainTypeId: 20 })).toBe(
+        route2
+      );
+
+      // trainTypeId: null で検索 → routeNoTrainType を返す
+      expect(result.current.find({ lineId: 300, trainTypeId: null })).toBe(
+        routeNoTrainType
+      );
+
+      // trainTypeId: 30 で検索 → 該当なし
+      expect(result.current.find({ lineId: 300, trainTypeId: 30 })).toBeNull();
     });
   });
 });
