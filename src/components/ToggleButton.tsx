@@ -65,9 +65,9 @@ const styles = StyleSheet.create({
     color: '#008ffe',
   },
   stateIndicator: {
-    minWidth: 64,
-    maxWidth: 72,
-    height: 32,
+    minWidth: isTablet ? 96 : 64,
+    maxWidth: isTablet ? 108 : 72,
+    height: isTablet ? 40 : 32,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
