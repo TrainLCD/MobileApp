@@ -16,6 +16,7 @@ import { Alert, Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
+import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
 import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
@@ -106,6 +107,7 @@ const App: React.FC = () => {
                         />
                       </Stack.Navigator>
                     </PortalProvider>
+                    <GlobalToast />
                   </DeepLinkProvider>
                 </NavigationContainer>
               </Provider>
