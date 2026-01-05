@@ -101,14 +101,13 @@ export const useSavedRoutes = () => {
     }): SavedRoute | null => {
       return (
         routes.find((r) => {
-          if (r.lineId !== lineId) return false;
-
           if (trainTypeId !== null) {
-            // 種別指定で検索する場合、hasTrainType: true かつ trainTypeId が一致する必要がある
+            // 種別指定で検索する場合、trainTypeId（lineGroupId）のみで一意に識別できる
+            // lineIdは経路の中間駅で異なる可能性があるため比較しない
             return r.hasTrainType && r.trainTypeId === trainTypeId;
           }
-          // trainTypeId === null の場合、hasTrainType: false の経路のみを検索
-          return !r.hasTrainType;
+          // trainTypeId === null の場合、lineId が一致し、hasTrainType: false の経路を検索
+          return r.lineId === lineId && !r.hasTrainType;
         }) ?? null
       );
     },
