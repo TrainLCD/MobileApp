@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
     height: 72,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 24,
   },
   closeButton: { width: '100%' },
@@ -94,7 +93,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 21,
-    backgroundColor: '#fff',
   },
   subtitle: { width: '100%', fontSize: 16 },
   title: {
@@ -233,7 +231,14 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         },
       ]}
     >
-      <View style={styles.headerContainer}>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ]}
+      >
         <Heading style={styles.title}>
           {translate('searchFirstStationTitle')}
         </Heading>
@@ -256,7 +261,14 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           />
         }
       />
-      <View style={styles.closeButtonContainer}>
+      <View
+        style={[
+          styles.closeButtonContainer,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ]}
+      >
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}

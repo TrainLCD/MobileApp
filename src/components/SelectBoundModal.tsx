@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     paddingVertical: 24,
-    borderRadius: 8,
     minHeight: 256,
   },
   stopsContainer: { gap: 14, marginTop: 24 },
@@ -510,13 +509,14 @@ export const SelectBoundModal: React.FC<Props> = ({
         styles.contentView,
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          borderRadius: isLEDTheme ? 0 : 8,
         },
         isTablet && {
           width: '80%',
           maxHeight: '90%',
           shadowOpacity: 0.25,
           shadowColor: '#333',
-          borderRadius: 16,
+          borderRadius: isLEDTheme ? 0 : 16,
         },
       ]}
     >
