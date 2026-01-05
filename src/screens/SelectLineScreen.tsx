@@ -104,33 +104,6 @@ const styles = StyleSheet.create({
   },
 });
 
-type ListHeaderProps = {
-  headingTitle: string;
-  carouselData: LoopItem[];
-  isPresetsLoading: boolean;
-  onPress: (route: SavedRoute) => void;
-};
-
-const ListHeader = React.memo(
-  ({
-    headingTitle,
-    carouselData,
-    isPresetsLoading,
-    onPress,
-  }: ListHeaderProps) => (
-    <>
-      <SelectLineScreenPresets
-        carouselData={carouselData}
-        isPresetsLoading={isPresetsLoading}
-        onPress={onPress}
-      />
-      <Heading style={styles.heading} singleLine>
-        {headingTitle}
-      </Heading>
-    </>
-  )
-);
-
 const NearbyStationLoader = () => (
   <SkeletonPlaceholder borderRadius={4} speed={1500}>
     <SkeletonPlaceholder.Item width="100%" height={72} />
@@ -763,13 +736,15 @@ const SelectLineScreen = () => {
             <NearbyStationLoader />
           ) : (
             <>
+              <SelectLineScreenPresets
+                carouselData={carouselData}
+                isPresetsLoading={isPresetsLoading}
+                onPress={handlePresetPress}
+              />
               {stationLines.length > 0 && (
-                <ListHeader
-                  headingTitle={headingTitleForRailway}
-                  carouselData={carouselData}
-                  isPresetsLoading={isPresetsLoading}
-                  onPress={handlePresetPress}
-                />
+                <Heading style={styles.heading} singleLine>
+                  {headingTitleForRailway}
+                </Heading>
               )}
               {Array.from({
                 length: Math.ceil(stationLines.length / numColumns),
