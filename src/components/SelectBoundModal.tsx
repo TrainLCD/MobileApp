@@ -394,21 +394,10 @@ export const SelectBoundModal: React.FC<Props> = ({
       return;
     }
 
-    const lineName = isJapanese
-      ? line.nameShort
-      : (line.nameRoman ?? line.nameShort);
-    const edgeStationNames = isJapanese
-      ? `${stations[0]?.name ?? ''}〜${stations[stations.length - 1]?.name ?? ''}`
-      : `${stations[0]?.nameRoman ?? ''} - ${stations[stations.length - 1]?.nameRoman ?? ''}`;
-
     if (pendingTrainType?.groupId) {
-      const trainTypeName =
-        (isJapanese ? pendingTrainType.name : pendingTrainType.nameRoman) ?? '';
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
-        name: wantedDestination
-          ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
-          : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
+        name: translate('preset'),
         lineId: line.id ?? 0,
         trainTypeId: pendingTrainType?.groupId,
         createdAt: new Date(),
@@ -422,15 +411,9 @@ export const SelectBoundModal: React.FC<Props> = ({
       return;
     }
 
-    const destinationName = isJapanese
-      ? wantedDestination?.name
-      : wantedDestination?.nameRoman;
     const newRoute: SavedRouteWithoutTrainTypeInput = {
       hasTrainType: false,
-
-      name: isJapanese
-        ? `${lineName} 各駅停車 ${edgeStationNames} ${destinationName ? `${destinationName}行き` : ''}`.trim()
-        : `${lineName} Local ${edgeStationNames}${destinationName ? ` for ${destinationName}` : ''}`.trim(),
+      name: translate('preset'),
       lineId: line.id ?? 0,
       trainTypeId: null,
       createdAt: new Date(),
@@ -446,10 +429,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     savedRoute,
     removeCurrentRoute,
     saveCurrentRoute,
-    wantedDestination,
     line,
     pendingTrainType,
-    stations,
   ]);
 
   const toggleNotificationModeEnabled = useCallback(() => {
