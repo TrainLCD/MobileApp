@@ -35,12 +35,12 @@ jest.mock('expo-location', () => ({
   hasStartedLocationUpdatesAsync: jest.fn(),
   stopLocationUpdatesAsync: jest.fn(),
   Accuracy: {
-    Highest: 6,
-    High: 5,
-    Balanced: 4,
-    Low: 3,
-    Lowest: 2,
-    BestForNavigation: 1,
+    Lowest: 1,
+    Low: 2,
+    Balanced: 3,
+    High: 4,
+    Highest: 5,
+    BestForNavigation: 6,
   },
 }));
 
