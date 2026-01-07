@@ -24,6 +24,22 @@ let mockNavigationState = {
   autoModeEnabled: false,
 };
 
+// Mock atom modules with identifiable references
+jest.mock('../store/atoms/station', () => ({
+  __esModule: true,
+  default: 'STATION_ATOM',
+}));
+
+jest.mock('../store/atoms/line', () => ({
+  __esModule: true,
+  default: 'LINE_ATOM',
+}));
+
+jest.mock('~/store/atoms/navigation', () => ({
+  __esModule: true,
+  default: 'NAVIGATION_ATOM',
+}));
+
 jest.mock('jotai', () => ({
   __esModule: true,
   useAtomValue: jest.fn(),
@@ -99,14 +115,18 @@ describe('useAutoMode', () => {
       autoModeEnabled: false,
     };
 
-    // Setup useAtomValue mock to return different values based on call order
-    let callIndex = 0;
-    mockUseAtomValue.mockImplementation(() => {
-      const idx = callIndex % 3;
-      callIndex++;
-      if (idx === 0) return mockStationState;
-      if (idx === 1) return mockLineState;
-      return mockNavigationState;
+    // Setup useAtomValue mock to return values based on atom reference
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      switch (atom) {
+        case 'STATION_ATOM':
+          return mockStationState;
+        case 'LINE_ATOM':
+          return mockLineState;
+        case 'NAVIGATION_ATOM':
+          return mockNavigationState;
+        default:
+          throw new Error(`Unknown atom: ${String(atom)}`);
+      }
     });
 
     mockUseLoopLine.mockReturnValue({
