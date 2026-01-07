@@ -144,10 +144,10 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
     // targetDestination が現在の駅より後ろにある場合は INBOUND
     const targetDestination = { id: 3, groupId: 3, name: '横浜' };
     const currentStationIndex = stations.findIndex(
-      (s: { groupId: number }) => s.groupId === currentStation?.groupId
+      (s) => s.groupId === currentStation?.groupId
     );
     const targetStationIndex = stations.findIndex(
-      (s: { groupId: number }) => s.groupId === targetDestination.groupId
+      (s) => s.groupId === targetDestination.groupId
     );
 
     const direction =
@@ -181,10 +181,10 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
     // targetDestination が現在の駅より前にある場合は OUTBOUND
     const targetDestination = { id: 1, groupId: 1, name: '東京' };
     const currentStationIndex = stations.findIndex(
-      (s: { groupId: number }) => s.groupId === currentStation?.groupId
+      (s) => s.groupId === currentStation?.groupId
     );
     const targetStationIndex = stations.findIndex(
-      (s: { groupId: number }) => s.groupId === targetDestination.groupId
+      (s) => s.groupId === targetDestination.groupId
     );
 
     const direction =
