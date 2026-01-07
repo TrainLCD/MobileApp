@@ -1,14 +1,7 @@
 import { useAtom } from 'jotai';
+import type { Station } from '~/@types/graphql';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-
-// Station 型の定義
-interface Station {
-  id: number;
-  groupId: number;
-  name: string;
-  nameRoman?: string;
-}
 
 // Mock jotai
 jest.mock('jotai', () => ({
@@ -114,17 +107,17 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
   });
 
   it('targetDestination が null の場合、方向のフィルタリングは行われない', () => {
-    const stations: Station[] = [
+    const stations = [
       { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
       { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
       { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-    ];
-    const currentStation: Station = {
+    ] as unknown as Station[];
+    const currentStation = {
       id: 1,
       groupId: 1,
       name: '東京',
       nameRoman: 'Tokyo',
-    };
+    } as unknown as Station;
 
     // targetDestination が null の場合は両方向を表示
     const targetDestination: Station | null = null;
@@ -140,25 +133,29 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
   });
 
   it('targetDestination が設定されている場合、INBOUND 方向が計算される', () => {
-    const stations: Station[] = [
+    const stations = [
       { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
       { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
       { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-    ];
-    const currentStation: Station = {
+    ] as unknown as Station[];
+    const currentStation = {
       id: 1,
       groupId: 1,
       name: '東京',
       nameRoman: 'Tokyo',
-    };
+    } as unknown as Station;
 
     // targetDestination が現在の駅より後ろにある場合は INBOUND
-    const targetDestination: Station = { id: 3, groupId: 3, name: '横浜' };
+    const targetDestination = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
     const currentStationIndex = stations.findIndex(
-      (s: Station) => s.groupId === currentStation.groupId
+      (s) => s.groupId === currentStation.groupId
     );
     const targetStationIndex = stations.findIndex(
-      (s: Station) => s.groupId === targetDestination.groupId
+      (s) => s.groupId === targetDestination.groupId
     );
 
     const direction =
@@ -170,25 +167,29 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
   });
 
   it('targetDestination が設定されている場合、OUTBOUND 方向が計算される', () => {
-    const stations: Station[] = [
+    const stations = [
       { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
       { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
       { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-    ];
-    const currentStation: Station = {
+    ] as unknown as Station[];
+    const currentStation = {
       id: 3,
       groupId: 3,
       name: '横浜',
       nameRoman: 'Yokohama',
-    };
+    } as unknown as Station;
 
     // targetDestination が現在の駅より前にある場合は OUTBOUND
-    const targetDestination: Station = { id: 1, groupId: 1, name: '東京' };
+    const targetDestination = {
+      id: 1,
+      groupId: 1,
+      name: '東京',
+    } as unknown as Station;
     const currentStationIndex = stations.findIndex(
-      (s: Station) => s.groupId === currentStation.groupId
+      (s) => s.groupId === currentStation.groupId
     );
     const targetStationIndex = stations.findIndex(
-      (s: Station) => s.groupId === targetDestination.groupId
+      (s) => s.groupId === targetDestination.groupId
     );
 
     const direction =
@@ -200,14 +201,22 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
   });
 
   it('wantedDestination が設定されている場合は targetDestination より優先される', () => {
-    const stations: Station[] = [
+    const stations = [
       { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
       { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
       { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-    ];
+    ] as unknown as Station[];
 
-    const targetDestination: Station = { id: 3, groupId: 3, name: '横浜' };
-    const wantedDestination: Station = { id: 2, groupId: 2, name: '品川' };
+    const targetDestination = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
+    const wantedDestination = {
+      id: 2,
+      groupId: 2,
+      name: '品川',
+    } as unknown as Station;
 
     // 実装のロジック: targetDestination && !isLoopLine && !wantedDestination
     // wantedDestination が設定されている場合は targetDestination のフィルタリングは無視される
@@ -221,7 +230,11 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
 
   it('ループ線の場合は targetDestination によるフィルタリングは行われない', () => {
     const isLoopLine = true;
-    const targetDestination: Station = { id: 3, groupId: 3, name: '横浜' };
+    const targetDestination = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
     const wantedDestination: Station | null = null;
 
     // 実装のロジック: targetDestination && !isLoopLine && !wantedDestination
@@ -273,7 +286,11 @@ describe('SelectBoundModal - onCloseAnimationEnd', () => {
   });
 
   it('targetDestination prop が SelectBoundModal の Props 型に含まれる', () => {
-    const targetStation: Station = { id: 3, groupId: 3, name: '横浜' };
+    const targetStation = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
 
     const props = {
       visible: true,
