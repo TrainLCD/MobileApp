@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import stationState from '../store/atoms/station';
 import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
@@ -23,58 +23,6 @@ const TestComponent: React.FC<{ excludePassed?: boolean }> = ({
   const lines = useConnectedLines(excludePassed);
   return <Text testID="lines">{JSON.stringify(lines)}</Text>;
 };
-
-const createLine = (
-  overrides: Partial<Line> = {},
-  typename: Line['__typename'] = 'Line'
-): Line => ({
-  __typename: typename,
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id: 1,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: 'Main Line',
-  nameKatakana: 'メインライン',
-  nameKorean: 'メインライン',
-  nameRoman: 'Main Line',
-  nameShort: 'Main',
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: null,
-  ...overrides,
-});
-
-const createStation = (id: number, line: Line): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude: null,
-  line: { ...line, __typename: 'LineNested' },
-  lines: [],
-  longitude: null,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 describe('useConnectedLines', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -97,7 +45,7 @@ describe('useConnectedLines', () => {
       selectedDirection: 'INBOUND',
       stations: [],
     };
-    currentLineValue = createLine();
+    currentLineValue = createLine(1);
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === stationState) {
         return stationAtomValue;
@@ -117,25 +65,40 @@ describe('useConnectedLines', () => {
   });
 
   it('INBOUND 方向で現在路線より先の直通路線を返す', () => {
-    const lineA = createLine({ id: 1, nameShort: '本線' });
-    const lineB = createLine({ id: 2, nameShort: 'A線' });
-    const lineBBranch = createLine({
-      id: 3,
+    const lineA = createLine(1, { nameShort: '本線' });
+    const lineB = createLine(2, { nameShort: 'A線' });
+    const lineBBranch = createLine(3, {
       nameShort: 'A線(支線)',
     });
-    const lineC = createLine({ id: 4, nameShort: 'C線' });
+    const lineC = createLine(4, { nameShort: 'C線' });
 
     stationAtomValue = {
-      selectedBound: createStation(7, lineC),
+      selectedBound: createStation(7, {
+        line: { id: lineC.id, nameShort: lineC.nameShort },
+      }),
       selectedDirection: 'INBOUND',
       stations: [
-        createStation(1, lineA),
-        createStation(2, lineA),
-        createStation(3, lineB),
-        createStation(4, lineB),
-        createStation(5, lineBBranch),
-        createStation(6, lineC),
-        createStation(7, lineC),
+        createStation(1, {
+          line: { id: lineA.id, nameShort: lineA.nameShort },
+        }),
+        createStation(2, {
+          line: { id: lineA.id, nameShort: lineA.nameShort },
+        }),
+        createStation(3, {
+          line: { id: lineB.id, nameShort: lineB.nameShort },
+        }),
+        createStation(4, {
+          line: { id: lineB.id, nameShort: lineB.nameShort },
+        }),
+        createStation(5, {
+          line: { id: lineBBranch.id, nameShort: lineBBranch.nameShort },
+        }),
+        createStation(6, {
+          line: { id: lineC.id, nameShort: lineC.nameShort },
+        }),
+        createStation(7, {
+          line: { id: lineC.id, nameShort: lineC.nameShort },
+        }),
       ],
     };
     currentLineValue = lineA;
@@ -147,21 +110,35 @@ describe('useConnectedLines', () => {
   });
 
   it('excludePassed=false で全ての直通候補を返しつつ現在路線は除外する', () => {
-    const lineA = createLine({ id: 10, nameShort: 'M線' });
-    const lineB = createLine({ id: 11, nameShort: 'N線' });
-    const lineBAlt = createLine({ id: 12, nameShort: 'N線(快速)' });
-    const lineC = createLine({ id: 13, nameShort: 'C線' });
+    const lineA = createLine(10, { nameShort: 'M線' });
+    const lineB = createLine(11, { nameShort: 'N線' });
+    const lineBAlt = createLine(12, { nameShort: 'N線(快速)' });
+    const lineC = createLine(13, { nameShort: 'C線' });
 
     stationAtomValue = {
-      selectedBound: createStation(7, lineC),
+      selectedBound: createStation(7, {
+        line: { id: lineC.id, nameShort: lineC.nameShort },
+      }),
       selectedDirection: 'OUTBOUND',
       stations: [
-        createStation(1, lineC),
-        createStation(2, lineC),
-        createStation(3, lineBAlt),
-        createStation(4, lineB),
-        createStation(5, lineA),
-        createStation(6, lineA),
+        createStation(1, {
+          line: { id: lineC.id, nameShort: lineC.nameShort },
+        }),
+        createStation(2, {
+          line: { id: lineC.id, nameShort: lineC.nameShort },
+        }),
+        createStation(3, {
+          line: { id: lineBAlt.id, nameShort: lineBAlt.nameShort },
+        }),
+        createStation(4, {
+          line: { id: lineB.id, nameShort: lineB.nameShort },
+        }),
+        createStation(5, {
+          line: { id: lineA.id, nameShort: lineA.nameShort },
+        }),
+        createStation(6, {
+          line: { id: lineA.id, nameShort: lineA.nameShort },
+        }),
       ],
     };
     currentLineValue = lineA;

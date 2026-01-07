@@ -2,8 +2,8 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Line, Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import type { Station } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
@@ -36,62 +36,6 @@ const TestComponent: React.FC<{
   const lines = useTransferLines(options);
   return <Text testID="transferLines">{JSON.stringify(lines)}</Text>;
 };
-
-const createLine = (
-  overrides: Partial<Line> = {},
-  typename: Line['__typename'] = 'Line'
-): Line => ({
-  __typename: typename,
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id: 1,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: 'Line',
-  nameKatakana: 'ライン',
-  nameKorean: '라인',
-  nameRoman: 'Line',
-  nameShort: 'Line',
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: null,
-  ...overrides,
-});
-
-const createStation = (
-  id: number,
-  overrides: Partial<Station> = {}
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude: null,
-  line: null,
-  lines: [],
-  longitude: null,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-  ...overrides,
-});
 
 describe('useTransferLines', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -136,8 +80,8 @@ describe('useTransferLines', () => {
   it('到着済みかつ停車駅なら現在駅の乗換情報を返す', () => {
     const currentStation = createStation(1);
     const transferLines = [
-      createLine({ id: 100, nameShort: 'metro' }),
-      createLine({ id: 101, nameShort: 'jr' }),
+      createLine(100, { nameShort: 'metro' }),
+      createLine(101, { nameShort: 'jr' }),
     ];
     stationAtomValue.arrived = true;
     currentStationValue = currentStation;

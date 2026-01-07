@@ -2,8 +2,8 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { StopCondition } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
@@ -27,55 +27,6 @@ jest.mock('../utils/isPass', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
-
-const createStation = (
-  id: number,
-  stopCondition: StopCondition = StopCondition.All
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude: null,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  longitude: null,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC = () => {
   const state = useStoppingState();
@@ -103,8 +54,12 @@ describe('useStoppingState', () => {
   });
 
   it('arrived=trueかつ通過駅でない場合、CURRENTを返す', () => {
-    const currentStation = createStation(1, StopCondition.All);
-    const nextStation = createStation(2, StopCondition.All);
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.All,
+    });
+    const nextStation = createStation(2, {
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: true,
@@ -120,7 +75,9 @@ describe('useStoppingState', () => {
   });
 
   it('nextStationがundefinedの場合、CURRENTを返す', () => {
-    const currentStation = createStation(1, StopCondition.All);
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,
@@ -135,8 +92,12 @@ describe('useStoppingState', () => {
   });
 
   it('approaching=trueかつarrived=falseかつ次の駅が通過駅でない場合、ARRIVINGを返す', () => {
-    const currentStation = createStation(1, StopCondition.All);
-    const nextStation = createStation(2, StopCondition.All);
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.All,
+    });
+    const nextStation = createStation(2, {
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,
@@ -152,8 +113,13 @@ describe('useStoppingState', () => {
   });
 
   it('approaching=trueだが次の駅が通過駅の場合、NEXTを返す', () => {
-    const currentStation = createStation(1, StopCondition.All);
-    const nextStation = createStation(2, StopCondition.Not); // pass station
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.All,
+    });
+    // pass station
+    const nextStation = createStation(2, {
+      stopCondition: StopCondition.Not,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,
@@ -171,8 +137,12 @@ describe('useStoppingState', () => {
   });
 
   it('approaching=falseかつarrived=falseの場合、NEXTを返す', () => {
-    const currentStation = createStation(1, StopCondition.All);
-    const nextStation = createStation(2, StopCondition.All);
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.All,
+    });
+    const nextStation = createStation(2, {
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,
@@ -188,8 +158,13 @@ describe('useStoppingState', () => {
   });
 
   it('arrived=trueだがcurrentStationが通過駅の場合、NEXTを返す', () => {
-    const currentStation = createStation(1, StopCondition.Not); // pass station
-    const nextStation = createStation(2, StopCondition.All);
+    // pass station
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.Not,
+    });
+    const nextStation = createStation(2, {
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: true,
@@ -207,8 +182,12 @@ describe('useStoppingState', () => {
   });
 
   it('arrived=trueかつapproaching=trueかつcurrentStationが通過駅でない場合、CURRENTを返す', () => {
-    const currentStation = createStation(1, StopCondition.All);
-    const nextStation = createStation(2, StopCondition.All);
+    const currentStation = createStation(1, {
+      stopCondition: StopCondition.All,
+    });
+    const nextStation = createStation(2, {
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: true,
