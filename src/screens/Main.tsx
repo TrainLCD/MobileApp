@@ -11,7 +11,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet } from 'react-native';
+import {
+  Alert,
+  AppState,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+} from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import {
   LineType,
@@ -529,6 +536,18 @@ const MainScreen: React.FC = () => {
     };
     f();
   }, [isRotated]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        ).catch(console.warn);
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
 
   const changeOperatingLine = useCallback(
     async (selectedStation: Station) => {
