@@ -46,6 +46,8 @@ const createMockTrainType = (
     lines,
   }) as unknown as TrainType;
 
+afterEach(() => jest.clearAllMocks());
+
 describe('computeCurrentStationInRoutes', () => {
   describe('列車種別がある場合', () => {
     it('列車種別の路線とstationの路線の共通路線を返す', () => {

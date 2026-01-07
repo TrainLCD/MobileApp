@@ -54,6 +54,8 @@ const filterTrainTypes = (
   });
 };
 
+afterEach(() => jest.clearAllMocks());
+
 describe('TrainTypeListModal - フィルタリングロジック', () => {
   describe('基本的なフィルタリング', () => {
     it('選択された路線を含む列車種別のみを返す', () => {
