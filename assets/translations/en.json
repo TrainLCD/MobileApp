@@ -223,5 +223,17 @@
   "toei": "Bureau of Transportation, Tokyo Metropolitan Government",
   "ccby": "CC BY 4.0 (Data has been modified)",
   "otherOss": "Other Open Source Software",
-  "toeiBusStopsNearby": "Nearby bus routes (Toei Bus)"
+  "toeiBusStopsNearby": "Nearby bus routes (Toei Bus)",
+  "themeConfirmTitle": "Change theme?",
+  "themeConfirmApply": "Apply",
+  "themeDescriptionTokyoMetro": "A simple theme inspired by Tokyo Metro station displays. Features an easy-to-read design.",
+  "themeDescriptionToei": "A theme inspired by Toei Subway station displays. Recreates the calm atmosphere unique to Toei lines.",
+  "themeDescriptionYamanote": "A theme inspired by JR Yamanote Line station displays. Features a friendly design.",
+  "themeDescriptionJrWest": "A theme inspired by JR West station displays. Recreates the style commonly seen in western Japan stations.",
+  "themeDescriptionTy": "A theme inspired by Tokyu Toyoko Line station displays. Features the stylish design characteristic of Tokyu lines.",
+  "themeDescriptionSaikyo": "A theme inspired by JR Saikyo Line station displays.",
+  "themeDescriptionLed": "An LED-style theme inspired by station electronic bulletin boards. Provides excellent visibility in dark environments.",
+  "themeDescriptionJo": "A theme inspired by JR Yokosuka/Sobu Rapid Line station displays. Recreates the atmosphere of these lines crossing central Tokyo.",
+  "themeDescriptionJl": "A theme inspired by JR Joban Line station displays. Features a calm design.",
+  "themeDescriptionJrKyushu": "A theme inspired by JR Kyushu station displays. Features the bold design unique to the Kyushu area."
 }
