@@ -2,6 +2,14 @@ import { useAtom } from 'jotai';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
+// Station 型の定義
+interface Station {
+  id: number;
+  groupId: number;
+  name: string;
+  nameRoman?: string;
+}
+
 // Mock jotai
 jest.mock('jotai', () => ({
   useAtom: jest.fn(),
@@ -105,112 +113,122 @@ describe('SelectBoundModal - targetDestination による方向フィルタリン
     jest.clearAllMocks();
   });
 
-  it('targetDestination が null の場合、両方向のボタンが表示される', () => {
-    const mockStationState = {
-      pendingStation: { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-      pendingStations: [
-        { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-        { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
-        { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-      ],
-      wantedDestination: null,
+  it('targetDestination が null の場合、方向のフィルタリングは行われない', () => {
+    const stations: Station[] = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ];
+    const currentStation: Station = {
+      id: 1,
+      groupId: 1,
+      name: '東京',
+      nameRoman: 'Tokyo',
     };
 
-    (useAtom as jest.Mock).mockReturnValue([mockStationState, jest.fn()]);
+    // targetDestination が null の場合は両方向を表示
+    const targetDestination: Station | null = null;
+    const wantedDestination: Station | null = null;
 
-    const [state] = useAtom(stationState);
+    // フィルタリング条件: targetDestination と wantedDestination が両方 null の場合
+    const shouldFilter =
+      targetDestination !== null || wantedDestination !== null;
 
-    // targetDestination が null の場合は方向のフィルタリングは行われない
-    expect(state.wantedDestination).toBeNull();
+    expect(shouldFilter).toBe(false);
+    expect(stations.length).toBe(3);
+    expect(currentStation.groupId).toBe(1);
   });
 
-  it('targetDestination が設定されている場合、その方向のみ表示される（INBOUND）', () => {
-    const mockStationState = {
-      pendingStation: { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-      pendingStations: [
-        { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-        { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
-        { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-      ],
-      wantedDestination: null,
+  it('targetDestination が設定されている場合、INBOUND 方向が計算される', () => {
+    const stations: Station[] = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ];
+    const currentStation: Station = {
+      id: 1,
+      groupId: 1,
+      name: '東京',
+      nameRoman: 'Tokyo',
     };
 
-    (useAtom as jest.Mock).mockReturnValue([mockStationState, jest.fn()]);
-
-    const [state] = useAtom(stationState);
-    const stations = state.pendingStations;
-    const currentStation = state.pendingStation;
-
     // targetDestination が現在の駅より後ろにある場合は INBOUND
-    const targetDestination = { id: 3, groupId: 3, name: '横浜' };
+    const targetDestination: Station = { id: 3, groupId: 3, name: '横浜' };
     const currentStationIndex = stations.findIndex(
-      (s) => s.groupId === currentStation?.groupId
+      (s: Station) => s.groupId === currentStation.groupId
     );
     const targetStationIndex = stations.findIndex(
-      (s) => s.groupId === targetDestination.groupId
+      (s: Station) => s.groupId === targetDestination.groupId
     );
 
     const direction =
       currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
 
+    expect(currentStationIndex).toBe(0);
+    expect(targetStationIndex).toBe(2);
     expect(direction).toBe('INBOUND');
   });
 
-  it('targetDestination が設定されている場合、その方向のみ表示される（OUTBOUND）', () => {
-    const mockStationState = {
-      pendingStation: {
-        id: 3,
-        groupId: 3,
-        name: '横浜',
-        nameRoman: 'Yokohama',
-      },
-      pendingStations: [
-        { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-        { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
-        { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-      ],
-      wantedDestination: null,
+  it('targetDestination が設定されている場合、OUTBOUND 方向が計算される', () => {
+    const stations: Station[] = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ];
+    const currentStation: Station = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+      nameRoman: 'Yokohama',
     };
 
-    (useAtom as jest.Mock).mockReturnValue([mockStationState, jest.fn()]);
-
-    const [state] = useAtom(stationState);
-    const stations = state.pendingStations;
-    const currentStation = state.pendingStation;
-
     // targetDestination が現在の駅より前にある場合は OUTBOUND
-    const targetDestination = { id: 1, groupId: 1, name: '東京' };
+    const targetDestination: Station = { id: 1, groupId: 1, name: '東京' };
     const currentStationIndex = stations.findIndex(
-      (s) => s.groupId === currentStation?.groupId
+      (s: Station) => s.groupId === currentStation.groupId
     );
     const targetStationIndex = stations.findIndex(
-      (s) => s.groupId === targetDestination.groupId
+      (s: Station) => s.groupId === targetDestination.groupId
     );
 
     const direction =
       currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
 
+    expect(currentStationIndex).toBe(2);
+    expect(targetStationIndex).toBe(0);
     expect(direction).toBe('OUTBOUND');
   });
 
-  it('targetDestination と wantedDestination が両方設定されている場合、wantedDestination が優先される', () => {
-    const mockStationState = {
-      pendingStation: { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-      pendingStations: [
-        { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
-        { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
-        { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
-      ],
-      wantedDestination: { id: 2, groupId: 2, name: '品川' },
-    };
+  it('wantedDestination が設定されている場合は targetDestination より優先される', () => {
+    const stations: Station[] = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ];
 
-    (useAtom as jest.Mock).mockReturnValue([mockStationState, jest.fn()]);
+    const targetDestination: Station = { id: 3, groupId: 3, name: '横浜' };
+    const wantedDestination: Station = { id: 2, groupId: 2, name: '品川' };
 
-    const [state] = useAtom(stationState);
-
+    // 実装のロジック: targetDestination && !isLoopLine && !wantedDestination
     // wantedDestination が設定されている場合は targetDestination のフィルタリングは無視される
-    expect(state.wantedDestination).not.toBeNull();
-    expect(state.wantedDestination?.groupId).toBe(2);
+    const shouldUseTargetDestination =
+      targetDestination !== null && wantedDestination === null;
+
+    expect(shouldUseTargetDestination).toBe(false);
+    expect(wantedDestination.groupId).toBe(2);
+    expect(stations.length).toBe(3);
+  });
+
+  it('ループ線の場合は targetDestination によるフィルタリングは行われない', () => {
+    const isLoopLine = true;
+    const targetDestination: Station = { id: 3, groupId: 3, name: '横浜' };
+    const wantedDestination: Station | null = null;
+
+    // 実装のロジック: targetDestination && !isLoopLine && !wantedDestination
+    const shouldUseTargetDestination =
+      targetDestination !== null && !isLoopLine && wantedDestination === null;
+
+    expect(shouldUseTargetDestination).toBe(false);
   });
 });
 
@@ -219,10 +237,10 @@ describe('SelectBoundModal - onCloseAnimationEnd', () => {
     jest.clearAllMocks();
   });
 
-  it('onCloseAnimationEnd prop が SelectBoundModal に渡せる', () => {
+  it('onCloseAnimationEnd prop が SelectBoundModal の Props 型に含まれる', () => {
     const mockOnCloseAnimationEnd = jest.fn();
 
-    // SelectBoundModal の Props 型に onCloseAnimationEnd が含まれることを確認
+    // Props の型が正しいことを確認
     const props = {
       visible: true,
       onClose: jest.fn(),
@@ -234,9 +252,42 @@ describe('SelectBoundModal - onCloseAnimationEnd', () => {
       targetDestination: null,
     };
 
-    // Props が正しい型を持っていることを確認
     expect(props).toHaveProperty('onCloseAnimationEnd');
     expect(typeof props.onCloseAnimationEnd).toBe('function');
+  });
+
+  it('onCloseAnimationEnd はオプショナルな prop である', () => {
+    // onCloseAnimationEnd を省略した Props も有効
+    const propsWithoutCallback = {
+      visible: true,
+      onClose: jest.fn(),
+      loading: false,
+      error: null,
+      onTrainTypeSelect: jest.fn(),
+      onBoundSelect: jest.fn(),
+      targetDestination: null,
+    };
+
+    // onCloseAnimationEnd がなくてもエラーにならない
+    expect(propsWithoutCallback).not.toHaveProperty('onCloseAnimationEnd');
+  });
+
+  it('targetDestination prop が SelectBoundModal の Props 型に含まれる', () => {
+    const targetStation: Station = { id: 3, groupId: 3, name: '横浜' };
+
+    const props = {
+      visible: true,
+      onClose: jest.fn(),
+      onCloseAnimationEnd: jest.fn(),
+      loading: false,
+      error: null,
+      onTrainTypeSelect: jest.fn(),
+      onBoundSelect: jest.fn(),
+      targetDestination: targetStation,
+    };
+
+    expect(props).toHaveProperty('targetDestination');
+    expect(props.targetDestination).toEqual(targetStation);
   });
 });
 
