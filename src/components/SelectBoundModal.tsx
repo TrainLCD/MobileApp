@@ -582,7 +582,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
-        line={line}
+        line={pendingTrainType?.line ?? station?.line ?? line}
         onClose={() => {
           setIsTrainTypeModalVisible(false);
         }}
