@@ -2,8 +2,12 @@ import { render, waitFor } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Line, Station, StationNumber } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { StopCondition } from '~/@types/graphql';
+import {
+  createLine,
+  createStation,
+  createStationNumber,
+} from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
@@ -41,88 +45,6 @@ jest.mock('./useStationNumberIndexFunc', () => ({
   __esModule: true,
   useStationNumberIndexFunc: jest.fn(),
 }));
-
-const createStationNumber = (
-  lineSymbol: string,
-  stationNumber: string
-): StationNumber => ({
-  __typename: 'StationNumber',
-  lineSymbol,
-  lineSymbolColor: '#123456',
-  lineSymbolShape: 'ROUND',
-  stationNumber,
-});
-
-const createStation = (
-  id: number,
-  stationNumbers: StationNumber[] = [],
-  stopCondition: StopCondition = StopCondition.All,
-  threeLetterCode: string | null = null
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude: 35.681236,
-  longitude: 139.767125,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers,
-  status: OperationStatus.InOperation,
-  stopCondition,
-  threeLetterCode,
-  trainType: null,
-  transportType: null,
-});
-
-const createLine = (id: number): Line => ({
-  __typename: 'Line',
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: 'Test Line',
-  nameKatakana: 'テストライン',
-  nameKorean: null,
-  nameRoman: 'Test Line',
-  nameShort: 'Test',
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC<{
   priorCurrent?: boolean;
@@ -196,12 +118,11 @@ describe('useNumbering', () => {
 
   it('priorCurrent=true, 停車駅の場合、現在駅の番号を返す', async () => {
     const stationNumbers = [createStationNumber('JY', '01')];
-    const currentStation = createStation(
-      1,
+    const currentStation = createStation(1, {
       stationNumbers,
-      StopCondition.All,
-      'TYO'
-    );
+      stopCondition: StopCondition.All,
+      threeLetterCode: 'TYO',
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: true,
@@ -223,17 +144,15 @@ describe('useNumbering', () => {
   it('arrived=false の場合、次駅の番号を返す', async () => {
     const currentStationNumbers = [createStationNumber('JY', '01')];
     const nextStationNumbers = [createStationNumber('JY', '02')];
-    const currentStation = createStation(
-      1,
-      currentStationNumbers,
-      StopCondition.All
-    );
-    const nextStation = createStation(
-      2,
-      nextStationNumbers,
-      StopCondition.All,
-      'SBY'
-    );
+    const currentStation = createStation(1, {
+      stationNumbers: currentStationNumbers,
+      stopCondition: StopCondition.All,
+    });
+    const nextStation = createStation(2, {
+      stationNumbers: nextStationNumbers,
+      stopCondition: StopCondition.All,
+      threeLetterCode: 'SBY',
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,
@@ -256,17 +175,15 @@ describe('useNumbering', () => {
   it('通過駅に到着した場合、次駅の番号を返す', async () => {
     const currentStationNumbers = [createStationNumber('JY', '01')];
     const nextStationNumbers = [createStationNumber('JY', '02')];
-    const currentStation = createStation(
-      1,
-      currentStationNumbers,
-      StopCondition.Not
-    );
-    const nextStation = createStation(
-      2,
-      nextStationNumbers,
-      StopCondition.All,
-      'NXT'
-    );
+    const currentStation = createStation(1, {
+      stationNumbers: currentStationNumbers,
+      stopCondition: StopCondition.Not,
+    });
+    const nextStation = createStation(2, {
+      stationNumbers: nextStationNumbers,
+      stopCondition: StopCondition.All,
+      threeLetterCode: 'NXT',
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: true,
@@ -286,7 +203,10 @@ describe('useNumbering', () => {
   });
 
   it('stationNumbersが空の場合、undefinedを返す', async () => {
-    const currentStation = createStation(1, [], StopCondition.All);
+    const currentStation = createStation(1, {
+      stationNumbers: [],
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: true,
@@ -304,12 +224,11 @@ describe('useNumbering', () => {
 
   it('firstStop=true の場合、selectedBoundの番号を返す', async () => {
     const boundStationNumbers = [createStationNumber('JK', '10')];
-    const boundStation = createStation(
-      10,
-      boundStationNumbers,
-      StopCondition.All,
-      'END'
-    );
+    const boundStation = createStation(10, {
+      stationNumbers: boundStationNumbers,
+      stopCondition: StopCondition.All,
+      threeLetterCode: 'END',
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,
@@ -329,11 +248,10 @@ describe('useNumbering', () => {
 
   it('nextStationがundefinedでpriorCurrent=falseの場合、stationNumberはundefinedになる', async () => {
     const currentStationNumbers = [createStationNumber('JY', '01')];
-    const currentStation = createStation(
-      1,
-      currentStationNumbers,
-      StopCondition.All
-    );
+    const currentStation = createStation(1, {
+      stationNumbers: currentStationNumbers,
+      stopCondition: StopCondition.All,
+    });
 
     mockUseAtomValue.mockReturnValue({
       arrived: false,

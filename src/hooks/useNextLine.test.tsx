@@ -1,8 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Line } from '~/@types/graphql';
-import { LineType, OperationStatus } from '~/@types/graphql';
+import { createLine } from '~/utils/test/factories';
 import { useConnectedLines } from './useConnectedLines';
 import { useNextLine } from './useNextLine';
 
@@ -10,26 +9,6 @@ jest.mock('./useConnectedLines', () => ({
   __esModule: true,
   useConnectedLines: jest.fn(),
 }));
-
-const createLine = (id: number, name: string): Line => ({
-  __typename: 'Line',
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: name,
-  nameKatakana: name,
-  nameKorean: null,
-  nameRoman: name,
-  nameShort: name,
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC = () => {
   const nextLine = useNextLine();
@@ -57,7 +36,10 @@ describe('useNextLine', () => {
   });
 
   it('connectedLinesに要素がある場合、最初の要素を返す', () => {
-    const lines = [createLine(1, 'Line1'), createLine(2, 'Line2')];
+    const lines = [
+      createLine(1, { nameShort: 'Line1' }),
+      createLine(2, { nameShort: 'Line2' }),
+    ];
     mockUseConnectedLines.mockReturnValue(lines);
 
     const { getByTestId } = render(<TestComponent />);
@@ -67,7 +49,7 @@ describe('useNextLine', () => {
   });
 
   it('connectedLinesに1つだけ要素がある場合、その要素を返す', () => {
-    const lines = [createLine(3, 'Line3')];
+    const lines = [createLine(3, { nameShort: 'Line3' })];
     mockUseConnectedLines.mockReturnValue(lines);
 
     const { getByTestId } = render(<TestComponent />);
@@ -77,7 +59,9 @@ describe('useNextLine', () => {
   });
 
   it('connectedLinesが更新されたら、新しい最初の要素を返す', () => {
-    mockUseConnectedLines.mockReturnValue([createLine(1, 'Line1')]);
+    mockUseConnectedLines.mockReturnValue([
+      createLine(1, { nameShort: 'Line1' }),
+    ]);
 
     const { getByTestId, rerender } = render(<TestComponent />);
     expect(getByTestId('nextLine').props.children).toBe(
@@ -86,8 +70,8 @@ describe('useNextLine', () => {
 
     // 更新
     mockUseConnectedLines.mockReturnValue([
-      createLine(5, 'Line5'),
-      createLine(6, 'Line6'),
+      createLine(5, { nameShort: 'Line5' }),
+      createLine(6, { nameShort: 'Line6' }),
     ]);
     rerender(<TestComponent />);
     expect(getByTestId('nextLine').props.children).toBe(

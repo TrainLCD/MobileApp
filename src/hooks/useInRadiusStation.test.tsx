@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import { useInRadiusStation } from './useInRadiusStation';
 
 // Mock state that can be modified per test
@@ -27,57 +27,6 @@ jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
   atom: jest.fn(),
 }));
-
-const createStation = (
-  id: number,
-  groupId: number,
-  latitude: number | null,
-  longitude: number | null
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId,
-  hasTrainTypes: false,
-  id,
-  latitude,
-  longitude,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC<{ radius: number }> = ({ radius }) => {
   const matchedStation = useInRadiusStation(radius);
@@ -116,7 +65,11 @@ describe('useInRadiusStation', () => {
   });
 
   it('位置情報がnullの場合、初期値（station）を返す', async () => {
-    const initialStation = createStation(1, 1, 35.681236, 139.767125);
+    const initialStation = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
     mockStationStateValue = {
       stations: [initialStation],
       station: initialStation,
@@ -132,8 +85,16 @@ describe('useInRadiusStation', () => {
   });
 
   it('位置情報のlatitudeがnullの場合、更新されない', async () => {
-    const initialStation = createStation(1, 1, 35.681236, 139.767125);
-    const nearbyStation = createStation(2, 2, 35.6813, 139.7672);
+    const initialStation = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    const nearbyStation = createStation(2, {
+      groupId: 2,
+      latitude: 35.6813,
+      longitude: 139.7672,
+    });
     mockStationStateValue = {
       stations: [initialStation, nearbyStation],
       station: initialStation,
@@ -154,8 +115,16 @@ describe('useInRadiusStation', () => {
   });
 
   it('位置情報のlongitudeがnullの場合、更新されない', async () => {
-    const initialStation = createStation(1, 1, 35.681236, 139.767125);
-    const nearbyStation = createStation(2, 2, 35.6813, 139.7672);
+    const initialStation = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    const nearbyStation = createStation(2, {
+      groupId: 2,
+      latitude: 35.6813,
+      longitude: 139.7672,
+    });
     mockStationStateValue = {
       stations: [initialStation, nearbyStation],
       station: initialStation,
@@ -176,8 +145,16 @@ describe('useInRadiusStation', () => {
   });
 
   it('半径内に駅がある場合、その駅を返す', async () => {
-    const station1 = createStation(1, 1, 35.681236, 139.767125);
-    const station2 = createStation(2, 2, 35.6813, 139.7672);
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.6813,
+      longitude: 139.7672,
+    });
     mockStationStateValue = {
       stations: [station1, station2],
       station: station1,
@@ -199,8 +176,17 @@ describe('useInRadiusStation', () => {
   });
 
   it('半径外に駅がある場合、初期値を維持する', async () => {
-    const station1 = createStation(1, 1, 35.681236, 139.767125);
-    const station2 = createStation(2, 2, 35.7, 139.8); // 約3km離れた位置
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    // 約3km離れた位置
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.7,
+      longitude: 139.8,
+    });
     mockStationStateValue = {
       stations: [station1, station2],
       station: station1,
@@ -222,8 +208,17 @@ describe('useInRadiusStation', () => {
   });
 
   it('駅の座標がnullの場合、その駅はスキップされる', async () => {
-    const station1 = createStation(1, 1, null, null); // 座標なし
-    const station2 = createStation(2, 2, 35.6813, 139.7672);
+    // 座標なし
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: null,
+      longitude: null,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.6813,
+      longitude: 139.7672,
+    });
     mockStationStateValue = {
       stations: [station1, station2],
       station: station1,
@@ -245,8 +240,17 @@ describe('useInRadiusStation', () => {
   });
 
   it('駅のlatitudeがnullの場合、その駅はスキップされる', async () => {
-    const station1 = createStation(1, 1, null, 139.767125); // latitudeなし
-    const station2 = createStation(2, 2, 35.6813, 139.7672);
+    // latitudeなし
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: null,
+      longitude: 139.767125,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.6813,
+      longitude: 139.7672,
+    });
     mockStationStateValue = {
       stations: [station1, station2],
       station: null,
@@ -267,8 +271,17 @@ describe('useInRadiusStation', () => {
   });
 
   it('駅のlongitudeがnullの場合、その駅はスキップされる', async () => {
-    const station1 = createStation(1, 1, 35.681236, null); // longitudeなし
-    const station2 = createStation(2, 2, 35.6813, 139.7672);
+    // longitudeなし
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: null,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.6813,
+      longitude: 139.7672,
+    });
     mockStationStateValue = {
       stations: [station1, station2],
       station: null,
@@ -289,9 +302,21 @@ describe('useInRadiusStation', () => {
   });
 
   it('複数の駅が半径内にある場合、最初にマッチした駅を返す', async () => {
-    const station1 = createStation(1, 1, 35.68124, 139.76713);
-    const station2 = createStation(2, 2, 35.68125, 139.76714);
-    const station3 = createStation(3, 3, 35.68126, 139.76715);
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.68124,
+      longitude: 139.76713,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.68125,
+      longitude: 139.76714,
+    });
+    const station3 = createStation(3, {
+      groupId: 3,
+      latitude: 35.68126,
+      longitude: 139.76715,
+    });
     mockStationStateValue = {
       stations: [station1, station2, station3],
       station: null,
@@ -333,8 +358,17 @@ describe('useInRadiusStation', () => {
   });
 
   it('radiusが小さい場合、遠くの駅はマッチしない', async () => {
-    const station1 = createStation(1, 1, 35.681236, 139.767125);
-    const station2 = createStation(2, 2, 35.682236, 139.767125); // 約111m離れた位置
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    // 約111m離れた位置
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.682236,
+      longitude: 139.767125,
+    });
     mockStationStateValue = {
       stations: [station1, station2],
       station: station1,

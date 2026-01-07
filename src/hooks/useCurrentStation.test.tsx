@@ -2,8 +2,8 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { StopCondition } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 
@@ -17,56 +17,6 @@ jest.mock('../utils/isPass', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
-
-const createStation = (
-  id: number,
-  groupId: number,
-  stopCondition: StopCondition = StopCondition.All
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId,
-  hasTrainTypes: false,
-  id,
-  latitude: null,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  longitude: null,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC<{
   skipPassStation?: boolean;
@@ -91,9 +41,9 @@ describe('useCurrentStation', () => {
   });
 
   it('stationFromStateと一致するstationを返す', () => {
-    const station1 = createStation(1, 1);
-    const station2 = createStation(2, 2);
-    const station3 = createStation(3, 3);
+    const station1 = createStation(1, { groupId: 1 });
+    const station2 = createStation(2, { groupId: 2 });
+    const station3 = createStation(3, { groupId: 3 });
 
     mockUseAtomValue.mockReturnValue({
       stations: [station1, station2, station3],
@@ -108,9 +58,9 @@ describe('useCurrentStation', () => {
   });
 
   it('idが一致しない場合、groupIdで検索する', () => {
-    const station1 = createStation(1, 1);
-    const station2 = createStation(2, 2);
-    const station3 = createStation(3, 2); // same groupId as station2
+    const station1 = createStation(1, { groupId: 1 });
+    const station2 = createStation(2, { groupId: 2 });
+    const station3 = createStation(3, { groupId: 2 }); // same groupId as station2
 
     mockUseAtomValue.mockReturnValue({
       stations: [station1, station3],
@@ -137,9 +87,18 @@ describe('useCurrentStation', () => {
   });
 
   it('skipPassStation=trueの場合、通過駅を除外する', () => {
-    const station1 = createStation(1, 1, StopCondition.All);
-    const station2 = createStation(2, 2, StopCondition.Not); // pass station
-    const station3 = createStation(3, 3, StopCondition.All);
+    const station1 = createStation(1, {
+      groupId: 1,
+      stopCondition: StopCondition.All,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      stopCondition: StopCondition.Not,
+    }); // pass station
+    const station3 = createStation(3, {
+      groupId: 3,
+      stopCondition: StopCondition.All,
+    });
 
     mockGetIsPass.mockImplementation(
       (s) => s?.stopCondition === StopCondition.Not
@@ -159,9 +118,9 @@ describe('useCurrentStation', () => {
   });
 
   it('withTrainTypes=trueの場合、列車種別を考慮した駅を返す', () => {
-    const station1 = createStation(1, 1);
-    const station2 = createStation(2, 2);
-    const station3 = createStation(3, 3);
+    const station1 = createStation(1, { groupId: 1 });
+    const station2 = createStation(2, { groupId: 2 });
+    const station3 = createStation(3, { groupId: 3 });
 
     mockUseAtomValue.mockReturnValue({
       stations: [station1, station2, station3],
@@ -176,9 +135,18 @@ describe('useCurrentStation', () => {
   });
 
   it('OUTBOUND方向の場合、逆順で検索する', () => {
-    const station1 = createStation(1, 1, StopCondition.All);
-    const station2 = createStation(2, 2, StopCondition.Not); // pass station
-    const station3 = createStation(3, 3, StopCondition.All);
+    const station1 = createStation(1, {
+      groupId: 1,
+      stopCondition: StopCondition.All,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      stopCondition: StopCondition.Not,
+    }); // pass station
+    const station3 = createStation(3, {
+      groupId: 3,
+      stopCondition: StopCondition.All,
+    });
 
     mockGetIsPass.mockImplementation(
       (s) => s?.stopCondition === StopCondition.Not

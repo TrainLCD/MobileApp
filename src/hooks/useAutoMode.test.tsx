@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import { useAutoMode } from './useAutoMode';
 import { useLoopLine } from './useLoopLine';
 
@@ -59,76 +59,6 @@ jest.mock('./useValueRef', () => ({
   useValueRef: jest.fn((value) => ({ current: value })),
 }));
 
-const createStation = (
-  id: number,
-  latitude: number,
-  longitude: number
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude,
-  longitude,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
-
-const createLine = (id: number): Line => ({
-  __typename: 'Line',
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: 'Test Line',
-  nameKatakana: 'テストライン',
-  nameKorean: null,
-  nameRoman: 'Test Line',
-  nameShort: 'Test',
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: null,
-});
-
 const TestComponent: React.FC = () => {
   useAutoMode();
   return <Text testID="autoMode">AutoMode</Text>;
@@ -147,9 +77,9 @@ describe('useAutoMode', () => {
     >;
 
   const stations = [
-    createStation(1, 35.681, 139.767),
-    createStation(2, 35.682, 139.768),
-    createStation(3, 35.683, 139.769),
+    createStation(1, { latitude: 35.681, longitude: 139.767 }),
+    createStation(2, { latitude: 35.682, longitude: 139.768 }),
+    createStation(3, { latitude: 35.683, longitude: 139.769 }),
   ];
 
   beforeEach(() => {

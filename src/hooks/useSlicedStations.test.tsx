@@ -2,8 +2,7 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 import { useSlicedStations } from './useSlicedStations';
@@ -23,52 +22,6 @@ jest.mock('./useLoopLine', () => ({
   __esModule: true,
   useLoopLine: jest.fn(),
 }));
-
-const createStation = (id: number, groupId: number, name: string): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId,
-  hasTrainTypes: false,
-  id,
-  latitude: 35.681236 + id * 0.001,
-  longitude: 139.767125 + id * 0.001,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  name,
-  nameChinese: null,
-  nameKatakana: `${name}`,
-  nameKorean: null,
-  nameRoman: name,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC = () => {
   const slicedStations = useSlicedStations();
@@ -91,11 +44,11 @@ describe('useSlicedStations', () => {
   >;
 
   const stations = [
-    createStation(1, 1, 'A'),
-    createStation(2, 2, 'B'),
-    createStation(3, 3, 'C'),
-    createStation(4, 4, 'D'),
-    createStation(5, 5, 'E'),
+    createStation(1, { groupId: 1, name: 'A' }),
+    createStation(2, { groupId: 2, name: 'B' }),
+    createStation(3, { groupId: 3, name: 'C' }),
+    createStation(4, { groupId: 4, name: 'D' }),
+    createStation(5, { groupId: 5, name: 'E' }),
   ];
 
   beforeEach(() => {
@@ -332,7 +285,7 @@ describe('useSlicedStations', () => {
     });
 
     it('駅が1つしかない場合', () => {
-      const singleStation = [createStation(1, 1, 'A')];
+      const singleStation = [createStation(1, { groupId: 1, name: 'A' })];
       mockUseAtomValue.mockReturnValue({
         stations: singleStation,
         arrived: true,

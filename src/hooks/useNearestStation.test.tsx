@@ -3,8 +3,7 @@ import findNearest from 'geolib/es/findNearest';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import { useCurrentStation } from './useCurrentStation';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
@@ -32,57 +31,6 @@ jest.mock('geolib/es/findNearest', () => ({
   default: jest.fn(),
 }));
 
-const createStation = (
-  id: number,
-  groupId: number,
-  latitude: number | null,
-  longitude: number | null
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId,
-  hasTrainTypes: false,
-  id,
-  latitude,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  longitude,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
-
 const TestComponent: React.FC = () => {
   const station = useNearestStation();
   return <Text testID="station">{JSON.stringify(station)}</Text>;
@@ -107,9 +55,21 @@ describe('useNearestStation', () => {
   });
 
   it('現在位置から最寄りの駅を返す', () => {
-    const station1 = createStation(1, 1, 35.681236, 139.767125);
-    const station2 = createStation(2, 2, 35.690921, 139.700258);
-    const station3 = createStation(3, 3, 35.658517, 139.701334);
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.690921,
+      longitude: 139.700258,
+    });
+    const station3 = createStation(3, {
+      groupId: 3,
+      latitude: 35.658517,
+      longitude: 139.701334,
+    });
 
     // locationAtom, then stationState
     mockUseAtomValue
@@ -175,9 +135,24 @@ describe('useNearestStation', () => {
   });
 
   it('位置情報が無効な駅を除外する', () => {
-    const station1 = createStation(1, 1, null, null); // invalid
-    const station2 = createStation(2, 2, 35.690921, 139.700258); // valid
-    const station3 = createStation(3, 3, 35.658517, null); // invalid
+    // invalid
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: null,
+      longitude: null,
+    });
+    // valid
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.690921,
+      longitude: 139.700258,
+    });
+    // invalid
+    const station3 = createStation(3, {
+      groupId: 3,
+      latitude: 35.658517,
+      longitude: null,
+    });
 
     mockUseAtomValue
       .mockReturnValueOnce({
@@ -206,9 +181,22 @@ describe('useNearestStation', () => {
   });
 
   it('currentStationまたはnextStationと一致する駅を優先する', () => {
-    const station1 = createStation(1, 1, 35.681236, 139.767125);
-    const station2 = createStation(2, 2, 35.690921, 139.700258);
-    const station3 = createStation(3, 3, 35.690921, 139.700258); // same coords as station2
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.690921,
+      longitude: 139.700258,
+    });
+    // same coords as station2
+    const station3 = createStation(3, {
+      groupId: 3,
+      latitude: 35.690921,
+      longitude: 139.700258,
+    });
 
     mockUseAtomValue
       .mockReturnValueOnce({
@@ -237,9 +225,22 @@ describe('useNearestStation', () => {
   });
 
   it('複数の同じ座標の駅がある場合、最初の駅を返す', () => {
-    const station1 = createStation(1, 1, 35.681236, 139.767125);
-    const station2 = createStation(2, 2, 35.690921, 139.700258);
-    const station3 = createStation(3, 3, 35.690921, 139.700258); // same coords
+    const station1 = createStation(1, {
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      latitude: 35.690921,
+      longitude: 139.700258,
+    });
+    // same coords
+    const station3 = createStation(3, {
+      groupId: 3,
+      latitude: 35.690921,
+      longitude: 139.700258,
+    });
 
     mockUseAtomValue
       .mockReturnValueOnce({

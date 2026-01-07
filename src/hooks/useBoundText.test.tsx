@@ -2,8 +2,7 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import { TOEI_OEDO_LINE_ID } from '../constants/line';
 import {
   TOEI_OEDO_LINE_RYOGOKU_STATION_ID,
@@ -42,59 +41,6 @@ jest.mock('./useLoopLine', () => ({
   useLoopLine: jest.fn(),
 }));
 
-const createStation = (
-  id: number,
-  groupId: number,
-  name: string,
-  nameRoman: string,
-  nameChinese: string,
-  nameKorean: string
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId,
-  hasTrainTypes: false,
-  id,
-  latitude: 35.681236,
-  longitude: 139.767125,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  name,
-  nameChinese,
-  nameKatakana: name,
-  nameKorean,
-  nameRoman,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
-
 const TestComponent: React.FC<{ excludePrefixAndSuffix?: boolean }> = ({
   excludePrefixAndSuffix,
 }) => {
@@ -117,8 +63,22 @@ describe('useBoundText', () => {
     typeof useLoopLine
   >;
 
-  const shibuya = createStation(1, 1, '渋谷', 'Shibuya', '涩谷', '시부야');
-  const shinjuku = createStation(2, 2, '新宿', 'Shinjuku', '新宿', '신주쿠');
+  const shibuya = createStation(1, {
+    groupId: 1,
+    name: '渋谷',
+    nameRoman: 'Shibuya',
+    nameChinese: '涩谷',
+    nameKorean: '시부야',
+    nameKatakana: '渋谷',
+  });
+  const shinjuku = createStation(2, {
+    groupId: 2,
+    name: '新宿',
+    nameRoman: 'Shinjuku',
+    nameChinese: '新宿',
+    nameKorean: '신주쿠',
+    nameKatakana: '新宿',
+  });
 
   beforeEach(() => {
     mockUseLoopLine.mockReturnValue({
@@ -250,30 +210,30 @@ describe('useBoundText', () => {
   });
 
   describe('大江戸線特殊処理', () => {
-    const tochomae = createStation(
-      TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER,
-      100,
-      '都庁前',
-      'Tochomae',
-      '都厅前',
-      '도청앞'
-    );
-    const ryogoku = createStation(
-      TOEI_OEDO_LINE_RYOGOKU_STATION_ID,
-      101,
-      '両国',
-      'Ryogoku',
-      '两国',
-      '료고쿠'
-    );
-    const hikarigaoka = createStation(
-      103,
-      103,
-      '光が丘',
-      'Hikarigaoka',
-      '光丘',
-      '히카리가오카'
-    );
+    const tochomae = createStation(TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER, {
+      groupId: 100,
+      name: '都庁前',
+      nameRoman: 'Tochomae',
+      nameChinese: '都厅前',
+      nameKorean: '도청앞',
+      nameKatakana: '都庁前',
+    });
+    const ryogoku = createStation(TOEI_OEDO_LINE_RYOGOKU_STATION_ID, {
+      groupId: 101,
+      name: '両国',
+      nameRoman: 'Ryogoku',
+      nameChinese: '两国',
+      nameKorean: '료고쿠',
+      nameKatakana: '両国',
+    });
+    const hikarigaoka = createStation(103, {
+      groupId: 103,
+      name: '光が丘',
+      nameRoman: 'Hikarigaoka',
+      nameChinese: '光丘',
+      nameKorean: '히카리가오카',
+      nameKatakana: '光が丘',
+    });
 
     beforeEach(() => {
       mockUseCurrentLine.mockReturnValue({
@@ -314,11 +274,14 @@ describe('useBoundText', () => {
       // 築地市場より小さいIDの駅
       const beforeTsukijishijo = createStation(
         TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID - 1,
-        104,
-        '汐留',
-        'Shiodome',
-        '汐留',
-        '시오도메'
+        {
+          groupId: 104,
+          name: '汐留',
+          nameRoman: 'Shiodome',
+          nameChinese: '汐留',
+          nameKorean: '시오도메',
+          nameKatakana: '汐留',
+        }
       );
       mockUseCurrentStation.mockReturnValue(beforeTsukijishijo);
 
@@ -341,11 +304,14 @@ describe('useBoundText', () => {
       // 両国より前の駅（経由表示されないケース）
       const beforeRyogoku = createStation(
         TOEI_OEDO_LINE_RYOGOKU_STATION_ID - 1,
-        105,
-        '蔵前',
-        'Kuramae',
-        '藏前',
-        '구라마에'
+        {
+          groupId: 105,
+          name: '蔵前',
+          nameRoman: 'Kuramae',
+          nameChinese: '藏前',
+          nameKorean: '구라마에',
+          nameKatakana: '蔵前',
+        }
       );
       mockUseCurrentStation.mockReturnValue(beforeRyogoku);
 

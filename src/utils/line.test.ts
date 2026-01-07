@@ -1,10 +1,6 @@
-import type { Line, Station } from '~/@types/graphql';
-import {
-  LineType,
-  OperationStatus,
-  StopCondition,
-  TransportType,
-} from '~/@types/graphql';
+import type { Station } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import {
   filterBusLinesForNonBusStation,
   filterWithoutCurrentLine,
@@ -12,72 +8,6 @@ import {
   getNextStationLinesWithoutCurrentLine,
   isBusLine,
 } from './line';
-
-const createLine = (id: number, nameKatakana: string): Line => ({
-  __typename: 'Line',
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: `Line${id}`,
-  nameKatakana,
-  nameKorean: null,
-  nameRoman: `Line${id}`,
-  nameShort: `L${id}`,
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: TransportType.Rail,
-});
-
-const createStation = (id: number, lines: Line[]): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude: 35.681236,
-  longitude: 139.767125,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Test Line',
-    nameKatakana: 'テストライン',
-    nameKorean: null,
-    nameRoman: 'Test Line',
-    nameShort: 'Test',
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: lines as unknown as Station['lines'],
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 describe('isBusLine', () => {
   it('should return true for Bus transport type', () => {
@@ -175,18 +105,22 @@ describe('filterBusLinesForNonBusStation', () => {
 });
 
 describe('filterWithoutCurrentLine', () => {
-  const line1 = createLine(1, 'ライン1');
-  const line2 = createLine(2, 'ライン2');
-  const line3 = createLine(3, 'ライン3');
+  const line1 = createLine(1, { nameKatakana: 'ライン1' });
+  const line2 = createLine(2, { nameKatakana: 'ライン2' });
+  const line3 = createLine(3, { nameKatakana: 'ライン3' });
 
   it('currentLineがnullの場合、空配列を返す', () => {
-    const stations = [createStation(1, [line1, line2])];
+    const stations = [
+      createStation(1, { lines: [line1, line2] as Station['lines'] }),
+    ];
     const result = filterWithoutCurrentLine(stations, null, 0);
     expect(result).toEqual([]);
   });
 
   it('stationIndexが範囲外の場合、空配列を返す', () => {
-    const stations = [createStation(1, [line1, line2])];
+    const stations = [
+      createStation(1, { lines: [line1, line2] as Station['lines'] }),
+    ];
     const result = filterWithoutCurrentLine(stations, line1, 5);
     expect(result).toEqual([]);
   });
@@ -198,20 +132,27 @@ describe('filterWithoutCurrentLine', () => {
   });
 
   it('現在の路線を除外した路線リストを返す', () => {
-    const stations = [createStation(1, [line1, line2, line3])];
+    const stations = [
+      createStation(1, { lines: [line1, line2, line3] as Station['lines'] }),
+    ];
     const result = filterWithoutCurrentLine(stations, line1, 0);
     expect(result).toEqual([line2, line3]);
   });
 
   it('同じnameKatakanaの路線も除外する', () => {
-    const line1Copy = createLine(100, 'ライン1'); // 同じnameKatakana
-    const stations = [createStation(1, [line1, line1Copy, line2])];
+    // 同じnameKatakana
+    const line1Copy = createLine(100, { nameKatakana: 'ライン1' });
+    const stations = [
+      createStation(1, {
+        lines: [line1, line1Copy, line2] as Station['lines'],
+      }),
+    ];
     const result = filterWithoutCurrentLine(stations, line1, 0);
     expect(result).toEqual([line2]);
   });
 
   it('駅にlinesがundefinedの場合、空配列を返す', () => {
-    const station = createStation(1, []);
+    const station = createStation(1, { lines: [] as Station['lines'] });
     station.lines = undefined;
     const stations = [station];
     const result = filterWithoutCurrentLine(stations, line1, 0);
@@ -219,7 +160,7 @@ describe('filterWithoutCurrentLine', () => {
   });
 
   it('駅にlinesがnullの場合、空配列を返す', () => {
-    const station = createStation(1, []);
+    const station = createStation(1, { lines: [] as Station['lines'] });
     station.lines = null;
     const stations = [station];
     const result = filterWithoutCurrentLine(stations, line1, 0);
@@ -228,13 +169,13 @@ describe('filterWithoutCurrentLine', () => {
 });
 
 describe('getCurrentStationLinesWithoutCurrentLine', () => {
-  const line1 = createLine(1, 'ライン1');
-  const line2 = createLine(2, 'ライン2');
+  const line1 = createLine(1, { nameKatakana: 'ライン1' });
+  const line2 = createLine(2, { nameKatakana: 'ライン2' });
 
   it('最初の駅（index=0）の路線を返す', () => {
     const stations = [
-      createStation(1, [line1, line2]),
-      createStation(2, [line1]),
+      createStation(1, { lines: [line1, line2] as Station['lines'] }),
+      createStation(2, { lines: [line1] as Station['lines'] }),
     ];
     const result = getCurrentStationLinesWithoutCurrentLine(stations, line1);
     expect(result).toEqual([line2]);
@@ -247,14 +188,14 @@ describe('getCurrentStationLinesWithoutCurrentLine', () => {
 });
 
 describe('getNextStationLinesWithoutCurrentLine', () => {
-  const line1 = createLine(1, 'ライン1');
-  const line2 = createLine(2, 'ライン2');
-  const line3 = createLine(3, 'ライン3');
+  const line1 = createLine(1, { nameKatakana: 'ライン1' });
+  const line2 = createLine(2, { nameKatakana: 'ライン2' });
+  const line3 = createLine(3, { nameKatakana: 'ライン3' });
 
   it('2番目の駅（index=1）の路線を返す（デフォルト）', () => {
     const stations = [
-      createStation(1, [line1]),
-      createStation(2, [line1, line2, line3]),
+      createStation(1, { lines: [line1] as Station['lines'] }),
+      createStation(2, { lines: [line1, line2, line3] as Station['lines'] }),
     ];
     const result = getNextStationLinesWithoutCurrentLine(stations, line1);
     expect(result).toEqual([line2, line3]);
@@ -262,9 +203,9 @@ describe('getNextStationLinesWithoutCurrentLine', () => {
 
   it('forceStationIndexを指定した場合、その駅の路線を返す', () => {
     const stations = [
-      createStation(1, [line1]),
-      createStation(2, [line1, line2]),
-      createStation(3, [line1, line3]),
+      createStation(1, { lines: [line1] as Station['lines'] }),
+      createStation(2, { lines: [line1, line2] as Station['lines'] }),
+      createStation(3, { lines: [line1, line3] as Station['lines'] }),
     ];
     const result = getNextStationLinesWithoutCurrentLine(stations, line1, 2);
     expect(result).toEqual([line3]);
@@ -272,15 +213,17 @@ describe('getNextStationLinesWithoutCurrentLine', () => {
 
   it('forceStationIndex=0を指定した場合、最初の駅の路線を返す', () => {
     const stations = [
-      createStation(1, [line1, line2]),
-      createStation(2, [line1, line3]),
+      createStation(1, { lines: [line1, line2] as Station['lines'] }),
+      createStation(2, { lines: [line1, line3] as Station['lines'] }),
     ];
     const result = getNextStationLinesWithoutCurrentLine(stations, line1, 0);
     expect(result).toEqual([line2]);
   });
 
   it('駅が1つしかない場合、空配列を返す', () => {
-    const stations = [createStation(1, [line1, line2])];
+    const stations = [
+      createStation(1, { lines: [line1, line2] as Station['lines'] }),
+    ];
     const result = getNextStationLinesWithoutCurrentLine(stations, line1);
     expect(result).toEqual([]);
   });
