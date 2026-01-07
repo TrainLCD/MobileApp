@@ -1,7 +1,7 @@
 import { render, waitFor } from '@testing-library/react-native';
 import type React from 'react';
 import { Text } from 'react-native';
-import { runOnJS, withTiming } from 'react-native-reanimated';
+import { withTiming } from 'react-native-reanimated';
 import { CustomModal } from './CustomModal';
 
 // jotaiのモック
@@ -112,10 +112,11 @@ describe('CustomModal - onCloseAnimationEnd', () => {
   it('閉じるアニメーション完了後に onCloseAnimationEnd が呼ばれる', async () => {
     const onCloseAnimationEnd = jest.fn();
 
-    // withTiming をモックしてコールバックを即座に実行
+    // visible=true の時は withTiming のコールバックを呼ばない（開くアニメーション）
+    // visible=false の時だけコールバックを呼ぶ（閉じるアニメーション）
     (withTiming as jest.Mock).mockImplementation((value, _config, callback) => {
-      if (callback) {
-        // finished=true, cancelled=false, visible=false の状態でコールバックを呼ぶ
+      // value が 0 の時（閉じるアニメーション）のみコールバックを実行
+      if (callback && value === 0) {
         callback(true);
       }
       return value;
@@ -127,6 +128,9 @@ describe('CustomModal - onCloseAnimationEnd', () => {
       </CustomModal>
     );
 
+    // 初期状態（visible=true）では呼ばれていない
+    expect(onCloseAnimationEnd).not.toHaveBeenCalled();
+
     // visible を false に変更してクローズアニメーションをトリガー
     rerender(
       <CustomModal visible={false} onCloseAnimationEnd={onCloseAnimationEnd}>
@@ -134,9 +138,11 @@ describe('CustomModal - onCloseAnimationEnd', () => {
       </CustomModal>
     );
 
-    // runOnJS が呼ばれたことを確認
+    // onCloseAnimationEnd が呼ばれたことを確認
+    // （React の StrictMode やモックの挙動により複数回呼ばれる可能性があるため、
+    //   少なくとも1回呼ばれたことを確認）
     await waitFor(() => {
-      expect(runOnJS).toHaveBeenCalled();
+      expect(onCloseAnimationEnd).toHaveBeenCalled();
     });
   });
 
