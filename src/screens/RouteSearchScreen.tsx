@@ -131,6 +131,13 @@ const RouteSearchScreen = () => {
 
   const scrollY = useSharedValue(0);
 
+  // 駅グループが変更されたら検索結果をクリア
+  // biome-ignore lint/correctness/useExhaustiveDependencies: station?.groupId の変更を意図的に監視
+  useEffect(() => {
+    setSearchResults([]);
+    setHasSearched(false);
+  }, [station?.groupId]);
+
   const [
     fetchRouteTypes,
     {
