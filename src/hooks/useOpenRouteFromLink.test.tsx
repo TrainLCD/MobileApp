@@ -2,7 +2,8 @@ import { useLazyQuery } from '@apollo/client/react';
 import { act, render } from '@testing-library/react-native';
 import { useSetAtom } from 'jotai';
 import type React from 'react';
-import type { Station, TrainType } from '~/@types/graphql';
+import type { TrainType } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import type { LineDirection } from '../models/Bound';
 import type { LineState } from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
@@ -26,32 +27,18 @@ const HookBridge: React.FC<{ onReady: (value: HookResult) => void }> = ({
   return null;
 };
 
-const createTrainType = (overrides: Partial<TrainType> = {}): TrainType =>
+const createTrainType = (
+  overrides: Partial<TrainType> = {},
+  typename: TrainType['__typename'] = 'TrainTypeNested'
+): TrainType =>
   ({
-    __typename: 'TrainType',
+    __typename: typename,
     typeId: 'local',
     name: 'Local',
     nameRoman: 'Local',
     color: '#fff',
     ...overrides,
   }) as TrainType;
-
-const createStation = (overrides: Partial<Station> = {}): Station =>
-  ({
-    __typename: 'Station',
-    id: 1,
-    groupId: 1,
-    name: 'Shibuya',
-    nameRoman: 'Shibuya',
-    line: {
-      __typename: 'Line',
-      id: 999,
-      nameShort: 'Main',
-      name: 'Main',
-    },
-    trainType: createTrainType(),
-    ...overrides,
-  }) as Station;
 
 const createStationState = (
   overrides: Partial<StationState> = {}
@@ -144,8 +131,16 @@ describe('useOpenRouteFromLink', () => {
       setupMolecules();
     const { mockFetchByGroup } = setupQueries();
     const stations = [
-      createStation({ groupId: 1 }),
-      createStation({ id: 2, groupId: 2 }),
+      createStation(1, {
+        groupId: 1,
+        line: { id: 999, nameShort: 'Main' },
+        trainType: createTrainType(),
+      } as Parameters<typeof createStation>[1]),
+      createStation(2, {
+        groupId: 2,
+        line: { id: 999, nameShort: 'Main' },
+        trainType: createTrainType(),
+      } as Parameters<typeof createStation>[1]),
     ];
     mockFetchByGroup.mockResolvedValue({
       data: { lineGroupStations: stations },
@@ -192,8 +187,8 @@ describe('useOpenRouteFromLink', () => {
     const { mockFetchByGroup, mockFetchByLine } = setupQueries();
     mockFetchByGroup.mockResolvedValue({ data: { lineGroupStations: [] } });
     const stations = [
-      createStation({ groupId: 5 }),
-      createStation({ groupId: 9 }),
+      createStation(5, { groupId: 5 }),
+      createStation(9, { groupId: 9 }),
     ];
     mockFetchByLine.mockResolvedValue({ data: { lineStations: stations } });
 

@@ -29,6 +29,10 @@ import {
 } from '~/lib/graphql/queries';
 import navigationState from '~/store/atoms/navigation';
 import isTablet from '~/utils/isTablet';
+import {
+  computeCurrentStationInRoutes,
+  getStationWithMatchingLine,
+} from '~/utils/routeSearch';
 import { findLocalType } from '~/utils/trainTypeString';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
@@ -131,6 +135,13 @@ const RouteSearchScreen = () => {
 
   const scrollY = useSharedValue(0);
 
+  // 駅グループが変更されたら検索結果をクリア
+  // biome-ignore lint/correctness/useExhaustiveDependencies: station?.groupId の変更を意図的に監視
+  useEffect(() => {
+    setSearchResults([]);
+    setHasSearched(false);
+  }, [station?.groupId]);
+
   const [
     fetchRouteTypes,
     {
@@ -202,9 +213,12 @@ const RouteSearchScreen = () => {
     async (selectedStation: Station) => {
       setSelectBoundModalVisible(true);
 
+      const newPendingLine = selectedStation.line ?? null;
+
       setNavigationState((prev) => ({
         ...prev,
         trainType: null,
+        pendingTrainType: null,
       }));
       setStationState((prev) => ({
         ...prev,
@@ -213,7 +227,7 @@ const RouteSearchScreen = () => {
       }));
       setLineState((prev) => ({
         ...prev,
-        pendingLine: selectedStation.line ?? null,
+        pendingLine: newPendingLine,
       }));
 
       // Guard: ensure both lineId and stationId are present before calling the query
@@ -237,12 +251,27 @@ const RouteSearchScreen = () => {
       const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
 
       if (!fetchedTrainTypes?.length) {
-        if (!station.line?.id) {
+        if (!selectedStation.line?.id) {
           return;
         }
+        // 列車種別が存在しない場合は選択した行き先駅の路線を使用
+        setLineState((prev) => ({
+          ...prev,
+          pendingLine: selectedStation.line ?? null,
+        }));
+        // 現在の駅の路線情報を選択した路線に合わせて更新
+        const updatedStation = getStationWithMatchingLine(
+          station,
+          selectedStation.line ?? null
+        );
+        setStationState((prev) => ({
+          ...prev,
+          pendingStation: updatedStation,
+          station: updatedStation,
+        }));
         const stationsByLineIdRes = await fetchStationsByLineId({
           variables: {
-            lineId: station?.line?.id,
+            lineId: selectedStation.line.id,
           },
         });
         const stations = stationsByLineIdRes.data?.lineStations ?? [];
@@ -253,11 +282,48 @@ const RouteSearchScreen = () => {
         return;
       }
 
+      // 先に選択される列車種別を決定
       const localTrainType =
         findLocalType(fetchedTrainTypes) ?? fetchedTrainTypes[0];
 
       if (!localTrainType?.groupId) {
         return;
+      }
+
+      // 選択された列車種別のみを使って路線を決定
+      const newCurrentStation = computeCurrentStationInRoutes(
+        station,
+        newPendingLine,
+        [localTrainType]
+      );
+      if (newCurrentStation) {
+        setStationState((prev) => {
+          const isSamePendingStation =
+            prev.pendingStation?.groupId === newCurrentStation.groupId;
+          const isSameStationLine =
+            prev.station?.line?.id === newCurrentStation.line?.id;
+
+          if (isSamePendingStation && isSameStationLine) {
+            return prev;
+          }
+          return {
+            ...prev,
+            pendingStation: isSamePendingStation
+              ? prev.pendingStation
+              : newCurrentStation,
+            // stationのlineも列車種別とマッチする路線に更新
+            station: prev.station
+              ? { ...prev.station, line: newCurrentStation.line }
+              : prev.station,
+          };
+        });
+        // pendingLineを現在の駅にマッチする路線に更新
+        if (newCurrentStation.line) {
+          setLineState((prev) => ({
+            ...prev,
+            pendingLine: newCurrentStation.line ?? null,
+          }));
+        }
       }
 
       const stationsByLineGroupIdRes = await fetchStationsByLineGroupId({
@@ -271,12 +337,11 @@ const RouteSearchScreen = () => {
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes,
-        pendingTrainType: prev.pendingTrainType ?? localTrainType,
+        pendingTrainType: localTrainType,
       }));
     },
     [
-      station?.line?.id,
-      station?.groupId,
+      station,
       fetchStationsByLineId,
       fetchStationsByLineGroupId,
       fetchRouteTypes,
@@ -403,54 +468,15 @@ const RouteSearchScreen = () => {
     },
   });
 
-  const currentStationInRoutes = useMemo<Station | null>(() => {
-    if (!station || !pendingLine) return null;
-
-    const notConnectedToOthersLine = station.lines?.find(
-      (l) => l.id === pendingLine.id
-    );
-
-    if (notConnectedToOthersLine) {
-      return { ...station, line: notConnectedToOthersLine } as Station;
-    }
-
-    const currentIds = new Set(
-      (station.lines ?? []).map((l) => l?.id).filter(Boolean)
-    );
-    const trainTypes = routeTypesData?.routeTypes?.trainTypes ?? [];
-
-    // Get all line IDs from the train types
-    const routeLineIdSet = new Set(
-      trainTypes
-        .flatMap((tt: TrainType) => [
-          tt.line?.id,
-          ...(tt.lines ?? []).map((l) => l.id),
-        ])
-        .filter(Boolean)
-    );
-
-    const commonIds = [...currentIds].filter((id) => routeLineIdSet.has(id));
-    const commonLine = (station.lines ?? []).find((l) =>
-      commonIds.includes(l.id)
-    );
-
-    if (!commonLine) return { ...station, line: pendingLine } as Station;
-
-    return { ...station, line: commonLine } as Station;
-  }, [station, pendingLine, routeTypesData?.routeTypes]);
-
-  useEffect(() => {
-    if (!currentStationInRoutes) return;
-    setStationState((prev) => {
-      if (prev.pendingStation?.groupId === currentStationInRoutes.groupId) {
-        return prev;
-      }
-      return {
-        ...prev,
-        pendingStation: currentStationInRoutes,
-      };
-    });
-  }, [currentStationInRoutes, setStationState]);
+  const currentStationInRoutes = useMemo<Station | null>(
+    () =>
+      computeCurrentStationInRoutes(
+        station,
+        pendingLine,
+        routeTypesData?.routeTypes?.trainTypes ?? []
+      ),
+    [station, pendingLine, routeTypesData?.routeTypes]
+  );
 
   return (
     <>
