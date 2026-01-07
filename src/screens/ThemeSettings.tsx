@@ -307,11 +307,32 @@ const ThemeSettingsScreen: React.FC = () => {
               style={{
                 fontSize: 16,
                 lineHeight: 24,
-                marginBottom: 24,
+                marginBottom: 16,
               }}
             >
               {getThemeDescription(pendingTheme.id)}
             </Typography>
+            <View
+              style={{
+                width: '100%',
+                aspectRatio: 16 / 9,
+                backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
+                borderRadius: isLEDTheme ? 0 : 8,
+                marginBottom: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {/* TODO: テーマのスクリーンショットを表示 */}
+              <Typography
+                style={{
+                  fontSize: 14,
+                  color: isLEDTheme ? '#888' : '#999',
+                }}
+              >
+                Preview
+              </Typography>
+            </View>
             <View
               style={{
                 flexDirection: 'row',
