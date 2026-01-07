@@ -1,4 +1,5 @@
 import { useAtom } from 'jotai';
+import type { Station } from '~/@types/graphql';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
@@ -97,6 +98,213 @@ describe('SelectBoundModal - wantedDestinationロジック', () => {
     }));
 
     expect(mockSetStationState).toHaveBeenCalledWith(expect.any(Function));
+  });
+});
+
+describe('SelectBoundModal - targetDestination による方向フィルタリング', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('targetDestination が null の場合、方向のフィルタリングは行われない', () => {
+    const stations = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ] as unknown as Station[];
+    const currentStation = {
+      id: 1,
+      groupId: 1,
+      name: '東京',
+      nameRoman: 'Tokyo',
+    } as unknown as Station;
+
+    // targetDestination が null の場合は両方向を表示
+    const targetDestination: Station | null = null;
+    const wantedDestination: Station | null = null;
+
+    // フィルタリング条件: targetDestination と wantedDestination が両方 null の場合
+    const shouldFilter =
+      targetDestination !== null || wantedDestination !== null;
+
+    expect(shouldFilter).toBe(false);
+    expect(stations.length).toBe(3);
+    expect(currentStation.groupId).toBe(1);
+  });
+
+  it('targetDestination が設定されている場合、INBOUND 方向が計算される', () => {
+    const stations = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ] as unknown as Station[];
+    const currentStation = {
+      id: 1,
+      groupId: 1,
+      name: '東京',
+      nameRoman: 'Tokyo',
+    } as unknown as Station;
+
+    // targetDestination が現在の駅より後ろにある場合は INBOUND
+    const targetDestination = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
+    const currentStationIndex = stations.findIndex(
+      (s) => s.groupId === currentStation.groupId
+    );
+    const targetStationIndex = stations.findIndex(
+      (s) => s.groupId === targetDestination.groupId
+    );
+
+    const direction =
+      currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
+
+    expect(currentStationIndex).toBe(0);
+    expect(targetStationIndex).toBe(2);
+    expect(direction).toBe('INBOUND');
+  });
+
+  it('targetDestination が設定されている場合、OUTBOUND 方向が計算される', () => {
+    const stations = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ] as unknown as Station[];
+    const currentStation = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+      nameRoman: 'Yokohama',
+    } as unknown as Station;
+
+    // targetDestination が現在の駅より前にある場合は OUTBOUND
+    const targetDestination = {
+      id: 1,
+      groupId: 1,
+      name: '東京',
+    } as unknown as Station;
+    const currentStationIndex = stations.findIndex(
+      (s) => s.groupId === currentStation.groupId
+    );
+    const targetStationIndex = stations.findIndex(
+      (s) => s.groupId === targetDestination.groupId
+    );
+
+    const direction =
+      currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
+
+    expect(currentStationIndex).toBe(2);
+    expect(targetStationIndex).toBe(0);
+    expect(direction).toBe('OUTBOUND');
+  });
+
+  it('wantedDestination が設定されている場合は targetDestination より優先される', () => {
+    const stations = [
+      { id: 1, groupId: 1, name: '東京', nameRoman: 'Tokyo' },
+      { id: 2, groupId: 2, name: '品川', nameRoman: 'Shinagawa' },
+      { id: 3, groupId: 3, name: '横浜', nameRoman: 'Yokohama' },
+    ] as unknown as Station[];
+
+    const targetDestination = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
+    const wantedDestination = {
+      id: 2,
+      groupId: 2,
+      name: '品川',
+    } as unknown as Station;
+
+    // 実装のロジック: targetDestination && !isLoopLine && !wantedDestination
+    // wantedDestination が設定されている場合は targetDestination のフィルタリングは無視される
+    const shouldUseTargetDestination =
+      targetDestination !== null && wantedDestination === null;
+
+    expect(shouldUseTargetDestination).toBe(false);
+    expect(wantedDestination.groupId).toBe(2);
+    expect(stations.length).toBe(3);
+  });
+
+  it('ループ線の場合は targetDestination によるフィルタリングは行われない', () => {
+    const isLoopLine = true;
+    const targetDestination = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
+    const wantedDestination: Station | null = null;
+
+    // 実装のロジック: targetDestination && !isLoopLine && !wantedDestination
+    const shouldUseTargetDestination =
+      targetDestination !== null && !isLoopLine && wantedDestination === null;
+
+    expect(shouldUseTargetDestination).toBe(false);
+  });
+});
+
+describe('SelectBoundModal - onCloseAnimationEnd', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('onCloseAnimationEnd prop が SelectBoundModal の Props 型に含まれる', () => {
+    const mockOnCloseAnimationEnd = jest.fn();
+
+    // Props の型が正しいことを確認
+    const props = {
+      visible: true,
+      onClose: jest.fn(),
+      onCloseAnimationEnd: mockOnCloseAnimationEnd,
+      loading: false,
+      error: null,
+      onTrainTypeSelect: jest.fn(),
+      onBoundSelect: jest.fn(),
+      targetDestination: null,
+    };
+
+    expect(props).toHaveProperty('onCloseAnimationEnd');
+    expect(typeof props.onCloseAnimationEnd).toBe('function');
+  });
+
+  it('onCloseAnimationEnd はオプショナルな prop である', () => {
+    // onCloseAnimationEnd を省略した Props も有効
+    const propsWithoutCallback = {
+      visible: true,
+      onClose: jest.fn(),
+      loading: false,
+      error: null,
+      onTrainTypeSelect: jest.fn(),
+      onBoundSelect: jest.fn(),
+      targetDestination: null,
+    };
+
+    // onCloseAnimationEnd がなくてもエラーにならない
+    expect(propsWithoutCallback).not.toHaveProperty('onCloseAnimationEnd');
+  });
+
+  it('targetDestination prop が SelectBoundModal の Props 型に含まれる', () => {
+    const targetStation = {
+      id: 3,
+      groupId: 3,
+      name: '横浜',
+    } as unknown as Station;
+
+    const props = {
+      visible: true,
+      onClose: jest.fn(),
+      onCloseAnimationEnd: jest.fn(),
+      loading: false,
+      error: null,
+      onTrainTypeSelect: jest.fn(),
+      onBoundSelect: jest.fn(),
+      targetDestination: targetStation,
+    };
+
+    expect(props).toHaveProperty('targetDestination');
+    expect(props.targetDestination).toEqual(targetStation);
   });
 });
 

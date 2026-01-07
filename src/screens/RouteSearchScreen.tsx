@@ -113,6 +113,8 @@ const RouteSearchScreen = () => {
     useState(false);
   const [searchResults, setSearchResults] = useState<Station[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedDestination, setSelectedDestination] =
+    useState<Station | null>(null);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const orientation = useDeviceOrientation();
@@ -212,6 +214,7 @@ const RouteSearchScreen = () => {
   const handleLineSelected = useCallback(
     async (selectedStation: Station) => {
       setSelectBoundModalVisible(true);
+      setSelectedDestination(selectedStation);
 
       const newPendingLine = selectedStation.line ?? null;
 
@@ -538,6 +541,9 @@ const RouteSearchScreen = () => {
         onClose={() => {
           setSelectBoundModalVisible(false);
         }}
+        onCloseAnimationEnd={() => {
+          setSelectedDestination(null);
+        }}
         onBoundSelect={() => {
           setSelectBoundModalVisible(false);
           setTrainTypeListModalVisible(false);
@@ -554,6 +560,7 @@ const RouteSearchScreen = () => {
           null
         }
         onTrainTypeSelect={handleTrainTypeSelected}
+        targetDestination={selectedDestination}
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
