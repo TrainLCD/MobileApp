@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
-    maxWidth: 720,
+    maxWidth: 640,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,
