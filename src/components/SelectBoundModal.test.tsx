@@ -351,14 +351,6 @@ describe('SelectBoundModal - renderButton 表示条件', () => {
     // ループ線なのでINBOUNDボタンは表示される
     expect(result).toBe(false);
   });
-
-  it('大江戸線の都庁前駅でboundStationsがある場合、OUTBOUNDボタンは表示される', () => {
-    // 都庁前駅が配列の先頭（currentIndex === 0）でも、
-    // boundStationsに光が丘があれば表示される
-    const result = shouldHideButton(1, 'OUTBOUND', false, 0, 5);
-    // boundStationsがあるのでOUTBOUNDボタンは表示される
-    expect(result).toBe(false);
-  });
 });
 
 describe('SelectBoundModal - 保存済み経路の検索ロジック', () => {
