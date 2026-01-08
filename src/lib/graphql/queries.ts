@@ -297,8 +297,18 @@ export const STATION_NESTED_FRAGMENT = gql`
 // Query for getting stations by coordinates (nearby stations)
 export const GET_STATIONS_NEARBY = gql`
   ${STATION_FRAGMENT}
-  query GetStationsNearby($latitude: Float!, $longitude: Float!, $limit: Int) {
-    stationsNearby(latitude: $latitude, longitude: $longitude, limit: $limit) {
+  query GetStationsNearby(
+    $latitude: Float!
+    $longitude: Float!
+    $limit: Int
+    $transportType: TransportType
+  ) {
+    stationsNearby(
+      latitude: $latitude
+      longitude: $longitude
+      limit: $limit
+      transportType: $transportType
+    ) {
       ...StationFields
     }
   }
