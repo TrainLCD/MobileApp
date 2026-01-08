@@ -419,4 +419,120 @@ describe('useBounds フック', () => {
     // outbound には光が丘が含まれる（都庁前駅の場合の特別処理）
     expect(bounds).toContain('"id":9930138');
   });
+
+  it('大江戸線で都庁前駅が現在駅で光が丘が既にoutbound側にある場合、重複して追加されない', () => {
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      selectedDirection: 'OUTBOUND',
+      selectedBound: undefined,
+    }));
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      pendingTrainType: null,
+    }));
+
+    // 都庁前駅（内回り: 9930101）が現在駅
+    const currentStation = { id: 9930101, groupId: 9930101 };
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    // 光が丘が都庁前より前にあるケース（通常のoutbound処理で光が丘が含まれる）
+    const stations = [
+      { id: 9930138, groupId: 9930138 }, // 光が丘（主要駅）
+      { id: 9930100, groupId: 9930100 }, // 都庁前(外回り)
+      { id: 9930101, groupId: 9930101 }, // 都庁前(内回り) - 現在駅
+      { id: 9930107, groupId: 9930107 }, // 飯田橋（主要駅）
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    // outbound には光が丘が含まれる（通常処理で含まれる）
+    expect(bounds).toContain('"id":9930138');
+    // 光が丘が1回だけ含まれることを確認（重複がない）
+    const boundsArray = JSON.parse(bounds);
+    const hikarigaokaCount = boundsArray
+      .flat()
+      .filter((s: { id: number }) => s.id === 9930138).length;
+    expect(hikarigaokaCount).toBe(1);
+  });
+
+  it('大江戸線で都庁前駅が現在駅で光が丘が配列に存在しない場合、outboundは空のまま', () => {
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      selectedDirection: 'INBOUND',
+      selectedBound: undefined,
+    }));
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      pendingTrainType: null,
+    }));
+
+    // 都庁前駅（内回り: 9930101）が現在駅
+    const currentStation = { id: 9930101, groupId: 9930101 };
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    // 光が丘が配列に存在しないケース
+    const stations = [
+      { id: 9930101, groupId: 9930101 }, // 都庁前(内回り) - 現在駅
+      { id: 9930107, groupId: 9930107 }, // 飯田橋（主要駅）
+      { id: 9930113, groupId: 9930113 }, // 両国（主要駅）
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    const boundsArray = JSON.parse(bounds);
+    // inbound には飯田橋、両国が含まれる
+    expect(bounds).toContain('"id":9930107');
+    expect(bounds).toContain('"id":9930113');
+    // outbound は空（光が丘がないため）
+    expect(boundsArray[1]).toEqual([]);
+  });
+
+  it('大江戸線で都庁前以外の駅が現在駅の場合、光が丘追加の特別処理は適用されない', () => {
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      selectedDirection: 'INBOUND',
+      selectedBound: undefined,
+    }));
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      pendingTrainType: null,
+    }));
+
+    // 飯田橋（9930107）が現在駅
+    const currentStation = { id: 9930107, groupId: 9930107 };
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    // 飯田橋が配列の先頭にあるケース
+    const stations = [
+      { id: 9930107, groupId: 9930107 }, // 飯田橋 - 現在駅
+      { id: 9930113, groupId: 9930113 }, // 両国（主要駅）
+      { id: 9930121, groupId: 9930121 }, // 大門（主要駅）
+      { id: 9930138, groupId: 9930138 }, // 光が丘（主要駅）
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    const boundsArray = JSON.parse(bounds);
+    // inbound には両国、大門、光が丘が含まれる
+    expect(bounds).toContain('"id":9930113');
+    expect(bounds).toContain('"id":9930121');
+    expect(bounds).toContain('"id":9930138');
+    // outbound は空（飯田橋より前に主要駅がないため）
+    expect(boundsArray[1]).toEqual([]);
+  });
 });
