@@ -135,6 +135,10 @@ const ThemeSettingsScreen: React.FC = () => {
     () => pendingTheme && getThemeInfo(pendingTheme.id),
     [pendingTheme]
   );
+  const previewImage = useMemo(
+    () => (isTablet ? themeInfo?.tabletImage : themeInfo?.spImage),
+    [themeInfo]
+  );
 
   const SETTING_ITEMS: SettingItem[] = useMemo(() => {
     const themes = getSettingsThemes();
@@ -332,30 +336,11 @@ const ThemeSettingsScreen: React.FC = () => {
                   borderColor: '#fff',
                 }}
               >
-                {(() => {
-                  const previewImage = isTablet
-                    ? themeInfo?.tabletImage
-                    : themeInfo?.spImage;
-                  if (previewImage) {
-                    return (
-                      <Image
-                        source={previewImage}
-                        style={{ width: '100%', height: '100%' }}
-                        contentFit="contain"
-                      />
-                    );
-                  }
-                  return (
-                    <Typography
-                      style={{
-                        fontSize: 14,
-                        color: isLEDTheme ? '#888' : '#999',
-                      }}
-                    >
-                      Preview
-                    </Typography>
-                  );
-                })()}
+                <Image
+                  source={previewImage}
+                  style={{ width: '100%', height: '100%' }}
+                  contentFit="contain"
+                />
               </View>
             </View>
             <View
