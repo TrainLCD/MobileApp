@@ -3,8 +3,8 @@ import { translate } from '~/translation';
 
 export type ThemeInfo = {
   description: string;
-  spImage?: number;
-  tabletImage?: number;
+  spImage: number;
+  tabletImage: number;
 };
 
 export const getThemeInfo = (theme: AppTheme): ThemeInfo => {
