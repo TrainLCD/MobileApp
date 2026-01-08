@@ -1,5 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import { APP_THEME } from '~/models/Theme';
+import { themeAtom } from '~/store/atoms/theme';
 import type { CommonHeaderProps } from '../components/Header.types';
 import { parenthesisRegexp } from '../constants';
 import navigationState from '../store/atoms/navigation';
@@ -28,6 +30,7 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
   const { selectedBound, arrived } = useAtomValue(stationState);
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
+  const theme = useAtomValue(themeAtom);
 
   // 駅・路線データ
   const currentStation = useCurrentStation();
@@ -36,7 +39,11 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
 
   // その他のhooks
   const trainType = useCurrentTrainType();
-  const boundStationNameList = useBoundText();
+  const boundStationNameList = useBoundText(
+    theme === APP_THEME.YAMANOTE ||
+      theme === APP_THEME.JO ||
+      theme === APP_THEME.JL
+  );
   const isLast = useIsNextLastStop();
   const firstStop = useFirstStop();
   const connectedLines = useConnectedLines();

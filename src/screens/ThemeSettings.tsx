@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
@@ -26,7 +27,10 @@ import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
+import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import { getSettingsThemes } from '~/utils/theme';
+import { getThemeInfo } from '~/utils/themeInfo';
 import {
   ASYNC_STORAGE_KEYS,
   IN_USE_COLOR_MAP,
@@ -37,22 +41,6 @@ type SettingItem = {
   id: AppTheme;
   title: string;
   hidden: boolean;
-};
-
-const getThemeDescription = (theme: AppTheme): string => {
-  const descriptionMap: Record<AppTheme, string> = {
-    [APP_THEME.TOKYO_METRO]: translate('themeDescriptionTokyoMetro'),
-    [APP_THEME.TOEI]: translate('themeDescriptionToei'),
-    [APP_THEME.YAMANOTE]: translate('themeDescriptionYamanote'),
-    [APP_THEME.JR_WEST]: translate('themeDescriptionJrWest'),
-    [APP_THEME.TY]: translate('themeDescriptionTy'),
-    [APP_THEME.SAIKYO]: translate('themeDescriptionSaikyo'),
-    [APP_THEME.LED]: translate('themeDescriptionLed'),
-    [APP_THEME.JO]: translate('themeDescriptionJo'),
-    [APP_THEME.JL]: translate('themeDescriptionJl'),
-    [APP_THEME.JR_KYUSHU]: translate('themeDescriptionJrKyushu'),
-  };
-  return descriptionMap[theme];
 };
 
 const styles = StyleSheet.create({
@@ -295,7 +283,7 @@ const ThemeSettingsScreen: React.FC = () => {
               </View>
               <Typography
                 style={{
-                  fontSize: 20,
+                  fontSize: RFValue(16),
                   fontWeight: 'bold',
                   flex: 1,
                 }}
@@ -305,39 +293,72 @@ const ThemeSettingsScreen: React.FC = () => {
             </View>
             <Typography
               style={{
-                fontSize: 16,
-                lineHeight: 24,
+                fontSize: RFValue(12),
+                lineHeight: RFValue(16),
                 marginBottom: 16,
               }}
             >
-              {getThemeDescription(pendingTheme.id)}
+              {getThemeInfo(pendingTheme.id).description}
             </Typography>
             <View
               style={{
-                width: '100%',
-                aspectRatio: 16 / 9,
-                backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
-                borderRadius: isLEDTheme ? 0 : 8,
-                marginBottom: 24,
-                justifyContent: 'center',
-                alignItems: 'center',
+                elevation: 1,
+                shadowColor: '#333',
+                shadowOpacity: 0.25,
+                shadowOffset: {
+                  width: 0,
+                  height: 0,
+                },
+                shadowRadius: 4,
+                borderRadius: isLEDTheme ? 0 : 16,
               }}
             >
-              {/* TODO: テーマのスクリーンショットを表示 */}
-              <Typography
+              <View
                 style={{
-                  fontSize: 14,
-                  color: isLEDTheme ? '#888' : '#999',
+                  width: '100%',
+                  aspectRatio: 16 / 9,
+                  backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
+                  borderRadius: isLEDTheme ? 0 : 16,
+                  marginBottom: 24,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  overflow: 'hidden',
+                  borderWidth: 1,
+                  borderColor: '#fff',
                 }}
               >
-                Preview
-              </Typography>
+                {(() => {
+                  const themeInfo = getThemeInfo(pendingTheme.id);
+                  const previewImage = isTablet
+                    ? themeInfo.tabletImage
+                    : themeInfo.spImage;
+                  if (previewImage) {
+                    return (
+                      <Image
+                        source={previewImage}
+                        style={{ width: '100%', height: '100%' }}
+                        contentFit="contain"
+                      />
+                    );
+                  }
+                  return (
+                    <Typography
+                      style={{
+                        fontSize: 14,
+                        color: isLEDTheme ? '#888' : '#999',
+                      }}
+                    >
+                      Preview
+                    </Typography>
+                  );
+                })()}
+              </View>
             </View>
             <View
               style={{
                 flexDirection: 'row',
                 justifyContent: 'flex-end',
-                gap: 12,
+                gap: 16,
               }}
             >
               <Button
