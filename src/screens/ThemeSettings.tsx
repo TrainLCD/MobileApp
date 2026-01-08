@@ -131,6 +131,11 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
+  const themeInfo = useMemo(
+    () => pendingTheme && getThemeInfo(pendingTheme.id),
+    [pendingTheme]
+  );
+
   const SETTING_ITEMS: SettingItem[] = useMemo(() => {
     const themes = getSettingsThemes();
     return themes.map((theme) => ({
@@ -298,7 +303,7 @@ const ThemeSettingsScreen: React.FC = () => {
                 marginBottom: 16,
               }}
             >
-              {getThemeInfo(pendingTheme.id).description}
+              {themeInfo?.description ?? ''}
             </Typography>
             <View
               style={{
@@ -328,10 +333,9 @@ const ThemeSettingsScreen: React.FC = () => {
                 }}
               >
                 {(() => {
-                  const themeInfo = getThemeInfo(pendingTheme.id);
                   const previewImage = isTablet
-                    ? themeInfo.tabletImage
-                    : themeInfo.spImage;
+                    ? themeInfo?.tabletImage
+                    : themeInfo?.spImage;
                   if (previewImage) {
                     return (
                       <Image
