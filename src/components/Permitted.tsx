@@ -145,7 +145,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     try {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
-      const base64 = file.base64();
+      const base64 = await file.base64();
       const urlString = `data:image/jpeg;base64,${base64}`;
 
       const message = isJapanese
