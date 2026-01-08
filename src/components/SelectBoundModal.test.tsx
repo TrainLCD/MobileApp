@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import type { Station } from '~/@types/graphql';
+import type { LineDirection } from '../models/Bound';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
@@ -309,8 +310,6 @@ describe('SelectBoundModal - onCloseAnimationEnd', () => {
 });
 
 describe('SelectBoundModal - renderButton 表示条件', () => {
-  type LineDirection = 'INBOUND' | 'OUTBOUND';
-
   // renderButtonの非表示条件をシミュレートするヘルパー関数
   const shouldHideButton = (
     boundStationsLength: number,
