@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import {
+  TOEI_OEDO_LINE_HIKARIGAOKA_STATION_ID,
   TOEI_OEDO_LINE_MAJOR_STATIONS_ID,
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER,
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER,
@@ -40,6 +41,11 @@ export const useBounds = (
         (s) => s.groupId === currentStation?.groupId
       );
       if (stationIndex < 0) return [[], []];
+
+      const isTochomaeStation =
+        currentStation?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER ||
+        currentStation?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER;
+
       const oedoLineInboundStops = stations
         .slice(stationIndex, stations.length)
         .filter(
@@ -49,7 +55,8 @@ export const useBounds = (
             s.id !== null &&
             TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
         );
-      const oedoLineOutboundStops = stations
+
+      let oedoLineOutboundStops = stations
         .slice(0, stationIndex)
         .reverse()
         .filter(
@@ -67,6 +74,16 @@ export const useBounds = (
             ? s.id !== TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER
             : true
         );
+
+      // 都庁前駅の場合、光が丘方面がoutboundにない場合は明示的に追加
+      if (isTochomaeStation && oedoLineOutboundStops.length === 0) {
+        const hikarigaokaStation = stations.find(
+          (s) => s.id === TOEI_OEDO_LINE_HIKARIGAOKA_STATION_ID
+        );
+        if (hikarigaokaStation) {
+          oedoLineOutboundStops = [hikarigaokaStation];
+        }
+      }
 
       return [oedoLineInboundStops, oedoLineOutboundStops];
     }
