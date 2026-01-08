@@ -37,13 +37,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   title: {
-    fontSize: RFValue(21),
+    fontSize: RFValue(16),
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   columnsRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   colLeft: {
     flex: 1,
@@ -129,8 +129,8 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const lineFg = isLEDTheme ? '#CCCCCC' : '#666666';
   const metaFg = isLEDTheme ? '#CCCCCC' : '#666666';
 
-  const leftCode = getStationPrimaryCode(from ?? undefined);
-  const rightCode = getStationPrimaryCode(to ?? undefined);
+  const leftCode = getStationPrimaryCode(from ?? null, to ?? null);
+  const rightCode = getStationPrimaryCode(to ?? null, from ?? null);
   const leftName = getStationName(from ?? undefined);
   const rightName = getStationName(to ?? undefined);
   const leftLine: Line | null = (from?.line as Line) ?? from?.line ?? null;
@@ -171,7 +171,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
 
   return (
     <View style={containerStyle}>
-      <Typography style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+      <Typography style={styles.title} numberOfLines={1}>
         {title}
       </Typography>
       {(leftLineName || rightLineName) && (
@@ -199,7 +199,6 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                 <Typography
                   style={[styles.lineText, { color: lineFg }]}
                   numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   {leftLineName}
                 </Typography>
@@ -230,7 +229,6 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                 <Typography
                   style={[styles.lineText, { color: lineFg }]}
                   numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   {rightLineName}
                 </Typography>
@@ -244,11 +242,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
           <Typography style={styles.stationName} numberOfLines={1}>
             {leftName}
           </Typography>
-          {leftCode ? (
-            <Typography style={[styles.stationCode, { color: metaFg }]}>
-              {leftCode}
-            </Typography>
-          ) : null}
+          <Typography style={[styles.stationCode, { color: metaFg }]}>
+            {leftCode}
+          </Typography>
         </View>
         <View style={styles.colCenter}>
           <Svg
@@ -271,11 +267,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
           <Typography style={styles.stationName} numberOfLines={1}>
             {rightName}
           </Typography>
-          {rightCode ? (
-            <Typography style={[styles.stationCode, { color: metaFg }]}>
-              {rightCode}
-            </Typography>
-          ) : null}
+          <Typography style={[styles.stationCode, { color: metaFg }]}>
+            {rightCode}
+          </Typography>
         </View>
       </View>
     </View>

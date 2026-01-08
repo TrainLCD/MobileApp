@@ -24,6 +24,8 @@ type Props = {
   visible: boolean;
   children: React.ReactNode;
   onClose?: () => void;
+  /** 閉じるアニメーションが完了した後に呼ばれるコールバック */
+  onCloseAnimationEnd?: () => void;
   dismissOnBackdropPress?: boolean;
   backdropStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
@@ -40,6 +42,7 @@ export const CustomModal: React.FC<Props> = ({
   visible,
   children,
   onClose,
+  onCloseAnimationEnd,
   dismissOnBackdropPress = true,
   backdropStyle,
   containerStyle,
@@ -74,12 +77,17 @@ export const CustomModal: React.FC<Props> = ({
       };
     }
 
+    const handleCloseAnimationEnd = () => {
+      setIsMounted(false);
+      onCloseAnimationEnd?.();
+    };
+
     opacity.value = withTiming(
       0,
       { duration: animationDuration },
       (finished) => {
         if (finished && !cancelled && !visible) {
-          runOnJS(setIsMounted)(false);
+          runOnJS(handleCloseAnimationEnd)();
         }
       }
     );
@@ -88,7 +96,7 @@ export const CustomModal: React.FC<Props> = ({
       cancelled = true;
       cancelAnimation(opacity);
     };
-  }, [animationDuration, opacity, visible]);
+  }, [animationDuration, opacity, visible, onCloseAnimationEnd]);
 
   const handleBackdropPress = () => {
     Keyboard.dismiss();
@@ -174,7 +182,7 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
-    maxWidth: 720,
+    maxWidth: 640,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,

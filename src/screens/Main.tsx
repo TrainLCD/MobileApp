@@ -29,6 +29,7 @@ import {
   useCurrentStation,
   useCurrentTrainType,
   useFirstStop,
+  useLockLandscapeOnActive,
   useLoopLine,
   useNextStation,
   useRefreshLeftStations,
@@ -116,6 +117,7 @@ const MainScreen: React.FC = () => {
   useAutoMode();
   useSimulationMode();
   useFirstStop(true);
+  useLockLandscapeOnActive();
 
   useTelemetrySender(true);
 

@@ -104,23 +104,15 @@ export const TrainTypeListModal = ({
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
-      const itemLine = item.line;
+      if (!line) return null;
+
       const lines = uniqBy(item.lines ?? [], 'id');
-
-      if (!itemLine || !line) return null;
-
-      // 選択された路線がこの列車種別の路線リストに含まれているかチェック
       const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
-      if (selectedLineIndex === -1) return null;
 
       if (destination) {
         const destinationLineIndex = lines.findIndex(
           (l) => l.id === destination.line?.id
         );
-
-        if (destinationLineIndex === -1) {
-          return null;
-        }
 
         // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
         let viaLines: Line[];
@@ -184,16 +176,33 @@ export const TrainTypeListModal = ({
   );
 
   const trainTypes = useMemo(() => {
+    if (!line) return [];
+
     const trainTypes = fetchedTrainTypes
       .map((tt) => {
-        const nestedTrainType = tt.lines?.find((l) => l.id === line?.id)
+        const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
           ?.trainType as TrainType | undefined;
         return { ...tt, ...nestedTrainType, id: tt.id };
       })
-      .filter((tt) => tt) as TrainType[];
+      .filter((tt): tt is TrainType => {
+        if (!tt || !tt.line) return false;
+
+        const lines = uniqBy(tt.lines ?? [], 'id');
+        const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
+        if (selectedLineIndex === -1) return false;
+
+        if (destination) {
+          const destinationLineIndex = lines.findIndex(
+            (l) => l.id === destination.line?.id
+          );
+          if (destinationLineIndex === -1) return false;
+        }
+
+        return true;
+      });
 
     return trainTypes;
-  }, [fetchedTrainTypes, line?.id]);
+  }, [fetchedTrainTypes, line, destination]);
 
   return (
     <CustomModal
