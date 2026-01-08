@@ -348,4 +348,75 @@ describe('useBounds フック', () => {
     expect(directionalStops).not.toContain('"id":12');
     expect(directionalStops).not.toContain('"id":13');
   });
+
+  it('大江戸線で都庁前駅(内回り)が現在駅の場合、光が丘方面も表示される', () => {
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      selectedDirection: 'INBOUND',
+      selectedBound: undefined,
+    }));
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      pendingTrainType: null,
+    }));
+
+    // 都庁前駅（内回り: 9930101）が現在駅
+    const currentStation = { id: 9930101, groupId: 9930101 };
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    // 都庁前が配列の先頭にあるケース（光が丘は後方）
+    const stations = [
+      { id: 9930101, groupId: 9930101 }, // 都庁前(内回り) - 現在駅
+      { id: 9930107, groupId: 9930107 }, // 飯田橋（主要駅）
+      { id: 9930113, groupId: 9930113 }, // 両国（主要駅）
+      { id: 9930138, groupId: 9930138 }, // 光が丘（主要駅）
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    // inbound には飯田橋、両国が含まれる
+    expect(bounds).toContain('"id":9930107');
+    expect(bounds).toContain('"id":9930113');
+    // outbound には光が丘が含まれる（都庁前駅の場合の特別処理）
+    expect(bounds).toContain('"id":9930138');
+  });
+
+  it('大江戸線で都庁前駅(外回り)が現在駅の場合、光が丘方面も表示される', () => {
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      selectedDirection: 'OUTBOUND',
+      selectedBound: undefined,
+    }));
+    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+      pendingTrainType: null,
+    }));
+
+    // 都庁前駅（外回り: 9930100）が現在駅
+    const currentStation = { id: 9930100, groupId: 9930100 };
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    // 都庁前(外回り)が配列の先頭にあるケース
+    const stations = [
+      { id: 9930100, groupId: 9930100 }, // 都庁前(外回り) - 現在駅
+      { id: 9930121, groupId: 9930121 }, // 大門（主要駅）
+      { id: 9930124, groupId: 9930124 }, // 六本木（主要駅）
+      { id: 9930138, groupId: 9930138 }, // 光が丘（主要駅）
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    // outbound には光が丘が含まれる（都庁前駅の場合の特別処理）
+    expect(bounds).toContain('"id":9930138');
+  });
 });
