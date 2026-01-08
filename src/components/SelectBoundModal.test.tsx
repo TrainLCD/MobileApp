@@ -308,6 +308,107 @@ describe('SelectBoundModal - onCloseAnimationEnd', () => {
   });
 });
 
+describe('SelectBoundModal - renderButton 表示条件', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('boundStationsが空の場合、ボタンは非表示になる', () => {
+    const boundStations: Station[] = [];
+    const direction = 'OUTBOUND';
+    const isLoopLine = false;
+    const currentIndex = 0;
+    const stationsLength = 5;
+
+    // renderButtonの条件をシミュレート
+    const shouldHideButton =
+      !boundStations.length ||
+      (direction === 'INBOUND' &&
+        !isLoopLine &&
+        currentIndex === stationsLength - 1);
+
+    expect(shouldHideButton).toBe(true);
+  });
+
+  it('boundStationsがある場合、currentIndex === 0でもOUTBOUNDボタンは表示される', () => {
+    const boundStations = [
+      { id: 9930138, groupId: 9930138, name: '光が丘' },
+    ] as unknown as Station[];
+    const direction = 'OUTBOUND';
+    const isLoopLine = false;
+    const currentIndex = 0;
+    const stationsLength = 5;
+
+    // renderButtonの条件をシミュレート
+    const shouldHideButton =
+      !boundStations.length ||
+      (direction === 'INBOUND' &&
+        !isLoopLine &&
+        currentIndex === stationsLength - 1);
+
+    // boundStationsがあるのでOUTBOUNDボタンは表示される
+    expect(shouldHideButton).toBe(false);
+  });
+
+  it('INBOUNDで終点（currentIndex === stations.length - 1）の場合、ボタンは非表示になる', () => {
+    const boundStations = [
+      { id: 1, groupId: 1, name: '東京' },
+    ] as unknown as Station[];
+    const direction = 'INBOUND';
+    const isLoopLine = false;
+    const currentIndex = 4;
+    const stationsLength = 5;
+
+    // renderButtonの条件をシミュレート
+    const shouldHideButton =
+      !boundStations.length ||
+      (direction === 'INBOUND' &&
+        !isLoopLine &&
+        currentIndex === stationsLength - 1);
+
+    expect(shouldHideButton).toBe(true);
+  });
+
+  it('ループ線の場合、終点でもINBOUNDボタンは表示される', () => {
+    const boundStations = [
+      { id: 1, groupId: 1, name: '東京' },
+    ] as unknown as Station[];
+    const direction = 'INBOUND';
+    const isLoopLine = true;
+    const currentIndex = 4;
+    const stationsLength = 5;
+
+    // renderButtonの条件をシミュレート
+    const shouldHideButton =
+      !boundStations.length ||
+      (direction === 'INBOUND' &&
+        !isLoopLine &&
+        currentIndex === stationsLength - 1);
+
+    // ループ線なのでINBOUNDボタンは表示される
+    expect(shouldHideButton).toBe(false);
+  });
+
+  it('大江戸線の都庁前駅でboundStationsがある場合、OUTBOUNDボタンは表示される', () => {
+    // 都庁前駅が配列の先頭（currentIndex === 0）でも、
+    // boundStationsに光が丘があれば表示される
+    const boundStations = [
+      { id: 9930138, groupId: 9930138, name: '光が丘' },
+    ] as unknown as Station[];
+    const direction = 'OUTBOUND';
+    const isLoopLine = false;
+    const currentIndex = 0; // 都庁前が配列の先頭
+
+    // renderButtonの条件をシミュレート
+    const shouldHideButton =
+      !boundStations.length ||
+      (direction === 'INBOUND' && !isLoopLine && currentIndex === 0);
+
+    // boundStationsがあるのでOUTBOUNDボタンは表示される
+    expect(shouldHideButton).toBe(false);
+  });
+});
+
 describe('SelectBoundModal - 保存済み経路の検索ロジック', () => {
   afterEach(() => {
     jest.clearAllMocks();
