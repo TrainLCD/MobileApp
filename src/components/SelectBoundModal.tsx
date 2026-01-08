@@ -81,19 +81,25 @@ type RenderButtonProps = {
 type Props = {
   visible: boolean;
   onClose: () => void;
+  /** 閉じるアニメーションが完了した後に呼ばれるコールバック */
+  onCloseAnimationEnd?: () => void;
   loading: boolean;
   error: Error | null;
   onTrainTypeSelect: (trainType: TrainType) => void;
   onBoundSelect: () => void;
+  /** 方面選択を片方向のみに絞るための目的地（終点としては扱わない） */
+  targetDestination?: Station | null;
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
   visible,
   onClose,
+  onCloseAnimationEnd,
   loading,
   error,
   onTrainTypeSelect,
   onBoundSelect,
+  targetDestination,
 }) => {
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
@@ -286,6 +292,22 @@ export const SelectBoundModal: React.FC<Props> = ({
         return <></>;
       }
 
+      // targetDestination が設定されている場合、その方向のボタンのみ表示（終点としては扱わない）
+      if (targetDestination && !isLoopLine && !wantedDestination) {
+        const currentStationIndex = stations.findIndex(
+          (s) => s.groupId === station?.groupId
+        );
+        const targetStationIndex = stations.findIndex(
+          (s) => s.groupId === targetDestination.groupId
+        );
+        const dir: LineDirection =
+          currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
+
+        if (direction !== dir) {
+          return <></>;
+        }
+      }
+
       if (wantedDestination && !isLoopLine) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === station?.groupId
@@ -320,8 +342,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         !boundStations.length ||
         (direction === 'INBOUND' &&
           !isLoopLine &&
-          currentIndex === stations.length - 1) ||
-        (direction === 'OUTBOUND' && !isLoopLine && !currentIndex)
+          currentIndex === stations.length - 1)
       ) {
         return <></>;
       }
@@ -351,6 +372,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       station?.groupId,
       stations,
       wantedDestination,
+      targetDestination,
       line,
       loopLineDirectionText,
       normalLineDirectionText,
@@ -394,21 +416,10 @@ export const SelectBoundModal: React.FC<Props> = ({
       return;
     }
 
-    const lineName = isJapanese
-      ? line.nameShort
-      : (line.nameRoman ?? line.nameShort);
-    const edgeStationNames = isJapanese
-      ? `${stations[0]?.name ?? ''}〜${stations[stations.length - 1]?.name ?? ''}`
-      : `${stations[0]?.nameRoman ?? ''} - ${stations[stations.length - 1]?.nameRoman ?? ''}`;
-
     if (pendingTrainType?.groupId) {
-      const trainTypeName =
-        (isJapanese ? pendingTrainType.name : pendingTrainType.nameRoman) ?? '';
       const newRoute: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
-        name: wantedDestination
-          ? `${lineName} ${trainTypeName} ${edgeStationNames} ${isJapanese ? `${wantedDestination.name}ゆき` : `for ${wantedDestination.nameRoman}`}`.trim()
-          : `${lineName} ${trainTypeName} ${edgeStationNames}`.trim(),
+        name: translate('preset'),
         lineId: line.id ?? 0,
         trainTypeId: pendingTrainType?.groupId,
         createdAt: new Date(),
@@ -422,15 +433,9 @@ export const SelectBoundModal: React.FC<Props> = ({
       return;
     }
 
-    const destinationName = isJapanese
-      ? wantedDestination?.name
-      : wantedDestination?.nameRoman;
     const newRoute: SavedRouteWithoutTrainTypeInput = {
       hasTrainType: false,
-
-      name: isJapanese
-        ? `${lineName} 各駅停車 ${edgeStationNames} ${destinationName ? `${destinationName}行き` : ''}`.trim()
-        : `${lineName} Local ${edgeStationNames}${destinationName ? ` for ${destinationName}` : ''}`.trim(),
+      name: translate('preset'),
       lineId: line.id ?? 0,
       trainTypeId: null,
       createdAt: new Date(),
@@ -446,10 +451,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     savedRoute,
     removeCurrentRoute,
     saveCurrentRoute,
-    wantedDestination,
     line,
     pendingTrainType,
-    stations,
   ]);
 
   const toggleNotificationModeEnabled = useCallback(() => {
@@ -504,6 +507,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     <CustomModal
       visible={visible}
       onClose={onClose}
+      onCloseAnimationEnd={onCloseAnimationEnd}
       backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       contentContainerStyle={[
         styles.contentView,
@@ -601,7 +605,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
-        line={line}
+        line={pendingTrainType?.line ?? station?.line ?? line}
         onClose={() => {
           setIsTrainTypeModalVisible(false);
         }}

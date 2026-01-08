@@ -2,8 +2,7 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Line, Station } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
@@ -18,72 +17,6 @@ jest.mock('jotai', () => ({
 jest.mock('./useCurrentStation', () => ({
   useCurrentStation: jest.fn(),
 }));
-
-const createLine = (id: number, nameShort: string): Line => ({
-  __typename: 'Line',
-  averageDistance: null,
-  color: '#123456',
-  company: null,
-  id,
-  lineSymbols: [],
-  lineType: LineType.Normal,
-  nameChinese: null,
-  nameFull: `${nameShort} Line`,
-  nameKatakana: `${nameShort}ライン`,
-  nameKorean: null,
-  nameRoman: `${nameShort} Line`,
-  nameShort,
-  station: null,
-  status: OperationStatus.InOperation,
-  trainType: null,
-  transportType: null,
-});
-
-const createStation = (id: number, groupId: number, line: Line): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId,
-  hasTrainTypes: false,
-  id,
-  latitude: null,
-  line: {
-    __typename: 'LineNested',
-    averageDistance: null,
-    color: line.color,
-    company: null,
-    id: line.id,
-    lineSymbols: [],
-    lineType: line.lineType,
-    nameChinese: line.nameChinese,
-    nameFull: line.nameFull,
-    nameKatakana: line.nameKatakana,
-    nameKorean: line.nameKorean,
-    nameRoman: line.nameRoman,
-    nameShort: line.nameShort,
-    station: null,
-    status: OperationStatus.InOperation,
-    trainType: null,
-    transportType: null,
-  },
-  lines: [],
-  longitude: null,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
-});
 
 const TestComponent: React.FC = () => {
   const currentLine = useCurrentLine();
@@ -103,9 +36,15 @@ describe('useCurrentLine', () => {
   });
 
   it('selectedLineとcurrentStationがある場合、現在の路線を返す', () => {
-    const lineA = createLine(1, 'LineA');
-    const station1 = createStation(1, 1, lineA);
-    const station2 = createStation(2, 2, lineA);
+    const lineA = createLine(1, { nameShort: 'LineA' });
+    const station1 = createStation(1, {
+      groupId: 1,
+      line: { id: lineA.id, nameShort: lineA.nameShort },
+    });
+    const station2 = createStation(2, {
+      groupId: 2,
+      line: { id: lineA.id, nameShort: lineA.nameShort },
+    });
 
     mockUseCurrentStation.mockReturnValue(station1);
 
@@ -132,8 +71,11 @@ describe('useCurrentLine', () => {
   });
 
   it('selectedLineがnullの場合、nullを返す', () => {
-    const lineA = createLine(1, 'LineA');
-    const station1 = createStation(1, 1, lineA);
+    const lineA = createLine(1, { nameShort: 'LineA' });
+    const station1 = createStation(1, {
+      groupId: 1,
+      line: { id: lineA.id, nameShort: lineA.nameShort },
+    });
 
     mockUseCurrentStation.mockReturnValue(station1);
 
@@ -157,7 +99,7 @@ describe('useCurrentLine', () => {
   });
 
   it('currentStationがundefinedの場合、nullを返す', () => {
-    const lineA = createLine(1, 'LineA');
+    const lineA = createLine(1, { nameShort: 'LineA' });
 
     mockUseCurrentStation.mockReturnValue(undefined);
 
@@ -181,10 +123,17 @@ describe('useCurrentLine', () => {
   });
 
   it('INBOUND方向の場合、路線情報を返す', () => {
-    const lineA = createLine(1, 'LineA');
-    const lineB = createLine(2, 'LineB');
-    const station1 = createStation(1, 1, lineA);
-    const station2 = createStation(2, 1, lineB); // same groupId, different line
+    const lineA = createLine(1, { nameShort: 'LineA' });
+    const lineB = createLine(2, { nameShort: 'LineB' });
+    const station1 = createStation(1, {
+      groupId: 1,
+      line: { id: lineA.id, nameShort: lineA.nameShort },
+    });
+    // same groupId, different line
+    const station2 = createStation(2, {
+      groupId: 1,
+      line: { id: lineB.id, nameShort: lineB.nameShort },
+    });
 
     mockUseCurrentStation.mockReturnValue(station1);
 
@@ -211,10 +160,17 @@ describe('useCurrentLine', () => {
   });
 
   it('OUTBOUND方向の場合、路線情報を返す', () => {
-    const lineA = createLine(1, 'LineA');
-    const lineB = createLine(2, 'LineB');
-    const station1 = createStation(1, 1, lineA);
-    const station2 = createStation(2, 1, lineB); // same groupId
+    const lineA = createLine(1, { nameShort: 'LineA' });
+    const lineB = createLine(2, { nameShort: 'LineB' });
+    const station1 = createStation(1, {
+      groupId: 1,
+      line: { id: lineA.id, nameShort: lineA.nameShort },
+    });
+    // same groupId
+    const station2 = createStation(2, {
+      groupId: 1,
+      line: { id: lineB.id, nameShort: lineB.nameShort },
+    });
 
     mockUseCurrentStation.mockReturnValue(station1);
 

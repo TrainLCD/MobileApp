@@ -37,6 +37,7 @@ export { useIsPassing } from './useIsPassing';
 export { useIsTerminus } from './useIsTerminus';
 export { useLazyPrevious } from './useLazyPrevious';
 export { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+export { useLockLandscapeOnActive } from './useLockLandscapeOnActive';
 export { useLoopLine } from './useLoopLine';
 export { useLoopLineBound } from './useLoopLineBound';
 export { useNearestStation } from './useNearestStation';

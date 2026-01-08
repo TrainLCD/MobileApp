@@ -3,6 +3,7 @@ import { act, render } from '@testing-library/react-native';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import { useFetchNearbyStation } from './useFetchNearbyStation';
 
 jest.mock('@apollo/client/react', () => ({
@@ -17,15 +18,6 @@ const HookBridge: React.FC<{ onReady: (value: HookResult) => void }> = ({
   onReady(useFetchNearbyStation());
   return null;
 };
-
-const createStation = (id: number): Station =>
-  ({
-    __typename: 'Station',
-    id,
-    groupId: id,
-    name: `Station${id}`,
-    nameRoman: `Station${id}`,
-  }) as Station;
 
 describe('useFetchNearbyStation', () => {
   const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;

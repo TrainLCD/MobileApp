@@ -24,7 +24,13 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
+import {
+  type Line,
+  type LineNested,
+  type Station,
+  type TrainType,
+  TransportType,
+} from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
@@ -321,6 +327,7 @@ const SelectLineScreen = () => {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         limit: 1,
+        transportType: TransportType.Rail,
       });
       const stationFromAPI = data.data?.stationsNearby[0] ?? null;
 

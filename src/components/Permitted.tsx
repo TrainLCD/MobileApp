@@ -5,12 +5,13 @@ import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
+import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
 import {
   ALL_AVAILABLE_LANGUAGES,
@@ -49,7 +50,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setSpeech = useSetAtom(speechState);
   const setTuning = useSetAtom(tuningState);
   const setTheme = useSetAtom(themeAtom);
-  const [reportModalShow, setReportModalShow] = useState(false);
+  const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
 
@@ -118,14 +119,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     try {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
-      const base64 = file.base64();
+      const base64 = await file.base64();
       setScreenShotBase64(base64);
       setReportModalShow(true);
       await ScreenOrientation.unlockAsync();
     } catch (err) {
       captureError(err);
     }
-  }, [isAppLatest]);
+  }, [isAppLatest, setReportModalShow]);
 
   const handleShare = useCallback(async () => {
     const captureError = (err: unknown) => {
@@ -144,7 +145,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     try {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
-      const base64 = file.base64();
+      const base64 = await file.base64();
       const urlString = `data:image/jpeg;base64,${base64}`;
 
       const message = isJapanese
@@ -354,7 +355,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ScreenOrientation.lockAsync(
       ScreenOrientation.OrientationLock.LANDSCAPE
     ).catch(console.error);
-  }, []);
+  }, [setReportModalShow]);
 
   const handleReportSend = useCallback(
     (description: string) => {

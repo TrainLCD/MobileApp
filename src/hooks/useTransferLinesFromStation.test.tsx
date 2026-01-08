@@ -3,12 +3,8 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, LineNested, Station } from '~/@types/graphql';
-import {
-  LineType,
-  OperationStatus,
-  StopCondition,
-  TransportType,
-} from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import stationState from '../store/atoms/station';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
@@ -38,7 +34,7 @@ const createLineNested = (overrides: Partial<LineNested> = {}): LineNested => ({
   company: null,
   id: 1,
   lineSymbols: [],
-  lineType: LineType.Normal,
+  lineType: undefined,
   nameChinese: null,
   nameFull: 'Line',
   nameKatakana: 'ライン',
@@ -46,41 +42,9 @@ const createLineNested = (overrides: Partial<LineNested> = {}): LineNested => ({
   nameRoman: 'Line',
   nameShort: 'Line',
   station: null,
-  status: OperationStatus.InOperation,
+  status: undefined,
   trainType: null,
   transportType: TransportType.Rail,
-  ...overrides,
-});
-
-const createStation = (
-  id: number,
-  overrides: Partial<Station> = {}
-): Station => ({
-  __typename: 'Station',
-  address: null,
-  closedAt: null,
-  distance: null,
-  groupId: id,
-  hasTrainTypes: false,
-  id,
-  latitude: null,
-  line: null,
-  lines: [],
-  longitude: null,
-  name: `Station${id}`,
-  nameChinese: null,
-  nameKatakana: `ステーション${id}`,
-  nameKorean: null,
-  nameRoman: `Station${id}`,
-  openedAt: null,
-  postalCode: null,
-  prefectureId: null,
-  stationNumbers: [],
-  status: OperationStatus.InOperation,
-  stopCondition: StopCondition.All,
-  threeLetterCode: null,
-  trainType: null,
-  transportType: null,
   ...overrides,
 });
 

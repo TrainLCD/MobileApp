@@ -2,15 +2,15 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2026-01-05（統計更新・都営バス対応・ライセンス画面追加反映）
+**最終更新**: 2026-01-06（テストカバレッジ改善・統計更新）
 
 ## 📊 概要
 
 ### プロジェクト統計
 - **総ファイル数**: 398個のTypeScript/TSXファイル
 - **本番コード**: 302ファイル
-- **テストファイル**: 96ファイル
-- **カバレッジ**: **約81%**（Lines coverage、742テストケース）
+- **テストファイル**: 110ファイル
+- **カバレッジ**: **約83.3%**（Lines coverage、977テストケース）
 - **コンポーネント数**: 110個
 - **カスタムフック数**: 78個
 - **スクリーン数**: 10個
@@ -275,10 +275,15 @@ src/components/
 #### 現状
 ```text
 本番コード:     302ファイル
-テストファイル:  96ファイル
-カバレッジ:     約81%（Lines coverage）
-テストケース:   742個
-テストスイート: 96個
+テストファイル:  110ファイル
+テストケース:   977個
+テストスイート: 110個
+
+カバレッジ詳細（2026-01-06計測）:
+  Statements:  83.04% (2,733/3,291)
+  Branches:    58.6% (2,540/4,334)  ⚠️ 要改善
+  Functions:   86.81% (724/834)
+  Lines:       83.27% (2,658/3,192)
 ```
 
 **最近の改善**（2025-12-25〜2025-12-31）:
@@ -298,7 +303,104 @@ src/components/
 - ✅ すべてのテストがプロジェクトガイドライン準拠（afterEachでクリーンアップ、具体的な検証アサーション）
 - ✅ **都営バスTTSテスト追加**（useBusTTSText.test.tsx）
 - ✅ **SelectBoundModalテスト追加**（SelectBoundModal.test.tsx）
-- 📈 **合計742テストケース**（カバレッジ約81%に向上）
+- ✅ **ブランチカバレッジ改善のためのフックテスト追加**（3ファイル、30テストケース）
+  - useThreshold (10テスト) - 距離計算ロジックの全分岐をカバー
+  - useCanGoForward (9テスト) - ナビゲーション判定の全分岐をカバー
+  - useInRadiusStation (11テスト) - 位置判定の全分岐をカバー
+- ✅ **追加のブランチカバレッジ改善テスト追加**（3ファイル、36テストケース）
+  - useSlicedStations (15テスト) - 駅リストスライス処理の全分岐をカバー
+  - useBoundText (10テスト) - 行先テキスト生成の全分岐をカバー（大江戸線特殊処理含む）
+  - useDistanceToNextStation (11テスト) - 次駅までの距離計算の全分岐をカバー
+- ✅ **さらなるブランチカバレッジ改善テスト追加**（5ファイル、35テストケース）✨ **NEW**
+  - useAutoMode (9テスト) - 自動モード処理の主要分岐をカバー
+  - useFirstStop (7テスト) - 始発駅判定の全分岐をカバー
+  - useIsPassing (8テスト) - 通過判定の全分岐をカバー
+  - useNextLine (4テスト) - 次路線取得の全分岐をカバー
+  - useNumbering (7テスト) - 駅番号取得の主要分岐をカバー
+- ✅ **追加のブランチカバレッジ改善テスト追加**（1ファイル、44テストケース）✨ **NEW**
+  - trainTypeString (44テスト) - 種別判定の全分岐をカバー（getIsLocal, getIsRapid, getIsLtdExp, find系関数）
+- ✅ **既存テストファイルの拡充**（line.test.ts）✨ **NEW**
+  - filterWithoutCurrentLine, getCurrentStationLinesWithoutCurrentLine, getNextStationLinesWithoutCurrentLineの17テスト追加
+- 📈 **合計977テストケース**（Linesカバレッジ約83.3%に向上）
+
+#### ⚠️ ブランチカバレッジが低い原因分析（2026-01-06）
+
+**全体**: Branchカバレッジが58.6%と他の指標（83%超）に比べて低い状態です。
+
+##### 原因1: テストが存在しないフック（54個中33個テスト有）
+以下のフックにはテストファイルが存在せず、0%のブランチカバレッジ：
+```text
+~~useCanGoForward.ts      (0% branch) - 条件分岐3つ~~ → ✅ **テスト追加済み**（9テスト）
+~~useThreshold.ts         (0% branch) - 条件分岐6つ~~ → ✅ **テスト追加済み**（10テスト）
+~~useInRadiusStation.ts   (0% branch) - 条件分岐2つ~~ → ✅ **テスト追加済み**（11テスト）
+~~useSlicedStations.ts    (25% branch)~~ → ✅ **テスト追加済み**（15テスト）
+~~useBoundText.ts~~ → ✅ **テスト追加済み**（10テスト）
+~~useDistanceToNextStation.ts~~ → ✅ **テスト追加済み**（11テスト）
+~~useAutoMode.ts~~ → ✅ **テスト追加済み**（9テスト）
+~~useFirstStop.ts~~ → ✅ **テスト追加済み**（7テスト）
+~~useIsPassing.ts~~ → ✅ **テスト追加済み**（8テスト）
+~~useNextLine.ts~~ → ✅ **テスト追加済み**（4テスト）
+~~useNumbering.ts~~ → ✅ **テスト追加済み**（7テスト）
+useDeepLink.ts,
+useHasPassStationInRegion.ts, useInterval.ts,
+useLazyPrevious.ts, useNextTrainType.ts,
+usePrevious.ts, useResetMainState.ts, useShouldHideTypeChange.ts,
+useTrainTypeStations.ts, useTypeWillChange.ts, useUpdateBottomState.ts,
+useWarningInfo.ts, useHeaderAnimation.ts, useHeaderCommonData.ts,
+useHeaderStateText.ts, useHeaderStationText.ts, useTransitionHeaderState.ts,
+useUpdateLiveActivities.ts, useRefreshLeftStations.ts, useStartBackgroundLocationUpdates.ts
+```
+
+##### 原因2: JSX内の条件分岐（三項演算子・論理演算子）
+Headerコンポーネントでは多くの条件付きレンダリングが使用されていますが、すべてのパスがテストされていません：
+```text
+HeaderJRWest.tsx        (15.6% branch) - 44個の条件分岐
+HeaderLED.tsx           (18.6% branch) - 多数の状態遷移
+HeaderJL.tsx            (37.73% branch)
+HeaderE235.tsx          (39.68% branch)
+NumberingIcon.tsx       (25.58% branch) - 26種類のアイコンタイプ分岐
+```
+
+##### 原因3: ユーティリティ関数のnullish合体演算子（??）・OR演算子（||）
+```text
+~~trainTypeString.ts      (16.66% branch)~~ → ✅ **テスト追加済み**（44テスト）
+~~line.ts                 (28.57% branch)~~ → ✅ **テスト拡充済み**（17テスト追加）
+truncateTrainType.ts    (42.85% branch)
+```
+
+##### 原因4: 自動生成コード
+```text
+graphql.ts, graphql.d.ts (0% branch) - GraphQL Codegenで自動生成、テスト対象外
+```
+
+##### 原因5: 早期リターン・nullチェックの分岐
+```text
+useBounds.ts            (39.39% branch) - 早期リターン4箇所
+useRefreshStation.ts    (42.3% branch) - nullチェック多数
+useTelemetrySender.ts   (38.46% branch) - WebSocket状態管理の分岐
+```
+
+##### ブランチカバレッジ改善の推奨アクション
+1. ~~**高優先**: テストが存在しない重要フックにテスト追加~~ ✅ **完了**（2026-01-06）
+   - ~~`useThreshold.ts` - 距離計算ロジックのテスト~~ ✅ **10テスト追加**
+   - ~~`useCanGoForward.ts` - ナビゲーション判定のテスト~~ ✅ **9テスト追加**
+   - ~~`useInRadiusStation.ts` - 位置判定のテスト~~ ✅ **11テスト追加**
+2. ~~**高優先**: 残りの重要フックにテスト追加~~ ✅ **完了**（2026-01-06）
+   - ~~`useSlicedStations.ts` - 駅リストのスライス処理~~ ✅ **15テスト追加**
+   - ~~`useBoundText.ts` - 行先テキスト生成~~ ✅ **10テスト追加**
+   - ~~`useDistanceToNextStation.ts` - 次駅までの距離計算~~ ✅ **11テスト追加**
+3. ~~**高優先**: 残りのフックにテスト追加~~ ✅ **完了**（2026-01-06）
+   - ~~`useAutoMode.ts` - 自動モード判定~~ ✅ **9テスト追加**
+   - ~~`useFirstStop.ts` - 始発駅判定~~ ✅ **7テスト追加**
+   - ~~`useIsPassing.ts` - 通過判定~~ ✅ **8テスト追加**
+   - ~~`useNextLine.ts` - 次路線取得~~ ✅ **4テスト追加**
+   - ~~`useNumbering.ts` - 駅番号取得~~ ✅ **7テスト追加**
+4. **中優先**: Header系コンポーネントの条件分岐テスト拡充
+   - 各言語（日/英/中/韓）でのレンダリングテスト
+   - 各ヘッダー状態（CURRENT/NEXT/ARRIVING）でのテスト
+5. **低優先**: ユーティリティ関数のエッジケーステスト
+   - null/undefined入力時の動作テスト
+   - デフォルト値が使われるケースのテスト
 
 #### テストが存在しないクリティカルなコンポーネント
 - ~~**9つのLineBoardコンポーネント**: テスト0個~~ → ✅ **完了**（9ファイル、95テストケース追加）
@@ -316,9 +418,10 @@ src/components/
 3. **継続**: 新規コードには必ずテスト追加のルール維持・カバレッジ80%以上を維持
 
 #### 達成された効果
-- ✅ **バグ検出率**: 大幅向上（カバレッジ81%達成）
+- ✅ **バグ検出率**: 大幅向上（Linesカバレッジ82.6%達成）
 - ✅ **リグレッション防止**: CI/CDでの自動検知が有効
-- ✅ **リファクタリングの安全性向上**: 742テストケースで担保
+- ✅ **リファクタリングの安全性向上**: 906テストケースで担保
+- ⚠️ **課題**: ブランチカバレッジ57.68%は改善の余地あり（目標: 70%以上）
 
 ---
 
@@ -838,6 +941,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 | 2025-12-31 | **依存関係の更新遅延を解消**<br>負債ドキュメントに記載の3パッケージを最新版に更新:<br>　- @react-native-community/cli: ^15.1.2 → ^20.0.2<br>　- @sentry/react-native: ~7.2.0 → ~7.8.0<br>　- effect: ^3.16.12 → ^3.19.13<br>lint、typecheck、test全てパスを確認（555テスト合格）<br>計画的な更新が必要なパッケージが0件に<br><br>**FlatListの最適化完了**<br>　- `removeClippedSubviews`を5ファイルに追加（Android）: Transfers.tsx、TransfersYamanote.tsx、StationSearchModal.tsx、RouteInfoModal.tsx、TrainTypeListModal.tsx<br>　- `SelectLineScreenPresets.tsx`のメモ化改善: renderItem、keyExtractor、onScroll、ListEmptyComponentをuseCallback/useMemoでラップ、ItemSeparatorComponentをReact.memoでラップ<br>FlatListの最適化によりAndroidでのスクロールパフォーマンスが向上<br><br>**iOS依存関係の更新** (chore/bump-deps)<br>　- @react-native-community/cli: Expo SDK 54への移行に伴い削除<br>　- 各種パッケージを最新版に更新<br><br>**Header系コンポーネントのテスト完全追加**<br>**テストカバレッジ向上**: 22-23% → 24-25%（108個の新規テストケース追加）<br>全9個のHeaderコンポーネントに包括的なユニットテスト追加:<br>　- Header.test.tsx（13テスト）: テーマに基づくHeaderコンポーネント選択<br>　- HeaderLED.test.tsx（12テスト）: LED表示のヘッダー状態遷移<br>　- HeaderTokyoMetro.test.tsx（14テスト）: 東京メトロスタイルのアニメーション・状態<br>　- HeaderJRWest.test.tsx（26テスト）: JR西日本スタイル、多言語対応、列車種別<br>　- HeaderJRKyushu.test.tsx（14テスト）: JR九州スタイルの状態遷移<br>　- HeaderTY.test.tsx（15テスト）: 東急スタイルのダークテーマ<br>　- HeaderSaikyo.test.tsx（14テスト）: 埼京線スタイル、時計表示、路線色<br>各コンポーネントのレンダリング、ヘッダー状態遷移、終点駅・始発駅対応、多言語対応をテスト<br>プロジェクト統計を更新（テストファイル85 → 92、テストケース555 → 663、カバレッジ22-23% → 24-25%）<br>全92テストスイート、663テスト合格を確認<br><br>**状態管理をJotaiに統一 (zustand完全削除)**<br>　- zustand依存をpackage.jsonから削除<br>　- useThemeStore → themeAtom (src/store/atoms/theme.ts) に移行<br>　- useLocationStore → locationAtom (src/store/atoms/location.ts) に移行（以前に完了）<br>　- useTuningStore → 使用箇所なしのため削除<br>　- 派生atom `isLEDThemeAtom` を追加（theme === APP_THEME.LED パターンを簡略化）<br>　- 40+ファイルでuseThemeStoreをuseAtomValue(themeAtom)に更新<br>　- テストファイル5つをjotaiモックに更新<br>　- Permitted.tsxでsetTheme依存関係を修正<br>状態管理の混在問題を完全解決、保守性と学習コストが大幅改善 |
 | 2026-01-02 | **Header系コンポーネントの構造大幅改善**<br>**約1,800行のコード削減**（純減約677行）を達成:<br>　- HeaderTokyoMetro.tsx: 660行 → 306行（354行削減）<br>　- HeaderJRKyushu.tsx: 638行 → 287行（351行削減）<br>　- HeaderTY.tsx: 633行 → 293行（340行削減）<br>　- HeaderSaikyo.tsx: 585行 → 284行（301行削減）<br>　- HeaderE235.tsx: 405行 → 239行（166行削減）<br>　- HeaderJL.tsx: 409行 → 246行（163行削減）<br>　- HeaderJRWest.tsx: 656行 → 535行（121行削減）<br><br>**新しい共通フック・ファイルを作成**:<br>　- useHeaderAnimation.ts（206行）: アニメーションロジックを共通化<br>　- useHeaderCommonData.ts（123行）: 共通データ取得ロジックを集約<br>　- Header.types.ts（72行）: 共通型定義を作成<br>　- useTransitionHeaderState.ts: 機能拡張<br><br>**データ上に存在しない英中韓駅名のスキップ対応**<br>多言語表示の堅牢性が向上、駅データにない言語を自動スキップ<br><br>**テストケース増加**: Header系テスト108 → 128テストケース<br>全92テストスイート、663テスト合格を維持<br>コード削減目標約25%を達成 |
 | 2026-01-05 | **プロジェクト統計を更新**<br>　- 総ファイル数: 382 → 398個<br>　- 本番コード: 297 → 302ファイル<br>　- テストファイル: 92 → 96個<br>　- コンポーネント数: 107 → 110個<br>　- スクリーン数: 9 → 10個（Licenses.tsx追加）<br><br>**テストカバレッジ大幅向上確認**<br>　- カバレッジ: 24-25% → 約81%（Lines coverage）<br>　- テストケース: 663 → 742個<br>　- テストスイート: 92 → 96個<br><br>**都営バス対応機能追加**（2026-01-02〜01-05）<br>　- 駅リストでバス停以外はバス停の乗換案内を隠す機能<br>　- 座標検索クエリからtransportType: TransportType.Rail削除<br>　- 都営バス対応UI改善<br>　- isBusLineヘルパー実装<br>　- 路線リストに都営バス見出し追加<br>　- バスの乗換案内はTTSで流さない機能<br>　- useBusTTSText.test.tsx追加<br><br>**ライセンス画面追加**<br>　- Licenses.tsx新規作成（スクリーン数9 → 10）<br>　- READMEにライセンス表示追加<br>　- prodでも都営交通ライセンス表示<br><br>**その他改善**<br>　- 縦画面向けのナンバリング改修<br>　- SelectBoundModal.test.tsx追加<br><br>**LineBoardの残りファイルへの共通フック適用**<br>　- LineBoardWest.tsx: useIncludesLongStationNameフックを適用（621行 → 616行、5行削減）<br>　- LineBoardJO.tsx: useIncludesLongStationNameフックを適用（482行 → 477行、5行削減）<br>　- LineBoardLED, YamanotePadは構造が異なるため適用対象外と判断<br>　　（LED: マーキーテキスト表示、YamanotePad: PadArchに委譲）<br>　- 合計約917行のコード削減達成（6ファイルで共通化完了）<br><br>**LineBoardWest/JOのローカルスタイル共通化**<br>　- LineBoardWest.tsx: 617行 → 510行（107行削減）<br>　　　• ローカルStyleSheet.create（110行）を削除<br>　　　• commonLineBoardStylesのバリアントを使用<br>　- LineBoardJO.tsx: 478行 → 383行（95行削減）<br>　　　• ローカルStyleSheet.create（102行）を8行に縮小<br>　　　• commonLineBoardStylesとマージして使用<br>　- commonStyles.ts: 89行 → 307行（24個のWest/JO用バリアント追加）<br>　　　• BAR_BOTTOM_WEST, BAR_BOTTOM_JO, BAR_TERMINAL_BOTTOM_JO定数<br>　　　• rootWestJO, barWest, barJO, barTerminalWest, barTerminalJO<br>　　　• stationNameWrapper, stationNameWrapperJO<br>　　　• stationNameContainerWestJO, stationNameContainerJO<br>　　　• stationNameWest, stationNameJO, stationNameEn, stationNameEnJO<br>　　　• chevronWest, chevronJO, lineDotWest<br>　　　• arrivedLineDotWest, arrivedLineDotJO, topBarWest, passMarkWest<br>　　　• numberingContainerWest, numberingTextWest, barDotJO, passChevronJO等<br>　- 合計約1,119行のコード削減達成（LineBoardコンポーネント全体） |
+| 2026-01-06 | **テストカバレッジ詳細分析実施**<br>テストケース: 742 → 802個、テストスイート: 96 → 98個に更新<br><br>**カバレッジ詳細（2026-01-06計測）**<br>　- Statements: 80.27% (2,483/3,093)<br>　- Branches: 56.07% (2,318/4,134) ⚠️ 要改善<br>　- Functions: 82.76% (653/789)<br>　- Lines: 80.67% (2,417/2,996)<br><br>**ブランチカバレッジ低下原因を特定**<br>　- 原因1: テストが存在しないフック（54個中27個のみテスト有）<br>　　　• useCanGoForward.ts (0%), useThreshold.ts (0%), useInRadiusStation.ts (0%)等<br>　- 原因2: JSX内の条件分岐（三項演算子・論理演算子）の網羅不足<br>　　　• HeaderJRWest.tsx (15.6%), HeaderLED.tsx (18.6%), NumberingIcon.tsx (25.58%)<br>　- 原因3: ユーティリティ関数のnullish合体演算子<br>　　　• trainTypeString.ts (16.66%), line.ts (28.57%)<br>　- 原因4: 自動生成コード（graphql.ts/d.ts）はテスト対象外<br>　- 原因5: 早期リターン・nullチェックの分岐テスト不足<br><br>**ブランチカバレッジ改善のためのテスト追加**（3ファイル、30テストケース）<br>　- useThreshold.test.tsx（10テスト）: 距離計算ロジックの全分岐をカバー<br>　　　• currentStation/nextStationがnullの場合のデフォルト閾値<br>　　　• 座標（latitude/longitude）がnullの場合<br>　　　• 駅間距離が短い/長い場合の閾値計算<br>　- useCanGoForward.test.tsx（9テスト）: ナビゲーション判定の全分岐をカバー<br>　　　• 環状線（山手線/大阪環状線/名城線）の判定<br>　　　• 次の駅存在時/終点停車時の判定<br>　　　• currentStation/nearestStationがundefinedの場合<br>　- useInRadiusStation.test.tsx（11テスト）: 位置判定の全分岐をカバー<br>　　　• 位置情報/座標がnullの場合<br>　　　• 半径内/外の駅マッチング<br>　　　• 駅座標がnullの場合のスキップ処理<br>プロジェクト統計を更新（テストファイル98 → 101、テストケース802 → 832）<br>高優先のブランチカバレッジ改善アクションを完了 |
 
 ---
 
