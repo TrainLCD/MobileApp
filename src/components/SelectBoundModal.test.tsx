@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import type { Station } from '~/@types/graphql';
+import type { LineDirection } from '../models/Bound';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
@@ -305,6 +306,50 @@ describe('SelectBoundModal - onCloseAnimationEnd', () => {
 
     expect(props).toHaveProperty('targetDestination');
     expect(props.targetDestination).toEqual(targetStation);
+  });
+});
+
+describe('SelectBoundModal - renderButton 表示条件', () => {
+  // renderButtonの非表示条件をシミュレートするヘルパー関数
+  const shouldHideButton = (
+    boundStationsLength: number,
+    direction: LineDirection,
+    isLoopLine: boolean,
+    currentIndex: number,
+    stationsLength: number
+  ): boolean => {
+    return (
+      !boundStationsLength ||
+      (direction === 'INBOUND' &&
+        !isLoopLine &&
+        currentIndex === stationsLength - 1)
+    );
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('boundStationsが空の場合、ボタンは非表示になる', () => {
+    const result = shouldHideButton(0, 'OUTBOUND', false, 0, 5);
+    expect(result).toBe(true);
+  });
+
+  it('boundStationsがある場合、currentIndex === 0でもOUTBOUNDボタンは表示される', () => {
+    const result = shouldHideButton(1, 'OUTBOUND', false, 0, 5);
+    // boundStationsがあるのでOUTBOUNDボタンは表示される
+    expect(result).toBe(false);
+  });
+
+  it('INBOUNDで終点（currentIndex === stations.length - 1）の場合、ボタンは非表示になる', () => {
+    const result = shouldHideButton(1, 'INBOUND', false, 4, 5);
+    expect(result).toBe(true);
+  });
+
+  it('ループ線の場合、終点でもINBOUNDボタンは表示される', () => {
+    const result = shouldHideButton(1, 'INBOUND', true, 4, 5);
+    // ループ線なのでINBOUNDボタンは表示される
+    expect(result).toBe(false);
   });
 });
 
