@@ -72,4 +72,5 @@ export { useUnderMaintenance } from './useUnderMaintenance';
 export { useUpdateBottomState } from './useUpdateBottomState';
 export { useUpdateLiveActivities } from './useUpdateLiveActivities';
 export { useValueRef } from './useValueRef';
+export { useWalkthroughCompleted } from './useWalkthroughCompleted';
 export { useWarningInfo } from './useWarningInfo';

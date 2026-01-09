@@ -239,5 +239,22 @@
   "themeDescriptionJrKyushu": "JR九州305系電車をイメージしたテーマです。",
   "searchByStationName": "駅名で検索",
   "nowAtLabel": "ただいま",
-  "welcomeLabel": "ようこそ"
+  "welcomeLabel": "ようこそ",
+  "walkthroughTitle1": "TrainLCDへようこそ",
+  "walkthroughDescription1": "TrainLCDは、日本全国の鉄道路線で使える新感覚ナビゲーションアプリです。乗車中の路線を選択すると、次の駅や乗り換え情報をリアルタイムで確認できます。",
+  "walkthroughTitle2": "現在地を変更",
+  "walkthroughDescription2": "ここをタップすると、現在地の駅を変更できます。位置情報が取得できない場所や、別の駅から出発したいときに便利です。",
+  "walkthroughTitle3": "路線を選択",
+  "walkthroughDescription3": "このリストから路線を選択できます。乗車中の路線を選択すると、次の駅や乗り換え情報が表示されます。",
+  "walkthroughTitle4": "カスタマイズ",
+  "walkthroughDescription4": "テーマ設定で東急東横線風や埼京線風など、お好みの表示スタイルに変更できます。",
+  "walkthroughTitle5": "プリセット",
+  "walkthroughDescription5": "よく使う路線をプリセットとして保存できます。保存した路線はここに表示され、タップするだけで素早く選択できます。",
+  "walkthroughNext": "次へ",
+  "walkthroughStart": "はじめる",
+  "walkthroughSkip": "スキップ",
+  "walkthroughSwipeHint": "スワイプで前後に移動できます",
+  "walkthroughSkipHint": "ウォークスルーをスキップして開始します",
+  "walkthroughGoToStepHint": "このステップに移動します",
+  "walkthroughNextHint": "次のステップに進みます"
 }
