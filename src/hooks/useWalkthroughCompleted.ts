@@ -1,25 +1,32 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
-import type { WalkthroughStep } from '../components/WalkthroughOverlay';
+import type {
+  WalkthroughStep,
+  WalkthroughStepId,
+} from '../components/WalkthroughOverlay';
 import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorage';
 
 const WALKTHROUGH_STEPS: WalkthroughStep[] = [
   {
+    id: 'welcome',
     titleKey: 'walkthroughTitle1',
     descriptionKey: 'walkthroughDescription1',
     tooltipPosition: 'bottom',
   },
   {
+    id: 'changeLocation',
     titleKey: 'walkthroughTitle2',
     descriptionKey: 'walkthroughDescription2',
     tooltipPosition: 'bottom',
   },
   {
+    id: 'selectLine',
     titleKey: 'walkthroughTitle3',
     descriptionKey: 'walkthroughDescription3',
     tooltipPosition: 'top',
   },
   {
+    id: 'customize',
     titleKey: 'walkthroughTitle4',
     descriptionKey: 'walkthroughDescription4',
     tooltipPosition: 'top',
@@ -30,6 +37,7 @@ type UseWalkthroughResult = {
   isWalkthroughCompleted: boolean | null;
   isWalkthroughActive: boolean;
   currentStepIndex: number;
+  currentStepId: WalkthroughStepId | null;
   currentStep: WalkthroughStep | null;
   totalSteps: number;
   nextStep: () => void;
@@ -111,10 +119,13 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
       }
     : null;
 
+  const currentStepId = currentStep?.id ?? null;
+
   return {
     isWalkthroughCompleted,
     isWalkthroughActive,
     currentStepIndex,
+    currentStepId,
     currentStep,
     totalSteps: WALKTHROUGH_STEPS.length,
     nextStep,

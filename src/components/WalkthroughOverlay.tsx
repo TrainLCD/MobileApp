@@ -21,7 +21,14 @@ export type SpotlightArea = {
   borderRadius?: number;
 };
 
+export type WalkthroughStepId =
+  | 'welcome'
+  | 'changeLocation'
+  | 'selectLine'
+  | 'customize';
+
 export type WalkthroughStep = {
+  id: WalkthroughStepId;
   spotlightArea?: SpotlightArea;
   titleKey: string;
   descriptionKey: string;

@@ -151,6 +151,7 @@ const SelectLineScreen = () => {
   const {
     isWalkthroughActive,
     currentStepIndex,
+    currentStepId,
     currentStep,
     totalSteps,
     nextStep,
@@ -417,9 +418,9 @@ const SelectLineScreen = () => {
     }
   }, [nearbyStationFetchError]);
 
-  // ウォークスルーのステップ2でNowHeaderをハイライト
+  // ウォークスルーの「現在地を変更」ステップでNowHeaderをハイライト
   useEffect(() => {
-    if (currentStepIndex === 1 && nowHeaderLayout) {
+    if (currentStepId === 'changeLocation' && nowHeaderLayout) {
       setSpotlightArea({
         x: nowHeaderLayout.x,
         y: nowHeaderLayout.y,
@@ -428,11 +429,11 @@ const SelectLineScreen = () => {
         borderRadius: 16,
       });
     }
-  }, [currentStepIndex, nowHeaderLayout, setSpotlightArea]);
+  }, [currentStepId, nowHeaderLayout, setSpotlightArea]);
 
-  // ウォークスルーのステップ3で路線一覧をハイライト
+  // ウォークスルーの「路線を選択」ステップで路線一覧をハイライト
   useEffect(() => {
-    if (currentStepIndex === 2 && lineListLayout) {
+    if (currentStepId === 'selectLine' && lineListLayout) {
       setSpotlightArea({
         x: lineListLayout.x,
         y: lineListLayout.y,
@@ -441,11 +442,11 @@ const SelectLineScreen = () => {
         borderRadius: 12,
       });
     }
-  }, [currentStepIndex, lineListLayout, setSpotlightArea]);
+  }, [currentStepId, lineListLayout, setSpotlightArea]);
 
-  // ウォークスルーのステップ4で設定ボタンをハイライト
+  // ウォークスルーの「カスタマイズ」ステップで設定ボタンをハイライト
   useEffect(() => {
-    if (currentStepIndex === 3 && settingsButtonLayout) {
+    if (currentStepId === 'customize' && settingsButtonLayout) {
       setSpotlightArea({
         x: settingsButtonLayout.x,
         y: settingsButtonLayout.y,
@@ -454,7 +455,7 @@ const SelectLineScreen = () => {
         borderRadius: 24,
       });
     }
-  }, [currentStepIndex, settingsButtonLayout, setSpotlightArea]);
+  }, [currentStepId, settingsButtonLayout, setSpotlightArea]);
 
   const handleLineListLayout = useCallback(() => {
     if (lineListRef.current) {
