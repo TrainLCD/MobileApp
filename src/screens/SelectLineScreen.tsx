@@ -13,7 +13,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedScrollHandler,
@@ -33,9 +33,11 @@ import {
 } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
-import { NowHeader } from '~/components/NowHeader';
+import { type HeaderLayout, NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
+import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { gqlClient } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -45,7 +47,10 @@ import {
 import type { SavedRoute } from '~/models/SavedRoute';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
+import FooterTabBar, {
+  type ButtonLayout,
+  FOOTER_BASE_HEIGHT,
+} from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import { useFetchCurrentLocationOnce, useFetchNearbyStation } from '../hooks';
@@ -129,6 +134,38 @@ const SelectLineScreen = () => {
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
+
+  const [settingsButtonLayout, setSettingsButtonLayout] =
+    useState<ButtonLayout | null>(null);
+  const [nowHeaderLayout, setNowHeaderLayout] = useState<HeaderLayout | null>(
+    null
+  );
+  const [lineListLayout, setLineListLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [presetsLayout, setPresetsLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const lineListRef = useRef<View>(null);
+  const presetsRef = useRef<View>(null);
+
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStepId,
+    currentStep,
+    totalSteps,
+    nextStep,
+    goToStep,
+    skipWalkthrough,
+    setSpotlightArea,
+  } = useWalkthroughCompleted();
 
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
@@ -387,6 +424,79 @@ const SelectLineScreen = () => {
       Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
   }, [nearbyStationFetchError]);
+
+  // ウォークスルーの「現在地を変更」ステップでNowHeaderをハイライト
+  useEffect(() => {
+    if (currentStepId === 'changeLocation' && nowHeaderLayout) {
+      setSpotlightArea({
+        x: nowHeaderLayout.x,
+        y: nowHeaderLayout.y,
+        width: nowHeaderLayout.width,
+        height: nowHeaderLayout.height,
+        borderRadius: 16,
+      });
+    }
+  }, [currentStepId, nowHeaderLayout, setSpotlightArea]);
+
+  // ウォークスルーの「路線を選択」ステップで路線一覧をハイライト
+  useEffect(() => {
+    if (currentStepId === 'selectLine' && lineListLayout) {
+      setSpotlightArea({
+        x: lineListLayout.x,
+        y: lineListLayout.y,
+        width: lineListLayout.width,
+        height: lineListLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, lineListLayout, setSpotlightArea]);
+
+  // ウォークスルーの「プリセット」ステップでプリセットエリアをハイライト
+  // SelectLineScreenPresetsのmarginTop: -16を補正
+  useEffect(() => {
+    if (currentStepId === 'savedRoutes' && presetsLayout) {
+      setSpotlightArea({
+        x: presetsLayout.x,
+        y: presetsLayout.y - 16,
+        width: presetsLayout.width,
+        height: presetsLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, presetsLayout, setSpotlightArea]);
+
+  // ウォークスルーの「カスタマイズ」ステップで設定ボタンをハイライト
+  useEffect(() => {
+    if (currentStepId === 'customize' && settingsButtonLayout) {
+      setSpotlightArea({
+        x: settingsButtonLayout.x,
+        y: settingsButtonLayout.y,
+        width: settingsButtonLayout.width,
+        height: settingsButtonLayout.height,
+        borderRadius: 24,
+      });
+    }
+  }, [currentStepId, settingsButtonLayout, setSpotlightArea]);
+
+  const handlePresetsLayout = useCallback(() => {
+    if (presetsRef.current) {
+      presetsRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setPresetsLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const handleLineListLayout = useCallback(() => {
+    if (lineListRef.current) {
+      lineListRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setLineListLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
 
   const handleLineSelected = useCallback(
     async (line: Line) => {
@@ -743,30 +853,34 @@ const SelectLineScreen = () => {
             <NearbyStationLoader />
           ) : (
             <>
-              <SelectLineScreenPresets
-                carouselData={carouselData}
-                isPresetsLoading={isPresetsLoading}
-                onPress={handlePresetPress}
-              />
-              {stationLines.length > 0 && (
-                <Heading style={styles.heading} singleLine>
-                  {headingTitleForRailway}
-                </Heading>
-              )}
-              {Array.from({
-                length: Math.ceil(stationLines.length / numColumns),
-              }).map((_, rowIndex) => {
-                const rowLines = stationLines.slice(
-                  rowIndex * numColumns,
-                  (rowIndex + 1) * numColumns
-                );
-                const rowKey = rowLines.map((l) => l.id).join('-');
-                return (
-                  <React.Fragment key={rowKey}>
-                    {renderLineRow(rowLines, rowIndex)}
-                  </React.Fragment>
-                );
-              })}
+              <View ref={presetsRef} onLayout={handlePresetsLayout}>
+                <SelectLineScreenPresets
+                  carouselData={carouselData}
+                  isPresetsLoading={isPresetsLoading}
+                  onPress={handlePresetPress}
+                />
+              </View>
+              <View ref={lineListRef} onLayout={handleLineListLayout}>
+                {stationLines.length > 0 && (
+                  <Heading style={styles.heading} singleLine>
+                    {headingTitleForRailway}
+                  </Heading>
+                )}
+                {Array.from({
+                  length: Math.ceil(stationLines.length / numColumns),
+                }).map((_, rowIndex) => {
+                  const rowLines = stationLines.slice(
+                    rowIndex * numColumns,
+                    (rowIndex + 1) * numColumns
+                  );
+                  const rowKey = rowLines.map((l) => l.id).join('-');
+                  return (
+                    <React.Fragment key={rowKey}>
+                      {renderLineRow(rowLines, rowIndex)}
+                    </React.Fragment>
+                  );
+                })}
+              </View>
 
               {busesLines.length > 0 && (
                 <>
@@ -801,11 +915,15 @@ const SelectLineScreen = () => {
       <NowHeader
         station={station}
         onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height + 32)}
+        onHeaderLayout={setNowHeaderLayout}
         scrollY={scrollY}
       />
 
       {/* フッター */}
-      <FooterTabBar active="home" />
+      <FooterTabBar
+        active="home"
+        onSettingsButtonLayout={setSettingsButtonLayout}
+      />
       {/* モーダル */}
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
@@ -824,6 +942,18 @@ const SelectLineScreen = () => {
         }
         onTrainTypeSelect={handleTrainTypeSelect}
       />
+      {/* ウォークスルー */}
+      {currentStep && (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onGoToStep={goToStep}
+          onSkip={skipWalkthrough}
+        />
+      )}
     </>
   );
 };
