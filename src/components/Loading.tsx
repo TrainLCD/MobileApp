@@ -90,13 +90,13 @@ const Loading = ({
         <Pressable
           style={styles.additionalLinkButton}
           onPress={() =>
-            navigation.dispatch(StackActions.replace('FakeStation'))
+            navigation.dispatch(StackActions.replace('SelectLine'))
           }
         >
           <Ionicons style={styles.icon} name="search-outline" size={32} />
 
           <Typography style={styles.additionalLinkText}>
-            {translate('searchFirstStationTitle')}
+            {translate('home')}
           </Typography>
         </Pressable>
       ) : null}

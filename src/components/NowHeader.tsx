@@ -18,10 +18,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { useLocationPermissionsGranted } from '~/hooks/useLocationPermissionsGranted';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import { isJapanese } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
@@ -88,6 +89,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
+  const locationPermissionsGranted = useLocationPermissionsGranted();
 
   const AnimatedTypography = useMemo(
     () => Animated.createAnimatedComponent(Typography),
@@ -95,14 +97,16 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
   );
 
   const nowHeader = useMemo(() => {
-    const label = isJapanese ? 'ただいま' : 'Now at';
+    const label = locationPermissionsGranted
+      ? translate('nowAtLabel')
+      : translate('welcomeLabel');
     if (!station) return { label, name: '' };
     const re = /\([^()]*\)/g;
     const name = isJapanese
       ? (station.name ?? '').replaceAll(re, '')
       : (station.nameRoman ?? station.name ?? '').replaceAll(re, '');
     return { label, name };
-  }, [station]);
+  }, [station, locationPermissionsGranted]);
 
   const COLLAPSE_RANGE = 64;
   const stackedStyle = useAnimatedStyle(() => ({
@@ -196,10 +200,14 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
                 >
                   {nowHeader.name ?? ''}
                 </AnimatedTypography>
-              ) : (
+              ) : locationPermissionsGranted ? (
                 <SkeletonPlaceholder borderRadius={4} speed={1500}>
                   <SkeletonPlaceholder.Item width={128} height={32} />
                 </SkeletonPlaceholder>
+              ) : (
+                <Typography style={styles.nowStation}>
+                  {translate('searchByStationName')}
+                </Typography>
               )}
             </Animated.View>
             {/* Inline layout (fades in) */}
@@ -212,7 +220,9 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {nowHeader.name ?? ''}
+                {station
+                  ? (nowHeader.name ?? '')
+                  : translate('searchByStationName')}
               </Typography>
             </Animated.View>
           </View>
