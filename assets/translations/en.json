@@ -7,7 +7,7 @@
   "nowStoppingAtKo": "현재",
   "selectLineTitle": "Please select a line",
   "settings": "Settings",
-  "searchFirstStationTitle": "Search for the first station",
+  "home": "Home",
   "selectBoundTitle": "Please select destination",
   "couldNotGetLocation": "Could not get location information. Please move and try again.",
   "badAccuracy": "There is an error in the location information, so it may not operate normally.",
@@ -235,5 +235,8 @@
   "themeDescriptionLed": "This theme is inspired by the JR East E531 series train.",
   "themeDescriptionJo": "This theme is inspired by the JR Yokosuka/Sobu Rapid Line.",
   "themeDescriptionJl": "This theme is inspired by the JR Joban Line Local service.",
-  "themeDescriptionJrKyushu": "This theme is inspired by the JR Kyushu 305 series train."
+  "themeDescriptionJrKyushu": "This theme is inspired by the JR Kyushu 305 series train.",
+  "searchByStationName": "Search by station name",
+  "nowAtLabel": "Now at",
+  "welcomeLabel": "Welcome"
 }
