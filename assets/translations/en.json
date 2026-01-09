@@ -247,6 +247,8 @@
   "walkthroughDescription3": "You can select a line from this list. Selecting the line you are currently riding will display the next station or transfer information.",
   "walkthroughTitle4": "Customize",
   "walkthroughDescription4": "You can change the display style to your preference, such as Tokyu Toyoko Line style or Saikyo Line style, by setting the theme.",
+  "walkthroughTitle5": "Presets",
+  "walkthroughDescription5": "Save your frequently used routes as presets. Saved routes appear here and can be quickly selected with a single tap.",
   "walkthroughNext": "Next",
   "walkthroughStart": "Get Started",
   "walkthroughSkip": "Skip",

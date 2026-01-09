@@ -24,6 +24,7 @@ export type SpotlightArea = {
 export type WalkthroughStepId =
   | 'welcome'
   | 'changeLocation'
+  | 'savedRoutes'
   | 'selectLine'
   | 'customize';
 

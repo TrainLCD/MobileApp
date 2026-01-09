@@ -146,7 +146,14 @@ const SelectLineScreen = () => {
     width: number;
     height: number;
   } | null>(null);
+  const [presetsLayout, setPresetsLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const lineListRef = useRef<View>(null);
+  const presetsRef = useRef<View>(null);
 
   const {
     isWalkthroughActive,
@@ -444,6 +451,19 @@ const SelectLineScreen = () => {
     }
   }, [currentStepId, lineListLayout, setSpotlightArea]);
 
+  // ウォークスルーの「プリセット」ステップでプリセットエリアをハイライト
+  useEffect(() => {
+    if (currentStepId === 'savedRoutes' && presetsLayout) {
+      setSpotlightArea({
+        x: presetsLayout.x,
+        y: presetsLayout.y,
+        width: presetsLayout.width,
+        height: presetsLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, presetsLayout, setSpotlightArea]);
+
   // ウォークスルーの「カスタマイズ」ステップで設定ボタンをハイライト
   useEffect(() => {
     if (currentStepId === 'customize' && settingsButtonLayout) {
@@ -456,6 +476,16 @@ const SelectLineScreen = () => {
       });
     }
   }, [currentStepId, settingsButtonLayout, setSpotlightArea]);
+
+  const handlePresetsLayout = useCallback(() => {
+    if (presetsRef.current) {
+      presetsRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setPresetsLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
 
   const handleLineListLayout = useCallback(() => {
     if (lineListRef.current) {
@@ -822,11 +852,13 @@ const SelectLineScreen = () => {
             <NearbyStationLoader />
           ) : (
             <>
-              <SelectLineScreenPresets
-                carouselData={carouselData}
-                isPresetsLoading={isPresetsLoading}
-                onPress={handlePresetPress}
-              />
+              <View ref={presetsRef} onLayout={handlePresetsLayout}>
+                <SelectLineScreenPresets
+                  carouselData={carouselData}
+                  isPresetsLoading={isPresetsLoading}
+                  onPress={handlePresetPress}
+                />
+              </View>
               <View ref={lineListRef} onLayout={handleLineListLayout}>
                 {stationLines.length > 0 && (
                   <Heading style={styles.heading} singleLine>

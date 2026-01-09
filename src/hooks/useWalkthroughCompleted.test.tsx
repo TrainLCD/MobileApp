@@ -95,6 +95,13 @@ describe('useWalkthroughCompleted', () => {
       });
 
       expect(result.current.currentStepIndex).toBe(3);
+      expect(result.current.currentStepId).toBe('savedRoutes');
+
+      act(() => {
+        result.current.nextStep();
+      });
+
+      expect(result.current.currentStepIndex).toBe(4);
       expect(result.current.currentStepId).toBe('customize');
     });
 
@@ -110,7 +117,7 @@ describe('useWalkthroughCompleted', () => {
 
       // 最後のステップまで進む
       act(() => {
-        result.current.goToStep(3);
+        result.current.goToStep(4);
       });
 
       expect(result.current.currentStepId).toBe('customize');
@@ -281,7 +288,14 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStep?.id).toBe('selectLine');
       expect(result.current.currentStep?.titleKey).toBe('walkthroughTitle3');
 
-      // Step 3: customize
+      // Step 3: savedRoutes
+      act(() => {
+        result.current.nextStep();
+      });
+      expect(result.current.currentStep?.id).toBe('savedRoutes');
+      expect(result.current.currentStep?.titleKey).toBe('walkthroughTitle5');
+
+      // Step 4: customize
       act(() => {
         result.current.nextStep();
       });
@@ -298,7 +312,7 @@ describe('useWalkthroughCompleted', () => {
         expect(result.current.isWalkthroughActive).toBe(true);
       });
 
-      expect(result.current.totalSteps).toBe(4);
+      expect(result.current.totalSteps).toBe(5);
     });
   });
 
@@ -318,7 +332,7 @@ describe('useWalkthroughCompleted', () => {
 
       // 最後のステップに移動してnextStepを呼ぶ
       act(() => {
-        result.current.goToStep(3);
+        result.current.goToStep(4);
       });
 
       await act(async () => {
