@@ -145,11 +145,12 @@ const WalkthroughOverlay: React.FC<Props> = ({
           ? screenHeight / 2
           : undefined;
 
-  const tooltipBottom = useBottomPositioning
-    ? screenHeight - spotlightArea.y + 20
-    : tooltipPosition === 'bottom' && !spotlightArea
-      ? insets.bottom + 100
-      : undefined;
+  const tooltipBottom =
+    useBottomPositioning && spotlightArea
+      ? screenHeight - spotlightArea.y + 20
+      : tooltipPosition === 'bottom' && !spotlightArea
+        ? insets.bottom + 100
+        : undefined;
 
   return (
     <Portal>
