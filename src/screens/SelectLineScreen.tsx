@@ -138,7 +138,7 @@ const SelectLineScreen = () => {
     currentStep,
     totalSteps,
     nextStep,
-    prevStep,
+    goToStep,
     skipWalkthrough,
   } = useWalkthroughCompleted();
 
@@ -844,7 +844,7 @@ const SelectLineScreen = () => {
           currentStepIndex={currentStepIndex}
           totalSteps={totalSteps}
           onNext={nextStep}
-          onPrev={prevStep}
+          onGoToStep={goToStep}
           onSkip={skipWalkthrough}
         />
       )}

@@ -1,5 +1,5 @@
 import { Portal } from '@gorhom/portal';
-import React, { useCallback, useId } from 'react';
+import React, { useId } from 'react';
 import {
   Dimensions,
   Platform,
@@ -7,13 +7,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { translate } from '../translation';
@@ -21,8 +14,6 @@ import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-const SWIPE_THRESHOLD = 50;
 
 export type SpotlightArea = {
   x: number;
@@ -45,7 +36,7 @@ type Props = {
   currentStepIndex: number;
   totalSteps: number;
   onNext: () => void;
-  onPrev: () => void;
+  onGoToStep: (index: number) => void;
   onSkip: () => void;
 };
 
@@ -122,12 +113,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  swipeHint: {
-    fontSize: RFValue(12),
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 8,
-  },
 });
 
 const WalkthroughOverlay: React.FC<Props> = ({
@@ -136,37 +121,11 @@ const WalkthroughOverlay: React.FC<Props> = ({
   currentStepIndex,
   totalSteps,
   onNext,
-  onPrev,
+  onGoToStep,
   onSkip,
 }) => {
   const insets = useSafeAreaInsets();
   const maskId = useId();
-  const translateX = useSharedValue(0);
-
-  const handleSwipeLeft = useCallback(() => {
-    onNext();
-  }, [onNext]);
-
-  const handleSwipeRight = useCallback(() => {
-    onPrev();
-  }, [onPrev]);
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-    })
-    .onEnd((event) => {
-      if (event.translationX < -SWIPE_THRESHOLD) {
-        runOnJS(handleSwipeLeft)();
-      } else if (event.translationX > SWIPE_THRESHOLD) {
-        runOnJS(handleSwipeRight)();
-      }
-      translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value * 0.3 }],
-  }));
 
   if (!visible) {
     return null;
@@ -224,59 +183,57 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </Svg>
         </Pressable>
 
-        <GestureDetector gesture={panGesture}>
-          <Animated.View
-            style={[
-              styles.tooltipContainer,
-              tooltipBottom !== undefined
-                ? { bottom: tooltipBottom }
-                : { top: tooltipTop },
-              animatedStyle,
-            ]}
-          >
-            <Typography style={styles.title}>
-              {translate(step.titleKey)}
-            </Typography>
-            <Typography style={styles.description}>
-              {translate(step.descriptionKey)}
-            </Typography>
+        <View
+          style={[
+            styles.tooltipContainer,
+            tooltipBottom !== undefined
+              ? { bottom: tooltipBottom }
+              : { top: tooltipTop },
+          ]}
+        >
+          <Typography style={styles.title}>
+            {translate(step.titleKey)}
+          </Typography>
+          <Typography style={styles.description}>
+            {translate(step.descriptionKey)}
+          </Typography>
 
-            <View style={styles.footer}>
-              <Pressable onPress={onSkip}>
-                <Typography style={styles.skipText}>
-                  {translate('walkthroughSkip')}
-                </Typography>
-              </Pressable>
+          <View style={styles.footer}>
+            <Pressable onPress={onSkip}>
+              <Typography style={styles.skipText}>
+                {translate('walkthroughSkip')}
+              </Typography>
+            </Pressable>
 
-              <View style={styles.pagination}>
-                {Array.from({ length: totalSteps }).map((_, index) => (
+            <View style={styles.pagination}>
+              {Array.from({ length: totalSteps }).map((_, index) => (
+                <Pressable
+                  key={`dot-${
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable array
+                    index
+                  }`}
+                  onPress={() => onGoToStep(index)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                >
                   <View
-                    key={`dot-${
-                      // biome-ignore lint/suspicious/noArrayIndexKey: stable array
-                      index
-                    }`}
                     style={[
                       styles.dot,
                       index === currentStepIndex && styles.dotActive,
                     ]}
                   />
-                ))}
-              </View>
-
-              <Pressable style={styles.nextButton} onPress={onNext}>
-                <Typography style={styles.nextButtonText}>
-                  {currentStepIndex === totalSteps - 1
-                    ? translate('walkthroughStart')
-                    : translate('walkthroughNext')}
-                </Typography>
-              </Pressable>
+                </Pressable>
+              ))}
             </View>
 
-            <Typography style={styles.swipeHint}>
-              {translate('walkthroughSwipeHint')}
-            </Typography>
-          </Animated.View>
-        </GestureDetector>
+            <Pressable style={styles.nextButton} onPress={onNext}>
+              <Typography style={styles.nextButtonText}>
+                {currentStepIndex === totalSteps - 1
+                  ? translate('walkthroughStart')
+                  : translate('walkthroughNext')}
+              </Typography>
+            </Pressable>
+          </View>
+        </View>
       </View>
     </Portal>
   );

@@ -28,7 +28,7 @@ type UseWalkthroughResult = {
   currentStep: WalkthroughStep | null;
   totalSteps: number;
   nextStep: () => void;
-  prevStep: () => void;
+  goToStep: (index: number) => void;
   skipWalkthrough: () => Promise<void>;
   setSpotlightArea: (area: WalkthroughStep['spotlightArea']) => void;
 };
@@ -68,12 +68,12 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
     }
   }, [currentStepIndex, completeWalkthrough]);
 
-  const prevStep = useCallback(() => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
+  const goToStep = useCallback((index: number) => {
+    if (index >= 0 && index < WALKTHROUGH_STEPS.length) {
+      setCurrentStepIndex(index);
       setSpotlightAreaState(undefined);
     }
-  }, [currentStepIndex]);
+  }, []);
 
   const skipWalkthrough = useCallback(async () => {
     await completeWalkthrough();
@@ -104,7 +104,7 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
     currentStep,
     totalSteps: WALKTHROUGH_STEPS.length,
     nextStep,
-    prevStep,
+    goToStep,
     skipWalkthrough,
     setSpotlightArea,
   };
