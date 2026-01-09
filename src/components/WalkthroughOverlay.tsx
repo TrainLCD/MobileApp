@@ -1,10 +1,10 @@
 import { Portal } from '@gorhom/portal';
 import React, { useId } from 'react';
 import {
-  Dimensions,
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,8 +12,6 @@ import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export type SpotlightArea = {
   x: number;
@@ -125,6 +123,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
   onSkip,
 }) => {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const maskId = useId();
 
   if (!visible) {
@@ -133,15 +132,22 @@ const WalkthroughOverlay: React.FC<Props> = ({
 
   const { spotlightArea, tooltipPosition = 'bottom' } = step;
 
-  const tooltipTop =
-    tooltipPosition === 'top'
-      ? insets.top + 60
-      : spotlightArea
-        ? spotlightArea.y + spotlightArea.height + 20
-        : SCREEN_HEIGHT / 2;
+  // tooltipPosition === 'top' かつ spotlightArea がある場合は bottom で配置
+  const useBottomPositioning =
+    tooltipPosition === 'top' && spotlightArea !== undefined;
 
-  const tooltipBottom =
-    tooltipPosition === 'bottom' && !spotlightArea
+  const tooltipTop =
+    tooltipPosition === 'top' && !spotlightArea
+      ? insets.top + 60
+      : tooltipPosition === 'bottom' && spotlightArea
+        ? spotlightArea.y + spotlightArea.height + 20
+        : tooltipPosition === 'bottom'
+          ? screenHeight / 2
+          : undefined;
+
+  const tooltipBottom = useBottomPositioning
+    ? screenHeight - spotlightArea.y + 20
+    : tooltipPosition === 'bottom' && !spotlightArea
       ? insets.bottom + 100
       : undefined;
 
@@ -149,14 +155,14 @@ const WalkthroughOverlay: React.FC<Props> = ({
     <Portal>
       <View style={styles.overlay} pointerEvents="box-none">
         <Pressable style={styles.pressableOverlay} onPress={onNext}>
-          <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+          <Svg width={screenWidth} height={screenHeight}>
             <Defs>
               <Mask id={maskId}>
                 <Rect
                   x="0"
                   y="0"
-                  width={SCREEN_WIDTH}
-                  height={SCREEN_HEIGHT}
+                  width={screenWidth}
+                  height={screenHeight}
                   fill="white"
                 />
                 {spotlightArea && (
@@ -175,8 +181,8 @@ const WalkthroughOverlay: React.FC<Props> = ({
             <Rect
               x="0"
               y="0"
-              width={SCREEN_WIDTH}
-              height={SCREEN_HEIGHT}
+              width={screenWidth}
+              height={screenHeight}
               fill="rgba(0, 0, 0, 0.7)"
               mask={`url(#${maskId})`}
             />
