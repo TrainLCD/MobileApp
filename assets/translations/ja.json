@@ -248,5 +248,6 @@
   "walkthroughDescription3": "テーマ設定で東京メトロ風やJR風など、お好みの表示スタイルに変更できます。画面を長押しするとメニューが開きます。",
   "walkthroughNext": "次へ",
   "walkthroughStart": "はじめる",
-  "walkthroughSkip": "スキップ"
+  "walkthroughSkip": "スキップ",
+  "walkthroughSwipeHint": "スワイプで前後に移動できます"
 }

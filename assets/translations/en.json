@@ -247,5 +247,6 @@
   "walkthroughDescription3": "Change the display style to Tokyo Metro, JR, and more through theme settings. Long press the screen to open the menu.",
   "walkthroughNext": "Next",
   "walkthroughStart": "Get Started",
-  "walkthroughSkip": "Skip"
+  "walkthroughSkip": "Skip",
+  "walkthroughSwipeHint": "Swipe to navigate"
 }

@@ -7,6 +7,13 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { translate } from '../translation';
@@ -14,6 +21,8 @@ import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const SWIPE_THRESHOLD = 50;
 
 export type SpotlightArea = {
   x: number;
@@ -36,6 +45,7 @@ type Props = {
   currentStepIndex: number;
   totalSteps: number;
   onNext: () => void;
+  onPrev: () => void;
   onSkip: () => void;
 };
 
@@ -112,7 +122,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  tapHint: {
+  swipeHint: {
     fontSize: RFValue(12),
     color: '#999',
     textAlign: 'center',
@@ -126,14 +136,37 @@ const WalkthroughOverlay: React.FC<Props> = ({
   currentStepIndex,
   totalSteps,
   onNext,
+  onPrev,
   onSkip,
 }) => {
   const insets = useSafeAreaInsets();
   const maskId = useId();
+  const translateX = useSharedValue(0);
 
-  const handlePress = useCallback(() => {
+  const handleSwipeLeft = useCallback(() => {
     onNext();
   }, [onNext]);
+
+  const handleSwipeRight = useCallback(() => {
+    onPrev();
+  }, [onPrev]);
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translateX.value = event.translationX;
+    })
+    .onEnd((event) => {
+      if (event.translationX < -SWIPE_THRESHOLD) {
+        runOnJS(handleSwipeLeft)();
+      } else if (event.translationX > SWIPE_THRESHOLD) {
+        runOnJS(handleSwipeRight)();
+      }
+      translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
+    });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value * 0.3 }],
+  }));
 
   if (!visible) {
     return null;
@@ -156,7 +189,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
   return (
     <Portal>
       <View style={styles.overlay} pointerEvents="box-none">
-        <Pressable style={styles.pressableOverlay} onPress={handlePress}>
+        <Pressable style={styles.pressableOverlay} onPress={onNext}>
           <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
             <Defs>
               <Mask id={maskId}>
@@ -191,57 +224,59 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </Svg>
         </Pressable>
 
-        <View
-          style={[
-            styles.tooltipContainer,
-            tooltipBottom !== undefined
-              ? { bottom: tooltipBottom }
-              : { top: tooltipTop },
-          ]}
-          pointerEvents="box-none"
-        >
-          <Typography style={styles.title}>
-            {translate(step.titleKey)}
-          </Typography>
-          <Typography style={styles.description}>
-            {translate(step.descriptionKey)}
-          </Typography>
+        <GestureDetector gesture={panGesture}>
+          <Animated.View
+            style={[
+              styles.tooltipContainer,
+              tooltipBottom !== undefined
+                ? { bottom: tooltipBottom }
+                : { top: tooltipTop },
+              animatedStyle,
+            ]}
+          >
+            <Typography style={styles.title}>
+              {translate(step.titleKey)}
+            </Typography>
+            <Typography style={styles.description}>
+              {translate(step.descriptionKey)}
+            </Typography>
 
-          <View style={styles.footer}>
-            <Pressable onPress={onSkip}>
-              <Typography style={styles.skipText}>
-                {translate('walkthroughSkip')}
-              </Typography>
-            </Pressable>
+            <View style={styles.footer}>
+              <Pressable onPress={onSkip}>
+                <Typography style={styles.skipText}>
+                  {translate('walkthroughSkip')}
+                </Typography>
+              </Pressable>
 
-            <View style={styles.pagination}>
-              {Array.from({ length: totalSteps }).map((_, index) => (
-                <View
-                  key={`dot-${
-                    // biome-ignore lint/suspicious/noArrayIndexKey: stable array
-                    index
-                  }`}
-                  style={[
-                    styles.dot,
-                    index === currentStepIndex && styles.dotActive,
-                  ]}
-                />
-              ))}
+              <View style={styles.pagination}>
+                {Array.from({ length: totalSteps }).map((_, index) => (
+                  <View
+                    key={`dot-${
+                      // biome-ignore lint/suspicious/noArrayIndexKey: stable array
+                      index
+                    }`}
+                    style={[
+                      styles.dot,
+                      index === currentStepIndex && styles.dotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+
+              <Pressable style={styles.nextButton} onPress={onNext}>
+                <Typography style={styles.nextButtonText}>
+                  {currentStepIndex === totalSteps - 1
+                    ? translate('walkthroughStart')
+                    : translate('walkthroughNext')}
+                </Typography>
+              </Pressable>
             </View>
 
-            <Pressable style={styles.nextButton} onPress={onNext}>
-              <Typography style={styles.nextButtonText}>
-                {currentStepIndex === totalSteps - 1
-                  ? translate('walkthroughStart')
-                  : translate('walkthroughNext')}
-              </Typography>
-            </Pressable>
-          </View>
-
-          <Typography style={styles.tapHint}>
-            {translate('tapToClose')}
-          </Typography>
-        </View>
+            <Typography style={styles.swipeHint}>
+              {translate('walkthroughSwipeHint')}
+            </Typography>
+          </Animated.View>
+        </GestureDetector>
       </View>
     </Portal>
   );
