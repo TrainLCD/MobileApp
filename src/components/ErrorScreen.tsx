@@ -65,7 +65,12 @@ const ErrorScreen: React.FC<Props> = ({
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
   const navigation = useNavigation();
   const handleToStationSearch = useCallback(
-    () => navigation.dispatch(StackActions.replace('FakeStation')),
+    () =>
+      navigation.dispatch(
+        StackActions.replace('MainStack', {
+          screen: 'SelectLine',
+        })
+      ),
     [navigation]
   );
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -100,7 +105,7 @@ const ErrorScreen: React.FC<Props> = ({
             style={styles.button}
           >
             <Typography style={styles.buttonText}>
-              {translate('searchFirstStationTitle')}
+              {translate('home')}
             </Typography>
           </TouchableOpacity>
         ) : null}

@@ -1,6 +1,5 @@
 import { memo, type ReactNode, useEffect } from 'react';
 import { Alert } from 'react-native';
-import Loading from '../components/Loading';
 import { useDeepLink } from '../hooks';
 import { translate } from '../translation';
 
@@ -18,9 +17,7 @@ const DeepLinkProvider = ({ children }: Props) => {
     }
   }, [fetchRoutesByLinkError]);
   if (isRoutesLoadingByLink && !fetchRoutesByLinkError) {
-    return (
-      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-    );
+    return null;
   }
 
   return children;

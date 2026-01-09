@@ -79,9 +79,15 @@ const PrivacyScreen: React.FC = () => {
     }
   }, [fetchCurrentLocation, navigation]);
 
-  const handleStartWithoutPermissionPress = useCallback(() => {
-    navigation.dispatch(StackActions.replace('FakeStation'));
-  }, [navigation]);
+  const handleStartWithoutPermissionPress = useCallback(
+    () =>
+      navigation.dispatch(
+        StackActions.replace('MainStack', {
+          screen: 'SelectLine',
+        })
+      ),
+    [navigation]
+  );
 
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {

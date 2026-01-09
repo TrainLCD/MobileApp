@@ -240,7 +240,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         ]}
       >
         <Heading style={styles.title}>
-          {translate('searchFirstStationTitle')}
+          {translate('searchByStationName')}
         </Heading>
         <SearchBar onSearch={handleSearchStations} nameSearch />
       </View>
