@@ -311,7 +311,6 @@ const ThemeSettingsScreen: React.FC = () => {
             </Typography>
             <View
               style={{
-                elevation: 1,
                 shadowColor: '#333',
                 shadowOpacity: 0.25,
                 shadowOffset: {
