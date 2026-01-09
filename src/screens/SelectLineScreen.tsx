@@ -35,7 +35,9 @@ import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
+import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { gqlClient } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -129,6 +131,15 @@ const SelectLineScreen = () => {
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
+
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStep,
+    totalSteps,
+    nextStep,
+    skipWalkthrough,
+  } = useWalkthroughCompleted();
 
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
@@ -824,6 +835,17 @@ const SelectLineScreen = () => {
         }
         onTrainTypeSelect={handleTrainTypeSelect}
       />
+      {/* ウォークスルー */}
+      {currentStep && (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onSkip={skipWalkthrough}
+        />
+      )}
     </>
   );
 };
