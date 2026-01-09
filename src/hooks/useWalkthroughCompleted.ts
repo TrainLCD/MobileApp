@@ -17,7 +17,7 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
   {
     titleKey: 'walkthroughTitle3',
     descriptionKey: 'walkthroughDescription3',
-    tooltipPosition: 'bottom',
+    tooltipPosition: 'top',
   },
 ];
 

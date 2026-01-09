@@ -1,8 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAtomValue } from 'jotai';
-import React, { useMemo } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo, useRef } from 'react';
+import {
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -10,6 +16,13 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 type FooterTab = 'home' | 'search' | 'settings';
 
 export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
+
+export type ButtonLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -49,12 +62,29 @@ const styles = StyleSheet.create({
 type Props = {
   active?: FooterTab;
   visible?: boolean;
+  onSettingsButtonLayout?: (layout: ButtonLayout) => void;
 };
 
-const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
+const FooterTabBar: React.FC<Props> = ({
+  active = 'home',
+  visible = true,
+  onSettingsButtonLayout,
+}) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const settingsButtonRef = useRef<View>(null);
+
+  const handleSettingsButtonLayout = useCallback(
+    (_event: LayoutChangeEvent) => {
+      if (onSettingsButtonLayout && settingsButtonRef.current) {
+        settingsButtonRef.current.measureInWindow((x, y, width, height) => {
+          onSettingsButtonLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onSettingsButtonLayout]
+  );
 
   const iconColor = useMemo(
     () => ({
@@ -111,11 +141,13 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
           </Pressable>
 
           <Pressable
+            ref={settingsButtonRef}
             style={styles.button}
             accessibilityRole="button"
             onPress={() => {
               navigation.navigate('AppSettings' as never);
             }}
+            onLayout={handleSettingsButtonLayout}
           >
             <Ionicons
               name={active === 'settings' ? 'settings' : 'settings-outline'}

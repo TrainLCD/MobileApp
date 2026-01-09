@@ -47,7 +47,10 @@ import {
 import type { SavedRoute } from '~/models/SavedRoute';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
+import FooterTabBar, {
+  type ButtonLayout,
+  FOOTER_BASE_HEIGHT,
+} from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import { useFetchCurrentLocationOnce, useFetchNearbyStation } from '../hooks';
@@ -132,6 +135,9 @@ const SelectLineScreen = () => {
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
 
+  const [settingsButtonLayout, setSettingsButtonLayout] =
+    useState<ButtonLayout | null>(null);
+
   const {
     isWalkthroughActive,
     currentStepIndex,
@@ -140,6 +146,7 @@ const SelectLineScreen = () => {
     nextStep,
     goToStep,
     skipWalkthrough,
+    setSpotlightArea,
   } = useWalkthroughCompleted();
 
   const location = useAtomValue(locationAtom);
@@ -399,6 +406,19 @@ const SelectLineScreen = () => {
       Alert.alert(translate('errorTitle'), translate('apiErrorText'));
     }
   }, [nearbyStationFetchError]);
+
+  // ウォークスルーのステップ3で設定ボタンをハイライト
+  useEffect(() => {
+    if (currentStepIndex === 2 && settingsButtonLayout) {
+      setSpotlightArea({
+        x: settingsButtonLayout.x,
+        y: settingsButtonLayout.y,
+        width: settingsButtonLayout.width,
+        height: settingsButtonLayout.height,
+        borderRadius: 24,
+      });
+    }
+  }, [currentStepIndex, settingsButtonLayout, setSpotlightArea]);
 
   const handleLineSelected = useCallback(
     async (line: Line) => {
@@ -817,7 +837,10 @@ const SelectLineScreen = () => {
       />
 
       {/* フッター */}
-      <FooterTabBar active="home" />
+      <FooterTabBar
+        active="home"
+        onSettingsButtonLayout={setSettingsButtonLayout}
+      />
       {/* モーダル */}
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
