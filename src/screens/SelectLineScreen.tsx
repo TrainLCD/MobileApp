@@ -13,7 +13,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedScrollHandler,
@@ -140,6 +140,13 @@ const SelectLineScreen = () => {
   const [nowHeaderLayout, setNowHeaderLayout] = useState<HeaderLayout | null>(
     null
   );
+  const [lineListLayout, setLineListLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const lineListRef = useRef<View>(null);
 
   const {
     isWalkthroughActive,
@@ -423,6 +430,19 @@ const SelectLineScreen = () => {
     }
   }, [currentStepIndex, nowHeaderLayout, setSpotlightArea]);
 
+  // ウォークスルーのステップ3で路線一覧をハイライト
+  useEffect(() => {
+    if (currentStepIndex === 2 && lineListLayout) {
+      setSpotlightArea({
+        x: lineListLayout.x,
+        y: lineListLayout.y,
+        width: lineListLayout.width,
+        height: lineListLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepIndex, lineListLayout, setSpotlightArea]);
+
   // ウォークスルーのステップ4で設定ボタンをハイライト
   useEffect(() => {
     if (currentStepIndex === 3 && settingsButtonLayout) {
@@ -435,6 +455,16 @@ const SelectLineScreen = () => {
       });
     }
   }, [currentStepIndex, settingsButtonLayout, setSpotlightArea]);
+
+  const handleLineListLayout = useCallback(() => {
+    if (lineListRef.current) {
+      lineListRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setLineListLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
 
   const handleLineSelected = useCallback(
     async (line: Line) => {
@@ -796,25 +826,27 @@ const SelectLineScreen = () => {
                 isPresetsLoading={isPresetsLoading}
                 onPress={handlePresetPress}
               />
-              {stationLines.length > 0 && (
-                <Heading style={styles.heading} singleLine>
-                  {headingTitleForRailway}
-                </Heading>
-              )}
-              {Array.from({
-                length: Math.ceil(stationLines.length / numColumns),
-              }).map((_, rowIndex) => {
-                const rowLines = stationLines.slice(
-                  rowIndex * numColumns,
-                  (rowIndex + 1) * numColumns
-                );
-                const rowKey = rowLines.map((l) => l.id).join('-');
-                return (
-                  <React.Fragment key={rowKey}>
-                    {renderLineRow(rowLines, rowIndex)}
-                  </React.Fragment>
-                );
-              })}
+              <View ref={lineListRef} onLayout={handleLineListLayout}>
+                {stationLines.length > 0 && (
+                  <Heading style={styles.heading} singleLine>
+                    {headingTitleForRailway}
+                  </Heading>
+                )}
+                {Array.from({
+                  length: Math.ceil(stationLines.length / numColumns),
+                }).map((_, rowIndex) => {
+                  const rowLines = stationLines.slice(
+                    rowIndex * numColumns,
+                    (rowIndex + 1) * numColumns
+                  );
+                  const rowKey = rowLines.map((l) => l.id).join('-');
+                  return (
+                    <React.Fragment key={rowKey}>
+                      {renderLineRow(rowLines, rowIndex)}
+                    </React.Fragment>
+                  );
+                })}
+              </View>
 
               {busesLines.length > 0 && (
                 <>
