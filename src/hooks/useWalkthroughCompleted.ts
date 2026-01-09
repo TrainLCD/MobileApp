@@ -76,13 +76,15 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
   }, []);
 
   const completeWalkthrough = useCallback(async () => {
+    // UIを即座に更新（楽観的更新）
+    setIsWalkthroughCompleted(true);
     try {
       await AsyncStorage.setItem(
         ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED,
         'true'
       );
-      setIsWalkthroughCompleted(true);
     } catch (error) {
+      // ストレージエラーは非ブロッキングとして扱う
       console.error('Failed to save walkthrough completion status:', error);
     }
   }, []);

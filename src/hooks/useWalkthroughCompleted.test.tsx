@@ -343,8 +343,9 @@ describe('useWalkthroughCompleted', () => {
         'Failed to save walkthrough completion status:',
         expect.any(Error)
       );
-      // エラーが発生してもisWalkthroughCompletedはfalseのまま
-      expect(result.current.isWalkthroughCompleted).toBe(false);
+      // 楽観的更新により、ストレージエラーが発生してもUIは閉じる
+      expect(result.current.isWalkthroughCompleted).toBe(true);
+      expect(result.current.isWalkthroughActive).toBe(false);
 
       consoleSpy.mockRestore();
     });
