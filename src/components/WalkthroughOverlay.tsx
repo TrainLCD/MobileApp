@@ -136,14 +136,13 @@ const WalkthroughOverlay: React.FC<Props> = ({
   const useBottomPositioning =
     tooltipPosition === 'top' && spotlightArea !== undefined;
 
+  // tooltipTop と tooltipBottom は相互排他的に設定
   const tooltipTop =
     tooltipPosition === 'top' && !spotlightArea
       ? insets.top + 60
       : tooltipPosition === 'bottom' && spotlightArea
         ? spotlightArea.y + spotlightArea.height + 20
-        : tooltipPosition === 'bottom'
-          ? screenHeight / 2
-          : undefined;
+        : undefined;
 
   const tooltipBottom =
     useBottomPositioning && spotlightArea
@@ -206,7 +205,12 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </Typography>
 
           <View style={styles.footer}>
-            <Pressable onPress={onSkip}>
+            <Pressable
+              onPress={onSkip}
+              accessibilityRole="button"
+              accessibilityLabel={translate('walkthroughSkip')}
+              accessibilityHint={translate('walkthroughSkipHint')}
+            >
               <Typography style={styles.skipText}>
                 {translate('walkthroughSkip')}
               </Typography>
@@ -221,6 +225,9 @@ const WalkthroughOverlay: React.FC<Props> = ({
                   }`}
                   onPress={() => onGoToStep(index)}
                   hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${index + 1} / ${totalSteps}`}
+                  accessibilityHint={translate('walkthroughGoToStepHint')}
                 >
                   <View
                     style={[
@@ -232,7 +239,17 @@ const WalkthroughOverlay: React.FC<Props> = ({
               ))}
             </View>
 
-            <Pressable style={styles.nextButton} onPress={onNext}>
+            <Pressable
+              style={styles.nextButton}
+              onPress={onNext}
+              accessibilityRole="button"
+              accessibilityLabel={
+                currentStepIndex === totalSteps - 1
+                  ? translate('walkthroughStart')
+                  : translate('walkthroughNext')
+              }
+              accessibilityHint={translate('walkthroughNextHint')}
+            >
               <Typography style={styles.nextButtonText}>
                 {currentStepIndex === totalSteps - 1
                   ? translate('walkthroughStart')

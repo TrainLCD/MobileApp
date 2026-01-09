@@ -250,5 +250,8 @@
   "walkthroughNext": "Next",
   "walkthroughStart": "Get Started",
   "walkthroughSkip": "Skip",
-  "walkthroughSwipeHint": "Swipe to navigate"
+  "walkthroughSwipeHint": "Swipe to navigate",
+  "walkthroughSkipHint": "Skip the walkthrough and get started",
+  "walkthroughGoToStepHint": "Go to this step",
+  "walkthroughNextHint": "Proceed to the next step"
 }

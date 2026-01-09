@@ -251,5 +251,8 @@
   "walkthroughNext": "次へ",
   "walkthroughStart": "はじめる",
   "walkthroughSkip": "スキップ",
-  "walkthroughSwipeHint": "スワイプで前後に移動できます"
+  "walkthroughSwipeHint": "スワイプで前後に移動できます",
+  "walkthroughSkipHint": "ウォークスルーをスキップして開始します",
+  "walkthroughGoToStepHint": "このステップに移動します",
+  "walkthroughNextHint": "次のステップに進みます"
 }
