@@ -7,7 +7,7 @@
   "nowStoppingAtKo": "현재",
   "selectLineTitle": "路線を選択してください",
   "settings": "設定",
-  "searchFirstStationTitle": "駅を検索",
+  "home": "ホーム",
   "selectBoundTitle": "行先を選択してください",
   "couldNotGetLocation": "位置情報を取得できませんでした。移動してからもう一度お試しください。",
   "badAccuracy": "位置情報に誤差が生じているため、正常に動作しない可能性があります。",
@@ -236,5 +236,8 @@
   "themeDescriptionLed": "JR東日本E531系電車をイメージしたテーマです。",
   "themeDescriptionJo": "JR横須賀・総武快速線をイメージしたテーマです。",
   "themeDescriptionJl": "JR常磐線各駅停車をイメージしたテーマです。",
-  "themeDescriptionJrKyushu": "JR九州305系電車をイメージしたテーマです。"
+  "themeDescriptionJrKyushu": "JR九州305系電車をイメージしたテーマです。",
+  "searchByStationName": "駅名で検索",
+  "nowAtLabel": "ただいま",
+  "welcomeLabel": "ようこそ"
 }
