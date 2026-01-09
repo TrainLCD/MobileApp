@@ -29,7 +29,7 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
     id: 'savedRoutes',
     titleKey: 'walkthroughTitle5',
     descriptionKey: 'walkthroughDescription5',
-    tooltipPosition: 'top',
+    tooltipPosition: 'bottom',
   },
   {
     id: 'customize',

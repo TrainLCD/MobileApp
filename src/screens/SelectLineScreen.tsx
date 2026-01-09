@@ -452,11 +452,12 @@ const SelectLineScreen = () => {
   }, [currentStepId, lineListLayout, setSpotlightArea]);
 
   // ウォークスルーの「プリセット」ステップでプリセットエリアをハイライト
+  // SelectLineScreenPresetsのmarginTop: -16を補正
   useEffect(() => {
     if (currentStepId === 'savedRoutes' && presetsLayout) {
       setSpotlightArea({
         x: presetsLayout.x,
-        y: presetsLayout.y,
+        y: presetsLayout.y - 16,
         width: presetsLayout.width,
         height: presetsLayout.height,
         borderRadius: 12,
