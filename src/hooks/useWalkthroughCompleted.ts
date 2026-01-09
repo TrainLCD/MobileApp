@@ -12,11 +12,16 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
   {
     titleKey: 'walkthroughTitle2',
     descriptionKey: 'walkthroughDescription2',
-    tooltipPosition: 'top',
+    tooltipPosition: 'bottom',
   },
   {
     titleKey: 'walkthroughTitle3',
     descriptionKey: 'walkthroughDescription3',
+    tooltipPosition: 'top',
+  },
+  {
+    titleKey: 'walkthroughTitle4',
+    descriptionKey: 'walkthroughDescription4',
     tooltipPosition: 'top',
   },
 ];

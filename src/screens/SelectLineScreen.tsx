@@ -33,7 +33,7 @@ import {
 } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
-import { NowHeader } from '~/components/NowHeader';
+import { type HeaderLayout, NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
@@ -137,6 +137,9 @@ const SelectLineScreen = () => {
 
   const [settingsButtonLayout, setSettingsButtonLayout] =
     useState<ButtonLayout | null>(null);
+  const [nowHeaderLayout, setNowHeaderLayout] = useState<HeaderLayout | null>(
+    null
+  );
 
   const {
     isWalkthroughActive,
@@ -407,9 +410,22 @@ const SelectLineScreen = () => {
     }
   }, [nearbyStationFetchError]);
 
-  // ウォークスルーのステップ3で設定ボタンをハイライト
+  // ウォークスルーのステップ2でNowHeaderをハイライト
   useEffect(() => {
-    if (currentStepIndex === 2 && settingsButtonLayout) {
+    if (currentStepIndex === 1 && nowHeaderLayout) {
+      setSpotlightArea({
+        x: nowHeaderLayout.x,
+        y: nowHeaderLayout.y,
+        width: nowHeaderLayout.width,
+        height: nowHeaderLayout.height,
+        borderRadius: 16,
+      });
+    }
+  }, [currentStepIndex, nowHeaderLayout, setSpotlightArea]);
+
+  // ウォークスルーのステップ4で設定ボタンをハイライト
+  useEffect(() => {
+    if (currentStepIndex === 3 && settingsButtonLayout) {
       setSpotlightArea({
         x: settingsButtonLayout.x,
         y: settingsButtonLayout.y,
@@ -833,6 +849,7 @@ const SelectLineScreen = () => {
       <NowHeader
         station={station}
         onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height + 32)}
+        onHeaderLayout={setNowHeaderLayout}
         scrollY={scrollY}
       />
 
