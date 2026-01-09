@@ -48,20 +48,29 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
 
   useEffect(() => {
     const checkWalkthroughCompleted = async () => {
-      const completed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED
-      );
-      setIsWalkthroughCompleted(completed === 'true');
+      try {
+        const completed = await AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED
+        );
+        setIsWalkthroughCompleted(completed === 'true');
+      } catch (error) {
+        console.error('Failed to check walkthrough completion status:', error);
+        setIsWalkthroughCompleted(false);
+      }
     };
     checkWalkthroughCompleted();
   }, []);
 
   const completeWalkthrough = useCallback(async () => {
-    await AsyncStorage.setItem(
-      ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED,
-      'true'
-    );
-    setIsWalkthroughCompleted(true);
+    try {
+      await AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED,
+        'true'
+      );
+      setIsWalkthroughCompleted(true);
+    } catch (error) {
+      console.error('Failed to save walkthrough completion status:', error);
+    }
   }, []);
 
   const nextStep = useCallback(() => {
