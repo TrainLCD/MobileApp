@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -75,14 +75,28 @@ const styles = StyleSheet.create({
   },
 });
 
+export type HeaderLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 type Props = {
   station: Station | null;
   onLayout?: (event: LayoutChangeEvent) => void;
+  onHeaderLayout?: (layout: HeaderLayout) => void;
   scrollY: SharedValue<number>;
 };
 
-export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
+export const NowHeader = ({
+  station,
+  onLayout,
+  onHeaderLayout,
+  scrollY,
+}: Props) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const headerCardRef = useRef<View>(null);
 
   const setStationAtom = useSetAtom(stationState);
   const setNavigationAtom = useSetAtom(navigationState);
@@ -138,6 +152,18 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     setIsSearchModalVisible(true);
   }, []);
 
+  const handleHeaderLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      onLayout?.(event);
+      if (onHeaderLayout && headerCardRef.current) {
+        headerCardRef.current.measureInWindow((x, y, width, height) => {
+          onHeaderLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onLayout, onHeaderLayout]
+  );
+
   const handleSelectStation = useCallback(
     (station: Station) => {
       setStationAtom((prev) => ({
@@ -170,6 +196,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     <>
       <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
         <View
+          ref={headerCardRef}
           style={[
             styles.nowHeaderCard,
             {
@@ -177,7 +204,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
               borderBottomRightRadius: isLEDTheme ? 0 : 16,
             },
           ]}
-          onLayout={onLayout}
+          onLayout={handleHeaderLayout}
         >
           {Platform.OS === 'ios' ? (
             <BlurView
