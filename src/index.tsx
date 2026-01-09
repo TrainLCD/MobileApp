@@ -11,16 +11,18 @@ import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Alert, Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
+import { useWalkthroughCompleted } from './hooks';
 import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import PrivacyScreen from './screens/Privacy';
+import WalkthroughScreen from './screens/Walkthrough';
 import MainStack from './stacks/MainStack';
 import { store } from './store';
 import { setI18nConfig } from './translation';
@@ -41,6 +43,53 @@ const options: NativeStackNavigationOptions = {
   },
 };
 
+const AppNavigator: React.FC = () => {
+  const [permStatus] = Location.useForegroundPermissions();
+  const { isWalkthroughCompleted, setWalkthroughCompleted } =
+    useWalkthroughCompleted();
+
+  const handleWalkthroughComplete = useCallback(async () => {
+    await setWalkthroughCompleted();
+  }, [setWalkthroughCompleted]);
+
+  const WalkthroughWithCallback = useCallback(
+    () => <WalkthroughScreen onComplete={handleWalkthroughComplete} />,
+    [handleWalkthroughComplete]
+  );
+
+  if (isWalkthroughCompleted === null) {
+    return null;
+  }
+
+  return (
+    <Stack.Navigator screenOptions={screenOptions}>
+      {!isWalkthroughCompleted ? (
+        <Stack.Screen
+          options={options}
+          name="Walkthrough"
+          component={WalkthroughWithCallback}
+        />
+      ) : null}
+
+      {!permStatus?.granted ? (
+        <Stack.Screen
+          options={options}
+          name="Privacy"
+          component={PrivacyScreen}
+        />
+      ) : null}
+
+      <Stack.Screen options={options} name="MainStack" component={MainStack} />
+
+      <Stack.Screen
+        options={options}
+        name="TuningSettings"
+        component={TuningSettings}
+      />
+    </Stack.Navigator>
+  );
+};
+
 const App: React.FC = () => {
   useEffect(() => {
     type TextProps = {
@@ -52,8 +101,6 @@ const App: React.FC = () => {
       (Text as unknown as TextProps).defaultProps || {};
     (Text as unknown as TextProps).defaultProps.allowFontScaling = false;
   }, []);
-
-  const [permStatus] = Location.useForegroundPermissions();
 
   const [fontsLoaded, fontsLoadError] = useFonts({
     Roboto_400Regular,
@@ -85,27 +132,7 @@ const App: React.FC = () => {
                 <NavigationContainer>
                   <DeepLinkProvider>
                     <PortalProvider>
-                      <Stack.Navigator screenOptions={screenOptions}>
-                        {!permStatus?.granted ? (
-                          <Stack.Screen
-                            options={options}
-                            name="Privacy"
-                            component={PrivacyScreen}
-                          />
-                        ) : null}
-
-                        <Stack.Screen
-                          options={options}
-                          name="MainStack"
-                          component={MainStack}
-                        />
-
-                        <Stack.Screen
-                          options={options}
-                          name="TuningSettings"
-                          component={TuningSettings}
-                        />
-                      </Stack.Navigator>
+                      <AppNavigator />
                     </PortalProvider>
                     <GlobalToast />
                   </DeepLinkProvider>

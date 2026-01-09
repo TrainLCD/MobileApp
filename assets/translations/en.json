@@ -238,5 +238,14 @@
   "themeDescriptionJrKyushu": "This theme is inspired by the JR Kyushu 305 series train.",
   "searchByStationName": "Search by station name",
   "nowAtLabel": "Now at",
-  "welcomeLabel": "Welcome"
+  "welcomeLabel": "Welcome",
+  "walkthroughTitle1": "Welcome to TrainLCD",
+  "walkthroughDescription1": "TrainLCD replicates the in-car display found on trains. Select your line to see real-time information about the next station and transfer options.",
+  "walkthroughTitle2": "Select a Line",
+  "walkthroughDescription2": "Use location services to automatically detect the nearest station, or search by station name to select your line.",
+  "walkthroughTitle3": "Customize",
+  "walkthroughDescription3": "Change the display style to Tokyo Metro, JR, and more through theme settings. Long press the screen to open the menu.",
+  "walkthroughNext": "Next",
+  "walkthroughStart": "Get Started",
+  "walkthroughSkip": "Skip"
 }
