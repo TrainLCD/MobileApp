@@ -25,6 +25,7 @@ const CARD_GAP = 12;
 
 const CARD_HEIGHT = isTablet ? 180 : 156;
 const VERTICAL_PADDING = isTablet ? 8 : 4;
+const HORIZONTAL_PADDING = 24;
 
 const styles = StyleSheet.create({
   root: {
@@ -48,30 +49,44 @@ export const SelectLineScreenPresets = ({
   onPress,
 }: Props) => {
   const carouselOffsetRef = useRef(0);
-  // 現在の“論理インデックス”（carouselData基準）を保持して、再描画でも位置を維持
+  // 現在の"論理インデックス"（carouselData基準）を保持して、再描画でも位置を維持
   const currentLogicalIndexRef = useRef(0);
   const listRef = useRef<FlatList<LoopItem>>(null);
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const isLandscape = screenWidth > screenHeight;
+
+  // タブレットでは縦向き2分割、横向き3分割のカード幅
+  const numCardsVisible = isTablet ? (isLandscape ? 3 : 2) : 1;
+  const cardWidth = isTablet
+    ? (screenWidth -
+        HORIZONTAL_PADDING * 2 -
+        CARD_GAP * (numCardsVisible - 1)) /
+      numCardsVisible
+    : screenWidth;
+
+  // プリセットが2件以上の場合のみループ用に3倍にする
+  const shouldLoop = carouselData.length >= 2;
   const loopData = useMemo(
     () =>
       carouselData.length
-        ? [
-            ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-a-${i}` })),
-            ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-b-${i}` })),
-            ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-c-${i}` })),
-          ]
+        ? shouldLoop
+          ? [
+              ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-a-${i}` })),
+              ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-b-${i}` })),
+              ...carouselData.map((r, i) => ({ ...r, __k: `${r.id}-c-${i}` })),
+            ]
+          : carouselData.map((r, i) => ({ ...r, __k: `${r.id}-${i}` }))
         : [],
-    [carouselData]
+    [carouselData, shouldLoop]
   );
-  const cardWidth = useWindowDimensions().width; // アイテム幅は画面幅いっぱい
-  const sidePadding = 0;
 
   const ITEM_SIZE = cardWidth + CARD_GAP;
 
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (!carouselData.length) return;
+      if (!carouselData.length || !shouldLoop) return;
       const x = e.nativeEvent.contentOffset.x;
-      const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
+      const rawIndex = Math.round(x / ITEM_SIZE);
       // 論理インデックス（0..length-1）を保存しておく
       const logicalIndex =
         ((rawIndex % carouselData.length) + carouselData.length) %
@@ -79,18 +94,16 @@ export const SelectLineScreenPresets = ({
       currentLogicalIndexRef.current = logicalIndex;
       // ループのため、先頭ブロックに来たら1ブロック先へ、末尾ブロックなら1ブロック戻す
       if (rawIndex < carouselData.length) {
-        const newOffset =
-          sidePadding + (rawIndex + carouselData.length) * ITEM_SIZE;
+        const newOffset = (rawIndex + carouselData.length) * ITEM_SIZE;
         carouselOffsetRef.current = newOffset;
         listRef.current?.scrollToOffset({ offset: newOffset, animated: false });
       } else if (rawIndex >= carouselData.length * 2) {
-        const newOffset =
-          sidePadding + (rawIndex - carouselData.length) * ITEM_SIZE;
+        const newOffset = (rawIndex - carouselData.length) * ITEM_SIZE;
         carouselOffsetRef.current = newOffset;
         listRef.current?.scrollToOffset({ offset: newOffset, animated: false });
       }
     },
-    [ITEM_SIZE, carouselData.length]
+    [ITEM_SIZE, carouselData.length, shouldLoop]
   );
 
   const snapOffsets = useMemo(
@@ -101,9 +114,9 @@ export const SelectLineScreenPresets = ({
   const keyExtractor = useCallback((item: LoopItem) => item.__k, []);
 
   const renderItem: ListRenderItem<LoopItem> = useCallback(
-    ({ item }) => (
-      <View style={{ width: cardWidth }}>
-        <View style={styles.horizontalMargin}>
+    ({ item }) =>
+      isTablet ? (
+        <View style={{ width: cardWidth }}>
           <Pressable onPress={() => item.stations.length > 0 && onPress(item)}>
             <PresetCard
               title={item.name}
@@ -112,8 +125,21 @@ export const SelectLineScreenPresets = ({
             />
           </Pressable>
         </View>
-      </View>
-    ),
+      ) : (
+        <View style={{ width: cardWidth }}>
+          <View style={styles.horizontalMargin}>
+            <Pressable
+              onPress={() => item.stations.length > 0 && onPress(item)}
+            >
+              <PresetCard
+                title={item.name}
+                from={item.stations[0]}
+                to={item.stations.at(-1)}
+              />
+            </Pressable>
+          </View>
+        </View>
+      ),
     [cardWidth, onPress]
   );
 
@@ -121,10 +147,10 @@ export const SelectLineScreenPresets = ({
     () =>
       isPresetsLoading ? (
         <View style={{ width: cardWidth }}>
-          <View style={styles.horizontalMargin}>
+          <View style={isTablet ? undefined : styles.horizontalMargin}>
             <SkeletonPlaceholder borderRadius={isTablet ? 8 : 4} speed={1500}>
               <SkeletonPlaceholder.Item
-                width={cardWidth - 48}
+                width={isTablet ? cardWidth : cardWidth - 48}
                 height={CARD_HEIGHT}
               />
             </SkeletonPlaceholder>
@@ -136,7 +162,7 @@ export const SelectLineScreenPresets = ({
             width: cardWidth,
           }}
         >
-          <View style={styles.horizontalMargin}>
+          <View style={isTablet ? undefined : styles.horizontalMargin}>
             <NoPresetsCard />
           </View>
         </View>
@@ -149,7 +175,7 @@ export const SelectLineScreenPresets = ({
       if (!carouselData.length) return;
       const x = e.nativeEvent.contentOffset.x;
       carouselOffsetRef.current = x;
-      const rawIndex = Math.round((x - sidePadding) / ITEM_SIZE);
+      const rawIndex = Math.round(x / ITEM_SIZE);
       const logicalIndex =
         ((rawIndex % carouselData.length) + carouselData.length) %
         carouselData.length;
@@ -176,7 +202,11 @@ export const SelectLineScreenPresets = ({
         snapToAlignment="start"
         disableIntervalMomentum
         style={{ height: CARD_HEIGHT }}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          isTablet && { paddingHorizontal: HORIZONTAL_PADDING },
+          carouselData.length <= 1 && { flexGrow: 1, justifyContent: 'center' },
+        ]}
       />
     </View>
   );

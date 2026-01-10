@@ -434,9 +434,9 @@ describe('SelectLineScreenPresets', () => {
         />
       );
 
-      // ループデータは3倍になるので、3つのPresetCardが表示される
+      // プリセットが1件の場合はループしないので1つだけ表示される
       const presetCards = getAllByTestId('preset-card');
-      expect(presetCards.length).toBe(3);
+      expect(presetCards.length).toBe(1);
     });
 
     it('複数のプリセットがある場合、全てがループデータとして3倍表示される', () => {
@@ -602,7 +602,7 @@ describe('SelectLineScreenPresets - ループデータ生成', () => {
     expect(presetCards.length).toBe(9);
   });
 
-  it('1つのプリセットでも3倍に複製される', () => {
+  it('1つのプリセットはループしない', () => {
     const stations = [createMockStation(1, '駅A', 'Station A')];
     const carouselData = [createMockLoopItem(1, '単独プリセット', stations)];
 
@@ -614,6 +614,7 @@ describe('SelectLineScreenPresets - ループデータ生成', () => {
       />
     );
 
-    expect(getAllByTestId('preset-card').length).toBe(3);
+    // プリセットが1件の場合はループしないので1つだけ表示される
+    expect(getAllByTestId('preset-card').length).toBe(1);
   });
 });
