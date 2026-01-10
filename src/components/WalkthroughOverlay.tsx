@@ -1,5 +1,5 @@
 import { Portal } from '@gorhom/portal';
-import React, { useId } from 'react';
+import React, { useEffect, useId } from 'react';
 import {
   Platform,
   Pressable,
@@ -7,6 +7,11 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { translate } from '../translation';
@@ -45,6 +50,8 @@ type Props = {
   onGoToStep: (index: number) => void;
   onSkip: () => void;
 };
+
+const ANIMATION_DURATION = 200;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -134,6 +141,21 @@ const WalkthroughOverlay: React.FC<Props> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const maskId = useId();
 
+  // アニメーション用のshared value
+  const slideProgress = useSharedValue(1);
+
+  // ステップが変わったときにスライドアニメーション
+  // biome-ignore lint/correctness/useExhaustiveDependencies: currentStepIndexの変化でアニメーションをトリガーする
+  useEffect(() => {
+    slideProgress.value = 0;
+    slideProgress.value = withTiming(1, { duration: ANIMATION_DURATION });
+  }, [currentStepIndex]);
+
+  const animatedTooltipStyle = useAnimatedStyle(() => ({
+    opacity: slideProgress.value,
+    transform: [{ translateY: (1 - slideProgress.value) * 20 }],
+  }));
+
   if (!visible) {
     return null;
   }
@@ -197,12 +219,13 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </Svg>
         </Pressable>
 
-        <View
+        <Animated.View
           style={[
             styles.tooltipContainer,
             tooltipBottom !== undefined
               ? { bottom: tooltipBottom }
               : { top: tooltipTop },
+            animatedTooltipStyle,
           ]}
         >
           <Typography style={styles.title}>
@@ -265,7 +288,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
               </Typography>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Portal>
   );
