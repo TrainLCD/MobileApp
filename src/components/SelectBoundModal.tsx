@@ -342,7 +342,8 @@ export const SelectBoundModal: React.FC<Props> = ({
         !boundStations.length ||
         (direction === 'INBOUND' &&
           !isLoopLine &&
-          currentIndex === stations.length - 1)
+          currentIndex === stations.length - 1) ||
+        (direction === 'OUTBOUND' && !isLoopLine && !currentIndex)
       ) {
         return <></>;
       }
