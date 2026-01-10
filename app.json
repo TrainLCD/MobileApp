@@ -2,13 +2,18 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd-production",
-    "version": "10.0.90",
+    "version": "10.0.93",
     "plugins": [
       "expo-font",
       "expo-localization",
       "expo-web-browser",
       "expo-sqlite",
-      "expo-audio",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+        }
+      ],
       "expo-asset"
     ],
     "extra": {
@@ -16,18 +21,18 @@
         "projectId": "8d3a9192-c70c-4c01-a10b-6f3c35f7ad75"
       },
       "versioning": {
-        "androidMinVersionCode": 100000170
+        "androidMinVersionCode": 100000173
       }
     },
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd",
       "scheme": "ProdTrainLCD",
-      "buildNumber": "2383",
+      "buildNumber": "2386",
       "supportsTablet": true
     },
     "android": {
       "package": "me.tinykitten.trainlcd",
-      "versionCode": 100000170,
+      "versionCode": 100000173,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"

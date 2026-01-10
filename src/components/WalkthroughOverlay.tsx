@@ -1,5 +1,5 @@
 import { Portal } from '@gorhom/portal';
-import React, { useId } from 'react';
+import React, { useEffect, useId } from 'react';
 import {
   Platform,
   Pressable,
@@ -7,6 +7,11 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { translate } from '../translation';
@@ -45,6 +50,8 @@ type Props = {
   onGoToStep: (index: number) => void;
   onSkip: () => void;
 };
+
+const ANIMATION_DURATION = 300;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -134,30 +141,46 @@ const WalkthroughOverlay: React.FC<Props> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const maskId = useId();
 
-  if (!visible) {
-    return null;
-  }
-
   const { spotlightArea, tooltipPosition = 'bottom' } = step;
 
   // tooltipPosition === 'top' かつ spotlightArea がある場合は bottom で配置
   const useBottomPositioning =
     tooltipPosition === 'top' && spotlightArea !== undefined;
 
-  // tooltipTop と tooltipBottom は相互排他的に設定
-  const tooltipTop =
-    tooltipPosition === 'top' && !spotlightArea
-      ? insets.top + 60
-      : tooltipPosition === 'bottom' && spotlightArea
-        ? spotlightArea.y + spotlightArea.height + 20
-        : undefined;
+  // ツールチップのY座標を計算（画面上端からの距離）
+  const calculateTooltipY = (): number => {
+    if (tooltipPosition === 'top' && !spotlightArea) {
+      return insets.top + 60;
+    }
+    if (tooltipPosition === 'bottom' && spotlightArea) {
+      return spotlightArea.y + spotlightArea.height + 20;
+    }
+    if (useBottomPositioning && spotlightArea) {
+      // bottomからの距離をtopに変換（推定高さ200pxを使用）
+      const estimatedModalHeight = 200;
+      return spotlightArea.y - estimatedModalHeight - 20;
+    }
+    // デフォルト: 画面下部
+    return screenHeight - insets.bottom - 300;
+  };
 
-  const tooltipBottom =
-    useBottomPositioning && spotlightArea
-      ? screenHeight - spotlightArea.y + 20
-      : tooltipPosition === 'bottom' && !spotlightArea
-        ? insets.bottom + 100
-        : undefined;
+  // アニメーション用のshared value
+  const animatedY = useSharedValue(calculateTooltipY());
+
+  // ステップが変わったときに位置をアニメーション
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 位置変更時にアニメーションをトリガーする
+  useEffect(() => {
+    const targetY = calculateTooltipY();
+    animatedY.value = withTiming(targetY, { duration: ANIMATION_DURATION });
+  }, [currentStepIndex, spotlightArea?.y, screenHeight]);
+
+  const animatedTooltipStyle = useAnimatedStyle(() => ({
+    top: animatedY.value,
+  }));
+
+  if (!visible) {
+    return null;
+  }
 
   return (
     <Portal>
@@ -197,14 +220,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </Svg>
         </Pressable>
 
-        <View
-          style={[
-            styles.tooltipContainer,
-            tooltipBottom !== undefined
-              ? { bottom: tooltipBottom }
-              : { top: tooltipTop },
-          ]}
-        >
+        <Animated.View style={[styles.tooltipContainer, animatedTooltipStyle]}>
           <Typography style={styles.title}>
             {translate(step.titleKey)}
           </Typography>
@@ -265,7 +281,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
               </Typography>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Portal>
   );
