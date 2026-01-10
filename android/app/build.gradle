@@ -142,13 +142,13 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000171
-            versionName "10.0.91"
+            versionCode 100000172
+            versionName "10.0.92"
         }
         prod {
             dimension "environment"
-            versionCode 100000171
-            versionName "10.0.91"
+            versionCode 100000172
+            versionName "10.0.92"
         }
     }
 }
