@@ -174,14 +174,17 @@ const WalkthroughOverlay: React.FC<Props> = ({
   }, [currentStepIndex, spotlightArea?.y, screenHeight]);
 
   // タブレットで中央揃えになるよう左位置を計算
-  const tooltipWidth = Math.min(screenWidth - 48, 640);
+  const tooltipWidth = Math.min(Math.max(0, screenWidth - 48), 640);
   const tooltipLeft = (screenWidth - tooltipWidth) / 2;
 
-  const animatedTooltipStyle = useAnimatedStyle(() => ({
-    top: animatedY.value,
-    left: tooltipLeft,
-    width: tooltipWidth,
-  }));
+  const animatedTooltipStyle = useAnimatedStyle(
+    () => ({
+      top: animatedY.value,
+      left: tooltipLeft,
+      width: tooltipWidth,
+    }),
+    [tooltipLeft, tooltipWidth]
+  );
 
   if (!visible) {
     return null;
