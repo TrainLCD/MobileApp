@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { useMemo } from 'react';
+import type { DimensionValue } from 'react-native';
 import type { ToastConfigParams } from 'react-native-toast-message';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
@@ -17,7 +18,7 @@ export const GlobalToast: React.FC = () => {
       borderLeftWidth: 16,
       backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#333',
       borderRadius: isLEDTheme ? 0 : 6,
-      width: isTablet ? '50%' : '90%',
+      width: (isTablet ? '50%' : '90%') as DimensionValue,
     });
 
     const contentContainerStyle = {
