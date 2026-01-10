@@ -68,9 +68,9 @@ importers:
       expo-asset:
         specifier: ~12.0.9
         version: 12.0.9(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
-      expo-audio:
-        specifier: ^1.0.14
-        version: 1.0.14(expo-asset@12.0.9(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
+      expo-av:
+        specifier: ^16.0.8
+        version: 16.0.8(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native-web@0.21.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
       expo-blur:
         specifier: ~15.0.7
         version: 15.0.7(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
@@ -3473,13 +3473,16 @@ packages:
       react: '*'
       react-native: '*'
 
-  expo-audio@1.0.14:
-    resolution: {integrity: sha512-UU8n1mIDPfO9zFQbPnIpnzhHeqC8c8WQUoOOFvlgI5CeOJMUrQ6UXDpX+LBcHxw/amSBhF5HP6VMr58foPKwbA==}
+  expo-av@16.0.8:
+    resolution: {integrity: sha512-cmVPftGR/ca7XBgs7R6ky36lF3OC0/MM/lpgX/yXqfv0jASTsh7AYX9JxHCwFmF+Z6JEB1vne9FDx4GiLcGreQ==}
     peerDependencies:
       expo: '*'
-      expo-asset: '*'
       react: '*'
       react-native: '*'
+      react-native-web: '*'
+    peerDependenciesMeta:
+      react-native-web:
+        optional: true
 
   expo-blur@15.0.7:
     resolution: {integrity: sha512-SugQQbQd+zRPy8z2G5qDD4NqhcD7srBF7fN7O7yq6q7ZFK59VWvpDxtMoUkmSfdxgqONsrBN/rLdk00USADrMg==}
@@ -10722,12 +10725,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-audio@1.0.14(expo-asset@12.0.9(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0):
+  expo-av@16.0.8(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native-web@0.21.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0):
     dependencies:
       expo: 54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
-      expo-asset: 12.0.9(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0)
+    optionalDependencies:
+      react-native-web: 0.21.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
   expo-blur@15.0.7(expo@54.0.21(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0):
     dependencies:

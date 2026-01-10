@@ -1200,6 +1200,9 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXApplication (7.0.7):
     - ExpoModulesCore
+  - EXAV (16.0.8):
+    - ExpoModulesCore
+    - ReactCommon/turbomodule/core
   - EXConstants (18.0.10):
     - ExpoModulesCore
   - EXNotifications (0.32.12):
@@ -1236,8 +1239,6 @@ PODS:
     - SocketRocket
     - Yoga
   - ExpoAsset (12.0.9):
-    - ExpoModulesCore
-  - ExpoAudio (1.0.14):
     - ExpoModulesCore
   - ExpoBlur (15.0.7):
     - ExpoModulesCore
@@ -4462,11 +4463,11 @@ DEPENDENCIES:
   - "BVLinearGradient (from `../node_modules/.pnpm/react-native-linear-gradient@2.8.3_react-native@0.81.5_@babel+core@7.27.1_@react-native_07bfa63d28daea5160f8232506313a6e/node_modules/react-native-linear-gradient`)"
   - "DoubleConversion (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)"
   - "EXApplication (from `../node_modules/.pnpm/expo-application@7.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_8bf09e6dec55ba8f7386e8514a7c526b/node_modules/expo-application/ios`)"
+  - "EXAV (from `../node_modules/.pnpm/expo-av@16.0.8_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@bab_8d4b13cbc67bd05926fedb43e8b2a48f/node_modules/expo-av/ios`)"
   - "EXConstants (from `../node_modules/.pnpm/expo-constants@18.0.10_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_4eb2a2a0604c1d7d1558755df878dc7a/node_modules/expo-constants/ios`)"
   - "EXNotifications (from `../node_modules/.pnpm/expo-notifications@0.32.12_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native_72a5dd1b39d23397d7100552c7c688ae/node_modules/expo-notifications/ios`)"
   - "Expo (from `../node_modules/.pnpm/expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@babel+core@7.27.1__62d81ecba63fc17f2a6e36d8c50727fd/node_modules/expo`)"
   - "ExpoAsset (from `../node_modules/.pnpm/expo-asset@12.0.9_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@_1aeac60f0f48a2ca9b439f2a9a1d5571/node_modules/expo-asset/ios`)"
-  - "ExpoAudio (from `../node_modules/.pnpm/expo-audio@1.0.14_expo-asset@12.0.9_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_rea_b6f3d41b00b8a26d4ccdffa73d483dac/node_modules/expo-audio/ios`)"
   - "ExpoBlur (from `../node_modules/.pnpm/expo-blur@15.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@b_fe7db98b9e3ff13a04c61564c236efac/node_modules/expo-blur/ios`)"
   - "ExpoCrypto (from `../node_modules/.pnpm/expo-crypto@15.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5__04bfc87ea091d5506db0690eea9be52f/node_modules/expo-crypto/ios`)"
   - "ExpoDevice (from `../node_modules/.pnpm/expo-device@8.0.9_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@_fcc33bccb0dade2a3f9d6a6b8bdf8327/node_modules/expo-device/ios`)"
@@ -4626,6 +4627,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   EXApplication:
     :path: "../node_modules/.pnpm/expo-application@7.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_8bf09e6dec55ba8f7386e8514a7c526b/node_modules/expo-application/ios"
+  EXAV:
+    :path: "../node_modules/.pnpm/expo-av@16.0.8_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@bab_8d4b13cbc67bd05926fedb43e8b2a48f/node_modules/expo-av/ios"
   EXConstants:
     :path: "../node_modules/.pnpm/expo-constants@18.0.10_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_4eb2a2a0604c1d7d1558755df878dc7a/node_modules/expo-constants/ios"
   EXNotifications:
@@ -4634,8 +4637,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@babel+core@7.27.1__62d81ecba63fc17f2a6e36d8c50727fd/node_modules/expo"
   ExpoAsset:
     :path: "../node_modules/.pnpm/expo-asset@12.0.9_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@_1aeac60f0f48a2ca9b439f2a9a1d5571/node_modules/expo-asset/ios"
-  ExpoAudio:
-    :path: "../node_modules/.pnpm/expo-audio@1.0.14_expo-asset@12.0.9_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_rea_b6f3d41b00b8a26d4ccdffa73d483dac/node_modules/expo-audio/ios"
   ExpoBlur:
     :path: "../node_modules/.pnpm/expo-blur@15.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@b_fe7db98b9e3ff13a04c61564c236efac/node_modules/expo-blur/ios"
   ExpoCrypto:
@@ -4867,11 +4868,11 @@ SPEC CHECKSUMS:
   BVLinearGradient: cb006ba232a1f3e4f341bb62c42d1098c284da70
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   EXApplication: 296622817d459f46b6c5fe8691f4aac44d2b79e7
+  EXAV: b60fcf142fae6684d295bc28cd7cfcb3335570ea
   EXConstants: fd688cef4e401dcf798a021cfb5d87c890c30ba3
   EXNotifications: 7cff475adb5d7a255a9ea46bbd2589cb3b454506
   Expo: 4b4eeccda52f5cf8b9a5fac47b8feb78e66d3ff3
   ExpoAsset: 9ba6fbd677fb8e241a3899ac00fa735bc911eadf
-  ExpoAudio: 6a923f661e3360a183503fd96728ff9010ae8afd
   ExpoBlur: 2dd8f64aa31f5d405652c21d3deb2d2588b1852f
   ExpoCrypto: c1fbce112d1b6b79652bbe380b4fd4cc91676595
   ExpoDevice: 148accb4071873d19fba80a2506c58ffa433d620
