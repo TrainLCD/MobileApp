@@ -159,10 +159,12 @@ export const useTTS = (): void => {
           try {
             await soundJa.unloadAsync();
           } catch {}
+          await unduck();
           return;
         }
       } catch (e) {
         console.error('[useTTS] Failed to create soundJa:', e);
+        await unduck();
         return;
       }
 
