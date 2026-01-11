@@ -81,6 +81,18 @@ export const useTTS = (): void => {
   const soundJaRef = useRef<Sound | null>(null);
   const soundEnRef = useRef<Sound | null>(null);
 
+  const unduck = useCallback(async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: false,
+      });
+    } catch (e) {
+      console.warn('[useTTS] Failed to unduck:', e);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -138,6 +150,7 @@ export const useTTS = (): void => {
           soundJaRef.current = null;
           soundEnRef.current = null;
           playingRef.current = false;
+          await unduck();
         }
         return;
       }
@@ -160,6 +173,7 @@ export const useTTS = (): void => {
           } catch {}
           soundEnRef.current = null;
           playingRef.current = false;
+          await unduck();
         }
       }
     };
@@ -173,6 +187,7 @@ export const useTTS = (): void => {
           } catch {}
           soundEnRef.current = null;
           playingRef.current = false;
+          await unduck();
         }
         return;
       }
@@ -186,17 +201,7 @@ export const useTTS = (): void => {
         }
         soundEnRef.current = null;
         playingRef.current = false;
-
-        // Unduck: 他のアプリの音量を元に戻す
-        try {
-          await Audio.setAudioModeAsync({
-            interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-            interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-            shouldDuckAndroid: false,
-          });
-        } catch (e) {
-          console.warn('[useTTS] Failed to unduck:', e);
-        }
+        await unduck();
       }
     };
 
@@ -214,8 +219,9 @@ export const useTTS = (): void => {
       soundJaRef.current = null;
       soundEnRef.current = null;
       playingRef.current = false;
+      await unduck();
     }
-  }, []);
+  }, [unduck]);
 
   const ttsApiUrl = useMemo(() => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
@@ -367,6 +373,14 @@ export const useTTS = (): void => {
         soundJaRef.current = null;
         soundEnRef.current = null;
         playingRef.current = false;
+        // Unduck on unmount
+        try {
+          await Audio.setAudioModeAsync({
+            interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+            interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+            shouldDuckAndroid: false,
+          });
+        } catch {}
       })();
     };
   }, []);
