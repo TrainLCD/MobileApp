@@ -155,7 +155,38 @@ export const useTTS = (): void => {
       soundEnRef.current = soundEn;
       playingRef.current = true;
 
-      const onPlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
+      const handlePlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundEn error:', status.error);
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundEn.setOnPlaybackStatusUpdate(null);
+          try {
+            await soundEn.unloadAsync();
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundEn:', e);
+          }
+          soundEnRef.current = null;
+          playingRef.current = false;
+          await unduck();
+        }
+      };
+
+      const onPlaybackStatusUpdateEn = (status: AVPlaybackStatus) => {
+        void handlePlaybackStatusUpdateEn(status).catch(console.error);
+      };
+
+      const handlePlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
         if (!status.isLoaded) {
           if (status.error) {
             console.warn('[useTTS] soundJa error:', status.error);
@@ -196,31 +227,8 @@ export const useTTS = (): void => {
         }
       };
 
-      const onPlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
-        if (!status.isLoaded) {
-          if (status.error) {
-            console.warn('[useTTS] soundEn error:', status.error);
-            try {
-              await soundEn.unloadAsync();
-            } catch {}
-            soundEnRef.current = null;
-            playingRef.current = false;
-            await unduck();
-          }
-          return;
-        }
-
-        if (status.didJustFinish) {
-          soundEn.setOnPlaybackStatusUpdate(null);
-          try {
-            await soundEn.unloadAsync();
-          } catch (e) {
-            console.warn('[useTTS] Failed to unload soundEn:', e);
-          }
-          soundEnRef.current = null;
-          playingRef.current = false;
-          await unduck();
-        }
+      const onPlaybackStatusUpdateJa = (status: AVPlaybackStatus) => {
+        void handlePlaybackStatusUpdateJa(status).catch(console.error);
       };
 
       try {
