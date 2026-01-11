@@ -97,10 +97,13 @@ export const useTTS = (): void => {
       try {
         await TrackPlayer.setupPlayer({
           autoHandleInterruptions: true,
-          // ダッキング設定（他のアプリの音量を下げる）
+          // ダッキング設定（他のアプリの音を止めずに音量だけ下げる）
           iosCategory: IOSCategory.Playback,
           iosCategoryMode: IOSCategoryMode.SpokenAudio,
-          iosCategoryOptions: [IOSCategoryOptions.DuckOthers],
+          iosCategoryOptions: [
+            IOSCategoryOptions.MixWithOthers,
+            IOSCategoryOptions.DuckOthers,
+          ],
         });
       } catch (e) {
         // "already been initialized" は成功として扱う
