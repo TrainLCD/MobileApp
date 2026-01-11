@@ -149,6 +149,7 @@ describe('useTTS', () => {
   });
 
   afterEach(() => {
+    jest.clearAllMocks();
     jest.resetModules();
   });
 
