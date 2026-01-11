@@ -5,21 +5,6 @@ import { AppState } from 'react-native';
 import { store } from '~/store';
 import { useTTS } from './useTTS';
 
-// モック状態の定数
-const _mockState = {
-  None: 'none',
-  Playing: 'playing',
-  Paused: 'paused',
-  Stopped: 'stopped',
-  Error: 'error',
-};
-
-const _mockEvent = {
-  PlaybackQueueEnded: 'playback-queue-ended',
-  RemotePause: 'remote-pause',
-  PlaybackState: 'playback-state',
-};
-
 // モック設定
 jest.mock('react-native-track-player', () => ({
   __esModule: true,
