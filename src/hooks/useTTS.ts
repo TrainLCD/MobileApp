@@ -1,5 +1,10 @@
 import { getIdToken } from '@react-native-firebase/auth';
-import { Audio, type AVPlaybackStatus } from 'expo-av';
+import {
+  Audio,
+  type AVPlaybackStatus,
+  InterruptionModeAndroid,
+  InterruptionModeIOS,
+} from 'expo-av';
 import type { Sound } from 'expo-av/build/Audio';
 import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
@@ -83,6 +88,8 @@ export const useTTS = (): void => {
           allowsRecordingIOS: false,
           staysActiveInBackground: backgroundEnabled,
           playsInSilentModeIOS: true,
+          interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
           shouldDuckAndroid: true,
           playThroughEarpieceAndroid: false,
         });
@@ -179,6 +186,17 @@ export const useTTS = (): void => {
         }
         soundEnRef.current = null;
         playingRef.current = false;
+
+        // Unduck: 他のアプリの音量を元に戻す
+        try {
+          await Audio.setAudioModeAsync({
+            interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+            interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+            shouldDuckAndroid: false,
+          });
+        } catch (e) {
+          console.warn('[useTTS] Failed to unduck:', e);
+        }
       }
     };
 
