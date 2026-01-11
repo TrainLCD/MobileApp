@@ -188,14 +188,14 @@ export const useTTS = (): void => {
 
         if (status.didJustFinish) {
           soundEn.setOnPlaybackStatusUpdate(null);
+          soundEnRef.current = null;
+          playingRef.current = false;
+          await unduck();
           try {
             await soundEn.unloadAsync();
           } catch (e) {
             console.warn('[useTTS] Failed to unload soundEn:', e);
           }
-          soundEnRef.current = null;
-          playingRef.current = false;
-          await unduck();
         }
       };
 
