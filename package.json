@@ -37,6 +37,7 @@
     "expo": "~54.0.21",
     "expo-application": "~7.0.7",
     "expo-asset": "~12.0.9",
+    "expo-av": "^16.0.8",
     "expo-blur": "~15.0.7",
     "expo-constants": "~18.0.10",
     "expo-crypto": "~15.0.7",
@@ -81,7 +82,6 @@
     "react-native-skeleton-placeholder": "^5.2.4",
     "react-native-svg": "15.12.1",
     "react-native-toast-message": "^2.3.3",
-    "react-native-track-player": "^4.1.2",
     "react-native-version-check": "^3.4.7",
     "react-native-view-shot": "4.0.3",
     "react-native-watch-connectivity": "^1.1.0",
@@ -143,10 +143,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.0.98",
-  "pnpm": {
-    "patchedDependencies": {
-      "react-native-track-player@4.1.2": "patches/react-native-track-player@4.1.2.patch"
-    }
-  }
+  "version": "10.0.98"
 }

@@ -1,18 +1,15 @@
 import { getIdToken } from '@react-native-firebase/auth';
+import {
+  Audio,
+  type AVPlaybackStatus,
+  InterruptionModeAndroid,
+  InterruptionModeIOS,
+} from 'expo-av';
+import type { Sound } from 'expo-av/build/Audio';
 import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
-import TrackPlayer, {
-  AppKilledPlaybackBehavior,
-  Event,
-  IOSCategory,
-  IOSCategoryMode,
-  IOSCategoryOptions,
-  State,
-  useTrackPlayerEvents,
-} from 'react-native-track-player';
 import { isBusLine } from '~/utils/line';
 import speechState from '../store/atoms/speech';
 import { isDevApp } from '../utils/isDevApp';
@@ -70,10 +67,7 @@ export const useTTS = (): void => {
 
   const firstSpeechRef = useRef(true);
   const playingRef = useRef(false);
-  const pausedByBackgroundRef = useRef(false);
   const isLoadableRef = useRef(true);
-  const isPlayerSetupRef = useRef(false);
-  const setupPromiseRef = useRef<Promise<boolean> | null>(null);
   const { store, getByText } = useTTSCache();
   const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
   const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
@@ -84,114 +78,49 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
-  const ensureSetup = useCallback(async (): Promise<boolean> => {
-    if (isPlayerSetupRef.current) {
-      return true;
+  const soundJaRef = useRef<Sound | null>(null);
+  const soundEnRef = useRef<Sound | null>(null);
+
+  const duck = useCallback(async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: true,
+      });
+    } catch (e) {
+      console.warn('[useTTS] Failed to duck:', e);
     }
+  }, []);
 
-    if (setupPromiseRef.current) {
-      return setupPromiseRef.current;
+  const unduck = useCallback(async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: false,
+      });
+    } catch (e) {
+      console.warn('[useTTS] Failed to unduck:', e);
     }
-
-    setupPromiseRef.current = (async () => {
-      try {
-        await TrackPlayer.setupPlayer({
-          autoHandleInterruptions: true,
-          // ダッキング設定（他のアプリの音を止めずに音量だけ下げる）
-          iosCategory: IOSCategory.Playback,
-          iosCategoryMode: IOSCategoryMode.SpokenAudio,
-          iosCategoryOptions: [
-            IOSCategoryOptions.MixWithOthers,
-            IOSCategoryOptions.DuckOthers,
-          ],
-        });
-      } catch (e) {
-        // "already been initialized" は成功として扱う
-        if (
-          e instanceof Error &&
-          e.message.includes('already been initialized')
-        ) {
-          console.log('[useTTS] TrackPlayer already initialized');
-        } else {
-          console.warn('[useTTS] setupPlayer failed:', e);
-          setupPromiseRef.current = null;
-          return false;
-        }
-      }
-
-      isPlayerSetupRef.current = true;
-
-      try {
-        // 通知なしの設定
-        await TrackPlayer.updateOptions({
-          capabilities: [],
-          compactCapabilities: [],
-          notificationCapabilities: [],
-          android: {
-            appKilledPlaybackBehavior:
-              AppKilledPlaybackBehavior.ContinuePlayback,
-          },
-        });
-      } catch (e) {
-        console.warn('[useTTS] updateOptions failed:', e);
-      }
-
-      return true;
-    })();
-
-    return setupPromiseRef.current;
   }, []);
 
   useEffect(() => {
-    ensureSetup();
-  }, [ensureSetup]);
-
-  useTrackPlayerEvents([Event.PlaybackQueueEnded], () => {
-    playingRef.current = false;
-  });
-
-  useTrackPlayerEvents([Event.RemotePause], () => {
-    playingRef.current = false;
-  });
-
-  useTrackPlayerEvents([Event.PlaybackState], async (event) => {
-    if (event.state === State.Playing) {
-      playingRef.current = true;
-    } else if (event.state === State.Error) {
-      console.warn('[useTTS] PlaybackState error');
-      playingRef.current = false;
+    (async () => {
       try {
-        await TrackPlayer.reset();
-      } catch {}
-    }
-  });
-
-  useEffect(() => {
-    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      if (
-        (nextAppState === 'background' || nextAppState === 'inactive') &&
-        !backgroundEnabled
-      ) {
-        try {
-          const state = await TrackPlayer.getPlaybackState();
-          if (state.state === State.Playing) {
-            await TrackPlayer.pause();
-            pausedByBackgroundRef.current = true;
-          }
-        } catch {}
-      } else if (nextAppState === 'active' && pausedByBackgroundRef.current) {
-        try {
-          await TrackPlayer.play();
-          pausedByBackgroundRef.current = false;
-        } catch {}
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          staysActiveInBackground: backgroundEnabled,
+          playsInSilentModeIOS: true,
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+          shouldDuckAndroid: false,
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (e) {
+        console.warn('[useTTS] setAudioModeAsync failed:', e);
       }
-    };
-
-    const subscription = AppState.addEventListener(
-      'change',
-      handleAppStateChange
-    );
-    return () => subscription.remove();
+    })();
   }, [backgroundEnabled]);
 
   const speakFromPath = useCallback(
@@ -200,40 +129,143 @@ export const useTTS = (): void => {
         return;
       }
 
-      const isSetup = await ensureSetup();
-      if (!isSetup) {
+      firstSpeechRef.current = false;
+
+      // 再生前にダッキングを有効化
+      await duck();
+
+      // 既存のサウンドをクリーンアップ
+      try {
+        await soundJaRef.current?.stopAsync();
+        await soundJaRef.current?.unloadAsync();
+      } catch {}
+      try {
+        await soundEnRef.current?.stopAsync();
+        await soundEnRef.current?.unloadAsync();
+      } catch {}
+      soundJaRef.current = null;
+      soundEnRef.current = null;
+
+      let soundJa: Sound;
+      let soundEn: Sound;
+      try {
+        const resultJa = await Audio.Sound.createAsync({ uri: pathJa });
+        soundJa = resultJa.sound;
+        try {
+          const resultEn = await Audio.Sound.createAsync({ uri: pathEn });
+          soundEn = resultEn.sound;
+        } catch (e) {
+          console.error('[useTTS] Failed to create soundEn:', e);
+          try {
+            await soundJa.unloadAsync();
+          } catch {}
+          await unduck();
+          return;
+        }
+      } catch (e) {
+        console.error('[useTTS] Failed to create soundJa:', e);
+        await unduck();
         return;
       }
 
-      firstSpeechRef.current = false;
+      soundJaRef.current = soundJa;
+      soundEnRef.current = soundEn;
       playingRef.current = true;
 
+      const handlePlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundEn error:', status.error);
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundEn.setOnPlaybackStatusUpdate(null);
+          soundEnRef.current = null;
+          playingRef.current = false;
+          await unduck();
+          try {
+            await soundEn.unloadAsync();
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundEn:', e);
+          }
+        }
+      };
+
+      const onPlaybackStatusUpdateEn = (status: AVPlaybackStatus) => {
+        void handlePlaybackStatusUpdateEn(status).catch(console.error);
+      };
+
+      const handlePlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundJa error:', status.error);
+            try {
+              await soundJa.unloadAsync();
+            } catch {}
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundJaRef.current = null;
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundJa.setOnPlaybackStatusUpdate(null);
+          try {
+            await soundJa.unloadAsync();
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundJa:', e);
+          }
+          soundJaRef.current = null;
+
+          if (isLoadableRef.current) {
+            soundEn.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateEn);
+            await soundEn.playAsync();
+          } else {
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+        }
+      };
+
+      const onPlaybackStatusUpdateJa = (status: AVPlaybackStatus) => {
+        void handlePlaybackStatusUpdateJa(status).catch(console.error);
+      };
+
       try {
-        await TrackPlayer.reset();
-        await TrackPlayer.add([
-          {
-            id: 'tts-ja',
-            url: pathJa,
-            title: 'TTS Japanese',
-            artist: 'TrainLCD',
-          },
-          {
-            id: 'tts-en',
-            url: pathEn,
-            title: 'TTS English',
-            artist: 'TrainLCD',
-          },
-        ]);
-        await TrackPlayer.play();
+        soundJa.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateJa);
+        await soundJa.playAsync();
       } catch (e) {
-        console.error('[useTTS] Failed to play:', e);
-        playingRef.current = false;
+        console.error('[useTTS] Failed to play soundJa:', e);
         try {
-          await TrackPlayer.reset();
+          await soundJa.unloadAsync();
         } catch {}
+        try {
+          await soundEn.unloadAsync();
+        } catch {}
+        soundJaRef.current = null;
+        soundEnRef.current = null;
+        playingRef.current = false;
+        await unduck();
       }
     },
-    [ensureSetup]
+    [duck, unduck]
   );
 
   const ttsApiUrl = useMemo(() => {
@@ -372,10 +404,22 @@ export const useTTS = (): void => {
       isLoadableRef.current = false;
       (async () => {
         try {
-          await TrackPlayer.reset();
+          await soundJaRef.current?.stopAsync();
         } catch {}
+        try {
+          await soundEnRef.current?.stopAsync();
+        } catch {}
+        try {
+          await soundJaRef.current?.unloadAsync();
+        } catch {}
+        try {
+          await soundEnRef.current?.unloadAsync();
+        } catch {}
+        soundJaRef.current = null;
+        soundEnRef.current = null;
         playingRef.current = false;
+        await unduck();
       })();
     };
-  }, []);
+  }, [unduck]);
 };
