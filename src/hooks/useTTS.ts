@@ -112,9 +112,9 @@ export const useTTS = (): void => {
           allowsRecordingIOS: false,
           staysActiveInBackground: backgroundEnabled,
           playsInSilentModeIOS: true,
-          interruptionModeIOS: InterruptionModeIOS.DuckOthers,
-          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-          shouldDuckAndroid: true,
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+          shouldDuckAndroid: false,
           playThroughEarpieceAndroid: false,
         });
       } catch (e) {
