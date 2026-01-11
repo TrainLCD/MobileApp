@@ -1,7 +1,7 @@
 diff --git a/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt b/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
 --- a/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
 +++ b/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
-@@ -545,7 +545,10 @@ class MusicModule(reactContext: ReactApplicationContext) :
+@@ -545,7 +545,9 @@ class MusicModule(reactContext: ReactApplicationContext) :
          if (verifyServiceBoundOrReject(callback)) return@launch
 
          if (index >= 0 && index < musicService.tracks.size) {
@@ -12,7 +12,7 @@ diff --git a/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicMo
          } else {
              callback.resolve(null)
          }
-@@ -585,7 +588,10 @@ class MusicModule(reactContext: ReactApplicationContext) :
+@@ -585,7 +588,8 @@ class MusicModule(reactContext: ReactApplicationContext) :
 -        callback.resolve(
 -            if (musicService.tracks.isEmpty()) null
 -            else Arguments.fromBundle(
