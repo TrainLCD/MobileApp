@@ -1,7 +1,5 @@
-import TrackPlayer, {
-  type EmitterSubscription,
-  Event,
-} from 'react-native-track-player';
+import type { EmitterSubscription } from 'react-native';
+import TrackPlayer, { Event } from 'react-native-track-player';
 
 const subscriptions: EmitterSubscription[] = [];
 
