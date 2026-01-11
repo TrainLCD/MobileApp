@@ -1,5 +1,10 @@
 import { getIdToken } from '@react-native-firebase/auth';
-import { Audio, type AVPlaybackStatus } from 'expo-av';
+import {
+  Audio,
+  type AVPlaybackStatus,
+  InterruptionModeAndroid,
+  InterruptionModeIOS,
+} from 'expo-av';
 import type { Sound } from 'expo-av/build/Audio';
 import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
@@ -76,6 +81,30 @@ export const useTTS = (): void => {
   const soundJaRef = useRef<Sound | null>(null);
   const soundEnRef = useRef<Sound | null>(null);
 
+  const duck = useCallback(async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: true,
+      });
+    } catch (e) {
+      console.warn('[useTTS] Failed to duck:', e);
+    }
+  }, []);
+
+  const unduck = useCallback(async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        shouldDuckAndroid: false,
+      });
+    } catch (e) {
+      console.warn('[useTTS] Failed to unduck:', e);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -83,7 +112,9 @@ export const useTTS = (): void => {
           allowsRecordingIOS: false,
           staysActiveInBackground: backgroundEnabled,
           playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+          shouldDuckAndroid: false,
           playThroughEarpieceAndroid: false,
         });
       } catch (e) {
@@ -92,112 +123,150 @@ export const useTTS = (): void => {
     })();
   }, [backgroundEnabled]);
 
-  const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
-    if (!isLoadableRef.current) {
-      return;
-    }
-
-    firstSpeechRef.current = false;
-
-    // 既存のサウンドをクリーンアップ
-    try {
-      await soundJaRef.current?.stopAsync();
-      await soundJaRef.current?.unloadAsync();
-    } catch {}
-    try {
-      await soundEnRef.current?.stopAsync();
-      await soundEnRef.current?.unloadAsync();
-    } catch {}
-    soundJaRef.current = null;
-    soundEnRef.current = null;
-
-    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa });
-    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn });
-
-    soundJaRef.current = soundJa;
-    soundEnRef.current = soundEn;
-    playingRef.current = true;
-
-    const onPlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) {
-        if (status.error) {
-          console.warn('[useTTS] soundJa error:', status.error);
-          try {
-            await soundJa.unloadAsync();
-          } catch {}
-          try {
-            await soundEn.unloadAsync();
-          } catch {}
-          soundJaRef.current = null;
-          soundEnRef.current = null;
-          playingRef.current = false;
-        }
+  const speakFromPath = useCallback(
+    async (pathJa: string, pathEn: string) => {
+      if (!isLoadableRef.current) {
         return;
       }
 
-      if (status.didJustFinish) {
-        soundJa.setOnPlaybackStatusUpdate(null);
-        try {
-          await soundJa.unloadAsync();
-        } catch (e) {
-          console.warn('[useTTS] Failed to unload soundJa:', e);
-        }
-        soundJaRef.current = null;
+      firstSpeechRef.current = false;
 
-        if (isLoadableRef.current) {
-          soundEn.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateEn);
-          await soundEn.playAsync();
-        } else {
-          try {
-            await soundEn.unloadAsync();
-          } catch {}
-          soundEnRef.current = null;
-          playingRef.current = false;
-        }
-      }
-    };
+      // 再生前にダッキングを有効化
+      await duck();
 
-    const onPlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) {
-        if (status.error) {
-          console.warn('[useTTS] soundEn error:', status.error);
-          try {
-            await soundEn.unloadAsync();
-          } catch {}
-          soundEnRef.current = null;
-          playingRef.current = false;
-        }
-        return;
-      }
-
-      if (status.didJustFinish) {
-        soundEn.setOnPlaybackStatusUpdate(null);
-        try {
-          await soundEn.unloadAsync();
-        } catch (e) {
-          console.warn('[useTTS] Failed to unload soundEn:', e);
-        }
-        soundEnRef.current = null;
-        playingRef.current = false;
-      }
-    };
-
-    try {
-      soundJa.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateJa);
-      await soundJa.playAsync();
-    } catch (e) {
-      console.error('[useTTS] Failed to play soundJa:', e);
+      // 既存のサウンドをクリーンアップ
       try {
-        await soundJa.unloadAsync();
+        await soundJaRef.current?.stopAsync();
+        await soundJaRef.current?.unloadAsync();
       } catch {}
       try {
-        await soundEn.unloadAsync();
+        await soundEnRef.current?.stopAsync();
+        await soundEnRef.current?.unloadAsync();
       } catch {}
       soundJaRef.current = null;
       soundEnRef.current = null;
-      playingRef.current = false;
-    }
-  }, []);
+
+      let soundJa: Sound;
+      let soundEn: Sound;
+      try {
+        const resultJa = await Audio.Sound.createAsync({ uri: pathJa });
+        soundJa = resultJa.sound;
+        try {
+          const resultEn = await Audio.Sound.createAsync({ uri: pathEn });
+          soundEn = resultEn.sound;
+        } catch (e) {
+          console.error('[useTTS] Failed to create soundEn:', e);
+          try {
+            await soundJa.unloadAsync();
+          } catch {}
+          await unduck();
+          return;
+        }
+      } catch (e) {
+        console.error('[useTTS] Failed to create soundJa:', e);
+        await unduck();
+        return;
+      }
+
+      soundJaRef.current = soundJa;
+      soundEnRef.current = soundEn;
+      playingRef.current = true;
+
+      const handlePlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundEn error:', status.error);
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundEn.setOnPlaybackStatusUpdate(null);
+          try {
+            await soundEn.unloadAsync();
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundEn:', e);
+          }
+          soundEnRef.current = null;
+          playingRef.current = false;
+          await unduck();
+        }
+      };
+
+      const onPlaybackStatusUpdateEn = (status: AVPlaybackStatus) => {
+        void handlePlaybackStatusUpdateEn(status).catch(console.error);
+      };
+
+      const handlePlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundJa error:', status.error);
+            try {
+              await soundJa.unloadAsync();
+            } catch {}
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundJaRef.current = null;
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundJa.setOnPlaybackStatusUpdate(null);
+          try {
+            await soundJa.unloadAsync();
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundJa:', e);
+          }
+          soundJaRef.current = null;
+
+          if (isLoadableRef.current) {
+            soundEn.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateEn);
+            await soundEn.playAsync();
+          } else {
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+        }
+      };
+
+      const onPlaybackStatusUpdateJa = (status: AVPlaybackStatus) => {
+        void handlePlaybackStatusUpdateJa(status).catch(console.error);
+      };
+
+      try {
+        soundJa.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateJa);
+        await soundJa.playAsync();
+      } catch (e) {
+        console.error('[useTTS] Failed to play soundJa:', e);
+        try {
+          await soundJa.unloadAsync();
+        } catch {}
+        try {
+          await soundEn.unloadAsync();
+        } catch {}
+        soundJaRef.current = null;
+        soundEnRef.current = null;
+        playingRef.current = false;
+        await unduck();
+      }
+    },
+    [duck, unduck]
+  );
 
   const ttsApiUrl = useMemo(() => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
@@ -349,7 +418,8 @@ export const useTTS = (): void => {
         soundJaRef.current = null;
         soundEnRef.current = null;
         playingRef.current = false;
+        await unduck();
       })();
     };
-  }, []);
+  }, [unduck]);
 };
