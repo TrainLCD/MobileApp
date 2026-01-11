@@ -97,7 +97,7 @@ export const useTTS = (): void => {
     try {
       await Audio.setAudioModeAsync({
         interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
         shouldDuckAndroid: false,
       });
     } catch (e) {
@@ -113,7 +113,7 @@ export const useTTS = (): void => {
           staysActiveInBackground: backgroundEnabled,
           playsInSilentModeIOS: true,
           interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
           shouldDuckAndroid: false,
           playThroughEarpieceAndroid: false,
         });
