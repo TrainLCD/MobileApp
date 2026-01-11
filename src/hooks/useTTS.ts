@@ -97,7 +97,7 @@ export const useTTS = (): void => {
     try {
       await Audio.setAudioModeAsync({
         interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
         shouldDuckAndroid: false,
       });
     } catch (e) {
