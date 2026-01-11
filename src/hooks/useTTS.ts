@@ -131,8 +131,25 @@ export const useTTS = (): void => {
       soundJaRef.current = null;
       soundEnRef.current = null;
 
-      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa });
-      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn });
+      let soundJa: Sound;
+      let soundEn: Sound;
+      try {
+        const resultJa = await Audio.Sound.createAsync({ uri: pathJa });
+        soundJa = resultJa.sound;
+        try {
+          const resultEn = await Audio.Sound.createAsync({ uri: pathEn });
+          soundEn = resultEn.sound;
+        } catch (e) {
+          console.error('[useTTS] Failed to create soundEn:', e);
+          try {
+            await soundJa.unloadAsync();
+          } catch {}
+          return;
+        }
+      } catch (e) {
+        console.error('[useTTS] Failed to create soundJa:', e);
+        return;
+      }
 
       soundJaRef.current = soundJa;
       soundEnRef.current = soundEn;
