@@ -1200,6 +1200,9 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXApplication (7.0.7):
     - ExpoModulesCore
+  - EXAV (16.0.8):
+    - ExpoModulesCore
+    - ReactCommon/turbomodule/core
   - EXConstants (18.0.10):
     - ExpoModulesCore
   - EXNotifications (0.32.12):
@@ -3409,9 +3412,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-track-player (4.1.2):
-    - React-Core
-    - SwiftAudioEx (= 1.1.0)
   - react-native-version-check (3.5.0):
     - React-Core
   - react-native-view-shot (4.0.3):
@@ -4455,7 +4455,6 @@ PODS:
     - SDWebImage/Core (~> 5.17)
   - Sentry/HybridSDK (8.57.3)
   - SocketRocket (0.7.1)
-  - SwiftAudioEx (1.1.0)
   - UMAppLoader (6.0.7)
   - Yoga (0.0.0)
 
@@ -4464,6 +4463,7 @@ DEPENDENCIES:
   - "BVLinearGradient (from `../node_modules/.pnpm/react-native-linear-gradient@2.8.3_react-native@0.81.5_@babel+core@7.27.1_@react-native_07bfa63d28daea5160f8232506313a6e/node_modules/react-native-linear-gradient`)"
   - "DoubleConversion (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)"
   - "EXApplication (from `../node_modules/.pnpm/expo-application@7.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_8bf09e6dec55ba8f7386e8514a7c526b/node_modules/expo-application/ios`)"
+  - "EXAV (from `../node_modules/.pnpm/expo-av@16.0.8_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@bab_8d4b13cbc67bd05926fedb43e8b2a48f/node_modules/expo-av/ios`)"
   - "EXConstants (from `../node_modules/.pnpm/expo-constants@18.0.10_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_4eb2a2a0604c1d7d1558755df878dc7a/node_modules/expo-constants/ios`)"
   - "EXNotifications (from `../node_modules/.pnpm/expo-notifications@0.32.12_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native_72a5dd1b39d23397d7100552c7c688ae/node_modules/expo-notifications/ios`)"
   - "Expo (from `../node_modules/.pnpm/expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@babel+core@7.27.1__62d81ecba63fc17f2a6e36d8c50727fd/node_modules/expo`)"
@@ -4528,7 +4528,6 @@ DEPENDENCIES:
   - "React-Mapbuffer (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/ReactCommon`)"
   - "React-microtasksnativemodule (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)"
   - "react-native-safe-area-context (from `../node_modules/.pnpm/react-native-safe-area-context@5.6.1_react-native@0.81.5_@babel+core@7.27.1_@react-nati_53116269c981a251932b15322431b52b/node_modules/react-native-safe-area-context`)"
-  - "react-native-track-player (from `../node_modules/.pnpm/react-native-track-player@4.1.2_react-native@0.81.5_@babel+core@7.27.1_@react-native-co_929cddd215031f4b0518fb0c77fd9dc1/node_modules/react-native-track-player`)"
   - "react-native-version-check (from `../node_modules/.pnpm/react-native-version-check@3.5.0_react-native@0.81.5_@babel+core@7.27.1_@react-native-c_9ced3cf714f1cef68e6f99b885b54370/node_modules/react-native-version-check`)"
   - "react-native-view-shot (from `../node_modules/.pnpm/react-native-view-shot@4.0.3_react-native@0.81.5_@babel+core@7.27.1_@react-native-commu_24cf574a85c1614859869dd6ce173a23/node_modules/react-native-view-shot`)"
   - "React-NativeModulesApple (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)"
@@ -4618,7 +4617,6 @@ SPEC REPOS:
     - SDWebImageWebPCoder
     - Sentry
     - SocketRocket
-    - SwiftAudioEx
 
 EXTERNAL SOURCES:
   boost:
@@ -4629,6 +4627,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   EXApplication:
     :path: "../node_modules/.pnpm/expo-application@7.0.7_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_8bf09e6dec55ba8f7386e8514a7c526b/node_modules/expo-application/ios"
+  EXAV:
+    :path: "../node_modules/.pnpm/expo-av@16.0.8_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.81.5_@bab_8d4b13cbc67bd05926fedb43e8b2a48f/node_modules/expo-av/ios"
   EXConstants:
     :path: "../node_modules/.pnpm/expo-constants@18.0.10_expo@54.0.21_@babel+core@7.27.1_graphql@16.11.0_react-native@0.8_4eb2a2a0604c1d7d1558755df878dc7a/node_modules/expo-constants/ios"
   EXNotifications:
@@ -4756,8 +4756,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   react-native-safe-area-context:
     :path: "../node_modules/.pnpm/react-native-safe-area-context@5.6.1_react-native@0.81.5_@babel+core@7.27.1_@react-nati_53116269c981a251932b15322431b52b/node_modules/react-native-safe-area-context"
-  react-native-track-player:
-    :path: "../node_modules/.pnpm/react-native-track-player@4.1.2_react-native@0.81.5_@babel+core@7.27.1_@react-native-co_929cddd215031f4b0518fb0c77fd9dc1/node_modules/react-native-track-player"
   react-native-version-check:
     :path: "../node_modules/.pnpm/react-native-version-check@3.5.0_react-native@0.81.5_@babel+core@7.27.1_@react-native-c_9ced3cf714f1cef68e6f99b885b54370/node_modules/react-native-version-check"
   react-native-view-shot:
@@ -4870,6 +4868,7 @@ SPEC CHECKSUMS:
   BVLinearGradient: cb006ba232a1f3e4f341bb62c42d1098c284da70
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   EXApplication: 296622817d459f46b6c5fe8691f4aac44d2b79e7
+  EXAV: b60fcf142fae6684d295bc28cd7cfcb3335570ea
   EXConstants: fd688cef4e401dcf798a021cfb5d87c890c30ba3
   EXNotifications: 7cff475adb5d7a255a9ea46bbd2589cb3b454506
   Expo: 4b4eeccda52f5cf8b9a5fac47b8feb78e66d3ff3
@@ -4957,7 +4956,6 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 017336879e2e0fb7537bbc08c24f34e2384c9260
   React-microtasksnativemodule: 63ee6730cec233feab9cdcc0c100dc28a12e4165
   react-native-safe-area-context: ee1e8e2a7abf737a8d4d9d1a5686a7f2e7466236
-  react-native-track-player: dd56f9948e03756a217c75e0a61aa04aab65b5a1
   react-native-version-check: 842a3b0e7221798cbe8c6abaf24aab3ed0b485ce
   react-native-view-shot: aab9ffbcc2f01035ee8ffd9a00c773e215b35c8b
   React-NativeModulesApple: cbceb3c4cb726838c461b13802a76cefa6f3476f
@@ -5015,7 +5013,6 @@ SPEC CHECKSUMS:
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Sentry: c643eb180df401dd8c734c5036ddd9dd9218daa6
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  SwiftAudioEx: f6aa653770f3a0d3851edaf8d834a30aee4a7646
   UMAppLoader: e1234c45d2b7da239e9e90fc4bbeacee12afd5b6
   Yoga: cc4a6600d61e4e9276e860d4d68eebb834a050ba
 

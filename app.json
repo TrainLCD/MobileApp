@@ -8,6 +8,12 @@
       "expo-localization",
       "expo-web-browser",
       "expo-sqlite",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+        }
+      ],
       "expo-asset"
     ],
     "extra": {
