@@ -9,7 +9,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { isClip } from 'react-native-app-clip';
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
@@ -161,42 +160,7 @@ const TTSSettingsScreen: React.FC = () => {
 
   const handleToggleBgTTS = useCallback(
     async (flag: boolean) => {
-      if (isClip()) {
-        Alert.alert(translate('notice'), translate('bgTtsAppClipAlertText'));
-        return;
-      }
-
       try {
-        const noticeConfirmed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
-        );
-
-        if (flag && noticeConfirmed === null) {
-          Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                try {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
-                    'true'
-                  );
-                } catch (error) {
-                  console.error('Failed to persist BG TTS notice flag', error);
-                  Alert.alert(
-                    translate('errorTitle'),
-                    translate('failedToSavePreference')
-                  );
-                }
-              },
-            },
-            {
-              text: 'OK',
-            },
-          ]);
-        }
-
         await AsyncStorage.setItem(
           ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
           flag ? 'true' : 'false'
