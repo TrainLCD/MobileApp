@@ -376,15 +376,8 @@ export const useTTS = (): void => {
         soundJaRef.current = null;
         soundEnRef.current = null;
         playingRef.current = false;
-        // Unduck on unmount
-        try {
-          await Audio.setAudioModeAsync({
-            interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
-            interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-            shouldDuckAndroid: false,
-          });
-        } catch {}
+        await unduck();
       })();
     };
-  }, []);
+  }, [unduck]);
 };
