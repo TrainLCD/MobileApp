@@ -111,117 +111,120 @@ export const useTTS = (): void => {
     })();
   }, [backgroundEnabled]);
 
-  const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
-    if (!isLoadableRef.current) {
-      return;
-    }
+  const speakFromPath = useCallback(
+    async (pathJa: string, pathEn: string) => {
+      if (!isLoadableRef.current) {
+        return;
+      }
 
-    firstSpeechRef.current = false;
+      firstSpeechRef.current = false;
 
-    // 既存のサウンドをクリーンアップ
-    try {
-      await soundJaRef.current?.stopAsync();
-      await soundJaRef.current?.unloadAsync();
-    } catch {}
-    try {
-      await soundEnRef.current?.stopAsync();
-      await soundEnRef.current?.unloadAsync();
-    } catch {}
-    soundJaRef.current = null;
-    soundEnRef.current = null;
+      // 既存のサウンドをクリーンアップ
+      try {
+        await soundJaRef.current?.stopAsync();
+        await soundJaRef.current?.unloadAsync();
+      } catch {}
+      try {
+        await soundEnRef.current?.stopAsync();
+        await soundEnRef.current?.unloadAsync();
+      } catch {}
+      soundJaRef.current = null;
+      soundEnRef.current = null;
 
-    const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa });
-    const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn });
+      const { sound: soundJa } = await Audio.Sound.createAsync({ uri: pathJa });
+      const { sound: soundEn } = await Audio.Sound.createAsync({ uri: pathEn });
 
-    soundJaRef.current = soundJa;
-    soundEnRef.current = soundEn;
-    playingRef.current = true;
+      soundJaRef.current = soundJa;
+      soundEnRef.current = soundEn;
+      playingRef.current = true;
 
-    const onPlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) {
-        if (status.error) {
-          console.warn('[useTTS] soundJa error:', status.error);
+      const onPlaybackStatusUpdateJa = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundJa error:', status.error);
+            try {
+              await soundJa.unloadAsync();
+            } catch {}
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundJaRef.current = null;
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundJa.setOnPlaybackStatusUpdate(null);
           try {
             await soundJa.unloadAsync();
-          } catch {}
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundJa:', e);
+          }
+          soundJaRef.current = null;
+
+          if (isLoadableRef.current) {
+            soundEn.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateEn);
+            await soundEn.playAsync();
+          } else {
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+        }
+      };
+
+      const onPlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
+        if (!status.isLoaded) {
+          if (status.error) {
+            console.warn('[useTTS] soundEn error:', status.error);
+            try {
+              await soundEn.unloadAsync();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+            await unduck();
+          }
+          return;
+        }
+
+        if (status.didJustFinish) {
+          soundEn.setOnPlaybackStatusUpdate(null);
           try {
             await soundEn.unloadAsync();
-          } catch {}
-          soundJaRef.current = null;
+          } catch (e) {
+            console.warn('[useTTS] Failed to unload soundEn:', e);
+          }
           soundEnRef.current = null;
           playingRef.current = false;
           await unduck();
         }
-        return;
-      }
+      };
 
-      if (status.didJustFinish) {
-        soundJa.setOnPlaybackStatusUpdate(null);
+      try {
+        soundJa.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateJa);
+        await soundJa.playAsync();
+      } catch (e) {
+        console.error('[useTTS] Failed to play soundJa:', e);
         try {
           await soundJa.unloadAsync();
-        } catch (e) {
-          console.warn('[useTTS] Failed to unload soundJa:', e);
-        }
-        soundJaRef.current = null;
-
-        if (isLoadableRef.current) {
-          soundEn.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateEn);
-          await soundEn.playAsync();
-        } else {
-          try {
-            await soundEn.unloadAsync();
-          } catch {}
-          soundEnRef.current = null;
-          playingRef.current = false;
-          await unduck();
-        }
-      }
-    };
-
-    const onPlaybackStatusUpdateEn = async (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) {
-        if (status.error) {
-          console.warn('[useTTS] soundEn error:', status.error);
-          try {
-            await soundEn.unloadAsync();
-          } catch {}
-          soundEnRef.current = null;
-          playingRef.current = false;
-          await unduck();
-        }
-        return;
-      }
-
-      if (status.didJustFinish) {
-        soundEn.setOnPlaybackStatusUpdate(null);
+        } catch {}
         try {
           await soundEn.unloadAsync();
-        } catch (e) {
-          console.warn('[useTTS] Failed to unload soundEn:', e);
-        }
+        } catch {}
+        soundJaRef.current = null;
         soundEnRef.current = null;
         playingRef.current = false;
         await unduck();
       }
-    };
-
-    try {
-      soundJa.setOnPlaybackStatusUpdate(onPlaybackStatusUpdateJa);
-      await soundJa.playAsync();
-    } catch (e) {
-      console.error('[useTTS] Failed to play soundJa:', e);
-      try {
-        await soundJa.unloadAsync();
-      } catch {}
-      try {
-        await soundEn.unloadAsync();
-      } catch {}
-      soundJaRef.current = null;
-      soundEnRef.current = null;
-      playingRef.current = false;
-      await unduck();
-    }
-  }, [unduck]);
+    },
+    [unduck]
+  );
 
   const ttsApiUrl = useMemo(() => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
