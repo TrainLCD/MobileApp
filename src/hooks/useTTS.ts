@@ -81,6 +81,18 @@ export const useTTS = (): void => {
   const soundJaRef = useRef<Sound | null>(null);
   const soundEnRef = useRef<Sound | null>(null);
 
+  const duck = useCallback(async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: true,
+      });
+    } catch (e) {
+      console.warn('[useTTS] Failed to duck:', e);
+    }
+  }, []);
+
   const unduck = useCallback(async () => {
     try {
       await Audio.setAudioModeAsync({
@@ -118,6 +130,9 @@ export const useTTS = (): void => {
       }
 
       firstSpeechRef.current = false;
+
+      // 再生前にダッキングを有効化
+      await duck();
 
       // 既存のサウンドをクリーンアップ
       try {
@@ -248,7 +263,7 @@ export const useTTS = (): void => {
         await unduck();
       }
     },
-    [unduck]
+    [duck, unduck]
   );
 
   const ttsApiUrl = useMemo(() => {
