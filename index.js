@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
 import { SENTRY_DSN } from 'react-native-dotenv';
-import TrackPlayer from 'react-native-track-player';
 import App from './src';
 import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
 import { setLocation } from './src/store/atoms/location';
@@ -42,10 +41,6 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
     }
   });
 }
-
-TrackPlayer.registerPlaybackService(() =>
-  require('./src/services/PlaybackService').PlaybackService
-);
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in the Expo client or in a native build,

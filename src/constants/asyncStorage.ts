@@ -9,6 +9,7 @@ export const ASYNC_STORAGE_KEYS = {
   ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED:
     '@TrainLCD:alwaysPermissionNotGrantedWarningDismissed',
   BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
+  BG_TTS_NOTICE: '@TrainLCD:bgTtsNotice',
   LEGACY_AUTO_MODE_ENABLED: '@TrainLCD:enableLegacyAutoMode',
   AUTO_MODE_V2_CONFIRMED: '@TrainLCD:autoModeV2Confirmed',
   SUBWAY_ALERT_DISMISSED: '@TrainLCD:subwayAlertDismissed',
