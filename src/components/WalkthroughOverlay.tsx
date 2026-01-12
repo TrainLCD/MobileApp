@@ -63,8 +63,7 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: 'absolute',
-    left: 24,
-    right: 24,
+    maxWidth: 640,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
@@ -174,9 +173,18 @@ const WalkthroughOverlay: React.FC<Props> = ({
     animatedY.value = withTiming(targetY, { duration: ANIMATION_DURATION });
   }, [currentStepIndex, spotlightArea?.y, screenHeight]);
 
-  const animatedTooltipStyle = useAnimatedStyle(() => ({
-    top: animatedY.value,
-  }));
+  // タブレットで中央揃えになるよう左位置を計算
+  const tooltipWidth = Math.min(Math.max(0, screenWidth - 48), 640);
+  const tooltipLeft = (screenWidth - tooltipWidth) / 2;
+
+  const animatedTooltipStyle = useAnimatedStyle(
+    () => ({
+      top: animatedY.value,
+      left: tooltipLeft,
+      width: tooltipWidth,
+    }),
+    [tooltipLeft, tooltipWidth]
+  );
 
   if (!visible) {
     return null;
