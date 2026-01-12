@@ -37,7 +37,7 @@
     "expo": "~54.0.21",
     "expo-application": "~7.0.7",
     "expo-asset": "~12.0.9",
-    "expo-av": "^16.0.8",
+    "expo-audio": "^0.4.8",
     "expo-blur": "~15.0.7",
     "expo-constants": "~18.0.10",
     "expo-crypto": "~15.0.7",
@@ -143,5 +143,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.0.93"
+  "version": "10.0.100"
 }
