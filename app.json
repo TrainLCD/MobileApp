@@ -8,7 +8,9 @@
       "expo-localization",
       "expo-web-browser",
       "expo-sqlite",
-      "expo-asset"
+      "expo-asset",
+      "@sentry/react-native",
+      "expo-audio"
     ],
     "extra": {
       "eas": {
