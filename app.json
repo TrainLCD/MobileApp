@@ -9,8 +9,23 @@
       "expo-web-browser",
       "expo-sqlite",
       "expo-asset",
-      "@sentry/react-native",
-      "expo-audio"
+      [
+        "@sentry/react-native",
+        {
+          "url": "https://sentry.io/",
+          "note": "Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.",
+          "project": "trainlcd-canary",
+          "organization": "tinykitten"
+        }
+      ],
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fff",
+          "image": "./assets/splash-icon.png"
+        }
+      ]
     ],
     "extra": {
       "eas": {
@@ -29,10 +44,7 @@
     "android": {
       "package": "me.tinykitten.trainlcd.dev",
       "versionCode": 100000181,
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+      "permissions": []
     },
     "owner": "trainlcd"
   }
