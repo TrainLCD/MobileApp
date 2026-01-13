@@ -2,35 +2,49 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd-production",
-    "version": "10.0.101",
+    "version": "10.0.103",
     "plugins": [
       "expo-font",
       "expo-localization",
       "expo-web-browser",
       "expo-sqlite",
-      "expo-asset"
+      "expo-asset",
+      [
+        "@sentry/react-native",
+        {
+          "url": "https://sentry.io/",
+          "note": "Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.",
+          "project": "trainlcd-canary",
+          "organization": "tinykitten"
+        }
+      ],
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fff",
+          "image": "./assets/splash-icon.png"
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "8d3a9192-c70c-4c01-a10b-6f3c35f7ad75"
       },
       "versioning": {
-        "androidMinVersionCode": 100000181
+        "androidMinVersionCode": 100000183
       }
     },
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd",
       "scheme": "ProdTrainLCD",
-      "buildNumber": "2394",
+      "buildNumber": "2396",
       "supportsTablet": true
     },
     "android": {
       "package": "me.tinykitten.trainlcd",
-      "versionCode": 100000181,
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+      "versionCode": 100000183,
+      "permissions": []
     },
     "owner": "trainlcd"
   }
