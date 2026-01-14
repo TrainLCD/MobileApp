@@ -10,8 +10,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import type { SectionBase, SectionListRenderItemInfo } from 'react-native';
-import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import Animated, {
   useAnimatedScrollHandler,
@@ -50,10 +49,6 @@ type SettingsSectionData = {
   onPress?: () => void;
 };
 
-interface SettingsSection extends SectionBase<SettingsSectionData> {
-  key: string;
-}
-
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
   screenBg: {
@@ -70,6 +65,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
+  sectionHeading: {
+    marginBottom: 24,
+    fontSize: 21,
+  },
+  sectionContainer: {
+    marginBottom: 0,
+  },
 });
 
 type ItemLayout = {
@@ -79,30 +81,18 @@ type ItemLayout = {
   height: number;
 };
 
-const SettingsItem = React.forwardRef<
-  View,
-  {
-    item: SettingsSectionData;
-    isFirst: boolean;
-    isLast: boolean;
-    onPress?: () => void;
-    onItemLayout?: (layout: ItemLayout) => void;
-  }
->(({ item, isFirst, isLast, onPress, onItemLayout }, ref) => {
+const SettingsItem = ({
+  item,
+  isFirst,
+  isLast,
+  onPress,
+}: {
+  item: SettingsSectionData;
+  isFirst: boolean;
+  isLast: boolean;
+  onPress?: () => void;
+}) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const viewRef = useRef<View>(null);
-
-  const handleLayout = useCallback(() => {
-    if (viewRef.current && onItemLayout) {
-      viewRef.current.measureInWindow(
-        (x: number, y: number, width: number, height: number) => {
-          onItemLayout({ x, y, width, height });
-        }
-      );
-    }
-  }, [onItemLayout]);
-
-  React.useImperativeHandle(ref, () => viewRef.current as View);
 
   const iconName = useMemo(() => {
     switch (item.id) {
@@ -122,62 +112,56 @@ const SettingsItem = React.forwardRef<
   }, [item.id]);
 
   return (
-    <View ref={viewRef} onLayout={handleLayout}>
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={!onPress}
-        accessibilityRole="button"
-        accessibilityLabel={item.title}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 24,
-          paddingVertical: 16,
-          backgroundColor: isLEDTheme ? '#333' : 'white',
-          opacity: onPress ? 1 : 0.5,
-          borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
-          borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
-          borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
-          borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
-          marginBottom: isLast ? 32 : 0,
-        }}
-      >
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-          <View
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole="button"
+      accessibilityLabel={item.title}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : 'white',
+        opacity: onPress ? 1 : 0.5,
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
+        marginBottom: isLast ? 32 : 0,
+      }}
+    >
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor: item.color,
+            marginRight: 16,
+            borderRadius: isLEDTheme ? 0 : 8,
+            overflow: 'hidden',
+          }}
+        >
+          <LinearGradient
+            colors={[item.color, lighten(0.1, item.color)]}
             style={{
-              width: 44,
-              height: 44,
-              backgroundColor: item.color,
-              marginRight: 16,
-              borderRadius: isLEDTheme ? 0 : 8,
-              overflow: 'hidden',
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
-            <LinearGradient
-              colors={[item.color, lighten(0.1, item.color)]}
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Ionicons name={iconName} size={24} color="white" />
-            </LinearGradient>
-          </View>
-          <Typography style={{ fontSize: 21, fontWeight: 'bold' }}>
-            {item.title}
-          </Typography>
+            <Ionicons name={iconName} size={24} color="white" />
+          </LinearGradient>
         </View>
+        <Typography style={{ fontSize: 21, fontWeight: 'bold' }}>
+          {item.title}
+        </Typography>
+      </View>
 
-        <CardChevron stroke="black" />
-      </TouchableOpacity>
-    </View>
+      <CardChevron stroke="black" />
+    </TouchableOpacity>
   );
-});
-
-const AnimatedSelectionList = Animated.createAnimatedComponent(
-  SectionList<SettingsSectionData, SettingsSection>
-);
+};
 
 const AppSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -194,6 +178,10 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
 
+  const themeRef = useRef<View>(null);
+  const ttsRef = useRef<View>(null);
+  const languagesRef = useRef<View>(null);
+
   const {
     isWalkthroughActive,
     currentStepIndex,
@@ -205,6 +193,36 @@ const AppSettingsScreen: React.FC = () => {
     skipWalkthrough,
     setSpotlightArea,
   } = useSettingsWalkthrough();
+
+  const handleThemeLayout = useCallback(() => {
+    if (themeRef.current) {
+      themeRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setThemeItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const handleTtsLayout = useCallback(() => {
+    if (ttsRef.current) {
+      ttsRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setTtsItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const handleLanguagesLayout = useCallback(() => {
+    if (languagesRef.current) {
+      languagesRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setLanguagesItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     if (currentStepId === 'settingsTheme' && themeItemLayout) {
@@ -242,95 +260,59 @@ const AppSettingsScreen: React.FC = () => {
     }
   }, [currentStepId, languagesItemLayout, setSpotlightArea]);
 
-  const SETTINGS_SECTIONS: SettingsSection[] = useMemo(
+  const personalizeItems: SettingsSectionData[] = useMemo(
     () =>
       [
         {
-          key: 'personalize',
-          data: [
-            {
-              id: SETTING_ITEM_ID_MAP.personalize_theme,
-              title: translate('selectThemeTitle'),
-              color: '#FF9500',
-              onPress: () => navigation.navigate('ThemeSettings' as never),
-            },
-            {
-              id: SETTING_ITEM_ID_MAP.personalize_tts,
-              title: translate('autoAnnounce'),
-              color: '#34C759',
-              onPress: () => navigation.navigate('TTSSettings' as never),
-            },
-            {
-              id: SETTING_ITEM_ID_MAP.personalize_languages,
-              title: translate('displayLanguages'),
-              color: '#007AFF',
-              onPress: () =>
-                navigation.navigate('EnabledLanguagesSettings' as never),
-            },
-          ].filter((dat) =>
-            isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
-          ), // Remove TTS setting in App Clip
+          id: SETTING_ITEM_ID_MAP.personalize_theme,
+          title: translate('selectThemeTitle'),
+          color: '#FF9500',
+          onPress: () => navigation.navigate('ThemeSettings' as never),
         },
         {
-          key: 'aboutApp',
-          data: [
-            {
-              id: SETTING_ITEM_ID_MAP.about_app_licenses,
-              title: translate('license'),
-              color: '#333',
-              onPress: () => navigation.navigate('Licenses' as never),
-            },
-          ],
+          id: SETTING_ITEM_ID_MAP.personalize_tts,
+          title: translate('autoAnnounce'),
+          color: '#34C759',
+          onPress: () => navigation.navigate('TTSSettings' as never),
         },
         {
-          key: 'forDevelopers',
-          data: isDevApp
-            ? [
-                {
-                  id: SETTING_ITEM_ID_MAP.developer_tuning,
-                  title: translate('tuning'),
-                  color: '#5856D6',
-                  onPress: () => navigation.navigate('TuningSettings' as never),
-                },
-              ]
-            : ([] as SettingsSectionData[]),
+          id: SETTING_ITEM_ID_MAP.personalize_languages,
+          title: translate('displayLanguages'),
+          color: '#007AFF',
+          onPress: () =>
+            navigation.navigate('EnabledLanguagesSettings' as never),
         },
-      ].filter((section) => section.data.length > 0),
+      ].filter((dat) =>
+        isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
+      ) as SettingsSectionData[],
     [navigation]
   );
 
-  const getItemLayoutCallback = useCallback((itemId: SettingItemId) => {
-    switch (itemId) {
-      case 'personalize_theme':
-        return setThemeItemLayout;
-      case 'personalize_tts':
-        return setTtsItemLayout;
-      case 'personalize_languages':
-        return setLanguagesItemLayout;
-      default:
-        return undefined;
-    }
-  }, []);
-
-  const renderItem = useCallback(
-    ({
-      item,
-      index,
-      section,
-    }: SectionListRenderItemInfo<SettingsSectionData, SettingsSection>) => (
-      <SettingsItem
-        item={item}
-        isFirst={index === 0}
-        isLast={index === section.data.length - 1}
-        onPress={item.onPress}
-        onItemLayout={getItemLayoutCallback(item.id)}
-      />
-    ),
-    [getItemLayoutCallback]
+  const aboutAppItems: SettingsSectionData[] = useMemo(
+    () => [
+      {
+        id: SETTING_ITEM_ID_MAP.about_app_licenses,
+        title: translate('license'),
+        color: '#333',
+        onPress: () => navigation.navigate('Licenses' as never),
+      },
+    ],
+    [navigation]
   );
-  const keyExtractor = useCallback(
-    (section: SettingsSectionData) => `key-${section.id}`,
-    []
+
+  const developerItems: SettingsSectionData[] = useMemo(
+    () =>
+      isDevApp
+        ? [
+            {
+              id: SETTING_ITEM_ID_MAP.developer_tuning,
+              title: translate('tuning'),
+              color: '#5856D6',
+              onPress: () => navigation.navigate('TuningSettings' as never),
+            },
+          ]
+        : [],
+    [navigation]
   );
 
   const handleScroll = useAnimatedScrollHandler({
@@ -339,22 +321,13 @@ const AppSettingsScreen: React.FC = () => {
     },
   });
 
-  const renderSectionHeader = useCallback(
-    (info: { section: SettingsSection }) => (
-      <Heading style={{ marginBottom: 24, fontSize: 21 }}>
-        {translate(info.section.key ?? '')}
-      </Heading>
-    ),
-    []
-  );
+  const showTtsItem = !isClip();
 
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <AnimatedSelectionList
+        <Animated.ScrollView
           style={StyleSheet.absoluteFill}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
@@ -362,14 +335,79 @@ const AppSettingsScreen: React.FC = () => {
             headerHeight ? { paddingTop: headerHeight } : null,
             { paddingBottom: FOOTER_BASE_HEIGHT + safeAreaBottom },
           ]}
-          renderSectionHeader={renderSectionHeader}
-          sections={SETTINGS_SECTIONS}
-          ListFooterComponent={() => (
-            <Typography style={styles.betaNotice}>
-              {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
-            </Typography>
+        >
+          {/* パーソナライズセクション */}
+          <View style={styles.sectionContainer}>
+            <Heading style={styles.sectionHeading}>
+              {translate('personalize')}
+            </Heading>
+            <View ref={themeRef} onLayout={handleThemeLayout}>
+              <SettingsItem
+                item={personalizeItems[0]}
+                isFirst={true}
+                isLast={!showTtsItem && personalizeItems.length === 1}
+                onPress={personalizeItems[0].onPress}
+              />
+            </View>
+            {showTtsItem && (
+              <View ref={ttsRef} onLayout={handleTtsLayout}>
+                <SettingsItem
+                  item={personalizeItems[1]}
+                  isFirst={false}
+                  isLast={false}
+                  onPress={personalizeItems[1].onPress}
+                />
+              </View>
+            )}
+            <View ref={languagesRef} onLayout={handleLanguagesLayout}>
+              <SettingsItem
+                item={personalizeItems[showTtsItem ? 2 : 1]}
+                isFirst={false}
+                isLast={true}
+                onPress={personalizeItems[showTtsItem ? 2 : 1].onPress}
+              />
+            </View>
+          </View>
+
+          {/* アプリについてセクション */}
+          <View style={styles.sectionContainer}>
+            <Heading style={styles.sectionHeading}>
+              {translate('aboutApp')}
+            </Heading>
+            {aboutAppItems.map((item, index) => (
+              <SettingsItem
+                key={item.id}
+                item={item}
+                isFirst={index === 0}
+                isLast={index === aboutAppItems.length - 1}
+                onPress={item.onPress}
+              />
+            ))}
+          </View>
+
+          {/* 開発者向けセクション */}
+          {developerItems.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <Heading style={styles.sectionHeading}>
+                {translate('forDevelopers')}
+              </Heading>
+              {developerItems.map((item, index) => (
+                <SettingsItem
+                  key={item.id}
+                  item={item}
+                  isFirst={index === 0}
+                  isLast={index === developerItems.length - 1}
+                  onPress={item.onPress}
+                />
+              ))}
+            </View>
           )}
-        />
+
+          {/* フッター */}
+          <Typography style={styles.betaNotice}>
+            {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
+          </Typography>
+        </Animated.ScrollView>
       </SafeAreaView>
       <SettingsHeader
         title={translate('settings')}
