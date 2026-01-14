@@ -255,5 +255,11 @@
   "walkthroughSwipeHint": "Swipe to navigate",
   "walkthroughSkipHint": "Skip the walkthrough and get started",
   "walkthroughGoToStepHint": "Go to this step",
-  "walkthroughNextHint": "Proceed to the next step"
+  "walkthroughNextHint": "Proceed to the next step",
+  "routeSearchWalkthroughTitle1": "Route Search",
+  "routeSearchWalkthroughDescription1": "On this screen, you can search for a destination station and find a route.",
+  "routeSearchWalkthroughTitle2": "Enter Station Name",
+  "routeSearchWalkthroughDescription2": "Enter the name of your destination station here and tap the search button to see the available options.",
+  "routeSearchWalkthroughTitle3": "Select a Route",
+  "routeSearchWalkthroughDescription3": "Tap a destination from the search results to see the route to that station. Routes are color-coded by line, so you can choose the line you want to take."
 }
