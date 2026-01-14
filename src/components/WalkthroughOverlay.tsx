@@ -31,7 +31,10 @@ export type WalkthroughStepId =
   | 'changeLocation'
   | 'savedRoutes'
   | 'selectLine'
-  | 'customize';
+  | 'customize'
+  | 'routeSearchIntro'
+  | 'routeSearchBar'
+  | 'routeSearchResults';
 
 export type WalkthroughStep = {
   id: WalkthroughStepId;
