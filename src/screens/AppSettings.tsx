@@ -3,7 +3,13 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { lighten } from 'polished';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { SectionBase, SectionListRenderItemInfo } from 'react-native';
 import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
@@ -19,6 +25,8 @@ import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
+import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { isDevApp } from '~/utils/isDevApp';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -64,18 +72,37 @@ const styles = StyleSheet.create({
   },
 });
 
-const SettingsItem = ({
-  item,
-  isFirst,
-  isLast,
-  onPress,
-}: {
-  item: SettingsSectionData;
-  isFirst: boolean;
-  isLast: boolean;
-  onPress?: () => void;
-}) => {
+type ItemLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const SettingsItem = React.forwardRef<
+  View,
+  {
+    item: SettingsSectionData;
+    isFirst: boolean;
+    isLast: boolean;
+    onPress?: () => void;
+    onItemLayout?: (layout: ItemLayout) => void;
+  }
+>(({ item, isFirst, isLast, onPress, onItemLayout }, ref) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const viewRef = useRef<View>(null);
+
+  const handleLayout = useCallback(() => {
+    if (viewRef.current && onItemLayout) {
+      viewRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          onItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, [onItemLayout]);
+
+  React.useImperativeHandle(ref, () => viewRef.current as View);
 
   const iconName = useMemo(() => {
     switch (item.id) {
@@ -95,56 +122,58 @@ const SettingsItem = ({
   }, [item.id]);
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole="button"
-      accessibilityLabel={item.title}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
-        opacity: onPress ? 1 : 0.5,
-        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
-        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
-        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
-        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
-        marginBottom: isLast ? 32 : 0,
-      }}
-    >
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-        <View
-          style={{
-            width: 44,
-            height: 44,
-            backgroundColor: item.color,
-            marginRight: 16,
-            borderRadius: isLEDTheme ? 0 : 8,
-            overflow: 'hidden',
-          }}
-        >
-          <LinearGradient
-            colors={[item.color, lighten(0.1, item.color)]}
+    <View ref={viewRef} onLayout={handleLayout}>
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={!onPress}
+        accessibilityRole="button"
+        accessibilityLabel={item.title}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 24,
+          paddingVertical: 16,
+          backgroundColor: isLEDTheme ? '#333' : 'white',
+          opacity: onPress ? 1 : 0.5,
+          borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+          borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+          borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+          borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
+          marginBottom: isLast ? 32 : 0,
+        }}
+      >
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+          <View
             style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
+              width: 44,
+              height: 44,
+              backgroundColor: item.color,
+              marginRight: 16,
+              borderRadius: isLEDTheme ? 0 : 8,
+              overflow: 'hidden',
             }}
           >
-            <Ionicons name={iconName} size={24} color="white" />
-          </LinearGradient>
+            <LinearGradient
+              colors={[item.color, lighten(0.1, item.color)]}
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Ionicons name={iconName} size={24} color="white" />
+            </LinearGradient>
+          </View>
+          <Typography style={{ fontSize: 21, fontWeight: 'bold' }}>
+            {item.title}
+          </Typography>
         </View>
-        <Typography style={{ fontSize: 21, fontWeight: 'bold' }}>
-          {item.title}
-        </Typography>
-      </View>
 
-      <CardChevron stroke="black" />
-    </TouchableOpacity>
+        <CardChevron stroke="black" />
+      </TouchableOpacity>
+    </View>
   );
-};
+});
 
 const AnimatedSelectionList = Animated.createAnimatedComponent(
   SectionList<SettingsSectionData, SettingsSection>
@@ -152,12 +181,66 @@ const AnimatedSelectionList = Animated.createAnimatedComponent(
 
 const AppSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [themeItemLayout, setThemeItemLayout] = useState<ItemLayout | null>(
+    null
+  );
+  const [ttsItemLayout, setTtsItemLayout] = useState<ItemLayout | null>(null);
+  const [languagesItemLayout, setLanguagesItemLayout] =
+    useState<ItemLayout | null>(null);
 
   const scrollY = useSharedValue(0);
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
+
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStepId,
+    currentStep,
+    totalSteps,
+    nextStep,
+    goToStep,
+    skipWalkthrough,
+    setSpotlightArea,
+  } = useSettingsWalkthrough();
+
+  useEffect(() => {
+    if (currentStepId === 'settingsTheme' && themeItemLayout) {
+      setSpotlightArea({
+        x: themeItemLayout.x,
+        y: themeItemLayout.y,
+        width: themeItemLayout.width,
+        height: themeItemLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, themeItemLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'settingsTts' && ttsItemLayout) {
+      setSpotlightArea({
+        x: ttsItemLayout.x,
+        y: ttsItemLayout.y,
+        width: ttsItemLayout.width,
+        height: ttsItemLayout.height,
+        borderRadius: 0,
+      });
+    }
+  }, [currentStepId, ttsItemLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'settingsLanguages' && languagesItemLayout) {
+      setSpotlightArea({
+        x: languagesItemLayout.x,
+        y: languagesItemLayout.y,
+        width: languagesItemLayout.width,
+        height: languagesItemLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, languagesItemLayout, setSpotlightArea]);
 
   const SETTINGS_SECTIONS: SettingsSection[] = useMemo(
     () =>
@@ -216,6 +299,19 @@ const AppSettingsScreen: React.FC = () => {
     [navigation]
   );
 
+  const getItemLayoutCallback = useCallback((itemId: SettingItemId) => {
+    switch (itemId) {
+      case 'personalize_theme':
+        return setThemeItemLayout;
+      case 'personalize_tts':
+        return setTtsItemLayout;
+      case 'personalize_languages':
+        return setLanguagesItemLayout;
+      default:
+        return undefined;
+    }
+  }, []);
+
   const renderItem = useCallback(
     ({
       item,
@@ -227,9 +323,10 @@ const AppSettingsScreen: React.FC = () => {
         isFirst={index === 0}
         isLast={index === section.data.length - 1}
         onPress={item.onPress}
+        onItemLayout={getItemLayoutCallback(item.id)}
       />
     ),
-    []
+    [getItemLayoutCallback]
   );
   const keyExtractor = useCallback(
     (section: SettingsSectionData) => `key-${section.id}`,
@@ -280,6 +377,17 @@ const AppSettingsScreen: React.FC = () => {
         scrollY={scrollY}
       />
       <FooterTabBar active="settings" />
+      {currentStep && (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onGoToStep={goToStep}
+          onSkip={skipWalkthrough}
+        />
+      )}
     </>
   );
 };

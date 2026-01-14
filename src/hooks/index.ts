@@ -53,6 +53,7 @@ export { useRefreshStation } from './useRefreshStation';
 export { useResetMainState } from './useResetMainState';
 export { useRouteSearchWalkthrough } from './useRouteSearchWalkthrough';
 export { useSavedRoutes } from './useSavedRoutes';
+export { useSettingsWalkthrough } from './useSettingsWalkthrough';
 export { useShouldHideTypeChange } from './useShouldHideTypeChange';
 export { useSimulationMode } from './useSimulationMode';
 export { useSlicedStations } from './useSlicedStations';
