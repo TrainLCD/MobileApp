@@ -20,6 +20,7 @@ export const ASYNC_STORAGE_KEYS = {
   WALKTHROUGH_COMPLETED: '@TrainLCD:walkthroughCompleted',
   ROUTE_SEARCH_WALKTHROUGH_COMPLETED:
     '@TrainLCD:routeSearchWalkthroughCompleted',
+  SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
 } as const;
 
 export type AsyncStorageKeys =
