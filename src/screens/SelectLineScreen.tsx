@@ -364,7 +364,6 @@ const SelectLineScreen = () => {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         limit: 1,
-        transportType: TransportType.Rail,
       });
       const stationFromAPI = data.data?.stationsNearby[0] ?? null;
 
