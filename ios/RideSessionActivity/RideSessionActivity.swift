@@ -308,7 +308,6 @@ struct RideSessionWidget: Widget {
         )
       }
     }
-    .supplementalActivityFamiliesIfAvailable()
   }
 }
 
