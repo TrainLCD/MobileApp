@@ -194,7 +194,7 @@ export const CommonCard: React.FC<Props> = ({
   const titleOrLineName = useMemo(() => {
     return isJapanese
       ? (title ?? line.nameShort ?? '')
-      : (title ?? line.nameRoman ?? '');
+      : (title ?? (line.nameRoman || line.nameShort) ?? '');
   }, [title, line.nameShort, line.nameRoman]);
 
   const targetStationNumber = targetStation?.stationNumbers?.[0]?.stationNumber;
