@@ -47,7 +47,6 @@ struct StationNumberGaugeView: View {
           gaugeColor,
           style: StrokeStyle(lineWidth: 3, lineCap: .round)
         )
-        .rotationEffect(.degrees(-90))
 
       // 中央の駅ナンバー表示
       if !displayNumber.isEmpty {
