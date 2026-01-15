@@ -16,13 +16,17 @@ struct StationNumberGaugeView: View {
   let progress: Double
   let stopped: Bool
 
-  private var displayNumber: String {
+  private var displayNumberParts: (symbol: String, number: String)? {
     let number = stopped ? stationNumber : nextStationNumber
     if number.isEmpty {
-      return ""
+      return nil
     }
-    // ハイフンを改行に置換して路線記号と番号を2行で表示（例: E-31 → E\n31）
-    return number.replacingOccurrences(of: "-", with: "\n")
+    let parts = number.split(separator: "-", maxSplits: 1)
+    if parts.count == 2 {
+      return (symbol: String(parts[0]), number: String(parts[1]))
+    }
+    // ハイフンがない場合はそのまま表示
+    return (symbol: "", number: number)
   }
 
   private var gaugeColor: Color {
@@ -48,12 +52,17 @@ struct StationNumberGaugeView: View {
         .rotationEffect(.degrees(-90))
 
       // 中央の駅ナンバー表示
-      if !displayNumber.isEmpty {
-        Text(displayNumber)
-          .font(.system(size: 10, weight: .bold, design: .rounded))
-          .multilineTextAlignment(.center)
-          .minimumScaleFactor(0.5)
-          .frame(width: 16, height: 16)
+      if let parts = displayNumberParts {
+        VStack(spacing: 0) {
+          if !parts.symbol.isEmpty {
+            Text(parts.symbol)
+              .font(.system(size: 8, weight: .bold, design: .rounded))
+          }
+          Text(parts.number)
+            .font(.system(size: 8, weight: .bold, design: .rounded))
+        }
+        .minimumScaleFactor(0.5)
+        .frame(width: 16, height: 16)
       } else {
         Image("AppIcon")
           .resizable()
