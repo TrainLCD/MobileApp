@@ -51,7 +51,7 @@ struct StationNumberGaugeView: View {
         )
         .rotationEffect(.degrees(-90))
 
-      // 中央の駅ナンバー表示
+      // 中央の駅ナンバー表示（ナンバリングがない場合は空）
       if let parts = displayNumberParts {
         VStack(spacing: 0) {
           if !parts.symbol.isEmpty {
@@ -63,11 +63,6 @@ struct StationNumberGaugeView: View {
         }
         .minimumScaleFactor(0.5)
         .frame(width: 16, height: 16)
-      } else {
-        Image("AppIcon")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 12, height: 12)
       }
     }
     .frame(width: 24, height: 24)
