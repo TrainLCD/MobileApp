@@ -26,12 +26,10 @@ struct StationNumberGaugeView: View {
   }
 
   private var gaugeColor: Color {
-    // TODO: デバッグ用 - 赤色で表示されるか確認後に削除
-    return .red
-    // if lineColor.isEmpty {
-    //   return .white
-    // }
-    // return Color(hex: lineColor)
+    if lineColor.isEmpty {
+      return .white
+    }
+    return Color(hex: lineColor)
   }
 
   var body: some View {
@@ -42,11 +40,12 @@ struct StationNumberGaugeView: View {
 
       // プログレスの円弧
       Circle()
-        .trim(from: 0, to: 1.0)  // TODO: デバッグ用 - progressを1.0に固定
+        .trim(from: 0, to: progress)
         .stroke(
           gaugeColor,
           style: StrokeStyle(lineWidth: 3, lineCap: .round)
         )
+        .rotationEffect(.degrees(-90))
 
       // 中央の駅ナンバー表示
       if !displayNumber.isEmpty {
