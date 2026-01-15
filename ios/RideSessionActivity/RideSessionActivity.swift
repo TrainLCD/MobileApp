@@ -59,7 +59,6 @@ struct StationNumberGaugeView: View {
           .resizable()
           .scaledToFit()
           .frame(width: 14, height: 14)
-          .clipShape(Circle())
       }
     }
     .frame(width: 24, height: 24)
