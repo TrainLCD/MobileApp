@@ -21,8 +21,8 @@ struct StationNumberGaugeView: View {
     if number.isEmpty {
       return ""
     }
-    // ハイフンを削除して路線記号+番号を表示（例: E-31 → E31）
-    return number.replacingOccurrences(of: "-", with: "")
+    // ハイフンを改行に置換して路線記号と番号を2行で表示（例: E-31 → E\n31）
+    return number.replacingOccurrences(of: "-", with: "\n")
   }
 
   private var gaugeColor: Color {
@@ -51,6 +51,7 @@ struct StationNumberGaugeView: View {
       if !displayNumber.isEmpty {
         Text(displayNumber)
           .font(.system(size: 10, weight: .bold, design: .rounded))
+          .multilineTextAlignment(.center)
           .minimumScaleFactor(0.5)
           .frame(width: 16, height: 16)
       } else {
