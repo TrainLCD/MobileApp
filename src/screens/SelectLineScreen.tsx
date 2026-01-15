@@ -364,7 +364,6 @@ const SelectLineScreen = () => {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         limit: 1,
-        transportType: TransportType.Rail,
       });
       const stationFromAPI = data.data?.stationsNearby[0] ?? null;
 
@@ -741,7 +740,9 @@ const SelectLineScreen = () => {
       re,
       ''
     );
-    return isJapanese ? `${baseNameJa}駅の路線` : baseNameEn;
+    return translate('linesNearbyAtStation', {
+      stationName: isJapanese ? baseNameJa : baseNameEn,
+    });
   }, [station]);
 
   const handleScroll = useAnimatedScrollHandler({

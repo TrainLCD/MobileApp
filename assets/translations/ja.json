@@ -224,6 +224,7 @@
   "toei": "東京都交通局",
   "ccby": "CC BY 4.0(加工して利用)",
   "otherOss": "その他オープンソースソフトウェア",
+  "linesNearbyAtStation": "%{stationName}駅の路線",
   "toeiBusStopsNearby": "周辺のバス路線（都営バス）",
   "themeConfirmTitle": "テーマを変更しますか？",
   "themeConfirmApply": "適用",
@@ -256,5 +257,19 @@
   "walkthroughSwipeHint": "スワイプで前後に移動できます",
   "walkthroughSkipHint": "ウォークスルーをスキップして開始します",
   "walkthroughGoToStepHint": "このステップに移動します",
-  "walkthroughNextHint": "次のステップに進みます"
+  "walkthroughNextHint": "次のステップに進みます",
+  "routeSearchWalkthroughTitle1": "経路検索",
+  "routeSearchWalkthroughDescription1": "この画面では、目的地の駅を検索して経路を見つけることができます。",
+  "routeSearchWalkthroughTitle2": "駅名を入力",
+  "routeSearchWalkthroughDescription2": "ここに目的地の駅名を入力して検索ボタンをタップすると、候補が表示されます。",
+  "routeSearchWalkthroughTitle3": "経路を選択",
+  "routeSearchWalkthroughDescription3": "検索結果から目的地をタップすると、その駅までの経路が表示されます。路線ごとに色分けされているので、乗りたい路線を選んでください。",
+  "settingsWalkthroughTitle1": "設定画面へようこそ",
+  "settingsWalkthroughDescription1": "ここでは、TrainLCDをあなた好みにカスタマイズできます。テーマの変更、自動アナウンスの設定、表示言語の選択が行えます。",
+  "settingsWalkthroughTitle2": "テーマ設定",
+  "settingsWalkthroughDescription2": "ここからテーマを変更できます。東京メトロ風、山手線風、電光掲示板風など、様々なスタイルから選べます。",
+  "settingsWalkthroughTitle3": "自動アナウンス",
+  "settingsWalkthroughDescription3": "自動アナウンス機能の設定ができます。駅到着時に音声で案内を受け取ることができます。",
+  "settingsWalkthroughTitle4": "表示言語",
+  "settingsWalkthroughDescription4": "画面に表示する言語を設定できます。日本語、英語、中国語、韓国語から選択可能です。"
 }

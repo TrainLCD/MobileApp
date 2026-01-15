@@ -3,9 +3,14 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { lighten } from 'polished';
-import React, { useCallback, useMemo, useState } from 'react';
-import type { SectionBase, SectionListRenderItemInfo } from 'react-native';
-import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import Animated, {
   useAnimatedScrollHandler,
@@ -19,6 +24,8 @@ import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
+import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { isDevApp } from '~/utils/isDevApp';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -42,10 +49,6 @@ type SettingsSectionData = {
   onPress?: () => void;
 };
 
-interface SettingsSection extends SectionBase<SettingsSectionData> {
-  key: string;
-}
-
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
   screenBg: {
@@ -62,7 +65,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
+  sectionHeading: {
+    marginBottom: 24,
+    fontSize: 21,
+  },
+  sectionContainer: {
+    marginBottom: 0,
+  },
 });
+
+type ItemLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 const SettingsItem = ({
   item,
@@ -141,17 +158,19 @@ const SettingsItem = ({
         </Typography>
       </View>
 
-      <CardChevron stroke="black" />
+      <CardChevron stroke={isLEDTheme ? 'white' : 'black'} />
     </TouchableOpacity>
   );
 };
 
-const AnimatedSelectionList = Animated.createAnimatedComponent(
-  SectionList<SettingsSectionData, SettingsSection>
-);
-
 const AppSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [themeItemLayout, setThemeItemLayout] = useState<ItemLayout | null>(
+    null
+  );
+  const [ttsItemLayout, setTtsItemLayout] = useState<ItemLayout | null>(null);
+  const [languagesItemLayout, setLanguagesItemLayout] =
+    useState<ItemLayout | null>(null);
 
   const scrollY = useSharedValue(0);
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
@@ -159,81 +178,153 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
 
-  const SETTINGS_SECTIONS: SettingsSection[] = useMemo(
+  const themeRef = useRef<View>(null);
+  const ttsRef = useRef<View>(null);
+  const languagesRef = useRef<View>(null);
+
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStepId,
+    currentStep,
+    totalSteps,
+    nextStep,
+    goToStep,
+    skipWalkthrough,
+    setSpotlightArea,
+  } = useSettingsWalkthrough();
+
+  const handleThemeLayout = useCallback(() => {
+    if (themeRef.current) {
+      themeRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setThemeItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const handleTtsLayout = useCallback(() => {
+    if (ttsRef.current) {
+      ttsRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setTtsItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const handleLanguagesLayout = useCallback(() => {
+    if (languagesRef.current) {
+      languagesRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setLanguagesItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  // Re-measure all items when headerHeight changes
+  useEffect(() => {
+    if (headerHeight > 0) {
+      // Use requestAnimationFrame to ensure layout has been applied
+      requestAnimationFrame(() => {
+        handleThemeLayout();
+        handleTtsLayout();
+        handleLanguagesLayout();
+      });
+    }
+  }, [headerHeight, handleThemeLayout, handleTtsLayout, handleLanguagesLayout]);
+
+  useEffect(() => {
+    if (currentStepId === 'settingsTheme' && themeItemLayout) {
+      setSpotlightArea({
+        x: themeItemLayout.x,
+        y: themeItemLayout.y,
+        width: themeItemLayout.width,
+        height: themeItemLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, themeItemLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'settingsTts' && ttsItemLayout) {
+      setSpotlightArea({
+        x: ttsItemLayout.x,
+        y: ttsItemLayout.y,
+        width: ttsItemLayout.width,
+        height: ttsItemLayout.height,
+        borderRadius: 0,
+      });
+    }
+  }, [currentStepId, ttsItemLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'settingsLanguages' && languagesItemLayout) {
+      setSpotlightArea({
+        x: languagesItemLayout.x,
+        y: languagesItemLayout.y,
+        width: languagesItemLayout.width,
+        height: languagesItemLayout.height,
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, languagesItemLayout, setSpotlightArea]);
+
+  const personalizeItems: SettingsSectionData[] = useMemo(
     () =>
       [
         {
-          key: 'personalize',
-          data: [
-            {
-              id: SETTING_ITEM_ID_MAP.personalize_theme,
-              title: translate('selectThemeTitle'),
-              color: '#FF9500',
-              onPress: () => navigation.navigate('ThemeSettings' as never),
-            },
-            {
-              id: SETTING_ITEM_ID_MAP.personalize_tts,
-              title: translate('autoAnnounce'),
-              color: '#34C759',
-              onPress: () => navigation.navigate('TTSSettings' as never),
-            },
-            {
-              id: SETTING_ITEM_ID_MAP.personalize_languages,
-              title: translate('displayLanguages'),
-              color: '#007AFF',
-              onPress: () =>
-                navigation.navigate('EnabledLanguagesSettings' as never),
-            },
-          ].filter((dat) =>
-            isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
-          ), // Remove TTS setting in App Clip
+          id: SETTING_ITEM_ID_MAP.personalize_theme,
+          title: translate('selectThemeTitle'),
+          color: '#FF9500',
+          onPress: () => navigation.navigate('ThemeSettings' as never),
         },
         {
-          key: 'aboutApp',
-          data: [
-            {
-              id: SETTING_ITEM_ID_MAP.about_app_licenses,
-              title: translate('license'),
-              color: '#333',
-              onPress: () => navigation.navigate('Licenses' as never),
-            },
-          ],
+          id: SETTING_ITEM_ID_MAP.personalize_tts,
+          title: translate('autoAnnounce'),
+          color: '#34C759',
+          onPress: () => navigation.navigate('TTSSettings' as never),
         },
         {
-          key: 'forDevelopers',
-          data: isDevApp
-            ? [
-                {
-                  id: SETTING_ITEM_ID_MAP.developer_tuning,
-                  title: translate('tuning'),
-                  color: '#5856D6',
-                  onPress: () => navigation.navigate('TuningSettings' as never),
-                },
-              ]
-            : ([] as SettingsSectionData[]),
+          id: SETTING_ITEM_ID_MAP.personalize_languages,
+          title: translate('displayLanguages'),
+          color: '#007AFF',
+          onPress: () =>
+            navigation.navigate('EnabledLanguagesSettings' as never),
         },
-      ].filter((section) => section.data.length > 0),
+      ].filter((dat) =>
+        isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
+      ) as SettingsSectionData[],
     [navigation]
   );
 
-  const renderItem = useCallback(
-    ({
-      item,
-      index,
-      section,
-    }: SectionListRenderItemInfo<SettingsSectionData, SettingsSection>) => (
-      <SettingsItem
-        item={item}
-        isFirst={index === 0}
-        isLast={index === section.data.length - 1}
-        onPress={item.onPress}
-      />
-    ),
-    []
+  const aboutAppItems: SettingsSectionData[] = useMemo(
+    () => [
+      {
+        id: SETTING_ITEM_ID_MAP.about_app_licenses,
+        title: translate('license'),
+        color: '#333',
+        onPress: () => navigation.navigate('Licenses' as never),
+      },
+    ],
+    [navigation]
   );
-  const keyExtractor = useCallback(
-    (section: SettingsSectionData) => `key-${section.id}`,
-    []
+
+  const developerItems: SettingsSectionData[] = useMemo(
+    () =>
+      isDevApp
+        ? [
+            {
+              id: SETTING_ITEM_ID_MAP.developer_tuning,
+              title: translate('tuning'),
+              color: '#5856D6',
+              onPress: () => navigation.navigate('TuningSettings' as never),
+            },
+          ]
+        : [],
+    [navigation]
   );
 
   const handleScroll = useAnimatedScrollHandler({
@@ -242,22 +333,13 @@ const AppSettingsScreen: React.FC = () => {
     },
   });
 
-  const renderSectionHeader = useCallback(
-    (info: { section: SettingsSection }) => (
-      <Heading style={{ marginBottom: 24, fontSize: 21 }}>
-        {translate(info.section.key ?? '')}
-      </Heading>
-    ),
-    []
-  );
+  const showTtsItem = !isClip();
 
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <AnimatedSelectionList
+        <Animated.ScrollView
           style={StyleSheet.absoluteFill}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
@@ -265,14 +347,79 @@ const AppSettingsScreen: React.FC = () => {
             headerHeight ? { paddingTop: headerHeight } : null,
             { paddingBottom: FOOTER_BASE_HEIGHT + safeAreaBottom },
           ]}
-          renderSectionHeader={renderSectionHeader}
-          sections={SETTINGS_SECTIONS}
-          ListFooterComponent={() => (
-            <Typography style={styles.betaNotice}>
-              {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
-            </Typography>
+        >
+          {/* パーソナライズセクション */}
+          <View style={styles.sectionContainer}>
+            <Heading style={styles.sectionHeading}>
+              {translate('personalize')}
+            </Heading>
+            <View ref={themeRef} onLayout={handleThemeLayout}>
+              <SettingsItem
+                item={personalizeItems[0]}
+                isFirst={true}
+                isLast={!showTtsItem && personalizeItems.length === 1}
+                onPress={personalizeItems[0].onPress}
+              />
+            </View>
+            {showTtsItem && (
+              <View ref={ttsRef} onLayout={handleTtsLayout}>
+                <SettingsItem
+                  item={personalizeItems[1]}
+                  isFirst={false}
+                  isLast={false}
+                  onPress={personalizeItems[1].onPress}
+                />
+              </View>
+            )}
+            <View ref={languagesRef} onLayout={handleLanguagesLayout}>
+              <SettingsItem
+                item={personalizeItems[showTtsItem ? 2 : 1]}
+                isFirst={false}
+                isLast={true}
+                onPress={personalizeItems[showTtsItem ? 2 : 1].onPress}
+              />
+            </View>
+          </View>
+
+          {/* アプリについてセクション */}
+          <View style={styles.sectionContainer}>
+            <Heading style={styles.sectionHeading}>
+              {translate('aboutApp')}
+            </Heading>
+            {aboutAppItems.map((item, index) => (
+              <SettingsItem
+                key={item.id}
+                item={item}
+                isFirst={index === 0}
+                isLast={index === aboutAppItems.length - 1}
+                onPress={item.onPress}
+              />
+            ))}
+          </View>
+
+          {/* 開発者向けセクション */}
+          {developerItems.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <Heading style={styles.sectionHeading}>
+                {translate('forDevelopers')}
+              </Heading>
+              {developerItems.map((item, index) => (
+                <SettingsItem
+                  key={item.id}
+                  item={item}
+                  isFirst={index === 0}
+                  isLast={index === developerItems.length - 1}
+                  onPress={item.onPress}
+                />
+              ))}
+            </View>
           )}
-        />
+
+          {/* フッター */}
+          <Typography style={styles.betaNotice}>
+            {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
+          </Typography>
+        </Animated.ScrollView>
       </SafeAreaView>
       <SettingsHeader
         title={translate('settings')}
@@ -280,6 +427,17 @@ const AppSettingsScreen: React.FC = () => {
         scrollY={scrollY}
       />
       <FooterTabBar active="settings" />
+      {currentStep && (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onGoToStep={goToStep}
+          onSkip={skipWalkthrough}
+        />
+      )}
     </>
   );
 };
