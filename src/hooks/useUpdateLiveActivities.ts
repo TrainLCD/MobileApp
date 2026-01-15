@@ -177,6 +177,16 @@ export const useUpdateLiveActivities = (): void => {
     [approachingFromState]
   );
 
+  const progress = useMemo(() => {
+    if (stopped) {
+      return 1.0;
+    }
+    if (approaching) {
+      return 0.8;
+    }
+    return 0.3;
+  }, [stopped, approaching]);
+
   const activityState = useMemo(
     () => ({
       stationName,
@@ -194,6 +204,7 @@ export const useUpdateLiveActivities = (): void => {
       lineName,
       passingStationName,
       passingStationNumber,
+      progress,
     }),
     [
       approaching,
@@ -207,6 +218,7 @@ export const useUpdateLiveActivities = (): void => {
       nextStationNumber,
       passingStationName,
       passingStationNumber,
+      progress,
       stationName,
       stationNumber,
       stopped,

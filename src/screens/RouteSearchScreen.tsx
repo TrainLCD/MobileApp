@@ -1,7 +1,13 @@
 import { useLazyQuery } from '@apollo/client/react';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import Animated, {
@@ -20,7 +26,9 @@ import { NowHeader } from '~/components/NowHeader';
 import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
+import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -136,6 +144,34 @@ const RouteSearchScreen = () => {
   const { pendingLine } = lineAtom;
 
   const scrollY = useSharedValue(0);
+
+  // ウォークスルー関連
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStepId,
+    currentStep,
+    totalSteps,
+    nextStep,
+    goToStep,
+    skipWalkthrough,
+    setSpotlightArea,
+  } = useRouteSearchWalkthrough();
+
+  const searchBarRef = useRef<View>(null);
+  const searchResultsRef = useRef<View>(null);
+  const [searchBarLayout, setSearchBarLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [searchResultsLayout, setSearchResultsLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   // 駅グループが変更されたら検索結果をクリア
   // biome-ignore lint/correctness/useExhaustiveDependencies: station?.groupId の変更を意図的に監視
@@ -481,6 +517,72 @@ const RouteSearchScreen = () => {
     [station, pendingLine, routeTypesData?.routeTypes]
   );
 
+  // ウォークスルーのレイアウト計測
+  const measureSearchBar = useCallback(() => {
+    if (searchBarRef.current) {
+      searchBarRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setSearchBarLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const measureSearchResults = useCallback(() => {
+    if (searchResultsRef.current) {
+      searchResultsRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setSearchResultsLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  // ステップが変わった時にレイアウトを再計測
+  useEffect(() => {
+    if (currentStepId === 'routeSearchBar') {
+      // 少し遅延させてレイアウトが安定してから計測
+      const timer = setTimeout(() => {
+        measureSearchBar();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureSearchBar]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchResults') {
+      const timer = setTimeout(() => {
+        measureSearchResults();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureSearchResults]);
+
+  // ウォークスルーのスポットライト設定
+  useEffect(() => {
+    if (currentStepId === 'routeSearchBar' && searchBarLayout) {
+      setSpotlightArea({
+        x: searchBarLayout.x,
+        y: searchBarLayout.y,
+        width: searchBarLayout.width,
+        height: searchBarLayout.height,
+        borderRadius: 8,
+      });
+    }
+  }, [currentStepId, searchBarLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchResults' && searchResultsLayout) {
+      setSpotlightArea({
+        x: searchResultsLayout.x,
+        y: searchResultsLayout.y,
+        width: searchResultsLayout.width,
+        height: Math.min(searchResultsLayout.height, 200),
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, searchResultsLayout, setSpotlightArea]);
+
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
@@ -494,7 +596,11 @@ const RouteSearchScreen = () => {
           ]}
         >
           <View style={styles.listHeaderContainer}>
-            <View style={styles.searchBarContainer}>
+            <View
+              ref={searchBarRef}
+              style={styles.searchBarContainer}
+              onLayout={measureSearchBar}
+            >
               <SearchBar onSearch={handleSearch} />
             </View>
             <Heading style={styles.searchResultHeading}>
@@ -502,27 +608,29 @@ const RouteSearchScreen = () => {
             </Heading>
           </View>
 
-          {!searchResults.length ? (
-            <EmptyResult
-              loading={byNameLoading || fetchRouteTypesLoading}
-              hasSearched={hasSearched}
-            />
-          ) : (
-            Array.from({
-              length: Math.ceil(searchResults.length / numColumns),
-            }).map((_, rowIndex) => {
-              const rowStations = searchResults.slice(
-                rowIndex * numColumns,
-                (rowIndex + 1) * numColumns
-              );
-              const rowKey = rowStations.map((s) => s.id).join('-');
-              return (
-                <React.Fragment key={rowKey}>
-                  {renderStationRow(rowStations, rowIndex)}
-                </React.Fragment>
-              );
-            })
-          )}
+          <View ref={searchResultsRef} onLayout={measureSearchResults}>
+            {!searchResults.length ? (
+              <EmptyResult
+                loading={byNameLoading || fetchRouteTypesLoading}
+                hasSearched={hasSearched}
+              />
+            ) : (
+              Array.from({
+                length: Math.ceil(searchResults.length / numColumns),
+              }).map((_, rowIndex) => {
+                const rowStations = searchResults.slice(
+                  rowIndex * numColumns,
+                  (rowIndex + 1) * numColumns
+                );
+                const rowKey = rowStations.map((s) => s.id).join('-');
+                return (
+                  <React.Fragment key={rowKey}>
+                    {renderStationRow(rowStations, rowIndex)}
+                  </React.Fragment>
+                );
+              })
+            )}
+          </View>
 
           <EmptyLineSeparator />
         </Animated.ScrollView>
@@ -576,6 +684,18 @@ const RouteSearchScreen = () => {
           fetchRouteTypesLoading
         }
       />
+
+      {currentStep && (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onGoToStep={goToStep}
+          onSkip={skipWalkthrough}
+        />
+      )}
     </>
   );
 };
