@@ -9,6 +9,60 @@
 import SwiftUI
 import WidgetKit
 
+struct StationNumberGaugeView: View {
+  let stationNumber: String
+  let nextStationNumber: String
+  let lineColor: String
+  let progress: Double
+  let stopped: Bool
+
+  private var displayNumber: String {
+    let number = stopped ? stationNumber : nextStationNumber
+    if number.isEmpty {
+      return ""
+    }
+    // 駅ナンバーが長い場合は数字部分のみ抽出して表示
+    let digits = number.filter { $0.isNumber }
+    if digits.count <= 2 {
+      return digits
+    }
+    // 3桁以上の場合は最後の2桁を表示
+    return String(digits.suffix(2))
+  }
+
+  private var gaugeColor: Color {
+    Color(hex: lineColor)
+  }
+
+  var body: some View {
+    ZStack {
+      // 背景の円（グレー）
+      Circle()
+        .stroke(Color.gray.opacity(0.3), lineWidth: 3)
+
+      // プログレスの円弧
+      Circle()
+        .trim(from: 0, to: progress)
+        .stroke(
+          gaugeColor,
+          style: StrokeStyle(lineWidth: 3, lineCap: .round)
+        )
+        .rotationEffect(.degrees(-90))
+
+      // 中央の駅ナンバー表示
+      if !displayNumber.isEmpty {
+        Text(displayNumber)
+          .font(.system(size: 10, weight: .bold, design: .rounded))
+          .minimumScaleFactor(0.5)
+      } else {
+        Image(systemName: "tram")
+          .font(.system(size: 10))
+      }
+    }
+    .frame(width: 24, height: 24)
+  }
+}
+
 // NOTE: 通過中の値を追加するとなぜかライブアクティビティが死ぬので含めていない
 // ちなみにライブアクティビティにスピナーが表示され固まる
 func getRunningStateText(
@@ -239,7 +293,13 @@ struct RideSessionWidget: Widget {
         .frame(maxWidth: .infinity)
         .padding(.trailing, 8)
       } minimal: {
-        Image(systemName: "tram")
+        StationNumberGaugeView(
+          stationNumber: context.state.stationNumber,
+          nextStationNumber: context.state.nextStationNumber,
+          lineColor: context.state.lineColor,
+          progress: context.state.progress,
+          stopped: context.state.stopped
+        )
       }
     }
     .supplementalActivityFamiliesIfAvailable()

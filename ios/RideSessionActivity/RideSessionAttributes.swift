@@ -28,5 +28,6 @@ struct RideSessionAttributes: ActivityAttributes {
     var isNextLastStop: Bool
     var lineColor: String
     var lineName: String
+    var progress: Double
   }
 }
