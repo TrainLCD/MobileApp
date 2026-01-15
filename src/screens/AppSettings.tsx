@@ -158,7 +158,7 @@ const SettingsItem = ({
         </Typography>
       </View>
 
-      <CardChevron stroke="black" />
+      <CardChevron stroke={isLEDTheme ? 'white' : 'black'} />
     </TouchableOpacity>
   );
 };
