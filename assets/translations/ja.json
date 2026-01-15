@@ -224,6 +224,7 @@
   "toei": "東京都交通局",
   "ccby": "CC BY 4.0(加工して利用)",
   "otherOss": "その他オープンソースソフトウェア",
+  "linesNearbyAtStation": "%{stationName}駅の路線",
   "toeiBusStopsNearby": "周辺のバス路線（都営バス）",
   "themeConfirmTitle": "テーマを変更しますか？",
   "themeConfirmApply": "適用",

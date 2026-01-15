@@ -26,7 +26,7 @@ class LiveActivityModule: NSObject {
       isNextLastStop: state["isNextLastStop"] as? Bool ?? false,
       lineColor: state["lineColor"] as? String ?? "#000000",
       lineName: state["lineName"] as? String ?? "",
-      progress: 0.0
+      progress: state["progress"] as? Double ?? 0.3
     )
   }
   

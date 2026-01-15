@@ -16,22 +16,24 @@ struct StationNumberGaugeView: View {
   let progress: Double
   let stopped: Bool
 
-  private var displayNumber: String {
+  private var displayNumberParts: (symbol: String, number: String)? {
     let number = stopped ? stationNumber : nextStationNumber
     if number.isEmpty {
-      return ""
+      return nil
     }
-    // 駅ナンバーが長い場合は数字部分のみ抽出して表示
-    let digits = number.filter { $0.isNumber }
-    if digits.count <= 2 {
-      return digits
+    let parts = number.split(separator: "-", maxSplits: 1)
+    if parts.count == 2 {
+      return (symbol: String(parts[0]), number: String(parts[1]))
     }
-    // 3桁以上の場合は最後の2桁を表示
-    return String(digits.suffix(2))
+    // ハイフンがない場合はそのまま表示
+    return (symbol: "", number: number)
   }
 
   private var gaugeColor: Color {
-    Color(hex: lineColor)
+    if lineColor.isEmpty {
+      return .white
+    }
+    return Color(hex: lineColor)
   }
 
   var body: some View {
@@ -49,16 +51,18 @@ struct StationNumberGaugeView: View {
         )
         .rotationEffect(.degrees(-90))
 
-      // 中央の駅ナンバー表示
-      if !displayNumber.isEmpty {
-        Text(displayNumber)
-          .font(.system(size: 10, weight: .bold, design: .rounded))
-          .minimumScaleFactor(0.5)
-      } else {
-        Image("AppIcon")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 14, height: 14)
+      // 中央の駅ナンバー表示（ナンバリングがない場合は空）
+      if let parts = displayNumberParts {
+        VStack(spacing: 0) {
+          if !parts.symbol.isEmpty {
+            Text(parts.symbol)
+              .font(.system(size: 8, weight: .bold, design: .rounded))
+          }
+          Text(parts.number)
+            .font(.system(size: 8, weight: .bold, design: .rounded))
+        }
+        .minimumScaleFactor(0.5)
+        .frame(width: 16, height: 16)
       }
     }
     .frame(width: 24, height: 24)
