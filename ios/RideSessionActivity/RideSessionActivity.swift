@@ -55,8 +55,11 @@ struct StationNumberGaugeView: View {
           .font(.system(size: 10, weight: .bold, design: .rounded))
           .minimumScaleFactor(0.5)
       } else {
-        Image(systemName: "tram")
-          .font(.system(size: 10))
+        Image("AppIcon")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 14, height: 14)
+          .clipShape(Circle())
       }
     }
     .frame(width: 24, height: 24)
