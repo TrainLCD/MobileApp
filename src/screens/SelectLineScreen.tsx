@@ -741,7 +741,9 @@ const SelectLineScreen = () => {
       re,
       ''
     );
-    return isJapanese ? `${baseNameJa}駅の路線` : baseNameEn;
+    return translate('linesNearbyAtStation', {
+      stationName: isJapanese ? baseNameJa : baseNameEn,
+    });
   }, [station]);
 
   const handleScroll = useAnimatedScrollHandler({
