@@ -13,10 +13,8 @@ extension WidgetConfiguration
 {
   func supplementalActivityFamiliesIfAvailable() -> some WidgetConfiguration
   {
-    if #available(iOSApplicationExtension 18.0, *) {
-      return self.supplementalActivityFamilies([ActivityFamily.small])
-    } else {
-      return self
-    }
+    // NOTE: supplementalActivityFamiliesを有効にすると、MacでLive Activityが表示された際に
+    // iPhone側でスピナーが表示されて固まるバグが発生するため、無効化する
+    return self
   }
 }
