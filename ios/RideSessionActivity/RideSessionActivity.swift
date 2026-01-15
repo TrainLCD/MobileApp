@@ -26,11 +26,12 @@ struct StationNumberGaugeView: View {
   }
 
   private var gaugeColor: Color {
-    // デバッグ: lineColorが空の場合は白にフォールバック
-    if lineColor.isEmpty {
-      return .white
-    }
-    return Color(hex: lineColor)
+    // TODO: デバッグ用 - 赤色で表示されるか確認後に削除
+    return .red
+    // if lineColor.isEmpty {
+    //   return .white
+    // }
+    // return Color(hex: lineColor)
   }
 
   var body: some View {
