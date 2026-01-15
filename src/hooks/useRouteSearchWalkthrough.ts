@@ -23,7 +23,7 @@ const ROUTE_SEARCH_WALKTHROUGH_STEPS: WalkthroughStep[] = [
     id: 'routeSearchResults',
     titleKey: 'routeSearchWalkthroughTitle3',
     descriptionKey: 'routeSearchWalkthroughDescription3',
-    tooltipPosition: 'top',
+    tooltipPosition: 'bottom',
   },
 ];
 

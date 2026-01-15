@@ -518,7 +518,7 @@ const RouteSearchScreen = () => {
   );
 
   // ウォークスルーのレイアウト計測
-  const handleSearchBarLayout = useCallback(() => {
+  const measureSearchBar = useCallback(() => {
     if (searchBarRef.current) {
       searchBarRef.current.measureInWindow(
         (x: number, y: number, width: number, height: number) => {
@@ -528,7 +528,7 @@ const RouteSearchScreen = () => {
     }
   }, []);
 
-  const handleSearchResultsLayout = useCallback(() => {
+  const measureSearchResults = useCallback(() => {
     if (searchResultsRef.current) {
       searchResultsRef.current.measureInWindow(
         (x: number, y: number, width: number, height: number) => {
@@ -537,6 +537,26 @@ const RouteSearchScreen = () => {
       );
     }
   }, []);
+
+  // ステップが変わった時にレイアウトを再計測
+  useEffect(() => {
+    if (currentStepId === 'routeSearchBar') {
+      // 少し遅延させてレイアウトが安定してから計測
+      const timer = setTimeout(() => {
+        measureSearchBar();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureSearchBar]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchResults') {
+      const timer = setTimeout(() => {
+        measureSearchResults();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureSearchResults]);
 
   // ウォークスルーのスポットライト設定
   useEffect(() => {
@@ -579,7 +599,7 @@ const RouteSearchScreen = () => {
             <View
               ref={searchBarRef}
               style={styles.searchBarContainer}
-              onLayout={handleSearchBarLayout}
+              onLayout={measureSearchBar}
             >
               <SearchBar onSearch={handleSearch} />
             </View>
@@ -588,7 +608,7 @@ const RouteSearchScreen = () => {
             </Heading>
           </View>
 
-          <View ref={searchResultsRef} onLayout={handleSearchResultsLayout}>
+          <View ref={searchResultsRef} onLayout={measureSearchResults}>
             {!searchResults.length ? (
               <EmptyResult
                 loading={byNameLoading || fetchRouteTypesLoading}
