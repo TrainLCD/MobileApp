@@ -21,13 +21,8 @@ struct StationNumberGaugeView: View {
     if number.isEmpty {
       return ""
     }
-    // 駅ナンバーが長い場合は数字部分のみ抽出して表示
-    let digits = number.filter { $0.isNumber }
-    if digits.count <= 2 {
-      return digits
-    }
-    // 3桁以上の場合は最後の2桁を表示
-    return String(digits.suffix(2))
+    // ハイフンを削除して路線記号+番号を表示（例: E-31 → E31）
+    return number.replacingOccurrences(of: "-", with: "")
   }
 
   private var gaugeColor: Color {
