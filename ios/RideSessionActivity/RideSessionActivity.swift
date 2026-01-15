@@ -52,11 +52,12 @@ struct StationNumberGaugeView: View {
         Text(displayNumber)
           .font(.system(size: 10, weight: .bold, design: .rounded))
           .minimumScaleFactor(0.5)
+          .frame(width: 16, height: 16)
       } else {
         Image("AppIcon")
           .resizable()
           .scaledToFit()
-          .frame(width: 14, height: 14)
+          .frame(width: 12, height: 12)
       }
     }
     .frame(width: 24, height: 24)
