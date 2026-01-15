@@ -42,7 +42,7 @@ struct StationNumberGaugeView: View {
 
       // プログレスの円弧
       Circle()
-        .trim(from: 0, to: progress)
+        .trim(from: 0, to: 1.0)  // TODO: デバッグ用 - progressを1.0に固定
         .stroke(
           gaugeColor,
           style: StrokeStyle(lineWidth: 3, lineCap: .round)
