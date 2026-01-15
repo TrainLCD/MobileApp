@@ -177,6 +177,13 @@ export const useUpdateLiveActivities = (): void => {
     [approachingFromState]
   );
 
+  const stationIndex = useMemo(() => {
+    const index = stations.findIndex((s) => s.id === stoppedStation?.id);
+    return index >= 0 ? index : 0;
+  }, [stations, stoppedStation?.id]);
+
+  const totalStations = useMemo(() => stations.length, [stations.length]);
+
   const activityState = useMemo(
     () => ({
       stationName,
@@ -194,6 +201,8 @@ export const useUpdateLiveActivities = (): void => {
       lineName,
       passingStationName,
       passingStationNumber,
+      stationIndex,
+      totalStations,
     }),
     [
       approaching,
@@ -207,9 +216,11 @@ export const useUpdateLiveActivities = (): void => {
       nextStationNumber,
       passingStationName,
       passingStationNumber,
+      stationIndex,
       stationName,
       stationNumber,
       stopped,
+      totalStations,
       trainTypeName,
     ]
   );

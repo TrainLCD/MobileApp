@@ -239,7 +239,14 @@ struct RideSessionWidget: Widget {
         .frame(maxWidth: .infinity)
         .padding(.trailing, 8)
       } minimal: {
-        Image(systemName: "tram")
+        Gauge(
+          value: Double(context.state.stationIndex),
+          in: 0...Double(max(context.state.totalStations - 1, 1))
+        ) {
+          Image(systemName: "tram")
+        }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .tint(Color(hex: context.state.lineColor))
       }
     }
     .supplementalActivityFamiliesIfAvailable()

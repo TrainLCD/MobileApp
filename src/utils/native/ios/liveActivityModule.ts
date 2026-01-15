@@ -14,6 +14,8 @@ type LiveActivityWidgetState = {
   lineColor: string;
   passingStationName: string;
   passingStationNumber: string;
+  stationIndex: number;
+  totalStations: number;
 };
 
 export const startLiveActivity = (state?: LiveActivityWidgetState) => {

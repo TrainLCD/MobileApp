@@ -28,5 +28,7 @@ struct RideSessionAttributes: ActivityAttributes {
     var isNextLastStop: Bool
     var lineColor: String
     var lineName: String
+    var stationIndex: Int
+    var totalStations: Int
   }
 }
