@@ -224,6 +224,18 @@ const AppSettingsScreen: React.FC = () => {
     }
   }, []);
 
+  // Re-measure all items when headerHeight changes
+  useEffect(() => {
+    if (headerHeight > 0) {
+      // Use requestAnimationFrame to ensure layout has been applied
+      requestAnimationFrame(() => {
+        handleThemeLayout();
+        handleTtsLayout();
+        handleLanguagesLayout();
+      });
+    }
+  }, [headerHeight, handleThemeLayout, handleTtsLayout, handleLanguagesLayout]);
+
   useEffect(() => {
     if (currentStepId === 'settingsTheme' && themeItemLayout) {
       setSpotlightArea({
