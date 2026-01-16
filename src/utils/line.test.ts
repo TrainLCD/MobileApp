@@ -5,6 +5,7 @@ import {
   filterBusLinesForNonBusStation,
   filterWithoutCurrentLine,
   getCurrentStationLinesWithoutCurrentLine,
+  getLocalizedLineName,
   getNextStationLinesWithoutCurrentLine,
   isBusLine,
 } from './line';
@@ -226,5 +227,115 @@ describe('getNextStationLinesWithoutCurrentLine', () => {
     ];
     const result = getNextStationLinesWithoutCurrentLine(stations, line1);
     expect(result).toEqual([]);
+  });
+});
+
+describe('getLocalizedLineName', () => {
+  describe('日本語環境（isJapanese: true）', () => {
+    it('nameShortを返す', () => {
+      const line = createLine(1, {
+        nameShort: '池袋線',
+        nameRoman: 'Ikebukuro Line',
+      });
+      expect(getLocalizedLineName(line, true)).toBe('池袋線');
+    });
+
+    it('nameShortがnullの場合、空文字を返す', () => {
+      const line = createLine(1, {
+        nameShort: null,
+        nameRoman: 'Ikebukuro Line',
+      });
+      expect(getLocalizedLineName(line, true)).toBe('');
+    });
+
+    it('nameShortがundefinedの場合、空文字を返す', () => {
+      const line = createLine(1, {
+        nameShort: undefined,
+        nameRoman: 'Ikebukuro Line',
+      });
+      expect(getLocalizedLineName(line, true)).toBe('');
+    });
+  });
+
+  describe('英語環境（isJapanese: false）', () => {
+    it('nameRomanを返す', () => {
+      const line = createLine(1, {
+        nameShort: '池袋線',
+        nameRoman: 'Ikebukuro Line',
+      });
+      expect(getLocalizedLineName(line, false)).toBe('Ikebukuro Line');
+    });
+
+    it('nameRomanが空文字の場合、nameShortにフォールバックする', () => {
+      const line = createLine(1, {
+        nameShort: '池袋線',
+        nameRoman: '',
+      });
+      expect(getLocalizedLineName(line, false)).toBe('池袋線');
+    });
+
+    it('nameRomanがnullの場合、nameShortにフォールバックする', () => {
+      const line = createLine(1, {
+        nameShort: '池袋線',
+        nameRoman: null,
+      });
+      expect(getLocalizedLineName(line, false)).toBe('池袋線');
+    });
+
+    it('nameRomanがundefinedの場合、nameShortにフォールバックする', () => {
+      const line = createLine(1, {
+        nameShort: '池袋線',
+        nameRoman: undefined,
+      });
+      expect(getLocalizedLineName(line, false)).toBe('池袋線');
+    });
+
+    it('nameRomanとnameShort両方が空の場合、空文字を返す', () => {
+      const line = createLine(1, {
+        nameShort: '',
+        nameRoman: '',
+      });
+      expect(getLocalizedLineName(line, false)).toBe('');
+    });
+
+    it('nameRomanとnameShort両方がnullの場合、空文字を返す', () => {
+      const line = createLine(1, {
+        nameShort: null,
+        nameRoman: null,
+      });
+      expect(getLocalizedLineName(line, false)).toBe('');
+    });
+  });
+
+  describe('バス路線のケース（nameRomanが空になりがち）', () => {
+    it('バス路線でnameRomanがない場合、英語環境でもnameShortを返す', () => {
+      const busLine = createLine(1, {
+        nameShort: '池65',
+        nameRoman: '',
+        transportType: TransportType.Bus,
+      });
+      expect(getLocalizedLineName(busLine, false)).toBe('池65');
+    });
+
+    it('バス路線でnameRomanがnullの場合、英語環境でもnameShortを返す', () => {
+      const busLine = createLine(1, {
+        nameShort: '池65',
+        nameRoman: null,
+        transportType: TransportType.Bus,
+      });
+      expect(getLocalizedLineName(busLine, false)).toBe('池65');
+    });
+  });
+
+  describe('エッジケース', () => {
+    it('lineがnullの場合、空文字を返す', () => {
+      expect(getLocalizedLineName(null, true)).toBe('');
+      expect(getLocalizedLineName(null, false)).toBe('');
+    });
+
+    it('lineがundefinedの場合、空文字を返す', () => {
+      expect(getLocalizedLineName(undefined, true)).toBe('');
+      expect(getLocalizedLineName(undefined, false)).toBe('');
+    });
   });
 });
