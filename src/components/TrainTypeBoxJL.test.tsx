@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
-import { TrainType } from '~/gen/proto/stationapi_pb';
+import type { TrainType } from '~/@types/graphql';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 
 // Mock dependencies
@@ -9,6 +9,7 @@ jest.mock('jotai', () => ({
     headerLangState: 'JA',
     headerState: 'CURRENT',
   })),
+  atom: jest.fn((val) => val),
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({
@@ -66,7 +67,22 @@ const TestSplitFunction = ({
 };
 
 describe('TrainTypeBoxJL', () => {
-  const mockTrainType = new TrainType({});
+  const mockTrainType: TrainType = {
+    __typename: 'TrainType',
+    id: 1,
+    typeId: 1,
+    groupId: 1,
+    name: 'Test',
+    nameKatakana: 'テスト',
+    nameRoman: 'Test',
+    nameChinese: '测试',
+    nameKorean: '테스트',
+    color: '#000000',
+    direction: null,
+    kind: null,
+    line: null,
+    lines: null,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();

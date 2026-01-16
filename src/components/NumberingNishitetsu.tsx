@@ -13,9 +13,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 84 * 1.5 : 84,
     height: isTablet ? 55 * 1.5 : 55,
@@ -62,6 +68,7 @@ const NumberingIconNishitetsu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const darkText = false;
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
@@ -88,14 +95,16 @@ const NumberingIconNishitetsu: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Typography
-        style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
-      >
-        {lineSymbol}
-      </Typography>
-      <View style={styles.stationNumberContainer}>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { backgroundColor: lineColor }]}>
+        <Typography
+          style={[styles.lineSymbol, { color: darkText ? '#231f20' : 'white' }]}
+        >
+          {lineSymbol}
+        </Typography>
+        <View style={styles.stationNumberContainer}>
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );

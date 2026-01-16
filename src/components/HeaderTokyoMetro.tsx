@@ -1,49 +1,24 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import React from 'react';
 import {
-  MARK_SHAPE,
-  parenthesisRegexp,
-  STATION_NAME_FONT_SIZE,
-} from '../constants';
-import {
-  useBoundText,
-  useConnectedLines,
-  useCurrentLine,
-  useCurrentStation,
-  useCurrentTrainType,
-  useFirstStop,
-  useIsNextLastStop,
-  useLazyPrevious,
-  useNextStation,
-  useNumbering,
-  usePrevious,
-} from '../hooks';
-import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import tuningState from '../store/atoms/tuning';
-import { translate } from '../translation';
+  Platform,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import Animated from 'react-native-reanimated';
+import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../constants';
+import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
-import katakanaToHiragana from '../utils/kanaToHiragana';
-import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
+import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 
-const { width: screenWidth } = Dimensions.get('screen');
-
 const styles = StyleSheet.create({
   root: {
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowOpacity: 0.25,
     shadowOffset: {
       width: 0,
@@ -51,6 +26,7 @@ const styles = StyleSheet.create({
     },
     shadowRadius: 1,
     paddingBottom: 4,
+    zIndex: 9999,
   },
   gradientRoot: {
     paddingTop: 14,
@@ -84,7 +60,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(18),
   },
   firstTextWrapper: {
-    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -97,7 +72,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   stateWrapper: {
-    width: screenWidth * 0.14,
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     marginRight: 12,
@@ -135,370 +109,39 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderTokyoMetro: React.FC = () => {
-  const { selectedBound, arrived } = useAtomValue(stationState);
-  const { headerState } = useAtomValue(navigationState);
-  const { headerTransitionDelay } = useAtomValue(tuningState);
-
-  const currentStation = useCurrentStation();
-  const currentLine = useCurrentLine();
-
-  const [fadeOutFinished, setFadeOutFinished] = useState(false);
-  const trainType = useCurrentTrainType();
-  const boundStationNameList = useBoundText();
-
-  const connectedLines = useConnectedLines();
-
-  const firstStop = useFirstStop();
-
-  const connectionText = useMemo(
-    () =>
-      connectedLines
-        ?.map((l) => l.nameShort.replace(parenthesisRegexp, ''))
-        .slice(0, 2)
-        .join('・'),
-    [connectedLines]
-  );
-
-  const headerLangState = useMemo(
-    () =>
-      headerState.split('_')[1]?.length
-        ? (headerState.split('_')[1] as HeaderLangState)
-        : ('JA' as HeaderLangState),
-    [headerState]
-  );
-  const boundText = useMemo(
-    () => boundStationNameList[headerLangState],
-    [boundStationNameList, headerLangState]
-  );
-
-  const isLast = useIsNextLastStop();
-  const nextStation = useNextStation();
-
-  const stationText = useMemo<string>(() => {
-    if (!selectedBound) {
-      return currentStation?.name ?? '';
-    }
-
-    if (firstStop) {
-      switch (headerLangState) {
-        case 'JA':
-          return selectedBound.name ?? '';
-        case 'KANA':
-          return katakanaToHiragana(selectedBound.nameKatakana ?? '');
-        case 'EN':
-          return selectedBound.nameRoman ?? '';
-        case 'ZH':
-          return selectedBound.nameChinese ?? '';
-        case 'KO':
-          return selectedBound.nameKorean ?? '';
-        default:
-      }
-    }
-
-    switch (headerState) {
-      case 'ARRIVING':
-        return nextStation?.name ?? '';
-      case 'ARRIVING_KANA':
-        return katakanaToHiragana(nextStation?.nameKatakana);
-      case 'ARRIVING_EN': {
-        return nextStation?.nameRoman ?? '';
-      }
-      case 'ARRIVING_ZH': {
-        return nextStation?.nameChinese ?? '';
-      }
-      case 'ARRIVING_KO': {
-        return nextStation?.nameKorean ?? '';
-      }
-      case 'CURRENT':
-        return currentStation?.name ?? '';
-      case 'CURRENT_KANA':
-        return katakanaToHiragana(currentStation?.nameKatakana);
-      case 'CURRENT_EN': {
-        return currentStation?.nameRoman ?? '';
-      }
-      case 'CURRENT_ZH': {
-        return currentStation?.nameChinese ?? '';
-      }
-      case 'CURRENT_KO': {
-        return currentStation?.nameKorean ?? '';
-      }
-      case 'NEXT': {
-        return nextStation?.name ?? '';
-      }
-      case 'NEXT_KANA':
-        return katakanaToHiragana(nextStation?.nameKatakana);
-      case 'NEXT_EN':
-        return nextStation?.nameRoman ?? '';
-      case 'NEXT_ZH':
-        return nextStation?.nameChinese ?? '';
-      case 'NEXT_KO':
-        return nextStation?.nameKorean ?? '';
-      default:
-        return '';
-    }
-  }, [
-    currentStation?.name,
-    currentStation?.nameChinese,
-    currentStation?.nameKatakana,
-    currentStation?.nameKorean,
-    currentStation?.nameRoman,
-    headerState,
-    nextStation?.name,
-    nextStation?.nameChinese,
-    nextStation?.nameKatakana,
-    nextStation?.nameKorean,
-    nextStation?.nameRoman,
+const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
+  const {
+    currentLine,
     selectedBound,
-    firstStop,
-    headerLangState,
-  ]);
-
-  const stateTextLeft = useMemo<string>(() => {
-    if (firstStop && selectedBound) {
-      switch (headerLangState) {
-        case 'EN':
-          return 'For';
-        case 'ZH':
-          return '开往';
-        default:
-          return '';
-      }
-    }
-
-    if (!selectedBound) {
-      return translate('nowStoppingAt');
-    }
-    switch (headerState) {
-      case 'ARRIVING':
-        return translate(isLast ? 'soonLast' : 'soon');
-      case 'ARRIVING_KANA':
-        return translate(isLast ? 'soonKanaLast' : 'soon');
-      case 'ARRIVING_EN':
-        return translate(isLast ? 'soonEnLast' : 'soonEn');
-      case 'ARRIVING_ZH':
-        return translate(isLast ? 'soonZhLast' : 'soonZh');
-      case 'ARRIVING_KO':
-        return translate(isLast ? 'soonKoLast' : 'soonKo');
-      case 'CURRENT':
-        return translate('nowStoppingAt');
-      case 'CURRENT_KANA':
-        return translate('nowStoppingAt');
-      case 'CURRENT_EN':
-      case 'CURRENT_ZH':
-      case 'CURRENT_KO':
-        return '';
-      case 'NEXT':
-        return translate(isLast ? 'nextLast' : 'next');
-      case 'NEXT_KANA':
-        return translate(isLast ? 'nextKanaLast' : 'nextKana');
-      case 'NEXT_EN':
-        return translate(isLast ? 'nextEnLast' : 'nextEn');
-      case 'NEXT_ZH':
-        return translate(isLast ? 'nextZhLast' : 'nextZh');
-      case 'NEXT_KO':
-        return translate(isLast ? 'nextKoLast' : 'nextKo');
-      default:
-        return '';
-    }
-  }, [headerState, isLast, selectedBound, firstStop, headerLangState]);
-
-  const stateTextRight = useMemo<string>(() => {
-    if (firstStop && selectedBound) {
-      switch (headerLangState) {
-        case 'JA':
-        case 'KANA':
-          return 'ゆき';
-        case 'KO':
-          return '행';
-        default:
-          return '';
-      }
-    }
-    return '';
-  }, [firstStop, selectedBound, headerLangState]);
-
-  const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
-
-  const prevStationText = usePrevious(stationText);
-  const prevStateTextLeft = usePrevious(stateTextLeft);
-  const prevStateTextRight = usePrevious(stateTextRight);
-  const prevBoundText = usePrevious(boundText);
-  const prevConnectionText = usePrevious(connectionText);
-
-  const nameFadeAnim = useSharedValue<number>(1);
-  const topNameScaleYAnim = useSharedValue<number>(0);
-  const stateOpacityAnim = useSharedValue<number>(0);
-  const boundOpacityAnim = useSharedValue<number>(0);
-  const bottomNameScaleYAnim = useSharedValue<number>(1);
-
-  const prevBoundIsDifferent = useMemo(
-    () => prevBoundText !== boundText,
-    [boundText, prevBoundText]
-  );
-
-  const fadeIn = useCallback((): void => {
-    if (!selectedBound) {
-      if (prevHeaderState === headerState) {
-        topNameScaleYAnim.value = 0;
-        nameFadeAnim.value = 1;
-        bottomNameScaleYAnim.value = 1;
-        stateOpacityAnim.value = 0;
-        setFadeOutFinished(true);
-      }
-      return;
-    }
-
-    const handleFinish = (finished: boolean | undefined) => {
-      if (finished) {
-        setFadeOutFinished(true);
-      }
-    };
-
-    if (prevHeaderState !== headerState) {
-      topNameScaleYAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-      nameFadeAnim.value = withTiming(
-        1,
-        {
-          duration: headerTransitionDelay,
-          easing: Easing.linear,
-        },
-        (finished) => runOnJS(handleFinish)(finished)
-      );
-      bottomNameScaleYAnim.value = withTiming(1, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-      stateOpacityAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-    }
-    if (prevBoundIsDifferent) {
-      boundOpacityAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-    }
-  }, [
-    bottomNameScaleYAnim,
-    boundOpacityAnim,
     headerState,
     headerTransitionDelay,
-    nameFadeAnim,
-    prevBoundIsDifferent,
-    prevHeaderState,
+    stationText,
+    stateText,
+    stateTextRight,
+    boundText,
+    currentStationNumber,
+    threeLetterCode,
+    numberingColor,
+    trainType,
+    firstStop,
+    connectedLines,
+    connectionText,
+    isJapaneseState,
+  } = props;
+
+  const animation = useHeaderAnimation({
     selectedBound,
-    stateOpacityAnim,
-    topNameScaleYAnim,
-  ]);
-
-  const fadeOut = useCallback((): void => {
-    if (!selectedBound) {
-      return;
-    }
-
-    nameFadeAnim.value = 0;
-    topNameScaleYAnim.value = 1;
-    stateOpacityAnim.value = 1;
-    boundOpacityAnim.value = 1;
-    bottomNameScaleYAnim.value = 0;
-  }, [
-    selectedBound,
-    nameFadeAnim,
-    topNameScaleYAnim,
-    stateOpacityAnim,
-    boundOpacityAnim,
-    bottomNameScaleYAnim,
-  ]);
-
-  const isJapaneseState = useMemo(
-    () => headerLangState === 'JA' || headerLangState === 'KANA',
-    [headerLangState]
-  );
-
-  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
-
-  const fade = useCallback(() => {
-    fadeOut();
-    fadeIn();
-  }, [fadeIn, fadeOut]);
-
-  useEffect(() => {
-    setFadeOutFinished(!selectedBound);
-    fade();
-  }, [fade, selectedBound]);
-
-  const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.value,
-  }));
-
-  const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.value,
-  }));
-
-  const topNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    const transform = {
-      transform: [
-        {
-          scaleY: 1 - topNameScaleYAnim.value,
-        },
-      ],
-    };
-
-    return transform;
+    headerState,
+    headerTransitionDelay,
+    stationText,
+    stateText,
+    stateTextRight,
+    boundText,
+    connectionText,
+    isJapaneseState,
   });
 
-  const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => {
-    const transform = {
-      transform: [
-        {
-          scaleY: topNameScaleYAnim.value,
-        },
-      ],
-    };
-
-    return transform;
-  });
-
-  const topNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: nameFadeAnim.value,
-    };
-  });
-
-  const bottomNameAnimatedStyles = useAnimatedStyle(() => {
-    return {
-      opacity: 1 - nameFadeAnim.value,
-    };
-  });
-
-  const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.value,
-  }));
-
-  const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: boundOpacityAnim.value,
-  }));
-
-  const [currentStationNumber, threeLetterCode] = useNumbering(
-    false,
-    firstStop
-  );
-
-  const numberingColor = useMemo(
-    () =>
-      getNumberingColor(
-        arrived,
-        currentStationNumber,
-        nextStation,
-        currentLine
-      ),
-    [arrived, currentStationNumber, currentLine, nextStation]
-  );
+  const dim = useWindowDimensions();
 
   return (
     <View style={styles.root}>
@@ -512,7 +155,10 @@ const HeaderTokyoMetro: React.FC = () => {
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
               <Animated.Text
-                style={[boundTopAnimatedStyles, styles.boundTextContainer]}
+                style={[
+                  animation.boundTopAnimatedStyles,
+                  styles.boundTextContainer,
+                ]}
               >
                 <Text
                   adjustsFontSizeToFit
@@ -526,43 +172,51 @@ const HeaderTokyoMetro: React.FC = () => {
                 <Text style={styles.boundText}>{boundText}</Text>
               </Animated.Text>
               <Animated.Text
-                style={[boundBottomAnimatedStyles, styles.boundTextContainer]}
+                style={[
+                  animation.boundBottomAnimatedStyles,
+                  styles.boundTextContainer,
+                ]}
               >
                 <Text
                   adjustsFontSizeToFit
                   numberOfLines={1}
                   style={styles.connectedLines}
                 >
-                  {connectedLines?.length && prevIsJapaneseState
-                    ? `${prevConnectionText}直通 `
+                  {connectedLines?.length && animation.prevIsJapaneseState
+                    ? `${animation.prevConnectionText}直通 `
                     : null}
                 </Text>
-                <Text style={styles.boundText}>{prevBoundText}</Text>
+                <Text style={styles.boundText}>{animation.prevBoundText}</Text>
               </Animated.Text>
             </View>
           ) : null}
         </View>
         <View style={styles.bottom}>
-          <View style={styles.stateWrapper}>
+          <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
             <Animated.Text
               style={[
-                stateTopAnimatedStyles,
+                animation.stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
-              {stateTextLeft}
+              {stateText}
             </Animated.Text>
             <Animated.Text
               style={[
-                stateBottomAnimatedStyles,
+                animation.stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
+              adjustsFontSizeToFit
+              numberOfLines={2}
             >
-              {prevStateTextLeft}
+              {animation.prevStateText}
             </Animated.Text>
           </View>
 
-          {currentStationNumber ? (
+          {currentStationNumber?.lineSymbolShape &&
+          currentStationNumber?.stationNumber ? (
             <View
               style={{
                 bottom:
@@ -576,6 +230,8 @@ const HeaderTokyoMetro: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber}
                 threeLetterCode={threeLetterCode}
+                allowScaling
+                transformOrigin={Platform.OS === 'ios' ? 'center' : undefined}
               />
             </View>
           ) : null}
@@ -586,9 +242,9 @@ const HeaderTokyoMetro: React.FC = () => {
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                  topNameAnimatedStyles,
+                  animation.topNameAnimatedStyles,
                   styles.stationName,
-                  topNameAnimatedAnchorStyle,
+                  animation.topNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
                     transformOrigin: 'top',
@@ -603,39 +259,45 @@ const HeaderTokyoMetro: React.FC = () => {
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                  bottomNameAnimatedStyles,
+                  animation.bottomNameAnimatedStyles,
                   styles.stationName,
-                  bottomNameAnimatedAnchorStyle,
+                  animation.bottomNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
                     transformOrigin: 'bottom',
                   },
                 ]}
               >
-                {prevStationText}
+                {animation.prevStationText}
               </Animated.Text>
             </View>
           </View>
 
           {selectedBound && firstStop ? (
-            <View style={styles.firstTextWrapper}>
-              <Animated.Text style={[stateTopAnimatedStyles, styles.firstText]}>
+            <View
+              style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
+            >
+              <Animated.Text
+                style={[animation.stateTopAnimatedStyles, styles.firstText]}
+              >
                 {stateTextRight}
               </Animated.Text>
               <Animated.Text
-                style={[stateBottomAnimatedStyles, styles.firstText]}
+                style={[animation.stateBottomAnimatedStyles, styles.firstText]}
               >
-                {prevStateTextRight}
+                {animation.prevStateTextRight}
               </Animated.Text>
             </View>
           ) : null}
         </View>
       </LinearGradient>
       <View
-        style={{
-          ...styles.divider,
-          backgroundColor: currentLine?.color ?? '#b5b5ac',
-        }}
+        style={[
+          styles.divider,
+          {
+            backgroundColor: currentLine?.color ?? '#b5b5ac',
+          },
+        ]}
       />
     </View>
   );

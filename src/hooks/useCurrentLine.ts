@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Line } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';

@@ -1,24 +1,41 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook } from '@testing-library/react-native';
-import { Provider } from 'jotai';
-import {
-  OperationStatus,
-  Station,
-  StopCondition,
-} from '~/gen/proto/stationapi_pb';
+import { Provider, useAtomValue } from 'jotai';
+import { OperationStatus, type Station, StopCondition } from '~/@types/graphql';
 import * as useCanGoForwardModule from '~/hooks/useCanGoForward';
-import * as useLocationStoreModule from '~/hooks/useLocationStore';
 import * as useNearestStationModule from '~/hooks/useNearestStation';
 import * as useNextStationModule from '~/hooks/useNextStation';
 import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
 
-const mockStation = new Station({
+jest.mock('jotai', () => {
+  const actual = jest.requireActual('jotai');
+  return {
+    ...actual,
+    useAtomValue: jest.fn(),
+    useSetAtom: jest.fn(() => jest.fn()),
+  };
+});
+
+jest.mock('~/store/atoms/notify', () => ({
+  __esModule: true,
+  default: {},
+}));
+
+const mockUseAtomValue = useAtomValue as jest.MockedFunction<
+  typeof useAtomValue
+>;
+
+const mockStation: Station = {
+  __typename: 'Station',
   id: 1,
   groupId: 1,
   name: 'Test Station',
   nameKatakana: 'テストステーション',
   nameRoman: 'Test Station',
+  nameChinese: undefined,
+  nameKorean: undefined,
+  threeLetterCode: undefined,
   latitude: 35.0,
   longitude: 135.0,
   lines: [],
@@ -30,7 +47,12 @@ const mockStation = new Station({
   status: OperationStatus.InOperation,
   stationNumbers: [],
   stopCondition: StopCondition.All,
-});
+  distance: undefined,
+  hasTrainTypes: undefined,
+  line: undefined,
+  trainType: undefined,
+  transportType: undefined,
+};
 
 describe('useRefreshStation', () => {
   beforeEach(() => {
@@ -44,14 +66,17 @@ describe('useRefreshStation', () => {
   });
 
   it('runs without crashing with basic mocks', () => {
-    jest
-      .spyOn(useLocationStoreModule, 'useLocationStore')
-
-      .mockImplementation((fn: any) =>
-        fn({
-          coords: { latitude: 35.0, longitude: 135.0, speed: 0, accuracy: 5 },
-        })
-      );
+    // locationAtom, notifyStateの順で呼ばれる
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.0,
+          longitude: 135.0,
+          speed: 0,
+          accuracy: 5,
+        },
+      }) // locationAtom
+      .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     jest
       .spyOn(useNearestStationModule, 'useNearestStation')

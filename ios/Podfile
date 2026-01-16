@@ -4,12 +4,11 @@ require File.join(File.dirname(`node --print "require.resolve('react-native/pack
 require 'json'
 podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
 
-ENV['RCT_NEW_ARCH_ENABLED'] = '0' if podfile_properties['newArchEnabled'] == 'false'
-ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] = podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
-
+ENV['RCT_NEW_ARCH_ENABLED'] ||= '0' if podfile_properties['newArchEnabled'] == 'false'
+ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
+ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
 platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
-install! 'cocoapods',
-  :deterministic_uuids => false
 
 prepare_react_native_project!
 
@@ -32,7 +31,6 @@ abstract_target 'TrainLCD' do
   config = use_native_modules!(config_command)
 
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -41,7 +39,7 @@ abstract_target 'TrainLCD' do
     :app_path => "#{Pod::Config.instance.installation_root}/..",
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
-
+  
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -50,15 +48,23 @@ abstract_target 'TrainLCD' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
-    # This is necessary for Xcode 14, because it signs resource bundles by default
-    # when building for devices.
-    installer.target_installation_results.pod_target_installation_results
-      .each do |pod_name, target_installation_result|
-      target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
-        resource_bundle_target.build_configurations.each do |config|
-          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-        end
-      end
+    plist_buddy = '/usr/libexec/PlistBuddy'
+    info_plists_to_clean = [File.join(__dir__, 'WatchApp', 'Info.plist')]
+
+    [
+      'WatchApp/Schemes',
+      'WatchApp Extension/Schemes',
+      'WatchWidget/Schemes',
+      'RideSessionActivity/Schemes',
+    ].each do |relative_dir|
+      info_plists_to_clean.concat Dir[File.join(__dir__, relative_dir, '*', 'Info.plist')]
+    end
+
+    info_plists_to_clean.each do |plist_path|
+      next unless File.exist?(plist_path)
+      next unless system(plist_buddy, '-c', 'Print :RCTNewArchEnabled', plist_path, out: File::NULL, err: File::NULL)
+
+      system(plist_buddy, '-c', 'Delete :RCTNewArchEnabled', plist_path)
     end
   end
 

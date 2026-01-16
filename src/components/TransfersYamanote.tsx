@@ -1,13 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import {
-  Dimensions,
   FlatList,
+  Platform,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { type Line, Station } from '~/gen/proto/stationapi_pb';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useGetLineMark, useTransferLines } from '../hooks';
 import { translate } from '../translation';
@@ -63,11 +64,11 @@ const styles = StyleSheet.create({
 });
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
-  const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
   const getLineMarkFunc = useGetLineMark();
   const lines = useTransferLines();
+  const dim = useWindowDimensions();
 
-  const flexBasis = useMemo(() => Dimensions.get('screen').width / 3, []);
+  const flexBasis = useMemo(() => dim.width / 3, [dim.width]);
 
   const renderTransferLine = useCallback(
     ({ item: line }: { item: Line; index: number }) => {
@@ -77,12 +78,10 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
       const lineMark = getLineMarkFunc({ line });
 
       return (
-        <View
+        <SafeAreaView
           style={[
             styles.transferLine,
             {
-              marginLeft: safeAreaLeft,
-              marginRight: safeAreaRight,
               flexBasis,
             },
           ]}
@@ -92,7 +91,12 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
             <TouchableOpacity
               activeOpacity={1}
               onPress={() =>
-                onPress(new Station({ ...line.station, line, lines }))
+                onPress({
+                  ...line.station,
+                  __typename: 'Station',
+                  line,
+                  lines,
+                } as Station)
               }
             >
               {lineMark ? (
@@ -110,30 +114,29 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
               <TouchableOpacity
                 activeOpacity={1}
                 onPress={() =>
-                  onPress(new Station({ ...line.station, line, lines }))
+                  onPress({
+                    ...line.station,
+                    __typename: 'Station',
+                    line,
+                    lines,
+                  } as Station)
                 }
               >
                 <Typography style={styles.lineName}>
-                  {line.nameShort.replace(parenthesisRegexp, '')}
+                  {line.nameShort?.replace(parenthesisRegexp, '')}
                 </Typography>
-                <Typography style={styles.lineNameEn}>
-                  {line.nameRoman?.replace(parenthesisRegexp, '')}
-                </Typography>
+                {line.nameRoman ? (
+                  <Typography style={styles.lineNameEn}>
+                    {line.nameRoman.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </SafeAreaView>
       );
     },
-    [
-      flexBasis,
-      onPress,
-      station,
-      getLineMarkFunc,
-      lines,
-      safeAreaLeft,
-      safeAreaRight,
-    ]
+    [flexBasis, onPress, station, getLineMarkFunc, lines]
   );
 
   return (
@@ -149,10 +152,11 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
       </View>
       <FlatList
         data={lines}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => (item.id ?? 0).toString()}
         renderItem={renderTransferLine}
         contentContainerStyle={styles.transferList}
         numColumns={2}
+        removeClippedSubviews={Platform.OS === 'android'}
       />
     </TouchableOpacity>
   );

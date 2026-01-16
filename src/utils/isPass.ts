@@ -1,13 +1,13 @@
 import memoize from 'lodash/memoize';
-import { type Station, StopCondition } from '~/gen/proto/stationapi_pb';
+import { type Station, StopCondition } from '~/@types/graphql';
 import { getIsHoliday } from './isHoliday';
 
-const getIsPass = memoize((station: Station | null): boolean =>
+const getIsPass = memoize((station: Station | undefined): boolean =>
   getIsPassFromStopCondition(station?.stopCondition)
 );
 
 export const getIsPassFromStopCondition = (
-  stopCondition: StopCondition | undefined
+  stopCondition: StopCondition | undefined | null
 ) => {
   const isHoliday = getIsHoliday(new Date());
 

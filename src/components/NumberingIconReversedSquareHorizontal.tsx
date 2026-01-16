@@ -12,9 +12,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: isTablet ? 10 * 1.5 : 10,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 64 * 1.5 : 64,
     height: isTablet ? 64 * 1.5 : 64,
@@ -74,6 +80,7 @@ const NumberingIconReversedSquareHorizontal: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -95,11 +102,13 @@ const NumberingIconReversedSquareHorizontal: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: lineColor }]}>
-      <Typography style={styles.lineSymbol}>
-        {lineSymbol}
-        {stationNumber}
-      </Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { backgroundColor: lineColor }]}>
+        <Typography style={styles.lineSymbol}>
+          {lineSymbol}
+          {stationNumber}
+        </Typography>
+      </View>
     </View>
   );
 };

@@ -12,6 +12,15 @@ export const ASYNC_STORAGE_KEYS = {
   BG_TTS_NOTICE: '@TrainLCD:bgTtsNotice',
   LEGACY_AUTO_MODE_ENABLED: '@TrainLCD:enableLegacyAutoMode',
   AUTO_MODE_V2_CONFIRMED: '@TrainLCD:autoModeV2Confirmed',
+  SUBWAY_ALERT_DISMISSED: '@TrainLCD:subwayAlertDismissed',
+  HOLIDAY_ALERT_DISMISSED: '@TrainLCD:holidayAlertDismissed',
+  WEEKDAY_ALERT_DISMISSED: '@TrainLCD:weekdayAlertDismissed',
+  PARTIALLY_PASS_ALERT_DISMISSED: '@TrainLCD:partiallyPassAlertDismissed',
+  TELEMETRY_ENABLED: '@TrainLCD:telemetryEnabled',
+  WALKTHROUGH_COMPLETED: '@TrainLCD:walkthroughCompleted',
+  ROUTE_SEARCH_WALKTHROUGH_COMPLETED:
+    '@TrainLCD:routeSearchWalkthroughCompleted',
+  SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
 } as const;
 
 export type AsyncStorageKeys =

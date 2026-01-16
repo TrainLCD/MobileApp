@@ -2,14 +2,8 @@
 import * as Linking from 'expo-linking';
 import type React from 'react';
 import { useCallback } from 'react';
-import {
-  Alert,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { isDevApp } from '~/utils/isDevApp';
 import { STATUS_URL } from '../constants';
 import { translate } from '../translation';

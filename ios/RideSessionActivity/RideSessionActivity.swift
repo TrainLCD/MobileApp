@@ -9,10 +9,70 @@
 import SwiftUI
 import WidgetKit
 
-// NOTE: 通過中の値を追加するとなぜかライブアクティビティが死ぬので含めていない
-// ちなみにライブアクティビティにスピナーが表示され固まる
+struct StationNumberGaugeView: View {
+  let stationNumber: String
+  let nextStationNumber: String
+  let lineColor: String
+  let progress: Double
+  let stopped: Bool
+
+  private var displayNumberParts: (symbol: String, number: String)? {
+    let number = stopped ? stationNumber : nextStationNumber
+    if number.isEmpty {
+      return nil
+    }
+    let parts = number.split(separator: "-", maxSplits: 1)
+    if parts.count == 2 {
+      return (symbol: String(parts[0]), number: String(parts[1]))
+    }
+    // ハイフンがない場合はそのまま表示
+    return (symbol: "", number: number)
+  }
+
+  private var gaugeColor: Color {
+    if lineColor.isEmpty {
+      return .white
+    }
+    return Color(hex: lineColor)
+  }
+
+  var body: some View {
+    ZStack {
+      // 背景の円（グレー）
+      Circle()
+        .stroke(Color.gray.opacity(0.3), lineWidth: 3)
+
+      // プログレスの円弧
+      Circle()
+        .trim(from: 0, to: progress)
+        .stroke(
+          gaugeColor,
+          style: StrokeStyle(lineWidth: 3, lineCap: .round)
+        )
+        .rotationEffect(.degrees(-90))
+
+      // 中央の駅ナンバー表示（ナンバリングがない場合は空）
+      if let parts = displayNumberParts {
+        VStack(spacing: 0) {
+          if !parts.symbol.isEmpty {
+            Text(parts.symbol)
+              .font(.system(size: 8, weight: .bold, design: .rounded))
+          }
+          Text(parts.number)
+            .font(.system(size: 8, weight: .bold, design: .rounded))
+        }
+        .minimumScaleFactor(0.5)
+        .frame(width: 16, height: 16)
+      }
+    }
+    .frame(width: 24, height: 24)
+  }
+}
+
+// NOTE: 通過中の値を追加するとライブアクティビティにスピナーが表示され固まる問題があったが、
+// supplementalActivityFamiliesに.mediumを追加してMacネイティブ描画を有効にすることで解消された
 func getRunningStateText(
-  approaching: Bool, stopped: Bool, isNextLastStop: Bool
+  approaching: Bool, stopped: Bool, isNextLastStop: Bool, isDynamicIsland: Bool = false
 ) -> String {
   if !stopped && !approaching {
     if isNextLastStop {
@@ -22,7 +82,10 @@ func getRunningStateText(
   }
 
   if stopped {
-    return String(localized: "stop")
+    if isDynamicIsland {
+      return String(localized: "stop")
+    }
+    return String(localized: "nowStoppingAt")
   }
 
   if approaching {
@@ -90,7 +153,8 @@ struct RideSessionWidget: Widget {
                 getRunningStateText(
                   approaching: context.state.approaching,
                   stopped: context.state.stopped,
-                  isNextLastStop: context.state.isNextLastStop
+                  isNextLastStop: context.state.isNextLastStop,
+                  isDynamicIsland: true
                 )
               )
               .bold()
@@ -112,7 +176,8 @@ struct RideSessionWidget: Widget {
                 getRunningStateText(
                   approaching: context.state.approaching,
                   stopped: context.state.stopped,
-                  isNextLastStop: context.state.isNextLastStop
+                  isNextLastStop: context.state.isNextLastStop,
+                  isDynamicIsland: true
                 )
               )
               .bold()
@@ -144,7 +209,8 @@ struct RideSessionWidget: Widget {
               getRunningStateText(
                 approaching: context.state.approaching,
                 stopped: context.state.stopped,
-                isNextLastStop: context.state.isNextLastStop
+                isNextLastStop: context.state.isNextLastStop,
+                isDynamicIsland: true
               )
             )
             .font(.caption)
@@ -233,7 +299,13 @@ struct RideSessionWidget: Widget {
         .frame(maxWidth: .infinity)
         .padding(.trailing, 8)
       } minimal: {
-        Image(systemName: "tram")
+        StationNumberGaugeView(
+          stationNumber: context.state.stationNumber,
+          nextStationNumber: context.state.nextStationNumber,
+          lineColor: context.state.lineColor,
+          progress: context.state.progress,
+          stopped: context.state.stopped
+        )
       }
     }
     .supplementalActivityFamiliesIfAvailable()

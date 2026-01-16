@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
-import type { Station, TrainType } from '~/gen/proto/stationapi_pb';
+import type { Station, TrainType } from '~/@types/graphql';
+import type { SavedRoute } from '~/models/SavedRoute';
 import {
   ALL_AVAILABLE_LANGUAGES,
   type AvailableLanguage,
@@ -8,8 +9,13 @@ import type { BottomTransitionState } from '../../models/BottomTransitionState';
 import type { HeaderTransitionState } from '../../models/HeaderTransitionState';
 import { isJapanese } from '../../translation';
 
+export type LoopItem = (SavedRoute & { stations: Station[] }) & {
+  __k: string;
+};
+
 export interface NavigationState {
   leftStations: Station[];
+  pendingTrainType: TrainType | null;
   trainType: TrainType | null;
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
@@ -22,10 +28,13 @@ export interface NavigationState {
   enableLegacyAutoMode: boolean;
   isAppLatest: boolean;
   firstStop: boolean;
+  presetsFetched: boolean;
+  presetRoutes: SavedRoute[];
 }
 
 export const initialNavigationState: NavigationState = {
   headerState: (isJapanese ? 'CURRENT' : 'CURRENT_EN') as HeaderTransitionState,
+  pendingTrainType: null,
   trainType: null,
   bottomState: 'LINE' as BottomTransitionState,
   leftStations: [],
@@ -36,6 +45,8 @@ export const initialNavigationState: NavigationState = {
   enableLegacyAutoMode: false,
   isAppLatest: false,
   firstStop: true,
+  presetsFetched: false,
+  presetRoutes: [],
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

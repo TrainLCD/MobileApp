@@ -8,14 +8,21 @@ import Typography from './Typography';
 type Props = {
   stationNumber: string;
   lineColor: string;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 8,
+  },
   root: {
+    width: isTablet ? 72 * 1.5 : 72,
+    height: isTablet ? 72 * 1.5 : 72,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'column',
-    borderRadius: 8,
   },
   hexagonContainer: {
     position: 'absolute',
@@ -42,6 +49,7 @@ const styles = StyleSheet.create({
 const NumberingIconNewShuttle: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
@@ -49,13 +57,15 @@ const NumberingIconNewShuttle: React.FC<Props> = ({
   const height = isTablet ? 72 * 1.5 : 72;
 
   return (
-    <View style={[styles.root, { width, height }]}>
-      <View style={styles.hexagonContainer}>
-        <Hexagon width={width} height={height} fill={lineColor} />
-      </View>
-      <View style={styles.content}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={styles.root}>
+        <View style={styles.hexagonContainer}>
+          <Hexagon width={width} height={height} fill={lineColor} />
+        </View>
+        <View style={styles.content}>
+          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );

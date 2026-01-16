@@ -14,12 +14,10 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.FONTS_SSH_KEY }}
+      - name: Checkout
+        uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -78,3 +76,4 @@ jobs:
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           PACKAGE_NAME: me.tinykitten.trainlcd
           NODE_ENV: production
+          ANDROID_HOME: /opt/android-sdk

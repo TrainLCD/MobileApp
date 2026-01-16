@@ -2,22 +2,50 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "version": "9.0.7",
+    "version": "10.0.113",
     "plugins": [
       "expo-font",
       "expo-localization",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sqlite",
+      "expo-asset",
+      [
+        "@sentry/react-native",
+        {
+          "url": "https://sentry.io/",
+          "note": "Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.",
+          "project": "trainlcd-canary",
+          "organization": "tinykitten"
+        }
+      ],
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fff",
+          "image": "./assets/splash-icon.png"
+        }
+      ]
     ],
+    "extra": {
+      "eas": {
+        "projectId": "dad36dde-0056-4760-8eda-37f05e7c9c6c"
+      },
+      "versioning": {
+        "androidMinVersionCode": 100000193
+      }
+    },
     "ios": {
-      "buildNumber": "1538"
+      "bundleIdentifier": "me.tinykitten.trainlcd.dev",
+      "scheme": "CanaryTrainLCD",
+      "buildNumber": "2406",
+      "supportsTablet": true
     },
     "android": {
-      "versionCode": 90007000
+      "package": "me.tinykitten.trainlcd.dev",
+      "versionCode": 100000193,
+      "permissions": []
     },
-    "extra": {
-      "versioning": {
-        "androidMinVersionCode": 90007000
-      }
-    }
+    "owner": "trainlcd"
   }
 }

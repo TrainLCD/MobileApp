@@ -7,16 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		003D700F74CEB3115CC10E95 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC8268CB94209948A044BC55 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */; };
 		01AEECF10F37882B9811E6C7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 9A63F38B4B68171CB2858B6F /* PrivacyInfo.xcprivacy */; };
-		023F090B8F5E0586C241ADAB /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18EA221FD0844633D33EA3E /* ExpoModulesProvider.swift */; };
-		0562688FE37CDE99A978822E /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C28AD6691F68DCD2138E8D1 /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */; };
 		05EF21EE11AA44B314EACA2C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 54DE97078DB0AFF2ACDDFE89 /* PrivacyInfo.xcprivacy */; };
 		0731D3B824204D62009CAE85 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0731D3B524204D62009CAE85 /* Expo.plist */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		19191A3C9474DCA5A601E448 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */; };
-		20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
-		7F3DCB005699FC9762FD31BB /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */; };
+		2667437868F4ECAB42F4D2D5 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A1E102603F9A5547B14502E /* Pods_TrainLCD_ProdTrainLCD.framework */; };
+		57286F572EB4906D0052DF44 /* SplashScreenAppClip.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 57286F562EB4906D0052DF44 /* SplashScreenAppClip.storyboard */; };
+		57286F592EB491F60052DF44 /* SplashScreenAppClip.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 57286F582EB491F60052DF44 /* SplashScreenAppClip.storyboard */; };
+		57286FD82EB4AA230052DF44 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18EA221FD0844633D33EA3E /* ExpoModulesProvider.swift */; };
+		57286FD92EB4AB260052DF44 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */; };
 		94000A5A2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
 		94000A5B2AD73E8900B5A11C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 94000A592AD73E8900B5A11C /* Assets.xcassets */; };
 		942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C1658229B99E0A007329A6 /* SensitiveNotificationModule.swift */; };
@@ -131,8 +130,6 @@
 		94E2C8662D64E1CB0090392E /* CanaryAppClip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = 94E2C84D2D64E1CA0090392E /* CanaryAppClip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		94E2CB522D6575DE0090392E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6242A32AC8B008339D2 /* GoogleService-Info.plist */; };
 		94E2CB532D6575E50090392E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 942CB6212A32AC77008339D2 /* GoogleService-Info.plist */; };
-		94E2CB542D6576860090392E /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9485EFF12A33613200382D09 /* SplashScreen.storyboard */; };
-		94E2CB552D65768B0090392E /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9485EFF42A33613800382D09 /* SplashScreen.storyboard */; };
 		94E2CB5A2D65775A0090392E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
 		94E2CB5B2D65775A0090392E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
 		94E2CB5C2D6577610090392E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
@@ -162,6 +159,9 @@
 		94FF39F424710AE800528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39F624710AE800528ED8 /* InfoPlist.strings */; };
 		94FF39FC24710B8B00528ED8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 94FF39FE24710B8B00528ED8 /* InfoPlist.strings */; };
 		9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */; };
+		BDFDCE751CE92A03F8C22B2A /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DDBDDB801B0581BB480C71FA /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */; };
+		E17316B63D0F7567C6320AB8 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18AD948BDA8B985185BF581E /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */; };
+		F0FA9708AB0E5181C6C5B9AC /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA0010B0125192EABD3451C0 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
 		F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
 
@@ -353,25 +353,21 @@
 
 /* Begin PBXFileReference section */
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
-		03754E269DF2E23F9059FCEF /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig"; sourceTree = "<group>"; };
-		03B02865504AE3E586CF35F8 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig"; sourceTree = "<group>"; };
-		07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		0731D3B524204D62009CAE85 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Expo.plist; path = TrainLCD/Supporting/Expo.plist; sourceTree = "<group>"; };
+		0F7B74DE441106C2A3D45BDE /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TrainLCD/Images.xcassets; sourceTree = "<group>"; };
-		1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
-		1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
-		261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
-		295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
+		18AD948BDA8B985185BF581E /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1CCCBA855823B8765F7E5A73 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ProdAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		1ECFA8A823D662826C28FBFA /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
+		2A1E102603F9A5547B14502E /* Pods_TrainLCD_ProdTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		2D16E6891FA4F8E400B85C8A /* libReact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libReact.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
+		4444455EA07CE7340720905C /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig"; sourceTree = "<group>"; };
 		54DE97078DB0AFF2ACDDFE89 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TrainLCD/Schemes/Dev/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.release.xcconfig"; sourceTree = "<group>"; };
-		700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		81EF14755E47F766FABFD091 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig"; sourceTree = "<group>"; };
-		8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD/Pods-TrainLCD.release.xcconfig"; sourceTree = "<group>"; };
+		57286F562EB4906D0052DF44 /* SplashScreenAppClip.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = SplashScreenAppClip.storyboard; path = TrainLCD/Schemes/Dev/SplashScreenAppClip.storyboard; sourceTree = "<group>"; };
+		57286F582EB491F60052DF44 /* SplashScreenAppClip.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = SplashScreenAppClip.storyboard; path = TrainLCD/Schemes/Prod/SplashScreenAppClip.storyboard; sourceTree = "<group>"; };
 		94000A592AD73E8900B5A11C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9407EAA025890E8500E02655 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		942CB5D92A32AA97008339D2 /* CanaryTrainLCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CanaryTrainLCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -396,6 +392,7 @@
 		945563362E22749700476E5D /* ProdWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ProdWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9455634D2E2274AC00476E5D /* CanaryWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CanaryWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9462B5FF28DEE76100782A33 /* SampleJY.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SampleJY.gpx; sourceTree = "<group>"; };
+		94785E7FBD6BA8D5410E1539 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig"; sourceTree = "<group>"; };
 		9485EFF12A33613200382D09 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TrainLCD/Schemes/Dev/SplashScreen.storyboard; sourceTree = "<group>"; };
 		9485EFF42A33613800382D09 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TrainLCD/Schemes/Prod/SplashScreen.storyboard; sourceTree = "<group>"; };
 		9495DAF52D65F31B0070E96B /* FrutigerNeueLTPro-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "FrutigerNeueLTPro-Bold.ttf"; sourceTree = "<group>"; };
@@ -451,15 +448,18 @@
 		94E688142C99AC5800FAF1F2 /* WidgetConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigurationExtension.swift; sourceTree = "<group>"; };
 		94FF39F524710AE800528ED8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		94FF39FD24710B8B00528ED8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A63F38B4B68171CB2858B6F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TrainLCD/Schemes/Dev/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		9C28AD6691F68DCD2138E8D1 /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A592DD65717110A2ECA76FC5 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; sourceTree = "<group>"; };
-		AC8268CB94209948A044BC55 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0010B0125192EABD3451C0 /* Pods_TrainLCD_CanaryTrainLCD.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DDBDDB801B0581BB480C71FA /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E18EA221FD0844633D33EA3E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		E22F1EAC3A56155418E7D91C /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig"; sourceTree = "<group>"; };
+		E4280FD89DBA8C94A7F09FA6 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		E9F6901CC9974741FA525DD8 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
+		ED55A77FA788DF3A9157FF17 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
+		F6451AE21C3A0B2B656DFA0A /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; sourceTree = "<group>"; };
+		FE868CC1D7400801A4A21956 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CanaryAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -511,7 +511,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				19191A3C9474DCA5A601E448 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */,
+				2667437868F4ECAB42F4D2D5 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -519,7 +519,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				20CE20C263B0CE2B1B3BA229 /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */,
+				F0FA9708AB0E5181C6C5B9AC /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -584,7 +584,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				003D700F74CEB3115CC10E95 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework in Frameworks */,
+				E17316B63D0F7567C6320AB8 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -592,7 +592,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0562688FE37CDE99A978822E /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework in Frameworks */,
+				BDFDCE751CE92A03F8C22B2A /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -609,6 +609,8 @@
 		13B07FAE1A68108700A75B9A /* TrainLCD */ = {
 			isa = PBXGroup;
 			children = (
+				57286F562EB4906D0052DF44 /* SplashScreenAppClip.storyboard */,
+				57286F582EB491F60052DF44 /* SplashScreenAppClip.storyboard */,
 				9438A5A12DDD8222008D2796 /* AppDelegate.swift */,
 				94E2CB792D6588680090392E /* CanaryTrainLCD.entitlements */,
 				94E2CB782D6588570090392E /* ProdTrainLCD.entitlements */,
@@ -631,6 +633,7 @@
 			isa = PBXGroup;
 			children = (
 				39791DD2C27D3B4904829432 /* ExpoModulesProvider.swift */,
+				1CCCBA855823B8765F7E5A73 /* ExpoModulesProvider.swift */,
 			);
 			name = ProdAppClip;
 			sourceTree = "<group>";
@@ -639,6 +642,7 @@
 			isa = PBXGroup;
 			children = (
 				E18EA221FD0844633D33EA3E /* ExpoModulesProvider.swift */,
+				FE868CC1D7400801A4A21956 /* ExpoModulesProvider.swift */,
 			);
 			name = CanaryAppClip;
 			sourceTree = "<group>";
@@ -659,10 +663,10 @@
 				2D16E6891FA4F8E400B85C8A /* libReact.a */,
 				94B9CDDF28D3025900D68287 /* WidgetKit.framework */,
 				94B9CDE128D3025900D68287 /* SwiftUI.framework */,
-				700F5AA687D0D5CB948C8AD3 /* Pods_TrainLCD_ProdTrainLCD.framework */,
-				962F9E2FBBD8F228216B5309 /* Pods_TrainLCD_CanaryTrainLCD.framework */,
-				9C28AD6691F68DCD2138E8D1 /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */,
-				AC8268CB94209948A044BC55 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */,
+				AA0010B0125192EABD3451C0 /* Pods_TrainLCD_CanaryTrainLCD.framework */,
+				DDBDDB801B0581BB480C71FA /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */,
+				2A1E102603F9A5547B14502E /* Pods_TrainLCD_ProdTrainLCD.framework */,
+				18AD948BDA8B985185BF581E /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -681,18 +685,14 @@
 		72E5486571395D51695C2A02 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B47C5AFCB8BDE514B7D1AC6 /* Pods-TrainLCD.debug.xcconfig */,
-				8AC623DBF3A3E2CB072F81F2 /* Pods-TrainLCD.release.xcconfig */,
-				261AA2DAFFDAF43D41A0CBD5 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */,
-				55C150E5D5B0BCE43A03F794 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */,
-				295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */,
-				1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */,
-				1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */,
-				07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */,
-				03B02865504AE3E586CF35F8 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */,
-				A592DD65717110A2ECA76FC5 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */,
-				03754E269DF2E23F9059FCEF /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */,
-				81EF14755E47F766FABFD091 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */,
+				ED55A77FA788DF3A9157FF17 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */,
+				0F7B74DE441106C2A3D45BDE /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */,
+				E22F1EAC3A56155418E7D91C /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */,
+				F6451AE21C3A0B2B656DFA0A /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */,
+				E4280FD89DBA8C94A7F09FA6 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */,
+				1ECFA8A823D662826C28FBFA /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */,
+				94785E7FBD6BA8D5410E1539 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */,
+				4444455EA07CE7340720905C /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -707,7 +707,6 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				9495DAFB2D65F31B0070E96B /* Fonts */,
 				94A4D53829BA05CC0088D971 /* TrainLCD-Bridging-Header.h */,
 				9462B5FF28DEE76100782A33 /* SampleJY.gpx */,
 				94C1656929B99D01007329A6 /* Modules */,
@@ -728,6 +727,7 @@
 				3AB0650746ED4D1FAB5AEEEA /* ExpoModulesProviders */,
 				54DE97078DB0AFF2ACDDFE89 /* PrivacyInfo.xcprivacy */,
 				9A63F38B4B68171CB2858B6F /* PrivacyInfo.xcprivacy */,
+				9495DAFB2D65F31B0070E96B /* Fonts */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -940,19 +940,19 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "ProdTrainLCD" */;
 			buildPhases = (
-				F8BC737F2AD7A05944D9E2A1 /* [CP] Check Pods Manifest.lock */,
+				6E139C6DC0A3CFF6BD9868A2 /* [CP] Check Pods Manifest.lock */,
 				FD4C38642228810C00325AF5 /* Start Packager */,
 				73378AEDEDDF9B3778E232F0 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				D7123C241D1BFB024B477D44 /* [CP] Copy Pods Resources */,
 				94CB9CE22588EC950030FBE2 /* Embed Watch Content */,
 				94B9CDEF28D3025A00D68287 /* Embed Foundation Extensions */,
-				CE1AF4B2F585030B826CD8CF /* [CP] Embed Pods Frameworks */,
 				9A5BC962D43A48928901B1FB /* Upload Debug Symbols to Sentry */,
 				94E2C8442D64E1AA0090392E /* Embed App Clips */,
+				86E84BAB6682BDFF0BE6D2E6 /* [CP] Embed Pods Frameworks */,
+				B49320F223A4F4D673AC6557 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -970,18 +970,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 942CB5D62A32AA96008339D2 /* Build configuration list for PBXNativeTarget "CanaryTrainLCD" */;
 			buildPhases = (
-				942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */,
+				1DEC2DC1E967147933B33050 /* [CP] Check Pods Manifest.lock */,
 				942CB5B62A32AA96008339D2 /* Start Packager */,
 				CB5CF8F4812BA85EC2C7AFDC /* [Expo] Configure project */,
 				942CB5B72A32AA96008339D2 /* Sources */,
 				942CB5C12A32AA96008339D2 /* Frameworks */,
 				942CB5C32A32AA96008339D2 /* Resources */,
 				942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */,
-				942CB5CF2A32AA96008339D2 /* [CP] Copy Pods Resources */,
 				942CB5D02A32AA96008339D2 /* Embed Watch Content */,
-				942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */,
 				942CB61C2A32AAE9008339D2 /* Embed Foundation Extensions */,
 				94E2C86B2D64E1CB0090392E /* Embed App Clips */,
+				6FE2F30AE1EE40834538D8A5 /* [CP] Embed Pods Frameworks */,
+				3400245360B0AA5F803CD234 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -1143,15 +1143,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 94E2C8482D64E1AA0090392E /* Build configuration list for PBXNativeTarget "ProdAppClip" */;
 			buildPhases = (
-				C68E3B5B19F7C96F6F5AE470 /* [CP] Check Pods Manifest.lock */,
+				9F6AFA870507DC753F048E7A /* [CP] Check Pods Manifest.lock */,
 				94E2C9762D64E3CA0090392E /* Start Packager */,
 				1A78635B90394D55806B7BCD /* [Expo] Configure project */,
 				94E2C8262D64E1A90090392E /* Sources */,
 				94E2C8272D64E1A90090392E /* Frameworks */,
 				94E2C8282D64E1A90090392E /* Resources */,
-				7A4125D19BE20ACD10043B47 /* [CP] Embed Pods Frameworks */,
-				B03548DCE77905396ED89232 /* [CP] Copy Pods Resources */,
 				94E2C9772D64E3E10090392E /* Bundle React Native code and images */,
+				8F68B1B4E189FDBE4C4F40BD /* [CP] Embed Pods Frameworks */,
+				2E53BCC384041F926E8AD83B /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -1169,15 +1169,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 94E2C8682D64E1CB0090392E /* Build configuration list for PBXNativeTarget "CanaryAppClip" */;
 			buildPhases = (
-				BF3BCE3CF1C0B36E818B4D24 /* [CP] Check Pods Manifest.lock */,
+				1238756A0ACF0943150FA11D /* [CP] Check Pods Manifest.lock */,
 				94E2C86D2D64E3520090392E /* Start Packager */,
 				8F03479E048D5EF9905129F1 /* [Expo] Configure project */,
 				94E2C8492D64E1CA0090392E /* Sources */,
 				94E2C84A2D64E1CA0090392E /* Frameworks */,
 				94E2C84B2D64E1CA0090392E /* Resources */,
 				94E2C86C2D64E3230090392E /* Bundle React Native code and images */,
-				FE79B801CEC143F881629F36 /* [CP] Embed Pods Frameworks */,
-				66642926995A57B142304C45 /* [CP] Copy Pods Resources */,
+				609989ABF34887E5E0B998DE /* [CP] Embed Pods Frameworks */,
+				2C11181506A7F94813B4D643 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -1400,8 +1400,8 @@
 				94E2CB5C2D6577610090392E /* InfoPlist.strings in Resources */,
 				94E2CB5A2D65775A0090392E /* InfoPlist.strings in Resources */,
 				94E2CB522D6575DE0090392E /* GoogleService-Info.plist in Resources */,
-				94E2CB552D65768B0090392E /* SplashScreen.storyboard in Resources */,
 				94E2CBC52D659E8C0090392E /* myriadpro-bold.ttf in Resources */,
+				57286F592EB491F60052DF44 /* SplashScreenAppClip.storyboard in Resources */,
 				94E2CBCA2D65AEE50090392E /* FuturaLTPro-Bold.ttf in Resources */,
 				94E2CBC62D659E8C0090392E /* verdana-bold.ttf in Resources */,
 				94E2CBC42D659E8C0090392E /* FrutigerNeueLTPro-Bold.ttf in Resources */,
@@ -1415,8 +1415,8 @@
 				94E2CB5F2D65777F0090392E /* Images.xcassets in Resources */,
 				94E2CB5D2D6577610090392E /* InfoPlist.strings in Resources */,
 				94E2CB5B2D65775A0090392E /* InfoPlist.strings in Resources */,
+				57286F572EB4906D0052DF44 /* SplashScreenAppClip.storyboard in Resources */,
 				94E2CB532D6575E50090392E /* GoogleService-Info.plist in Resources */,
-				94E2CB542D6576860090392E /* SplashScreen.storyboard in Resources */,
 				94E2CBC22D659E800090392E /* myriadpro-bold.ttf in Resources */,
 				94E2CBC82D65AEE50090392E /* FuturaLTPro-Bold.ttf in Resources */,
 				94E2CBC32D659E800090392E /* verdana-bold.ttf in Resources */,
@@ -1441,6 +1441,28 @@
 			shellPath = /bin/sh;
 			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
+		1238756A0ACF0943150FA11D /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		1A78635B90394D55806B7BCD /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1450,17 +1472,44 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/ProdAppClip/ProdAppClip.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/expo-configure-project.sh\"\n";
 		};
-		66642926995A57B142304C45 /* [CP] Copy Pods Resources */ = {
+		1DEC2DC1E967147933B33050 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-CanaryTrainLCD-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2C11181506A7F94813B4D643 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1546,118 +1595,93 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		73378AEDEDDF9B3778E232F0 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-ProdTrainLCD/expo-configure-project.sh\"\n";
-		};
-		7A4125D19BE20ACD10043B47 /* [CP] Embed Pods Frameworks */ = {
+		2E53BCC384041F926E8AD83B /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/BoringSSL-GRPC/openssl_grpc.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXNotifications/ExpoNotifications_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXTaskManager/ExpoTaskManager_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoDevice/ExpoDevice_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoLocalization/ExpoLocalization_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseAuth/FirebaseAuth_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseCore/FirebaseCore_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseCoreExtension/FirebaseCoreExtension_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseCoreInternal/FirebaseCoreInternal_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestore/FirebaseFirestore_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreInternal/FirebaseFirestoreInternal_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseInstallations/FirebaseInstallations_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUtilities/GoogleUtilities_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesObjC/FBLPromises_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNDeviceInfo/RNDeviceInfoPrivacyInfo.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/Sentry/Sentry.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/abseil/xcprivacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-C++/gRPCCertificates-Cpp.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-C++/grpcpp.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-Core/grpc.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/leveldb-library/leveldb_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/nanopb/nanopb_Privacy.bundle",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/openssl_grpc.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoNotifications_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoTaskManager_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoDevice_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoLocalization_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseAuth_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseCore_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseCoreExtension_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseCoreInternal_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestore_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreInternal_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseInstallations_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GTMSessionFetcher_Core_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleUtilities_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FBLPromises_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNDeviceInfoPrivacyInfo.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Sentry.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/xcprivacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/boost_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/gRPCCertificates-Cpp.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/grpcpp.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/grpc.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/glog_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/leveldb_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/nanopb_Privacy.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8F03479E048D5EF9905129F1 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/expo-configure-project.sh\"\n";
-		};
-		942CB5B52A32AA96008339D2 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-CanaryTrainLCD-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		942CB5B62A32AA96008339D2 /* Start Packager */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Start Packager";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Bundle React Native code and images";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
-		};
-		942CB5CF2A32AA96008339D2 /* [CP] Copy Pods Resources */ = {
+		3400245360B0AA5F803CD234 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1743,7 +1767,47 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		942CB5D52A32AA96008339D2 /* [CP] Embed Pods Frameworks */ = {
+		609989ABF34887E5E0B998DE /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6E139C6DC0A3CFF6BD9868A2 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-ProdTrainLCD-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6FE2F30AE1EE40834538D8A5 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1760,6 +1824,123 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		73378AEDEDDF9B3778E232F0 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/ProdTrainLCD.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-ProdTrainLCD/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-ProdTrainLCD/expo-configure-project.sh\"\n";
+		};
+		86E84BAB6682BDFF0BE6D2E6 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8F03479E048D5EF9905129F1 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/CanaryAppClip/CanaryAppClip.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/expo-configure-project.sh\"\n";
+		};
+		8F68B1B4E189FDBE4C4F40BD /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		942CB5B62A32AA96008339D2 /* Start Packager */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Start Packager";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle React Native code and images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
 		94E2C86C2D64E3230090392E /* Bundle React Native code and images */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1847,115 +2028,7 @@
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh";
 		};
-		B03548DCE77905396ED89232 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/BoringSSL-GRPC/openssl_grpc.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXNotifications/ExpoNotifications_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXTaskManager/ExpoTaskManager_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoDevice/ExpoDevice_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoLocalization/ExpoLocalization_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseAuth/FirebaseAuth_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseCore/FirebaseCore_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseCoreExtension/FirebaseCoreExtension_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseCoreInternal/FirebaseCoreInternal_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestore/FirebaseFirestore_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreInternal/FirebaseFirestoreInternal_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseInstallations/FirebaseInstallations_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUtilities/GoogleUtilities_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesObjC/FBLPromises_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/RNDeviceInfo/RNDeviceInfoPrivacyInfo.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/Sentry/Sentry.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/abseil/xcprivacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-C++/gRPCCertificates-Cpp.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-C++/grpcpp.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/gRPC-Core/grpc.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/leveldb-library/leveldb_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/nanopb/nanopb_Privacy.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/openssl_grpc.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoNotifications_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoTaskManager_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoDevice_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoLocalization_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseAuth_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseCore_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseCoreExtension_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseCoreInternal_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestore_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreInternal_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseInstallations_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GTMSessionFetcher_Core_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleUtilities_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FBLPromises_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNDeviceInfoPrivacyInfo.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Sentry.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/xcprivacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/boost_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/gRPCCertificates-Cpp.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/grpcpp.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/grpc.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/glog_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/leveldb_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/nanopb_Privacy.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD-ProdAppClip/Pods-TrainLCD-ProdTrainLCD-ProdAppClip-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		BF3BCE3CF1C0B36E818B4D24 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C68E3B5B19F7C96F6F5AE470 /* [CP] Check Pods Manifest.lock */ = {
+		9F6AFA870507DC753F048E7A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1977,44 +2050,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		CB5CF8F4812BA85EC2C7AFDC /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD/expo-configure-project.sh\"\n";
-		};
-		CE1AF4B2F585030B826CD8CF /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		D7123C241D1BFB024B477D44 /* [CP] Copy Pods Resources */ = {
+		B49320F223A4F4D673AC6557 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2100,27 +2136,29 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-ProdTrainLCD/Pods-TrainLCD-ProdTrainLCD-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F8BC737F2AD7A05944D9E2A1 /* [CP] Check Pods Manifest.lock */ = {
+		CB5CF8F4812BA85EC2C7AFDC /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/CanaryTrainLCD.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/expo-configure-project.sh",
 			);
-			name = "[CP] Check Pods Manifest.lock";
+			name = "[Expo] Configure project";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TrainLCD-ProdTrainLCD-checkManifestLockResult.txt",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-TrainLCD-CanaryTrainLCD/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-TrainLCD-CanaryTrainLCD/expo-configure-project.sh\"\n";
 		};
 		FD4C38642228810C00325AF5 /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2139,24 +2177,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		FE79B801CEC143F881629F36 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -2279,7 +2299,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7F3DCB005699FC9762FD31BB /* ExpoModulesProvider.swift in Sources */,
+				57286FD92EB4AB260052DF44 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2287,7 +2307,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				023F090B8F5E0586C241ADAB /* ExpoModulesProvider.swift in Sources */,
+				57286FD82EB4AA230052DF44 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2391,7 +2411,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 295DEDD9DBAC5638C390E7C1 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */;
+			baseConfigurationReference = E4280FD89DBA8C94A7F09FA6 /* Pods-TrainLCD-ProdTrainLCD.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
@@ -2399,7 +2419,6 @@
 				CODE_SIGN_ENTITLEMENTS = ProdTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
@@ -2409,7 +2428,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2431,7 +2449,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1C6FE845809B4E87642ED521 /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */;
+			baseConfigurationReference = 1ECFA8A823D662826C28FBFA /* Pods-TrainLCD-ProdTrainLCD.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
@@ -2439,7 +2457,6 @@
 				CODE_SIGN_ENTITLEMENTS = ProdTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
@@ -2448,7 +2465,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2471,7 +2487,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CC = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang.sh";
+				CC = "";
 				CCACHE_BINARY = /opt/homebrew/bin/ccache;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -2499,7 +2515,8 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				CXX = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";
+				CURRENT_PROJECT_VERSION = 2406;
+				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -2529,10 +2546,22 @@
 					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers/platform/ios",
+					"${PODS_ROOT}/ReactCommon",
+					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
+					"${PODS_ROOT}/React-runtimeexecutor",
+					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
+					"${PODS_ROOT}/ReactCommon-Samples",
+					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
+					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
+					"${PODS_ROOT}/React-NativeModulesApple",
+					"${PODS_ROOT}/React-graphics",
+					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang.sh";
-				LDPLUSPLUS = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -2542,7 +2571,7 @@
 					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
 					"\"$(inherited)\"",
 				);
-				MARKETING_VERSION = 9.0.7;
+				MARKETING_VERSION = 10.0.113;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "$(inherited)";
@@ -2550,9 +2579,10 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.79.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._27c6aaf8eace69061a98d926110509f3/node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				TARGETED_DEVICE_FAMILY = 1;
 				USE_HERMES = true;
@@ -2563,7 +2593,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CC = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang.sh";
+				CC = "";
 				CCACHE_BINARY = /opt/homebrew/bin/ccache;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -2591,7 +2621,8 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				CXX = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";
+				CURRENT_PROJECT_VERSION = 2406;
+				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -2617,10 +2648,22 @@
 					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-runtimeexecutor/React_runtimeexecutor.framework/Headers/platform/ios",
+					"${PODS_ROOT}/ReactCommon",
+					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
+					"${PODS_ROOT}/React-runtimeexecutor",
+					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
+					"${PODS_ROOT}/ReactCommon-Samples",
+					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
+					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
+					"${PODS_ROOT}/React-NativeModulesApple",
+					"${PODS_ROOT}/React-graphics",
+					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang.sh";
-				LDPLUSPLUS = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -2630,15 +2673,16 @@
 					"\"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)\"",
 					"\"$(inherited)\"",
 				);
-				MARKETING_VERSION = 9.0.7;
+				MARKETING_VERSION = 10.0.113;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd;
 				PRODUCT_NAME = trainlcd;
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.79.5_@babel+core@7.27.1_@react-native-community+cli@15.1.3_typescript@5._27c6aaf8eace69061a98d926110509f3/node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.27.1_@react-native-community+cli@20.0.2_typescript@5._997df343468db670a462b0460c92cd08/node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				TARGETED_DEVICE_FAMILY = 1;
 				USE_HERMES = true;
@@ -2648,7 +2692,7 @@
 		};
 		942CB5D72A32AA96008339D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1725B22107938DC5D6B7FF41 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */;
+			baseConfigurationReference = ED55A77FA788DF3A9157FF17 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
@@ -2656,7 +2700,6 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -2666,7 +2709,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2688,7 +2730,7 @@
 		};
 		942CB5D82A32AA96008339D2 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 07219698430390FAD6DFC278 /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */;
+			baseConfigurationReference = 0F7B74DE441106C2A3D45BDE /* Pods-TrainLCD-CanaryTrainLCD.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
@@ -2696,7 +2738,6 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -2706,7 +2747,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -2740,7 +2780,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/CanaryWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -2748,7 +2787,6 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -2782,7 +2820,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -2790,7 +2827,6 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Dev/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "TrainLCD Canary";
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -2822,7 +2858,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/CanaryWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -2836,7 +2871,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -2870,7 +2904,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -2884,7 +2917,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -2916,7 +2948,6 @@
 				CODE_SIGN_ENTITLEMENTS = RideSessionActivity/CanaryRideSessionActivity.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2930,7 +2961,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -2966,7 +2996,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -2980,7 +3009,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3016,7 +3044,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchWidget/ProdWatchWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3036,7 +3063,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3073,7 +3099,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3089,7 +3114,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3123,7 +3147,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchWidget/CanaryWatchWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3143,7 +3166,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3179,7 +3201,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3195,7 +3216,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3226,7 +3246,6 @@
 				CODE_SIGN_ENTITLEMENTS = RideSessionActivity/ProdRideSessionActivity.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3240,7 +3259,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3276,7 +3294,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3290,7 +3307,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3324,7 +3340,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/ProdWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -3338,7 +3353,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3372,7 +3386,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"WatchApp Extension/Preview Content\"";
@@ -3386,7 +3399,6 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3418,7 +3430,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/ProdWatchApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -3426,7 +3437,6 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3460,7 +3470,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
@@ -3468,7 +3477,6 @@
 				IBSC_MODULE = WatchApp_Extension;
 				INFOPLIST_FILE = WatchApp/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -D EXPO_CONFIGURATION_DEBUG";
 				PODS_ROOT = "${SRCROOT}/Pods";
@@ -3487,7 +3495,7 @@
 		};
 		94E2C8452D64E1AA0090392E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 03754E269DF2E23F9059FCEF /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */;
+			baseConfigurationReference = 94785E7FBD6BA8D5410E1539 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -3502,7 +3510,6 @@
 				CODE_SIGN_ENTITLEMENTS = ProdAppClip/ProdAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3518,14 +3525,13 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3541,7 +3547,7 @@
 		};
 		94E2C8462D64E1AA0090392E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 81EF14755E47F766FABFD091 /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */;
+			baseConfigurationReference = 4444455EA07CE7340720905C /* Pods-TrainLCD-ProdTrainLCD-ProdAppClip.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -3557,7 +3563,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3569,14 +3574,13 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = me.tinykitten.trainlcd.Clip;
@@ -3591,7 +3595,7 @@
 		};
 		94E2C8692D64E1CB0090392E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 03B02865504AE3E586CF35F8 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */;
+			baseConfigurationReference = E22F1EAC3A56155418E7D91C /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -3606,7 +3610,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryAppClip/CanaryAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1538;
+				CURRENT_PROJECT_VERSION = 2406;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3622,14 +3626,14 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
+				MARKETING_VERSION = 10.0.113;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -3646,7 +3650,7 @@
 		};
 		94E2C86A2D64E1CB0090392E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A592DD65717110A2ECA76FC5 /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */;
+			baseConfigurationReference = F6451AE21C3A0B2B656DFA0A /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -3662,7 +3666,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1538;
+				CURRENT_PROJECT_VERSION = 2406;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3674,14 +3678,14 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 9.0.7;
+				MARKETING_VERSION = 10.0.113;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PODS_ROOT = "${SRCROOT}/Pods";

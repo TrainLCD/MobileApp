@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderJL from './HeaderJL';
 
 // Mock dependencies
@@ -8,6 +9,7 @@ jest.mock('jotai', () => ({
     headerLangState: 'JA',
     headerState: 'CURRENT',
   })),
+  atom: jest.fn((val) => val),
 }));
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
@@ -50,10 +52,6 @@ jest.mock('~/translation', () => ({
 
 jest.mock('~/hooks/useTransferLines', () => ({
   useTransferLines: jest.fn(() => []),
-}));
-
-jest.mock('~/hooks/useStationList', () => ({
-  useStationList: jest.fn(() => []),
 }));
 
 jest.mock('~/utils/isTablet', () => ({
@@ -132,7 +130,7 @@ describe('HeaderJL', () => {
   describe('Component rendering', () => {
     it('should render without crashing', () => {
       expect(() => {
-        render(<HeaderJL />);
+        render(<HeaderJL {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
   });

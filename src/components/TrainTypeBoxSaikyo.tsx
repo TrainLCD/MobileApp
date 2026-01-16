@@ -9,14 +9,15 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import type { TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
-import type { TrainType } from '~/gen/proto/stationapi_pb';
-import { useLazyPrevious, usePrevious } from '~/hooks';
+import { useCurrentLine, useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
 import Typography from './Typography';
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     shadowOpacity: 0.25,
-    shadowColor: '#000',
+    shadowColor: '#333',
     shadowRadius: 1,
     elevation: 5,
     fontSize: isTablet ? 18 * 1.5 : 18,
@@ -81,8 +82,11 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
+  const currentLine = useCurrentLine();
 
   const textOpacityAnim = useSharedValue(0);
+
+  const isBus = isBusLine(currentLine);
 
   const trainTypeColor = useMemo(() => {
     if (getIsLocal(trainType)) {
@@ -126,7 +130,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     trainType?.nameKorean || translate('localKo')
   );
 
+  const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
+
   const trainTypeName = useMemo(() => {
+    if (isBus) {
+      return lineNameJa;
+    }
     switch (headerLangState) {
       case 'EN':
         return trainTypeNameR;
@@ -138,7 +147,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         return trainTypeNameJa;
     }
   }, [
+    isBus,
     headerLangState,
+    lineNameJa,
     trainTypeNameJa,
     trainTypeNameKo,
     trainTypeNameR,
@@ -246,9 +257,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
+              styles.text,
               textTopAnimatedStyles,
               {
-                ...styles.text,
                 paddingLeft,
                 letterSpacing,
               },
@@ -262,9 +273,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
+              styles.text,
               textBottomAnimatedStyles,
               {
-                ...styles.text,
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
               },

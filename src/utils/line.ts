@@ -1,4 +1,9 @@
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
+
+export const isBusLine = (
+  line: Pick<Line, 'transportType'> | null | undefined
+): boolean => line?.transportType === TransportType.Bus;
 
 export const filterWithoutCurrentLine = (
   stations: Station[],
@@ -9,10 +14,12 @@ export const filterWithoutCurrentLine = (
   if (!currentLine || !currentStation) {
     return [];
   }
-  return currentStation.lines.filter(
-    (line: Line) =>
-      line.id !== currentLine.id &&
-      line.nameKatakana !== currentLine.nameKatakana
+  return (
+    currentStation.lines?.filter(
+      (line: Line) =>
+        line.id !== currentLine.id &&
+        line.nameKatakana !== currentLine.nameKatakana
+    ) ?? []
   );
 };
 
@@ -27,3 +34,17 @@ export const getNextStationLinesWithoutCurrentLine = (
   forceStationIndex?: number
 ): Line[] =>
   filterWithoutCurrentLine(stations, selectedLine, forceStationIndex ?? 1);
+
+/**
+ * バス停以外の駅ではバス路線を除外してフィルタリングする
+ * バス停の場合はすべての路線を表示
+ */
+export const filterBusLinesForNonBusStation = <
+  T extends Pick<Line, 'transportType'>,
+>(
+  currentLine: Pick<Line, 'transportType'> | null | undefined,
+  lines: T[] | null | undefined
+): T[] => {
+  if (!lines) return [];
+  return lines.filter((l) => isBusLine(currentLine) || !isBusLine(l));
+};

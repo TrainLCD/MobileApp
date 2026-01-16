@@ -1,8 +1,17 @@
 import { darken } from 'polished';
-import React, { useCallback } from 'react';
-import { Animated, Dimensions, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
@@ -39,13 +48,6 @@ type Props = {
   isEn: boolean;
 };
 
-type State = {
-  fillHeight: Animated.Value;
-  bgScale: Animated.Value;
-  chevronBottom: Animated.Value;
-  chevronOpacity: Animated.Value;
-};
-
 const styles = StyleSheet.create({
   stationNames: {
     position: 'absolute',
@@ -77,7 +79,7 @@ const styles = StyleSheet.create({
   },
   animatedSurface: {
     position: 'absolute',
-    bottom: -128,
+    bottom: -200,
   },
   clipViewStyle: {
     overflow: 'hidden',
@@ -89,7 +91,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 60,
     height: 45,
-    right: screenWidth / 3.1,
+    right: Platform.OS === 'ios' ? screenWidth / 3 : screenWidth / 3.25,
+    bottom: 72,
+    // 非到着時のベース角度
     transform: [{ rotate: '-20deg' }],
     zIndex: 1,
   },
@@ -97,7 +101,8 @@ const styles = StyleSheet.create({
     width: 72,
     height: 54,
     top: (4 * screenHeight) / 7,
-    right: screenWidth / 2.985,
+    right: screenWidth / (Platform.OS === 'ios' ? 2.985 : 3.1),
+    bottom: undefined,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
@@ -181,6 +186,8 @@ const Transfers: React.FC<TransfersProps> = ({
   lineMarks,
   isEn,
 }: TransfersProps) => {
+  const isBus = isBusLine(station?.line);
+
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
       transferLines.map((l, i) => {
@@ -200,7 +207,7 @@ const Transfers: React.FC<TransfersProps> = ({
             <Typography style={styles.lineName}>
               {isEn
                 ? l.nameRoman?.replace(parenthesisRegexp, '')
-                : l.nameShort.replace(parenthesisRegexp, '')}
+                : l.nameShort?.replace(parenthesisRegexp, '')}
             </Typography>
           </View>
         );
@@ -224,7 +231,7 @@ const Transfers: React.FC<TransfersProps> = ({
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
           <Typography style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameRoman} Station`}
+            {`${station?.nameRoman}${isBus ? '' : ' Station'}`}
           </Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
         </View>
@@ -237,7 +244,7 @@ const Transfers: React.FC<TransfersProps> = ({
           }
         >
           <Typography style={styles.transfersCurrentStationName}>
-            {`${station?.name ?? ''}駅`}
+            {`${station?.name ?? ''}${isBus ? '' : '駅'}`}
           </Typography>
           <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
           <View style={styles.transferLines}>{renderTransferLines()}</View>
@@ -247,101 +254,119 @@ const Transfers: React.FC<TransfersProps> = ({
   );
 };
 
-class PadArch extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    const bgScale = new Animated.Value(0.95);
-    const chevronBottom = new Animated.Value(72);
-    const chevronOpacity = new Animated.Value(1);
-    const fillHeight = new Animated.Value(0);
-    this.state = {
-      bgScale,
-      chevronBottom,
-      chevronOpacity,
-      fillHeight,
-    };
-  }
+const PadArch: React.FC<Props> = ({
+  arrived,
+  line,
+  stations,
+  transferLines,
+  station,
+  numberingInfo,
+  lineMarks,
+  isEn,
+}: Props) => {
+  // 共有値（Reanimated）
+  const bgScale = useSharedValue(0.95);
+  // シェブロンのアニメーションは 0..1 の単一タイムラインで駆動
+  const chevronTimeline = useSharedValue(0);
+  const fillHeight = useSharedValue(0);
 
-  componentDidMount(): void {
-    this.animated();
-    this.startSlidingAnimation();
-  }
-
-  componentDidUpdate(prevProps: Props): void {
-    const { arrived } = this.props;
-
-    this.animated();
-    // 発車ごとにアニメーションをかける
-    if (arrived !== prevProps.arrived) {
-      this.startSlidingAnimation();
-    }
-  }
-
-  animated = (): void => {
-    const { arrived } = this.props;
-    const { bgScale, chevronBottom, chevronOpacity } = this.state;
+  // エフェクト: シェブロンと背景のアニメーション制御
+  // biome-ignore lint/correctness/useExhaustiveDependencies: SharedValue は安定した参照のため依存配列に含めません
+  useEffect(() => {
+    // 既存のアニメーションを停止してから新しいアニメーションを開始
+    cancelAnimation(bgScale);
+    cancelAnimation(chevronTimeline);
 
     if (arrived) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(bgScale, {
-            toValue: 0.8,
-            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
-            useNativeDriver: false,
-          }),
-          Animated.timing(bgScale, {
-            toValue: 0.95,
-            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
-            useNativeDriver: false,
-          }),
-        ])
-      ).start();
+      // 背景スケールを鼓動させる
+      bgScale.value = withRepeat(
+        withSequence(
+          withTiming(0.8, { duration: YAMANOTE_CHEVRON_SCALE_DURATION }),
+          withTiming(0.95, { duration: YAMANOTE_CHEVRON_SCALE_DURATION })
+        ),
+        -1,
+        false
+      );
     } else {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(chevronBottom, {
-            toValue: 110,
-            duration: YAMANOTE_CHEVRON_MOVE_DURATION,
-            useNativeDriver: false,
-          }),
-          Animated.timing(chevronOpacity, {
-            toValue: 0,
-            duration: YAMANOTE_CHEVRON_MOVE_DURATION / 2,
-            useNativeDriver: false,
-          }),
-        ])
-      ).start();
+      // タイムラインは2フェーズ（移動→フェード）でループ（合計 2x の所要時間）
+      chevronTimeline.value = 0;
+      chevronTimeline.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2 }),
+          withTiming(0, { duration: 0 })
+        ),
+        -1,
+        false
+      );
     }
-  };
+  }, [arrived]);
 
-  startSlidingAnimation = (): void => {
-    const { fillHeight } = this.state;
-    fillHeight.setValue(0);
-    Animated.timing(fillHeight, {
-      toValue: screenHeight,
+  // エフェクト: マウント時と到着/出発切替ごとに塗りつぶしアニメーション
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 到着状態の変化時のみ再実行
+  useEffect(() => {
+    fillHeight.value = 0;
+    fillHeight.value = withTiming(Dimensions.get('window').height, {
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
-      useNativeDriver: false,
-    }).start();
-  };
+    });
+  }, [arrived, fillHeight]);
 
-  getDotLeft = (i: number): number => {
+  // アニメーション用スタイル
+  const fillStyle = useAnimatedStyle(() => ({ height: fillHeight.value }));
+  const chevronContainerStyle = useAnimatedStyle(() => {
+    if (arrived) return {};
+    const p = chevronTimeline.value; // サイクル全体で 0..1 の進行度
+    // 前半(0..0.5): 位置 128 → 104、後半は 104 を維持
+    const movePhase = Math.min(p / 0.5, 1); // 前半中は 0..1
+    const bottom = 128 - (128 - 104) * movePhase;
+    // 後半(0.5..1): 不透明度 1 → 0、前半は 1 を維持
+    const fadePhase = Math.max((p - 0.5) / 0.5, 0); // 後半中は 0..1
+    const opacity = 0.2 + (1 - fadePhase) * 0.8; // 0.2..1 の範囲
+    // 128→104 を 56→32 に変換
+    const translateY = bottom - 72;
+    return {
+      // 既定の rotate(-20deg) を維持したまま並記（transform は配列全体が上書きされるためここで回転も指定）
+      transform: [{ rotate: '-20deg' }, { translateY }],
+      opacity,
+    };
+  });
+
+  // AnimatedChevron不要。SharedValueを直接渡す
+
+  const pathD1 = `M -4 -60 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
+    screenWidth / 1.5 - 4
+  } ${screenHeight}`;
+  const pathD2 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
+    screenWidth / 1.5
+  } ${screenHeight}`;
+  const pathD3 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
+    screenWidth / 1.5
+  } ${screenHeight}`;
+  const hexLineColor = line.color ?? '#000';
+  const strokeWidth = Platform.select({
+    ios: 128,
+    android: 96,
+    default: 128,
+  });
+
+  const getDotLeft = useCallback((i: number): number => {
+    const leftPad = Platform.OS === 'ios' ? 0 : 21;
     switch (i) {
       case 0:
-        return screenWidth / 3;
+        return screenWidth / 3 + leftPad;
       case 1:
-        return screenWidth / 2.35;
+        return screenWidth / 2.35 + leftPad;
       case 2:
-        return screenWidth / 1.975;
+        return screenWidth / 1.975 + leftPad;
       case 3:
-        return screenWidth / 1.785;
+        return screenWidth / 1.785 + leftPad;
       case 4:
-        return screenWidth / 1.655 - 3.5; // 普通のiPadとiPad Pro用の微調整
+        return screenWidth / 1.655 - (Platform.OS === 'ios' ? 3.5 : 0);
       default:
         return 0;
     }
-  };
+  }, []);
 
-  getStationNameLeft = (i: number): number => {
+  const getStationNameLeft = useCallback((i: number): number => {
     switch (i) {
       case 0:
         return screenWidth / 2.2;
@@ -356,9 +381,9 @@ class PadArch extends React.PureComponent<Props, State> {
       default:
         return 0;
     }
-  };
+  }, []);
 
-  getStationNameTop = (i: number): number => {
+  const getStationNameTop = useCallback((i: number): number => {
     switch (i) {
       case 0:
         return -8;
@@ -373,166 +398,141 @@ class PadArch extends React.PureComponent<Props, State> {
       default:
         return 0;
     }
-  };
+  }, []);
 
-  getCustomDotStyle = (
-    i: number,
-    stations: Station[],
-    arrived: boolean,
-    pass: boolean
-  ): {
-    left: number;
-    top: number;
-    backgroundColor: string;
-  } => {
-    const dotColor =
-      i === stations.length - 2 && !arrived && !pass ? '#F6BE00' : 'white';
+  const getCustomDotStyle = useCallback(
+    (
+      i: number,
+      stationsArg: Station[],
+      arrivedArg: boolean,
+      pass: boolean
+    ): { left: number; top: number; backgroundColor: string } => {
+      const dotColor =
+        i === stationsArg.length - 2 && !arrivedArg && !pass
+          ? '#F6BE00'
+          : 'white';
+      return {
+        left: getDotLeft(i),
+        top: !i ? screenHeight / 30 : (i * screenHeight) / 7,
+        backgroundColor: dotColor,
+      };
+    },
+    [getDotLeft]
+  );
 
-    return {
-      left: this.getDotLeft(i),
-      top: !i ? screenHeight / 30 : (i * screenHeight) / 7,
-      backgroundColor: dotColor,
-    };
-  };
+  const getCustomStationNameStyle = useCallback(
+    (i: number): { left: number; top: number } => ({
+      left: getStationNameLeft(i),
+      top: getStationNameTop(i),
+    }),
+    [getStationNameLeft, getStationNameTop]
+  );
 
-  getCustomStationNameStyle = (i: number): { left: number; top: number } => ({
-    left: this.getStationNameLeft(i),
-    top: this.getStationNameTop(i),
-  });
+  return (
+    <>
+      <Transfers
+        transferLines={transferLines}
+        station={station}
+        lineMarks={lineMarks}
+        isEn={isEn}
+      />
 
-  render(): React.ReactElement {
-    const {
-      arrived,
-      line,
-      stations,
-      transferLines,
-      station,
-      numberingInfo,
-      lineMarks,
-      isEn,
-    } = this.props;
-    const AnimatedChevron = Animated.createAnimatedComponent(ChevronYamanote);
-    const { bgScale, chevronBottom, chevronOpacity, fillHeight } = this.state;
+      <Svg width={screenWidth} height={screenHeight} fill="transparent">
+        <Path d={pathD1} stroke="#333" strokeWidth={strokeWidth} />
+        <Path d={pathD2} stroke="#505a6e" strokeWidth={strokeWidth} />
+      </Svg>
 
-    const pathD1 = `M -4 -60 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-      screenWidth / 1.5 - 4
-    } ${screenHeight}`;
-    const pathD2 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-      screenWidth / 1.5
-    } ${screenHeight}`;
-    const pathD3 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-      screenWidth / 1.5
-    } ${screenHeight}`;
-    const hexLineColor = line.color ?? '#000';
-
-    return (
-      <>
-        <Transfers
-          transferLines={transferLines}
-          station={station}
-          lineMarks={lineMarks}
-          isEn={isEn}
-        />
-
-        <Svg width={screenWidth} height={screenHeight} fill="transparent">
-          <Path d={pathD1} stroke="#333" strokeWidth={128} />
-          <Path d={pathD2} stroke="#505a6e" strokeWidth={128} />
-        </Svg>
-
-        <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
-          <Svg
-            style={styles.animatedSurface}
-            width={screenWidth}
-            height={screenHeight}
-            fill="transparent"
-          >
-            <Path
-              d={pathD1}
-              stroke={darken(0.3, hexLineColor)}
-              strokeWidth={128}
-            />
-          </Svg>
-        </Animated.View>
-        <Animated.View style={{ ...styles.clipViewStyle, height: fillHeight }}>
-          <Svg
-            style={styles.animatedSurface}
-            width={screenWidth}
-            height={screenHeight}
-            fill="transparent"
-          >
-            <Path d={pathD3} stroke={hexLineColor} strokeWidth={128} />
-          </Svg>
-        </Animated.View>
-        <Animated.View
-          style={[
-            styles.chevron,
-            arrived
-              ? styles.chevronArrived
-              : { bottom: chevronBottom, opacity: chevronOpacity },
-          ]}
+      <Animated.View style={[styles.clipViewStyle, fillStyle]}>
+        <Svg
+          style={styles.animatedSurface}
+          width={screenWidth}
+          height={screenHeight}
+          fill="transparent"
         >
-          <AnimatedChevron backgroundScale={bgScale} arrived={arrived} />
-        </Animated.View>
+          <Path
+            d={pathD1}
+            stroke={darken(0.3, hexLineColor)}
+            strokeWidth={strokeWidth}
+          />
+        </Svg>
+      </Animated.View>
+      <Animated.View style={[styles.clipViewStyle, fillStyle]}>
+        <Svg
+          style={styles.animatedSurface}
+          width={screenWidth}
+          height={screenHeight}
+          fill="transparent"
+        >
+          <Path d={pathD3} stroke={hexLineColor} strokeWidth={strokeWidth} />
+        </Svg>
+      </Animated.View>
+      <Animated.View
+        style={[
+          styles.chevron,
+          arrived ? styles.chevronArrived : chevronContainerStyle,
+        ]}
+      >
+        <ChevronYamanote backgroundScaleSV={bgScale} arrived={arrived} />
+      </Animated.View>
 
-        <View style={styles.stationNames}>
-          {stations.map((s, i) =>
-            s ? (
-              <React.Fragment key={s.id}>
-                <View
-                  style={[
-                    styles.circle,
-                    (arrived && i === stations.length - 2) || getIsPass(s)
-                      ? styles.arrivedCircle
-                      : undefined,
-                    this.getCustomDotStyle(i, stations, arrived, getIsPass(s)),
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.stationNameContainer,
-                    this.getCustomStationNameStyle(i),
-                  ]}
-                >
-                  {numberingInfo[i] ? (
-                    <View
-                      style={[
-                        (numberingInfo[i] as NumberingInfo).lineMarkShape
-                          .signShape === MARK_SHAPE.SQUARE
-                          ? styles.numberingSquareIconContainer
-                          : styles.numberingIconContainer,
-                        getIsPass(s) ? styles.halfOpacity : null,
-                      ]}
-                    >
-                      <NumberingIcon
-                        shape={
-                          numberingInfo[i]?.lineMarkShape?.signShape ??
-                          MARK_SHAPE.NOOP
-                        }
-                        lineColor={numberingInfo[i]?.lineColor ?? '#000'}
-                        stationNumber={numberingInfo[i]?.stationNumber ?? ''}
-                        allowScaling={false}
-                      />
-                    </View>
-                  ) : (
-                    <View style={styles.numberingIconPlaceholder} />
-                  )}
-
-                  <Typography
+      <View style={styles.stationNames}>
+        {stations.map((s, i) =>
+          s ? (
+            <React.Fragment key={s.id}>
+              <View
+                style={[
+                  styles.circle,
+                  (arrived && i === stations.length - 2) || getIsPass(s)
+                    ? styles.arrivedCircle
+                    : undefined,
+                  getCustomDotStyle(i, stations, arrived, getIsPass(s)),
+                ]}
+              />
+              <View
+                style={[
+                  styles.stationNameContainer,
+                  getCustomStationNameStyle(i),
+                ]}
+              >
+                {numberingInfo[i] ? (
+                  <View
                     style={[
-                      styles.stationName,
+                      (numberingInfo[i] as NumberingInfo).lineMarkShape
+                        .signShape === MARK_SHAPE.SQUARE
+                        ? styles.numberingSquareIconContainer
+                        : styles.numberingIconContainer,
                       getIsPass(s) ? styles.halfOpacity : null,
                     ]}
                   >
-                    {isEn ? s.nameRoman : s.name}
-                  </Typography>
-                </View>
-              </React.Fragment>
-            ) : null
-          )}
-        </View>
-      </>
-    );
-  }
-}
+                    <NumberingIcon
+                      shape={
+                        numberingInfo[i]?.lineMarkShape?.signShape ??
+                        MARK_SHAPE.NOOP
+                      }
+                      lineColor={numberingInfo[i]?.lineColor ?? '#000'}
+                      stationNumber={numberingInfo[i]?.stationNumber ?? ''}
+                      allowScaling={false}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.numberingIconPlaceholder} />
+                )}
 
-export default PadArch;
+                <Typography
+                  style={[
+                    styles.stationName,
+                    getIsPass(s) ? styles.halfOpacity : null,
+                  ]}
+                >
+                  {isEn ? s.nameRoman : s.name}
+                </Typography>
+              </View>
+            </React.Fragment>
+          ) : null
+        )}
+      </View>
+    </>
+  );
+};
+
+export default React.memo(PadArch);

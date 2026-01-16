@@ -1,4 +1,3 @@
-import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
@@ -6,24 +5,28 @@ import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { LineType } from '~/@types/graphql';
 import {
+  BUS_MAX_ACCEL_IN_M_S,
+  BUS_MAX_DECEL_IN_M_S,
+  BUS_MAX_SPEED_IN_M_S,
   LINE_TYPE_MAX_ACCEL_IN_M_S,
   LINE_TYPE_MAX_DECEL_IN_M_S,
   LINE_TYPE_MAX_SPEEDS_IN_M_S,
   LOCATION_TASK_NAME,
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
-import { LineType } from '~/gen/proto/stationapi_pb';
+import { store } from '~/store';
+import { locationAtom, setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { isBusLine } from '../utils/line';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
-import { useLocationStore } from './useLocationStore';
-import { useNextStation } from './useNextStation';
 
 export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
@@ -48,7 +51,13 @@ export const useSimulationMode = (): void => {
     [currentLine]
   );
 
+  const isBus = useMemo(() => isBusLine(currentLine), [currentLine]);
+
   const maxSpeed = useMemo<number>(() => {
+    if (isBus) {
+      return BUS_MAX_SPEED_IN_M_S;
+    }
+
     if (currentLineType === LineType.BulletTrain) {
       return LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain];
     }
@@ -62,10 +71,9 @@ export const useSimulationMode = (): void => {
     }
 
     return defaultMaxSpeed;
-  }, [currentLineType, trainType]);
+  }, [isBus, currentLineType, trainType]);
 
   const station = useInRadiusStation(maxSpeed / 2);
-  const nextStation = useNextStation(false);
 
   const maybeRevsersedStations = useMemo(
     () =>
@@ -82,19 +90,15 @@ export const useSimulationMode = (): void => {
       return;
     }
 
-    pipe(
-      Effect.promise(() =>
-        Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
-      ),
-      Effect.andThen((hasStarted) => {
-        if (hasStarted) {
-          return Effect.promise(() =>
-            Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME)
-          );
-        }
-      }),
-      Effect.runPromise
-    );
+    const stopLocationUpdates = async () => {
+      const hasStarted =
+        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (hasStarted) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+    };
+
+    stopLocationUpdates();
   }, [enabled]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
@@ -118,25 +122,46 @@ export const useSimulationMode = (): void => {
 
       const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
 
+      if (
+        cur.latitude == null ||
+        cur.longitude == null ||
+        next.latitude == null ||
+        next.longitude == null
+      ) {
+        return [];
+      }
+
       const points: GeolibInputCoordinates[] = [
-        { latitude: cur.latitude, longitude: cur.longitude },
-        ...betweenNextStation.map((s) => ({
-          latitude: s.latitude,
-          longitude: s.longitude,
-        })),
         {
-          latitude: next.latitude,
-          longitude: next.longitude,
+          latitude: cur.latitude as number,
+          longitude: cur.longitude as number,
+        },
+        ...betweenNextStation
+          .filter((s) => s.latitude != null && s.longitude != null)
+          .map((s) => ({
+            latitude: s.latitude as number,
+            longitude: s.longitude as number,
+          })),
+        {
+          latitude: next.latitude as number,
+          longitude: next.longitude as number,
         },
       ];
 
       const distanceForNextStation = getPathLength(points);
 
+      const accel = isBus
+        ? BUS_MAX_ACCEL_IN_M_S
+        : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
+      const decel = isBus
+        ? BUS_MAX_DECEL_IN_M_S
+        : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
+
       const speedProfile = generateTrainSpeedProfile({
         distance: distanceForNextStation,
         maxSpeed,
-        accel: LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType],
-        decel: LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType],
+        accel,
+        decel,
         interval: 1,
       });
 
@@ -156,68 +181,92 @@ export const useSimulationMode = (): void => {
 
   const step = useCallback(
     (speed: number) => {
-      if (!nextStation) {
+      // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
+      const stationsWithoutPass = maybeRevsersedStations.filter(
+        (s) => !getIsPass(s)
+      );
+      const currentSegmentStation =
+        maybeRevsersedStations[segmentIndexRef.current];
+      const currentSegmentStopIndex = stationsWithoutPass.findIndex(
+        (s) => s.id === currentSegmentStation?.id
+      );
+      const targetStation = stationsWithoutPass[currentSegmentStopIndex + 1];
+
+      if (!targetStation) {
         segmentIndexRef.current = 0;
-        useLocationStore.setState((prev) =>
-          prev
-            ? {
-                ...prev,
-                coords: {
-                  ...prev.coords,
-                  latitude: maybeRevsersedStations[0]?.latitude,
-                  longitude: maybeRevsersedStations[0]?.longitude,
-                },
-                timestamp: Date.now(),
-              }
-            : prev
-        );
+        const firstStation = maybeRevsersedStations[0];
+        const prev = store.get(locationAtom);
+        if (
+          prev &&
+          firstStation?.latitude != null &&
+          firstStation?.longitude != null
+        ) {
+          setLocation({
+            ...prev,
+            coords: {
+              ...prev.coords,
+              latitude: firstStation.latitude,
+              longitude: firstStation.longitude,
+            },
+            timestamp: Date.now(),
+          });
+        }
         return;
       }
 
-      useLocationStore.setState((prev) => {
-        if (!prev) {
-          return prev;
+      const prev = store.get(locationAtom);
+      if (
+        !prev ||
+        targetStation.latitude == null ||
+        targetStation.longitude == null
+      ) {
+        return;
+      }
+
+      const bearingForNextStation = getGreatCircleBearing(
+        {
+          latitude: prev.coords.latitude,
+          longitude: prev.coords.longitude,
+        },
+        {
+          latitude: targetStation.latitude,
+          longitude: targetStation.longitude,
         }
+      );
 
-        const bearingForNextStation = getGreatCircleBearing(
-          {
-            latitude: prev.coords.latitude,
-            longitude: prev.coords.longitude,
-          },
-          {
-            latitude: nextStation.latitude,
-            longitude: nextStation.longitude,
-          }
-        );
+      const nextPoint = computeDestinationPoint(
+        {
+          lat: prev.coords.latitude,
+          lon: prev.coords.longitude,
+        },
+        speed,
+        bearingForNextStation
+      );
 
-        const nextPoint = computeDestinationPoint(
-          {
-            lat: prev.coords.latitude,
-            lon: prev.coords.longitude,
-          },
+      setLocation({
+        timestamp: Date.now(),
+        coords: {
+          ...nextPoint,
+          accuracy: 0,
+          altitude: null,
+          altitudeAccuracy: null,
           speed,
-          bearingForNextStation
-        );
-
-        return {
-          timestamp: Date.now(),
-          coords: {
-            ...nextPoint,
-            accuracy: 0,
-            altitude: null,
-            altitudeAccuracy: null,
-            speed,
-            heading: null,
-          },
-        };
+          heading: null,
+        },
       });
     },
-    [nextStation, maybeRevsersedStations]
+    [maybeRevsersedStations]
   );
 
   useEffect(() => {
-    if (enabled && stations.length > 0 && station) {
-      useLocationStore.setState({
+    if (
+      enabled &&
+      stations.length > 0 &&
+      station &&
+      station.latitude != null &&
+      station.longitude != null
+    ) {
+      setLocation({
         timestamp: Date.now(),
         coords: {
           accuracy: null,

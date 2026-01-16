@@ -1,21 +1,35 @@
 import type React from 'react';
-import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
+import { StyleSheet, type TextProps } from 'react-native';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
-interface Props {
+type Props = {
   children: React.ReactNode;
-  style?: StyleProp<TextStyle>;
-}
+  singleLine?: boolean;
+} & TextProps;
 
 const styles = StyleSheet.create({
   text: {
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
 
-export const Heading: React.FC<Props> = ({ children, style }: Props) => {
-  return <Typography style={[styles.text, style]}>{children}</Typography>;
+export const Heading: React.FC<Props> = ({
+  children,
+  style,
+  singleLine,
+  numberOfLines,
+  ...props
+}: Props) => {
+  return (
+    <Typography
+      adjustsFontSizeToFit
+      style={[styles.text, style]}
+      {...props}
+      numberOfLines={singleLine ? 1 : numberOfLines}
+    >
+      {children}
+    </Typography>
+  );
 };
