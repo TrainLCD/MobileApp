@@ -1,10 +1,4 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  getFirestore,
-  query,
-} from '@react-native-firebase/firestore';
+import { doc, getDoc, getFirestore } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 
 type MaintenanceDoc = {
@@ -16,10 +10,8 @@ export const useUnderMaintenance = () => {
   useEffect(() => {
     const fetchMaintenance = async () => {
       const db = getFirestore();
-      const { docs } = await getDocs(
-        query(collection(db, 'appConfig'), doc(db, 'maintenance'))
-      );
-      const data = docs[0]?.data() as MaintenanceDoc | undefined;
+      const docSnap = await getDoc(doc(db, 'appConfig', 'maintenance'));
+      const data = docSnap.data() as MaintenanceDoc | undefined;
       if (data) {
         setUnderMaintenance(data.underMaintenance);
       }
