@@ -3,7 +3,7 @@ import type React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
-import { isBusLine } from '~/utils/line';
+import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
@@ -81,7 +81,7 @@ export const StationSettingsModal: React.FC<Props> = ({
     >
       <View style={styles.container}>
         <Typography style={styles.lineText}>
-          {isJapanese ? station?.line?.nameShort : station?.line?.nameRoman}
+          {getLocalizedLineName(station?.line, isJapanese)}
         </Typography>
         <Heading style={styles.heading}>
           {isJapanese ? station?.name : station?.nameRoman}
