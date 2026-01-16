@@ -111,7 +111,11 @@ export const RouteInfoModal = ({
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
       const subtitle = Array.from(
-        new Set((lines ?? []).map((l) => getLocalizedLineName(l, isJapanese)))
+        new Set(
+          (lines ?? [])
+            .map((l) => getLocalizedLineName(l, isJapanese))
+            .filter(Boolean)
+        )
       ).join(isJapanese ? '・' : ', ');
 
       return (

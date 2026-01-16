@@ -273,10 +273,10 @@ export const SelectBoundModal: React.FC<Props> = ({
         if (!trainTypeForCard) {
           return lineName;
         }
-        const trainTypeName = isJapanese
-          ? trainTypeForCard.name
-          : trainTypeForCard.nameRoman;
-        return `${lineName} ${!isLoopLine && trainTypeName ? trainTypeName : ''}`;
+        const trainTypeName =
+          !isLoopLine &&
+          (isJapanese ? trainTypeForCard.name : trainTypeForCard.nameRoman);
+        return trainTypeName ? `${lineName} ${trainTypeName}` : lineName;
       };
       const finalStop =
         wantedDestination ??
