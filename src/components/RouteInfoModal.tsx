@@ -97,7 +97,7 @@ export const RouteInfoModal = ({
   const { pendingLine } = useAtomValue(lineState);
   const lineName = isJapanese
     ? (pendingLine?.nameShort ?? '')
-    : (pendingLine?.nameRoman ?? '');
+    : ((pendingLine?.nameRoman || pendingLine?.nameShort) ?? '');
   const trainTypeName = isJapanese
     ? (trainType?.name ?? '普通/各駅停車')
     : (trainType?.nameRoman ?? 'Local');
@@ -111,7 +111,9 @@ export const RouteInfoModal = ({
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
       const subtitle = isJapanese
         ? Array.from(new Set((lines ?? []).map((l) => l.nameShort))).join('・')
-        : Array.from(new Set((lines ?? []).map((l) => l.nameRoman))).join(', ');
+        : Array.from(
+            new Set((lines ?? []).map((l) => l.nameRoman || l.nameShort))
+          ).join(', ');
 
       return (
         <CommonCard

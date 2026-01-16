@@ -271,13 +271,14 @@ export const SelectBoundModal: React.FC<Props> = ({
       ) => {
         const lineName = isJapanese
           ? lineForCard.nameShort
-          : lineForCard.nameRoman;
-        const trainTypeName = trainTypeForCard
-          ? isJapanese
-            ? trainTypeForCard.name
-            : trainTypeForCard.nameRoman
-          : '';
-        return `${lineName} ${!isLoopLine && trainTypeName ? trainTypeName : ''}`.trim();
+          : lineForCard.nameRoman || lineForCard.nameShort;
+        if (!trainTypeForCard) {
+          return lineName;
+        }
+        const trainTypeName = isJapanese
+          ? trainTypeForCard.name
+          : trainTypeForCard.nameRoman;
+        return `${lineName} ${!isLoopLine && trainTypeName ? trainTypeName : ''}`;
       };
       const finalStop =
         wantedDestination ??
@@ -322,7 +323,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           const title = isLoopLine
             ? loopLineDirectionText(direction)
             : normalLineDirectionText(boundStations);
-          const subtitle = buildSubtitle(lineForCard, trainTypeForCard);
+          const subtitle = buildSubtitle(lineForCard, trainTypeForCard) ?? '';
           return (
             <CommonCard
               line={lineForCard ?? line}
@@ -354,7 +355,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       const title = isLoopLine
         ? loopLineDirectionText(direction)
         : normalLineDirectionText(boundStations);
-      const subtitle = buildSubtitle(lineForCard, trainTypeForCard);
+      const subtitle = buildSubtitle(lineForCard, trainTypeForCard) ?? '';
 
       return (
         <CommonCard

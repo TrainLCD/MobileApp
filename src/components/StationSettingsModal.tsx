@@ -81,7 +81,9 @@ export const StationSettingsModal: React.FC<Props> = ({
     >
       <View style={styles.container}>
         <Typography style={styles.lineText}>
-          {isJapanese ? station?.line?.nameShort : station?.line?.nameRoman}
+          {isJapanese
+            ? station?.line?.nameShort
+            : station?.line?.nameRoman || station?.line?.nameShort}
         </Typography>
         <Heading style={styles.heading}>
           {isJapanese ? station?.name : station?.nameRoman}
