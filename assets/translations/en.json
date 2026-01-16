@@ -223,7 +223,7 @@
   "toei": "Bureau of Transportation, Tokyo Metropolitan Government",
   "ccby": "CC BY 4.0 (Data has been modified)",
   "otherOss": "Other Open Source Software",
-  "linesNearbyAtStation": "Nearby lines at %{stationName} Station",
+  "linesNearbyAtStation": "Lines at %{stationName} Station",
   "toeiBusStopsNearby": "Nearby bus routes (Toei Bus)",
   "themeConfirmTitle": "Change theme?",
   "themeConfirmApply": "Apply",
