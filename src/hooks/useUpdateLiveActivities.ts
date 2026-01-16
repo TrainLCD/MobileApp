@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
+import { isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import { directionToDirectionName } from '../models/Bound';
 import stationState from '../store/atoms/station';
@@ -47,6 +48,11 @@ export const useUpdateLiveActivities = (): void => {
   const isPassing = useIsPassing();
 
   const trainTypeName = useMemo(() => {
+    // 現状種別が存在するバス路線を扱っていないので、種別名は表示しない
+    if (isBusLine(currentLine)) {
+      return '';
+    }
+
     // 山手線か大阪環状線の直通がない種別が選択されていて、日本語環境でもない場合
     // 英語だとInbound/Outboundとなり本質と違うので空の文字列を渡して表示しないようにしている
     // 名古屋市営地下鉄名城線は主要行き先を登録していないので、Clockwise/Counterclockwiseのままにしている
@@ -65,6 +71,7 @@ export const useUpdateLiveActivities = (): void => {
       .replace(parenthesisRegexp, '')
       .replace(/\n/, '');
   }, [
+    currentLine,
     currentStation?.line,
     isFullLoopLine,
     isOsakaLoopLine,
@@ -140,7 +147,10 @@ export const useUpdateLiveActivities = (): void => {
     [currentLine?.color]
   );
   const lineName = useMemo(
-    () => (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ?? '',
+    () =>
+      (isJapanese
+        ? currentLine?.nameShort
+        : currentLine?.nameRoman || currentLine?.nameShort) ?? '',
     [currentLine?.nameRoman, currentLine?.nameShort]
   );
 

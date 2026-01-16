@@ -65,7 +65,7 @@ export const useAppleWatch = (): void => {
             lineColorC: l.color,
             name: isJapanese
               ? l.nameShort?.replace(parenthesisRegexp, '')
-              : l.nameRoman?.replace(parenthesisRegexp, ''),
+              : (l.nameRoman || l.nameShort)?.replace(parenthesisRegexp, ''),
             lineSymbol: currentNumbering?.lineSymbol ?? '',
           })),
         stationNumber: currentNumbering?.stationNumber,
@@ -83,7 +83,10 @@ export const useAppleWatch = (): void => {
         name:
           (isJapanese
             ? currentLine.nameShort?.replace(parenthesisRegexp, '')
-            : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
+            : (currentLine.nameRoman || currentLine.nameShort)?.replace(
+                parenthesisRegexp,
+                ''
+              )) ?? '',
         lineColorC: currentLine.color,
         lineSymbol: currentNumbering?.lineSymbol ?? '',
       },
