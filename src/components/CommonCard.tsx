@@ -6,7 +6,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
-import { isBusLine } from '~/utils/line';
+import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark } from '../hooks';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -192,10 +192,8 @@ export const CommonCard: React.FC<Props> = ({
   }, [bounds, stations]);
 
   const titleOrLineName = useMemo(() => {
-    return isJapanese
-      ? (title ?? line.nameShort ?? '')
-      : (title ?? (line.nameRoman || line.nameShort) ?? '');
-  }, [title, line.nameShort, line.nameRoman]);
+    return title ?? getLocalizedLineName(line, isJapanese);
+  }, [title, line]);
 
   const targetStationNumber = targetStation?.stationNumbers?.[0]?.stationNumber;
   const targetStationColor =
