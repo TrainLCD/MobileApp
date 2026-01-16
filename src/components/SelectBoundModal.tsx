@@ -24,7 +24,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
-import { isBusLine } from '~/utils/line';
+import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
@@ -269,9 +269,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         lineForCard: Line,
         trainTypeForCard?: TrainType | null
       ) => {
-        const lineName = isJapanese
-          ? lineForCard.nameShort
-          : lineForCard.nameRoman || lineForCard.nameShort;
+        const lineName = getLocalizedLineName(lineForCard, isJapanese);
         if (!trainTypeForCard) {
           return lineName;
         }

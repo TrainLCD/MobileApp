@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { isBusLine } from '~/utils/line';
+import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import { directionToDirectionName } from '../models/Bound';
 import stationState from '../store/atoms/station';
@@ -147,11 +147,8 @@ export const useUpdateLiveActivities = (): void => {
     [currentLine?.color]
   );
   const lineName = useMemo(
-    () =>
-      (isJapanese
-        ? currentLine?.nameShort
-        : currentLine?.nameRoman || currentLine?.nameShort) ?? '',
-    [currentLine?.nameRoman, currentLine?.nameShort]
+    () => getLocalizedLineName(currentLine, isJapanese),
+    [currentLine]
   );
 
   const passingStationName = useMemo(

@@ -48,3 +48,16 @@ export const filterBusLinesForNonBusStation = <
   if (!lines) return [];
   return lines.filter((l) => isBusLine(currentLine) || !isBusLine(l));
 };
+
+/**
+ * ローカライズされた路線名を取得する
+ * 英語環境でnameRomanが空の場合、nameShortにフォールバックする（バス路線対応）
+ */
+export const getLocalizedLineName = (
+  line: Pick<Line, 'nameShort' | 'nameRoman'> | null | undefined,
+  isJapanese: boolean
+): string => {
+  if (!line) return '';
+  if (isJapanese) return line.nameShort ?? '';
+  return line.nameRoman || line.nameShort || '';
+};
