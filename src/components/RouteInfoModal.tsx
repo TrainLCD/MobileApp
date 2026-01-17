@@ -9,7 +9,10 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import isTablet from '~/utils/isTablet';
-import { filterBusLinesForNonBusStation } from '~/utils/line';
+import {
+  filterBusLinesForNonBusStation,
+  getLocalizedLineName,
+} from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
@@ -95,9 +98,7 @@ export const RouteInfoModal = ({
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const { pendingLine } = useAtomValue(lineState);
-  const lineName = isJapanese
-    ? (pendingLine?.nameShort ?? '')
-    : (pendingLine?.nameRoman ?? '');
+  const lineName = getLocalizedLineName(pendingLine, isJapanese);
   const trainTypeName = isJapanese
     ? (trainType?.name ?? '普通/各駅停車')
     : (trainType?.nameRoman ?? 'Local');
@@ -109,9 +110,13 @@ export const RouteInfoModal = ({
       if (!line) return null;
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
-      const subtitle = isJapanese
-        ? Array.from(new Set((lines ?? []).map((l) => l.nameShort))).join('・')
-        : Array.from(new Set((lines ?? []).map((l) => l.nameRoman))).join(', ');
+      const subtitle = Array.from(
+        new Set(
+          (lines ?? [])
+            .map((l) => getLocalizedLineName(l, isJapanese))
+            .filter(Boolean)
+        )
+      ).join(isJapanese ? '・' : ', ');
 
       return (
         <CommonCard

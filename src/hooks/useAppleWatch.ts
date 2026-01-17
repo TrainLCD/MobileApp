@@ -8,6 +8,7 @@ import {
 } from 'react-native-watch-connectivity';
 import type { Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
+import { getLocalizedLineName } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -63,9 +64,10 @@ export const useAppleWatch = (): void => {
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
-            name: isJapanese
-              ? l.nameShort?.replace(parenthesisRegexp, '')
-              : l.nameRoman?.replace(parenthesisRegexp, ''),
+            name: getLocalizedLineName(l, isJapanese).replace(
+              parenthesisRegexp,
+              ''
+            ),
             lineSymbol: currentNumbering?.lineSymbol ?? '',
           })),
         stationNumber: currentNumbering?.stationNumber,
@@ -80,10 +82,10 @@ export const useAppleWatch = (): void => {
       })),
       selectedLine: {
         id: currentLine.id,
-        name:
-          (isJapanese
-            ? currentLine.nameShort?.replace(parenthesisRegexp, '')
-            : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
+        name: getLocalizedLineName(currentLine, isJapanese).replace(
+          parenthesisRegexp,
+          ''
+        ),
         lineColorC: currentLine.color,
         lineSymbol: currentNumbering?.lineSymbol ?? '',
       },
