@@ -69,8 +69,8 @@ struct StationNumberGaugeView: View {
   }
 }
 
-// NOTE: 通過中の値を追加するとなぜかライブアクティビティが死ぬので含めていない
-// ちなみにライブアクティビティにスピナーが表示され固まる
+// NOTE: 通過中の値を追加するとライブアクティビティにスピナーが表示され固まる問題があったが、
+// supplementalActivityFamiliesに.mediumを追加してMacネイティブ描画を有効にすることで解消された
 func getRunningStateText(
   approaching: Bool, stopped: Bool, isNextLastStop: Bool, isDynamicIsland: Bool = false
 ) -> String {

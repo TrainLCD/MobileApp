@@ -24,13 +24,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import {
-  type Line,
-  type LineNested,
-  type Station,
-  type TrainType,
-  TransportType,
-} from '~/@types/graphql';
+import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { type HeaderLayout, NowHeader } from '~/components/NowHeader';
