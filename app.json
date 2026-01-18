@@ -14,7 +14,7 @@
         {
           "url": "https://sentry.io/",
           "note": "Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.",
-          "project": "trainlcd-canary",
+          "project": "trainlcd",
           "organization": "tinykitten"
         }
       ],
@@ -36,13 +36,13 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "me.tinykitten.trainlcd.dev",
-      "scheme": "CanaryTrainLCD",
+      "bundleIdentifier": "me.tinykitten.trainlcd",
+      "scheme": "ProdTrainLCD",
       "buildNumber": "2407",
       "supportsTablet": true
     },
     "android": {
-      "package": "me.tinykitten.trainlcd.dev",
+      "package": "me.tinykitten.trainlcd",
       "versionCode": 100000194,
       "permissions": []
     },
