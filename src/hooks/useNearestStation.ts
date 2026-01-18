@@ -1,42 +1,47 @@
 import findNearest from 'geolib/es/findNearest';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
+import { locationAtom } from '~/store/atoms/location';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
-import { useLocationStore } from './useLocationStore';
 import { useNextStation } from './useNextStation';
 
-export const useNearestStation = (): Station | null => {
-  const latitude = useLocationStore((state) => state?.coords.latitude);
-  const longitude = useLocationStore((state) => state?.coords.longitude);
+export const useNearestStation = (): Station | undefined => {
+  const location = useAtomValue(locationAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
   const { stations } = useAtomValue(stationState);
   const currentStation = useCurrentStation(false);
   const nextStation = useNextStation(false);
 
-  const nearestStation = useMemo<Station | null>(() => {
-    if (!latitude || !longitude) {
-      return null;
+  const nearestStation = useMemo<Station | undefined>(() => {
+    if (latitude == null || longitude == null) {
+      return undefined;
     }
 
-    const nearestCoordinates = stations.length
+    const validStations = stations.filter(
+      (s) => s.latitude != null && s.longitude != null
+    );
+
+    const nearestCoordinates = validStations.length
       ? (findNearest(
           {
             latitude,
             longitude,
           },
-          stations.map((sta) => ({
-            latitude: sta.latitude,
-            longitude: sta.longitude,
+          validStations.map((sta) => ({
+            latitude: sta.latitude as number,
+            longitude: sta.longitude as number,
           }))
         ) as { latitude: number; longitude: number })
-      : null;
+      : undefined;
 
     if (!nearestCoordinates) {
-      return null;
+      return undefined;
     }
 
-    const nearestStations = stations.filter(
+    const nearestStations = validStations.filter(
       (sta) =>
         sta.latitude === nearestCoordinates.latitude &&
         sta.longitude === nearestCoordinates.longitude
@@ -45,9 +50,7 @@ export const useNearestStation = (): Station | null => {
     return (
       nearestStations.find(
         (s) => s.id === currentStation?.id || s.id === nextStation?.id
-      ) ??
-      nearestStations[0] ??
-      null
+      ) ?? nearestStations[0]
     );
   }, [latitude, longitude, stations, currentStation, nextStation]);
 

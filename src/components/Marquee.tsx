@@ -1,6 +1,21 @@
-import React, { cloneElement, useCallback, useMemo, useRef } from 'react';
-import { Dimensions, ScrollView, StyleSheet, type View } from 'react-native';
+import React, {
+  cloneElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
+import {
+  type LayoutChangeEvent,
+  ScrollView,
+  type StyleProp,
+  StyleSheet,
+  useWindowDimensions,
+  type View,
+  type ViewStyle,
+} from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -18,45 +33,83 @@ const styles = StyleSheet.create({
 
 const PIXELS_PER_SECOND = 400;
 
-const screenWidth = Dimensions.get('screen').width;
-
 const Marquee = ({ children }: Props) => {
+  const dim = useWindowDimensions();
+
   const wrapperViewRef = useRef<View>(null);
-  const offsetX = useSharedValue(screenWidth);
+  const offsetX = useSharedValue(dim.width);
+  const contentWidthRef = useRef(0);
 
   const startScroll = useCallback(
     (width: number) => {
-      const totalDistance = screenWidth + width;
+      contentWidthRef.current = width;
+      // stop previous animation
+      cancelAnimation(offsetX);
+      // if content fits, no scrolling
+      if (width <= dim.width) {
+        offsetX.value = 0;
+        return;
+      }
+      // start from right edge and move left beyond the content
+      offsetX.value = dim.width;
+      const totalDistance = dim.width + width;
       const duration = (totalDistance / PIXELS_PER_SECOND) * 1000;
-
       offsetX.value = withRepeat(
         withTiming(-width, { duration, easing: Easing.linear }),
         -1
       );
     },
-    [offsetX]
+    [dim.width, offsetX]
   );
 
-  const childrenCloned = useMemo(
-    () =>
-      cloneElement(children, {
-        // biome-ignore lint/suspicious/noExplicitAny: どうしょうもない
-        ...(children.props as any),
-        style: {
-          // biome-ignore lint/suspicious/noExplicitAny: どうしょうもない
-          ...(children.props as any).style,
+  const childrenCloned = useMemo(() => {
+    type LayoutableProps = {
+      style?: StyleProp<ViewStyle>;
+      onLayout?: (event: LayoutChangeEvent) => void;
+    };
+    const { style: childStyle, onLayout: originalOnLayout } =
+      children.props as LayoutableProps;
+
+    const handleLayout = (event: LayoutChangeEvent) => {
+      const {
+        nativeEvent: {
+          layout: { width },
         },
-        onLayout: ({
-          nativeEvent: {
-            layout: { width },
-          },
-        }: {
-          nativeEvent: { layout: { width: number } };
-        }) => startScroll(width),
-        ref: wrapperViewRef,
-      }),
-    [children, startScroll]
-  );
+      } = event;
+      startScroll(width);
+      originalOnLayout?.(event);
+    };
+
+    const mergedProps = {
+      ...(children.props as Record<string, unknown>),
+      style: childStyle,
+      onLayout: handleLayout,
+      ref: wrapperViewRef,
+    };
+
+    return cloneElement(children, mergedProps);
+  }, [children, startScroll]);
+
+  // restart on rotation or size change
+  useEffect(() => {
+    const w = contentWidthRef.current;
+    if (w > 0) {
+      // restart using latest width and dim without depending on startScroll
+      cancelAnimation(offsetX);
+      if (w <= dim.width) {
+        offsetX.value = 0;
+      } else {
+        offsetX.value = dim.width;
+        const totalDistance = dim.width + w;
+        const duration = (totalDistance / PIXELS_PER_SECOND) * 1000;
+        offsetX.value = withRepeat(
+          withTiming(-w, { duration, easing: Easing.linear }),
+          -1
+        );
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dim.width, offsetX]);
 
   const animatedViewStyle = useAnimatedStyle(() => ({
     transform: [

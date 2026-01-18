@@ -1,13 +1,16 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type { Line } from '~/gen/proto/stationapi_pb';
+import type { Line } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
-type Option = { omitRepeatingLine?: boolean; omitJR?: boolean };
+type Option = {
+  omitRepeatingLine?: boolean;
+  omitJR?: boolean;
+};
 
 export const useTransferLines = (options?: Option): Line[] => {
   const { arrived } = useAtomValue(stationState);
@@ -17,12 +20,12 @@ export const useTransferLines = (options?: Option): Line[] => {
     () =>
       arrived && currentStation && !getIsPass(currentStation)
         ? currentStation
-        : (nextStation ?? null),
+        : nextStation,
     [arrived, currentStation, nextStation]
   );
 
   const { omitRepeatingLine, omitJR } = options ?? {
-    omitRepeatingLines: false,
+    omitRepeatingLine: false,
     omitJR: false,
   };
 

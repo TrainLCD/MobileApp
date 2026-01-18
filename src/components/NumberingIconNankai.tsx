@@ -13,9 +13,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     position: 'relative',
     justifyContent: 'center',
@@ -66,6 +72,7 @@ const NumberingIconNankai: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
@@ -79,21 +86,23 @@ const NumberingIconNankai: React.FC<Props> = ({
   }
 
   return (
-    <View style={styles.root}>
-      <Svg height={isTablet ? 72 * 1.5 : 72} width={isTablet ? 72 * 1.5 : 72}>
-        <Ellipse
-          cx={(isTablet ? 72 * 1.5 : 72) / 2}
-          cy={(isTablet ? 72 * 1.5 : 72) / 2}
-          rx={(isTablet ? 72 * 1.5 : 72) / 2}
-          ry={(isTablet ? 72 * 1.5 : 72) / 2.5}
-          stroke="white"
-          strokeWidth={1}
-          fill={lineColor}
-        />
-      </Svg>
-      <View style={styles.texts}>
-        <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-        <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={styles.root}>
+        <Svg height={isTablet ? 72 * 1.5 : 72} width={isTablet ? 72 * 1.5 : 72}>
+          <Ellipse
+            cx={(isTablet ? 72 * 1.5 : 72) / 2}
+            cy={(isTablet ? 72 * 1.5 : 72) / 2}
+            rx={(isTablet ? 72 * 1.5 : 72) / 2}
+            ry={(isTablet ? 72 * 1.5 : 72) / 2.5}
+            stroke="white"
+            strokeWidth={1}
+            fill={lineColor}
+          />
+        </Svg>
+        <View style={styles.texts}>
+          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
+          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
+        </View>
       </View>
     </View>
   );

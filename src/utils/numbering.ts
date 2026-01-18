@@ -1,4 +1,4 @@
-import type { Line, Station, StationNumber } from '~/gen/proto/stationapi_pb';
+import type { Line, Station, StationNumber } from '~/@types/graphql';
 
 export const getNumberingColor = (
   arrived: boolean,

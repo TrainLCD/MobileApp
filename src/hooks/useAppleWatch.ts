@@ -6,8 +6,9 @@ import {
   updateApplicationContext,
   useReachability,
 } from 'react-native-watch-connectivity';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
+import { getLocalizedLineName } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -29,10 +30,10 @@ export const useAppleWatch = (): void => {
   const nextStation = useNextStation();
   const stoppingState = useStoppingState();
   const { isLoopLine: isFullLoopLine, isPartiallyLoopLine } = useLoopLine();
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
 
-  const switchedStation = useMemo<Station | null>(
-    () => (arrived && !getIsPass(station) ? station : (nextStation ?? null)),
+  const switchedStation = useMemo<Station | undefined>(
+    () => (arrived && !getIsPass(station) ? station : nextStation),
     [arrived, nextStation, station]
   );
 
@@ -41,7 +42,7 @@ export const useAppleWatch = (): void => {
     const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : 'ゆき';
 
     return `${isJapanese ? '' : enPrefix}${directionalStops
-      .map((s) => (isJapanese ? s.name : s.nameRoman))
+      .map((s: Station) => (isJapanese ? s.name : s.nameRoman))
       .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
   }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
 
@@ -58,20 +59,21 @@ export const useAppleWatch = (): void => {
       station: {
         id: switchedStation.id,
         name: isJapanese ? switchedStation.name : switchedStation.nameRoman,
-        lines: switchedStation.lines
+        lines: (switchedStation.lines ?? [])
           .filter((l) => l.id !== currentLine.id)
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
-            name: isJapanese
-              ? l.nameShort.replace(parenthesisRegexp, '')
-              : l.nameRoman?.replace(parenthesisRegexp, ''),
+            name: getLocalizedLineName(l, isJapanese).replace(
+              parenthesisRegexp,
+              ''
+            ),
             lineSymbol: currentNumbering?.lineSymbol ?? '',
           })),
         stationNumber: currentNumbering?.stationNumber,
         pass: false,
       },
-      stationList: switchedStations.map((s) => ({
+      stationList: switchedStations.map((s: Station) => ({
         id: s.id,
         name: isJapanese ? s.name : s.nameRoman,
         lines: [],
@@ -80,10 +82,10 @@ export const useAppleWatch = (): void => {
       })),
       selectedLine: {
         id: currentLine.id,
-        name:
-          (isJapanese
-            ? currentLine.nameShort.replace(parenthesisRegexp, '')
-            : currentLine.nameRoman?.replace(parenthesisRegexp, '')) ?? '',
+        name: getLocalizedLineName(currentLine, isJapanese).replace(
+          parenthesisRegexp,
+          ''
+        ),
         lineColorC: currentLine.color,
         lineSymbol: currentNumbering?.lineSymbol ?? '',
       },

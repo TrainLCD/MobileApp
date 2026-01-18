@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
 });
 
 type Props = {
-  style: ViewStyle;
+  style: ViewStyle | ViewStyle[];
   white?: boolean;
   bold?: boolean;
 };

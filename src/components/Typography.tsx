@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { forwardRef, type LegacyRef, useMemo } from 'react';
 import {
   type StyleProp,
@@ -7,19 +8,22 @@ import {
   type TextStyle,
 } from 'react-native';
 import { FONTS } from '../constants';
-import { useThemeStore } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {
       return FONTS.JFDotJiskan24h;
     }
-    return StyleSheet.flatten(props.style)?.fontWeight === 'bold'
-      ? FONTS.RobotoBold
-      : FONTS.RobotoRegular;
+    const weight = StyleSheet.flatten(props.style)?.fontWeight;
+    const isBold =
+      weight === 'bold' ||
+      weight === '700' ||
+      weight === '800' ||
+      weight === '900';
+    return isBold ? FONTS.RobotoBold : FONTS.RobotoRegular;
   }, [isLEDTheme, props.style]);
 
   const style = useMemo<StyleProp<TextStyle>>(

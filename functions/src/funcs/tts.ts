@@ -1,8 +1,8 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { createHash } from 'node:crypto';
-import { normalizeRomanText } from '../utils/normalize';
-import * as admin from 'firebase-admin';
 import { PubSub } from '@google-cloud/pubsub';
+import * as admin from 'firebase-admin';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { normalizeRomanText } from '../utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -41,14 +41,16 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/[！-／：-＠［-｀｛-～、-〜”’・]+/g, ' ')
     // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
     .replace(/`/g, '')
+    // 日本語はjoを「ホ」と読まない
+    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     // 一丁目で終わる駅
     .replace(
-      /\-itchome/gi,
+      /-itchome/gi,
       `<phoneme alphabet="ipa" ph="itt͡ɕoːme">いっちょうめ</phoneme>`
     )
     // 新宿三丁目など
     .replace(
-      /\-sanchome/gi,
+      /-sanchome/gi,
       ' <phoneme alphabet="ipa" ph="sant͡ɕoːme">さんちょうめ</phoneme>'
     )
     // 宇部
@@ -141,14 +143,16 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Tsurumi/gi,
       '<phoneme alphabet="ipa" ph="t͡sɯɾɯmi">つるみ</phoneme>'
     )
-    // 日本語はjoを「ホ」と読まない
-    .replace(/jo/gi, '<phoneme alphabet="ipa" ph="ʤo">じょ</phoneme>')
     .replace(/JR/gi, 'J-R')
     .replace(
       /Ryogoku/gi,
       '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
     )
-    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');
+    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>')
+    // 都営バスを想定
+    .replace(/.Sta\./gi, ' Station')
+    .replace(/.Univ\./gi, ' University')
+    .replace(/.Hp\./gi, ' Hospital');
 
   if (ssmlEn.trim().length === 0) {
     throw new HttpsError(
@@ -283,20 +287,6 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
         signal: AbortSignal.timeout(30000), // 30秒のタイムアウト
       }),
     ]);
-
-    if (!jaRes.ok || !enRes.ok) {
-      const [jaText, enText] = await Promise.all([
-        jaRes.text().catch(() => ''),
-        enRes.text().catch(() => ''),
-      ]);
-      console.error(
-        `TTS API error detail: ja=${jaRes.status} ${jaText}; en=${enRes.status} ${enText}`
-      );
-      throw new HttpsError(
-        'internal',
-        `TTS API error: ja=${jaRes.status}, en=${enRes.status}`
-      );
-    }
 
     const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
       await Promise.all([jaRes.json(), enRes.json()]);

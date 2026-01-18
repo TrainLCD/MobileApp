@@ -13,7 +13,7 @@
 "next" = "Next";
 "nextLast" = "Next last stop";
 "nowStoppingAt" = "Now stopping at";
-"stop" = "Stopping at";
+"stop" = "Stop";
 "nextLast" = "Next last stop";
 "passingStation" = "Passing %@";
 "boundStation" = "Bound for %@";

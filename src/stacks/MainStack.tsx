@@ -4,20 +4,19 @@ import {
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import Licenses from '~/screens/Licenses';
+import RouteSearchScreen from '~/screens/RouteSearchScreen';
+import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
-import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { useConnectivity, useUnderMaintenance } from '../hooks';
 import AppSettings from '../screens/AppSettings';
-import ThemeSettings from '../screens/AppSettings/ThemeSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
-import NotificationSettings from '../screens/NotificationSettingsScreen';
-import SelectBound from '../screens/SelectBound';
-import SelectLine from '../screens/SelectLine';
-import SpecifyDestinationSettingsScreen from '../screens/SpecifyDestinationSettingsScreen';
-import TrainTypeSettings from '../screens/TrainTypeSettingsScreen';
+import SelectLine from '../screens/SelectLineScreen';
+import ThemeSettings from '../screens/ThemeSettings';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 
 const Stack = createNativeStackNavigator();
@@ -30,7 +29,7 @@ const screenOptions: NativeStackNavigationOptions = {
 const MainStack: React.FC = () => {
   const { station, selectedBound } = useAtomValue(stationState);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
@@ -77,11 +76,6 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
-          name="SelectBound"
-          component={SelectBound}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
           name="Main"
           component={Main}
         />
@@ -97,23 +91,23 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
+          name="TTSSettings"
+          component={TTSSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
           name="EnabledLanguagesSettings"
           component={EnabledLanguagesSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
-          name="Notification"
-          component={NotificationSettings}
+          name="RouteSearch"
+          component={RouteSearchScreen}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
-          name="TrainType"
-          component={TrainTypeSettings}
-        />
-        <Stack.Screen
-          options={optionsWithCustomStyle}
-          name="SpecifyDestinationSettings"
-          component={SpecifyDestinationSettingsScreen}
+          name="Licenses"
+          component={Licenses}
         />
       </Stack.Navigator>
     </Permitted>

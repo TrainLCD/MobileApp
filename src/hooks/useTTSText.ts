@@ -1,9 +1,10 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
+import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { useAfterNextStation } from './useAfterNextStation';
@@ -19,7 +20,6 @@ import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useStoppingState } from './useStoppingState';
-import { useThemeStore } from './useThemeStore';
 import { useTransferLines } from './useTransferLines';
 
 const EMPTY_TTS_TEXT = {
@@ -38,19 +38,20 @@ const EMPTY_TTS_TEXT = {
 export const useTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | undefined[] => {
-  const theme = useThemeStore();
+): [string, string] | [] => {
+  const theme = useAtomValue(themeAtom);
 
-  const { selectedBound: selectedBoundOrigin } = useAtomValue(stationState);
+  const { selectedBound: selectedBoundOrigin, stations } =
+    useAtomValue(stationState);
   const station = useCurrentStation();
   const currentLineOrigin = useCurrentLine();
 
-  const connectedLinesOrigin = useConnectedLines();
-  const transferLinesOriginal = useTransferLines();
+  const connectedLines = useConnectedLines();
+  const transferLines = useTransferLines();
   const currentTrainTypeOrigin = useCurrentTrainType();
-  const loopLineBoundJa = useLoopLineBound(false);
+  const loopLineBoundJa = useLoopLineBound(false, 'JA');
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
   const nextStationOrigin = useNextStation();
   const isNextStopTerminus = useIsTerminus(nextStationOrigin);
   const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
@@ -63,42 +64,42 @@ export const useTTSText = (
       return;
     }
 
+    if (!nextStationOrigin.stationNumbers) {
+      return;
+    }
+
     const stationNumberIndex = getStationNumberIndex(nextStationOrigin);
-    return nextStationOrigin?.stationNumbers[stationNumberIndex];
+
+    // Validate stationNumberIndex is a valid integer within array bounds
+    if (
+      !Number.isInteger(stationNumberIndex) ||
+      stationNumberIndex < 0 ||
+      stationNumberIndex >= nextStationOrigin.stationNumbers.length
+    ) {
+      return;
+    }
+
+    return nextStationOrigin.stationNumbers[stationNumberIndex];
   }, [getStationNumberIndex, nextStationOrigin]);
 
   const replaceJapaneseText = useCallback(
-    (name: string | undefined, nameKatakana: string | undefined) =>
+    (
+      name: string | undefined | null,
+      nameKatakana: string | undefined | null
+    ) =>
       !name || !nameKatakana
         ? `<sub alias="かくえきていしゃ">各駅停車</sub>`
         : `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`,
     []
   );
 
-  const transferLines = useMemo(
-    () =>
-      transferLinesOriginal.map((l) => ({
-        ...l,
-        nameRoman: l.nameRoman,
-      })),
-    [transferLinesOriginal]
-  );
-
   const currentLine = useMemo(
-    () =>
-      currentLineOrigin && {
-        ...currentLineOrigin,
-        nameRoman: currentLineOrigin?.nameRoman,
-      },
+    () => currentLineOrigin ?? null,
     [currentLineOrigin]
   );
 
   const selectedBound = useMemo(
-    () =>
-      selectedBoundOrigin && {
-        ...selectedBoundOrigin,
-        nameRoman: selectedBoundOrigin?.nameRoman,
-      },
+    () => selectedBoundOrigin ?? null,
     [selectedBoundOrigin]
   );
 
@@ -139,7 +140,7 @@ export const useTTSText = (
   const boundForEn = useMemo(
     () =>
       isLoopLine
-        ? `${loopLineBoundEn?.boundFor.replaceAll('&', ' and ')}`
+        ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
         : `${directionalStops?.map((s) => s?.nameRoman).join(' and ')}`,
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
@@ -153,6 +154,7 @@ export const useTTSText = (
     if (!nextStationNumber?.stationNumber) {
       return '';
     }
+
     const split = nextStationNumber.stationNumber.split('-');
 
     if (!split.length) {
@@ -164,26 +166,17 @@ export const useTTSText = (
       )}`;
     }
 
-    const symbol = split[0]?.split('').join('-');
+    const symbol = split[0]?.split('').join(' ');
     const num = split[2]
       ? `${Number(split[1])}-${Number(split[2])}`
       : Number(split[1]).toString();
 
     return `${
-      nextStationNumber.lineSymbol.length || theme === APP_THEME.JR_WEST
+      nextStationNumber.lineSymbol?.length || theme === APP_THEME.JR_WEST
         ? ''
         : 'Station Number '
     }${symbol} ${num}.`;
   }, [nextStationNumber, theme]);
-
-  const connectedLines = useMemo(
-    () =>
-      connectedLinesOrigin?.map((l) => ({
-        ...l,
-        nameRoman: l.nameRoman,
-      })),
-    [connectedLinesOrigin]
-  );
 
   const nextStation = useMemo(
     () =>
@@ -203,17 +196,21 @@ export const useTTSText = (
 
   const afterNextStationOrigin = useAfterNextStation();
   const afterNextStation = useMemo<Station | undefined>(() => {
-    return (
-      afterNextStationOrigin &&
-      new Station({
-        ...afterNextStationOrigin,
-        nameRoman: afterNextStationOrigin?.nameRoman,
-        lines: afterNextStationOrigin.lines.map((l) => ({
-          ...l,
-          nameRoman: l.nameRoman,
-        })),
-      })
-    );
+    if (!afterNextStationOrigin) {
+      return undefined;
+    }
+
+    return {
+      ...afterNextStationOrigin,
+      nameRoman: afterNextStationOrigin?.nameRoman ?? undefined,
+      lines:
+        afterNextStationOrigin.lines?.map(
+          (l: { nameRoman: string | null | undefined }) => ({
+            ...l,
+            nameRoman: l.nameRoman ?? undefined,
+          })
+        ) ?? [],
+    } as Station;
   }, [afterNextStationOrigin]);
 
   const nextStationIndex = useMemo(
@@ -247,7 +244,9 @@ export const useTTSText = (
   const viaStation = useMemo(() => {
     const sortedStops = allStops
       .slice()
-      .sort((a, b) => (a.lines.length < b.lines.length ? 1 : -1));
+      .sort((a, b) =>
+        (a.lines?.length ?? 0) < (b.lines?.length ?? 0) ? 1 : -1
+      );
 
     if (allStops[allStops.length - 1]?.id === sortedStops[0]?.id) {
       return; // 終着駅と同じ駅の場合undefinedを返す
@@ -861,7 +860,7 @@ export const useTTSText = (
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.`
+                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -976,10 +975,10 @@ export const useTTSText = (
                       } will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${
-            nextStationNumber?.lineSymbol.length
-              ? `station number ${nextStationNumberText}`
-              : ''
+          }The next stop is ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}${
+            nextStationNumber?.lineSymbol?.length
+              ? ` station number ${nextStationNumberText.replace(/\.$/, '')}.`
+              : '.'
           } ${
             transferLines.length
               ? `Transfer here for ${transferLines
@@ -994,9 +993,9 @@ export const useTTSText = (
           ARRIVING: `We will soon be making a brief stop at ${
             nextStation?.nameRoman
           }${
-            nextStationNumber?.lineSymbol.length
-              ? ` station number ${nextStationNumberText}`
-              : ''
+            nextStationNumber?.lineSymbol?.length
+              ? ` station number ${nextStationNumberText.replace(/\.$/, '')}.`
+              : '.'
           } ${
             transferLines.length
               ? `Transfer here for ${transferLines
@@ -1049,7 +1048,7 @@ export const useTTSText = (
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${
                   afterNextStation.nameRoman
-                }${isNextStopTerminus ? ' the last stop' : ''}.`
+                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -1078,8 +1077,6 @@ export const useTTSText = (
           ARRIVING: `We will soon be arriving at ${
             nextStation?.nameRoman
           }${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${nextStationNumberText}. ${
-            isNextStopTerminus ? 'The last stop.' : ''
-          } ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
@@ -1110,7 +1107,7 @@ export const useTTSText = (
       nextStation?.groupId,
       selectedBound?.groupId,
       nextStation?.nameRoman,
-      nextStationNumber?.lineSymbol.length,
+      nextStationNumber?.lineSymbol?.length,
       nextStationNumberText,
       selectedBound,
       transferLines,

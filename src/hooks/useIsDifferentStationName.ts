@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
-import type { Line, Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
 import { isEnAtom } from '../store/selectors/isEn';
 
 export const useIsDifferentStationName = () => {
@@ -37,8 +37,7 @@ export const useIsDifferentStationName = () => {
         );
       }
 
-      // nameだと市ヶ谷と市ケ谷の違い程度でも違うものとなってしまうのでよみがなで判別する
-      return station.nameKatakana !== line.station.nameKatakana;
+      return station.name !== line.station.name;
     },
     [isEn]
   );

@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { Line, type Station } from '~/gen/proto/stationapi_pb';
+import type { Line, Station } from '~/@types/graphql';
+import { isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import stationState from '../store/atoms/station';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
@@ -11,7 +12,7 @@ type Option = {
 };
 
 export const useTransferLinesFromStation = (
-  station: Station | null,
+  station: Station | undefined,
   option?: Option
 ): Line[] => {
   const { omitRepeatingLine, omitJR } = option ?? {
@@ -24,14 +25,15 @@ export const useTransferLinesFromStation = (
   const transferLines = useMemo(
     () =>
       station?.lines
+        ?.filter((line) => !isBusLine(line))
         ?.filter((line) => line.id !== station.line?.id)
         // カッコを除いて路線名が同じということは、
         // データ上の都合で路線が分かれているだけなので除外する
         // ex. JR神戸線(大阪～神戸) と JR神戸線(神戸～姫路) は実質同じ路線
         .filter(
           (line) =>
-            line.nameShort.replace(parenthesisRegexp, '') !==
-            station.line?.nameShort.replace(parenthesisRegexp, '')
+            line.nameShort?.replace(parenthesisRegexp, '') !==
+            station.line?.nameShort?.replace(parenthesisRegexp, '')
         )
         .filter((line) => {
           const currentStationIndex = stations.findIndex(
@@ -42,10 +44,10 @@ export const useTransferLinesFromStation = (
           if (!prevStation || !nextStation) {
             return true;
           }
-          const hasSameLineInPrevStationLine = prevStation.lines.some(
+          const hasSameLineInPrevStationLine = prevStation.lines?.some(
             (pl) => pl.id === line.id
           );
-          const hasSameLineInNextStationLine = nextStation.lines.some(
+          const hasSameLineInNextStationLine = nextStation.lines?.some(
             (nl) => nl.id === line.id
           );
 
@@ -78,17 +80,17 @@ export const useTransferLinesFromStation = (
     return omitJRLinesIfThresholdExceeded(transferLines ?? [])
       .map((l) => ({
         ...l,
-        nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+        nameShort: l.nameShort?.replace(parenthesisRegexp, ''),
         nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
       }))
-      .map((l) => new Line(l));
+      .map((l) => l);
   }
 
   return (transferLines ?? [])
     .map((l) => ({
       ...l,
-      nameShort: l.nameShort.replace(parenthesisRegexp, ''),
+      nameShort: l.nameShort?.replace(parenthesisRegexp, ''),
       nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
     }))
-    .map((l) => new Line(l));
+    .map((l) => l);
 };

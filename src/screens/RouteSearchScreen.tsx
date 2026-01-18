@@ -1,134 +1,245 @@
-import { useMutation, useQuery } from '@connectrpc/connect-query';
-import { StackActions, useNavigation } from '@react-navigation/native';
-import { useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  type NativeSyntheticEvent,
-  Platform,
-  StyleSheet,
-  TextInput,
-  type TextInputChangeEventData,
-  type TextInputKeyPressEventData,
-  View,
-} from 'react-native';
+import { useLazyQuery } from '@apollo/client/react';
+import { Orientation } from 'expo-screen-orientation';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
-import type { Route, Station } from '~/gen/proto/stationapi_pb';
+import Animated, {
+  LinearTransition,
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { Station, TrainType } from '~/@types/graphql';
+import { CommonCard } from '~/components/CommonCard';
+import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
+import { EmptyResult } from '~/components/EmptyResult';
+import FooterTabBar from '~/components/FooterTabBar';
+import { Heading } from '~/components/Heading';
+import { NowHeader } from '~/components/NowHeader';
+import { SearchBar } from '~/components/SearchBar';
+import { SelectBoundModal } from '~/components/SelectBoundModal';
+import { TrainTypeListModal } from '~/components/TrainTypeListModal';
+import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import {
-  getRoutes,
-  getStationByIdList,
-  getStationsByName,
-} from '~/gen/proto/stationapi-StationAPI_connectquery';
-import FAB from '../components/FAB';
-import { Heading } from '../components/Heading';
-import { RouteListModal } from '../components/RouteListModal';
-import { StationList } from '../components/StationList';
-import { FONTS } from '../constants';
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+  GET_ROUTE_TYPES,
+  GET_STATIONS_BY_NAME,
+} from '~/lib/graphql/queries';
+import navigationState from '~/store/atoms/navigation';
+import isTablet from '~/utils/isTablet';
 import {
-  useCurrentStation,
-  useGetStationsWithTermination,
-  useThemeStore,
-  useTrainTypeStations,
-} from '../hooks';
-import type { LineDirection } from '../models/Bound';
-import { APP_THEME } from '../models/Theme';
+  computeCurrentStationInRoutes,
+  getStationWithMatchingLine,
+} from '~/utils/routeSearch';
+import { findLocalType } from '~/utils/trainTypeString';
 import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { translate } from '../translation';
-import { groupStations } from '../utils/groupStations';
-import { RFValue } from '../utils/rfValue';
+import { isLEDThemeAtom } from '../store/atoms/theme';
+import { isJapanese, translate } from '../translation';
+
+type GetRouteTypesData = {
+  routeTypes: {
+    nextPageToken: string | null;
+    trainTypes: TrainType[];
+  };
+};
+
+type GetRouteTypesVariables = {
+  fromStationGroupId: number;
+  toStationGroupId: number;
+  pageSize?: number;
+  pageToken?: string;
+  viaLineId?: number;
+};
+
+type GetStationsByNameData = {
+  stationsByName: Station[];
+};
+
+type GetStationsByNameVariables = {
+  name: string;
+  limit?: number;
+  fromStationGroupId?: number;
+};
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
 
 const styles = StyleSheet.create({
   root: {
-    paddingHorizontal: 48,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
     flex: 1,
-    alignItems: 'center',
   },
-  settingItem: {
-    width: '65%',
-    height: '100%',
-    alignItems: 'center',
+  nonLEDBg: {
+    backgroundColor: '#FAFAFA',
   },
-  heading: {
-    marginBottom: 24,
+  listHeaderContainer: {
+    marginTop: 16,
   },
-  stationNameInput: {
-    borderWidth: 1,
-    padding: 12,
-    width: '100%',
-    fontSize: RFValue(14),
+  searchBarContainer: {
+    marginBottom: 48,
   },
-  emptyText: {
-    fontSize: RFValue(16),
-    textAlign: 'center',
-    marginTop: 12,
+  listContainerStyle: {
+    paddingHorizontal: 24,
+    paddingBottom: 128,
+  },
+  searchResultHeading: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 16,
   },
 });
 
 const RouteSearchScreen = () => {
-  const [query, setQuery] = useState('');
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
+  const [selectBoundModalVisible, setSelectBoundModalVisible] = useState(false);
+  const [trainTypeListModalVisible, setTrainTypeListModalVisible] =
+    useState(false);
+  const [searchResults, setSearchResults] = useState<Station[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedDestination, setSelectedDestination] =
+    useState<Station | null>(null);
 
-  const navigation = useNavigation();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
-
-  const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false);
-  const setStationState = useSetAtom(stationState);
-  const setLineState = useSetAtom(lineState);
-  const setNavigationState = useSetAtom(navigationState);
-
-  const currentStation = useCurrentStation();
-  const getTerminatedStations = useGetStationsWithTermination();
-
-  const { mutateAsync: fetchStationByIdList } = useMutation(getStationByIdList);
-
-  const {
-    fetchStations: fetchStationsByLineGroupId,
-    isLoading: isTrainTypesLoading,
-    error: fetchTrainTypesError,
-  } = useTrainTypeStations();
-
-  const {
-    data: byNameData,
-    status: byNameLoadingStatus,
-    mutate: fetchByName,
-    error: byNameError,
-  } = useMutation(getStationsByName);
-
-  const {
-    data: routesData,
-    isLoading: isRoutesLoading,
-    error: fetchRoutesError,
-  } = useQuery(
-    getRoutes,
-    {
-      fromStationGroupId: currentStation?.groupId,
-      toStationGroupId: selectedStation?.groupId,
-    },
-    { enabled: !!currentStation && !!selectedStation }
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const orientation = useDeviceOrientation();
+  const isPortraitOrientation = useMemo(
+    () =>
+      orientation === Orientation.PORTRAIT_UP ||
+      orientation === Orientation.PORTRAIT_DOWN,
+    [orientation]
+  );
+  const numColumns = useMemo(
+    () => (isTablet ? (isPortraitOrientation ? 2 : 3) : 1),
+    [isPortraitOrientation]
   );
 
-  const onPressBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [navigation]);
+  const [{ station, wantedDestination }, setStationState] =
+    useAtom(stationState);
+  const setNavigationState = useSetAtom(navigationState);
+  const [lineAtom, setLineState] = useAtom(lineState);
+  const { pendingLine } = lineAtom;
 
-  const handleSubmit = useCallback(() => {
-    if (!currentStation || !query.trim().length) {
-      return;
-    }
-    fetchByName({
-      stationName: query.trim(),
-      limit: Number(SEARCH_STATION_RESULT_LIMIT),
-      fromStationGroupId: currentStation?.groupId,
-    });
-  }, [currentStation, fetchByName, query]);
+  const scrollY = useSharedValue(0);
+
+  // ウォークスルー関連
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStepId,
+    currentStep,
+    totalSteps,
+    nextStep,
+    goToStep,
+    skipWalkthrough,
+    setSpotlightArea,
+  } = useRouteSearchWalkthrough();
+
+  const searchBarRef = useRef<View>(null);
+  const searchResultsRef = useRef<View>(null);
+  const [searchBarLayout, setSearchBarLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [searchResultsLayout, setSearchResultsLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  // 駅グループが変更されたら検索結果をクリア
+  // biome-ignore lint/correctness/useExhaustiveDependencies: station?.groupId の変更を意図的に監視
+  useEffect(() => {
+    setSearchResults([]);
+    setHasSearched(false);
+  }, [station?.groupId]);
+
+  const [
+    fetchRouteTypes,
+    {
+      data: routeTypesData,
+      loading: fetchRouteTypesLoading,
+      error: fetchRouteTypesError,
+    },
+  ] = useLazyQuery<GetRouteTypesData, GetRouteTypesVariables>(GET_ROUTE_TYPES);
+
+  const [fetchByName, { loading: byNameLoading, error: byNameError }] =
+    useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+      GET_STATIONS_BY_NAME
+    );
+
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
+
+  const [
+    fetchStationsByLineGroupId,
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+      client: fetchStationsByLineGroupIdClient,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+
+  const handleSearch = useCallback(
+    async (query: string) => {
+      if (!station?.groupId) return;
+
+      setSearchResults([]);
+
+      if (!query.trim().length) {
+        setHasSearched(false);
+        return [] as Station[];
+      }
+      setHasSearched(true);
+      const limit = Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10);
+      const result = await fetchByName({
+        variables: {
+          name: query.trim(),
+          limit,
+          fromStationGroupId: station.groupId,
+        },
+      });
+      const stations = result.data?.stationsByName ?? [];
+
+      setSearchResults(stations);
+    },
+    [fetchByName, station?.groupId]
+  );
 
   useEffect(() => {
     if (byNameError) {
@@ -136,228 +247,453 @@ const RouteSearchScreen = () => {
     }
   }, [byNameError]);
 
-  // NOTE: 今いる駅は出なくていい
-  const groupedStations = useMemo(
-    () =>
-      groupStations(byNameData?.stations ?? []).filter(
-        (sta) => sta.groupId !== currentStation?.groupId
-      ),
-    [byNameData?.stations, currentStation?.groupId]
-  );
+  const handleLineSelected = useCallback(
+    async (selectedStation: Station) => {
+      setSelectBoundModalVisible(true);
+      setSelectedDestination(selectedStation);
 
-  const handleStationPress = useCallback(
-    async (stationFromSearch: Station) => {
-      setLineState((prev) => ({
-        ...prev,
-        selectedLine: stationFromSearch.line ?? null,
-      }));
-      setSelectedStation(stationFromSearch);
-      setIsRouteListModalVisible(true);
-    },
-    [setLineState]
-  );
-
-  const onKeyPress = useCallback(
-    (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-      if (e.nativeEvent.key === 'Enter') {
-        handleSubmit();
-      }
-    },
-    [handleSubmit]
-  );
-
-  const onChange = useCallback(
-    (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-      setQuery(e.nativeEvent.text);
-    },
-    []
-  );
-
-  const handleSelect = useCallback(
-    async (route: Route | undefined, asTerminus: boolean) => {
-      const stop = route?.stops.find(
-        (s) => s.groupId === currentStation?.groupId
-      );
-      if (!stop) {
-        return;
-      }
-
-      const trainType = stop.trainType;
-
-      if (!trainType?.id) {
-        const { stations } = await fetchStationByIdList({
-          ids: route?.stops.map((r) => r.id),
-        });
-        const stationInRoute =
-          stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
-
-        const direction: LineDirection | null = (() => {
-          const fromIdx = (stations ?? []).findIndex(
-            (s) => s.groupId === currentStation?.groupId
-          );
-          const toIdx = (stations ?? []).findIndex(
-            (s) => s.groupId === selectedStation?.groupId
-          );
-          if (fromIdx === -1 || toIdx === -1) {
-            return null;
-          }
-          return fromIdx < toIdx ? 'INBOUND' : 'OUTBOUND';
-        })();
-
-        if (!direction) {
-          return;
-        }
-
-        setNavigationState((prev) => ({ ...prev, trainType: null }));
-
-        const terminatedStations = getTerminatedStations(
-          selectedStation,
-          stations ?? []
-        );
-
-        setStationState((prev) => ({
-          ...prev,
-          station: stationInRoute,
-          stations: asTerminus ? terminatedStations : stations,
-          selectedDirection: direction,
-          selectedBound: asTerminus
-            ? direction === 'INBOUND'
-              ? terminatedStations[terminatedStations.length - 1]
-              : terminatedStations[0]
-            : direction === 'INBOUND'
-              ? (stations[stations.length - 1] ?? null)
-              : (stations[0] ?? null),
-        }));
-        navigation.dispatch(
-          StackActions.replace('MainStack', { screen: 'Main' })
-        );
-        return;
-      }
-
-      const { stations } = await fetchStationsByLineGroupId({
-        lineGroupId: trainType.groupId,
-      });
-
-      const station =
-        stations.find((s) => s.groupId === currentStation?.groupId) ?? null;
-
-      const direction: LineDirection | null = (() => {
-        const fromIdx = (stations ?? []).findIndex(
-          (s) => s.groupId === currentStation?.groupId
-        );
-        const toIdx = (stations ?? []).findIndex(
-          (s) => s.groupId === selectedStation?.groupId
-        );
-        if (fromIdx === -1 || toIdx === -1) {
-          return null;
-        }
-        return fromIdx < toIdx ? 'INBOUND' : 'OUTBOUND';
-      })();
-
-      if (!direction) {
-        return;
-      }
-
-      const terminatedStations = getTerminatedStations(
-        selectedStation,
-        stations ?? []
-      );
+      const newPendingLine = selectedStation.line ?? null;
 
       setNavigationState((prev) => ({
         ...prev,
-        trainType,
-        stationForHeader: station,
+        trainType: null,
+        pendingTrainType: null,
       }));
       setStationState((prev) => ({
         ...prev,
-        station,
-        stations: asTerminus ? terminatedStations : stations,
-        selectedDirection: direction,
-        selectedBound: asTerminus
-          ? direction === 'INBOUND'
-            ? terminatedStations[terminatedStations.length - 1]
-            : terminatedStations[0]
-          : direction === 'INBOUND'
-            ? stations[stations.length - 1]
-            : stations[0],
+        pendingStations: [],
+        wantedDestination: null,
       }));
-      navigation.dispatch(
-        StackActions.replace('MainStack', { screen: 'Main' })
+      setLineState((prev) => ({
+        ...prev,
+        pendingLine: newPendingLine,
+      }));
+
+      // Guard: ensure both lineId and stationId are present before calling the query
+      if (
+        !selectedStation.groupId ||
+        !selectedStation.line?.id ||
+        !station?.groupId
+      ) {
+        return;
+      }
+
+      const result = await fetchRouteTypes({
+        variables: {
+          fromStationGroupId: station.groupId,
+          toStationGroupId: selectedStation.groupId,
+          pageSize: Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10),
+          viaLineId: selectedStation.line.id,
+        },
+      });
+
+      const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
+
+      if (!fetchedTrainTypes?.length) {
+        if (!selectedStation.line?.id) {
+          return;
+        }
+        // 列車種別が存在しない場合は選択した行き先駅の路線を使用
+        setLineState((prev) => ({
+          ...prev,
+          pendingLine: selectedStation.line ?? null,
+        }));
+        // 現在の駅の路線情報を選択した路線に合わせて更新
+        const updatedStation = getStationWithMatchingLine(
+          station,
+          selectedStation.line ?? null
+        );
+        setStationState((prev) => ({
+          ...prev,
+          pendingStation: updatedStation,
+          station: updatedStation,
+        }));
+        const stationsByLineIdRes = await fetchStationsByLineId({
+          variables: {
+            lineId: selectedStation.line.id,
+          },
+        });
+        const stations = stationsByLineIdRes.data?.lineStations ?? [];
+        setStationState((prev) => ({
+          ...prev,
+          pendingStations: stations,
+        }));
+        return;
+      }
+
+      // 先に選択される列車種別を決定
+      const localTrainType =
+        findLocalType(fetchedTrainTypes) ?? fetchedTrainTypes[0];
+
+      if (!localTrainType?.groupId) {
+        return;
+      }
+
+      // 選択された列車種別のみを使って路線を決定
+      const newCurrentStation = computeCurrentStationInRoutes(
+        station,
+        newPendingLine,
+        [localTrainType]
       );
+      if (newCurrentStation) {
+        setStationState((prev) => {
+          const isSamePendingStation =
+            prev.pendingStation?.groupId === newCurrentStation.groupId;
+          const isSameStationLine =
+            prev.station?.line?.id === newCurrentStation.line?.id;
+
+          if (isSamePendingStation && isSameStationLine) {
+            return prev;
+          }
+          return {
+            ...prev,
+            pendingStation: isSamePendingStation
+              ? prev.pendingStation
+              : newCurrentStation,
+            // stationのlineも列車種別とマッチする路線に更新
+            station: prev.station
+              ? { ...prev.station, line: newCurrentStation.line }
+              : prev.station,
+          };
+        });
+        // pendingLineを現在の駅にマッチする路線に更新
+        if (newCurrentStation.line) {
+          setLineState((prev) => ({
+            ...prev,
+            pendingLine: newCurrentStation.line ?? null,
+          }));
+        }
+      }
+
+      const stationsByLineGroupIdRes = await fetchStationsByLineGroupId({
+        variables: { lineGroupId: localTrainType.groupId },
+      });
+      const stations = stationsByLineGroupIdRes.data?.lineGroupStations ?? [];
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations: stations,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        fetchedTrainTypes,
+        pendingTrainType: localTrainType,
+      }));
     },
     [
-      currentStation?.groupId,
-      fetchStationByIdList,
+      station,
+      fetchStationsByLineId,
       fetchStationsByLineGroupId,
-      navigation,
-      selectedStation?.groupId,
+      fetchRouteTypes,
       setNavigationState,
       setStationState,
-      selectedStation,
-      getTerminatedStations,
+      setLineState,
     ]
   );
 
+  const renderCard = useCallback(
+    (item: Station) => {
+      const line = item.line;
+
+      if (!line) return null;
+
+      return (
+        <CommonCard
+          targetStation={item}
+          line={line}
+          title={
+            isJapanese ? item.name || undefined : item.nameRoman || undefined
+          }
+          subtitle={
+            isJapanese
+              ? line.nameShort || undefined
+              : line.nameRoman || undefined
+          }
+          onPress={() => handleLineSelected(item)}
+        />
+      );
+    },
+    [handleLineSelected]
+  );
+
+  const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
+    if (!isTablet || count <= 0) {
+      return null;
+    }
+
+    return Array.from({ length: count }).map((_, i) => (
+      <Animated.View
+        layout={LinearTransition.springify()}
+        // biome-ignore lint/suspicious/noArrayIndexKey: プレースホルダーは静的で順序が変わらないため問題なし
+        key={`placeholder-${rowIndex}-${i}`}
+        style={{ flex: 1 }}
+      />
+    ));
+  }, []);
+
+  const renderStationRow = useCallback(
+    (rowStations: Station[], rowIndex: number) => {
+      return (
+        <>
+          {rowIndex > 0 && <EmptyLineSeparator />}
+          <Animated.View
+            layout={LinearTransition.springify()}
+            style={
+              isTablet
+                ? {
+                    flexDirection: 'row',
+                    gap: 16,
+                  }
+                : undefined
+            }
+          >
+            {rowStations.map((item, colIndex) => {
+              return (
+                <Animated.View
+                  layout={LinearTransition.springify()}
+                  key={item.id ?? `station-${rowIndex}-${colIndex}`}
+                  style={isTablet ? { flex: 1 } : undefined}
+                >
+                  {renderCard(item)}
+                </Animated.View>
+              );
+            })}
+            {renderPlaceholders(rowIndex, numColumns - rowStations.length)}
+          </Animated.View>
+        </>
+      );
+    },
+    [numColumns, renderCard, renderPlaceholders]
+  );
+
+  const handleTrainTypeSelected = useCallback(
+    async (trainType: TrainType) => {
+      if (!trainType.groupId) return;
+
+      setSelectBoundModalVisible(true);
+
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingTrainType: trainType,
+      }));
+
+      fetchStationsByLineGroupIdClient.cache.evict({
+        fieldName: 'lineGroupStations',
+        args: { lineGroupId: trainType.groupId },
+      });
+      fetchStationsByLineGroupIdClient.cache.gc();
+
+      const pendingStationsData = await fetchStationsByLineGroupId({
+        variables: {
+          lineGroupId: trainType.groupId,
+        },
+      });
+      const pendingStations = pendingStationsData.data?.lineGroupStations ?? [];
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations,
+      }));
+    },
+    [
+      fetchStationsByLineGroupId,
+      setStationState,
+      setNavigationState,
+      fetchStationsByLineGroupIdClient,
+    ]
+  );
+
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
+
+  const currentStationInRoutes = useMemo<Station | null>(
+    () =>
+      computeCurrentStationInRoutes(
+        station,
+        pendingLine,
+        routeTypesData?.routeTypes?.trainTypes ?? []
+      ),
+    [station, pendingLine, routeTypesData?.routeTypes]
+  );
+
+  // ウォークスルーのレイアウト計測
+  const measureSearchBar = useCallback(() => {
+    if (searchBarRef.current) {
+      searchBarRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setSearchBarLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const measureSearchResults = useCallback(() => {
+    if (searchResultsRef.current) {
+      searchResultsRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setSearchResultsLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  // ステップが変わった時にレイアウトを再計測
+  useEffect(() => {
+    if (currentStepId === 'routeSearchBar') {
+      // 少し遅延させてレイアウトが安定してから計測
+      const timer = setTimeout(() => {
+        measureSearchBar();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureSearchBar]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchResults') {
+      const timer = setTimeout(() => {
+        measureSearchResults();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureSearchResults]);
+
+  // ウォークスルーのスポットライト設定
+  useEffect(() => {
+    if (currentStepId === 'routeSearchBar' && searchBarLayout) {
+      setSpotlightArea({
+        x: searchBarLayout.x,
+        y: searchBarLayout.y,
+        width: searchBarLayout.width,
+        height: searchBarLayout.height,
+        borderRadius: 8,
+      });
+    }
+  }, [currentStepId, searchBarLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchResults' && searchResultsLayout) {
+      setSpotlightArea({
+        x: searchResultsLayout.x,
+        y: searchResultsLayout.y,
+        width: searchResultsLayout.width,
+        height: Math.min(searchResultsLayout.height, 200),
+        borderRadius: 12,
+      });
+    }
+  }, [currentStepId, searchResultsLayout, setSpotlightArea]);
+
   return (
     <>
-      <View
-        style={{
-          ...styles.root,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-        }}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.settingItem}
+      <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
+        <Animated.ScrollView
+          style={StyleSheet.absoluteFill}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={[
+            styles.listContainerStyle,
+            nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
+          ]}
         >
-          <Heading style={styles.heading}>
-            {translate('routeSearchTitle')}
-          </Heading>
-          <TextInput
-            placeholder={translate('searchDestinationPlaceholder')}
-            value={query}
-            style={{
-              ...styles.stationNameInput,
-              borderColor: isLEDTheme ? '#fff' : '#aaa',
-              color: isLEDTheme ? '#fff' : '#000',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
-            placeholderTextColor={isLEDTheme ? '#fff' : undefined}
-            onChange={onChange}
-            onSubmitEditing={handleSubmit}
-            onKeyPress={onKeyPress}
-          />
-          {byNameLoadingStatus === 'pending' ? (
+          <View style={styles.listHeaderContainer}>
             <View
-              style={{
-                ...StyleSheet.absoluteFillObject,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
+              ref={searchBarRef}
+              style={styles.searchBarContainer}
+              onLayout={measureSearchBar}
             >
-              <ActivityIndicator size="large" />
+              <SearchBar onSearch={handleSearch} />
             </View>
-          ) : (
-            <StationList
-              withoutTransfer
-              fromRoutes
-              data={groupedStations}
-              onSelect={handleStationPress}
-            />
-          )}
-        </KeyboardAvoidingView>
-      </View>
-      <FAB onPress={onPressBack} icon="close" disabled={isTrainTypesLoading} />
-      {selectedStation && (
-        <RouteListModal
-          finalStation={selectedStation}
-          routes={routesData?.routes ?? []}
-          visible={isRouteListModalVisible}
-          isRoutesLoading={isRoutesLoading}
-          isTrainTypesLoading={isTrainTypesLoading}
-          error={fetchRoutesError || fetchTrainTypesError}
-          onClose={() => setIsRouteListModalVisible(false)}
-          onSelect={handleSelect}
+            <Heading style={styles.searchResultHeading}>
+              {translate('searchResult')}
+            </Heading>
+          </View>
+
+          <View ref={searchResultsRef} onLayout={measureSearchResults}>
+            {!searchResults.length ? (
+              <EmptyResult
+                loading={byNameLoading || fetchRouteTypesLoading}
+                hasSearched={hasSearched}
+              />
+            ) : (
+              Array.from({
+                length: Math.ceil(searchResults.length / numColumns),
+              }).map((_, rowIndex) => {
+                const rowStations = searchResults.slice(
+                  rowIndex * numColumns,
+                  (rowIndex + 1) * numColumns
+                );
+                const rowKey = rowStations.map((s) => s.id).join('-');
+                return (
+                  <React.Fragment key={rowKey}>
+                    {renderStationRow(rowStations, rowIndex)}
+                  </React.Fragment>
+                );
+              })
+            )}
+          </View>
+
+          <EmptyLineSeparator />
+        </Animated.ScrollView>
+      </SafeAreaView>
+
+      <NowHeader
+        station={station}
+        onLayout={(e) => setNowHeaderHeight(e.nativeEvent.layout.height)}
+        scrollY={scrollY}
+      />
+      {/* フッター */}
+      <FooterTabBar active="search" />
+
+      <SelectBoundModal
+        visible={selectBoundModalVisible}
+        onClose={() => {
+          setSelectBoundModalVisible(false);
+        }}
+        onCloseAnimationEnd={() => {
+          setSelectedDestination(null);
+        }}
+        onBoundSelect={() => {
+          setSelectBoundModalVisible(false);
+          setTrainTypeListModalVisible(false);
+        }}
+        loading={
+          fetchRouteTypesLoading ||
+          fetchStationsByLineIdLoading ||
+          fetchStationsByLineGroupIdLoading
+        }
+        error={
+          fetchRouteTypesError ??
+          fetchStationsByLineIdError ??
+          fetchStationsByLineGroupIdError ??
+          null
+        }
+        onTrainTypeSelect={handleTrainTypeSelected}
+        targetDestination={selectedDestination}
+      />
+      <TrainTypeListModal
+        visible={trainTypeListModalVisible}
+        line={currentStationInRoutes?.line ?? null}
+        destination={wantedDestination}
+        onClose={() => {
+          setTrainTypeListModalVisible(false);
+        }}
+        onSelect={handleTrainTypeSelected}
+        loading={
+          fetchStationsByLineIdLoading ||
+          fetchStationsByLineGroupIdLoading ||
+          fetchRouteTypesLoading
+        }
+      />
+
+      {currentStep && (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={currentStep}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onGoToStep={goToStep}
+          onSkip={skipWalkthrough}
         />
       )}
     </>

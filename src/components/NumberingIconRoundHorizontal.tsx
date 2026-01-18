@@ -12,9 +12,15 @@ type Props = {
   stationNumber: string;
   lineColor: string;
   size?: NumberingIconSize;
+  withOutline?: boolean;
 };
 
 const styles = StyleSheet.create({
+  optionalBorder: {
+    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
     height: isTablet ? 72 * 1.5 : 72,
@@ -98,6 +104,7 @@ const NumberingIconRoundHorizontal: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   lineColor,
   size,
+  withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
@@ -135,15 +142,17 @@ const NumberingIconRoundHorizontal: React.FC<Props> = ({
   }
 
   return (
-    <View style={[styles.root, { borderColor: lineColor }]}>
-      <Typography
-        style={
-          lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
-        }
-      >
-        {lineSymbol}
-        {stationNumber}
-      </Typography>
+    <View style={withOutline ? styles.optionalBorder : undefined}>
+      <View style={[styles.root, { borderColor: lineColor }]}>
+        <Typography
+          style={
+            lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
+          }
+        >
+          {lineSymbol}
+          {stationNumber}
+        </Typography>
+      </View>
     </View>
   );
 };

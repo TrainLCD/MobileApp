@@ -1,10 +1,22 @@
-import { onMessagePublished } from 'firebase-functions/v2/pubsub';
-import { VertexAI } from '@google-cloud/vertexai';
-import type { FeedbackMessage } from '../models/feedback';
-import type { AIReport, FewShotItem } from '../models/ai';
-import dayjs from 'dayjs';
-import type { DiscordEmbed } from '../models/common';
 import { Storage } from '@google-cloud/storage';
+import { VertexAI } from '@google-cloud/vertexai';
+import dayjs from 'dayjs';
+import { onMessagePublished } from 'firebase-functions/v2/pubsub';
+import type { AIReport, FewShotItem } from '../models/ai';
+import type { DiscordEmbed } from '../models/common';
+import type { FeedbackMessage } from '../models/feedback';
+
+interface VertexPart {
+  text?: string;
+}
+
+interface VertexCandidate {
+  content?: { parts?: VertexPart[] };
+}
+
+interface VertexResponse {
+  response?: { candidates?: VertexCandidate[] };
+}
 
 const GITHUB_LABELS = {
   PLATFORM_IOS: '🍎 iOS',
@@ -63,7 +75,7 @@ function looksLikeSpam(text: string) {
   // Long run without sentence-ending punctuation but with announcement tokens
   if (
     t.length >= 40 &&
-    !/[。．\.!?！？]/.test(t) &&
+    !/[。．.!?！？]/.test(t) &&
     /(次は|まもなく|行きです)/.test(t)
   ) {
     score += 0.5;
@@ -121,7 +133,7 @@ async function generateWithRetry(
   const compactFew = half
     .map((b) =>
       b.length > FEW_SHOT_PER_EX_MAX
-        ? b.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
+        ? `${b.slice(0, FEW_SHOT_PER_EX_MAX - 1)}…`
         : b
     )
     .join('\n\n');
@@ -134,21 +146,22 @@ async function generateWithRetry(
   return res;
 }
 
-function extractTextFromVertex(result: any): string {
+function extractTextFromVertex(result: VertexResponse): string {
   // Vertex返却の差分に強い安全抽出
   const parts =
     result?.response?.candidates?.flatMap(
-      (c: any) => c?.content?.parts ?? []
+      (c: VertexCandidate) => c?.content?.parts ?? []
     ) ?? [];
-  const txt = parts.find((p: any) => typeof p?.text === 'string')?.text;
+  const txt = parts.find((p: VertexPart) => typeof p?.text === 'string')?.text;
   return typeof txt === 'string' ? txt : '{}';
 }
 
-function coerceReport(raw: any, titleMax = 72): AIReport {
+function coerceReport(raw: unknown, titleMax = 72): AIReport {
   const norm = (k: string) =>
     String(k).toLowerCase().replace(/\s+/g, '').trim();
-  const map = new Map<string, any>();
-  for (const [k, v] of Object.entries(raw || {})) map.set(norm(k), v);
+  const map = new Map<string, unknown>();
+  const entries = raw && typeof raw === 'object' ? Object.entries(raw) : [];
+  for (const [k, v] of entries) map.set(norm(k), v);
 
   const getStr = (k: string, d = '') => String(map.get(k) ?? d).trim();
   const getNum = (k: string, d = 0.5) => {
@@ -164,12 +177,15 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
   let title = getStr('title');
   let summary = getStr('summary');
   const isSpam = getBool('isSpam');
-  const labels = Array.isArray(map.get('labels')) ? map.get('labels') : [];
+  const rawLabels = map.get('labels');
+  const labels: string[] = Array.isArray(rawLabels)
+    ? rawLabels.filter((l): l is string => typeof l === 'string')
+    : [];
   const confidence = getNum('confidence', 0.5);
   const reason = getStr('reason');
 
   if (!title) title = '要約未取得';
-  if (title.length > titleMax) title = title.slice(0, titleMax - 1) + '…';
+  if (title.length > titleMax) title = `${title.slice(0, titleMax - 1)}…`;
   if (!summary) summary = '';
 
   return { title, summary, isSpam, labels, confidence, reason };
@@ -243,7 +259,7 @@ async function loadFewShotFromGCS(): Promise<string | null> {
   const blocks = shuffled.map((it) => {
     const block = `Input:\n${String(it.input)}\nOutput:\n${String(it.output)}`;
     return block.length > FEW_SHOT_PER_EX_MAX
-      ? block.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
+      ? `${block.slice(0, FEW_SHOT_PER_EX_MAX - 1)}…`
       : block;
   });
   return blocks.join('\n\n');
@@ -299,7 +315,7 @@ export const feedbackTriageWorker = onMessagePublished(
       report.description
     );
 
-    const text = extractTextFromVertex(vertexRes as any);
+    const text = extractTextFromVertex(vertexRes as VertexResponse);
     const raw = (() => {
       try {
         const m = text.match(/\{[\s\S]*\}/);

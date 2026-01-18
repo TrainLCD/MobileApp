@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { type StationNumber, TrainTypeKind } from '~/gen/proto/stationapi_pb';
+import { type StationNumber, TrainTypeKind } from '~/@types/graphql';
 import { JOBAN_LINE_IDS } from '../constants';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -28,27 +28,29 @@ export const useNumbering = (
   const getStationNumberIndex = useStationNumberIndexFunc();
 
   const targetStation = useMemo(
-    () => (firstStop ? selectedBound : stoppedCurrentStation),
+    () => (firstStop ? (selectedBound ?? undefined) : stoppedCurrentStation),
     [firstStop, selectedBound, stoppedCurrentStation]
   );
 
   const currentStationNumberIndex = useMemo(
     () =>
       getStationNumberIndex(
-        targetStation ?? null,
+        targetStation,
         firstStop ? selectedBound?.line : undefined
       ),
     [firstStop, getStationNumberIndex, selectedBound?.line, targetStation]
   );
   const nextStationNumberIndex = useMemo(
-    () => getStationNumberIndex(nextStation ?? null),
+    () => getStationNumberIndex(nextStation),
     [getStationNumberIndex, nextStation]
   );
 
   const isJobanLineRapid = useMemo(
     () =>
       currentLine &&
-      JOBAN_LINE_IDS.includes(currentLine?.id) &&
+      currentLine.id !== undefined &&
+      currentLine.id !== null &&
+      JOBAN_LINE_IDS.includes(currentLine.id) &&
       (trainType?.kind === TrainTypeKind.Rapid ||
         trainType?.kind === TrainTypeKind.HighSpeedRapid),
     [currentLine, trainType?.kind]
@@ -68,7 +70,7 @@ export const useNumbering = (
 
     if (priorCurrent && !getIsPass(targetStation)) {
       if (isJobanLineRapid) {
-        const jjNumber = targetStation.stationNumbers.find(
+        const jjNumber = targetStation.stationNumbers?.find(
           (num) => num.lineSymbol === 'JJ'
         );
         if (jjNumber) {
@@ -80,7 +82,7 @@ export const useNumbering = (
         );
       }
 
-      setThreeLetterCode(targetStation?.threeLetterCode);
+      setThreeLetterCode(targetStation?.threeLetterCode ?? undefined);
       return;
     }
 
@@ -88,7 +90,7 @@ export const useNumbering = (
     // 到着していない場合は無条件で次の駅の番号を表示する
     if ((arrived && getIsPass(currentStation)) || !arrived) {
       if (isJobanLineRapid) {
-        const jjNumber = nextStation?.stationNumbers.find(
+        const jjNumber = nextStation?.stationNumbers?.find(
           (num) => num.lineSymbol === 'JJ'
         );
 
@@ -99,12 +101,12 @@ export const useNumbering = (
         setStationNumber(nextStation?.stationNumbers?.[nextStationNumberIndex]);
       }
 
-      setThreeLetterCode(nextStation?.threeLetterCode);
+      setThreeLetterCode(nextStation?.threeLetterCode ?? undefined);
       return;
     }
 
     if (isJobanLineRapid) {
-      const jjNumber = targetStation?.stationNumbers.find(
+      const jjNumber = targetStation?.stationNumbers?.find(
         (num) => num.lineSymbol === 'JJ'
       );
       if (jjNumber) {
@@ -115,7 +117,7 @@ export const useNumbering = (
         targetStation?.stationNumbers?.[currentStationNumberIndex]
       );
     }
-    setThreeLetterCode(targetStation?.threeLetterCode);
+    setThreeLetterCode(targetStation?.threeLetterCode ?? undefined);
   }, [
     arrived,
     currentStation,

@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import type { Station } from '~/@types/graphql';
 import { TOEI_OEDO_LINE_ID } from '../constants';
 import {
   TOEI_OEDO_LINE_RYOGOKU_STATION_ID,
@@ -16,10 +17,11 @@ import { useLoopLine } from './useLoopLine';
 export const useBoundText = (
   excludePrefixAndSuffix?: boolean
 ): Record<HeaderLangState, string> => {
-  const { selectedBound, selectedDirection } = useAtomValue(stationState);
+  const { selectedBound, selectedDirection, stations } =
+    useAtomValue(stationState);
 
   const { isLoopLine } = useLoopLine();
-  const { directionalStops } = useBounds();
+  const { directionalStops } = useBounds(stations);
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
 
@@ -40,7 +42,7 @@ export const useBoundText = (
     ) {
       if (
         selectedDirection === 'INBOUND' &&
-        currentStation.id >= TOEI_OEDO_LINE_RYOGOKU_STATION_ID &&
+        (currentStation.id ?? 0) >= TOEI_OEDO_LINE_RYOGOKU_STATION_ID &&
         !excludePrefixAndSuffix
       ) {
         return {
@@ -52,7 +54,7 @@ export const useBoundText = (
       }
       if (
         selectedDirection === 'OUTBOUND' &&
-        currentStation.id <= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID &&
+        (currentStation.id ?? 0) <= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID &&
         !excludePrefixAndSuffix
       ) {
         return {
@@ -78,20 +80,20 @@ export const useBoundText = (
 
     if (excludePrefixAndSuffix) {
       return {
-        JA: directionalStops.map((s) => s.name).join('・'),
-        EN: directionalStops.map((s) => s.nameRoman).join(' & '),
-        ZH: directionalStops.map((s) => s.nameChinese).join('・'),
-        KO: directionalStops.map((s) => s.nameKorean).join('・'),
+        JA: directionalStops.map((s: Station) => s.name).join('・'),
+        EN: directionalStops.map((s: Station) => s.nameRoman).join(' & '),
+        ZH: directionalStops.map((s: Station) => s.nameChinese).join('・'),
+        KO: directionalStops.map((s: Station) => s.nameKorean).join('・'),
       };
     }
 
     return {
-      JA: `${directionalStops.map((s) => s.name).join('・')} ${
+      JA: `${directionalStops.map((s: Station) => s.name).join('・')} ${
         isLoopLine ? '方面' : 'ゆき'
       }`,
-      EN: `for ${directionalStops.map((s) => s.nameRoman).join(' & ')}`,
-      ZH: `开往 ${directionalStops.map((s) => s.nameChinese).join('・')}`,
-      KO: `${directionalStops.map((s) => s.nameKorean).join('・')} 행`,
+      EN: `for ${directionalStops.map((s: Station) => s.nameRoman).join(' & ')}`,
+      ZH: `开往 ${directionalStops.map((s: Station) => s.nameChinese).join('・')}`,
+      KO: `${directionalStops.map((s: Station) => s.nameKorean).join('・')} 행`,
     };
   }, [
     currentStation,

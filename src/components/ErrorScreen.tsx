@@ -1,10 +1,11 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
+import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { STATUS_URL } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -64,17 +65,24 @@ const ErrorScreen: React.FC<Props> = ({
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
   const navigation = useNavigation();
   const handleToStationSearch = useCallback(
-    () => navigation.dispatch(StackActions.replace('FakeStation')),
+    () =>
+      navigation.dispatch(
+        StackActions.replace('MainStack', {
+          screen: 'SelectLine',
+        })
+      ),
     [navigation]
   );
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <SafeAreaView
-      style={{
-        ...styles.root,
-        backgroundColor: isLEDTheme ? '#212121' : '#fff',
-      }}
+      style={[
+        styles.root,
+        {
+          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+        },
+      ]}
     >
       <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
       <Typography style={styles.text}>{text}</Typography>
@@ -97,7 +105,7 @@ const ErrorScreen: React.FC<Props> = ({
             style={styles.button}
           >
             <Typography style={styles.buttonText}>
-              {translate('searchFirstStationTitle')}
+              {translate('home')}
             </Typography>
           </TouchableOpacity>
         ) : null}

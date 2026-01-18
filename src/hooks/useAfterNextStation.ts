@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
@@ -15,8 +15,7 @@ export const useAfterNextStation = () => {
     () =>
       Array.from(new Set(slicedStationsOrigin.map((s) => s.groupId)))
         .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-        .filter((s) => !!s)
-        .map((s) => new Station(s)),
+        .filter((s): s is Station => !!s),
     [slicedStationsOrigin]
   );
 

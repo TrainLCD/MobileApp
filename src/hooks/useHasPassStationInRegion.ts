@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import type { Station } from '~/gen/proto/stationapi_pb';
+import type { Station } from '~/@types/graphql';
 import getIsPass from '../utils/isPass';
 
 export const useHasPassStationInRegion = (
   stations: Station[],
-  prevStation: Station | null,
-  nextStation: Station | null
+  prevStation: Station | undefined,
+  nextStation: Station | undefined
 ): boolean => {
   const prevStationIndex = useMemo(
     () => stations.findIndex((s) => s.groupId === prevStation?.groupId),

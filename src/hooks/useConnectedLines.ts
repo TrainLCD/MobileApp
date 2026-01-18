@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
+import type { Line } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
-import { Line } from '~/gen/proto/stationapi_pb';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 
@@ -15,8 +15,7 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
       stations
         .map((s) => s.line)
         .filter((l) => !!l)
-        .filter((line, idx, arr) => arr[idx - 1]?.id !== line?.id)
-        .map((l) => new Line(l)) ?? [],
+        .filter((line, idx, arr) => arr[idx - 1]?.id !== line?.id) ?? [],
     [stations]
   );
 
@@ -25,8 +24,8 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
       lines.filter(
         // 乗車中の路線と同じ名前の路線をしばき倒す
         (l) =>
-          l.nameShort.replace(parenthesisRegexp, '') !==
-          currentLine?.nameShort.replace(parenthesisRegexp, '')
+          l.nameShort?.replace(parenthesisRegexp, '') !==
+          currentLine?.nameShort?.replace(parenthesisRegexp, '')
       ),
     [currentLine?.nameShort]
   );
@@ -52,18 +51,18 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
             .map((_, i) => belongLines.slice().reverse()[i])
             .map((l) => ({
               ...l,
-              name: l.nameShort.replace(parenthesisRegexp, ''),
+              name: l.nameShort?.replace(parenthesisRegexp, ''),
             }))
-            .map((l) => new Line(l))
+            .map((l) => l)
             .reverse()
         : joinedLineIds
             .slice(0, currentLineIndex)
             .map((_, i) => belongLines[i])
             .map((l) => ({
               ...l,
-              name: l.nameShort.replace(parenthesisRegexp, ''),
+              name: l.nameShort?.replace(parenthesisRegexp, ''),
             }))
-            .map((l) => new Line(l))
+            .map((l) => l)
             .reverse();
     const companyDuplicatedLines = notGroupedJoinedLines
       .filter((l, i, arr) => l.company?.id === arr[i - 1]?.company?.id)
@@ -97,7 +96,7 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
       .reduce<Line[]>((acc, cur, idx, arr) => {
         // 直通先が1つしかなければ別に計算する必要はない
         if (arr.length === 1) {
-          return [new Line(cur)];
+          return [cur];
         }
 
         // 処理中の路線がグループ化されていない配列の何番目にあるか調べる
@@ -137,8 +136,8 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
         (l, i, arr) =>
           arr.findIndex(
             (jl) =>
-              l.nameShort.replace(parenthesisRegexp, '') ===
-              jl.nameShort.replace(parenthesisRegexp, '')
+              l.nameShort?.replace(parenthesisRegexp, '') ===
+              jl.nameShort?.replace(parenthesisRegexp, '')
           ) === i
       )
     );

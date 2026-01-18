@@ -1,9 +1,9 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
 import {
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,9 +13,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FONTS } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { ASYNC_STORAGE_KEYS, FONTS } from '~/constants';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -26,7 +25,7 @@ import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
-    height: Dimensions.get('screen').height,
+    height: '100%',
     paddingVertical: 24,
   },
   settingItem: {
@@ -65,7 +64,7 @@ const styles = StyleSheet.create({
 
 const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useAtom(tuningState);
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
@@ -139,17 +138,47 @@ const TuningSettings: React.FC = () => {
       untouchableModeEnabled: !prev.untouchableModeEnabled,
     }));
 
+  const toggleTelemetryEnabled = () => {
+    if (settings.telemetryEnabled) {
+      AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED, 'false');
+      setSettings((prev) => ({
+        ...prev,
+        telemetryEnabled: !prev.telemetryEnabled,
+      }));
+      return;
+    }
+
+    Alert.alert(translate('notice'), translate('telemetrySettingWillPersist'), [
+      {
+        text: 'OK',
+        onPress: () => {
+          AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED, 'true');
+          setSettings((prev) => ({
+            ...prev,
+            telemetryEnabled: !prev.telemetryEnabled,
+          }));
+        },
+      },
+      {
+        text: translate('cancel'),
+        style: 'cancel',
+      },
+    ]);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={{
-          ...styles.root,
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          paddingLeft: safeAreaLeft || 32,
-          paddingRight: safeAreaRight || 32,
-        }}
+        contentContainerStyle={[
+          styles.root,
+          {
+            backgroundColor: isLEDTheme ? '#212121' : '#fff',
+            paddingLeft: safeAreaLeft || 32,
+            paddingRight: safeAreaRight || 32,
+          },
+        ]}
       >
         <Heading>{translate('tuning')}</Heading>
         <Typography style={styles.settingItemGroupTitle}>
@@ -161,11 +190,13 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : 'black',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             onChangeText={handleHeaderIntervalChange}
             value={settings.headerTransitionInterval.toString()}
             placeholder={settings.headerTransitionInterval.toString()}
@@ -179,11 +210,13 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : 'black',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             onChangeText={handleHeaderDelayChange}
             value={settings.headerTransitionDelay.toString()}
             placeholder={settings.headerTransitionDelay.toString()}
@@ -197,11 +230,13 @@ const TuningSettings: React.FC = () => {
         </Typography>
         <View style={styles.settingItem}>
           <TextInput
-            style={{
-              ...styles.textInput,
-              color: isLEDTheme ? '#fff' : 'black',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
+            style={[
+              styles.textInput,
+              {
+                color: isLEDTheme ? '#fff' : 'black',
+                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              },
+            ]}
             onChangeText={handleBottomDelayChange}
             value={settings.bottomTransitionInterval.toString()}
             placeholder={settings.bottomTransitionInterval.toString()}
@@ -257,6 +292,31 @@ const TuningSettings: React.FC = () => {
             accessibilityRole="button"
           >
             {translate('enableUntouchableMode')}
+          </Typography>
+        </View>
+
+        <View style={styles.switchSettingItem}>
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={settings.telemetryEnabled}
+              onValueChange={toggleTelemetryEnabled}
+              accessibilityLabel={translate('optInTelemetryTitle')}
+            />
+          ) : (
+            <Switch
+              value={settings.telemetryEnabled}
+              onValueChange={toggleTelemetryEnabled}
+              ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('optInTelemetryTitle')}
+            />
+          )}
+
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleTelemetryEnabled}
+            accessibilityRole="button"
+          >
+            {translate('optInTelemetryTitle')}
           </Typography>
         </View>
       </ScrollView>

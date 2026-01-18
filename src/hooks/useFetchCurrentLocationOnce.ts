@@ -1,9 +1,10 @@
 import * as Location from 'expo-location';
+import { useAtomValue } from 'jotai';
 import { useCallback, useState } from 'react';
-import { useLocationStore } from './useLocationStore';
+import { locationAtom } from '~/store/atoms/location';
 
 export const useFetchCurrentLocationOnce = () => {
-  const lastKnownLocation = useLocationStore();
+  const lastKnownLocation = useAtomValue(locationAtom);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
