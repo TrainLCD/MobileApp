@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - feature/prod-deploy-flow
 
 jobs:
   build_android:
