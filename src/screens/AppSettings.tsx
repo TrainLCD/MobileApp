@@ -416,11 +416,13 @@ const AppSettingsScreen: React.FC = () => {
             </View>
           )}
 
-          {/* フッター */}
-          <Typography style={styles.betaNotice}>
-            {isDevApp ? translate('canaryNotice') : ''}
-            {!isDevApp && isBetaBuild ? translate('betaNotice') : ''}
-          </Typography>
+          {/* ビルド情報 */}
+          {isDevApp || isBetaBuild ? (
+            <Typography style={styles.betaNotice}>
+              {isDevApp ? translate('canaryNotice') : ''}
+              {!isDevApp && isBetaBuild ? translate('betaNotice') : ''}
+            </Typography>
+          ) : null}
         </Animated.ScrollView>
       </SafeAreaView>
       <SettingsHeader
