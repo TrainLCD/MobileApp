@@ -13,4 +13,5 @@ declare module 'react-native-dotenv' {
   export const ENABLE_EXPERIMENTAL_TELEMETRY: string;
   export const EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: string;
   export const EXPERIMENTAL_TELEMETRY_TOKEN: string;
+  export const IS_BETA_BUILD: string;
 }

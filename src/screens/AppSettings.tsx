@@ -26,6 +26,7 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
+import { isBetaBuild } from '~/utils/isBetaBuild';
 import { isDevApp } from '~/utils/isDevApp';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -415,10 +416,13 @@ const AppSettingsScreen: React.FC = () => {
             </View>
           )}
 
-          {/* フッター */}
-          <Typography style={styles.betaNotice}>
-            {isDevApp ? translate('canaryNotice') : translate('betaNotice')}
-          </Typography>
+          {/* ビルド情報 */}
+          {isDevApp || isBetaBuild ? (
+            <Typography style={styles.betaNotice}>
+              {isDevApp ? translate('canaryNotice') : ''}
+              {!isDevApp && isBetaBuild ? translate('betaNotice') : ''}
+            </Typography>
+          ) : null}
         </Animated.ScrollView>
       </SafeAreaView>
       <SettingsHeader
