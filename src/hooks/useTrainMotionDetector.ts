@@ -8,12 +8,14 @@ import {
   GRAVITY,
   LOW_PASS_FILTER_ALPHA,
   MIN_SAMPLES_FOR_STATE_CHANGE,
+  MIN_STABLE_DURATION_MS,
   MOTION_SAMPLE_WINDOW_SIZE,
   MOVING_VARIANCE_THRESHOLD,
   STATION_STOP_MIN_DURATION_MS,
   STOP_ACCELERATION_THRESHOLD,
   STOP_DETECTION_WINDOW_SIZE,
   STOPPED_VARIANCE_THRESHOLD,
+  VARIANCE_STABILITY_THRESHOLD,
 } from '~/constants/motion';
 import {
   type AccelerationSample,
@@ -56,6 +58,10 @@ export const useTrainMotionDetector = (): void => {
   const stopStartTimeRef = useRef<number | null>(null);
   // 現在のフェーズをrefで保持（コールバックの依存を安定化）
   const motionPhaseRef = useRef<TrainMotionPhase>(motionState.phase);
+  // 分散の履歴（分散の安定性を計算するため）
+  const varianceHistoryRef = useRef<number[]>([]);
+  // 状態が安定し始めた時刻
+  const stableStartTimeRef = useRef<number | null>(null);
 
   // motionState.phaseが変更されたらrefを更新
   useEffect(() => {
@@ -130,6 +136,24 @@ export const useTrainMotionDetector = (): void => {
   );
 
   /**
+   * 分散の安定性を計算（分散自体の変動を見る）
+   * 電車の振動は一定だが、手の揺れは不規則
+   */
+  const calculateVarianceStability = useCallback(
+    (varianceHistory: number[]): number => {
+      if (varianceHistory.length < 5) return 1; // 十分な履歴がない場合は不安定とみなす
+
+      const mean =
+        varianceHistory.reduce((a, b) => a + b, 0) / varianceHistory.length;
+      const squaredDiffs = varianceHistory.map((v) => (v - mean) ** 2);
+      return Math.sqrt(
+        squaredDiffs.reduce((a, b) => a + b, 0) / varianceHistory.length
+      );
+    },
+    []
+  );
+
+  /**
    * 平均加速度を計算（進行方向の加速度を推定）
    * 移動平均の変化率から加速/減速を判定
    */
@@ -162,19 +186,29 @@ export const useTrainMotionDetector = (): void => {
 
   /**
    * 移動状態を判定
+   * varianceStability: 分散の安定性（低いほど安定）
    */
   const determinePhase = useCallback(
     (
       avgMagnitude: number,
       variance: number,
-      accelerationTrend: number
+      accelerationTrend: number,
+      varianceStability: number
     ): TrainMotionPhase => {
+      // 分散が不安定な場合（手の揺れの可能性）は状態変化を抑制
+      const isVarianceStable = varianceStability < VARIANCE_STABILITY_THRESHOLD;
+
       // 停車中の判定: 加速度が低く、振動も少ない
       if (
         avgMagnitude < STOP_ACCELERATION_THRESHOLD &&
         variance < STOPPED_VARIANCE_THRESHOLD
       ) {
         return 'stopped';
+      }
+
+      // 分散が不安定な場合は移動状態への遷移を抑制
+      if (!isVarianceStable) {
+        return 'unknown';
       }
 
       // 加速中の判定: 正の加速度トレンド
@@ -193,8 +227,8 @@ export const useTrainMotionDetector = (): void => {
         return 'decelerating';
       }
 
-      // 巡行中の判定: 一定の振動があるが加速度変化は小さい
-      if (variance > MOVING_VARIANCE_THRESHOLD) {
+      // 巡行中の判定: 一定の振動があるが加速度変化は小さい、かつ安定
+      if (variance > MOVING_VARIANCE_THRESHOLD && isVarianceStable) {
         return 'cruising';
       }
 
@@ -241,23 +275,48 @@ export const useTrainMotionDetector = (): void => {
         samplesRef.current.length;
       const accelerationTrend = calculateAccelerationTrend(samplesRef.current);
 
+      // 分散の履歴を更新（最大10個保持）
+      varianceHistoryRef.current = [
+        ...varianceHistoryRef.current.slice(-9),
+        variance,
+      ];
+
+      // 分散の安定性を計算
+      const varianceStability = calculateVarianceStability(
+        varianceHistoryRef.current
+      );
+
       // 状態を判定
       const detectedPhase = determinePhase(
         avgMagnitude,
         variance,
-        accelerationTrend
+        accelerationTrend,
+        varianceStability
       );
 
       // 状態遷移のヒステリシス（安定性のため）
       if (detectedPhase === candidatePhaseRef.current) {
         stateCounterRef.current += 1;
+        // 安定開始時刻を記録（まだ記録されていない場合）
+        if (stableStartTimeRef.current === null) {
+          stableStartTimeRef.current = Date.now();
+        }
       } else {
         candidatePhaseRef.current = detectedPhase;
         stateCounterRef.current = 1;
+        stableStartTimeRef.current = Date.now();
       }
 
-      // 状態を確定
-      if (stateCounterRef.current >= MIN_SAMPLES_FOR_STATE_CHANGE) {
+      // 状態を確定（サンプル数と安定継続時間の両方をチェック）
+      const stableDuration =
+        stableStartTimeRef.current !== null
+          ? Date.now() - stableStartTimeRef.current
+          : 0;
+      const isStableEnough =
+        stateCounterRef.current >= MIN_SAMPLES_FOR_STATE_CHANGE &&
+        stableDuration >= MIN_STABLE_DURATION_MS;
+
+      if (isStableEnough) {
         const now = Date.now();
         const currentPhase = motionPhaseRef.current;
 
@@ -309,6 +368,7 @@ export const useTrainMotionDetector = (): void => {
       applyLowPassFilter,
       calculateMagnitude,
       calculateVariance,
+      calculateVarianceStability,
       calculateAccelerationTrend,
       determinePhase,
       setTrainMotion,
@@ -334,6 +394,8 @@ export const useTrainMotionDetector = (): void => {
       samplesRef.current = [];
       stateCounterRef.current = 0;
       candidatePhaseRef.current = 'unknown';
+      varianceHistoryRef.current = [];
+      stableStartTimeRef.current = null;
     };
   }, [motionState.isEnabled, processAccelerometerData]);
 };
