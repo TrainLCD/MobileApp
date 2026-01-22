@@ -1,10 +1,15 @@
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { accuracyHistoryAtom, locationAtom } from '~/store/atoms/location';
+import {
+  stationStopDetectedAtom,
+  type TrainMotionPhase,
+  trainMotionAtom,
+} from '~/store/atoms/trainMotion';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
 
@@ -25,7 +30,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 11,
   },
+  sectionHeading: {
+    color: '#00ff00',
+    fontWeight: 'bold',
+    fontSize: 10,
+    marginTop: 4,
+  },
 });
+
+// フェーズごとの色
+const phaseColors: Record<TrainMotionPhase, string> = {
+  unknown: '#888888',
+  stopped: '#ff4444',
+  accelerating: '#44ff44',
+  cruising: '#4444ff',
+  decelerating: '#ffaa00',
+};
+
+// フェーズの短縮表示
+const phaseLabels: Record<TrainMotionPhase, string> = {
+  unknown: '不明',
+  stopped: '停車',
+  accelerating: '加速',
+  cruising: '走行',
+  decelerating: '減速',
+};
 
 const DevOverlay: React.FC = () => {
   const location = useAtomValue(locationAtom);
@@ -35,6 +64,10 @@ const DevOverlay: React.FC = () => {
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation();
   const isTelemetryEnabled = useTelemetryEnabled();
+
+  // モーション検出状態
+  const motionState = useAtomValue(trainMotionAtom);
+  const stationStopCount = useAtomValue(stationStopDetectedAtom);
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
@@ -51,6 +84,28 @@ const DevOverlay: React.FC = () => {
     () => generateAccuracyChart(accuracyHistory),
     [accuracyHistory]
   );
+
+  // 経過秒数を毎秒更新するためのtick state
+  const [phaseDuration, setPhaseDuration] = useState(0);
+
+  useEffect(() => {
+    if (!motionState.isEnabled || motionState.phaseStartTime === 0) {
+      setPhaseDuration(0);
+      return;
+    }
+
+    setPhaseDuration(
+      Math.round((Date.now() - motionState.phaseStartTime) / 1000)
+    );
+
+    const intervalId = setInterval(() => {
+      setPhaseDuration(
+        Math.round((Date.now() - motionState.phaseStartTime) / 1000)
+      );
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [motionState.isEnabled, motionState.phaseStartTime]);
 
   const dim = useWindowDimensions();
 
@@ -88,6 +143,28 @@ const DevOverlay: React.FC = () => {
       <Typography style={styles.text}>
         Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
       </Typography>
+
+      {/* モーション検出セクション */}
+      <Typography style={styles.sectionHeading}>Motion</Typography>
+      {motionState.isEnabled ? (
+        <>
+          <Typography style={styles.text}>
+            Phase:{' '}
+            <Text style={{ color: phaseColors[motionState.phase] }}>
+              {phaseLabels[motionState.phase]}
+            </Text>
+            {` ${phaseDuration}s`}
+          </Typography>
+          <Typography style={styles.text}>
+            Accel: {motionState.currentAcceleration.toFixed(3)} m/s²
+          </Typography>
+          <Typography style={styles.text}>
+            Stops: {motionState.stopCount} (Total: {stationStopCount})
+          </Typography>
+        </>
+      ) : (
+        <Typography style={styles.text}>OFF (GPS mode)</Typography>
+      )}
     </View>
   );
 };
