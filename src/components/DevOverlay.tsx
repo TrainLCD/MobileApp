@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   sectionHeading: {
-    color: '#00ff00',
+    color: 'white',
     fontWeight: 'bold',
     fontSize: 10,
     marginTop: 4,
