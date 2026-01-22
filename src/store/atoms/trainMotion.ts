@@ -55,6 +55,9 @@ export const trainMotionAtom = atom<TrainMotionState>(initialTrainMotionState);
 // 停車検出イベント用のatom（停車を検出したときにインクリメント）
 export const stationStopDetectedAtom = atom<number>(0);
 
+// 強制モードフラグ（手動で有効化された場合、GPS精度に関係なく維持）
+export const motionDetectionForcedAtom = atom<boolean>(false);
+
 // 移動検出の有効/無効を切り替えるatom
 export const motionDetectionEnabledAtom = atom(
   (get) => get(trainMotionAtom).isEnabled,

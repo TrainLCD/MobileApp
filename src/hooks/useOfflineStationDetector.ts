@@ -6,6 +6,7 @@ import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import {
   motionDetectionEnabledAtom,
+  motionDetectionForcedAtom,
   stationStopDetectedAtom,
   trainMotionAtom,
 } from '~/store/atoms/trainMotion';
@@ -41,6 +42,9 @@ export const useOfflineStationDetector = (): OfflineDetectorState => {
   const location = useAtomValue(locationAtom);
   const motionState = useAtomValue(trainMotionAtom);
   const stationStopCount = useAtomValue(stationStopDetectedAtom);
+  const isForced = useAtomValue(motionDetectionForcedAtom);
+  const navigation = useAtomValue(navigationState);
+  const isAutoMode = navigation.autoModeEnabled;
   const setMotionEnabled = useSetAtom(motionDetectionEnabledAtom);
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
@@ -67,19 +71,26 @@ export const useOfflineStationDetector = (): OfflineDetectorState => {
       poorGpsCountRef.current = Math.max(0, poorGpsCountRef.current - 1);
     }
 
-    // GPS精度が悪い状態が続いたらオフラインモードを有効化
+    // GPS精度が悪い状態が続いたらオフラインモードを有効化（オートモード時は無効）
     if (
       poorGpsCountRef.current >= POOR_GPS_COUNT_THRESHOLD &&
-      !motionState.isEnabled
+      !motionState.isEnabled &&
+      !isAutoMode
     ) {
       setMotionEnabled(true);
     }
 
-    // GPS精度が回復したらオフラインモードを無効化
-    if (poorGpsCountRef.current === 0 && motionState.isEnabled) {
+    // GPS精度が回復したらオフラインモードを無効化（強制モード時は無効化しない）
+    if (poorGpsCountRef.current === 0 && motionState.isEnabled && !isForced) {
       setMotionEnabled(false);
     }
-  }, [location?.coords.accuracy, motionState.isEnabled, setMotionEnabled]);
+  }, [
+    location?.coords.accuracy,
+    motionState.isEnabled,
+    isForced,
+    isAutoMode,
+    setMotionEnabled,
+  ]);
 
   /**
    * 停車検出時に次の駅に遷移
@@ -113,6 +124,13 @@ export const useOfflineStationDetector = (): OfflineDetectorState => {
     setStation,
     setNavigation,
   ]);
+
+  // オートモード時はモーション検出を強制OFF
+  useEffect(() => {
+    if (isAutoMode && motionState.isEnabled) {
+      setMotionEnabled(false);
+    }
+  }, [isAutoMode, motionState.isEnabled, setMotionEnabled]);
 
   // GPS精度の監視
   useEffect(() => {

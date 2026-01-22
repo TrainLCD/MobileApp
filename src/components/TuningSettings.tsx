@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import {
   Alert,
@@ -15,7 +15,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ASYNC_STORAGE_KEYS, FONTS } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import { motionDetectionEnabledAtom } from '~/store/atoms/trainMotion';
+import {
+  motionDetectionEnabledAtom,
+  motionDetectionForcedAtom,
+} from '~/store/atoms/trainMotion';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -69,6 +72,7 @@ const TuningSettings: React.FC = () => {
   const [motionDetectionEnabled, setMotionDetectionEnabled] = useAtom(
     motionDetectionEnabledAtom
   );
+  const setMotionForced = useSetAtom(motionDetectionForcedAtom);
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
@@ -170,8 +174,11 @@ const TuningSettings: React.FC = () => {
     ]);
   };
 
-  const toggleMotionDetectionEnabled = () =>
-    setMotionDetectionEnabled(!motionDetectionEnabled);
+  const toggleMotionDetectionEnabled = () => {
+    const newEnabled = !motionDetectionEnabled;
+    setMotionDetectionEnabled(newEnabled);
+    setMotionForced(newEnabled);
+  };
 
   return (
     <KeyboardAvoidingView

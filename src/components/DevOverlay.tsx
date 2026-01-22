@@ -14,6 +14,7 @@ import { accuracyHistoryAtom, locationAtom } from '~/store/atoms/location';
 import {
   initialTrainMotionState,
   motionDetectionEnabledAtom,
+  motionDetectionForcedAtom,
   stationStopDetectedAtom,
   type TrainMotionPhase,
   trainMotionAtom,
@@ -78,10 +79,13 @@ const DevOverlay: React.FC = () => {
   const motionState = motionStateRaw ?? initialTrainMotionState;
   const stationStopCount = useAtomValue(stationStopDetectedAtom) ?? 0;
   const setMotionEnabled = useSetAtom(motionDetectionEnabledAtom);
+  const setMotionForced = useSetAtom(motionDetectionForcedAtom);
 
   const handleMotionToggle = useCallback(() => {
-    setMotionEnabled(!motionState.isEnabled);
-  }, [motionState.isEnabled, setMotionEnabled]);
+    const newEnabled = !motionState.isEnabled;
+    setMotionEnabled(newEnabled);
+    setMotionForced(newEnabled);
+  }, [motionState.isEnabled, setMotionEnabled, setMotionForced]);
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
@@ -160,7 +164,7 @@ const DevOverlay: React.FC = () => {
 
       {/* モーション検出セクション（タップでトグル） */}
       <Pressable onPress={handleMotionToggle}>
-        <Typography style={styles.sectionHeading}>Motion (tap)</Typography>
+        <Typography style={styles.sectionHeading}>Motion</Typography>
         {motionState.isEnabled ? (
           <>
             <Typography style={styles.text}>
