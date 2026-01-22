@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { POOR_GPS_ACCURACY_THRESHOLD } from '~/constants/motion';
 import { locationAtom } from '~/store/atoms/location';
@@ -90,9 +90,28 @@ const MotionDebugOverlay: React.FC = () => {
     [motionState.confidence]
   );
 
-  const phaseDuration = useMemo(() => {
-    if (motionState.phaseStartTime === 0) return 0;
-    return Math.round((Date.now() - motionState.phaseStartTime) / 1000);
+  // 経過秒数を毎秒更新するためのtick state
+  const [phaseDuration, setPhaseDuration] = useState(0);
+
+  useEffect(() => {
+    if (motionState.phaseStartTime === 0) {
+      setPhaseDuration(0);
+      return;
+    }
+
+    // 初期値を設定
+    setPhaseDuration(
+      Math.round((Date.now() - motionState.phaseStartTime) / 1000)
+    );
+
+    // 毎秒更新
+    const intervalId = setInterval(() => {
+      setPhaseDuration(
+        Math.round((Date.now() - motionState.phaseStartTime) / 1000)
+      );
+    }, 1000);
+
+    return () => clearInterval(intervalId);
   }, [motionState.phaseStartTime]);
 
   const phaseColor = phaseColors[motionState.phase];

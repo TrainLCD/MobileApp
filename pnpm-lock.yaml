@@ -123,7 +123,7 @@ importers:
         specifier: ~9.0.8
         version: 9.0.8(expo@54.0.31(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))
       expo-sensors:
-        specifier: ^15.0.8
+        specifier: ~15.0.8
         version: 15.0.8(expo@54.0.31(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))
       expo-splash-screen:
         specifier: ~31.0.13
@@ -13684,7 +13684,7 @@ snapshots:
 
   v8-to-istanbul@9.3.0:
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
 

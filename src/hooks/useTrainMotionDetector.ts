@@ -54,6 +54,13 @@ export const useTrainMotionDetector = (): void => {
   const candidatePhaseRef = useRef<TrainMotionPhase>('unknown');
   // 停車開始時刻
   const stopStartTimeRef = useRef<number | null>(null);
+  // 現在のフェーズをrefで保持（コールバックの依存を安定化）
+  const motionPhaseRef = useRef<TrainMotionPhase>(motionState.phase);
+
+  // motionState.phaseが変更されたらrefを更新
+  useEffect(() => {
+    motionPhaseRef.current = motionState.phase;
+  }, [motionState.phase]);
 
   /**
    * 重力成分を除去した加速度を計算
@@ -252,7 +259,7 @@ export const useTrainMotionDetector = (): void => {
       // 状態を確定
       if (stateCounterRef.current >= MIN_SAMPLES_FOR_STATE_CHANGE) {
         const now = Date.now();
-        const currentPhase = motionState.phase;
+        const currentPhase = motionPhaseRef.current;
 
         // 停車検出のロジック
         if (detectedPhase === 'stopped' && currentPhase !== 'stopped') {
@@ -304,7 +311,6 @@ export const useTrainMotionDetector = (): void => {
       calculateVariance,
       calculateAccelerationTrend,
       determinePhase,
-      motionState.phase,
       setTrainMotion,
       setStationStopDetected,
     ]
@@ -324,11 +330,10 @@ export const useTrainMotionDetector = (): void => {
 
     return () => {
       subscription.remove();
-      // バッファをクリア
+      // バッファをクリア（stopStartTimeRefは停車検出の継続性を保つためリセットしない）
       samplesRef.current = [];
       stateCounterRef.current = 0;
       candidatePhaseRef.current = 'unknown';
-      stopStartTimeRef.current = null;
     };
   }, [motionState.isEnabled, processAccelerometerData]);
 };

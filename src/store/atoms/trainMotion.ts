@@ -63,13 +63,17 @@ export const motionDetectionEnabledAtom = atom(
     set(trainMotionAtom, {
       ...current,
       isEnabled: enabled,
-      // 無効化時はリセット
+      // 無効化時は全状態をリセット
       ...(enabled
         ? {}
         : {
             phase: 'unknown',
             confidence: 0,
             stopCount: 0,
+            phaseStartTime: 0,
+            lastStopTime: null,
+            currentAcceleration: 0,
+            currentVariance: 0,
           }),
     });
   }
