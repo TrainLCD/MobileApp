@@ -1,12 +1,19 @@
 import * as Application from 'expo-application';
-import { useAtomValue } from 'jotai';
-import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useAtomValue, useSetAtom } from 'jotai';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { accuracyHistoryAtom, locationAtom } from '~/store/atoms/location';
 import {
   initialTrainMotionState,
+  motionDetectionEnabledAtom,
   stationStopDetectedAtom,
   type TrainMotionPhase,
   trainMotionAtom,
@@ -70,6 +77,11 @@ const DevOverlay: React.FC = () => {
   const motionStateRaw = useAtomValue(trainMotionAtom);
   const motionState = motionStateRaw ?? initialTrainMotionState;
   const stationStopCount = useAtomValue(stationStopDetectedAtom) ?? 0;
+  const setMotionEnabled = useSetAtom(motionDetectionEnabledAtom);
+
+  const handleMotionToggle = useCallback(() => {
+    setMotionEnabled(!motionState.isEnabled);
+  }, [motionState.isEnabled, setMotionEnabled]);
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
@@ -146,27 +158,29 @@ const DevOverlay: React.FC = () => {
         Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
       </Typography>
 
-      {/* モーション検出セクション */}
-      <Typography style={styles.sectionHeading}>Motion</Typography>
-      {motionState.isEnabled ? (
-        <>
-          <Typography style={styles.text}>
-            Phase:{' '}
-            <Text style={{ color: phaseColors[motionState.phase] }}>
-              {phaseLabels[motionState.phase]}
-            </Text>
-            {` ${phaseDuration}s`}
-          </Typography>
-          <Typography style={styles.text}>
-            Accel: {motionState.currentAcceleration.toFixed(3)} m/s²
-          </Typography>
-          <Typography style={styles.text}>
-            Stops: {motionState.stopCount} (Total: {stationStopCount})
-          </Typography>
-        </>
-      ) : (
-        <Typography style={styles.text}>OFF (GPS mode)</Typography>
-      )}
+      {/* モーション検出セクション（タップでトグル） */}
+      <Pressable onPress={handleMotionToggle}>
+        <Typography style={styles.sectionHeading}>Motion (tap)</Typography>
+        {motionState.isEnabled ? (
+          <>
+            <Typography style={styles.text}>
+              Phase:{' '}
+              <Text style={{ color: phaseColors[motionState.phase] }}>
+                {phaseLabels[motionState.phase]}
+              </Text>
+              {` ${phaseDuration}s`}
+            </Typography>
+            <Typography style={styles.text}>
+              Accel: {motionState.currentAcceleration.toFixed(3)} m/s²
+            </Typography>
+            <Typography style={styles.text}>
+              Stops: {motionState.stopCount} (Total: {stationStopCount})
+            </Typography>
+          </>
+        ) : (
+          <Typography style={styles.text}>OFF (GPS mode)</Typography>
+        )}
+      </Pressable>
     </View>
   );
 };
