@@ -203,6 +203,7 @@
   "setAsTerminus": "終着駅に設定する",
   "optInTelemetryTitle": "テレメトリを有効にする",
   "telemetrySettingWillPersist": "テレメトリ有効化は永続的に保持されます。",
+  "forceMotionDetection": "モーション検出を強制する",
   "personalize": "パーソナライズ",
   "forDevelopers": "開発者向け",
   "toEnabled": "有効にする",

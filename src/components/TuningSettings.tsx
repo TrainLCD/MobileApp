@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ASYNC_STORAGE_KEYS, FONTS } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { motionDetectionEnabledAtom } from '~/store/atoms/trainMotion';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -65,6 +66,9 @@ const styles = StyleSheet.create({
 const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useAtom(tuningState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const [motionDetectionEnabled, setMotionDetectionEnabled] = useAtom(
+    motionDetectionEnabledAtom
+  );
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
@@ -165,6 +169,9 @@ const TuningSettings: React.FC = () => {
       },
     ]);
   };
+
+  const toggleMotionDetectionEnabled = () =>
+    setMotionDetectionEnabled(!motionDetectionEnabled);
 
   return (
     <KeyboardAvoidingView
@@ -317,6 +324,31 @@ const TuningSettings: React.FC = () => {
             accessibilityRole="button"
           >
             {translate('optInTelemetryTitle')}
+          </Typography>
+        </View>
+
+        <View style={styles.switchSettingItem}>
+          {isLEDTheme ? (
+            <LEDThemeSwitch
+              value={motionDetectionEnabled}
+              onValueChange={toggleMotionDetectionEnabled}
+              accessibilityLabel={translate('forceMotionDetection')}
+            />
+          ) : (
+            <Switch
+              value={motionDetectionEnabled}
+              onValueChange={toggleMotionDetectionEnabled}
+              ios_backgroundColor={'#fff'}
+              accessibilityLabel={translate('forceMotionDetection')}
+            />
+          )}
+
+          <Typography
+            style={styles.switchSettingItemText}
+            onPress={toggleMotionDetectionEnabled}
+            accessibilityRole="button"
+          >
+            {translate('forceMotionDetection')}
           </Typography>
         </View>
       </ScrollView>

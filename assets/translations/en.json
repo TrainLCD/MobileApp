@@ -202,6 +202,7 @@
   "setAsTerminus": "Set as terminus",
   "optInTelemetryTitle": "Enable telemetry",
   "telemetrySettingWillPersist": "Enabling telemetry will be persisted.",
+  "forceMotionDetection": "Force motion detection",
   "personalize": "Personalize",
   "forDevelopers": "Developers",
   "toEnabled": "Enable",
