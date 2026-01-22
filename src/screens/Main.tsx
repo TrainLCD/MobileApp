@@ -32,6 +32,7 @@ import {
   useLockLandscapeOnActive,
   useLoopLine,
   useNextStation,
+  useOfflineStationDetector,
   useRefreshLeftStations,
   useRefreshStation,
   useResetMainState,
@@ -118,6 +119,7 @@ const MainScreen: React.FC = () => {
   useSimulationMode();
   useFirstStop(true);
   useLockLandscapeOnActive();
+  useOfflineStationDetector();
 
   useTelemetrySender(true);
 
