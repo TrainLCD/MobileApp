@@ -38,7 +38,7 @@ export interface TrainMotionState {
 }
 
 // 初期状態
-const initialTrainMotionState: TrainMotionState = {
+export const initialTrainMotionState: TrainMotionState = {
   phase: 'unknown',
   confidence: 0,
   phaseStartTime: 0,

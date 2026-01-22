@@ -6,6 +6,7 @@ import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { accuracyHistoryAtom, locationAtom } from '~/store/atoms/location';
 import {
+  initialTrainMotionState,
   stationStopDetectedAtom,
   type TrainMotionPhase,
   trainMotionAtom,
@@ -65,9 +66,10 @@ const DevOverlay: React.FC = () => {
   const nextStation = useNextStation();
   const isTelemetryEnabled = useTelemetryEnabled();
 
-  // モーション検出状態
-  const motionState = useAtomValue(trainMotionAtom);
-  const stationStopCount = useAtomValue(stationStopDetectedAtom);
+  // モーション検出状態（nullの場合は初期状態を使用）
+  const motionStateRaw = useAtomValue(trainMotionAtom);
+  const motionState = motionStateRaw ?? initialTrainMotionState;
+  const stationStopCount = useAtomValue(stationStopDetectedAtom) ?? 0;
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
