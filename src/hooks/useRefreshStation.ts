@@ -86,26 +86,24 @@ export const useRefreshStation = (): void => {
     const isAccuracyInvalid =
       !accuracy || (accuracy ?? 0) >= BAD_ACCURACY_THRESHOLD;
 
+    const isInRadius = isPointWithinRadius(
+      { latitude, longitude },
+      {
+        latitude: nearestStation.latitude as number,
+        longitude: nearestStation.longitude as number,
+      },
+      arrivedThreshold
+    );
+
+    // NOTE: 開発環境では速度判定をスキップ（Lockitoテスト用）
     const arrived =
-      isSpeedInvalid || isAccuracyInvalid
-        ? isPointWithinRadius(
-            { latitude, longitude },
-            {
-              latitude: nearestStation.latitude as number,
-              longitude: nearestStation.longitude as number,
-            },
-            arrivedThreshold
-          )
-        : isPointWithinRadius(
-            { latitude, longitude },
-            {
-              latitude: nearestStation.latitude as number,
-              longitude: nearestStation.longitude as number,
-            },
-            arrivedThreshold
-          ) &&
-          // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
-          (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED;
+      process.env.NODE_ENV === 'development'
+        ? isInRadius
+        : isSpeedInvalid || isAccuracyInvalid
+          ? isInRadius
+          : isInRadius &&
+            // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
+            (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED;
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
