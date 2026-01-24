@@ -248,28 +248,71 @@ class TTSPlayer {
         return undefined;
       }
 
-      const ttsJson = await (
-        await fetch(this.ttsApiUrl, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify(reqBody),
-          method: 'POST',
-        })
-      ).json();
+      const response = await fetch(this.ttsApiUrl, {
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(reqBody),
+        method: 'POST',
+      });
 
-      const fileJa = new File(Paths.cache, `${ttsJson.result.id}_ja.mp3`);
-      const fileEn = new File(Paths.cache, `${ttsJson.result.id}_en.mp3`);
-
-      if (ttsJson?.result?.jaAudioContent) {
-        fileJa.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
-      }
-      if (ttsJson?.result?.enAudioContent) {
-        fileEn.write(base64ToUint8Array(ttsJson.result.enAudioContent));
+      if (!response.ok) {
+        console.error(
+          '[TTSPlayer] TTS API returned error status:',
+          response.status
+        );
+        return undefined;
       }
 
-      return { id: ttsJson.result.id, pathJa: fileJa.uri, pathEn: fileEn.uri };
+      const ttsJson = await response.json();
+
+      // APIレスポンスの検証
+      if (!ttsJson || typeof ttsJson !== 'object') {
+        console.error('[TTSPlayer] Invalid TTS API response:', ttsJson);
+        return undefined;
+      }
+
+      if (ttsJson.error) {
+        console.error('[TTSPlayer] TTS API error:', ttsJson.error);
+        return undefined;
+      }
+
+      if (!ttsJson.result || typeof ttsJson.result !== 'object') {
+        console.error('[TTSPlayer] TTS API response missing result:', ttsJson);
+        return undefined;
+      }
+
+      if (!ttsJson.result.id) {
+        console.error(
+          '[TTSPlayer] TTS API response missing result.id:',
+          ttsJson.result
+        );
+        return undefined;
+      }
+
+      const { id, jaAudioContent, enAudioContent } = ttsJson.result;
+
+      // 音声コンテンツが両方ないなら失敗
+      if (!jaAudioContent && !enAudioContent) {
+        console.error(
+          '[TTSPlayer] TTS API response missing audio content:',
+          ttsJson.result
+        );
+        return undefined;
+      }
+
+      const fileJa = new File(Paths.cache, `${id}_ja.mp3`);
+      const fileEn = new File(Paths.cache, `${id}_en.mp3`);
+
+      if (jaAudioContent) {
+        fileJa.write(base64ToUint8Array(jaAudioContent));
+      }
+      if (enAudioContent) {
+        fileEn.write(base64ToUint8Array(enAudioContent));
+      }
+
+      return { id, pathJa: fileJa.uri, pathEn: fileEn.uri };
     } catch (error) {
       console.error('[TTSPlayer] fetchSpeech error:', error);
       return undefined;
