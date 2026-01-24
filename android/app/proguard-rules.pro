@@ -12,3 +12,6 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# Expo modules (Headless tasks, notifications, etc.)
+-keep class expo.modules.** { *; }
