@@ -1,3 +1,4 @@
+import { getAuth } from '@react-native-firebase/auth';
 import { Platform } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { store } from '~/store';
@@ -92,6 +93,15 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
       .filter((s): s is Station => !!s);
 
     const ttsPlayer = TTSPlayer.getInstance();
+
+    // Firebase Authから直接getIdTokenを設定（バックグラウンドではuseTTSが動かないため）
+    const auth = getAuth();
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) {
+      ttsPlayer.setGetIdToken(() => firebaseUser.getIdToken());
+    } else {
+      return;
+    }
 
     // AudioModeを設定（バックグラウンド再生有効）
     await ttsPlayer.setAudioMode(true);
