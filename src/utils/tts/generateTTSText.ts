@@ -88,10 +88,12 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
   const afterNextStationIndex = slicedStations.findIndex(
     (s) => s.groupId === afterNextStation?.groupId
   );
-  const betweenNextStation = slicedStations.slice(
-    nextStationIndex + 1,
-    afterNextStationIndex
-  );
+  const betweenNextStation =
+    nextStationIndex === -1 ||
+    afterNextStationIndex === -1 ||
+    afterNextStationIndex <= nextStationIndex
+      ? []
+      : slicedStations.slice(nextStationIndex + 1, afterNextStationIndex);
 
   // 全停車駅
   const allStops = slicedStations.filter((s) => {
@@ -419,7 +421,7 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
 
       case APP_THEME.TY:
         if (stoppingState === 'ARRIVING') {
-          return `We will soon make a brief stop at ${nextStation?.nameRoman} ${nextStationNumberText}${isNextStopTerminus ? ', the last stop.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Passengers changing to ', ', Please transfer at this station.')}${
+          return `We will soon make a brief stop at ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${isNextStopTerminus ? ', the last stop.' : nextStationNumberText?.endsWith('.') ? '' : '.'}${transferLines.length ? ` ${transferLinesText('Passengers changing to ', ', Please transfer at this station.')}` : ''}${
             afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${afterNextStation.nameRoman}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
@@ -437,18 +439,18 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
                   : ''
               } to ${boundForEn}. `
             : ''
-        }The next station is ${nextStation?.nameRoman} ${nextStationNumberText}${isNextStopTerminus ? ', the last stop.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Passengers changing to ', ', Please transfer at this station.')}`;
+        }The next station is ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${isNextStopTerminus ? ', the last stop.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Passengers changing to ', ', Please transfer at this station.')}`;
 
       case APP_THEME.YAMANOTE:
       case APP_THEME.SAIKYO:
         if (stoppingState === 'ARRIVING') {
-          return `The next station is ${nextStation?.nameRoman} ${nextStationNumberText}${isNextStopTerminus ? ', terminal.' : ''} ${transferLinesText('Please change here for ', '.')} ${
+          return `The next station is ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${isNextStopTerminus ? ', terminal.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')} ${
             isNextStopTerminus
               ? 'Thank you for traveling with us, and look forward to serving you again.'
               : ''
           }`;
         }
-        return `${firstSpeech ? `This is the ${currentLine.nameRoman} train bound for ${boundForEn}. ` : ''}The next station is ${nextStation?.nameRoman} ${nextStationNumberText}${isNextStopTerminus ? ', terminal.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')}`;
+        return `${firstSpeech ? `This is the ${currentLine.nameRoman} train bound for ${boundForEn}. ` : ''}The next station is ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${isNextStopTerminus ? ', terminal.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')}`;
 
       case APP_THEME.JR_WEST:
         if (stoppingState === 'ARRIVING') {
@@ -487,7 +489,7 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
 
       case APP_THEME.TOEI:
         if (stoppingState === 'ARRIVING') {
-          return `We will soon be arriving at ${nextStation?.nameRoman} ${nextStationNumberText}${nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')}${
+          return `We will soon be arriving at ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')}${
             currentTrainType && afterNextStation
               ? ` The stop after ${nextStation?.nameRoman}, will be ${afterNextStation.nameRoman}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
@@ -501,11 +503,11 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
           firstSpeech
             ? `Thank you for using the ${currentLine.nameRoman}. `
             : ''
-        }This is the ${currentTrainType?.nameRoman?.replace(parenthesisRegexp, '') ?? 'Local'} train bound for ${boundForEn}. The next station is ${nextStation?.nameRoman} ${nextStationNumberText}${nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')}`;
+        }This is the ${currentTrainType?.nameRoman?.replace(parenthesisRegexp, '') ?? 'Local'} train bound for ${boundForEn}. The next station is ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${nextStationNumberText?.endsWith('.') ? '' : '.'} ${transferLinesText('Please change here for ', '.')}`;
 
       case APP_THEME.JR_KYUSHU:
         if (stoppingState === 'ARRIVING') {
-          return `We will soon be arriving at ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${nextStationNumberText}${nextStationNumberText?.endsWith('.') ? '' : '.'} ${
+          return `We will soon be arriving at ${nextStation?.nameRoman}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${nextStationNumberText?.endsWith('.') ? '' : '.'} ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
@@ -521,7 +523,7 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
               : ''
           }`;
         }
-        return `${firstSpeech ? `This is a ${currentTrainType?.nameRoman?.replace(parenthesisRegexp, '') ?? 'Local'} train bound for ${boundForEn}. ` : ''}The next station is ${nextStation?.nameRoman} ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${
+        return `${firstSpeech ? `This is a ${currentTrainType?.nameRoman?.replace(parenthesisRegexp, '') ?? 'Local'} train bound for ${boundForEn}. ` : ''}The next station is ${nextStation?.nameRoman}${nextStationNumberText ? ` ${nextStationNumberText}` : ''}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal.' : nextStationNumberText?.endsWith('.') ? '' : '.'} ${
           transferLines.length
             ? `You can transfer to ${transferLines
                 .map((l, i, a) =>
