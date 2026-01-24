@@ -4,10 +4,15 @@ import { APP_THEME } from '../../models/Theme';
 import { generateTTSText, type TTSTextData } from './generateTTSText';
 
 describe('generateTTSText', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   const createBaseData = (
     overrides: Partial<TTSTextData> = {}
   ): TTSTextData => {
     const stations = TOEI_SHINJUKU_LINE_STATIONS;
+    const lastStation = stations.at(-1);
     return {
       theme: APP_THEME.TY,
       firstSpeech: false,
@@ -16,7 +21,7 @@ describe('generateTTSText', () => {
       currentStation: stations[0],
       nextStation: stations[1],
       afterNextStation: stations[2],
-      selectedBound: stations[stations.length - 1],
+      selectedBound: lastStation ?? null,
       transferLines: [],
       connectedLines: [],
       currentTrainType: null,
@@ -24,7 +29,7 @@ describe('generateTTSText', () => {
       isPartiallyLoopLine: false,
       loopLineBoundJa: undefined,
       loopLineBoundEn: undefined,
-      directionalStops: [stations[stations.length - 1]],
+      directionalStops: lastStation ? [lastStation] : [],
       slicedStations: stations,
       isNextStopTerminus: false,
       isAfterNextStopTerminus: false,

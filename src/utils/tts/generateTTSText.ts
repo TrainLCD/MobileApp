@@ -128,7 +128,7 @@ export const generateTTSText = (data: TTSTextData): [string, string] | [] => {
       return '';
     }
     if (split.length === 1) {
-      return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${Number(nextStationNumber.stationNumber)}`;
+      return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${Number(nextStationNumber.stationNumber)}.`;
     }
 
     const symbol = split[0]?.split('').join(' ');
