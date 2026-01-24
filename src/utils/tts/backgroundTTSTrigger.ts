@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import type { Station } from '~/@types/graphql';
 import { store } from '~/store';
 import lineState from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
@@ -6,6 +7,21 @@ import speechState from '~/store/atoms/speech';
 import stationState from '~/store/atoms/station';
 import { themeAtom } from '~/store/atoms/theme';
 import { generateTTSText } from './generateTTSText';
+import {
+  getAfterNextStation,
+  getConnectedLines,
+  getCurrentLine,
+  getCurrentStation,
+  getCurrentTrainType,
+  getDirectionalStops,
+  getLoopLineBound,
+  getLoopLineInfo,
+  getNextStation,
+  getSlicedStations,
+  getStoppingState,
+  getTransferLines,
+  isTerminus,
+} from './helpers';
 import TTSPlayer from './TTSPlayer';
 
 let firstSpeech = true;
@@ -41,6 +57,40 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
       return;
     }
 
+    // helpers.tsの関数を使ってデータを取得
+    const currentLine = getCurrentLine(station, line);
+    const currentStation = getCurrentStation(station);
+    const nextStation = getNextStation(station, line, navigation);
+    const afterNextStation = getAfterNextStation(station, line, navigation);
+    const stoppingState = getStoppingState(station, line, navigation);
+    const transferLines = getTransferLines(station, line, navigation);
+    const connectedLines = getConnectedLines(station, line);
+    const currentTrainType = getCurrentTrainType(station, line, navigation);
+    const loopInfo = getLoopLineInfo(station, line, navigation);
+    const loopLineBoundJa = getLoopLineBound(station, line, navigation, 'JA');
+    const loopLineBoundEn = getLoopLineBound(station, line, navigation, 'EN');
+    const directionalStops = getDirectionalStops(station, line, navigation);
+    const slicedStationsRaw = getSlicedStations(station, line, navigation);
+    const isNextStopTerminus = isTerminus(
+      nextStation,
+      station,
+      line,
+      navigation
+    );
+    const isAfterNextStopTerminus = isTerminus(
+      afterNextStation,
+      station,
+      line,
+      navigation
+    );
+
+    // slicedStationsの重複除去
+    const slicedStations = Array.from(
+      new Set(slicedStationsRaw.map((s) => s.groupId))
+    )
+      .map((gid) => slicedStationsRaw.find((s) => s.groupId === gid))
+      .filter((s): s is Station => !!s);
+
     const ttsPlayer = TTSPlayer.getInstance();
 
     // AudioModeを設定（バックグラウンド再生有効）
@@ -48,11 +98,25 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
 
     // TTSテキストを生成
     const ttsText = generateTTSText({
-      stationState: station,
-      lineState: line,
-      navigationState: navigation,
       theme,
       firstSpeech,
+      stoppingState,
+      currentLine,
+      currentStation,
+      nextStation,
+      afterNextStation,
+      selectedBound: station.selectedBound,
+      transferLines,
+      connectedLines,
+      currentTrainType,
+      isLoopLine: loopInfo.isLoopLine,
+      isPartiallyLoopLine: loopInfo.isPartiallyLoopLine,
+      loopLineBoundJa: loopLineBoundJa?.boundFor,
+      loopLineBoundEn: loopLineBoundEn?.boundFor,
+      directionalStops,
+      slicedStations,
+      isNextStopTerminus,
+      isAfterNextStopTerminus,
     });
 
     if (!ttsText.length) {
@@ -66,13 +130,13 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
     }
 
     // 現在のstoppingStateを計算して、変化があった場合のみ再生
-    const currentStoppingState = `${station.arrived}-${station.approaching}-${station.station?.id}`;
+    const currentStoppingStateKey = `${station.arrived}-${station.approaching}-${station.station?.id}`;
 
-    if (currentStoppingState === lastStoppingState) {
+    if (currentStoppingStateKey === lastStoppingState) {
       return;
     }
 
-    lastStoppingState = currentStoppingState;
+    lastStoppingState = currentStoppingStateKey;
 
     // 再生
     await ttsPlayer.speak(textJa, textEn);
