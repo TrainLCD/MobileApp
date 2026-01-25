@@ -37,9 +37,8 @@
     </activity>
     <service
         android:name="expo.modules.location.services.LocationTaskService"
-        android:exported="false"
         android:foregroundServiceType="location|mediaPlayback"
-        tools:node="replace">
+        tools:node="merge">
     </service>
   </application>
 </manifest>
