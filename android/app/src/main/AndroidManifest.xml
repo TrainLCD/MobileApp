@@ -4,6 +4,7 @@
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_TYPE_LOCATION"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -34,5 +35,11 @@
         <data android:scheme="@string/app_scheme"/>
       </intent-filter>
     </activity>
+    <service
+        android:name="expo.modules.location.services.LocationTaskService"
+        android:exported="false"
+        android:foregroundServiceType="location|mediaPlayback"
+        tools:node="replace">
+    </service>
   </application>
 </manifest>
