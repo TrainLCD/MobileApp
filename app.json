@@ -2,7 +2,7 @@
   "expo": {
     "name": "TrainLCD",
     "slug": "trainlcd",
-    "version": "10.0.121",
+    "version": "10.0.122",
     "plugins": [
       "expo-font",
       "expo-localization",
@@ -32,18 +32,18 @@
         "projectId": "dad36dde-0056-4760-8eda-37f05e7c9c6c"
       },
       "versioning": {
-        "androidMinVersionCode": 100000201
+        "androidMinVersionCode": 100000202
       }
     },
     "ios": {
       "bundleIdentifier": "me.tinykitten.trainlcd.dev",
       "scheme": "CanaryTrainLCD",
-      "buildNumber": "2414",
+      "buildNumber": "2415",
       "supportsTablet": true
     },
     "android": {
       "package": "me.tinykitten.trainlcd.dev",
-      "versionCode": 100000201,
+      "versionCode": 100000202,
       "permissions": []
     },
     "owner": "trainlcd"
