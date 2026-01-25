@@ -130,7 +130,7 @@ describe('RouteSearchScreen - 駅グループ変更時の検索結果クリア',
       }, [groupId]);
     };
 
-    const { rerender } = renderHook(
+    const { rerender } = renderHook<void, { groupId: number | undefined }>(
       ({ groupId }) => useResetSearchOnGroupChange(groupId),
       { initialProps: { groupId: 1 } }
     );
@@ -161,7 +161,7 @@ describe('RouteSearchScreen - 駅グループ変更時の検索結果クリア',
       }, [groupId]);
     };
 
-    const { rerender } = renderHook(
+    const { rerender } = renderHook<void, { groupId: number | undefined }>(
       ({ groupId }) => useResetSearchOnGroupChange(groupId),
       { initialProps: { groupId: 1 } }
     );
@@ -189,7 +189,7 @@ describe('RouteSearchScreen - 駅グループ変更時の検索結果クリア',
       }, [groupId]);
     };
 
-    const { rerender } = renderHook(
+    const { rerender } = renderHook<void, { groupId: number | undefined }>(
       ({ groupId }) => useResetSearchOnGroupChange(groupId),
       { initialProps: { groupId: undefined as number | undefined } }
     );
@@ -223,7 +223,10 @@ describe('RouteSearchScreen - 駅グループ変更時の検索結果クリア',
       return { searchResults, hasSearched };
     };
 
-    const { result } = renderHook(({ groupId }) => useSearchState(groupId), {
+    const { result } = renderHook<
+      { searchResults: string[]; hasSearched: boolean },
+      { groupId: number | undefined }
+    >(({ groupId }) => useSearchState(groupId), {
       initialProps: { groupId: 1 },
     });
 
