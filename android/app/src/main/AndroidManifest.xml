@@ -35,10 +35,5 @@
         <data android:scheme="@string/app_scheme"/>
       </intent-filter>
     </activity>
-    <service
-        android:name="expo.modules.location.services.LocationTaskService"
-        android:foregroundServiceType="location|mediaPlayback"
-        tools:node="merge">
-    </service>
   </application>
 </manifest>
