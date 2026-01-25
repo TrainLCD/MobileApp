@@ -44,7 +44,11 @@
     "android": {
       "package": "me.tinykitten.trainlcd.dev",
       "versionCode": 100000208,
-      "permissions": []
+      "permissions": [],
+      "autolinking": {
+        "buildFromSource": ["expo-task-manager"]
+      }
+
     },
     "owner": "trainlcd"
   }
