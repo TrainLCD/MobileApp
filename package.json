@@ -95,6 +95,7 @@
     "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/typescript": "^5.0.2",
     "@graphql-codegen/typescript-operations": "^5.0.2",
+    "@react-native-community/cli": "^20.1.0",
     "@react-native/js-polyfills": "^0.81.0",
     "@react-native/metro-config": "^0.81.1",
     "@testing-library/jest-native": "^4.0.11",
@@ -143,5 +144,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.0.127"
+  "version": "10.0.128"
 }
