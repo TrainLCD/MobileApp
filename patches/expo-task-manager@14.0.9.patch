@@ -1,0 +1,25 @@
+diff --git a/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java b/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
+index c54fb7d59eeb6ebff4dc5b59e8e7d2661192ac3d..4fa3dc1f687d9a4c962f51acfc49f77054b74c5d 100644
+--- a/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
++++ b/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
+@@ -215,11 +215,17 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
+   }
+ 
+   private JobInfo createJobInfo(int jobId, ComponentName jobService, PersistableBundle extras) {
+-    return new JobInfo.Builder(jobId, jobService)
++    JobInfo.Builder builder = new JobInfo.Builder(jobId, jobService)
+       .setExtras(extras)
+       .setMinimumLatency(0)
+-      .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE)
+-      .build();
++      .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
++
++    // API 28+ でDozeモード中も優先度を維持
++    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
++      builder.setImportantWhileForeground(true);
++    }
++
++    return builder.build();
+   }
+ 
+   private JobInfo createJobInfo(Context context, TaskInterface task, int jobId, List<PersistableBundle> data) {
