@@ -1,22 +1,27 @@
 diff --git a/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java b/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
-index c54fb7d59eeb6ebff4dc5b59e8e7d2661192ac3d..4fa3dc1f687d9a4c962f51acfc49f77054b74c5d 100644
+index c54fb7d59eeb6ebff4dc5b59e8e7d2661192ac3d..784888956c0a1c5172ad2b4119ec20955db0a900 100644
 --- a/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
 +++ b/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
-@@ -215,11 +215,17 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
+@@ -215,11 +215,20 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
    }
  
    private JobInfo createJobInfo(int jobId, ComponentName jobService, PersistableBundle extras) {
 -    return new JobInfo.Builder(jobId, jobService)
-+    JobInfo.Builder builder = new JobInfo.Builder(jobId, jobService)
-       .setExtras(extras)
-       .setMinimumLatency(0)
+-      .setExtras(extras)
+-      .setMinimumLatency(0)
 -      .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE)
 -      .build();
-+      .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
++    JobInfo.Builder builder = new JobInfo.Builder(jobId, jobService)
++      .setExtras(extras);
 +
-+    // API 28+ でDozeモード中も優先度を維持
-+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-+      builder.setImportantWhileForeground(true);
++    // API 31+ では setExpedited を使用して優先実行
++    // setImportantWhileForeground は非推奨のため使用しない
++    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
++      builder.setExpedited(true);
++    } else {
++      // 低いAPIレベルでは従来のdeadline/latencyを使用
++      builder.setMinimumLatency(0);
++      builder.setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
 +    }
 +
 +    return builder.build();

@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   expo-task-manager@14.0.9:
-    hash: 330cdc16cc4568b13f1d7ca7a9cfabdd24193119c2e47567aca1043a173b0887
+    hash: 07044f37dd835ee00763142621c7a8e3fe1f57c356b00058766a6f528ace232c
     path: patches/expo-task-manager@14.0.9.patch
 
 importers:
@@ -135,7 +135,7 @@ importers:
         version: 16.0.10(expo@54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
       expo-task-manager:
         specifier: ~14.0.9
-        version: 14.0.9(patch_hash=330cdc16cc4568b13f1d7ca7a9cfabdd24193119c2e47567aca1043a173b0887)(expo@54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))
+        version: 14.0.9(patch_hash=07044f37dd835ee00763142621c7a8e3fe1f57c356b00058766a6f528ace232c)(expo@54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))
       expo-web-browser:
         specifier: ~15.0.10
         version: 15.0.10(expo@54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))
@@ -10460,7 +10460,7 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0)
 
-  expo-task-manager@14.0.9(patch_hash=330cdc16cc4568b13f1d7ca7a9cfabdd24193119c2e47567aca1043a173b0887)(expo@54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0)):
+  expo-task-manager@14.0.9(patch_hash=07044f37dd835ee00763142621c7a8e3fe1f57c356b00058766a6f528ace232c)(expo@54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0)):
     dependencies:
       expo: 54.0.32(@babel/core@7.27.1)(graphql@16.11.0)(react-native@0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
       react-native: 0.81.5(@babel/core@7.27.1)(@react-native-community/cli@20.0.2(typescript@5.9.2))(@react-native/metro-config@0.81.1(@babel/core@7.27.1))(@types/react@19.1.13)(react@19.1.0)
