@@ -63,7 +63,7 @@ describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
   });
 
   it('does not open websocket or send data', async () => {
-    renderHook(() => useTelemetrySender(true, 'wss://localhost:8080'));
+    renderHook(() => useTelemetrySender(true, 'https://localhost:8080'));
 
     await new Promise((r) => setTimeout(r, 30));
 

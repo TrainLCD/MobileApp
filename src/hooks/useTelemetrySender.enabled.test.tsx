@@ -78,6 +78,9 @@ let mockFetch: jest.Mock;
 describe('useTelemetrySender', () => {
   beforeEach(() => {
     mockFetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
       json: () => Promise.resolve({ ok: true }),
     });
     global.fetch = mockFetch;
@@ -251,6 +254,9 @@ describe('useTelemetrySender', () => {
   test('should warn when API returns error', async () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
       json: () => Promise.resolve({ ok: false, error: 'Server error' }),
     });
 

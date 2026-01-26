@@ -129,7 +129,22 @@ export const useTelemetrySender = (
           body: JSON.stringify(payload.data),
         });
 
-        const result = ApiResponse.safeParse(await response.json());
+        if (!response.ok) {
+          console.error(
+            `HTTP error: ${response.status} ${response.statusText}`
+          );
+          return;
+        }
+
+        let json: unknown;
+        try {
+          json = await response.json();
+        } catch {
+          console.error('Failed to parse response JSON');
+          return;
+        }
+
+        const result = ApiResponse.safeParse(json);
         if (result.success && !result.data.ok) {
           console.warn('Log API error:', result.data.error);
         }
@@ -185,7 +200,20 @@ export const useTelemetrySender = (
         body: JSON.stringify(payload.data),
       });
 
-      const result = ApiResponse.safeParse(await response.json());
+      if (!response.ok) {
+        console.error(`HTTP error: ${response.status} ${response.statusText}`);
+        return;
+      }
+
+      let json: unknown;
+      try {
+        json = await response.json();
+      } catch {
+        console.error('Failed to parse response JSON');
+        return;
+      }
+
+      const result = ApiResponse.safeParse(json);
       if (result.success) {
         if (result.data.ok) {
           if (result.data.warning) {
