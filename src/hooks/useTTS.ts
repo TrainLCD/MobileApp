@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { TransportType } from '~/@types/graphql';
 import speechState from '../store/atoms/speech';
 import TTSPlayer from '../utils/tts/TTSPlayer';
@@ -12,10 +12,10 @@ import { useTTSText } from './useTTSText';
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled } = useAtomValue(speechState);
   const currentLine = useCurrentLine();
+  const ttsPlayer = TTSPlayer.getInstance();
 
-  const firstSpeechRef = useRef(true);
-  const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
-  const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
+  const trainTTSText = useTTSText(ttsPlayer.isFirstSpeech(), enabled);
+  const busTTSText = useBusTTSText(ttsPlayer.isFirstSpeech(), enabled);
   const ttsText =
     currentLine?.transportType === TransportType.Bus
       ? busTTSText
@@ -24,7 +24,6 @@ export const useTTS = (): void => {
   const [textJa, textEn] = ttsText;
 
   const user = useCachedInitAnonymousUser();
-  const ttsPlayer = TTSPlayer.getInstance();
 
   // バックグラウンドTTS用にgetIdTokenを設定
   useEffect(() => {
@@ -67,8 +66,8 @@ export const useTTS = (): void => {
       try {
         await ttsPlayer.speak(textJa, textEn);
         // 最初の放送フラグを更新
-        if (firstSpeechRef.current) {
-          firstSpeechRef.current = false;
+        if (ttsPlayer.isFirstSpeech()) {
+          ttsPlayer.setFirstSpeechDone();
         }
       } catch (err) {
         console.error('[useTTS] speak error:', err);

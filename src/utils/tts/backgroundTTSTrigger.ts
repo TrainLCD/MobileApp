@@ -18,6 +18,7 @@ import {
   getLoopLineBound,
   getLoopLineInfo,
   getNextStation,
+  getNextStationNumber,
   getSlicedStations,
   getStoppingState,
   getTransferLines,
@@ -25,8 +26,8 @@ import {
 } from './helpers';
 import TTSPlayer from './TTSPlayer';
 
-let firstSpeech = true;
 let lastStoppingState: string | null = null;
+let tokenInitialized = false;
 
 /**
  * バックグラウンドでTTSをトリガーする
@@ -84,6 +85,7 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
       line,
       navigation
     );
+    const nextStationNumber = getNextStationNumber(station, line, navigation);
 
     // slicedStationsの重複除去
     const slicedStations = Array.from(
@@ -95,12 +97,16 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
     const ttsPlayer = TTSPlayer.getInstance();
 
     // Firebase Authから直接getIdTokenを設定（バックグラウンドではuseTTSが動かないため）
-    const auth = getAuth();
-    const firebaseUser = auth.currentUser;
-    if (firebaseUser) {
-      ttsPlayer.setGetIdToken(() => firebaseUser.getIdToken());
-    } else {
-      return;
+    // 初回のみ設定し、以降はTTSPlayer内のキャッシュを使う
+    if (!tokenInitialized) {
+      const auth = getAuth();
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        ttsPlayer.setGetIdToken(() => firebaseUser.getIdToken());
+        tokenInitialized = true;
+      } else {
+        return;
+      }
     }
 
     // AudioModeを設定（バックグラウンド再生有効）
@@ -109,7 +115,7 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
     // TTSテキストを生成
     const ttsText = generateTTSText({
       theme,
-      firstSpeech,
+      firstSpeech: ttsPlayer.isFirstSpeech(),
       stoppingState,
       currentLine,
       currentStation,
@@ -127,6 +133,12 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
       slicedStations,
       isNextStopTerminus,
       isAfterNextStopTerminus,
+      nextStationNumber: nextStationNumber
+        ? {
+            stationNumber: nextStationNumber.stationNumber,
+            lineSymbol: nextStationNumber.lineSymbol,
+          }
+        : undefined,
     });
 
     if (!ttsText.length) {
@@ -152,8 +164,8 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
     await ttsPlayer.speak(textJa, textEn);
 
     // 最初の放送フラグを更新
-    if (firstSpeech) {
-      firstSpeech = false;
+    if (ttsPlayer.isFirstSpeech()) {
+      ttsPlayer.setFirstSpeechDone();
     }
   } catch (error) {
     console.error('[backgroundTTSTrigger] Error:', error);
@@ -165,7 +177,10 @@ export const triggerBackgroundTTS = async (): Promise<void> => {
  * 新しい乗車セッション開始時に呼び出す
  */
 export const resetFirstSpeech = (): void => {
-  firstSpeech = true;
   lastStoppingState = null;
-  TTSPlayer.getInstance().resetLastPlayedText();
+  tokenInitialized = false;
+  const ttsPlayer = TTSPlayer.getInstance();
+  ttsPlayer.resetFirstSpeech();
+  ttsPlayer.resetLastPlayedText();
+  ttsPlayer.clearTokenCache();
 };

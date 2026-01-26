@@ -53,6 +53,9 @@ type TTSCache = {
 
 type GetIdTokenFunc = () => Promise<string | undefined>;
 
+// トークンキャッシュ（有効期限55分 - Firebaseトークンは1時間有効なので余裕を持たせる）
+const TOKEN_CACHE_DURATION_MS = 55 * 60 * 1000;
+
 class TTSPlayer {
   private static instance: TTSPlayer | null = null;
   private soundJa: AudioPlayer | null = null;
@@ -62,6 +65,9 @@ class TTSPlayer {
   private ttsApiUrl: string;
   private getIdToken: GetIdTokenFunc | null = null;
   private lastPlayedTextJa: string | null = null;
+  private cachedToken: string | null = null;
+  private cachedTokenExpiry = 0;
+  private firstSpeech = true;
 
   private constructor() {
     this.ttsApiUrl = isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
@@ -76,6 +82,59 @@ class TTSPlayer {
 
   setGetIdToken(fn: GetIdTokenFunc): void {
     this.getIdToken = fn;
+  }
+
+  // キャッシュ付きトークン取得（バックグラウンドでのネットワーク遅延を回避）
+  private async getCachedIdToken(): Promise<string | undefined> {
+    const now = Date.now();
+
+    // キャッシュが有効ならそれを返す
+    if (this.cachedToken && now < this.cachedTokenExpiry) {
+      return this.cachedToken;
+    }
+
+    if (!this.getIdToken) {
+      console.warn('[TTSPlayer] getIdToken not set');
+      return undefined;
+    }
+
+    try {
+      // タイムアウト付きでトークン取得（5秒）
+      const tokenPromise = this.getIdToken();
+      const timeoutPromise = new Promise<undefined>((resolve) =>
+        setTimeout(() => resolve(undefined), 5000)
+      );
+
+      const token = await Promise.race([tokenPromise, timeoutPromise]);
+
+      if (token) {
+        this.cachedToken = token;
+        this.cachedTokenExpiry = now + TOKEN_CACHE_DURATION_MS;
+        return token;
+      }
+
+      // 新しいトークン取得に失敗したが、古いキャッシュがあればそれを使う（期限切れでも）
+      if (this.cachedToken) {
+        console.warn(
+          '[TTSPlayer] Failed to refresh token, using expired cache'
+        );
+        return this.cachedToken;
+      }
+
+      return undefined;
+    } catch (error) {
+      console.error('[TTSPlayer] getCachedIdToken error:', error);
+      // エラー時も古いキャッシュがあれば使う
+      if (this.cachedToken) {
+        return this.cachedToken;
+      }
+      return undefined;
+    }
+  }
+
+  clearTokenCache(): void {
+    this.cachedToken = null;
+    this.cachedTokenExpiry = 0;
   }
 
   async setAudioMode(backgroundEnabled: boolean): Promise<void> {
@@ -229,11 +288,6 @@ class TTSPlayer {
     textJa: string,
     textEn: string
   ): Promise<{ id: string; pathJa: string; pathEn: string } | undefined> {
-    if (!this.getIdToken) {
-      console.warn('[TTSPlayer] getIdToken not set');
-      return undefined;
-    }
-
     const reqBody = {
       data: {
         ssmlJa: `<speak>${textJa.trim()}</speak>`,
@@ -242,7 +296,7 @@ class TTSPlayer {
     };
 
     try {
-      const idToken = await this.getIdToken();
+      const idToken = await this.getCachedIdToken();
       if (!idToken) {
         console.warn('[TTSPlayer] Failed to get idToken');
         return undefined;
@@ -371,6 +425,18 @@ class TTSPlayer {
 
   resetLastPlayedText(): void {
     this.lastPlayedTextJa = null;
+  }
+
+  isFirstSpeech(): boolean {
+    return this.firstSpeech;
+  }
+
+  setFirstSpeechDone(): void {
+    this.firstSpeech = false;
+  }
+
+  resetFirstSpeech(): void {
+    this.firstSpeech = true;
   }
 }
 

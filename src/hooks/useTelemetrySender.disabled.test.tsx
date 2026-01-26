@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook } from '@testing-library/react-native';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
 
@@ -37,23 +36,17 @@ jest.mock('~/store/atoms/location', () => ({
 }));
 
 describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
-  let mockSend: jest.Mock;
+  let mockFetch: jest.Mock;
   let consoleErrorSpy: jest.SpyInstance;
   let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    mockSend = jest.fn();
+    mockFetch = jest.fn();
 
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-    global.WebSocket = jest.fn().mockImplementation(() => ({
-      readyState: 1,
-      send: mockSend,
-      close: jest.fn(),
-    })) as any;
-
-    (global.WebSocket as any).OPEN = 1;
+    global.fetch = mockFetch;
   });
 
   afterEach(() => {
@@ -62,12 +55,11 @@ describe('useTelemetrySender (ENABLE_EXPERIMENTAL_TELEMETRY=false)', () => {
     jest.clearAllMocks();
   });
 
-  it('does not open websocket or send data', async () => {
-    renderHook(() => useTelemetrySender(true, 'wss://localhost:8080'));
+  it('does not send HTTP request when telemetry is disabled', async () => {
+    renderHook(() => useTelemetrySender(true, 'https://localhost:8080'));
 
     await new Promise((r) => setTimeout(r, 30));
 
-    expect(global.WebSocket).not.toHaveBeenCalled();
-    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });
