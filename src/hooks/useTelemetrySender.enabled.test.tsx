@@ -185,10 +185,9 @@ describe('useTelemetrySender', () => {
   });
 
   test('should not send log if baseUrl is not provided', async () => {
-    const { result } = renderHook(
-      () => useTelemetrySender(false, ''),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useTelemetrySender(false, ''), {
+      wrapper,
+    });
 
     await act(async () => {
       result.current.sendLog('Test log');
@@ -225,7 +224,9 @@ describe('useTelemetrySender', () => {
   });
 
   test('should handle fetch error gracefully', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(
@@ -269,7 +270,10 @@ describe('useTelemetrySender', () => {
 
     await waitFor(
       () => {
-        expect(consoleSpy).toHaveBeenCalledWith('Log API error:', 'Server error');
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Log API error:',
+          'Server error'
+        );
       },
       { timeout: 2000 }
     );
