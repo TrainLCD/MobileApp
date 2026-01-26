@@ -54,7 +54,8 @@ const ApiResponse = z.object({
 
 export const useTelemetrySender = (
   sendTelemetryAutomatically = false,
-  baseUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL
+  baseUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL,
+  token = EXPERIMENTAL_TELEMETRY_TOKEN
 ) => {
   const lastSentTelemetryRef = useRef<number>(0);
   const gnssRef = useRef<GnssState | null>(null);
@@ -123,7 +124,7 @@ export const useTelemetrySender = (
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${EXPERIMENTAL_TELEMETRY_TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload.data),
         });
@@ -136,7 +137,7 @@ export const useTelemetrySender = (
         console.error('Failed to send log:', error);
       }
     },
-    [isTelemetryEnabled, baseUrl]
+    [isTelemetryEnabled, baseUrl, token]
   );
 
   const sendTelemetry = useCallback(async () => {
@@ -179,7 +180,7 @@ export const useTelemetrySender = (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${EXPERIMENTAL_TELEMETRY_TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload.data),
       });
@@ -197,7 +198,15 @@ export const useTelemetrySender = (
     } catch (error) {
       console.error('Failed to send location:', error);
     }
-  }, [coords, state, isTelemetryEnabled, line?.id, station?.id, baseUrl]);
+  }, [
+    coords,
+    state,
+    isTelemetryEnabled,
+    line?.id,
+    station?.id,
+    baseUrl,
+    token,
+  ]);
 
   useEffect(() => {
     if (!isTelemetryEnabled || !sendTelemetryAutomatically) {

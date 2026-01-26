@@ -18,10 +18,6 @@ jest.mock('expo-network', () => ({
 jest.mock('~/utils/telemetryConfig', () => ({
   isTelemetryEnabledByBuild: true,
 }));
-jest.mock('react-native-dotenv', () => ({
-  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: 'https://example.com',
-  EXPERIMENTAL_TELEMETRY_TOKEN: 'test-token',
-}));
 jest.mock('jotai', () => {
   const actual = jest.requireActual('jotai');
   return {
@@ -115,7 +111,7 @@ describe('useTelemetrySender', () => {
 
   test('should send log via fetch API', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
@@ -144,7 +140,7 @@ describe('useTelemetrySender', () => {
 
   test('should send log with default level as debug', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
@@ -172,7 +168,7 @@ describe('useTelemetrySender', () => {
     (useTelemetryEnabled as jest.Mock).mockReturnValue(false);
 
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
@@ -199,7 +195,7 @@ describe('useTelemetrySender', () => {
 
   test('should include Authorization header with token', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
@@ -230,7 +226,7 @@ describe('useTelemetrySender', () => {
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
@@ -259,7 +255,7 @@ describe('useTelemetrySender', () => {
     });
 
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
@@ -283,7 +279,7 @@ describe('useTelemetrySender', () => {
 
   test('should send multiple logs independently', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com'),
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
     );
 
