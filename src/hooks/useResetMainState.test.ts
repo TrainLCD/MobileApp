@@ -37,7 +37,7 @@ jest.mock('../store/atoms/station', () => ({
 const mockResetFirstSpeech = resetFirstSpeech as jest.Mock;
 
 describe('useResetMainState', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

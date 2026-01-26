@@ -49,6 +49,7 @@ export const useStartBackgroundLocationUpdates = () => {
 
   useEffect(() => {
     let watchPositionSub: Location.LocationSubscription | null = null;
+    let cancelled = false;
 
     if (autoModeEnabled || bgPermGranted) {
       return;
@@ -56,16 +57,22 @@ export const useStartBackgroundLocationUpdates = () => {
 
     (async () => {
       try {
-        watchPositionSub = await Location.watchPositionAsync(
+        const sub = await Location.watchPositionAsync(
           LOCATION_TASK_OPTIONS,
           setLocation
         );
+        if (cancelled) {
+          sub.remove();
+        } else {
+          watchPositionSub = sub;
+        }
       } catch (error) {
         console.warn('位置情報の監視開始に失敗しました:', error);
       }
     })();
 
     return () => {
+      cancelled = true;
       watchPositionSub?.remove();
     };
   }, [autoModeEnabled, bgPermGranted]);
