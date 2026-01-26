@@ -12,12 +12,6 @@ jobs:
       profile: production
     steps:
       - uses: eas/checkout
-      - name: Ensure EAS_PROJECT is production
-        run: |
-          if [ "${EAS_PROJECT:-}" != "production" ]; then
-            echo "EAS_PROJECT must be 'production' for this workflow; got '${EAS_PROJECT:-<unset>}'"
-            exit 1
-          fi
       - name: Checkout submodules
         run: |
           set -euo pipefail
