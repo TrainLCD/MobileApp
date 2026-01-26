@@ -7,10 +7,10 @@ on:
 jobs:
   build_android:
     type: build
+    environment: production
     params:
       platform: android
       profile: production
-      environment: production
     steps:
       - uses: eas/checkout
       - name: Checkout submodules
@@ -61,17 +61,17 @@ jobs:
     name: Submit to Google Play Store
     needs: [build_android]
     type: submit
+    environment: production
     params:
       build_id: ${{ needs.build_android.outputs.build_id }}
       profile: production
-      environment: production
 
   build_ios:
     type: build
+    environment: production
     params:
       platform: ios
       profile: production
-      environment: production
     steps:
       - uses: eas/checkout
       - name: Ensure EAS_PROJECT is production
@@ -112,7 +112,7 @@ jobs:
     name: Submit to TestFlight
     needs: [build_ios]
     type: testflight
+    environment: production
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production
-      environment: production
