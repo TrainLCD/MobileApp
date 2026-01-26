@@ -140,7 +140,7 @@ export const useTelemetrySender = (
   );
 
   const sendTelemetry = useCallback(async () => {
-    if (!isTelemetryEnabled || !line?.id || !baseUrl) {
+    if (!isTelemetryEnabled || line?.id == null || !baseUrl) {
       return;
     }
 
@@ -172,6 +172,8 @@ export const useTelemetrySender = (
       return;
     }
 
+    lastSentTelemetryRef.current = now;
+
     try {
       const response = await fetch(`${baseUrl}/api/location`, {
         method: 'POST',
@@ -185,7 +187,6 @@ export const useTelemetrySender = (
       const result = ApiResponse.safeParse(await response.json());
       if (result.success) {
         if (result.data.ok) {
-          lastSentTelemetryRef.current = now;
           if (result.data.warning) {
             console.warn('Location API warning:', result.data.warning);
           }
