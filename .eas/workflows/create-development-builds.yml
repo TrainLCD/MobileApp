@@ -10,6 +10,7 @@ jobs:
     params:
       platform: android
       profile: development
+      environment: development
     steps:
       - uses: eas/checkout
       - name: Checkout submodules
@@ -63,12 +64,14 @@ jobs:
     params:
       build_id: ${{ needs.build_android.outputs.build_id }}
       profile: development
+      environment: development
 
   build_ios:
     type: build
     params:
       platform: ios
       profile: development
+      environment: development
     steps:
       - uses: eas/checkout
       - name: Checkout submodules
@@ -106,3 +109,4 @@ jobs:
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: development
+      environment: development
