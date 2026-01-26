@@ -206,7 +206,7 @@ describe('useThreshold', () => {
 
   it('駅間距離がapproachingThreshold上限付近の場合、正しく判定する', () => {
     // approachingThreshold = distance/2 = 1000 となる距離は 2000m
-    // 約1500mの距離を設定 -> approachingThreshold = 750, arrivedThreshold = 375
+    // 約1000mの距離を設定 -> approachingThreshold = 500, arrivedThreshold = 250
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
@@ -216,7 +216,7 @@ describe('useThreshold', () => {
     mockUseNextStation.mockReturnValue({
       id: 2,
       groupId: 2,
-      latitude: 35.694736, // 約1500m北
+      latitude: 35.690236, // 約1000m北
       longitude: 139.767125,
     } as ReturnType<typeof useNextStation>);
 
@@ -225,14 +225,14 @@ describe('useThreshold', () => {
 
     // 距離/2 < 1000 なので計算値を使用
     expect(result.approachingThreshold).toBeLessThan(APPROACHING_MAX_THRESHOLD);
-    // 距離/4 < 500 なので計算値を使用
+    // 距離/4 < 300 なので計算値を使用
     expect(result.arrivedThreshold).toBeLessThan(ARRIVED_MAX_THRESHOLD);
   });
 
   it('駅間距離がarrivedThreshold上限付近でapproachingThresholdが最大値の場合', () => {
-    // arrivedThreshold = distance/4 = 500 となる距離は 2000m
-    // approachingThreshold = distance/2 = 1000m -> 最大値
-    // 約2500mの距離を設定
+    // arrivedThreshold = distance/4 = 300 となる距離は 1200m
+    // approachingThreshold = distance/2 = 600m
+    // 約2500mの距離を設定 -> 両方とも最大値
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
