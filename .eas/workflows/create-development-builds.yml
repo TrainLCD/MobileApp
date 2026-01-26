@@ -7,6 +7,7 @@ on:
 jobs:
   build_android:
     type: build
+    environment: development
     params:
       platform: android
       profile: development
@@ -60,12 +61,14 @@ jobs:
     name: Submit to Google Play Store
     needs: [build_android]
     type: submit
+    environment: development
     params:
       build_id: ${{ needs.build_android.outputs.build_id }}
       profile: development
 
   build_ios:
     type: build
+    environment: development
     params:
       platform: ios
       profile: development
@@ -103,6 +106,7 @@ jobs:
     name: Submit to TestFlight
     needs: [build_ios]
     type: testflight
+    environment: development
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: development
