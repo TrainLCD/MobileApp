@@ -29,7 +29,9 @@ export default ({ config }: ConfigContext) => ({
   ],
   extra: {
     eas: {
-      projectId: process.env.EAS_BUILD_PROJECT_ID || '',
+      projectId:
+        process.env.EAS_BUILD_PROJECT_ID ||
+        'dad36dde-0056-4760-8eda-37f05e7c9c6c',
     },
   },
   ios: {
