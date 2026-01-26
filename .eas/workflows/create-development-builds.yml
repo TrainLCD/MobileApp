@@ -71,12 +71,6 @@ jobs:
       profile: development
     steps:
       - uses: eas/checkout
-      - name: Ensure EAS_PROJECT is canary
-        run: |
-          if [ "${EAS_PROJECT:-}" != "canary" ]; then
-            echo "EAS_PROJECT must be 'canary' for this workflow; got '${EAS_PROJECT:-<unset>}'"
-            exit 1
-          fi
       - name: Checkout submodules
         run: |
           set -euo pipefail
