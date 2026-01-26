@@ -142,6 +142,5 @@
       "^~/@types/graphql$": "<rootDir>/src/@types/graphql.ts"
     }
   },
-  "name": "trainlcd",
-  "version": "10.0.131"
+  "name": "trainlcd"
 }
