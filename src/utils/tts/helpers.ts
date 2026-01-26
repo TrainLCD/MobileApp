@@ -1,4 +1,4 @@
-import type { Line, Station, TrainType } from '~/@types/graphql';
+import type { Line, Station, StationNumber, TrainType } from '~/@types/graphql';
 import {
   MEIJO_LINE_ID,
   OSAKA_LOOP_LINE_ID,
@@ -608,4 +608,41 @@ export const getDirectionalStops = (
     .slice(reversedCurrentIndex)
     .filter((s) => !getIsPass(s));
   return [filtered[filtered.length - 1]].filter((s): s is Station => !!s);
+};
+
+// getStationNumberIndex の純粋関数版
+export const getStationNumberIndex = (
+  station: Station | undefined,
+  line: Line | null
+): number => {
+  return (
+    line?.lineSymbols?.findIndex(({ symbol }) =>
+      station?.stationNumbers?.some(({ lineSymbol }) => symbol === lineSymbol)
+    ) ?? 0
+  );
+};
+
+// getNextStationNumber の純粋関数版
+export const getNextStationNumber = (
+  stationState: StationState,
+  lineState: LineState,
+  navigationState: NavigationState
+): StationNumber | undefined => {
+  const nextStation = getNextStation(stationState, lineState, navigationState);
+  const currentLine = getCurrentLine(stationState, lineState);
+
+  if (!nextStation?.stationNumbers) {
+    return undefined;
+  }
+
+  const stationNumberIndex = getStationNumberIndex(nextStation, currentLine);
+  if (
+    !Number.isInteger(stationNumberIndex) ||
+    stationNumberIndex < 0 ||
+    stationNumberIndex >= nextStation.stationNumbers.length
+  ) {
+    return undefined;
+  }
+
+  return nextStation.stationNumbers[stationNumberIndex];
 };
