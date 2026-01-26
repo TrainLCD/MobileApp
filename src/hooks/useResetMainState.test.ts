@@ -118,7 +118,7 @@ describe('useResetMainState', () => {
     const { result, rerender } = renderHook(() => useResetMainState());
 
     const firstReset = result.current;
-    rerender();
+    rerender(undefined);
     const secondReset = result.current;
 
     expect(firstReset).toBe(secondReset);
