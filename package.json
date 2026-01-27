@@ -13,7 +13,8 @@
     "deploy:ios:canary": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_canary",
     "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
     "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
-    "gql:codegen": "graphql-codegen --config utils/codegen.ts"
+    "gql:codegen": "graphql-codegen --config utils/codegen.ts",
+    "version:bump": "node scripts/bump-version.js"
   },
   "dependencies": {
     "@apollo/client": "^4.0.7",
@@ -142,5 +143,6 @@
       "^~/@types/graphql$": "<rootDir>/src/@types/graphql.ts"
     }
   },
-  "name": "trainlcd"
+  "name": "trainlcd",
+  "version": "10.0.132"
 }
