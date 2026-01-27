@@ -9,6 +9,7 @@ jest.mock("@notifee/react-native", () => ({
   },
   AndroidForegroundServiceType: {
     FOREGROUND_SERVICE_TYPE_LOCATION: 8,
+    FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK: 2,
   },
   AndroidImportance: {
     LOW: 2,

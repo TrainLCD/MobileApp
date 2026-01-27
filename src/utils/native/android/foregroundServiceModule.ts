@@ -49,6 +49,7 @@ export const startForegroundService = async (): Promise<void> => {
         asForegroundService: true,
         foregroundServiceTypes: [
           AndroidForegroundServiceType.FOREGROUND_SERVICE_TYPE_LOCATION,
+          AndroidForegroundServiceType.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
         ],
         importance: AndroidImportance.LOW,
         // 通知を常に表示（スワイプで消せない）
