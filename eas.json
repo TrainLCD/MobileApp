@@ -1,12 +1,10 @@
 {
   "cli": {
-    "version": ">= 16.26.0",
-    "appVersionSource": "remote"
+    "version": ">= 16.26.0"
   },
   "build": {
     "development": {
       "distribution": "store",
-      "autoIncrement": true,
       "android": {
         "gradleCommand": ":app:bundleDevRelease"
       },
@@ -20,7 +18,6 @@
     },
     "production": {
       "distribution": "store",
-      "autoIncrement": true,
       "android": {
         "gradleCommand": ":app:bundleProdRelease"
       },
