@@ -35,5 +35,6 @@
         <data android:scheme="@string/app_scheme"/>
       </intent-filter>
     </activity>
+    <service android:name="app.notifee.core.ForegroundService" android:foregroundServiceType="location|mediaPlayback" />
   </application>
 </manifest>

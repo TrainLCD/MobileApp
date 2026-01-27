@@ -3,11 +3,32 @@ import notifee, {
   AndroidImportance,
   EventType,
 } from '@notifee/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 import { Platform } from 'react-native';
+import { ASYNC_STORAGE_KEYS } from '~/constants/asyncStorage';
 import { translate } from '~/translation';
 
 const CHANNEL_ID = 'trainlcd-foreground-service';
 const NOTIFICATION_ID = 'trainlcd-foreground-notification';
+
+/**
+ * フォアグラウンドサービスを起動する条件を満たしているかチェック
+ * - バックグラウンド音声が有効
+ * - 位置情報が常に許可されている
+ */
+const shouldStartForegroundService = async (): Promise<boolean> => {
+  try {
+    const [bgTtsEnabled, locationPermission] = await Promise.all([
+      AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
+      Location.getBackgroundPermissionsAsync(),
+    ]);
+
+    return bgTtsEnabled === 'true' && locationPermission.granted;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * 通知チャンネルを作成
@@ -31,9 +52,16 @@ export const createNotificationChannel = async (): Promise<void> => {
 /**
  * Androidフォアグラウンドサービスを開始
  * これによりDozeモードでも位置情報の更新が継続される
+ * バックグラウンド音声が有効かつ位置情報が常に許可されている場合のみ起動
  */
 export const startForegroundService = async (): Promise<void> => {
   if (Platform.OS !== 'android') {
+    return;
+  }
+
+  // バックグラウンド音声が有効かつ位置情報が常に許可されている場合のみ起動
+  const shouldStart = await shouldStartForegroundService();
+  if (!shouldStart) {
     return;
   }
 
