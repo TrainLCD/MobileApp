@@ -38,7 +38,7 @@ jobs:
       - name: Bump version
         run: |
           set -e
-          pnpm run version:bump -- --no-version-increment
+          pnpm run version:bump --no-version-increment
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
