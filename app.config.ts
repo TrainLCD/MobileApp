@@ -59,7 +59,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000215,
+    versionCode: 100000216,
   },
   owner: 'trainlcd',
 });
