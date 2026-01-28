@@ -3,25 +3,11 @@ import notifee, {
   AndroidImportance,
   EventType,
 } from '@notifee/react-native';
-import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 import { translate } from '~/translation';
 
 const CHANNEL_ID = 'trainlcd-foreground-service';
 const NOTIFICATION_ID = 'trainlcd-foreground-notification';
-
-/**
- * フォアグラウンドサービスを起動する条件を満たしているかチェック
- * - 位置情報が常に許可されている
- */
-const shouldStartForegroundService = async (): Promise<boolean> => {
-  try {
-    const locationPermission = await Location.getBackgroundPermissionsAsync();
-    return locationPermission.granted;
-  } catch {
-    return false;
-  }
-};
 
 /**
  * 通知チャンネルを作成
@@ -44,17 +30,11 @@ export const createNotificationChannel = async (): Promise<void> => {
 
 /**
  * Androidフォアグラウンドサービスを開始
- * これによりDozeモードでも位置情報の更新が継続される
- * 位置情報が常に許可されている場合のみ起動
+ * バックグラウンドでのメディア再生（TTS）を継続するために使用
+ * 位置情報の更新はexpo-locationのforegroundServiceで処理する
  */
 export const startForegroundService = async (): Promise<void> => {
   if (Platform.OS !== 'android') {
-    return;
-  }
-
-  // 位置情報が常に許可されている場合のみ起動
-  const shouldStart = await shouldStartForegroundService();
-  if (!shouldStart) {
     return;
   }
 
@@ -69,7 +49,6 @@ export const startForegroundService = async (): Promise<void> => {
         channelId: CHANNEL_ID,
         asForegroundService: true,
         foregroundServiceTypes: [
-          AndroidForegroundServiceType.FOREGROUND_SERVICE_TYPE_LOCATION,
           AndroidForegroundServiceType.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
         ],
         importance: AndroidImportance.LOW,
