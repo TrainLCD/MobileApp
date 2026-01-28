@@ -3,11 +3,25 @@ import notifee, {
   AndroidImportance,
   EventType,
 } from '@notifee/react-native';
+import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 import { translate } from '~/translation';
 
 const CHANNEL_ID = 'trainlcd-foreground-service';
 const NOTIFICATION_ID = 'trainlcd-foreground-notification';
+
+/**
+ * フォアグラウンドサービスを起動する条件を満たしているかチェック
+ * - 位置情報が常に許可されている
+ */
+const shouldStartForegroundService = async (): Promise<boolean> => {
+  try {
+    const locationPermission = await Location.getBackgroundPermissionsAsync();
+    return locationPermission.granted;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * 通知チャンネルを作成
@@ -35,6 +49,12 @@ export const createNotificationChannel = async (): Promise<void> => {
  */
 export const startForegroundService = async (): Promise<void> => {
   if (Platform.OS !== 'android') {
+    return;
+  }
+
+  // 位置情報が常に許可されている場合のみ起動
+  const shouldStart = await shouldStartForegroundService();
+  if (!shouldStart) {
     return;
   }
 
