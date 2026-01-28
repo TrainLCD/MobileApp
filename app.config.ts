@@ -11,6 +11,13 @@ export default ({ config }: ConfigContext) => ({
     'expo-sqlite',
     'expo-asset',
     [
+      'expo-location',
+      {
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: true,
+      },
+    ],
+    [
       '@sentry/react-native',
       {
         url: 'https://sentry.io/',
