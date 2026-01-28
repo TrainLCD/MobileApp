@@ -1,4 +1,3 @@
-import notifee from '@notifee/react-native';
 import * as Sentry from '@sentry/react-native';
 import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
@@ -6,12 +5,7 @@ import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
 import { setLocation } from './src/store/atoms/location';
-import { onBackgroundEvent } from './src/utils/native/android/foregroundServiceModule';
 import { triggerBackgroundTTS } from './src/utils/tts/backgroundTTSTrigger';
-
-// notifeeのバックグラウンドイベントハンドラを登録
-// フォアグラウンドサービスの通知イベントを処理
-notifee.onBackgroundEvent(onBackgroundEvent);
 
 Sentry.init({
   dsn: SENTRY_DSN,

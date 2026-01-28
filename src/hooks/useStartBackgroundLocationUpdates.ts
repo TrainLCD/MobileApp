@@ -1,13 +1,8 @@
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 import { setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
-import {
-  startForegroundService,
-  stopForegroundService,
-} from '~/utils/native/android/foregroundServiceModule';
 import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
@@ -23,11 +18,6 @@ export const useStartBackgroundLocationUpdates = () => {
 
     (async () => {
       try {
-        // AndroidではNotifeeのフォアグラウンドサービスも起動（バックグラウンドTTS用）
-        if (Platform.OS === 'android') {
-          await startForegroundService();
-        }
-
         // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
         // Android 16以降ではJobSchedulerにランタイムクォータが適用されるため、
         // expo-locationのフォアグラウンドサービス内で直接位置更新を実行する必要がある
@@ -51,11 +41,6 @@ export const useStartBackgroundLocationUpdates = () => {
     })();
 
     return () => {
-      // AndroidではNotifeeのフォアグラウンドサービスも停止
-      if (Platform.OS === 'android') {
-        stopForegroundService();
-      }
-
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
         console.warn(
           'バックグラウンド位置情報の更新停止に失敗しました:',

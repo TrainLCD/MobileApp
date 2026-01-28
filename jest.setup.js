@@ -12,28 +12,6 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   },
 }));
 
-jest.mock("@notifee/react-native", () => ({
-  __esModule: true,
-  default: {
-    onBackgroundEvent: jest.fn(),
-    displayNotification: jest.fn(),
-    createChannel: jest.fn(),
-    stopForegroundService: jest.fn(),
-    getDisplayedNotifications: jest.fn(() => Promise.resolve([])),
-  },
-  AndroidForegroundServiceType: {
-    FOREGROUND_SERVICE_TYPE_LOCATION: 8,
-    FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK: 2,
-  },
-  AndroidImportance: {
-    LOW: 2,
-  },
-  EventType: {
-    PRESS: 1,
-    DISMISSED: 2,
-  },
-}));
-
 jest.mock("~/hooks", () => ({
   useCurrentStation: jest.fn(() => null),
   useThemeStore: jest.fn(() => ({})),
