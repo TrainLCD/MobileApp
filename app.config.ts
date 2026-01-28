@@ -11,6 +11,13 @@ export default ({ config }: ConfigContext) => ({
     'expo-sqlite',
     'expo-asset',
     [
+      'expo-location',
+      {
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: true,
+      },
+    ],
+    [
       '@sentry/react-native',
       {
         url: 'https://sentry.io/',
@@ -52,7 +59,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000215,
+    versionCode: 100000216,
   },
   owner: 'trainlcd',
 });

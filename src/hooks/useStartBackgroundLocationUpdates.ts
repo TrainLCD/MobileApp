@@ -23,26 +23,24 @@ export const useStartBackgroundLocationUpdates = () => {
 
     (async () => {
       try {
-        // Androidではnotifeeのフォアグラウンドサービスを使用
-        // これによりDozeモードでも位置情報の更新が継続される
+        // AndroidではNotifeeのフォアグラウンドサービスも起動（バックグラウンドTTS用）
         if (Platform.OS === 'android') {
           await startForegroundService();
         }
 
+        // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
+        // Android 16以降ではJobSchedulerにランタイムクォータが適用されるため、
+        // expo-locationのフォアグラウンドサービス内で直接位置更新を実行する必要がある
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           ...LOCATION_TASK_OPTIONS,
           // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
           // OtherNavigationは必須
           activityType: Location.ActivityType.OtherNavigation,
-          // iOSのみexpo-locationのフォアグラウンドサービスを使用
-          // Androidはnotifeeのフォアグラウンドサービスを使用するため設定しない
-          ...(Platform.OS === 'ios' && {
-            foregroundService: {
-              notificationTitle: translate('bgAlertTitle'),
-              notificationBody: translate('bgAlertContent'),
-              killServiceOnDestroy: true,
-            },
-          }),
+          foregroundService: {
+            notificationTitle: translate('bgAlertTitle'),
+            notificationBody: translate('bgAlertContent'),
+            killServiceOnDestroy: true,
+          },
         });
       } catch (error) {
         console.warn(
@@ -53,7 +51,7 @@ export const useStartBackgroundLocationUpdates = () => {
     })();
 
     return () => {
-      // Androidではnotifeeのフォアグラウンドサービスも停止
+      // AndroidではNotifeeのフォアグラウンドサービスも停止
       if (Platform.OS === 'android') {
         stopForegroundService();
       }
