@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TransportType } from '~/@types/graphql';
 import speechState from '../store/atoms/speech';
 import TTSPlayer from '../utils/tts/TTSPlayer';
@@ -14,8 +14,19 @@ export const useTTS = (): void => {
   const currentLine = useCurrentLine();
   const ttsPlayer = TTSPlayer.getInstance();
 
-  const trainTTSText = useTTSText(ttsPlayer.isFirstSpeech(), enabled);
-  const busTTSText = useBusTTSText(ttsPlayer.isFirstSpeech(), enabled);
+  // firstSpeechをローカルステートで管理し、
+  // フラグ変更だけによる不要なテキスト再生成・再再生を防ぐ
+  const [localFirstSpeech, setLocalFirstSpeech] = useState(
+    ttsPlayer.isFirstSpeech()
+  );
+
+  // TTSPlayerがリセットされた場合の同期（新しいトリップ開始時）
+  if (ttsPlayer.isFirstSpeech() && !localFirstSpeech) {
+    setLocalFirstSpeech(true);
+  }
+
+  const trainTTSText = useTTSText(localFirstSpeech, enabled);
+  const busTTSText = useBusTTSText(localFirstSpeech, enabled);
   const ttsText =
     currentLine?.transportType === TransportType.Bus
       ? busTTSText
@@ -62,6 +73,13 @@ export const useTTS = (): void => {
       return;
     }
 
+    // 初回放送後にfirstSpeechフラグが変わりテキストが変化した場合、
+    // ローカルステートを更新して正しいテキストで再レンダリングさせる
+    if (localFirstSpeech && !ttsPlayer.isFirstSpeech()) {
+      setLocalFirstSpeech(false);
+      return;
+    }
+
     (async () => {
       try {
         await ttsPlayer.speak(textJa, textEn);
@@ -73,7 +91,15 @@ export const useTTS = (): void => {
         console.error('[useTTS] speak error:', err);
       }
     })();
-  }, [enabled, prevTextEn, prevTextJa, textEn, textJa, ttsPlayer]);
+  }, [
+    enabled,
+    localFirstSpeech,
+    prevTextEn,
+    prevTextJa,
+    textEn,
+    textJa,
+    ttsPlayer,
+  ]);
 
   // クリーンアップ
   useEffect(() => {
