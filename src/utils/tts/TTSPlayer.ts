@@ -383,10 +383,13 @@ class TTSPlayer {
       return;
     }
 
-    // 再生中なら待つ
+    // 再生中またはフェッチ中なら待つ
     if (this.isPlaying) {
       return;
     }
+
+    // フェッチ中の同時呼び出しを防ぐために早期にフラグを立てる
+    this.isPlaying = true;
 
     try {
       const cache = this.getByText(textJa);
@@ -415,6 +418,8 @@ class TTSPlayer {
       await this.speakFromPath(pathJa, pathEn);
     } catch (error) {
       console.error('[TTSPlayer] speak error:', error);
+    } finally {
+      this.isPlaying = false;
     }
   }
 
