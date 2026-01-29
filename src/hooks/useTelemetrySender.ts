@@ -1,3 +1,4 @@
+import * as Battery from 'expo-battery';
 import * as Device from 'expo-device';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -32,6 +33,8 @@ const LocationUpdateRequest = z.object({
     accuracy: z.number().nullable().optional(),
     speed: z.number().nullable().optional(),
   }),
+  batteryLevel: z.number().nullable().optional(),
+  batteryState: z.nativeEnum(Battery.BatteryState).nullable().optional(),
   timestamp: z.number(),
 });
 
@@ -169,6 +172,16 @@ export const useTelemetrySender = (
       return;
     }
 
+    let batteryLevel: number | null = null;
+    let batteryState: Battery.BatteryState | null = null;
+    try {
+      batteryLevel = await Battery.getBatteryLevelAsync();
+      batteryState = await Battery.getBatteryStateAsync();
+    } catch {
+      batteryLevel = null;
+      batteryState = null;
+    }
+
     const payload = LocationUpdateRequest.safeParse({
       device: Device.modelName ?? 'unknown',
       state,
@@ -180,6 +193,8 @@ export const useTelemetrySender = (
         accuracy: coords.accuracy,
         speed: coords.speed,
       },
+      batteryLevel,
+      batteryState,
       timestamp: now,
     });
 
