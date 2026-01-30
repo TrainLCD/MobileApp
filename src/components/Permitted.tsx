@@ -303,11 +303,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           enabled: speechEnabledStr === 'true',
         }));
       }
+      const isAndroid16OrHigher =
+        Platform.OS === 'android' && Number(Platform.Version) >= 36;
       if (bgTTSEnabledStr) {
+        const bgEnabled = bgTTSEnabledStr === 'true' && !isAndroid16OrHigher;
         setSpeech((prev) => ({
           ...prev,
-          backgroundEnabled: bgTTSEnabledStr === 'true',
+          backgroundEnabled: bgEnabled,
         }));
+        // Android 16以上で保存値がtrueの場合、永続化もfalseに上書き
+        if (isAndroid16OrHigher && bgTTSEnabledStr === 'true') {
+          AsyncStorage.setItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED, 'false');
+        }
       }
       if (legacyAutoModeEnabledStr) {
         setNavigation((prev) => ({

@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -95,6 +96,18 @@ const TTSSettingsScreen: React.FC = () => {
     useAtom(speechState);
 
   const navigation = useNavigation();
+
+  // Android 16 (API 36) ではバックグラウンド音声再生が制限されるため無効化
+  const isAndroid16OrHigher =
+    Platform.OS === 'android' && Number(Platform.Version) >= 36;
+
+  // Android 16以上ではバックグラウンド再生を強制的にfalseにする
+  useEffect(() => {
+    if (isAndroid16OrHigher && backgroundEnabled) {
+      setSpeechState((prev) => ({ ...prev, backgroundEnabled: false }));
+      AsyncStorage.setItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED, 'false');
+    }
+  }, [isAndroid16OrHigher, backgroundEnabled, setSpeechState]);
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -247,7 +260,10 @@ const TTSSettingsScreen: React.FC = () => {
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
           state={state}
-          disabled={speechEnabled === false && item.id === 'enable_bg_tts'}
+          disabled={
+            item.id === 'enable_bg_tts' &&
+            (!speechEnabled || isAndroid16OrHigher)
+          }
         />
       );
     },
@@ -256,6 +272,7 @@ const TTSSettingsScreen: React.FC = () => {
       handleToggleBgTTS,
       speechEnabled,
       backgroundEnabled,
+      isAndroid16OrHigher,
       SETTING_ITEMS.length,
     ]
   );
@@ -280,13 +297,26 @@ const TTSSettingsScreen: React.FC = () => {
           renderItem={renderItem}
           onScroll={handleScroll}
           ListFooterComponent={() => (
-            <Button
-              style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-              textStyle={{ fontWeight: 'bold' }}
-              onPress={() => navigation.goBack()}
-            >
-              OK
-            </Button>
+            <>
+              {isAndroid16OrHigher ? (
+                <Typography
+                  style={{
+                    marginTop: 12,
+                    fontSize: 14,
+                    color: isLEDTheme ? '#ccc' : '#666',
+                  }}
+                >
+                  {translate('bgTtsUnavailableOnAndroid16')}
+                </Typography>
+              ) : null}
+              <Button
+                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+                textStyle={{ fontWeight: 'bold' }}
+                onPress={() => navigation.goBack()}
+              >
+                OK
+              </Button>
+            </>
           )}
         />
       </View>
