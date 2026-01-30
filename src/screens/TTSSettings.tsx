@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
@@ -100,6 +100,14 @@ const TTSSettingsScreen: React.FC = () => {
   // Android 16 (API 36) ではバックグラウンド音声再生が制限されるため無効化
   const isAndroid16OrHigher =
     Platform.OS === 'android' && Number(Platform.Version) >= 36;
+
+  // Android 16以上ではバックグラウンド再生を強制的にfalseにする
+  useEffect(() => {
+    if (isAndroid16OrHigher && backgroundEnabled) {
+      setSpeechState((prev) => ({ ...prev, backgroundEnabled: false }));
+      AsyncStorage.setItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED, 'false');
+    }
+  }, [isAndroid16OrHigher, backgroundEnabled, setSpeechState]);
 
   const SETTING_ITEMS: SettingItem[] = [
     {
