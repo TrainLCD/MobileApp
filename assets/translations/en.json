@@ -156,6 +156,7 @@
   "selectFirstStationTitle": "Please select the first station",
   "longPressNotice": "Press and hold the screen to open the menu.",
   "autoAnnounceBackgroundTitle": "Enable background voice announcement",
+  "bgTtsUnavailableOnAndroid16": "Background playback is not available on Android 16 or later due to OS restrictions.",
   "loadingLocation": "Getting location information...",
   "loadingAPI": "Communicating with server...",
   "routeSearchTitle": "Find a route",

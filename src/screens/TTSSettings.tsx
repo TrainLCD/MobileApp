@@ -289,13 +289,26 @@ const TTSSettingsScreen: React.FC = () => {
           renderItem={renderItem}
           onScroll={handleScroll}
           ListFooterComponent={() => (
-            <Button
-              style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-              textStyle={{ fontWeight: 'bold' }}
-              onPress={() => navigation.goBack()}
-            >
-              OK
-            </Button>
+            <>
+              {isAndroid16OrHigher ? (
+                <Typography
+                  style={{
+                    marginTop: 12,
+                    fontSize: 14,
+                    color: isLEDTheme ? '#ccc' : '#666',
+                  }}
+                >
+                  {translate('bgTtsUnavailableOnAndroid16')}
+                </Typography>
+              ) : null}
+              <Button
+                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+                textStyle={{ fontWeight: 'bold' }}
+                onPress={() => navigation.goBack()}
+              >
+                OK
+              </Button>
+            </>
           )}
         />
       </View>
