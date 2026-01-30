@@ -5,6 +5,7 @@ import React, { useCallback, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -95,6 +96,10 @@ const TTSSettingsScreen: React.FC = () => {
     useAtom(speechState);
 
   const navigation = useNavigation();
+
+  // Android 16 (API 36) ではバックグラウンド音声再生が制限されるため無効化
+  const isAndroid16OrHigher =
+    Platform.OS === 'android' && Number(Platform.Version) >= 36;
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -247,7 +252,10 @@ const TTSSettingsScreen: React.FC = () => {
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
           state={state}
-          disabled={speechEnabled === false && item.id === 'enable_bg_tts'}
+          disabled={
+            item.id === 'enable_bg_tts' &&
+            (!speechEnabled || isAndroid16OrHigher)
+          }
         />
       );
     },
@@ -256,6 +264,7 @@ const TTSSettingsScreen: React.FC = () => {
       handleToggleBgTTS,
       speechEnabled,
       backgroundEnabled,
+      isAndroid16OrHigher,
       SETTING_ITEMS.length,
     ]
   );
