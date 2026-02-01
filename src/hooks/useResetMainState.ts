@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
-import { resetFirstSpeech } from '../utils/tts/backgroundTTSTrigger';
 
 export const useResetMainState = () => {
   const setNavigationState = useSetAtom(navigationState);
@@ -23,8 +22,6 @@ export const useResetMainState = () => {
       arrived: true,
       approaching: false,
     }));
-    // TTS状態もリセット
-    resetFirstSpeech();
   }, [setNavigationState, setStationState]);
 
   return reset;
