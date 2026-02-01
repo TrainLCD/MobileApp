@@ -253,30 +253,51 @@ export const useTTS = (): void => {
 
       try {
         const idToken = await user?.getIdToken();
-
-        const ttsJson = await (
-          await fetch(ttsApiUrl, {
-            headers: {
-              'content-type': 'application/json; charset=UTF-8',
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify(reqBody),
-            method: 'POST',
-          })
-        ).json();
-
-        const fileJa = new File(Paths.cache, `${ttsJson.result.id}_ja.mp3`);
-        const fileEn = new File(Paths.cache, `${ttsJson.result.id}_en.mp3`);
-
-        if (ttsJson?.result?.jaAudioContent) {
-          fileJa.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
+        if (!idToken) {
+          console.warn('[useTTS] idToken is missing, skipping fetch');
+          return;
         }
-        if (ttsJson?.result?.enAudioContent) {
-          fileEn.write(base64ToUint8Array(ttsJson.result.enAudioContent));
+
+        const response = await fetch(ttsApiUrl, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify(reqBody),
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          console.warn(
+            `[useTTS] TTS API returned ${response.status}: ${response.statusText}`
+          );
+          return;
         }
+
+        const ttsJson = await response.json();
+
+        if (!ttsJson?.result?.id) {
+          console.warn('[useTTS] Invalid TTS response: missing result.id');
+          return;
+        }
+
+        const { jaAudioContent, enAudioContent, id } = ttsJson.result;
+
+        if (!jaAudioContent || !enAudioContent) {
+          console.warn(
+            '[useTTS] Missing audio content in TTS response, skipping file write'
+          );
+          return;
+        }
+
+        const fileJa = new File(Paths.cache, `${id}_ja.mp3`);
+        const fileEn = new File(Paths.cache, `${id}_en.mp3`);
+
+        fileJa.write(base64ToUint8Array(jaAudioContent));
+        fileEn.write(base64ToUint8Array(enAudioContent));
 
         return {
-          id: ttsJson.result.id,
+          id,
           pathJa: fileJa.uri,
           pathEn: fileEn.uri,
         };
