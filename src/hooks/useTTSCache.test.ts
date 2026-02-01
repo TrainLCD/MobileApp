@@ -31,7 +31,7 @@ describe('useTTSCache', () => {
     expect(cache).toBeNull();
   });
 
-  it('should clear all cache entries', () => {
+  it('should clear all cache entries', async () => {
     const { result } = renderHook(() => useTTSCache());
 
     act(() => {
@@ -50,8 +50,8 @@ describe('useTTSCache', () => {
     expect(result.current.getByText('テスト1')).not.toBeNull();
     expect(result.current.getByText('テスト2')).not.toBeNull();
 
-    act(() => {
-      result.current.clearCache();
+    await act(async () => {
+      await result.current.clearCache();
     });
 
     expect(result.current.getByText('テスト1')).toBeNull();
