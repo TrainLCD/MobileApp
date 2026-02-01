@@ -5,7 +5,6 @@ import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
 import { setLocation } from './src/store/atoms/location';
-import { triggerBackgroundTTS } from './src/utils/tts/backgroundTTSTrigger';
 
 Sentry.init({
   dsn: SENTRY_DSN,
@@ -39,8 +38,6 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
         return;
       }
       setLocation(latestLocation);
-      // Androidバックグラウンド時にTTSをトリガー
-      triggerBackgroundTTS();
     }
   });
 }
