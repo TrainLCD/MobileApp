@@ -1,11 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { isJapanese } from '../translation';
-import { resetFirstSpeech } from '../utils/tts/backgroundTTSTrigger';
 import { useResetMainState } from './useResetMainState';
-
-jest.mock('../utils/tts/backgroundTTSTrigger', () => ({
-  resetFirstSpeech: jest.fn(),
-}));
 
 const mockSetNavigationState = jest.fn();
 const mockSetStationState = jest.fn();
@@ -33,8 +28,6 @@ jest.mock('../store/atoms/station', () => ({
   __esModule: true,
   default: { _name: 'stationState' },
 }));
-
-const mockResetFirstSpeech = resetFirstSpeech as jest.Mock;
 
 describe('useResetMainState', () => {
   afterEach(() => {
@@ -102,16 +95,6 @@ describe('useResetMainState', () => {
       arrived: true,
       approaching: false,
     });
-  });
-
-  test('should call resetFirstSpeech when reset is called', () => {
-    const { result } = renderHook(() => useResetMainState());
-
-    act(() => {
-      result.current();
-    });
-
-    expect(mockResetFirstSpeech).toHaveBeenCalledTimes(1);
   });
 
   test('should return the same reset function reference on re-renders', () => {

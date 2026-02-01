@@ -1,32 +1,71 @@
+import { fetch } from 'expo/fetch';
+import type { AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { File, Paths } from 'expo-file-system';
 import { useAtomValue } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
 import speechState from '../store/atoms/speech';
-import TTSPlayer from '../utils/tts/TTSPlayer';
+import { isDevApp } from '../utils/isDevApp';
 import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
+import { useTTSCache } from './useTTSCache';
 import { useTTSText } from './useTTSText';
+
+const BASE64_ALPHABET =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+
+const base64ToUint8Array = (input: string): Uint8Array => {
+  const sanitized = input.replace(/[^A-Za-z0-9+/=]/g, '');
+  const length =
+    (sanitized.length * 3) / 4 -
+    (sanitized.endsWith('==') ? 2 : sanitized.endsWith('=') ? 1 : 0);
+  const bytes = new Uint8Array(length);
+
+  let byteIndex = 0;
+  const decodeChar = (char: string): number => {
+    if (char === '=') {
+      return 0;
+    }
+    const index = BASE64_ALPHABET.indexOf(char);
+    if (index === -1) {
+      throw new Error('Invalid base64 character.');
+    }
+    return index;
+  };
+
+  for (let i = 0; i < sanitized.length; i += 4) {
+    const chunk =
+      (decodeChar(sanitized[i]) << 18) |
+      (decodeChar(sanitized[i + 1]) << 12) |
+      (decodeChar(sanitized[i + 2]) << 6) |
+      decodeChar(sanitized[i + 3]);
+
+    bytes[byteIndex++] = (chunk >> 16) & 0xff;
+    if (sanitized[i + 2] !== '=') {
+      bytes[byteIndex++] = (chunk >> 8) & 0xff;
+    }
+    if (sanitized[i + 3] !== '=') {
+      bytes[byteIndex++] = chunk & 0xff;
+    }
+  }
+
+  return bytes;
+};
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled } = useAtomValue(speechState);
   const currentLine = useCurrentLine();
-  const ttsPlayer = TTSPlayer.getInstance();
 
-  // firstSpeechをローカルステートで管理し、
-  // フラグ変更だけによる不要なテキスト再生成・再再生を防ぐ
-  const [localFirstSpeech, setLocalFirstSpeech] = useState(
-    ttsPlayer.isFirstSpeech()
-  );
-
-  // TTSPlayerがリセットされた場合の同期（新しいトリップ開始時）
-  if (ttsPlayer.isFirstSpeech() && !localFirstSpeech) {
-    setLocalFirstSpeech(true);
-  }
-
-  const trainTTSText = useTTSText(localFirstSpeech, enabled);
-  const busTTSText = useBusTTSText(localFirstSpeech, enabled);
+  const firstSpeechRef = useRef(true);
+  const playingRef = useRef(false);
+  const isLoadableRef = useRef(true);
+  const { store, getByText } = useTTSCache();
+  const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
+  const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
   const ttsText =
     currentLine?.transportType === TransportType.Bus
       ? busTTSText
@@ -36,75 +75,252 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
-  // バックグラウンドTTS用にgetIdTokenを設定
-  useEffect(() => {
-    if (user) {
-      ttsPlayer.setGetIdToken(() => user.getIdToken());
-    }
-  }, [user, ttsPlayer]);
+  const soundJaRef = useRef<AudioPlayer | null>(null);
+  const soundEnRef = useRef<AudioPlayer | null>(null);
 
-  // AudioMode設定
   useEffect(() => {
-    ttsPlayer.setAudioMode(backgroundEnabled);
-  }, [backgroundEnabled, ttsPlayer]);
+    (async () => {
+      try {
+        await setAudioModeAsync({
+          allowsRecording: false,
+          shouldPlayInBackground: backgroundEnabled,
+          interruptionMode: 'duckOthers',
+          playsInSilentMode: true,
+          interruptionModeAndroid: 'duckOthers',
+          shouldRouteThroughEarpiece: false,
+        });
+      } catch (e) {
+        console.warn('[useTTS] setAudioModeAsync failed:', e);
+      }
+    })();
+  }, [backgroundEnabled]);
 
-  // TTS再生トリガー
-  useEffect(() => {
-    if (!enabled) {
+  const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
+    if (!isLoadableRef.current) {
       return;
     }
 
-    // 同じテキストならスキップ
-    if (prevTextJa === textJa && prevTextEn === textEn) {
+    firstSpeechRef.current = false;
+
+    // 既存のプレイヤーをクリーンアップ
+    try {
+      soundJaRef.current?.pause();
+      soundJaRef.current?.remove();
+    } catch {}
+    try {
+      soundEnRef.current?.pause();
+      soundEnRef.current?.remove();
+    } catch {}
+    soundJaRef.current = null;
+    soundEnRef.current = null;
+
+    const soundJa = createAudioPlayer({
+      uri: pathJa,
+    });
+    const soundEn = createAudioPlayer({
+      uri: pathEn,
+    });
+
+    soundJaRef.current = soundJa;
+    soundEnRef.current = soundEn;
+    playingRef.current = true;
+
+    const enRemoveListener = soundEn.addListener(
+      'playbackStatusUpdate',
+      (enStatus) => {
+        if (enStatus.didJustFinish) {
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch (e) {
+            console.warn('[useTTS] Failed to remove soundEn:', e);
+          }
+          soundEnRef.current = null;
+          playingRef.current = false;
+        } else if ('error' in enStatus && enStatus.error) {
+          // 英語側エラー時も確実に終了
+          console.warn('[useTTS] soundEn error:', enStatus.error);
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch {}
+          soundEnRef.current = null;
+          playingRef.current = false;
+        }
+      }
+    );
+
+    const jaRemoveListener = soundJa.addListener(
+      'playbackStatusUpdate',
+      (jaStatus) => {
+        if (jaStatus.didJustFinish) {
+          jaRemoveListener?.remove();
+          try {
+            soundJa.remove();
+          } catch (e) {
+            console.warn('[useTTS] Failed to remove soundJa:', e);
+          }
+          soundJaRef.current = null;
+          if (isLoadableRef.current) {
+            soundEn.play();
+          } else {
+            // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
+            enRemoveListener?.remove();
+            try {
+              soundEn.remove();
+            } catch {}
+            soundEnRef.current = null;
+            playingRef.current = false;
+          }
+        } else if ('error' in jaStatus && jaStatus.error) {
+          // 日本語側エラー時は両者解放して停止
+          console.warn('[useTTS] soundJa error:', jaStatus.error);
+          jaRemoveListener?.remove();
+          try {
+            soundJa.remove();
+          } catch {}
+          soundJaRef.current = null;
+          enRemoveListener?.remove();
+          try {
+            soundEn.remove();
+          } catch {}
+          soundEnRef.current = null;
+          playingRef.current = false;
+        }
+      }
+    );
+
+    try {
+      soundJa.play();
+    } catch (e) {
+      console.error('[useTTS] Failed to play soundJa:', e);
+      // 再生失敗時もリスナーとリソースをクリーンアップ
+      jaRemoveListener?.remove();
+      enRemoveListener?.remove();
+      try {
+        soundJa.remove();
+      } catch {}
+      try {
+        soundEn.remove();
+      } catch {}
+      soundJaRef.current = null;
+      soundEnRef.current = null;
+      playingRef.current = false;
+    }
+  }, []);
+
+  const ttsApiUrl = useMemo(() => {
+    return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
+  }, []);
+
+  const fetchSpeech = useCallback(async () => {
+    if (!textJa?.length || !textEn?.length || !isLoadableRef.current) {
       return;
     }
 
+    const reqBody = {
+      data: {
+        ssmlJa: `<speak>${textJa.trim()}</speak>`,
+        ssmlEn: `<speak>${textEn.trim()}</speak>`,
+      },
+    };
+
+    try {
+      const idToken = await user?.getIdToken();
+
+      const ttsJson = await (
+        await fetch(ttsApiUrl, {
+          headers: {
+            'content-type': 'application/json; charset=UTF-8',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify(reqBody),
+          method: 'POST',
+        })
+      ).json();
+
+      const fileJa = new File(Paths.cache, `${ttsJson.result.id}_ja.mp3`);
+      const fileEn = new File(Paths.cache, `${ttsJson.result.id}_en.mp3`);
+
+      if (ttsJson?.result?.jaAudioContent) {
+        fileJa.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
+      }
+      if (ttsJson?.result?.enAudioContent) {
+        fileEn.write(base64ToUint8Array(ttsJson.result.enAudioContent));
+      }
+
+      return { id: ttsJson.result.id, pathJa: fileJa.uri, pathEn: fileEn.uri };
+    } catch (error) {
+      console.error('[useTTS] fetchSpeech error:', error);
+      return;
+    }
+  }, [textEn, textJa, ttsApiUrl, user]);
+
+  const speech = useCallback(async () => {
     if (!textJa || !textEn) {
       return;
     }
 
-    // 再生中ならスキップ
-    if (ttsPlayer.isCurrentlyPlaying()) {
-      return;
-    }
+    try {
+      const cache = getByText(textJa);
 
-    // 既に同じテキストが再生済みならスキップ
-    if (ttsPlayer.getLastPlayedTextJa() === textJa) {
-      return;
-    }
+      if (cache) {
+        await speakFromPath(cache.ja.path, cache.en.path);
+        return;
+      }
 
-    // 初回放送後にfirstSpeechフラグが変わりテキストが変化した場合、
-    // ローカルステートを更新して正しいテキストで再レンダリングさせる
-    if (localFirstSpeech && !ttsPlayer.isFirstSpeech()) {
-      setLocalFirstSpeech(false);
+      const fetched = await fetchSpeech();
+      if (!fetched) {
+        console.warn('[useTTS] Failed to fetch speech audio');
+        return;
+      }
+
+      const { id, pathJa, pathEn } = fetched;
+
+      store(id, { text: textJa, path: pathJa }, { text: textEn, path: pathEn });
+
+      await speakFromPath(pathJa, pathEn);
+    } catch (error) {
+      console.error('[useTTS] speech error:', error);
+    }
+  }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
+
+  useEffect(() => {
+    if (
+      !enabled ||
+      playingRef.current ||
+      (prevTextJa === textJa && prevTextEn === textEn)
+    ) {
       return;
     }
 
     (async () => {
       try {
-        await ttsPlayer.speak(textJa, textEn);
-        // 最初の放送フラグを更新
-        if (ttsPlayer.isFirstSpeech()) {
-          ttsPlayer.setFirstSpeechDone();
-        }
+        await speech();
       } catch (err) {
-        console.error('[useTTS] speak error:', err);
+        console.error(err);
       }
     })();
-  }, [
-    enabled,
-    localFirstSpeech,
-    prevTextEn,
-    prevTextJa,
-    textEn,
-    textJa,
-    ttsPlayer,
-  ]);
+  }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa]);
 
-  // クリーンアップ
   useEffect(() => {
     return () => {
-      ttsPlayer.stop();
+      isLoadableRef.current = false;
+      try {
+        soundJaRef.current?.pause();
+      } catch {}
+      try {
+        soundEnRef.current?.pause();
+      } catch {}
+      try {
+        soundJaRef.current?.remove();
+      } catch {}
+      try {
+        soundEnRef.current?.remove();
+      } catch {}
+      soundJaRef.current = null;
+      soundEnRef.current = null;
+      playingRef.current = false;
     };
-  }, [ttsPlayer]);
+  }, []);
 };
