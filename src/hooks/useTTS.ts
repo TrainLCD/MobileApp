@@ -63,6 +63,10 @@ export const useTTS = (): void => {
   const firstSpeechRef = useRef(true);
   const playingRef = useRef(false);
   const isLoadableRef = useRef(true);
+  const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
+  const speechWithTextRef = useRef<
+    ((ja: string, en: string) => Promise<void>) | null
+  >(null);
   const { store, getByText } = useTTSCache();
   const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
   const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
@@ -137,6 +141,12 @@ export const useTTS = (): void => {
           }
           soundEnRef.current = null;
           playingRef.current = false;
+          // 再生中にテキストが変わっていたら次の再生をトリガー
+          const pending = pendingRef.current;
+          if (pending) {
+            pendingRef.current = null;
+            speechWithTextRef.current?.(pending.textJa, pending.textEn);
+          }
         } else if ('error' in enStatus && enStatus.error) {
           // 英語側エラー時も確実に終了
           console.warn('[useTTS] soundEn error:', enStatus.error);
@@ -146,6 +156,11 @@ export const useTTS = (): void => {
           } catch {}
           soundEnRef.current = null;
           playingRef.current = false;
+          const pending = pendingRef.current;
+          if (pending) {
+            pendingRef.current = null;
+            speechWithTextRef.current?.(pending.textJa, pending.textEn);
+          }
         }
       }
     );
@@ -186,6 +201,11 @@ export const useTTS = (): void => {
           } catch {}
           soundEnRef.current = null;
           playingRef.current = false;
+          const pending = pendingRef.current;
+          if (pending) {
+            pendingRef.current = null;
+            speechWithTextRef.current?.(pending.textJa, pending.textEn);
+          }
         }
       }
     );
@@ -206,6 +226,11 @@ export const useTTS = (): void => {
       soundJaRef.current = null;
       soundEnRef.current = null;
       playingRef.current = false;
+      const pending = pendingRef.current;
+      if (pending) {
+        pendingRef.current = null;
+        speechWithTextRef.current?.(pending.textJa, pending.textEn);
+      }
     }
   }, []);
 
@@ -213,99 +238,116 @@ export const useTTS = (): void => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
   }, []);
 
-  const fetchSpeech = useCallback(async () => {
-    if (!textJa?.length || !textEn?.length || !isLoadableRef.current) {
+  const fetchSpeechWithText = useCallback(
+    async (ja: string, en: string) => {
+      if (!ja.length || !en.length || !isLoadableRef.current) {
+        return;
+      }
+
+      const reqBody = {
+        data: {
+          ssmlJa: `<speak>${ja.trim()}</speak>`,
+          ssmlEn: `<speak>${en.trim()}</speak>`,
+        },
+      };
+
+      try {
+        const idToken = await user?.getIdToken();
+
+        const ttsJson = await (
+          await fetch(ttsApiUrl, {
+            headers: {
+              'content-type': 'application/json; charset=UTF-8',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify(reqBody),
+            method: 'POST',
+          })
+        ).json();
+
+        const fileJa = new File(Paths.cache, `${ttsJson.result.id}_ja.mp3`);
+        const fileEn = new File(Paths.cache, `${ttsJson.result.id}_en.mp3`);
+
+        if (ttsJson?.result?.jaAudioContent) {
+          fileJa.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
+        }
+        if (ttsJson?.result?.enAudioContent) {
+          fileEn.write(base64ToUint8Array(ttsJson.result.enAudioContent));
+        }
+
+        return {
+          id: ttsJson.result.id,
+          pathJa: fileJa.uri,
+          pathEn: fileEn.uri,
+        };
+      } catch (error) {
+        console.error('[useTTS] fetchSpeech error:', error);
+        return;
+      }
+    },
+    [ttsApiUrl, user]
+  );
+
+  const speechWithText = useCallback(
+    async (ja: string, en: string) => {
+      try {
+        const cache = getByText(ja);
+
+        if (cache) {
+          await speakFromPath(cache.ja.path, cache.en.path);
+          return;
+        }
+
+        const fetched = await fetchSpeechWithText(ja, en);
+        if (!fetched) {
+          console.warn('[useTTS] Failed to fetch speech audio');
+          return;
+        }
+
+        const { id, pathJa, pathEn } = fetched;
+
+        store(id, { text: ja, path: pathJa }, { text: en, path: pathEn });
+
+        await speakFromPath(pathJa, pathEn);
+      } catch (error) {
+        console.error('[useTTS] speech error:', error);
+      }
+    },
+    [fetchSpeechWithText, getByText, speakFromPath, store]
+  );
+
+  speechWithTextRef.current = speechWithText;
+
+  useEffect(() => {
+    if (!enabled || (prevTextJa === textJa && prevTextEn === textEn)) {
       return;
     }
 
-    const reqBody = {
-      data: {
-        ssmlJa: `<speak>${textJa.trim()}</speak>`,
-        ssmlEn: `<speak>${textEn.trim()}</speak>`,
-      },
-    };
-
-    try {
-      const idToken = await user?.getIdToken();
-
-      const ttsJson = await (
-        await fetch(ttsApiUrl, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify(reqBody),
-          method: 'POST',
-        })
-      ).json();
-
-      const fileJa = new File(Paths.cache, `${ttsJson.result.id}_ja.mp3`);
-      const fileEn = new File(Paths.cache, `${ttsJson.result.id}_en.mp3`);
-
-      if (ttsJson?.result?.jaAudioContent) {
-        fileJa.write(base64ToUint8Array(ttsJson.result.jaAudioContent));
-      }
-      if (ttsJson?.result?.enAudioContent) {
-        fileEn.write(base64ToUint8Array(ttsJson.result.enAudioContent));
-      }
-
-      return { id: ttsJson.result.id, pathJa: fileJa.uri, pathEn: fileEn.uri };
-    } catch (error) {
-      console.error('[useTTS] fetchSpeech error:', error);
-      return;
-    }
-  }, [textEn, textJa, ttsApiUrl, user]);
-
-  const speech = useCallback(async () => {
     if (!textJa || !textEn) {
       return;
     }
 
-    try {
-      const cache = getByText(textJa);
-
-      if (cache) {
-        await speakFromPath(cache.ja.path, cache.en.path);
-        return;
-      }
-
-      const fetched = await fetchSpeech();
-      if (!fetched) {
-        console.warn('[useTTS] Failed to fetch speech audio');
-        return;
-      }
-
-      const { id, pathJa, pathEn } = fetched;
-
-      store(id, { text: textJa, path: pathJa }, { text: textEn, path: pathEn });
-
-      await speakFromPath(pathJa, pathEn);
-    } catch (error) {
-      console.error('[useTTS] speech error:', error);
-    }
-  }, [fetchSpeech, getByText, speakFromPath, store, textEn, textJa]);
-
-  useEffect(() => {
-    if (
-      !enabled ||
-      playingRef.current ||
-      (prevTextJa === textJa && prevTextEn === textEn)
-    ) {
+    // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
+    if (playingRef.current) {
+      pendingRef.current = { textJa, textEn };
       return;
     }
 
+    pendingRef.current = null;
+
     (async () => {
       try {
-        await speech();
+        await speechWithText(textJa, textEn);
       } catch (err) {
         console.error(err);
       }
     })();
-  }, [enabled, prevTextEn, prevTextJa, speech, textEn, textJa]);
+  }, [enabled, prevTextEn, prevTextJa, speechWithText, textEn, textJa]);
 
   useEffect(() => {
     return () => {
       isLoadableRef.current = false;
+      pendingRef.current = null;
       try {
         soundJaRef.current?.pause();
       } catch {}

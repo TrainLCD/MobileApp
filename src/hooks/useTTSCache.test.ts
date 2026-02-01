@@ -2,6 +2,10 @@ import { act, renderHook } from '@testing-library/react-native';
 import { useTTSCache } from './useTTSCache';
 
 describe('useTTSCache', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should store and retrieve cache entries', () => {
     const { result } = renderHook(() => useTTSCache());
 
