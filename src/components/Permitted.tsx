@@ -343,17 +343,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     return remove;
   }, [clearWarningInfo, selectedBound]);
 
-  const NullableWarningPanel: React.FC = useCallback(
-    () =>
-      warningInfo ? (
-        <WarningPanel
-          onPress={clearWarningInfo}
-          text={warningInfo.text}
-          warningLevel={warningInfo.level}
-        />
-      ) : null,
-    [clearWarningInfo, warningInfo]
-  );
+  const NullableWarningPanel: React.FC = useCallback(() => {
+    if (!warningInfo?.text || !warningInfo?.level) {
+      return null;
+    }
+    return (
+      <WarningPanel
+        onPress={clearWarningInfo}
+        text={warningInfo.text}
+        warningLevel={warningInfo.level}
+      />
+    );
+  }, [clearWarningInfo, warningInfo?.level, warningInfo?.text]);
 
   const handleNewReportModalClose = useCallback(() => {
     setScreenShotBase64('');
