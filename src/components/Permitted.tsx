@@ -343,18 +343,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     return remove;
   }, [clearWarningInfo, selectedBound]);
 
-  const NullableWarningPanel: React.FC = useCallback(
-    () =>
-      warningInfo ? (
-        <WarningPanel
-          onPress={clearWarningInfo}
-          text={warningInfo.text}
-          warningLevel={warningInfo.level}
-        />
-      ) : null,
-    [clearWarningInfo, warningInfo]
-  );
-
   const handleNewReportModalClose = useCallback(() => {
     setScreenShotBase64('');
     setReportModalShow(false);
@@ -427,7 +415,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       >
         <View style={styles.container}>
           {children}
-          <NullableWarningPanel />
+          {warningInfo?.text && warningInfo?.level && (
+            <WarningPanel
+              onPress={clearWarningInfo}
+              text={warningInfo.text}
+              warningLevel={warningInfo.level}
+            />
+          )}
         </View>
       </LongPressGestureHandler>
       {/* NOTE: このViewを外すとフィードバックモーダルのレイアウトが崩御する */}
