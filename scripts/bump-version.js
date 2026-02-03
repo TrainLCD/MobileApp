@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..');
-const appJsonPath = path.join(rootDir, 'app.json');
+const appConfigPath = path.join(rootDir, 'app.config.ts');
 const packageJsonPath = path.join(rootDir, 'package.json');
 const pbxprojPath = path.join(rootDir, 'ios', 'TrainLCD.xcodeproj', 'project.pbxproj');
 const androidBuildGradlePath = path.join(rootDir, 'android', 'app', 'build.gradle');
@@ -20,6 +20,7 @@ let explicitAndroidVersion = null;
 let skipBuildIncrement = false;
 let noIosIncrement = false;
 let noAndroidIncrement = false;
+let noVersionIncrement = false;
 
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
@@ -70,6 +71,10 @@ for (let i = 0; i < args.length; i += 1) {
     noAndroidIncrement = true;
     continue;
   }
+  if (arg === '--no-version-increment') {
+    noVersionIncrement = true;
+    continue;
+  }
   console.error(`エラー: 未対応の引数 ${arg}`);
   process.exit(1);
 }
@@ -77,6 +82,32 @@ for (let i = 0; i < args.length; i += 1) {
 const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, 'utf8'));
 const writeJson = (filePath, data) => {
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`);
+};
+
+const updateAppConfig = (filePath, version, versionCode) => {
+  let content = fs.readFileSync(filePath, 'utf8');
+
+  if (version) {
+    if (!/version:\s*['"][^'"]+['"]/.test(content)) {
+      throw new Error('app.config.ts に version が見つかりません。');
+    }
+    content = content.replace(
+      /version:\s*['"][^'"]+['"]/,
+      `version: '${version}'`
+    );
+  }
+
+  if (versionCode !== undefined) {
+    if (!/versionCode:\s*\d+/.test(content)) {
+      throw new Error('app.config.ts に versionCode が見つかりません。');
+    }
+    content = content.replace(
+      /versionCode:\s*\d+/,
+      `versionCode: ${versionCode}`
+    );
+  }
+
+  fs.writeFileSync(filePath, content);
 };
 
 const updatePbxproj = (filePath, projectVersion, marketingVersion) => {
@@ -104,17 +135,8 @@ const updatePbxproj = (filePath, projectVersion, marketingVersion) => {
   fs.writeFileSync(filePath, updatedContent);
 };
 
-const extractFlavorSetting = (source, flavor, key, valuePattern) => {
-  const regex = new RegExp(`${flavor}\\s*\\{[\\s\\S]*?${key}\\s*${valuePattern}`, 'm');
-  const match = source.match(regex);
-  if (!match) {
-    throw new Error(`build.gradle の ${flavor} フレーバーに ${key} が見つかりません。`);
-  }
-  return match;
-};
-
 const replaceFlavorNumericSetting = (source, flavor, key, value) => {
-  const regex = new RegExp(`(${flavor}\\s*\\{[\\s\\S]*?${key}\\s*)(\\d+)`, 'm');
+  const regex = new RegExp(`(${flavor}\\s*\\{[\\s\\S]*?${key}\\s+)(\\d+)`, 'm');
   if (!regex.test(source)) {
     throw new Error(`build.gradle の ${flavor} フレーバーに ${key} が見つかりません。`);
   }
@@ -122,7 +144,7 @@ const replaceFlavorNumericSetting = (source, flavor, key, value) => {
 };
 
 const replaceFlavorStringSetting = (source, flavor, key, value) => {
-  const regex = new RegExp(`(${flavor}\\s*\\{[\\s\\S]*?${key}\\s*)"([^"]*)"`, 'm');
+  const regex = new RegExp(`(${flavor}\\s*\\{[\\s\\S]*?${key}\\s+)"([^"]*)"`, 'm');
   if (!regex.test(source)) {
     throw new Error(`build.gradle の ${flavor} フレーバーに ${key} が見つかりません。`);
   }
@@ -130,25 +152,47 @@ const replaceFlavorStringSetting = (source, flavor, key, value) => {
 };
 
 const updateAndroidBuildGradle = (filePath, versionCode, versionName) => {
-  const content = fs.readFileSync(filePath, 'utf8');
+  let content = fs.readFileSync(filePath, 'utf8');
 
-  extractFlavorSetting(content, 'dev', 'versionCode', '(\\d+)');
-  const prodVersionCodeMatch = extractFlavorSetting(content, 'prod', 'versionCode', '(\\d+)');
+  // productFlavors内のdev/prodのversionCodeを更新
+  content = replaceFlavorNumericSetting(content, 'dev', 'versionCode', versionCode);
+  content = replaceFlavorNumericSetting(content, 'prod', 'versionCode', versionCode);
 
-  const currentProdVersionCode = Number(prodVersionCodeMatch[1]);
-  if (Number.isNaN(currentProdVersionCode)) {
-    throw new Error('prod フレーバーの versionCode が数値として認識できません。');
+  // versionNameを更新（versionNameが指定された場合のみ）
+  if (versionName) {
+    content = replaceFlavorStringSetting(content, 'dev', 'versionName', versionName);
+    content = replaceFlavorStringSetting(content, 'prod', 'versionName', versionName);
   }
 
-  const nextProdVersionCode = Math.max(currentProdVersionCode, versionCode);
+  fs.writeFileSync(filePath, content);
+};
 
-  let updatedContent = content;
-  updatedContent = replaceFlavorNumericSetting(updatedContent, 'dev', 'versionCode', versionCode);
-  updatedContent = replaceFlavorNumericSetting(updatedContent, 'prod', 'versionCode', nextProdVersionCode);
-  updatedContent = replaceFlavorStringSetting(updatedContent, 'dev', 'versionName', versionName);
-  updatedContent = replaceFlavorStringSetting(updatedContent, 'prod', 'versionName', versionName);
+const extractVersionFromAppConfig = (filePath) => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const match = content.match(/version:\s*['"]([^'"]+)['"]/);
+  if (!match) {
+    throw new Error('app.config.ts から version を取得できません。');
+  }
+  return match[1];
+};
 
-  fs.writeFileSync(filePath, updatedContent);
+const extractVersionCodeFromBuildGradle = (filePath) => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  // prodフレーバーからversionCodeを取得
+  const match = content.match(/prod\s*\{[\s\S]*?versionCode\s+(\d+)/m);
+  if (!match) {
+    throw new Error('build.gradle の prod フレーバーから versionCode を取得できません。');
+  }
+  return Number(match[1]);
+};
+
+const extractIosBuildNumberFromPbxproj = (filePath) => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const match = content.match(/CURRENT_PROJECT_VERSION = (\d+);/);
+  if (!match) {
+    throw new Error('project.pbxproj から CURRENT_PROJECT_VERSION を取得できません。');
+  }
+  return Number(match[1]);
 };
 
 const toNumberOrZero = (value) => {
@@ -160,17 +204,6 @@ const toNumberOrZero = (value) => {
     throw new Error(`数値へ変換できませんでした: ${value}`);
   }
   return result;
-};
-
-const resolveAndroidMinVersionCode = (appJson) => {
-  const minValue = appJson?.expo?.extra?.versioning?.androidMinVersionCode;
-  if (minValue === undefined || minValue === null) {
-    return null;
-  }
-  if (typeof minValue !== 'number') {
-    throw new Error('extra.versioning.androidMinVersionCode は数値で指定してください。');
-  }
-  return minValue;
 };
 
 const bumpSemver = (currentVersion, type) => {
@@ -189,28 +222,25 @@ const bumpSemver = (currentVersion, type) => {
   }
 };
 
-const appJson = readJson(appJsonPath);
 const packageJson = readJson(packageJsonPath);
 
-const currentVersion = appJson.expo?.version;
-if (!currentVersion) {
-  console.error('エラー: app.json に expo.version が見つかりません。');
-  process.exit(1);
-}
+const currentVersion = extractVersionFromAppConfig(appConfigPath);
+const currentAndroidVersionCode = extractVersionCodeFromBuildGradle(androidBuildGradlePath);
+const currentIosBuildNumber = extractIosBuildNumberFromPbxproj(pbxprojPath);
 
 let nextVersion = explicitVersion;
 if (!nextVersion) {
-  nextVersion = bumpSemver(currentVersion, increment ?? 'patch');
+  if (noVersionIncrement) {
+    nextVersion = currentVersion;
+  } else {
+    nextVersion = bumpSemver(currentVersion, increment ?? 'patch');
+  }
 }
 
 if (!semverPattern.test(nextVersion)) {
   console.error(`エラー: 指定したバージョンがSemVer形式ではありません: ${nextVersion}`);
   process.exit(1);
 }
-
-const iosBuildNumber = toNumberOrZero(appJson.expo?.ios?.buildNumber);
-const androidVersionCode = toNumberOrZero(appJson.expo?.android?.versionCode);
-const androidMinVersionCode = resolveAndroidMinVersionCode(appJson) ?? androidVersionCode;
 
 if (skipBuildIncrement) {
   noIosIncrement = true;
@@ -242,7 +272,7 @@ const resolvedAndroidExplicit = explicitAndroidVersion !== null ? parseExplicitN
 const shouldIncrementIos = resolvedIosExplicit === null && !noIosIncrement;
 const shouldIncrementAndroid = resolvedAndroidExplicit === null && !noAndroidIncrement;
 
-let nextIosBuildNumber = resolvedIosExplicit !== null ? resolvedIosExplicit : (shouldIncrementIos ? iosBuildNumber + 1 : iosBuildNumber);
+let nextIosBuildNumber = resolvedIosExplicit !== null ? resolvedIosExplicit : (shouldIncrementIos ? currentIosBuildNumber + 1 : currentIosBuildNumber);
 if (nextIosBuildNumber <= 0) {
   console.error('エラー: iOSのビルド番号は1以上である必要があります。');
   process.exit(1);
@@ -256,48 +286,41 @@ let nextAndroidVersionCode;
 if (resolvedAndroidExplicit !== null) {
   nextAndroidVersionCode = resolvedAndroidExplicit;
 } else if (shouldIncrementAndroid) {
-  const base = Math.max(androidVersionCode, androidMinVersionCode);
-  nextAndroidVersionCode = base + 1;
+  nextAndroidVersionCode = currentAndroidVersionCode + 1;
 } else {
-  nextAndroidVersionCode = Math.max(androidVersionCode, androidMinVersionCode);
+  nextAndroidVersionCode = currentAndroidVersionCode;
 }
 
-if (nextAndroidVersionCode < androidMinVersionCode) {
-  console.error(`エラー: AndroidのversionCodeは ${androidMinVersionCode} 以上に設定してください。指定値: ${nextAndroidVersionCode}`);
-  process.exit(1);
-}
 if (!Number.isInteger(nextAndroidVersionCode)) {
   console.error('エラー: AndroidのversionCodeは整数である必要があります。');
   process.exit(1);
 }
 
-// expo-versionプラグインが参照する値を更新
-appJson.expo.version = nextVersion;
-if (!appJson.expo.ios) {
-  appJson.expo.ios = {};
-}
-if (!appJson.expo.android) {
-  appJson.expo.android = {};
-}
-appJson.expo.ios.buildNumber = String(nextIosBuildNumber);
-appJson.expo.android.versionCode = Math.trunc(nextAndroidVersionCode);
+// 各ファイルを更新
+const versionChanged = currentVersion !== nextVersion;
+const androidVersionCodeChanged = currentAndroidVersionCode !== nextAndroidVersionCode;
 
-if (!appJson.expo.extra) {
-  appJson.expo.extra = {};
+if (versionChanged || androidVersionCodeChanged) {
+  updateAppConfig(
+    appConfigPath,
+    versionChanged ? nextVersion : null,
+    androidVersionCodeChanged ? Math.trunc(nextAndroidVersionCode) : undefined
+  );
 }
-if (!appJson.expo.extra.versioning || typeof appJson.expo.extra.versioning !== 'object') {
-  appJson.expo.extra.versioning = {};
+
+if (versionChanged) {
+  packageJson.version = nextVersion;
+  writeJson(packageJsonPath, packageJson);
 }
-appJson.expo.extra.versioning.androidMinVersionCode = Math.trunc(nextAndroidVersionCode);
 
-// Nodeパッケージとしてのバージョンも同期
-packageJson.version = nextVersion;
+// MARKETING_VERSIONはバージョンが変更された場合のみ更新
+updatePbxproj(pbxprojPath, nextIosBuildNumber, versionChanged ? nextVersion : null);
+updateAndroidBuildGradle(androidBuildGradlePath, Math.trunc(nextAndroidVersionCode), versionChanged ? nextVersion : null);
 
-writeJson(appJsonPath, appJson);
-writeJson(packageJsonPath, packageJson);
-updatePbxproj(pbxprojPath, nextIosBuildNumber, nextVersion);
-updateAndroidBuildGradle(androidBuildGradlePath, Math.trunc(nextAndroidVersionCode), nextVersion);
-
-console.log(`バージョンを ${currentVersion} → ${nextVersion} に更新しました。`);
-console.log(`iOS ビルド番号: ${iosBuildNumber || '(未設定)'} → ${nextIosBuildNumber}`);
-console.log(`Android versionCode: ${androidVersionCode || '(未設定)'} → ${Math.trunc(nextAndroidVersionCode)}`);
+if (versionChanged) {
+  console.log(`バージョンを ${currentVersion} → ${nextVersion} に更新しました。`);
+} else {
+  console.log(`バージョン ${currentVersion} は変更しません。`);
+}
+console.log(`iOS ビルド番号: ${currentIosBuildNumber} → ${nextIosBuildNumber}`);
+console.log(`Android versionCode: ${currentAndroidVersionCode} → ${Math.trunc(nextAndroidVersionCode)}`);

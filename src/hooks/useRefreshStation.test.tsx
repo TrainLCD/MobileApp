@@ -72,8 +72,6 @@ describe('useRefreshStation', () => {
         coords: {
           latitude: 35.0,
           longitude: 135.0,
-          speed: 0,
-          accuracy: 5,
         },
       }) // locationAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState

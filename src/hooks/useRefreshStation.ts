@@ -5,10 +5,6 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import { locationAtom } from '~/store/atoms/location';
-import {
-  ARRIVED_MAXIMUM_SPEED,
-  BAD_ACCURACY_THRESHOLD,
-} from '../constants/threshold';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -39,8 +35,6 @@ export const useRefreshStation = (): void => {
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
-  const speed = location?.coords.speed ?? -1;
-  const accuracy = location?.coords.accuracy;
 
   const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);
@@ -70,48 +64,20 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
-    if (getIsPass(nearestStation)) {
-      return isPointWithinRadius(
-        { latitude, longitude },
-        {
-          latitude: nearestStation.latitude as number,
-          longitude: nearestStation.longitude as number,
-        },
-        arrivedThreshold
-      );
-    }
-
-    // NOTE: 速度か位置情報の取得誤差が無効値 or 位置情報の取得誤差が一定以上ある場合は走行速度を停車判定に使用しない
-    const isSpeedInvalid = speed < 0;
-    const isAccuracyInvalid =
-      !accuracy || (accuracy ?? 0) >= BAD_ACCURACY_THRESHOLD;
-
-    const arrived =
-      isSpeedInvalid || isAccuracyInvalid
-        ? isPointWithinRadius(
-            { latitude, longitude },
-            {
-              latitude: nearestStation.latitude as number,
-              longitude: nearestStation.longitude as number,
-            },
-            arrivedThreshold
-          )
-        : isPointWithinRadius(
-            { latitude, longitude },
-            {
-              latitude: nearestStation.latitude as number,
-              longitude: nearestStation.longitude as number,
-            },
-            arrivedThreshold
-          ) &&
-          // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
-          (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED;
+    const arrived = isPointWithinRadius(
+      { latitude, longitude },
+      {
+        latitude: nearestStation.latitude as number,
+        longitude: nearestStation.longitude as number,
+      },
+      arrivedThreshold
+    );
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
     }
     return arrived;
-  }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
+  }, [arrivedThreshold, latitude, longitude, nearestStation]);
 
   const isApproaching = useMemo((): boolean => {
     if (
