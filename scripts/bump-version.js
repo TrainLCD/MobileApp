@@ -84,7 +84,7 @@ const writeJson = (filePath, data) => {
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`);
 };
 
-const updateAppConfig = (filePath, version, versionCode) => {
+const updateAppConfig = (filePath, version, versionCode, iosBuildNumber) => {
   let content = fs.readFileSync(filePath, 'utf8');
 
   if (version) {
@@ -105,6 +105,43 @@ const updateAppConfig = (filePath, version, versionCode) => {
       /versionCode:\s*\d+/,
       `versionCode: ${versionCode}`
     );
+  }
+
+  if (iosBuildNumber !== undefined) {
+    const buildNumberLine = `    buildNumber: '${iosBuildNumber}',`;
+    const lines = content.split('\n');
+    let iosStartIndex = -1;
+    let iosEndIndex = -1;
+    for (let i = 0; i < lines.length; i += 1) {
+      if (lines[i].includes('ios: {')) {
+        iosStartIndex = i;
+        break;
+      }
+    }
+    if (iosStartIndex === -1) {
+      throw new Error('app.config.ts に ios セクションが見つかりません。');
+    }
+    for (let i = iosStartIndex + 1; i < lines.length; i += 1) {
+      if (lines[i].startsWith('  },')) {
+        iosEndIndex = i;
+        break;
+      }
+    }
+    if (iosEndIndex === -1) {
+      throw new Error('app.config.ts の ios セクション終端が見つかりません。');
+    }
+    let replaced = false;
+    for (let i = iosStartIndex + 1; i < iosEndIndex; i += 1) {
+      if (lines[i].trim().startsWith('buildNumber:')) {
+        lines[i] = buildNumberLine;
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced) {
+      lines.splice(iosStartIndex + 1, 0, buildNumberLine);
+    }
+    content = `${lines.join('\n')}\n`;
   }
 
   fs.writeFileSync(filePath, content);
@@ -299,12 +336,14 @@ if (!Number.isInteger(nextAndroidVersionCode)) {
 // 各ファイルを更新
 const versionChanged = currentVersion !== nextVersion;
 const androidVersionCodeChanged = currentAndroidVersionCode !== nextAndroidVersionCode;
+const iosBuildNumberChanged = currentIosBuildNumber !== nextIosBuildNumber;
 
-if (versionChanged || androidVersionCodeChanged) {
+if (versionChanged || androidVersionCodeChanged || iosBuildNumberChanged) {
   updateAppConfig(
     appConfigPath,
     versionChanged ? nextVersion : null,
-    androidVersionCodeChanged ? Math.trunc(nextAndroidVersionCode) : undefined
+    androidVersionCodeChanged ? Math.trunc(nextAndroidVersionCode) : undefined,
+    iosBuildNumberChanged ? String(nextIosBuildNumber) : undefined
   );
 }
 
