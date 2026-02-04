@@ -43,6 +43,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
+    buildNumber: '2434',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
