@@ -83,6 +83,8 @@ export const useTTS = (): void => {
   const soundJaRef = useRef<AudioPlayer | null>(null);
   const soundEnRef = useRef<AudioPlayer | null>(null);
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const jaListenerRef = useRef<{ remove: () => void } | null>(null);
+  const enListenerRef = useRef<{ remove: () => void } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -156,6 +158,14 @@ export const useTTS = (): void => {
           '[useTTS] Playback safety timeout reached, force resetting'
         );
         try {
+          jaListenerRef.current?.remove();
+        } catch {}
+        jaListenerRef.current = null;
+        try {
+          enListenerRef.current?.remove();
+        } catch {}
+        enListenerRef.current = null;
+        try {
           soundJaRef.current?.pause();
           soundJaRef.current?.remove();
         } catch {}
@@ -173,6 +183,7 @@ export const useTTS = (): void => {
         (jaStatus) => {
           if (jaStatus.didJustFinish) {
             jaRemoveListener?.remove();
+            jaListenerRef.current = null;
             try {
               soundJa.remove();
             } catch (e) {
@@ -191,6 +202,7 @@ export const useTTS = (): void => {
                 (enStatus) => {
                   if (enStatus.didJustFinish) {
                     enRemoveListener?.remove();
+                    enListenerRef.current = null;
                     try {
                       soundEn.remove();
                     } catch (e) {
@@ -201,6 +213,7 @@ export const useTTS = (): void => {
                   } else if ('error' in enStatus && enStatus.error) {
                     console.warn('[useTTS] soundEn error:', enStatus.error);
                     enRemoveListener?.remove();
+                    enListenerRef.current = null;
                     try {
                       soundEn.remove();
                     } catch {}
@@ -209,8 +222,20 @@ export const useTTS = (): void => {
                   }
                 }
               );
+              enListenerRef.current = enRemoveListener;
 
-              soundEn.play();
+              try {
+                soundEn.play();
+              } catch (e) {
+                console.error('[useTTS] Failed to play soundEn:', e);
+                enRemoveListener?.remove();
+                enListenerRef.current = null;
+                try {
+                  soundEn.remove();
+                } catch {}
+                soundEnRef.current = null;
+                finishPlaying();
+              }
             } else {
               // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
               finishPlaying();
@@ -218,6 +243,7 @@ export const useTTS = (): void => {
           } else if ('error' in jaStatus && jaStatus.error) {
             console.warn('[useTTS] soundJa error:', jaStatus.error);
             jaRemoveListener?.remove();
+            jaListenerRef.current = null;
             try {
               soundJa.remove();
             } catch {}
@@ -226,12 +252,14 @@ export const useTTS = (): void => {
           }
         }
       );
+      jaListenerRef.current = jaRemoveListener;
 
       try {
         soundJa.play();
       } catch (e) {
         console.error('[useTTS] Failed to play soundJa:', e);
         jaRemoveListener?.remove();
+        jaListenerRef.current = null;
         try {
           soundJa.remove();
         } catch {}
@@ -373,6 +401,14 @@ export const useTTS = (): void => {
         clearTimeout(playingTimeoutRef.current);
         playingTimeoutRef.current = null;
       }
+      try {
+        jaListenerRef.current?.remove();
+      } catch {}
+      jaListenerRef.current = null;
+      try {
+        enListenerRef.current?.remove();
+      } catch {}
+      enListenerRef.current = null;
       try {
         soundJaRef.current?.pause();
       } catch {}
