@@ -12,7 +12,6 @@ import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
-import { useTTSCache } from './useTTSCache';
 import { useTTSText } from './useTTSText';
 
 const BASE64_ALPHABET =
@@ -56,6 +55,9 @@ const base64ToUint8Array = (input: string): Uint8Array => {
   return bytes;
 };
 
+// 再生が完了しない場合のフォールバックタイムアウト（ミリ秒）
+const PLAYBACK_TIMEOUT_MS = 60_000;
+
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled } = useAtomValue(speechState);
   const currentLine = useCurrentLine();
@@ -67,7 +69,6 @@ export const useTTS = (): void => {
   const speechWithTextRef = useRef<
     ((ja: string, en: string) => Promise<void>) | null
   >(null);
-  const { store, getByText } = useTTSCache();
   const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
   const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
   const ttsText =
@@ -81,6 +82,7 @@ export const useTTS = (): void => {
 
   const soundJaRef = useRef<AudioPlayer | null>(null);
   const soundEnRef = useRef<AudioPlayer | null>(null);
+  const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -99,140 +101,146 @@ export const useTTS = (): void => {
     })();
   }, [backgroundEnabled]);
 
-  const speakFromPath = useCallback(async (pathJa: string, pathEn: string) => {
-    if (!isLoadableRef.current) {
-      return;
+  // playingRefのリセットとpending処理を一元化してデッドロックを防止
+  const finishPlaying = useCallback(() => {
+    playingRef.current = false;
+    if (playingTimeoutRef.current) {
+      clearTimeout(playingTimeoutRef.current);
+      playingTimeoutRef.current = null;
     }
+    const pending = pendingRef.current;
+    if (pending) {
+      pendingRef.current = null;
+      speechWithTextRef.current?.(pending.textJa, pending.textEn);
+    }
+  }, []);
 
-    firstSpeechRef.current = false;
-
-    // 既存のプレイヤーをクリーンアップ
-    try {
-      soundJaRef.current?.pause();
-      soundJaRef.current?.remove();
-    } catch {}
-    try {
-      soundEnRef.current?.pause();
-      soundEnRef.current?.remove();
-    } catch {}
-    soundJaRef.current = null;
-    soundEnRef.current = null;
-
-    const soundJa = createAudioPlayer({
-      uri: pathJa,
-    });
-    const soundEn = createAudioPlayer({
-      uri: pathEn,
-    });
-
-    soundJaRef.current = soundJa;
-    soundEnRef.current = soundEn;
-    playingRef.current = true;
-
-    const enRemoveListener = soundEn.addListener(
-      'playbackStatusUpdate',
-      (enStatus) => {
-        if (enStatus.didJustFinish) {
-          enRemoveListener?.remove();
-          try {
-            soundEn.remove();
-          } catch (e) {
-            console.warn('[useTTS] Failed to remove soundEn:', e);
-          }
-          soundEnRef.current = null;
-          playingRef.current = false;
-          // 再生中にテキストが変わっていたら次の再生をトリガー
-          const pending = pendingRef.current;
-          if (pending) {
-            pendingRef.current = null;
-            speechWithTextRef.current?.(pending.textJa, pending.textEn);
-          }
-        } else if ('error' in enStatus && enStatus.error) {
-          // 英語側エラー時も確実に終了
-          console.warn('[useTTS] soundEn error:', enStatus.error);
-          enRemoveListener?.remove();
-          try {
-            soundEn.remove();
-          } catch {}
-          soundEnRef.current = null;
-          playingRef.current = false;
-          const pending = pendingRef.current;
-          if (pending) {
-            pendingRef.current = null;
-            speechWithTextRef.current?.(pending.textJa, pending.textEn);
-          }
-        }
+  const speakFromPath = useCallback(
+    async (pathJa: string, pathEn: string) => {
+      if (!isLoadableRef.current) {
+        return;
       }
-    );
 
-    const jaRemoveListener = soundJa.addListener(
-      'playbackStatusUpdate',
-      (jaStatus) => {
-        if (jaStatus.didJustFinish) {
-          jaRemoveListener?.remove();
-          try {
-            soundJa.remove();
-          } catch (e) {
-            console.warn('[useTTS] Failed to remove soundJa:', e);
-          }
-          soundJaRef.current = null;
-          if (isLoadableRef.current) {
-            soundEn.play();
-          } else {
-            // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
-            enRemoveListener?.remove();
-            try {
-              soundEn.remove();
-            } catch {}
-            soundEnRef.current = null;
-            playingRef.current = false;
-          }
-        } else if ('error' in jaStatus && jaStatus.error) {
-          // 日本語側エラー時は両者解放して停止
-          console.warn('[useTTS] soundJa error:', jaStatus.error);
-          jaRemoveListener?.remove();
-          try {
-            soundJa.remove();
-          } catch {}
-          soundJaRef.current = null;
-          enRemoveListener?.remove();
-          try {
-            soundEn.remove();
-          } catch {}
-          soundEnRef.current = null;
-          playingRef.current = false;
-          const pending = pendingRef.current;
-          if (pending) {
-            pendingRef.current = null;
-            speechWithTextRef.current?.(pending.textJa, pending.textEn);
-          }
-        }
-      }
-    );
+      firstSpeechRef.current = false;
 
-    try {
-      soundJa.play();
-    } catch (e) {
-      console.error('[useTTS] Failed to play soundJa:', e);
-      // 再生失敗時もリスナーとリソースをクリーンアップ
-      jaRemoveListener?.remove();
-      enRemoveListener?.remove();
+      // 既存のプレイヤーをクリーンアップ
       try {
-        soundJa.remove();
+        soundJaRef.current?.pause();
+        soundJaRef.current?.remove();
       } catch {}
       try {
-        soundEn.remove();
+        soundEnRef.current?.pause();
+        soundEnRef.current?.remove();
       } catch {}
       soundJaRef.current = null;
       soundEnRef.current = null;
-      playingRef.current = false;
-      const pending = pendingRef.current;
-      if (pending) {
-        pendingRef.current = null;
-        speechWithTextRef.current?.(pending.textJa, pending.textEn);
+
+      // 既存のタイムアウトをクリア
+      if (playingTimeoutRef.current) {
+        clearTimeout(playingTimeoutRef.current);
       }
-    }
-  }, []);
+
+      const soundJa = createAudioPlayer({
+        uri: pathJa,
+      });
+
+      soundJaRef.current = soundJa;
+      playingRef.current = true;
+
+      // 再生が完了しない場合のフォールバックタイムアウト
+      playingTimeoutRef.current = setTimeout(() => {
+        if (!playingRef.current) {
+          return;
+        }
+        console.warn(
+          '[useTTS] Playback safety timeout reached, force resetting'
+        );
+        try {
+          soundJaRef.current?.pause();
+          soundJaRef.current?.remove();
+        } catch {}
+        try {
+          soundEnRef.current?.pause();
+          soundEnRef.current?.remove();
+        } catch {}
+        soundJaRef.current = null;
+        soundEnRef.current = null;
+        finishPlaying();
+      }, PLAYBACK_TIMEOUT_MS);
+
+      const jaRemoveListener = soundJa.addListener(
+        'playbackStatusUpdate',
+        (jaStatus) => {
+          if (jaStatus.didJustFinish) {
+            jaRemoveListener?.remove();
+            try {
+              soundJa.remove();
+            } catch (e) {
+              console.warn('[useTTS] Failed to remove soundJa:', e);
+            }
+            soundJaRef.current = null;
+            if (isLoadableRef.current) {
+              // 日本語再生完了後に英語プレイヤーを生成して再生（リソース節約）
+              const soundEn = createAudioPlayer({
+                uri: pathEn,
+              });
+              soundEnRef.current = soundEn;
+
+              const enRemoveListener = soundEn.addListener(
+                'playbackStatusUpdate',
+                (enStatus) => {
+                  if (enStatus.didJustFinish) {
+                    enRemoveListener?.remove();
+                    try {
+                      soundEn.remove();
+                    } catch (e) {
+                      console.warn('[useTTS] Failed to remove soundEn:', e);
+                    }
+                    soundEnRef.current = null;
+                    finishPlaying();
+                  } else if ('error' in enStatus && enStatus.error) {
+                    console.warn('[useTTS] soundEn error:', enStatus.error);
+                    enRemoveListener?.remove();
+                    try {
+                      soundEn.remove();
+                    } catch {}
+                    soundEnRef.current = null;
+                    finishPlaying();
+                  }
+                }
+              );
+
+              soundEn.play();
+            } else {
+              // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
+              finishPlaying();
+            }
+          } else if ('error' in jaStatus && jaStatus.error) {
+            console.warn('[useTTS] soundJa error:', jaStatus.error);
+            jaRemoveListener?.remove();
+            try {
+              soundJa.remove();
+            } catch {}
+            soundJaRef.current = null;
+            finishPlaying();
+          }
+        }
+      );
+
+      try {
+        soundJa.play();
+      } catch (e) {
+        console.error('[useTTS] Failed to play soundJa:', e);
+        jaRemoveListener?.remove();
+        try {
+          soundJa.remove();
+        } catch {}
+        soundJaRef.current = null;
+        finishPlaying();
+      }
+    },
+    [finishPlaying]
+  );
 
   const ttsApiUrl = useMemo(() => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
@@ -312,29 +320,20 @@ export const useTTS = (): void => {
   const speechWithText = useCallback(
     async (ja: string, en: string) => {
       try {
-        const cache = getByText(ja);
-
-        if (cache) {
-          await speakFromPath(cache.ja.path, cache.en.path);
-          return;
-        }
-
         const fetched = await fetchSpeechWithText(ja, en);
         if (!fetched) {
           console.warn('[useTTS] Failed to fetch speech audio');
           return;
         }
 
-        const { id, pathJa, pathEn } = fetched;
-
-        store(id, { text: ja, path: pathJa }, { text: en, path: pathEn });
+        const { pathJa, pathEn } = fetched;
 
         await speakFromPath(pathJa, pathEn);
       } catch (error) {
         console.error('[useTTS] speech error:', error);
       }
     },
-    [fetchSpeechWithText, getByText, speakFromPath, store]
+    [fetchSpeechWithText, speakFromPath]
   );
 
   speechWithTextRef.current = speechWithText;
@@ -350,6 +349,7 @@ export const useTTS = (): void => {
 
     // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
     if (playingRef.current) {
+      console.warn('[useTTS] Already playing, queuing text as pending');
       pendingRef.current = { textJa, textEn };
       return;
     }
@@ -369,6 +369,10 @@ export const useTTS = (): void => {
     return () => {
       isLoadableRef.current = false;
       pendingRef.current = null;
+      if (playingTimeoutRef.current) {
+        clearTimeout(playingTimeoutRef.current);
+        playingTimeoutRef.current = null;
+      }
       try {
         soundJaRef.current?.pause();
       } catch {}
