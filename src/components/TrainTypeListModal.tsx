@@ -98,7 +98,23 @@ const getViaLines = (
 };
 
 // 同じ会社の連続する路線を「〇〇線」にまとめて表示する
+// 全路線が同一会社の場合はまとめずに個別表示する
 const formatLineNames = (lines: Line[], ja: boolean): string => {
+  const names = (l: Line) => (ja ? l.nameShort : l.nameRoman);
+  const sep = ja ? '・' : ', ';
+
+  // 全路線が同一会社ならグルーピングせず個別表示
+  const allSameCompany =
+    lines.length > 1 &&
+    lines[0]?.company?.id != null &&
+    lines.every((l) => l.company?.id === lines[0]?.company?.id);
+
+  if (allSameCompany) {
+    return Array.from(new Set(lines.map(names)))
+      .filter(Boolean)
+      .join(sep);
+  }
+
   // 連続する同一会社の路線をサブグループ化（companyがない場合はまとめない）
   const companyGroups = lines.reduce<Line[][]>((groups, l) => {
     const lastGroup = groups.at(-1);
@@ -122,10 +138,10 @@ const formatLineNames = (lines: Line[], ja: boolean): string => {
           : group[0]?.company?.nameEnglishShort;
         return ja ? `${companyName}線` : `${companyName} Line`;
       }
-      return ja ? group[0]?.nameShort : group[0]?.nameRoman;
+      return names(group[0]);
     })
     .filter(Boolean)
-    .join(ja ? '・' : ', ');
+    .join(sep);
 };
 
 type Props = {
