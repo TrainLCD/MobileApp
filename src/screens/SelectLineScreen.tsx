@@ -123,8 +123,6 @@ const SelectLineScreen = () => {
   const [stationAtomState, setStationState] = useAtom(stationState);
   const [, setLineState] = useAtom(lineStateAtom);
   const { station: stationFromAtom, stationsCache } = stationAtomState;
-  const stationsCacheRef = useRef(stationsCache);
-  stationsCacheRef.current = stationsCache;
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -772,12 +770,13 @@ const SelectLineScreen = () => {
           targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
-          stations={stationsCacheRef.current[index] ?? []}
+          stations={stationsCache[index] ?? []}
+          loading={!stationsCache[index]}
           testID={generateLineTestId(line)}
         />
       );
     },
-    [fetchStationsByLineIdLoading, handleLineSelected]
+    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {

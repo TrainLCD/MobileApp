@@ -171,6 +171,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           line={line}
           title={title}
           subtitle={subtitle}
+          subtitleNumberOfLines={1}
           onPress={() => {
             onSelect(item);
           }}
