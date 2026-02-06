@@ -408,11 +408,12 @@ const RouteSearchScreen = () => {
               ? line.nameShort || undefined
               : line.nameRoman || undefined
           }
+          loading={fetchRouteTypesLoading}
           onPress={() => handleLineSelected(item)}
         />
       );
     },
-    [handleLineSelected]
+    [handleLineSelected, fetchRouteTypesLoading]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
