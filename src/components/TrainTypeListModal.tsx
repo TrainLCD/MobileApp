@@ -83,18 +83,16 @@ const getViaLines = (
 
   // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
   if (selectedLineIndex === destinationLineIndex) {
-    return linesWithoutCurrent.slice(selectedLineIndex + 1);
+    return lines.slice(selectedLineIndex + 1);
   }
 
-  const [start, end] =
-    selectedLineIndex <= destinationLineIndex
-      ? [selectedLineIndex, destinationLineIndex]
-      : [destinationLineIndex, selectedLineIndex];
-  let segment = linesWithoutCurrent.slice(start, end + 1);
+  const start = Math.min(selectedLineIndex, destinationLineIndex);
+  const end = Math.max(selectedLineIndex, destinationLineIndex);
+  let segment = lines.slice(start + 1, end);
   if (selectedLineIndex > destinationLineIndex) {
-    segment = segment.reverse();
+    segment = [...segment].reverse();
   }
-  return segment.slice(1);
+  return segment.filter((l) => l.id !== selectedLine.id);
 };
 
 // 同じ会社の連続する路線を「〇〇線」にまとめて表示する

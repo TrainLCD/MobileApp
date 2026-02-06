@@ -291,10 +291,12 @@ export const CommonCard: React.FC<Props> = ({
       )}
       <View style={styles.texts}>
         <Typography style={styles.title} numberOfLines={1}>
-          {titleOrLineName.split(/(\([^)]*\))/).map((part, index) =>
+          {titleOrLineName.split(/(\([^)]*\))/).map((part, index, parts) =>
             /^\(.*\)$/.test(part) ? (
               <Typography key={`${index}-${part}`} style={styles.titleParens}>
-                {index > 0 ? ` ${part}` : part}
+                {index > 0 && !/\s$/.test(parts[index - 1] ?? '')
+                  ? ` ${part}`
+                  : part}
               </Typography>
             ) : (
               part
