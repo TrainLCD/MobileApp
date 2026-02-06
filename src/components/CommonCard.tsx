@@ -21,14 +21,17 @@ type Props = {
   stations?: Station[];
   title?: string;
   subtitle?: string;
+  subtitleNumberOfLines?: number;
   disabled?: boolean;
   testID?: string;
+  loading?: boolean;
   onPress?: () => void;
 };
 
 const styles = StyleSheet.create({
   root: {
-    height: 72,
+    minHeight: 72,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -81,6 +84,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  titleParens: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
   subtitle: {
     fontSize: 12,
     fontWeight: 'bold',
@@ -90,16 +98,14 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   subtitleContainer: {
-    height: 16,
-    // 横方向は左揃え（縦は subtitleRow の alignItems で中央揃え）
     justifyContent: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   chevron: {
     width: 24,
     height: 24,
-    marginLeft: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -112,15 +118,21 @@ const styles = StyleSheet.create({
 type SubtitleProps = {
   inboundText: string;
   outboundText: string;
+  numberOfLines?: number;
   loading?: boolean;
 };
 
-const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
+const Subtitle = ({
+  inboundText,
+  outboundText,
+  numberOfLines,
+  loading,
+}: SubtitleProps) => {
   if (loading) {
     return (
       <View style={styles.subtitleContainer}>
         <SkeletonPlaceholder borderRadius={1} speed={1500}>
-          <SkeletonPlaceholder.Item width={60} height={12} />
+          <SkeletonPlaceholder.Item opacity={0.9} width={60} height={12} />
         </SkeletonPlaceholder>
       </View>
     );
@@ -129,7 +141,9 @@ const Subtitle = ({ inboundText, outboundText, loading }: SubtitleProps) => {
   return (
     <View style={styles.subtitleContainer}>
       {inboundText ? (
-        <Typography style={styles.subtitle}>{inboundText}</Typography>
+        <Typography style={styles.subtitle} numberOfLines={numberOfLines}>
+          {inboundText}
+        </Typography>
       ) : null}
       {inboundText && outboundText ? (
         <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.arrow}>
@@ -156,8 +170,10 @@ export const CommonCard: React.FC<Props> = ({
   stations = [],
   title,
   subtitle,
+  subtitleNumberOfLines,
   disabled,
   testID,
+  loading,
   onPress,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -275,12 +291,33 @@ export const CommonCard: React.FC<Props> = ({
       )}
       <View style={styles.texts}>
         <Typography style={styles.title} numberOfLines={1}>
-          {titleOrLineName}
+          {titleOrLineName.split(/(\([^)]*\))/).map((part, index, parts) =>
+            /^\(.*\)$/.test(part) ? (
+              <Typography key={`${index}-${part}`} style={styles.titleParens}>
+                {index > 0 && !/\s$/.test(parts[index - 1] ?? '')
+                  ? ` ${part}`
+                  : part}
+              </Typography>
+            ) : (
+              part
+            )
+          )}
         </Typography>
-        {subtitle ? (
-          <Subtitle inboundText={subtitle} outboundText="" />
-        ) : (
-          <Subtitle inboundText={inboundText} outboundText={outboundText} />
+        {subtitle && (
+          <Subtitle
+            inboundText={subtitle}
+            outboundText=""
+            numberOfLines={subtitleNumberOfLines}
+            loading={loading}
+          />
+        )}
+        {!subtitle && (!!inboundText || !!outboundText) && (
+          <Subtitle
+            inboundText={inboundText}
+            outboundText={outboundText}
+            numberOfLines={subtitleNumberOfLines}
+            loading={loading}
+          />
         )}
       </View>
       <View style={styles.chevron}>

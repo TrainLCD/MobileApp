@@ -125,6 +125,7 @@ export const RouteInfoModal = ({
           title={title}
           subtitle={subtitle}
           onPress={() => onSelect?.(item)}
+          subtitleNumberOfLines={1}
         />
       );
     },
