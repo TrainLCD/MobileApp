@@ -99,7 +99,7 @@ const getViaLines = (
 // 全路線が同一会社の場合はまとめずに個別表示する
 const formatLineNames = (lines: Line[], ja: boolean): string => {
   const names = (l: Line) => (ja ? l.nameShort : l.nameRoman);
-  const sep = ja ? '・' : ', ';
+  const sep = ja ? ' ' : ', ';
 
   // 全路線が同一会社ならグルーピングせず個別表示
   const allSameCompany =

@@ -116,7 +116,7 @@ export const RouteInfoModal = ({
             .map((l) => getLocalizedLineName(l, isJapanese))
             .filter(Boolean)
         )
-      ).join(isJapanese ? '・' : ', ');
+      ).join(isJapanese ? ' ' : ', ');
 
       return (
         <CommonCard
