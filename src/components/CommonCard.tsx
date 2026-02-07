@@ -193,7 +193,7 @@ export const CommonCard: React.FC<Props> = ({
         .slice(0, 2)
         .map((s) => s.name)
         .filter(Boolean)
-        .join('・');
+        .join(' ');
       const en = arr
         .slice(0, 2)
         .map((s) => s.nameRoman || s.name)
