@@ -189,14 +189,15 @@ export const TrainTypeListModal = ({
 
       const title = `${isJapanese ? item.name : item.nameRoman}`;
 
-      // 種別が変わる箇所で改行して区切る
+      // 同じ種別の路線をグループ化（連続していなくても同じtypeIdなら同一グループ）
       const groupedViaLines = viaLines.reduce<Line[][]>((groups, l) => {
-        const lastGroup = groups[groups.length - 1];
-        if (
-          lastGroup &&
-          lastGroup[0]?.trainType?.typeId === l.trainType?.typeId
-        ) {
-          lastGroup.push(l);
+        const typeId = l.trainType?.typeId;
+        const existingGroup =
+          typeId !== null && typeId !== undefined
+            ? groups.find((g) => g[0]?.trainType?.typeId === typeId)
+            : undefined;
+        if (existingGroup) {
+          existingGroup.push(l);
         } else {
           groups.push([l]);
         }
