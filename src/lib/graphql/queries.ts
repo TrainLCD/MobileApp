@@ -302,10 +302,29 @@ export const GET_LINE_GROUP_STATIONS = gql`
 
 // Lightweight fragment for route/train-type selection (TrainTypeListModal + computeCurrentStationInRoutes)
 export const LINE_ROUTE_FRAGMENT = gql`
+  ${LINE_SYMBOL_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
   fragment LineRouteFields on LineNested {
     id
+    color
+    lineType
     nameShort
     nameRoman
+    lineSymbols {
+      ...LineSymbolFields
+    }
+    station {
+      id
+      groupId
+      name
+      nameRoman
+      nameChinese
+      nameKorean
+      hasTrainTypes
+      stationNumbers {
+        ...StationNumberFields
+      }
+    }
     trainType {
       typeId
       name
