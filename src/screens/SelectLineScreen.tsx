@@ -249,7 +249,9 @@ const SelectLineScreen = () => {
   }, [isRoutesDBInitialized, updateRoutes]);
 
   useEffect(() => {
-    const routesKey = routes.map((r) => r.id).join(',');
+    const routesKey = routes
+      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
+      .join(',');
     if (routesKey === prevRoutesKeyRef.current) return;
     prevRoutesKeyRef.current = routesKey;
 
