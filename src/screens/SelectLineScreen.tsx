@@ -301,9 +301,9 @@ const SelectLineScreen = () => {
         });
 
         setCarouselData(
-          routes.map((r) => ({
+          routes.map((r, i) => ({
             ...r,
-            __k: '',
+            __k: `${r.id}-${i}`,
             stations: r.hasTrainType
               ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
               : (lineStationsMap.get(r.lineId) ?? []),
