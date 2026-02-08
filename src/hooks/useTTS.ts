@@ -192,12 +192,17 @@ export const useTTS = (): void => {
           if (jaStatus.didJustFinish) {
             jaRemoveListener?.remove();
             jaListenerRef.current = null;
-            try {
-              soundJa.remove();
-            } catch (e) {
-              console.warn('[useTTS] Failed to remove soundJa:', e);
-            }
-            soundJaRef.current = null;
+            // 日本語プレイヤーはまだremoveしない
+            // コールバック内でremoveするとオーディオセッションが不安定になり
+            // 直後に生成する英語プレイヤーの再生が開始されないことがある
+            const removeSoundJa = () => {
+              try {
+                soundJa.remove();
+              } catch {}
+              if (soundJaRef.current === soundJa) {
+                soundJaRef.current = null;
+              }
+            };
             if (isLoadableRef.current) {
               // 日本語再生完了後に英語プレイヤーを生成して再生（リソース節約）
               const soundEn = createAudioPlayer({
@@ -217,6 +222,7 @@ export const useTTS = (): void => {
                       console.warn('[useTTS] Failed to remove soundEn:', e);
                     }
                     soundEnRef.current = null;
+                    removeSoundJa();
                     finishPlaying();
                   } else if ('error' in enStatus && enStatus.error) {
                     console.warn('[useTTS] soundEn error:', enStatus.error);
@@ -226,6 +232,7 @@ export const useTTS = (): void => {
                       soundEn.remove();
                     } catch {}
                     soundEnRef.current = null;
+                    removeSoundJa();
                     finishPlaying();
                   }
                 }
@@ -242,10 +249,12 @@ export const useTTS = (): void => {
                   soundEn.remove();
                 } catch {}
                 soundEnRef.current = null;
+                removeSoundJa();
                 finishPlaying();
               }
             } else {
               // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
+              removeSoundJa();
               finishPlaying();
             }
           } else if ('error' in jaStatus && jaStatus.error) {
