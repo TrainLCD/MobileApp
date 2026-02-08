@@ -1,5 +1,4 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
-import { BatchHttpLink } from '@apollo/client/link/batch-http';
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 import DeviceInfo from 'react-native-device-info';
 import {
   DEV_API_URL,
@@ -30,17 +29,7 @@ const uri = (() => {
 })();
 
 export const gqlClient = new ApolloClient({
-  link: new BatchHttpLink({
-    uri,
-    batchMax: 20,
-    batchInterval: 5,
-    includeExtensions: false,
-    batchKey: (operation) => {
-      const context = operation.getContext();
-      const batchGroup = context.batchGroup ?? 'default';
-      return `${uri}:${batchGroup}`;
-    },
-  }),
+  link: new HttpLink({ uri }),
   cache: new InMemoryCache({
     typePolicies: {
       LineNested: { keyFields: false },
