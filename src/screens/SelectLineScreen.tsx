@@ -35,6 +35,7 @@ import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { gqlClient } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
+  GET_LINE_LIST_STATIONS,
   GET_LINE_STATIONS,
   GET_STATION_TRAIN_TYPES,
 } from '~/lib/graphql/queries';
@@ -146,6 +147,7 @@ const SelectLineScreen = () => {
   } | null>(null);
   const lineListRef = useRef<View>(null);
   const presetsRef = useRef<View>(null);
+  const prevRoutesKeyRef = useRef('');
 
   const {
     isWalkthroughActive,
@@ -247,54 +249,84 @@ const SelectLineScreen = () => {
   }, [isRoutesDBInitialized, updateRoutes]);
 
   useEffect(() => {
+    const routesKey = routes
+      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
+      .join(',');
+    if (routesKey === prevRoutesKeyRef.current) return;
+
     const fetchAsync = async () => {
       try {
-        const jobs = routes.map((route) => {
-          if (route.hasTrainType) {
-            return gqlClient.query<{ lineGroupStations: Station[] }>({
-              query: GET_LINE_GROUP_STATIONS,
-              variables: {
-                lineGroupId: route.trainTypeId,
-              },
-              context: { batchGroup: 'presets-init' },
-            });
-          }
+        const lineRoutes = routes.filter((r) => !r.hasTrainType);
+        const trainTypeRoutes = routes.filter((r) => r.hasTrainType);
 
-          return gqlClient.query<{ lineStations: Station[] }>({
-            query: GET_LINE_STATIONS,
-            variables: {
-              lineId: route.lineId,
-            },
-            context: { batchGroup: 'presets-init' },
+        // !hasTrainType のルートを lineListStations で一括取得
+        const lineStationsMap = new Map<number, Station[]>();
+        const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
+        if (validLineRoutes.length > 0) {
+          const lineIds = validLineRoutes.map((r) => r.lineId);
+          const result = await gqlClient.query<{
+            lineListStations: Station[];
+          }>({
+            query: GET_LINE_LIST_STATIONS,
+            variables: { lineIds },
           });
-        });
+          for (const s of result.data?.lineListStations ?? []) {
+            const lid = s.line?.id;
+            if (lid == null) continue;
+            const arr = lineStationsMap.get(lid);
+            if (arr) {
+              arr.push(s);
+            } else {
+              lineStationsMap.set(lid, [s]);
+            }
+          }
+        }
 
-        const results = await Promise.allSettled(jobs);
-        const routeStations: Array<SavedRoute & { stations: Station[] }> =
-          results.map((r, index) =>
+        // hasTrainType のルートは個別に lineGroupStations で取得
+        const trainTypeResults = await Promise.allSettled(
+          trainTypeRoutes.map((route) =>
+            gqlClient.query<{ lineGroupStations: Station[] }>({
+              query: GET_LINE_GROUP_STATIONS,
+              variables: { lineGroupId: route.trainTypeId },
+            })
+          )
+        );
+        const rejected = trainTypeResults.filter(
+          (r): r is PromiseRejectedResult => r.status === 'rejected'
+        );
+        if (rejected.length > 0) {
+          for (const [i, r] of trainTypeResults.entries()) {
+            if (r.status === 'rejected') {
+              console.error(
+                `trainTypeId=${trainTypeRoutes[i].trainTypeId}`,
+                r.reason
+              );
+            }
+          }
+          return;
+        }
+
+        const trainTypeStationsMap = new Map<number, Station[]>();
+        for (const [i, route] of trainTypeRoutes.entries()) {
+          const r = trainTypeResults[i];
+          trainTypeStationsMap.set(
+            route.trainTypeId,
             r.status === 'fulfilled'
-              ? {
-                  ...routes[index],
-                  stations:
-                    (r.value.data as { lineGroupStations: Station[] })
-                      .lineGroupStations ??
-                    (r.value.data as { lineStations: Station[] })
-                      .lineStations ??
-                    [],
-                }
-              : ({ ...routes[index], stations: [] } as SavedRoute & {
-                  stations: Station[];
-                })
+              ? (r.value.data?.lineGroupStations ?? [])
+              : []
           );
+        }
 
         setCarouselData(
-          routes.map((r) => ({
+          routes.map((r, i) => ({
             ...r,
-            __k: '', // loop用のキー（実際にはloopDataで付与されるのでここでは空文字でよい）
-            stations:
-              routeStations.find((rs) => rs.id === r.id)?.stations ?? [],
+            __k: `${r.id}-${i}`,
+            stations: r.hasTrainType
+              ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
+              : (lineStationsMap.get(r.lineId) ?? []),
           }))
         );
+        prevRoutesKeyRef.current = routesKey;
       } catch (err) {
         console.error(err);
       }
@@ -319,22 +351,36 @@ const SelectLineScreen = () => {
         (line): line is LineNested => line?.id != null
       );
 
-      const jobs = fetchedLines.map((line) =>
-        gqlClient.query<{ lineStations: Station[] }>({
-          query: GET_LINE_STATIONS,
-          variables: {
-            lineId: line.id as number,
-          },
-          context: { batchGroup: 'lines-init' },
-        })
-      );
+      const lineIds = fetchedLines.map((line) => line.id as number);
+      if (lineIds.length === 0) return;
 
-      const results = await Promise.allSettled(jobs);
+      let allStations: Station[];
+      try {
+        const result = await gqlClient.query<{
+          lineListStations: Station[];
+        }>({
+          query: GET_LINE_LIST_STATIONS,
+          variables: { lineIds },
+        });
+        allStations = result.data?.lineListStations ?? [];
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+      const stationsByLineId = new Map<number, Station[]>();
+      for (const s of allStations) {
+        const lid = s.line?.id;
+        if (lid == null) continue;
+        const arr = stationsByLineId.get(lid);
+        if (arr) {
+          arr.push(s);
+        } else {
+          stationsByLineId.set(lid, [s]);
+        }
+      }
 
-      const stationsCache: Station[][] = results.map((r) =>
-        r.status === 'fulfilled'
-          ? (r.value.data?.lineStations ?? [])
-          : ([] as Station[])
+      const stationsCache: Station[][] = fetchedLines.map(
+        (line) => stationsByLineId.get(line.id as number) ?? []
       );
 
       setStationState((prev) => ({
@@ -367,10 +413,6 @@ const SelectLineScreen = () => {
         ...prev,
         stationForHeader: stationFromAPI,
       }));
-
-      if (stationFromAPI) {
-        await updateStationsCache(stationFromAPI);
-      }
     };
     fetchInitialNearbyStationAsync();
   }, [
@@ -379,7 +421,6 @@ const SelectLineScreen = () => {
     setNavigationState,
     setStationState,
     station,
-    updateStationsCache,
   ]);
 
   useEffect(() => {
