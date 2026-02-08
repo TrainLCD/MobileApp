@@ -32,7 +32,7 @@ import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
-  GET_ROUTE_TYPES,
+  GET_ROUTE_TYPES_LIGHT,
   GET_STATIONS_BY_NAME,
 } from '~/lib/graphql/queries';
 import navigationState from '~/store/atoms/navigation';
@@ -187,7 +187,9 @@ const RouteSearchScreen = () => {
       loading: fetchRouteTypesLoading,
       error: fetchRouteTypesError,
     },
-  ] = useLazyQuery<GetRouteTypesData, GetRouteTypesVariables>(GET_ROUTE_TYPES);
+  ] = useLazyQuery<GetRouteTypesData, GetRouteTypesVariables>(
+    GET_ROUTE_TYPES_LIGHT
+  );
 
   const [fetchByName, { loading: byNameLoading, error: byNameError }] =
     useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(

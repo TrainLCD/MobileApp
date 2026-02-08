@@ -116,7 +116,9 @@ export type Query = {
   __typename: 'Query';
   connectedRoutes: Array<Route>;
   line: Maybe<Line>;
+  lineGroupListStations: Array<Station>;
   lineGroupStations: Array<Station>;
+  lineListStations: Array<Station>;
   lineStations: Array<Station>;
   linesByName: Array<Line>;
   routeTypes: RouteTypePage;
@@ -138,8 +140,19 @@ export type QueryLineArgs = {
   lineId: Scalars['Int']['input'];
 };
 
+export type QueryLineGroupListStationsArgs = {
+  lineGroupIds: Array<Scalars['Int']['input']>;
+  transportType: InputMaybe<TransportType>;
+};
+
 export type QueryLineGroupStationsArgs = {
+  directionId: InputMaybe<Scalars['Int']['input']>;
   lineGroupId: Scalars['Int']['input'];
+  transportType: InputMaybe<TransportType>;
+};
+
+export type QueryLineListStationsArgs = {
+  lineIds: Array<Scalars['Int']['input']>;
   transportType: InputMaybe<TransportType>;
 };
 
@@ -1752,10 +1765,404 @@ export type GetStationsNearbyQueryVariables = Exact<{
   latitude: Scalars['Float']['input'];
   longitude: Scalars['Float']['input'];
   limit: InputMaybe<Scalars['Int']['input']>;
+  transportType: InputMaybe<TransportType>;
 }>;
 
 export type GetStationsNearbyQuery = {
   stationsNearby: Array<{
+    __typename: 'Station';
+    id: number | null | undefined;
+    groupId: number | null | undefined;
+    name: string | null | undefined;
+    nameKatakana: string | null | undefined;
+    nameRoman: string | null | undefined;
+    nameChinese: string | null | undefined;
+    nameKorean: string | null | undefined;
+    threeLetterCode: string | null | undefined;
+    latitude: number | null | undefined;
+    longitude: number | null | undefined;
+    address: string | null | undefined;
+    postalCode: string | null | undefined;
+    prefectureId: number | null | undefined;
+    openedAt: string | null | undefined;
+    closedAt: string | null | undefined;
+    status: OperationStatus | null | undefined;
+    distance: number | null | undefined;
+    hasTrainTypes: boolean | null | undefined;
+    stopCondition: StopCondition | null | undefined;
+    transportType: TransportType | null | undefined;
+    stationNumbers:
+      | Array<{
+          __typename: 'StationNumber';
+          lineSymbol: string | null | undefined;
+          lineSymbolColor: string | null | undefined;
+          lineSymbolShape: string | null | undefined;
+          stationNumber: string | null | undefined;
+        }>
+      | null
+      | undefined;
+    line:
+      | {
+          __typename: 'LineNested';
+          id: number | null | undefined;
+          averageDistance: number | null | undefined;
+          color: string | null | undefined;
+          lineType: LineType | null | undefined;
+          nameFull: string | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          status: OperationStatus | null | undefined;
+          transportType: TransportType | null | undefined;
+          company:
+            | {
+                __typename: 'Company';
+                id: number | null | undefined;
+                name: string | null | undefined;
+                nameEnglishFull: string | null | undefined;
+                nameEnglishShort: string | null | undefined;
+                nameFull: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameShort: string | null | undefined;
+                railroadId: number | null | undefined;
+                status: OperationStatus | null | undefined;
+                type: CompanyType | null | undefined;
+                url: string | null | undefined;
+              }
+            | null
+            | undefined;
+          lineSymbols:
+            | Array<{
+                __typename: 'LineSymbol';
+                color: string | null | undefined;
+                shape: string | null | undefined;
+                symbol: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                id: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                hasTrainTypes: boolean | null | undefined;
+                stationNumbers:
+                  | Array<{
+                      __typename: 'StationNumber';
+                      lineSymbol: string | null | undefined;
+                      lineSymbolColor: string | null | undefined;
+                      lineSymbolShape: string | null | undefined;
+                      stationNumber: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
+        }
+      | null
+      | undefined;
+    lines:
+      | Array<{
+          __typename: 'LineNested';
+          id: number | null | undefined;
+          averageDistance: number | null | undefined;
+          color: string | null | undefined;
+          lineType: LineType | null | undefined;
+          nameFull: string | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          status: OperationStatus | null | undefined;
+          transportType: TransportType | null | undefined;
+          company:
+            | {
+                __typename: 'Company';
+                id: number | null | undefined;
+                name: string | null | undefined;
+                nameEnglishFull: string | null | undefined;
+                nameEnglishShort: string | null | undefined;
+                nameFull: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameShort: string | null | undefined;
+                railroadId: number | null | undefined;
+                status: OperationStatus | null | undefined;
+                type: CompanyType | null | undefined;
+                url: string | null | undefined;
+              }
+            | null
+            | undefined;
+          lineSymbols:
+            | Array<{
+                __typename: 'LineSymbol';
+                color: string | null | undefined;
+                shape: string | null | undefined;
+                symbol: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                id: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                hasTrainTypes: boolean | null | undefined;
+                stationNumbers:
+                  | Array<{
+                      __typename: 'StationNumber';
+                      lineSymbol: string | null | undefined;
+                      lineSymbolColor: string | null | undefined;
+                      lineSymbolShape: string | null | undefined;
+                      stationNumber: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          trainType:
+            | {
+                __typename: 'TrainTypeNested';
+                id: number | null | undefined;
+                typeId: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                color: string | null | undefined;
+                direction: TrainDirection | null | undefined;
+                kind: TrainTypeKind | null | undefined;
+              }
+            | null
+            | undefined;
+        }>
+      | null
+      | undefined;
+    trainType:
+      | {
+          __typename: 'TrainTypeNested';
+          id: number | null | undefined;
+          typeId: number | null | undefined;
+          groupId: number | null | undefined;
+          name: string | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          color: string | null | undefined;
+          direction: TrainDirection | null | undefined;
+          kind: TrainTypeKind | null | undefined;
+          line:
+            | {
+                __typename: 'LineNested';
+                id: number | null | undefined;
+                averageDistance: number | null | undefined;
+                color: string | null | undefined;
+                lineType: LineType | null | undefined;
+                nameFull: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameShort: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                status: OperationStatus | null | undefined;
+                transportType: TransportType | null | undefined;
+                company:
+                  | {
+                      __typename: 'Company';
+                      id: number | null | undefined;
+                      name: string | null | undefined;
+                      nameEnglishFull: string | null | undefined;
+                      nameEnglishShort: string | null | undefined;
+                      nameFull: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameShort: string | null | undefined;
+                      railroadId: number | null | undefined;
+                      status: OperationStatus | null | undefined;
+                      type: CompanyType | null | undefined;
+                      url: string | null | undefined;
+                    }
+                  | null
+                  | undefined;
+                lineSymbols:
+                  | Array<{
+                      __typename: 'LineSymbol';
+                      color: string | null | undefined;
+                      shape: string | null | undefined;
+                      symbol: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+                station:
+                  | {
+                      __typename: 'StationNested';
+                      id: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      hasTrainTypes: boolean | null | undefined;
+                      stationNumbers:
+                        | Array<{
+                            __typename: 'StationNumber';
+                            lineSymbol: string | null | undefined;
+                            lineSymbolColor: string | null | undefined;
+                            lineSymbolShape: string | null | undefined;
+                            stationNumber: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          lines:
+            | Array<{
+                __typename: 'LineNested';
+                id: number | null | undefined;
+                averageDistance: number | null | undefined;
+                color: string | null | undefined;
+                lineType: LineType | null | undefined;
+                nameFull: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameShort: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                status: OperationStatus | null | undefined;
+                transportType: TransportType | null | undefined;
+                company:
+                  | {
+                      __typename: 'Company';
+                      id: number | null | undefined;
+                      name: string | null | undefined;
+                      nameEnglishFull: string | null | undefined;
+                      nameEnglishShort: string | null | undefined;
+                      nameFull: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameShort: string | null | undefined;
+                      railroadId: number | null | undefined;
+                      status: OperationStatus | null | undefined;
+                      type: CompanyType | null | undefined;
+                      url: string | null | undefined;
+                    }
+                  | null
+                  | undefined;
+                lineSymbols:
+                  | Array<{
+                      __typename: 'LineSymbol';
+                      color: string | null | undefined;
+                      shape: string | null | undefined;
+                      symbol: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+                station:
+                  | {
+                      __typename: 'StationNested';
+                      id: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      hasTrainTypes: boolean | null | undefined;
+                      stationNumbers:
+                        | Array<{
+                            __typename: 'StationNumber';
+                            lineSymbol: string | null | undefined;
+                            lineSymbolColor: string | null | undefined;
+                            lineSymbolShape: string | null | undefined;
+                            stationNumber: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                    }
+                  | null
+                  | undefined;
+              }>
+            | null
+            | undefined;
+        }
+      | null
+      | undefined;
+  }>;
+};
+
+export type GetLineListStationsQueryVariables = Exact<{
+  lineIds: Array<Scalars['Int']['input']> | Scalars['Int']['input'];
+}>;
+
+export type GetLineListStationsQuery = {
+  lineListStations: Array<{
     __typename: 'Station';
     id: number | null | undefined;
     groupId: number | null | undefined;

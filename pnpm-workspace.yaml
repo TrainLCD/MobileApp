@@ -1,2 +1,5 @@
+packages:
+  - '.'
+  - '!functions'
 patchedDependencies:
   expo-task-manager@14.0.9: patches/expo-task-manager@14.0.9.patch
