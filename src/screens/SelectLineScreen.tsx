@@ -34,12 +34,12 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { gqlClient } from '~/lib/gql';
 import {
-  GET_LINE_GROUP_LIST_STATIONS,
+  GET_LINE_GROUP_LIST_STATIONS_PRESET,
   GET_LINE_GROUP_STATIONS,
-  GET_LINE_LIST_STATIONS,
   GET_LINE_LIST_STATIONS_LIGHT,
+  GET_LINE_LIST_STATIONS_PRESET,
   GET_LINE_STATIONS,
-  GET_STATION_TRAIN_TYPES,
+  GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import isTablet from '~/utils/isTablet';
@@ -238,7 +238,7 @@ const SelectLineScreen = () => {
     fetchTrainTypes,
     { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
   ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES
+    GET_STATION_TRAIN_TYPES_LIGHT
   );
 
   useEffect(() => {
@@ -269,7 +269,7 @@ const SelectLineScreen = () => {
           const result = await gqlClient.query<{
             lineListStations: Station[];
           }>({
-            query: GET_LINE_LIST_STATIONS,
+            query: GET_LINE_LIST_STATIONS_PRESET,
             variables: { lineIds },
           });
           for (const s of result.data?.lineListStations ?? []) {
@@ -291,7 +291,7 @@ const SelectLineScreen = () => {
           const result = await gqlClient.query<{
             lineGroupListStations: Station[];
           }>({
-            query: GET_LINE_GROUP_LIST_STATIONS,
+            query: GET_LINE_GROUP_LIST_STATIONS_PRESET,
             variables: { lineGroupIds },
           });
           for (const s of result.data?.lineGroupListStations ?? []) {
