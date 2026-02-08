@@ -260,8 +260,9 @@ const SelectLineScreen = () => {
 
         // !hasTrainType のルートを lineListStations で一括取得
         const lineStationsMap = new Map<number, Station[]>();
-        if (lineRoutes.length > 0) {
-          const lineIds = lineRoutes.map((r) => r.lineId);
+        const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
+        if (validLineRoutes.length > 0) {
+          const lineIds = validLineRoutes.map((r) => r.lineId);
           const result = await gqlClient.query<{
             lineListStations: Station[];
           }>({
@@ -336,14 +337,19 @@ const SelectLineScreen = () => {
       const lineIds = fetchedLines.map((line) => line.id as number);
       if (lineIds.length === 0) return;
 
-      const result = await gqlClient.query<{
-        lineListStations: Station[];
-      }>({
-        query: GET_LINE_LIST_STATIONS,
-        variables: { lineIds },
-      });
-
-      const allStations = result.data?.lineListStations ?? [];
+      let allStations: Station[];
+      try {
+        const result = await gqlClient.query<{
+          lineListStations: Station[];
+        }>({
+          query: GET_LINE_LIST_STATIONS,
+          variables: { lineIds },
+        });
+        allStations = result.data?.lineListStations ?? [];
+      } catch (err) {
+        console.error(err);
+        return;
+      }
       const stationsByLineId = new Map<number, Station[]>();
       for (const s of allStations) {
         const lid = s.line?.id;
