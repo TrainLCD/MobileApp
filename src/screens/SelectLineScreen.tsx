@@ -34,9 +34,12 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { gqlClient } from '~/lib/gql';
 import {
+  GET_LINE_GROUP_LIST_STATIONS_PRESET,
   GET_LINE_GROUP_STATIONS,
+  GET_LINE_LIST_STATIONS_LIGHT,
+  GET_LINE_LIST_STATIONS_PRESET,
   GET_LINE_STATIONS,
-  GET_STATION_TRAIN_TYPES,
+  GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import isTablet from '~/utils/isTablet';
@@ -123,8 +126,6 @@ const SelectLineScreen = () => {
   const [stationAtomState, setStationState] = useAtom(stationState);
   const [, setLineState] = useAtom(lineStateAtom);
   const { station: stationFromAtom, stationsCache } = stationAtomState;
-  const stationsCacheRef = useRef(stationsCache);
-  stationsCacheRef.current = stationsCache;
   const setNavigationState = useSetAtom(navigationState);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -148,6 +149,7 @@ const SelectLineScreen = () => {
   } | null>(null);
   const lineListRef = useRef<View>(null);
   const presetsRef = useRef<View>(null);
+  const prevRoutesKeyRef = useRef('');
 
   const {
     isWalkthroughActive,
@@ -236,7 +238,7 @@ const SelectLineScreen = () => {
     fetchTrainTypes,
     { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
   ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES
+    GET_STATION_TRAIN_TYPES_LIGHT
   );
 
   useEffect(() => {
@@ -249,54 +251,71 @@ const SelectLineScreen = () => {
   }, [isRoutesDBInitialized, updateRoutes]);
 
   useEffect(() => {
+    const routesKey = routes
+      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
+      .join(',');
+    if (routesKey === prevRoutesKeyRef.current) return;
+
     const fetchAsync = async () => {
       try {
-        const jobs = routes.map((route) => {
-          if (route.hasTrainType) {
-            return gqlClient.query<{ lineGroupStations: Station[] }>({
-              query: GET_LINE_GROUP_STATIONS,
-              variables: {
-                lineGroupId: route.trainTypeId,
-              },
-              context: { batchGroup: 'presets-init' },
-            });
-          }
+        const lineRoutes = routes.filter((r) => !r.hasTrainType);
+        const trainTypeRoutes = routes.filter((r) => r.hasTrainType);
 
-          return gqlClient.query<{ lineStations: Station[] }>({
-            query: GET_LINE_STATIONS,
-            variables: {
-              lineId: route.lineId,
-            },
-            context: { batchGroup: 'presets-init' },
+        // !hasTrainType のルートを lineListStations で一括取得
+        const lineStationsMap = new Map<number, Station[]>();
+        const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
+        if (validLineRoutes.length > 0) {
+          const lineIds = validLineRoutes.map((r) => r.lineId);
+          const result = await gqlClient.query<{
+            lineListStations: Station[];
+          }>({
+            query: GET_LINE_LIST_STATIONS_PRESET,
+            variables: { lineIds },
           });
-        });
+          for (const s of result.data?.lineListStations ?? []) {
+            const lid = s.line?.id;
+            if (lid == null) continue;
+            const arr = lineStationsMap.get(lid);
+            if (arr) {
+              arr.push(s);
+            } else {
+              lineStationsMap.set(lid, [s]);
+            }
+          }
+        }
 
-        const results = await Promise.allSettled(jobs);
-        const routeStations: Array<SavedRoute & { stations: Station[] }> =
-          results.map((r, index) =>
-            r.status === 'fulfilled'
-              ? {
-                  ...routes[index],
-                  stations:
-                    (r.value.data as { lineGroupStations: Station[] })
-                      .lineGroupStations ??
-                    (r.value.data as { lineStations: Station[] })
-                      .lineStations ??
-                    [],
-                }
-              : ({ ...routes[index], stations: [] } as SavedRoute & {
-                  stations: Station[];
-                })
-          );
+        // hasTrainType のルートを lineGroupListStations で一括取得
+        const trainTypeStationsMap = new Map<number, Station[]>();
+        if (trainTypeRoutes.length > 0) {
+          const lineGroupIds = trainTypeRoutes.map((r) => r.trainTypeId);
+          const result = await gqlClient.query<{
+            lineGroupListStations: Station[];
+          }>({
+            query: GET_LINE_GROUP_LIST_STATIONS_PRESET,
+            variables: { lineGroupIds },
+          });
+          for (const s of result.data?.lineGroupListStations ?? []) {
+            const gid = s.trainType?.groupId;
+            if (gid == null) continue;
+            const arr = trainTypeStationsMap.get(gid);
+            if (arr) {
+              arr.push(s);
+            } else {
+              trainTypeStationsMap.set(gid, [s]);
+            }
+          }
+        }
 
         setCarouselData(
-          routes.map((r) => ({
+          routes.map((r, i) => ({
             ...r,
-            __k: '', // loop用のキー（実際にはloopDataで付与されるのでここでは空文字でよい）
-            stations:
-              routeStations.find((rs) => rs.id === r.id)?.stations ?? [],
+            __k: `${r.id}-${i}`,
+            stations: r.hasTrainType
+              ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
+              : (lineStationsMap.get(r.lineId) ?? []),
           }))
         );
+        prevRoutesKeyRef.current = routesKey;
       } catch (err) {
         console.error(err);
       }
@@ -321,22 +340,36 @@ const SelectLineScreen = () => {
         (line): line is LineNested => line?.id != null
       );
 
-      const jobs = fetchedLines.map((line) =>
-        gqlClient.query<{ lineStations: Station[] }>({
-          query: GET_LINE_STATIONS,
-          variables: {
-            lineId: line.id as number,
-          },
-          context: { batchGroup: 'lines-init' },
-        })
-      );
+      const lineIds = fetchedLines.map((line) => line.id as number);
+      if (lineIds.length === 0) return;
 
-      const results = await Promise.allSettled(jobs);
+      let allStations: Station[];
+      try {
+        const result = await gqlClient.query<{
+          lineListStations: Station[];
+        }>({
+          query: GET_LINE_LIST_STATIONS_LIGHT,
+          variables: { lineIds },
+        });
+        allStations = result.data?.lineListStations ?? [];
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+      const stationsByLineId = new Map<number, Station[]>();
+      for (const s of allStations) {
+        const lid = s.line?.id;
+        if (lid == null) continue;
+        const arr = stationsByLineId.get(lid);
+        if (arr) {
+          arr.push(s);
+        } else {
+          stationsByLineId.set(lid, [s]);
+        }
+      }
 
-      const stationsCache: Station[][] = results.map((r) =>
-        r.status === 'fulfilled'
-          ? (r.value.data?.lineStations ?? [])
-          : ([] as Station[])
+      const stationsCache: Station[][] = fetchedLines.map(
+        (line) => stationsByLineId.get(line.id as number) ?? []
       );
 
       setStationState((prev) => ({
@@ -369,10 +402,6 @@ const SelectLineScreen = () => {
         ...prev,
         stationForHeader: stationFromAPI,
       }));
-
-      if (stationFromAPI) {
-        await updateStationsCache(stationFromAPI);
-      }
     };
     fetchInitialNearbyStationAsync();
   }, [
@@ -381,7 +410,6 @@ const SelectLineScreen = () => {
     setNavigationState,
     setStationState,
     station,
-    updateStationsCache,
   ]);
 
   useEffect(() => {
@@ -772,12 +800,13 @@ const SelectLineScreen = () => {
           targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
-          stations={stationsCacheRef.current[index] ?? []}
+          stations={stationsCache[index] ?? []}
+          loading={!stationsCache[index]}
           testID={generateLineTestId(line)}
         />
       );
     },
-    [fetchStationsByLineIdLoading, handleLineSelected]
+    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
