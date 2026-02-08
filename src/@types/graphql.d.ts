@@ -117,6 +117,7 @@ export type Query = {
   connectedRoutes: Array<Route>;
   line: Maybe<Line>;
   lineGroupStations: Array<Station>;
+  lineListStations: Array<Station>;
   lineStations: Array<Station>;
   linesByName: Array<Line>;
   routeTypes: RouteTypePage;
@@ -139,7 +140,13 @@ export type QueryLineArgs = {
 };
 
 export type QueryLineGroupStationsArgs = {
+  directionId: InputMaybe<Scalars['Int']['input']>;
   lineGroupId: Scalars['Int']['input'];
+  transportType: InputMaybe<TransportType>;
+};
+
+export type QueryLineListStationsArgs = {
+  lineIds: Array<Scalars['Int']['input']>;
   transportType: InputMaybe<TransportType>;
 };
 
@@ -1752,6 +1759,7 @@ export type GetStationsNearbyQueryVariables = Exact<{
   latitude: Scalars['Float']['input'];
   longitude: Scalars['Float']['input'];
   limit: InputMaybe<Scalars['Int']['input']>;
+  transportType: InputMaybe<TransportType>;
 }>;
 
 export type GetStationsNearbyQuery = {
