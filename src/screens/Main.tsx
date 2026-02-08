@@ -49,7 +49,7 @@ import {
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
-  GET_STATION_TRAIN_TYPES,
+  GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
@@ -147,7 +147,7 @@ const MainScreen: React.FC = () => {
     fetchTrainTypes,
     { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
   ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES
+    GET_STATION_TRAIN_TYPES_LIGHT
   );
 
   const currentStationRef = useRef(currentStation);
