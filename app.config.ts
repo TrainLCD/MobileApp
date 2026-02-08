@@ -3,7 +3,7 @@ import type { ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext) => ({
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.0.132',
+  version: '10.0.133',
   plugins: [
     'expo-font',
     'expo-localization',
@@ -64,15 +64,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
-
-
-
-
-
-
-
-
-
-
-
