@@ -291,8 +291,23 @@ const SelectLineScreen = () => {
             })
           )
         );
+        const rejected = trainTypeResults.filter(
+          (r): r is PromiseRejectedResult => r.status === 'rejected'
+        );
+        if (rejected.length > 0) {
+          for (const [i, r] of trainTypeResults.entries()) {
+            if (r.status === 'rejected') {
+              console.error(
+                `trainTypeId=${trainTypeRoutes[i].trainTypeId}`,
+                r.reason
+              );
+            }
+          }
+          return;
+        }
+
         const trainTypeStationsMap = new Map<number, Station[]>();
-        trainTypeRoutes.forEach((route, i) => {
+        for (const [i, route] of trainTypeRoutes.entries()) {
           const r = trainTypeResults[i];
           trainTypeStationsMap.set(
             route.trainTypeId,
@@ -300,7 +315,7 @@ const SelectLineScreen = () => {
               ? (r.value.data?.lineGroupStations ?? [])
               : []
           );
-        });
+        }
 
         setCarouselData(
           routes.map((r, i) => ({
