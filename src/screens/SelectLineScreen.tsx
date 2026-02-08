@@ -34,8 +34,10 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { gqlClient } from '~/lib/gql';
 import {
+  GET_LINE_GROUP_LIST_STATIONS,
   GET_LINE_GROUP_STATIONS,
   GET_LINE_LIST_STATIONS,
+  GET_LINE_LIST_STATIONS_LIGHT,
   GET_LINE_STATIONS,
   GET_STATION_TRAIN_TYPES,
 } from '~/lib/graphql/queries';
@@ -282,39 +284,26 @@ const SelectLineScreen = () => {
           }
         }
 
-        // hasTrainType のルートは個別に lineGroupStations で取得
-        const trainTypeResults = await Promise.allSettled(
-          trainTypeRoutes.map((route) =>
-            gqlClient.query<{ lineGroupStations: Station[] }>({
-              query: GET_LINE_GROUP_STATIONS,
-              variables: { lineGroupId: route.trainTypeId },
-            })
-          )
-        );
-        const rejected = trainTypeResults.filter(
-          (r): r is PromiseRejectedResult => r.status === 'rejected'
-        );
-        if (rejected.length > 0) {
-          for (const [i, r] of trainTypeResults.entries()) {
-            if (r.status === 'rejected') {
-              console.error(
-                `trainTypeId=${trainTypeRoutes[i].trainTypeId}`,
-                r.reason
-              );
+        // hasTrainType のルートを lineGroupListStations で一括取得
+        const trainTypeStationsMap = new Map<number, Station[]>();
+        if (trainTypeRoutes.length > 0) {
+          const lineGroupIds = trainTypeRoutes.map((r) => r.trainTypeId);
+          const result = await gqlClient.query<{
+            lineGroupListStations: Station[];
+          }>({
+            query: GET_LINE_GROUP_LIST_STATIONS,
+            variables: { lineGroupIds },
+          });
+          for (const s of result.data?.lineGroupListStations ?? []) {
+            const gid = s.trainType?.groupId;
+            if (gid == null) continue;
+            const arr = trainTypeStationsMap.get(gid);
+            if (arr) {
+              arr.push(s);
+            } else {
+              trainTypeStationsMap.set(gid, [s]);
             }
           }
-          return;
-        }
-
-        const trainTypeStationsMap = new Map<number, Station[]>();
-        for (const [i, route] of trainTypeRoutes.entries()) {
-          const r = trainTypeResults[i];
-          trainTypeStationsMap.set(
-            route.trainTypeId,
-            r.status === 'fulfilled'
-              ? (r.value.data?.lineGroupStations ?? [])
-              : []
-          );
         }
 
         setCarouselData(
@@ -359,7 +348,7 @@ const SelectLineScreen = () => {
         const result = await gqlClient.query<{
           lineListStations: Station[];
         }>({
-          query: GET_LINE_LIST_STATIONS,
+          query: GET_LINE_LIST_STATIONS_LIGHT,
           variables: { lineIds },
         });
         allStations = result.data?.lineListStations ?? [];

@@ -314,6 +314,31 @@ export const GET_STATIONS_NEARBY = gql`
   }
 `;
 
+// Lightweight fragment for station cache (bounds display only)
+export const STATION_LIGHT_FRAGMENT = gql`
+  fragment StationLightFields on Station {
+    id
+    groupId
+    name
+    nameRoman
+    nameChinese
+    nameKorean
+    line {
+      id
+    }
+  }
+`;
+
+// Query for getting stations by multiple line IDs (lightweight, for line card bounds)
+export const GET_LINE_LIST_STATIONS_LIGHT = gql`
+  ${STATION_LIGHT_FRAGMENT}
+  query GetLineListStationsLight($lineIds: [Int!]!) {
+    lineListStations(lineIds: $lineIds) {
+      ...StationLightFields
+    }
+  }
+`;
+
 // Query for getting stations by multiple line IDs in a single request
 export const GET_LINE_LIST_STATIONS = gql`
   ${STATION_FRAGMENT}
@@ -347,6 +372,16 @@ export const GET_STATIONS_BY_NAME = gql`
       limit: $limit
       fromStationGroupId: $fromStationGroupId
     ) {
+      ...StationFields
+    }
+  }
+`;
+
+// Query for getting stations by multiple line group IDs in a single request
+export const GET_LINE_GROUP_LIST_STATIONS = gql`
+  ${STATION_FRAGMENT}
+  query GetLineGroupListStations($lineGroupIds: [Int!]!) {
+    lineGroupListStations(lineGroupIds: $lineGroupIds) {
       ...StationFields
     }
   }
