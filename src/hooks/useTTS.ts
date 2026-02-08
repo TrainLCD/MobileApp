@@ -125,7 +125,15 @@ export const useTTS = (): void => {
 
       firstSpeechRef.current = false;
 
-      // 既存のプレイヤーをクリーンアップ
+      // 既存のリスナーとプレイヤーをクリーンアップ
+      try {
+        jaListenerRef.current?.remove();
+      } catch {}
+      jaListenerRef.current = null;
+      try {
+        enListenerRef.current?.remove();
+      } catch {}
+      enListenerRef.current = null;
       try {
         soundJaRef.current?.pause();
         soundJaRef.current?.remove();
@@ -347,10 +355,12 @@ export const useTTS = (): void => {
 
   const speechWithText = useCallback(
     async (ja: string, en: string) => {
+      playingRef.current = true;
       try {
         const fetched = await fetchSpeechWithText(ja, en);
         if (!fetched) {
           console.warn('[useTTS] Failed to fetch speech audio');
+          finishPlaying();
           return;
         }
 
@@ -359,9 +369,10 @@ export const useTTS = (): void => {
         await speakFromPath(pathJa, pathEn);
       } catch (error) {
         console.error('[useTTS] speech error:', error);
+        finishPlaying();
       }
     },
-    [fetchSpeechWithText, speakFromPath]
+    [fetchSpeechWithText, finishPlaying, speakFromPath]
   );
 
   speechWithTextRef.current = speechWithText;
