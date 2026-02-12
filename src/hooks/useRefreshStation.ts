@@ -19,6 +19,9 @@ import { useThreshold } from './useThreshold';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
 
+// GPS精度に応じた閾値補正の上限(m)
+const MAX_ACCURACY_BONUS = 150;
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -35,6 +38,7 @@ export const useRefreshStation = (): void => {
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
+  const accuracy = location?.coords.accuracy;
 
   const nextStation = useNextStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);
@@ -47,6 +51,18 @@ export const useRefreshStation = (): void => {
   const getStationNumberIndex = useStationNumberIndexFunc();
   const { arrivedThreshold, approachingThreshold } =
     useThreshold(nearestStation);
+
+  // GPS精度に応じた実効閾値を算出する
+  // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
+  const accuracyBonus = useMemo(() => {
+    if (accuracy == null || !Number.isFinite(accuracy) || accuracy <= 0) {
+      return 0;
+    }
+    return Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
+  }, [accuracy]);
+
+  const effectiveArrivedThreshold = arrivedThreshold + accuracyBonus;
+  const effectiveApproachingThreshold = approachingThreshold + accuracyBonus;
 
   const isArrived = useMemo((): boolean => {
     const inGracePeriod =
@@ -71,14 +87,14 @@ export const useRefreshStation = (): void => {
         latitude: nearestStation.latitude as number,
         longitude: nearestStation.longitude as number,
       },
-      arrivedThreshold
+      effectiveArrivedThreshold
     );
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
     }
     return arrived;
-  }, [arrivedThreshold, latitude, longitude, nearestStation]);
+  }, [effectiveArrivedThreshold, latitude, longitude, nearestStation]);
 
   const isApproaching = useMemo((): boolean => {
     if (
@@ -97,9 +113,9 @@ export const useRefreshStation = (): void => {
         latitude: nextStation.latitude as number,
         longitude: nextStation.longitude as number,
       },
-      approachingThreshold
+      effectiveApproachingThreshold
     );
-  }, [approachingThreshold, latitude, longitude, nextStation]);
+  }, [effectiveApproachingThreshold, latitude, longitude, nextStation]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
