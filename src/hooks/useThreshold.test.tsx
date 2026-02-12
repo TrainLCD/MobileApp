@@ -3,7 +3,9 @@ import type React from 'react';
 import { Text } from 'react-native';
 import {
   APPROACHING_MAX_THRESHOLD,
+  APPROACHING_MIN_THRESHOLD,
   ARRIVED_MAX_THRESHOLD,
+  ARRIVED_MIN_THRESHOLD,
 } from '../constants/threshold';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
@@ -176,7 +178,13 @@ describe('useThreshold', () => {
 
     // 約438mの距離 -> approachingThreshold = 219, arrivedThreshold = 109.5
     expect(result.approachingThreshold).toBeLessThan(APPROACHING_MAX_THRESHOLD);
+    expect(result.approachingThreshold).toBeGreaterThanOrEqual(
+      APPROACHING_MIN_THRESHOLD
+    );
     expect(result.arrivedThreshold).toBeLessThan(ARRIVED_MAX_THRESHOLD);
+    expect(result.arrivedThreshold).toBeGreaterThanOrEqual(
+      ARRIVED_MIN_THRESHOLD
+    );
     // approachingThresholdはarrivedThresholdの2倍
     expect(result.approachingThreshold).toBe(result.arrivedThreshold * 2);
   });
@@ -205,7 +213,6 @@ describe('useThreshold', () => {
   });
 
   it('駅間距離がapproachingThreshold上限付近の場合、正しく判定する', () => {
-    // approachingThreshold = distance/2 = 1000 となる距離は 2000m
     // 約1000mの距離を設定 -> approachingThreshold = 500, arrivedThreshold = 250
     mockUseCurrentStation.mockReturnValue({
       id: 1,
@@ -223,15 +230,11 @@ describe('useThreshold', () => {
     const { getByTestId } = render(<TestComponent />);
     const result = JSON.parse(getByTestId('thresholds').props.children);
 
-    // 距離/2 < 1000 なので計算値を使用
     expect(result.approachingThreshold).toBeLessThan(APPROACHING_MAX_THRESHOLD);
-    // 距離/4 < 300 なので計算値を使用
     expect(result.arrivedThreshold).toBeLessThan(ARRIVED_MAX_THRESHOLD);
   });
 
   it('駅間距離がarrivedThreshold上限付近でapproachingThresholdが最大値の場合', () => {
-    // arrivedThreshold = distance/4 = 300 となる距離は 1200m
-    // approachingThreshold = distance/2 = 600m
     // 約2500mの距離を設定 -> 両方とも最大値
     mockUseCurrentStation.mockReturnValue({
       id: 1,
@@ -249,9 +252,33 @@ describe('useThreshold', () => {
     const { getByTestId } = render(<TestComponent />);
     const result = JSON.parse(getByTestId('thresholds').props.children);
 
-    // 距離/2 > 1000 なので最大値
     expect(result.approachingThreshold).toBe(APPROACHING_MAX_THRESHOLD);
-    // 距離/4 > 500 なので最大値
     expect(result.arrivedThreshold).toBe(ARRIVED_MAX_THRESHOLD);
+  });
+
+  it('駅間距離が非常に短い場合、最小閾値にクランプされる', () => {
+    // 約200mの距離 -> distance/4 = 50 < ARRIVED_MIN_THRESHOLD(100)
+    mockUseCurrentStation.mockReturnValue({
+      id: 1,
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    } as ReturnType<typeof useCurrentStation>);
+    mockUseNextStation.mockReturnValue({
+      id: 2,
+      groupId: 2,
+      latitude: 35.683036, // 約200m北
+      longitude: 139.767125,
+    } as ReturnType<typeof useNextStation>);
+
+    const { getByTestId } = render(<TestComponent />);
+    const result = JSON.parse(getByTestId('thresholds').props.children);
+
+    expect(result.arrivedThreshold).toBeGreaterThanOrEqual(
+      ARRIVED_MIN_THRESHOLD
+    );
+    expect(result.approachingThreshold).toBeGreaterThanOrEqual(
+      APPROACHING_MIN_THRESHOLD
+    );
   });
 });
