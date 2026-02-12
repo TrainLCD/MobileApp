@@ -1,6 +1,5 @@
 import getDistance from 'geolib/es/getPreciseDistance';
 import { useMemo } from 'react';
-import type { Station } from '~/@types/graphql';
 import {
   APPROACHING_MAX_THRESHOLD,
   APPROACHING_MIN_THRESHOLD,
@@ -13,19 +12,16 @@ import { useNextStation } from './useNextStation';
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
 
-export const useThreshold = (nearestStation?: Station) => {
+export const useThreshold = () => {
   const currentStation = useCurrentStation(true);
   const nextStation = useNextStation(false);
 
-  // nearestStationが渡された場合はそちらを基準にして閾値を計算する
-  const baseStation = nearestStation ?? currentStation;
-
   const betweenDistance = useMemo(() => {
     if (
-      !baseStation ||
+      !currentStation ||
       !nextStation ||
-      baseStation.latitude == null ||
-      baseStation.longitude == null ||
+      currentStation.latitude == null ||
+      currentStation.longitude == null ||
       nextStation.latitude == null ||
       nextStation.longitude == null
     ) {
@@ -33,15 +29,15 @@ export const useThreshold = (nearestStation?: Station) => {
     }
     return getDistance(
       {
-        latitude: baseStation.latitude as number,
-        longitude: baseStation.longitude as number,
+        latitude: currentStation.latitude as number,
+        longitude: currentStation.longitude as number,
       },
       {
         latitude: nextStation.latitude as number,
         longitude: nextStation.longitude as number,
       }
     );
-  }, [baseStation, nextStation]);
+  }, [currentStation, nextStation]);
 
   const approachingThreshold = useMemo(() => {
     if (!betweenDistance) {

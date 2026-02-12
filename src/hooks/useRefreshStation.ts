@@ -49,8 +49,7 @@ export const useRefreshStation = (): void => {
   const nearestStation = useNearestStation();
   const canGoForward = useCanGoForward();
   const getStationNumberIndex = useStationNumberIndexFunc();
-  const { arrivedThreshold, approachingThreshold } =
-    useThreshold(nearestStation);
+  const { arrivedThreshold, approachingThreshold } = useThreshold();
 
   // GPS精度に応じた実効閾値を算出する
   // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
