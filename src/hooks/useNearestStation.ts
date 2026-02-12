@@ -7,9 +7,6 @@ import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
-// 現在駅のインデックスを中心に前後何駅まで探索するか
-const NEARBY_STATION_RANGE = 5;
-
 export const useNearestStation = (): Station | undefined => {
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
@@ -24,40 +21,18 @@ export const useNearestStation = (): Station | undefined => {
     [stations]
   );
 
-  // 現在駅の近傍のみに探索範囲を絞った候補を生成する
-  // 鉄道は路線に沿って移動するため、遠い駅への到着は通常ありえない
-  const candidateStations = useMemo(() => {
-    if (!currentStation) {
-      return validStations;
-    }
-
-    const currentIndex = validStations.findIndex(
-      (s) => s.id === currentStation.id
-    );
-    if (currentIndex === -1) {
-      return validStations;
-    }
-
-    const start = Math.max(0, currentIndex - NEARBY_STATION_RANGE);
-    const end = Math.min(
-      validStations.length,
-      currentIndex + NEARBY_STATION_RANGE + 1
-    );
-    return validStations.slice(start, end);
-  }, [currentStation, validStations]);
-
   const nearestStation = useMemo<Station | undefined>(() => {
     if (latitude == null || longitude == null) {
       return undefined;
     }
 
-    const nearestCoordinates = candidateStations.length
+    const nearestCoordinates = validStations.length
       ? (findNearest(
           {
             latitude,
             longitude,
           },
-          candidateStations.map((sta) => ({
+          validStations.map((sta) => ({
             latitude: sta.latitude as number,
             longitude: sta.longitude as number,
           }))
@@ -68,7 +43,7 @@ export const useNearestStation = (): Station | undefined => {
       return undefined;
     }
 
-    const nearestStations = candidateStations.filter(
+    const nearestStations = validStations.filter(
       (sta) =>
         sta.latitude === nearestCoordinates.latitude &&
         sta.longitude === nearestCoordinates.longitude
@@ -79,7 +54,7 @@ export const useNearestStation = (): Station | undefined => {
         (s) => s.id === currentStation?.id || s.id === nextStation?.id
       ) ?? nearestStations[0]
     );
-  }, [latitude, longitude, candidateStations, currentStation, nextStation]);
+  }, [latitude, longitude, validStations, currentStation, nextStation]);
 
   return nearestStation;
 };
