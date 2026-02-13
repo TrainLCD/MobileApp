@@ -384,9 +384,10 @@ const SelectLineScreen = () => {
   );
 
   useEffect(() => {
-    const fetchInitialNearbyStationAsync = async (
-      coords?: { latitude: number; longitude: number }
-    ) => {
+    const fetchInitialNearbyStationAsync = async (coords?: {
+      latitude: number;
+      longitude: number;
+    }) => {
       if (station || initialNearbyFetchInFlightRef.current) return;
       initialNearbyFetchInFlightRef.current = true;
 
