@@ -1,7 +1,7 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Platform, StyleSheet, View } from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -118,6 +118,7 @@ type Props = {
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
+  const wasVisibleRef = useRef(false);
   const location = useAtomValue(locationAtom);
   const [modalCoords, setModalCoords] = useState<{
     latitude: number;
@@ -157,8 +158,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   useEffect(() => {
     if (!visible) {
       setModalCoords(null);
+      wasVisibleRef.current = false;
       return;
     }
+    if (wasVisibleRef.current) return;
+    wasVisibleRef.current = true;
 
     const refreshLocation = async () => {
       try {
