@@ -130,7 +130,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -142,14 +141,13 @@ describe('useSimulationMode', () => {
     expect(Location.hasStartedLocationUpdatesAsync).not.toHaveBeenCalled();
   });
 
-  it('レガシー自動モードが有効の場合は何もしない', () => {
+  it('自動モード有効の場合でもレンダリングできる', () => {
     (useAtomValue as jest.Mock)
       .mockReturnValueOnce({
         stations: [],
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: true,
         autoModeEnabled: true,
       });
 
@@ -167,7 +165,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -191,6 +188,50 @@ describe('useSimulationMode', () => {
     );
   });
 
+  it('segmentIndexが範囲外でも自動進行が停止しない', () => {
+    const stations = [
+      mockStation(1, 1, 35.681, 139.767),
+      mockStation(2, 2, 35.691, 139.777),
+      mockStation(3, 3, 35.701, 139.787),
+    ];
+
+    (useAtomValue as jest.Mock)
+      .mockReturnValueOnce({
+        stations,
+        selectedDirection: 'OUTBOUND' as const,
+      })
+      .mockReturnValueOnce({
+        autoModeEnabled: true,
+      });
+
+    // 初期segmentIndexは-1になる
+    jest
+      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
+      .mockReturnValue(undefined);
+
+    (store.get as jest.Mock).mockReturnValue({
+      coords: {
+        latitude: 35.681,
+        longitude: 139.767,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: 0,
+        heading: null,
+      },
+      timestamp: 100000,
+    });
+
+    renderHook(() => useSimulationMode(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    // 1秒目でインデックス正規化、2秒目で実際の移動更新が走る
+    jest.advanceTimersByTime(2000);
+
+    expect(locationAtomModule.setLocation).toHaveBeenCalled();
+  });
+
   it('速度プロファイルを生成し、位置情報を更新する', () => {
     const stations = [
       mockStation(1, 1, 35.681, 139.767),
@@ -204,7 +245,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -243,7 +283,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -266,7 +305,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -301,7 +339,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -334,7 +371,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'INBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -386,7 +422,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -439,7 +474,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true, // Enable auto mode to trigger profile generation
       });
 
@@ -496,7 +530,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -549,7 +582,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 

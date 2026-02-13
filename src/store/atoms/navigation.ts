@@ -25,7 +25,6 @@ export interface NavigationState {
   enabledLanguages: AvailableLanguage[];
   fetchedTrainTypes: TrainType[];
   autoModeEnabled: boolean;
-  enableLegacyAutoMode: boolean;
   isAppLatest: boolean;
   firstStop: boolean;
   presetsFetched: boolean;
@@ -42,7 +41,6 @@ export const initialNavigationState: NavigationState = {
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   fetchedTrainTypes: [],
   autoModeEnabled: false,
-  enableLegacyAutoMode: false,
   isAppLatest: false,
   firstStop: true,
   presetsFetched: false,

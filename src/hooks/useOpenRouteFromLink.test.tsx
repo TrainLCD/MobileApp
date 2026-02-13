@@ -67,7 +67,6 @@ const createNavigationState = (
   enabledLanguages: [],
   fetchedTrainTypes: [],
   autoModeEnabled: false,
-  enableLegacyAutoMode: false,
   isAppLatest: false,
   firstStop: true,
   presetsFetched: false,

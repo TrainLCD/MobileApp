@@ -276,14 +276,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         enabledLanguagesStr,
         speechEnabledStr,
         bgTTSEnabledStr,
-        legacyAutoModeEnabledStr,
         telemetryEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LEGACY_AUTO_MODE_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
       ]);
 
@@ -315,12 +313,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         if (isAndroid16OrHigher && bgTTSEnabledStr === 'true') {
           AsyncStorage.setItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED, 'false');
         }
-      }
-      if (legacyAutoModeEnabledStr) {
-        setNavigation((prev) => ({
-          ...prev,
-          enableLegacyAutoMode: legacyAutoModeEnabledStr === 'true',
-        }));
       }
       if (telemetryEnabledStr) {
         setTuning((prev) => ({

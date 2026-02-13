@@ -118,6 +118,8 @@ const NearbyStationLoader = () => (
   </SkeletonPlaceholder>
 );
 
+const INITIAL_LOCATION_FALLBACK_DELAY_MS = 800;
+
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
@@ -150,6 +152,7 @@ const SelectLineScreen = () => {
   const lineListRef = useRef<View>(null);
   const presetsRef = useRef<View>(null);
   const prevRoutesKeyRef = useRef('');
+  const initialNearbyFetchInFlightRef = useRef(false);
 
   const {
     isWalkthroughActive,
@@ -381,32 +384,64 @@ const SelectLineScreen = () => {
   );
 
   useEffect(() => {
-    const fetchInitialNearbyStationAsync = async () => {
-      if (station) return;
+    const fetchInitialNearbyStationAsync = async (coords?: {
+      latitude: number;
+      longitude: number;
+    }) => {
+      if (station || initialNearbyFetchInFlightRef.current) return;
+      initialNearbyFetchInFlightRef.current = true;
 
-      const location = await fetchCurrentLocation(true);
-      if (!location) return;
-      setLocation(location);
-      const data = await fetchByCoords({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        limit: 1,
-      });
-      const stationFromAPI = data.data?.stationsNearby[0] ?? null;
+      try {
+        let requestCoords = coords;
+        if (!requestCoords) {
+          const currentLocation = await fetchCurrentLocation(true);
+          if (!currentLocation) return;
+          setLocation(currentLocation);
+          requestCoords = {
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
+          };
+        }
 
-      setStationState((prev) => ({
-        ...prev,
-        station: stationFromAPI,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        stationForHeader: stationFromAPI,
-      }));
+        const data = await fetchByCoords({
+          latitude: requestCoords.latitude,
+          longitude: requestCoords.longitude,
+          limit: 1,
+        });
+
+        const stationFromAPI = data.data?.stationsNearby[0] ?? null;
+        setStationState((prev) => ({
+          ...prev,
+          station: stationFromAPI,
+        }));
+        setNavigationState((prev) => ({
+          ...prev,
+          stationForHeader: stationFromAPI,
+        }));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        initialNearbyFetchInFlightRef.current = false;
+      }
     };
-    fetchInitialNearbyStationAsync();
+
+    if (latitude != null && longitude != null) {
+      fetchInitialNearbyStationAsync({ latitude, longitude });
+      return;
+    }
+
+    const fallbackTimerId = setTimeout(() => {
+      fetchInitialNearbyStationAsync();
+    }, INITIAL_LOCATION_FALLBACK_DELAY_MS);
+
+    return () => {
+      clearTimeout(fallbackTimerId);
+    };
   }, [
     fetchByCoords,
     fetchCurrentLocation,
+    latitude,
+    longitude,
     setNavigationState,
     setStationState,
     station,
