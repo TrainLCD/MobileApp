@@ -1,6 +1,6 @@
 import { darken } from 'polished';
 import React, { useCallback, useEffect } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 60,
     height: 45,
-    right: Platform.OS === 'ios' ? screenWidth / 3.15 : screenWidth / 3.25,
+    right: screenWidth / 3.15,
     top: (4 * screenHeight) / 7 + 84,
     // 非到着時のベース角度
     transform: [{ rotate: '-20deg' }],
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 54,
     top: (4 * screenHeight) / 7,
-    right: screenWidth / (Platform.OS === 'ios' ? 2.985 : 3.1),
+    right: screenWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
@@ -339,14 +339,10 @@ const PadArch: React.FC<Props> = ({
     screenWidth / 1.5
   } ${screenHeight}`;
   const hexLineColor = line.color ?? '#000';
-  const strokeWidth = Platform.select({
-    ios: 128,
-    android: 96,
-    default: 128,
-  });
+  const strokeWidth = 128;
 
   const getDotLeft = useCallback((i: number): number => {
-    const leftPad = Platform.OS === 'ios' ? 0 : 21;
+    const leftPad = 0;
     switch (i) {
       case 0:
         return screenWidth / 3 + leftPad;
@@ -357,7 +353,7 @@ const PadArch: React.FC<Props> = ({
       case 3:
         return screenWidth / 1.785 + leftPad;
       case 4:
-        return screenWidth / 1.655 - (Platform.OS === 'ios' ? 3.5 : 0);
+        return screenWidth / 1.655 - 3.5;
       default:
         return 0;
     }
