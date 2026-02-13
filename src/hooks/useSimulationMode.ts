@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
+import getDistance from 'geolib/es/getDistance';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
 import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
@@ -31,8 +32,7 @@ import { useInRadiusStation } from './useInRadiusStation';
 export const useSimulationMode = (): void => {
   const { stations: rawStations, selectedDirection } =
     useAtomValue(stationState);
-  const { enableLegacyAutoMode, autoModeEnabled } =
-    useAtomValue(navigationState);
+  const { autoModeEnabled } = useAtomValue(navigationState);
 
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
@@ -40,6 +40,7 @@ export const useSimulationMode = (): void => {
   const segmentIndexRef = useRef(0);
   const childIndexRef = useRef(0);
   const speedProfilesRef = useRef<number[][]>([]);
+  const segmentProgressDistanceRef = useRef(0);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -82,8 +83,8 @@ export const useSimulationMode = (): void => {
   );
 
   const enabled = useMemo(() => {
-    return !enableLegacyAutoMode && autoModeEnabled;
-  }, [enableLegacyAutoMode, autoModeEnabled]);
+    return autoModeEnabled;
+  }, [autoModeEnabled]);
 
   useEffect(() => {
     if (!enabled) {
@@ -177,23 +178,54 @@ export const useSimulationMode = (): void => {
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
+    segmentProgressDistanceRef.current = 0;
   }, []);
 
   const step = useCallback(
     (speed: number) => {
+      if (maybeRevsersedStations.length === 0) {
+        return;
+      }
+
+      // 駅リスト更新でsegmentIndexが不正化しても自動進行が止まらないように正規化する
+      const normalizedSegmentIndex = Math.min(
+        Math.max(segmentIndexRef.current, 0),
+        maybeRevsersedStations.length - 1
+      );
+      if (normalizedSegmentIndex !== segmentIndexRef.current) {
+        segmentIndexRef.current = normalizedSegmentIndex;
+        childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
+      }
+
       // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
       const stationsWithoutPass = maybeRevsersedStations.filter(
         (s) => !getIsPass(s)
       );
+      if (stationsWithoutPass.length === 0) {
+        return;
+      }
+
       const currentSegmentStation =
-        maybeRevsersedStations[segmentIndexRef.current];
+        maybeRevsersedStations[normalizedSegmentIndex];
+      const currentSegmentStationIndex = maybeRevsersedStations.findIndex(
+        (s) => s.id === currentSegmentStation?.id
+      );
+      if (currentSegmentStationIndex < 0) {
+        segmentIndexRef.current = 0;
+        childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
+        return;
+      }
+
       const currentSegmentStopIndex = stationsWithoutPass.findIndex(
         (s) => s.id === currentSegmentStation?.id
       );
-      const targetStation = stationsWithoutPass[currentSegmentStopIndex + 1];
+      const nextStopStation = stationsWithoutPass[currentSegmentStopIndex + 1];
 
-      if (!targetStation) {
+      if (!nextStopStation) {
         segmentIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         const prev = store.get(locationAtom);
         if (
@@ -217,9 +249,72 @@ export const useSimulationMode = (): void => {
       const prev = store.get(locationAtom);
       if (
         !prev ||
-        targetStation.latitude == null ||
-        targetStation.longitude == null
+        nextStopStation.latitude == null ||
+        nextStopStation.longitude == null
       ) {
+        return;
+      }
+
+      const nextStopStationIndex = maybeRevsersedStations.findIndex(
+        (s) => s.id === nextStopStation.id
+      );
+      if (
+        nextStopStationIndex < 0 ||
+        nextStopStationIndex < currentSegmentStationIndex
+      ) {
+        segmentIndexRef.current = 0;
+        childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
+        return;
+      }
+
+      const waypoints = maybeRevsersedStations
+        .slice(currentSegmentStationIndex, nextStopStationIndex + 1)
+        .filter((s) => s.latitude != null && s.longitude != null);
+
+      if (waypoints.length === 0) {
+        return;
+      }
+
+      const progressedDistance = segmentProgressDistanceRef.current + speed;
+      const cumulativeDistances = waypoints.reduce<number[]>(
+        (acc, waypoint, index, arr) => {
+          if (index === 0) {
+            acc.push(0);
+            return acc;
+          }
+
+          const prevWaypoint = arr[index - 1];
+          if (!prevWaypoint) {
+            return acc;
+          }
+
+          const prevDistance = acc[index - 1] ?? 0;
+          const distance = getDistance(
+            {
+              latitude: prevWaypoint.latitude as number,
+              longitude: prevWaypoint.longitude as number,
+            },
+            {
+              latitude: waypoint.latitude as number,
+              longitude: waypoint.longitude as number,
+            }
+          );
+
+          acc.push(prevDistance + distance);
+          return acc;
+        },
+        []
+      );
+
+      const targetWaypointIndex = cumulativeDistances.findIndex(
+        (distance) => distance >= progressedDistance
+      );
+      const targetStation = waypoints[targetWaypointIndex] ?? nextStopStation;
+      const targetLatitude = targetStation.latitude;
+      const targetLongitude = targetStation.longitude;
+
+      if (targetLatitude == null || targetLongitude == null) {
         return;
       }
 
@@ -229,8 +324,8 @@ export const useSimulationMode = (): void => {
           longitude: prev.coords.longitude,
         },
         {
-          latitude: targetStation.latitude,
-          longitude: targetStation.longitude,
+          latitude: targetLatitude,
+          longitude: targetLongitude,
         }
       );
 
@@ -254,6 +349,7 @@ export const useSimulationMode = (): void => {
           heading: null,
         },
       });
+      segmentProgressDistanceRef.current = progressedDistance;
     },
     [maybeRevsersedStations]
   );
@@ -296,8 +392,10 @@ export const useSimulationMode = (): void => {
           (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
         );
 
-        segmentIndexRef.current = nextSegmentIndex;
+        segmentIndexRef.current =
+          nextSegmentIndex === -1 ? 0 : nextSegmentIndex;
         childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
         return;
       }
 
