@@ -164,9 +164,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     if (wasVisibleRef.current) return;
     wasVisibleRef.current = true;
 
+    let active = true;
     const refreshLocation = async () => {
       try {
         const currentLocation = await fetchCurrentLocation();
+        if (!active) return;
         setModalCoords({
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
@@ -178,6 +180,9 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     };
 
     refreshLocation();
+    return () => {
+      active = false;
+    };
   }, [visible, fetchCurrentLocation]);
 
   useEffect(() => {
