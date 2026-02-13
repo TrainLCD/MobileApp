@@ -30,8 +30,6 @@ import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
 
 export const useSimulationMode = (): void => {
-  const WAYPOINT_REACHED_THRESHOLD = 20;
-
   const { stations: rawStations, selectedDirection } =
     useAtomValue(stationState);
   const { autoModeEnabled } = useAtomValue(navigationState);
@@ -42,6 +40,7 @@ export const useSimulationMode = (): void => {
   const segmentIndexRef = useRef(0);
   const childIndexRef = useRef(0);
   const speedProfilesRef = useRef<number[][]>([]);
+  const segmentProgressDistanceRef = useRef(0);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -179,6 +178,7 @@ export const useSimulationMode = (): void => {
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
+    segmentProgressDistanceRef.current = 0;
   }, []);
 
   const step = useCallback(
@@ -199,6 +199,7 @@ export const useSimulationMode = (): void => {
 
       if (!nextStopStation) {
         segmentIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         const prev = store.get(locationAtom);
         if (
@@ -233,23 +234,48 @@ export const useSimulationMode = (): void => {
       );
 
       const waypoints = maybeRevsersedStations
-        .slice(currentSegmentStationIndex + 1, nextStopStationIndex + 1)
+        .slice(currentSegmentStationIndex, nextStopStationIndex + 1)
         .filter((s) => s.latitude != null && s.longitude != null);
 
-      const targetStation =
-        waypoints.find(
-          (s) =>
-            getDistance(
-              {
-                latitude: prev.coords.latitude,
-                longitude: prev.coords.longitude,
-              },
-              {
-                latitude: s.latitude as number,
-                longitude: s.longitude as number,
-              }
-            ) > WAYPOINT_REACHED_THRESHOLD
-        ) ?? nextStopStation;
+      if (waypoints.length === 0) {
+        return;
+      }
+
+      const progressedDistance = segmentProgressDistanceRef.current + speed;
+      const cumulativeDistances = waypoints.reduce<number[]>(
+        (acc, waypoint, index, arr) => {
+          if (index === 0) {
+            acc.push(0);
+            return acc;
+          }
+
+          const prevWaypoint = arr[index - 1];
+          if (!prevWaypoint) {
+            return acc;
+          }
+
+          const prevDistance = acc[index - 1] ?? 0;
+          const distance = getDistance(
+            {
+              latitude: prevWaypoint.latitude as number,
+              longitude: prevWaypoint.longitude as number,
+            },
+            {
+              latitude: waypoint.latitude as number,
+              longitude: waypoint.longitude as number,
+            }
+          );
+
+          acc.push(prevDistance + distance);
+          return acc;
+        },
+        []
+      );
+
+      const targetWaypointIndex = cumulativeDistances.findIndex(
+        (distance) => distance >= progressedDistance
+      );
+      const targetStation = waypoints[targetWaypointIndex] ?? nextStopStation;
       const targetLatitude = targetStation.latitude;
       const targetLongitude = targetStation.longitude;
 
@@ -288,6 +314,7 @@ export const useSimulationMode = (): void => {
           heading: null,
         },
       });
+      segmentProgressDistanceRef.current = progressedDistance;
     },
     [maybeRevsersedStations]
   );
@@ -330,8 +357,10 @@ export const useSimulationMode = (): void => {
           (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
         );
 
-        segmentIndexRef.current = nextSegmentIndex;
+        segmentIndexRef.current =
+          nextSegmentIndex === -1 ? 0 : nextSegmentIndex;
         childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
         return;
       }
 
