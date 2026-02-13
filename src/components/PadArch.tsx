@@ -1,6 +1,6 @@
 import { darken } from 'polished';
 import React, { useCallback, useEffect } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 60,
     height: 45,
-    right: Platform.OS === 'ios' ? screenWidth / 3 : screenWidth / 3.25,
-    bottom: 72,
+    right: screenWidth / 3.15,
+    top: (4 * screenHeight) / 7 + 84,
     // 非到着時のベース角度
     transform: [{ rotate: '-20deg' }],
     zIndex: 1,
@@ -101,8 +101,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 54,
     top: (4 * screenHeight) / 7,
-    right: screenWidth / (Platform.OS === 'ios' ? 2.985 : 3.1),
-    bottom: undefined,
+    right: screenWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
@@ -315,14 +314,12 @@ const PadArch: React.FC<Props> = ({
   const chevronContainerStyle = useAnimatedStyle(() => {
     if (arrived) return {};
     const p = chevronTimeline.value; // サイクル全体で 0..1 の進行度
-    // 前半(0..0.5): 位置 128 → 104、後半は 104 を維持
+    // 前半(0..0.5): 上方向に 24px 移動、後半は維持
     const movePhase = Math.min(p / 0.5, 1); // 前半中は 0..1
-    const bottom = 128 - (128 - 104) * movePhase;
-    // 後半(0.5..1): 不透明度 1 → 0、前半は 1 を維持
+    // 後半(0.5..1): 不透明度 1 → 0.2、前半は 1 を維持
     const fadePhase = Math.max((p - 0.5) / 0.5, 0); // 後半中は 0..1
     const opacity = 0.2 + (1 - fadePhase) * 0.8; // 0.2..1 の範囲
-    // 128→104 を 56→32 に変換
-    const translateY = bottom - 72;
+    const translateY = -movePhase * 24;
     return {
       // 既定の rotate(-20deg) を維持したまま並記（transform は配列全体が上書きされるためここで回転も指定）
       transform: [{ rotate: '-20deg' }, { translateY }],
@@ -342,14 +339,10 @@ const PadArch: React.FC<Props> = ({
     screenWidth / 1.5
   } ${screenHeight}`;
   const hexLineColor = line.color ?? '#000';
-  const strokeWidth = Platform.select({
-    ios: 128,
-    android: 96,
-    default: 128,
-  });
+  const strokeWidth = 128;
 
   const getDotLeft = useCallback((i: number): number => {
-    const leftPad = Platform.OS === 'ios' ? 0 : 21;
+    const leftPad = 0;
     switch (i) {
       case 0:
         return screenWidth / 3 + leftPad;
@@ -360,7 +353,7 @@ const PadArch: React.FC<Props> = ({
       case 3:
         return screenWidth / 1.785 + leftPad;
       case 4:
-        return screenWidth / 1.655 - (Platform.OS === 'ios' ? 3.5 : 0);
+        return screenWidth / 1.655 - 3.5;
       default:
         return 0;
     }
