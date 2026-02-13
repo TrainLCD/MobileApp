@@ -183,15 +183,41 @@ export const useSimulationMode = (): void => {
 
   const step = useCallback(
     (speed: number) => {
+      if (maybeRevsersedStations.length === 0) {
+        return;
+      }
+
+      // 駅リスト更新でsegmentIndexが不正化しても自動進行が止まらないように正規化する
+      const normalizedSegmentIndex = Math.min(
+        Math.max(segmentIndexRef.current, 0),
+        maybeRevsersedStations.length - 1
+      );
+      if (normalizedSegmentIndex !== segmentIndexRef.current) {
+        segmentIndexRef.current = normalizedSegmentIndex;
+        childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
+      }
+
       // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
       const stationsWithoutPass = maybeRevsersedStations.filter(
         (s) => !getIsPass(s)
       );
+      if (stationsWithoutPass.length === 0) {
+        return;
+      }
+
       const currentSegmentStation =
-        maybeRevsersedStations[segmentIndexRef.current];
+        maybeRevsersedStations[normalizedSegmentIndex];
       const currentSegmentStationIndex = maybeRevsersedStations.findIndex(
         (s) => s.id === currentSegmentStation?.id
       );
+      if (currentSegmentStationIndex < 0) {
+        segmentIndexRef.current = 0;
+        childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
+        return;
+      }
+
       const currentSegmentStopIndex = stationsWithoutPass.findIndex(
         (s) => s.id === currentSegmentStation?.id
       );
@@ -232,6 +258,15 @@ export const useSimulationMode = (): void => {
       const nextStopStationIndex = maybeRevsersedStations.findIndex(
         (s) => s.id === nextStopStation.id
       );
+      if (
+        nextStopStationIndex < 0 ||
+        nextStopStationIndex < currentSegmentStationIndex
+      ) {
+        segmentIndexRef.current = 0;
+        childIndexRef.current = 0;
+        segmentProgressDistanceRef.current = 0;
+        return;
+      }
 
       const waypoints = maybeRevsersedStations
         .slice(currentSegmentStationIndex, nextStopStationIndex + 1)
