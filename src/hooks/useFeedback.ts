@@ -59,8 +59,7 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
-  const { autoModeEnabled, enableLegacyAutoMode } =
-    useAtomValue(navigationState);
+  const { autoModeEnabled } = useAtomValue(navigationState);
 
   const sendReport = useCallback(
     async ({
@@ -118,7 +117,6 @@ export const useFeedback = (
           language: isJapanese ? 'ja-JP' : 'en-US',
           appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
           autoModeEnabled,
-          enableLegacyAutoMode,
           deviceInfo: Device.isDevice
             ? {
                 brand,
@@ -163,7 +161,7 @@ export const useFeedback = (
         throw new Error(`フィードバックの送信に失敗しました: ${err}`);
       }
     },
-    [user, autoModeEnabled, enableLegacyAutoMode]
+    [user, autoModeEnabled]
   );
 
   return {

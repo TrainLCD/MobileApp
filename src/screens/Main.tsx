@@ -24,7 +24,6 @@ import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
-  useAutoMode,
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
@@ -114,7 +113,6 @@ const MainScreen: React.FC = () => {
   const trainType = useCurrentTrainType();
   const nextStation = useNextStation();
 
-  useAutoMode();
   useSimulationMode();
   useFirstStop(true);
   useLockLandscapeOnActive();

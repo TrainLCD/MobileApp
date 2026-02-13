@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
+import getDistance from 'geolib/es/getDistance';
 import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
 import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
@@ -29,10 +30,11 @@ import { useCurrentTrainType } from './useCurrentTrainType';
 import { useInRadiusStation } from './useInRadiusStation';
 
 export const useSimulationMode = (): void => {
+  const WAYPOINT_REACHED_THRESHOLD = 20;
+
   const { stations: rawStations, selectedDirection } =
     useAtomValue(stationState);
-  const { enableLegacyAutoMode, autoModeEnabled } =
-    useAtomValue(navigationState);
+  const { autoModeEnabled } = useAtomValue(navigationState);
 
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
@@ -82,8 +84,8 @@ export const useSimulationMode = (): void => {
   );
 
   const enabled = useMemo(() => {
-    return !enableLegacyAutoMode && autoModeEnabled;
-  }, [enableLegacyAutoMode, autoModeEnabled]);
+    return autoModeEnabled;
+  }, [autoModeEnabled]);
 
   useEffect(() => {
     if (!enabled) {
@@ -187,12 +189,15 @@ export const useSimulationMode = (): void => {
       );
       const currentSegmentStation =
         maybeRevsersedStations[segmentIndexRef.current];
+      const currentSegmentStationIndex = maybeRevsersedStations.findIndex(
+        (s) => s.id === currentSegmentStation?.id
+      );
       const currentSegmentStopIndex = stationsWithoutPass.findIndex(
         (s) => s.id === currentSegmentStation?.id
       );
-      const targetStation = stationsWithoutPass[currentSegmentStopIndex + 1];
+      const nextStopStation = stationsWithoutPass[currentSegmentStopIndex + 1];
 
-      if (!targetStation) {
+      if (!nextStopStation) {
         segmentIndexRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         const prev = store.get(locationAtom);
@@ -217,9 +222,38 @@ export const useSimulationMode = (): void => {
       const prev = store.get(locationAtom);
       if (
         !prev ||
-        targetStation.latitude == null ||
-        targetStation.longitude == null
+        nextStopStation.latitude == null ||
+        nextStopStation.longitude == null
       ) {
+        return;
+      }
+
+      const nextStopStationIndex = maybeRevsersedStations.findIndex(
+        (s) => s.id === nextStopStation.id
+      );
+
+      const waypoints = maybeRevsersedStations
+        .slice(currentSegmentStationIndex + 1, nextStopStationIndex + 1)
+        .filter((s) => s.latitude != null && s.longitude != null);
+
+      const targetStation =
+        waypoints.find(
+          (s) =>
+            getDistance(
+              {
+                latitude: prev.coords.latitude,
+                longitude: prev.coords.longitude,
+              },
+              {
+                latitude: s.latitude as number,
+                longitude: s.longitude as number,
+              }
+            ) > WAYPOINT_REACHED_THRESHOLD
+        ) ?? nextStopStation;
+      const targetLatitude = targetStation.latitude;
+      const targetLongitude = targetStation.longitude;
+
+      if (targetLatitude == null || targetLongitude == null) {
         return;
       }
 
@@ -229,8 +263,8 @@ export const useSimulationMode = (): void => {
           longitude: prev.coords.longitude,
         },
         {
-          latitude: targetStation.latitude,
-          longitude: targetStation.longitude,
+          latitude: targetLatitude,
+          longitude: targetLongitude,
         }
       );
 

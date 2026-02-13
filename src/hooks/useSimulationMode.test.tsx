@@ -130,7 +130,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -142,14 +141,13 @@ describe('useSimulationMode', () => {
     expect(Location.hasStartedLocationUpdatesAsync).not.toHaveBeenCalled();
   });
 
-  it('レガシー自動モードが有効の場合は何もしない', () => {
+  it('自動モード有効の場合でもレンダリングできる', () => {
     (useAtomValue as jest.Mock)
       .mockReturnValueOnce({
         stations: [],
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: true,
         autoModeEnabled: true,
       });
 
@@ -167,7 +165,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -204,7 +201,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -243,7 +239,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -266,7 +261,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -301,7 +295,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: false,
       });
 
@@ -334,7 +327,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'INBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -386,7 +378,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -439,7 +430,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true, // Enable auto mode to trigger profile generation
       });
 
@@ -496,7 +486,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
@@ -549,7 +538,6 @@ describe('useSimulationMode', () => {
         selectedDirection: 'OUTBOUND' as const,
       })
       .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
         autoModeEnabled: true,
       });
 
