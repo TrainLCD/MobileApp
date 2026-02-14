@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
 import speechState from '../store/atoms/speech';
+import stationState from '../store/atoms/station';
 import { isDevApp } from '../utils/isDevApp';
 import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
@@ -60,9 +61,13 @@ const PLAYBACK_TIMEOUT_MS = 60_000;
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled } = useAtomValue(speechState);
+  const { arrived, selectedBound } = useAtomValue(stationState);
   const currentLine = useCurrentLine();
 
   const firstSpeechRef = useRef(true);
+  // 行先選択直後の初回TTSを抑止し、発車後（arrived=false）でのみ解放する
+  const suppressFirstSpeechUntilDepartureRef = useRef(false);
+  const prevSelectedBoundIdRef = useRef<string | number | null>(null);
   const playingRef = useRef(false);
   const isLoadableRef = useRef(true);
   const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
@@ -387,12 +392,36 @@ export const useTTS = (): void => {
   speechWithTextRef.current = speechWithText;
 
   useEffect(() => {
+    const currentSelectedBoundId = selectedBound?.id ?? null;
+    const hasSelectedBoundChanged =
+      currentSelectedBoundId !== prevSelectedBoundIdRef.current;
+
+    // 初回かつ行先変更時のみ、停車中の初回読み上げをスキップ対象にする
+    if (firstSpeechRef.current && hasSelectedBoundChanged && selectedBound) {
+      suppressFirstSpeechUntilDepartureRef.current = true;
+    }
+
+    prevSelectedBoundIdRef.current = currentSelectedBoundId;
+  }, [selectedBound]);
+
+  useEffect(() => {
     if (!enabled || (prevTextJa === textJa && prevTextEn === textEn)) {
       return;
     }
 
     if (!textJa || !textEn) {
       return;
+    }
+
+    if (
+      firstSpeechRef.current &&
+      suppressFirstSpeechUntilDepartureRef.current
+    ) {
+      // 停車中は初回TTSを抑止し、発車後の更新で初回を再開する
+      if (arrived) {
+        return;
+      }
+      suppressFirstSpeechUntilDepartureRef.current = false;
     }
 
     // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
@@ -411,7 +440,15 @@ export const useTTS = (): void => {
         console.error(err);
       }
     })();
-  }, [enabled, prevTextEn, prevTextJa, speechWithText, textEn, textJa]);
+  }, [
+    arrived,
+    enabled,
+    prevTextEn,
+    prevTextJa,
+    speechWithText,
+    textEn,
+    textJa,
+  ]);
 
   useEffect(() => {
     return () => {
