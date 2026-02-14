@@ -33,7 +33,7 @@ const DevOverlay: React.FC = () => {
   const accuracy = location?.coords?.accuracy;
   const accuracyHistory = useAtomValue(accuracyHistoryAtom);
   const distanceToNextStation = useDistanceToNextStation();
-  const nextStation = useNextStation();
+  const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
