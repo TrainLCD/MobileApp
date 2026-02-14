@@ -439,7 +439,7 @@ describe('SelectLineScreenPresets', () => {
       expect(presetCards.length).toBe(1);
     });
 
-    it('複数のプリセットがある場合、全てがループデータとして3倍表示される', () => {
+    it('プリセットが2件の場合は重複せず2件だけ表示される', () => {
       const stations1 = [
         createMockStation(1, '新宿', 'Shinjuku'),
         createMockStation(2, '渋谷', 'Shibuya'),
@@ -461,9 +461,9 @@ describe('SelectLineScreenPresets', () => {
         />
       );
 
-      // 2プリセット × 3倍 = 6
+      // 2プリセットの場合はループしないので2件のみ表示
       const presetCards = getAllByTestId('preset-card');
-      expect(presetCards.length).toBe(6);
+      expect(presetCards.length).toBe(2);
     });
 
     it('プリセットのタイトルが正しく表示される', () => {

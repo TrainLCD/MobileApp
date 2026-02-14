@@ -64,8 +64,8 @@ export const SelectLineScreenPresets = ({
       numCardsVisible
     : screenWidth;
 
-  // プリセットが2件以上の場合のみループ用に3倍にする
-  const shouldLoop = carouselData.length >= 2;
+  // プリセットが3件以上の場合のみループ用に3倍にする
+  const shouldLoop = carouselData.length >= 3;
   const loopData = useMemo(
     () =>
       carouselData.length
@@ -205,7 +205,7 @@ export const SelectLineScreenPresets = ({
         contentContainerStyle={[
           styles.contentContainer,
           isTablet && { paddingHorizontal: HORIZONTAL_PADDING },
-          carouselData.length <= 1 && { flexGrow: 1, justifyContent: 'center' },
+          !shouldLoop && { flexGrow: 1, justifyContent: 'center' },
         ]}
       />
     </View>
