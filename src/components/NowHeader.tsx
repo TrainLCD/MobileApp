@@ -19,6 +19,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { useLocationPermissionsGranted } from '~/hooks/useLocationPermissionsGranted';
+import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -26,7 +27,6 @@ import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
-import { locationAtom } from '~/store/atoms/location';
 
 const styles = StyleSheet.create({
   nowHeaderContainer: {
