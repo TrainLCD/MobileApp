@@ -19,6 +19,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { useLocationPermissionsGranted } from '~/hooks/useLocationPermissionsGranted';
+import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -100,6 +101,7 @@ export const NowHeader = ({
 
   const setStationAtom = useSetAtom(stationState);
   const setNavigationAtom = useSetAtom(navigationState);
+  const setLocationAtom = useSetAtom(locationAtom);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
@@ -177,9 +179,21 @@ export const NowHeader = ({
         trainType: null,
         fetchedTrainTypes: [],
       }));
+      setLocationAtom({
+        coords: {
+          latitude: station.latitude as number,
+          longitude: station.longitude as number,
+          altitude: null,
+          accuracy: 0,
+          heading: null,
+          speed: 0,
+          altitudeAccuracy: null,
+        },
+        timestamp: Date.now(),
+      });
       setIsSearchModalVisible(false);
     },
-    [setStationAtom, setNavigationAtom]
+    [setStationAtom, setNavigationAtom, setLocationAtom]
   );
 
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
