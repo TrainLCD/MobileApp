@@ -8,7 +8,7 @@ export const useDistanceToNextStation = () => {
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
-  const nextStation = useNextStation();
+  const nextStation = useNextStation(false);
 
   const distanceToNextStation = useMemo(
     () =>
