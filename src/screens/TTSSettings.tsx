@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
@@ -26,8 +26,17 @@ import { translate } from '~/translation';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 
 type SettingItem = {
-  id: 'enable_tts' | 'enable_bg_tts';
+  id: string;
   title: string;
+  nationalFlag?: string;
+};
+
+type TTSLanguage = 'JA' | 'EN';
+
+type TTSLanguageSettingItem = {
+  id: TTSLanguage;
+  title: string;
+  nationalFlag: string;
 };
 
 const styles = StyleSheet.create({
@@ -77,11 +86,16 @@ const SettingsItem = ({
         borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
       }}
     >
+      {item.nationalFlag ? (
+        <View style={{ marginRight: 12 }}>
+          <Typography style={{ fontSize: 21 }}>{item.nationalFlag}</Typography>
+        </View>
+      ) : null}
       <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
         {item.title}
       </Typography>
 
-      <StatePanel state={disabled ? false : state} disabled={disabled} />
+      <StatePanel state={state} disabled={disabled} />
     </Pressable>
   );
 };
@@ -92,8 +106,10 @@ const TTSSettingsScreen: React.FC = () => {
   const scrollY = useSharedValue(0);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const [{ enabled: speechEnabled, backgroundEnabled }, setSpeechState] =
-    useAtom(speechState);
+  const [
+    { enabled: speechEnabled, backgroundEnabled, ttsEnabledLanguages },
+    setSpeechState,
+  ] = useAtom(speechState);
 
   const navigation = useNavigation();
 
@@ -119,6 +135,22 @@ const TTSSettingsScreen: React.FC = () => {
       title: translate('autoAnnounceBackgroundTitle'),
     },
   ] as const;
+
+  const TTS_LANGUAGE_ITEMS: TTSLanguageSettingItem[] = useMemo(
+    () => [
+      {
+        id: 'JA',
+        title: translate('japanese'),
+        nationalFlag: '🇯🇵',
+      },
+      {
+        id: 'EN',
+        title: translate('english'),
+        nationalFlag: '🇺🇸',
+      },
+    ],
+    []
+  );
 
   const handleToggleTTS = useCallback(
     async (flag: boolean) => {
@@ -229,6 +261,49 @@ const TTSSettingsScreen: React.FC = () => {
     [setSpeechState]
   );
 
+  const handleToggleTTSLanguage = useCallback(
+    async (language: TTSLanguage) => {
+      const isJapaneseOff = !ttsEnabledLanguages.includes('JA');
+      const isEnglishOff = !ttsEnabledLanguages.includes('EN');
+      const isCurrentEnabled = ttsEnabledLanguages.includes(language);
+      const shouldDisableJapanese =
+        language === 'JA' && isCurrentEnabled && isEnglishOff;
+      const shouldDisableEnglish =
+        language === 'EN' && isCurrentEnabled && isJapaneseOff;
+
+      if (shouldDisableJapanese || shouldDisableEnglish) {
+        return;
+      }
+
+      const toggledLanguages = ttsEnabledLanguages.includes(language)
+        ? ttsEnabledLanguages.filter((lang) => lang !== language)
+        : [...ttsEnabledLanguages, language];
+      const normalizedLanguages: Array<'JA' | 'EN'> = [
+        ...(toggledLanguages.includes('JA') ? (['JA'] as const) : []),
+        ...(toggledLanguages.includes('EN') ? (['EN'] as const) : []),
+      ];
+
+      setSpeechState((prev) => ({
+        ...prev,
+        ttsEnabledLanguages: normalizedLanguages,
+      }));
+
+      try {
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES,
+          JSON.stringify(normalizedLanguages)
+        );
+      } catch (error) {
+        console.error('Failed to save TTS enabled languages:', error);
+        Alert.alert(
+          translate('errorTitle'),
+          translate('failedToSavePreference')
+        );
+      }
+    },
+    [setSpeechState, ttsEnabledLanguages]
+  );
+
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
       const state = (() => {
@@ -259,7 +334,12 @@ const TTSSettingsScreen: React.FC = () => {
           isFirst={index === 0}
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
-          state={state}
+          state={
+            item.id === 'enable_bg_tts' &&
+            (!speechEnabled || isAndroid16OrHigher)
+              ? false
+              : state
+          }
           disabled={
             item.id === 'enable_bg_tts' &&
             (!speechEnabled || isAndroid16OrHigher)
@@ -309,6 +389,40 @@ const TTSSettingsScreen: React.FC = () => {
                   {translate('bgTtsUnavailableOnAndroid16')}
                 </Typography>
               ) : null}
+              <View style={{ marginTop: 16 }}>
+                {TTS_LANGUAGE_ITEMS.map((item, index) => {
+                  const state = ttsEnabledLanguages.includes(item.id);
+                  const disabled =
+                    !speechEnabled ||
+                    (item.id === 'JA' &&
+                      state &&
+                      !ttsEnabledLanguages.includes('EN')) ||
+                    (item.id === 'EN' &&
+                      state &&
+                      !ttsEnabledLanguages.includes('JA'));
+
+                  return (
+                    <SettingsItem
+                      key={item.id}
+                      item={item}
+                      isFirst={index === 0}
+                      isLast={index === TTS_LANGUAGE_ITEMS.length - 1}
+                      onToggle={() => handleToggleTTSLanguage(item.id)}
+                      state={state}
+                      disabled={disabled}
+                    />
+                  );
+                })}
+              </View>
+              <Typography
+                style={{
+                  marginTop: 16,
+                  textAlign: 'center',
+                  color: '#8B8B8B',
+                }}
+              >
+                {translate('requireJapaneseOrEnglish')}
+              </Typography>
               <Button
                 style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
                 textStyle={{ fontWeight: 'bold' }}
