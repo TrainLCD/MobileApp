@@ -36,22 +36,35 @@ const filterTrainTypes = (
 ): TrainType[] => {
   if (!line) return [];
 
-  return fetchedTrainTypes.filter((tt): tt is TrainType => {
-    if (!tt || !tt.line) return false;
+  const trainTypesWithSelectedLine = fetchedTrainTypes.filter(
+    (tt): tt is TrainType => {
+      if (!tt || !tt.line) return false;
 
-    const lines = tt.lines ?? [];
-    const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
-    if (selectedLineIndex === -1) return false;
+      const lines = tt.lines ?? [];
+      const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
+      if (selectedLineIndex === -1) return false;
 
-    if (destination) {
-      const destinationLineIndex = lines.findIndex(
-        (l) => l.id === destination.line?.id
-      );
-      if (destinationLineIndex === -1) return false;
+      return true;
     }
+  );
 
-    return true;
+  if (!destination?.line?.id) {
+    return trainTypesWithSelectedLine;
+  }
+
+  const trainTypesWithDestination = trainTypesWithSelectedLine.filter((tt) => {
+    const lines = tt.lines ?? [];
+    const destinationLineIndex = lines.findIndex(
+      (l) => l.id === destination.line?.id
+    );
+    return destinationLineIndex !== -1;
   });
+
+  if (!trainTypesWithDestination.length) {
+    return trainTypesWithSelectedLine;
+  }
+
+  return trainTypesWithDestination;
 };
 
 afterEach(() => jest.clearAllMocks());
@@ -131,7 +144,7 @@ describe('TrainTypeListModal - フィルタリングロジック', () => {
       expect(result[0].id).toBe(1);
     });
 
-    it('行き先の路線を含まない列車種別は除外される', () => {
+    it('行き先の路線を含む種別が0件の場合は現在路線ベースでフォールバックする', () => {
       const seibuLine = createMockLine(1, '西武池袋線');
       const fukutoshinLine = createMockLine(3, '副都心線');
       const unrelatedLine = createMockLine(99, '関係ない路線');
@@ -144,7 +157,52 @@ describe('TrainTypeListModal - フィルタリングロジック', () => {
       const destination = { line: unrelatedLine };
       const result = filterTrainTypes([trainType], seibuLine, destination);
 
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(trainType.id);
+    });
+
+    it('destination.lineが未設定の場合は現在路線ベースで表示する', () => {
+      const seibuLine = createMockLine(1, '西武池袋線');
+      const fukutoshinLine = createMockLine(3, '副都心線');
+
+      const trainType = createMockTrainType(1, '急行', seibuLine, [
+        seibuLine,
+        fukutoshinLine,
+      ]);
+
+      const destination = { line: null };
+      const result = filterTrainTypes([trainType], seibuLine, destination);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(trainType.id);
+    });
+
+    it('池袋→東飯能（西武秩父線側）でdestination路線未包含でも0件にならない', () => {
+      const seibuIkebukuroLine = createMockLine(1, '西武池袋線');
+      const seibuShinjukuLine = createMockLine(2, '西武新宿線');
+      const seibuChichibuLine = createMockLine(3, '西武秩父線');
+
+      // 実データで起きるように、種別のlinesには現在路線（西武池袋線）はあるが
+      // 行き先側の路線（西武秩父線）が含まれないケースを再現
+      const rapid = createMockTrainType(10, '快速急行', seibuIkebukuroLine, [
+        seibuIkebukuroLine,
+      ]);
+      const local = createMockTrainType(11, '各駅停車', seibuIkebukuroLine, [
+        seibuIkebukuroLine,
+      ]);
+      const unrelated = createMockTrainType(12, '各駅停車', seibuShinjukuLine, [
+        seibuShinjukuLine,
+      ]);
+
+      const destination = { line: seibuChichibuLine };
+      const result = filterTrainTypes(
+        [rapid, local, unrelated],
+        seibuIkebukuroLine,
+        destination
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result.map((tt) => tt.id)).toEqual([10, 11]);
     });
   });
 

@@ -520,6 +520,22 @@ const RouteSearchScreen = () => {
     [station, pendingLine, routeTypesData?.routeTypes]
   );
 
+  const currentStationLineForTrainTypeModal = useMemo(() => {
+    const currentLine = currentStationInRoutes?.line;
+    const currentStationLines = station?.lines ?? [];
+
+    if (
+      currentLine &&
+      currentStationLines.some(
+        (stationLine) => stationLine.id === currentLine.id
+      )
+    ) {
+      return currentLine;
+    }
+
+    return station?.line ?? currentStationLines[0] ?? null;
+  }, [currentStationInRoutes?.line, station?.line, station?.lines]);
+
   // ウォークスルーのレイアウト計測
   const measureSearchBar = useCallback(() => {
     if (searchBarRef.current) {
@@ -675,7 +691,7 @@ const RouteSearchScreen = () => {
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
-        line={currentStationInRoutes?.line ?? null}
+        line={currentStationLineForTrainTypeModal}
         destination={wantedDestination}
         onClose={() => {
           setTrainTypeListModalVisible(false);

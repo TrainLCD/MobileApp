@@ -385,3 +385,87 @@ describe('SelectBoundModal - 保存済み経路の検索ロジック', () => {
     expect(updatedState.pendingTrainType?.groupId).toBe(200);
   });
 });
+
+describe('SelectBoundModal - TrainTypeListModalの路線選択', () => {
+  const resolveTrainTypeModalLine = ({
+    stationLines,
+    selectedLine,
+    stationLine,
+    pendingTrainTypeLine,
+    pendingLine,
+  }: {
+    stationLines: Array<{ id: number }>;
+    selectedLine: { id: number } | null;
+    stationLine: { id: number } | null;
+    pendingTrainTypeLine: { id: number } | null;
+    pendingLine: { id: number } | null;
+  }) => {
+    const hasStationLine = (targetLine: { id: number } | null) =>
+      !!targetLine &&
+      stationLines.some((stationLine) => stationLine.id === targetLine.id);
+
+    if (hasStationLine(selectedLine)) {
+      return selectedLine;
+    }
+    if (hasStationLine(stationLine)) {
+      return stationLine;
+    }
+    if (hasStationLine(pendingTrainTypeLine)) {
+      return pendingTrainTypeLine;
+    }
+    if (hasStationLine(pendingLine)) {
+      return pendingLine;
+    }
+
+    return (
+      stationLine ?? stationLines[0] ?? selectedLine ?? pendingLine ?? null
+    );
+  };
+
+  it('selectedLine が station.lines に含まれる場合は最優先される', () => {
+    const seibuIkebukuroLine = { id: 1 };
+    const seibuChichibuLine = { id: 2 };
+
+    const result = resolveTrainTypeModalLine({
+      stationLines: [seibuIkebukuroLine, seibuChichibuLine],
+      selectedLine: seibuIkebukuroLine,
+      stationLine: seibuChichibuLine,
+      pendingTrainTypeLine: seibuChichibuLine,
+      pendingLine: seibuChichibuLine,
+    });
+
+    expect(result?.id).toBe(seibuIkebukuroLine.id);
+  });
+
+  it('selectedLine/stationLine が不一致でも pendingTrainType.line が含まれればそれを使う', () => {
+    const seibuIkebukuroLine = { id: 1 };
+    const seibuChichibuLine = { id: 2 };
+    const unrelatedLine = { id: 99 };
+
+    const result = resolveTrainTypeModalLine({
+      stationLines: [seibuIkebukuroLine, seibuChichibuLine],
+      selectedLine: unrelatedLine,
+      stationLine: unrelatedLine,
+      pendingTrainTypeLine: seibuChichibuLine,
+      pendingLine: unrelatedLine,
+    });
+
+    expect(result?.id).toBe(seibuChichibuLine.id);
+  });
+
+  it('station.lines に一致がない場合は fallback で station.line を使う', () => {
+    const seibuIkebukuroLine = { id: 1 };
+    const seibuChichibuLine = { id: 2 };
+    const unrelatedLine = { id: 99 };
+
+    const result = resolveTrainTypeModalLine({
+      stationLines: [seibuIkebukuroLine, seibuChichibuLine],
+      selectedLine: unrelatedLine,
+      stationLine: unrelatedLine,
+      pendingTrainTypeLine: null,
+      pendingLine: null,
+    });
+
+    expect(result?.id).toBe(unrelatedLine.id);
+  });
+});

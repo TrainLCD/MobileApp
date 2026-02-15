@@ -124,7 +124,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     setNavigationState,
   ] = useAtom(navigationState);
   const [lineAtom, setLineState] = useAtom(lineState);
-  const { pendingLine: line } = lineAtom;
+  const { pendingLine: line, selectedLine } = lineAtom;
   const [{ targetStationIds }, setNotifyState] = useAtom(notifyState);
 
   const { isLoopLine } = useLoopLine(stations, false);
@@ -503,6 +503,34 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   const isBus = isBusLine(line);
 
+  const trainTypeModalLine = useMemo(() => {
+    const stationLines = station?.lines ?? [];
+    const hasStationLine = (targetLine: Line | null | undefined) =>
+      !!targetLine &&
+      stationLines.some((stationLine) => stationLine.id === targetLine.id);
+
+    if (hasStationLine(selectedLine)) {
+      return selectedLine;
+    }
+    if (hasStationLine(station?.line)) {
+      return station?.line ?? null;
+    }
+    if (hasStationLine(pendingTrainType?.line)) {
+      return pendingTrainType?.line ?? null;
+    }
+    if (hasStationLine(line)) {
+      return line;
+    }
+
+    return station?.line ?? stationLines[0] ?? selectedLine ?? line ?? null;
+  }, [
+    line,
+    pendingTrainType?.line,
+    selectedLine,
+    station?.line,
+    station?.lines,
+  ]);
+
   return (
     <CustomModal
       visible={visible}
@@ -609,7 +637,8 @@ export const SelectBoundModal: React.FC<Props> = ({
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
-        line={pendingTrainType?.line ?? station?.line ?? line}
+        line={trainTypeModalLine}
+        destination={targetDestination ?? wantedDestination}
         onClose={() => {
           setIsTrainTypeModalVisible(false);
         }}

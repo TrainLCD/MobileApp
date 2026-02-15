@@ -375,3 +375,64 @@ describe('RouteSearchScreen - selectedDestination の状態管理', () => {
     expect(selectBoundModalProps).toHaveProperty('onCloseAnimationEnd');
   });
 });
+
+describe('RouteSearchScreen - TrainTypeListModalの路線選択', () => {
+  const selectTrainTypeModalLine = ({
+    currentStationInRoutesLine,
+    stationLine,
+    stationLines,
+  }: {
+    currentStationInRoutesLine: { id: number } | null;
+    stationLine: { id: number } | null;
+    stationLines: Array<{ id: number }>;
+  }) => {
+    if (
+      currentStationInRoutesLine &&
+      stationLines.some((l) => l.id === currentStationInRoutesLine.id)
+    ) {
+      return currentStationInRoutesLine;
+    }
+
+    return stationLine ?? stationLines[0] ?? null;
+  };
+
+  it('currentStationInRoutes.line が station.lines に存在すればそれを使う', () => {
+    const seibuIkebukuroLine = { id: 1 };
+    const seibuShinjukuLine = { id: 2 };
+
+    const result = selectTrainTypeModalLine({
+      currentStationInRoutesLine: seibuIkebukuroLine,
+      stationLine: seibuShinjukuLine,
+      stationLines: [seibuIkebukuroLine, seibuShinjukuLine],
+    });
+
+    expect(result?.id).toBe(seibuIkebukuroLine.id);
+  });
+
+  it('currentStationInRoutes.line が station.lines に無ければ station.line を使う', () => {
+    const seibuIkebukuroLine = { id: 1 };
+    const seibuShinjukuLine = { id: 2 };
+    const unrelatedLine = { id: 99 };
+
+    const result = selectTrainTypeModalLine({
+      currentStationInRoutesLine: unrelatedLine,
+      stationLine: seibuIkebukuroLine,
+      stationLines: [seibuIkebukuroLine, seibuShinjukuLine],
+    });
+
+    expect(result?.id).toBe(seibuIkebukuroLine.id);
+  });
+
+  it('station.line が null の場合は station.lines の先頭を使う', () => {
+    const seibuIkebukuroLine = { id: 1 };
+    const seibuShinjukuLine = { id: 2 };
+
+    const result = selectTrainTypeModalLine({
+      currentStationInRoutesLine: null,
+      stationLine: null,
+      stationLines: [seibuIkebukuroLine, seibuShinjukuLine],
+    });
+
+    expect(result?.id).toBe(seibuIkebukuroLine.id);
+  });
+});
