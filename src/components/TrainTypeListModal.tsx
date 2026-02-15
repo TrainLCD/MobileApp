@@ -80,6 +80,9 @@ const getViaLines = (
   const destinationLineIndex = lines.findIndex(
     (l) => l.id === destination.line?.id
   );
+  if (destinationLineIndex === -1) {
+    return linesWithoutCurrent;
+  }
 
   // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
   if (selectedLineIndex === destinationLineIndex) {
@@ -164,21 +167,17 @@ export const TrainTypeListModal = ({
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const title = useMemo(() => {
-    if (!destination) {
-      return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
-    }
-
-    return isJapanese
-      ? `${destination.name ?? ''}方面`
-      : `${destination.nameRoman ?? ''}`;
-  }, [destination, line?.nameRoman, line?.nameShort]);
+    return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
+  }, [line?.nameRoman, line?.nameShort]);
   const subtitle = useMemo(() => {
     if (!destination) {
       return '';
     }
 
-    return isJapanese ? `${line?.nameShort ?? ''}` : `${line?.nameRoman ?? ''}`;
-  }, [destination, line?.nameRoman, line?.nameShort]);
+    return isJapanese
+      ? `${destination.name ?? ''}方面`
+      : `${destination.nameRoman ?? ''}`;
+  }, [destination]);
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
@@ -245,7 +244,7 @@ export const TrainTypeListModal = ({
   const trainTypes = useMemo(() => {
     if (!line) return [];
 
-    const trainTypes = fetchedTrainTypes
+    const trainTypesWithSelectedLine = fetchedTrainTypes
       .map((tt) => {
         const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
           ?.trainType as TrainType | undefined;
@@ -258,17 +257,29 @@ export const TrainTypeListModal = ({
         const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
         if (selectedLineIndex === -1) return false;
 
-        if (destination) {
-          const destinationLineIndex = lines.findIndex(
-            (l) => l.id === destination.line?.id
-          );
-          if (destinationLineIndex === -1) return false;
-        }
-
         return true;
       });
 
-    return trainTypes;
+    if (!destination?.line?.id) {
+      return trainTypesWithSelectedLine;
+    }
+
+    const trainTypesWithDestination = trainTypesWithSelectedLine.filter(
+      (tt) => {
+        const lines = uniqBy(tt.lines ?? [], 'id');
+        const destinationLineIndex = lines.findIndex(
+          (l) => l.id === destination.line?.id
+        );
+        return destinationLineIndex !== -1;
+      }
+    );
+
+    // destination路線がデータ都合で欠落している場合は0件表示を避けるためフォールバック
+    if (!trainTypesWithDestination.length) {
+      return trainTypesWithSelectedLine;
+    }
+
+    return trainTypesWithDestination;
   }, [fetchedTrainTypes, line, destination]);
 
   return (
@@ -297,12 +308,15 @@ export const TrainTypeListModal = ({
           },
         ]}
       >
-        {destination ? (
-          <Heading style={styles.subtitle}>{subtitle}</Heading>
-        ) : null}
-        <Heading singleLine style={styles.title}>
+        <Heading
+          singleLine
+          style={destination ? styles.subtitle : styles.title}
+        >
           {title}
         </Heading>
+        {destination ? (
+          <Heading style={styles.title}>{subtitle}</Heading>
+        ) : null}
       </View>
 
       <FlatList<TrainType>
