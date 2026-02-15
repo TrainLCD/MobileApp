@@ -1,6 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
+import { ALL_AVAILABLE_LANGUAGES, type AvailableLanguage } from '~/constants';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -48,16 +49,23 @@ const hasStationTextForLang = (
  */
 const getNextAvailableLang = (
   currentLang: HeaderLangState,
-  enabledLanguages: string[],
+  enabledLanguages: AvailableLanguage[],
   targetStation: Station | undefined
 ): HeaderLangState | null => {
+  if (enabledLanguages.length <= 1) {
+    return null;
+  }
+
+  const normalizedCurrentLang = currentLang !== 'KANA' ? currentLang : 'JA';
   const currentIndex = enabledLanguages.indexOf(
-    currentLang !== 'KANA' ? currentLang : 'JA'
+    normalizedCurrentLang as AvailableLanguage
   );
 
-  // 現在の言語から後ろを順に探す
-  for (let i = currentIndex + 1; i < enabledLanguages.length; i++) {
-    const lang = enabledLanguages[i] as HeaderLangState;
+  // 現在の言語の次から循環して探索
+  for (let i = 1; i < enabledLanguages.length; i++) {
+    const nextIndex =
+      currentIndex >= 0 ? (currentIndex + i) % enabledLanguages.length : i - 1;
+    const lang = enabledLanguages[nextIndex] as HeaderLangState;
     if (hasStationTextForLang(targetStation, lang)) {
       return lang;
     }
@@ -65,6 +73,37 @@ const getNextAvailableLang = (
 
   // 見つからなければnull（JAに戻る）
   return null;
+};
+
+const getDefaultHeaderLang = (
+  enabledLanguages: AvailableLanguage[]
+): AvailableLanguage => {
+  if (enabledLanguages.includes('JA')) {
+    return 'JA';
+  }
+  return enabledLanguages[0] || 'EN';
+};
+
+const toHeaderTransitionState = (
+  headerState: HeaderState,
+  lang: HeaderLangState
+): HeaderTransitionState => {
+  if (lang === 'JA') {
+    return headerState as HeaderTransitionState;
+  }
+  return `${headerState}_${lang}` as HeaderTransitionState;
+};
+
+const getFallbackStateWithoutJapanese = (
+  headerState: HeaderState,
+  currentLang: HeaderLangState,
+  enabledLanguages: AvailableLanguage[]
+): HeaderTransitionState => {
+  const fallbackLang =
+    currentLang === 'JA' || currentLang === 'KANA'
+      ? getDefaultHeaderLang(enabledLanguages)
+      : (currentLang as AvailableLanguage);
+  return toHeaderTransitionState(headerState, fallbackLang);
 };
 
 export const useTransitionHeaderState = (): void => {
@@ -86,10 +125,18 @@ export const useTransitionHeaderState = (): void => {
   const nextStation = useNextStation();
   const isPassing = useIsPassing();
 
-  const enabledLanguages = useMemo(
-    () => (isLEDTheme ? ['JA', 'EN'] : enabledLanguagesFromState),
-    [enabledLanguagesFromState, isLEDTheme]
-  );
+  const enabledLanguages = useMemo<AvailableLanguage[]>(() => {
+    const orderedEnabledLanguages = ALL_AVAILABLE_LANGUAGES.filter((lang) =>
+      enabledLanguagesFromState.includes(lang)
+    );
+    if (isLEDTheme) {
+      return orderedEnabledLanguages.filter(
+        (lang) => lang === 'JA' || lang === 'EN'
+      );
+    }
+    return orderedEnabledLanguages;
+  }, [enabledLanguagesFromState, isLEDTheme]);
+  const isJapaneseEnabled = enabledLanguages.includes('JA');
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
     // 停車中は等前ながらfalse
@@ -130,16 +177,51 @@ export const useTransitionHeaderState = (): void => {
         case 'ARRIVING_EN':
         case 'ARRIVING_ZH':
         case 'ARRIVING_KO':
+          if (!enabledLanguages.length) {
+            break;
+          }
           setNavigation((prev) => ({
             ...prev,
-            headerState: isJapanese ? 'CURRENT' : 'CURRENT_EN',
+            headerState: toHeaderTransitionState(
+              'CURRENT',
+              isJapanese && isJapaneseEnabled
+                ? 'JA'
+                : getDefaultHeaderLang(enabledLanguages)
+            ),
           }));
           break;
         default:
           break;
       }
     }
-  }, [arrived, headerState, setNavigation, station]);
+  }, [
+    arrived,
+    enabledLanguages,
+    headerState,
+    isJapaneseEnabled,
+    setNavigation,
+    station,
+  ]);
+
+  useEffect(() => {
+    if (isJapaneseEnabled || !enabledLanguages.length) {
+      return;
+    }
+    const [stoppingState, langState] = headerState.split('_') as [
+      HeaderState,
+      HeaderLangState | undefined,
+    ];
+    if (langState && langState !== 'KANA') {
+      return;
+    }
+    setNavigation((prev) => ({
+      ...prev,
+      headerState: toHeaderTransitionState(
+        stoppingState,
+        getDefaultHeaderLang(enabledLanguages)
+      ),
+    }));
+  }, [enabledLanguages, headerState, isJapaneseEnabled, setNavigation]);
 
   useInterval(
     useCallback(() => {
@@ -168,6 +250,20 @@ export const useTransitionHeaderState = (): void => {
         case 'ARRIVING': {
           switch (currentHeaderStateLang) {
             case 'JA':
+              if (!isJapaneseEnabled) {
+                if (!nextLang) {
+                  setNavigation((prev) => ({
+                    ...prev,
+                    headerState: 'ARRIVING',
+                  }));
+                  break;
+                }
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: toHeaderTransitionState('ARRIVING', nextLang),
+                }));
+                break;
+              }
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING_KANA',
@@ -177,13 +273,19 @@ export const useTransitionHeaderState = (): void => {
               if (!nextLang) {
                 setNavigation((prev) => ({
                   ...prev,
-                  headerState: 'ARRIVING',
+                  headerState: isJapaneseEnabled
+                    ? 'ARRIVING'
+                    : getFallbackStateWithoutJapanese(
+                        'ARRIVING',
+                        currentHeaderStateLang,
+                        enabledLanguages
+                      ),
                 }));
                 break;
               }
               setNavigation((prev) => ({
                 ...prev,
-                headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
+                headerState: toHeaderTransitionState('ARRIVING', nextLang),
               }));
               break;
           }
@@ -193,12 +295,39 @@ export const useTransitionHeaderState = (): void => {
           if (showNextExpression) {
             setNavigation((prev) => ({
               ...prev,
-              headerState: 'NEXT',
+              headerState: isJapaneseEnabled
+                ? 'NEXT'
+                : getFallbackStateWithoutJapanese(
+                    'NEXT',
+                    currentHeaderStateLang,
+                    enabledLanguages
+                  ),
             }));
             break;
           }
           switch (currentHeaderStateLang) {
             case 'JA':
+              if (!isJapaneseEnabled) {
+                if (isPassing) {
+                  break;
+                }
+                if (!nextLang) {
+                  setNavigation((prev) => ({
+                    ...prev,
+                    headerState: getFallbackStateWithoutJapanese(
+                      'CURRENT',
+                      currentHeaderStateLang,
+                      enabledLanguages
+                    ),
+                  }));
+                  break;
+                }
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: toHeaderTransitionState('CURRENT', nextLang),
+                }));
+                break;
+              }
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'CURRENT_KANA',
@@ -211,13 +340,19 @@ export const useTransitionHeaderState = (): void => {
               if (!nextLang) {
                 setNavigation((prev) => ({
                   ...prev,
-                  headerState: 'CURRENT',
+                  headerState: isJapaneseEnabled
+                    ? 'CURRENT'
+                    : getFallbackStateWithoutJapanese(
+                        'CURRENT',
+                        currentHeaderStateLang,
+                        enabledLanguages
+                      ),
                 }));
                 break;
               }
               setNavigation((prev) => ({
                 ...prev,
-                headerState: `CURRENT_${nextLang}` as HeaderTransitionState,
+                headerState: toHeaderTransitionState('CURRENT', nextLang),
               }));
               break;
           }
@@ -226,6 +361,24 @@ export const useTransitionHeaderState = (): void => {
         case 'NEXT': {
           switch (currentHeaderStateLang) {
             case 'JA':
+              if (!isJapaneseEnabled) {
+                if (!nextLang) {
+                  setNavigation((prev) => ({
+                    ...prev,
+                    headerState: getFallbackStateWithoutJapanese(
+                      'NEXT',
+                      currentHeaderStateLang,
+                      enabledLanguages
+                    ),
+                  }));
+                  break;
+                }
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: toHeaderTransitionState('NEXT', nextLang),
+                }));
+                break;
+              }
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'NEXT_KANA',
@@ -235,13 +388,19 @@ export const useTransitionHeaderState = (): void => {
               if (!nextLang) {
                 setNavigation((prev) => ({
                   ...prev,
-                  headerState: 'NEXT',
+                  headerState: isJapaneseEnabled
+                    ? 'NEXT'
+                    : getFallbackStateWithoutJapanese(
+                        'NEXT',
+                        currentHeaderStateLang,
+                        enabledLanguages
+                      ),
                 }));
                 break;
               }
               setNavigation((prev) => ({
                 ...prev,
-                headerState: `NEXT_${nextLang}` as HeaderTransitionState,
+                headerState: toHeaderTransitionState('NEXT', nextLang),
               }));
               break;
           }
@@ -258,12 +417,36 @@ export const useTransitionHeaderState = (): void => {
             if (nextStation) {
               setNavigation((prev) => ({
                 ...prev,
-                headerState: 'ARRIVING',
+                headerState: isJapaneseEnabled
+                  ? 'ARRIVING'
+                  : getFallbackStateWithoutJapanese(
+                      'ARRIVING',
+                      currentHeaderStateLang,
+                      enabledLanguages
+                    ),
               }));
             }
             break;
           case 'ARRIVING': {
             if (currentHeaderStateLang === 'JA') {
+              if (!isJapaneseEnabled) {
+                if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
+                  setNavigation((prev) => ({
+                    ...prev,
+                    headerState: getFallbackStateWithoutJapanese(
+                      'ARRIVING',
+                      currentHeaderStateLang,
+                      enabledLanguages
+                    ),
+                  }));
+                  break;
+                }
+                setNavigation((prev) => ({
+                  ...prev,
+                  headerState: toHeaderTransitionState('ARRIVING', nextLang),
+                }));
+                break;
+              }
               setNavigation((prev) => ({
                 ...prev,
                 headerState: 'ARRIVING_KANA',
@@ -274,13 +457,19 @@ export const useTransitionHeaderState = (): void => {
             if (!nextLang || (nextLang !== 'EN' && !isExtraLangAvailable)) {
               setNavigation((prev) => ({
                 ...prev,
-                headerState: 'ARRIVING',
+                headerState: isJapaneseEnabled
+                  ? 'ARRIVING'
+                  : getFallbackStateWithoutJapanese(
+                      'ARRIVING',
+                      currentHeaderStateLang,
+                      enabledLanguages
+                    ),
               }));
               break;
             }
             setNavigation((prev) => ({
               ...prev,
-              headerState: `ARRIVING_${nextLang}` as HeaderTransitionState,
+              headerState: toHeaderTransitionState('ARRIVING', nextLang),
             }));
             break;
           }
@@ -292,6 +481,7 @@ export const useTransitionHeaderState = (): void => {
       approaching,
       enabledLanguages,
       headerStateRef,
+      isJapaneseEnabled,
       isExtraLangAvailable,
       isPassing,
       nextStation,
