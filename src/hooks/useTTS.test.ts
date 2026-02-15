@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
 import React from 'react';
 import speechState from '~/store/atoms/speech';
 import { useTTS } from './useTTS';
@@ -57,12 +57,16 @@ jest.mock('./useCachedAnonymousUser', () => ({
 }));
 
 const createMockPlayer = () => {
-  let playbackStatusListener: ((status: { didJustFinish: boolean }) => void) | null =
-    null;
+  let playbackStatusListener:
+    | ((status: { didJustFinish: boolean }) => void)
+    | null = null;
 
   return {
     addListener: jest.fn(
-      (_event: string, callback: (status: { didJustFinish: boolean }) => void) => {
+      (
+        _event: string,
+        callback: (status: { didJustFinish: boolean }) => void
+      ) => {
         playbackStatusListener = callback;
         return { remove: jest.fn() };
       }
@@ -93,8 +97,8 @@ describe('useTTS', () => {
       }),
     });
 
-    mockCreateAudioPlayer.mockImplementation(
-      (_source: { uri: string }) => createMockPlayer()
+    mockCreateAudioPlayer.mockImplementation((_source: { uri: string }) =>
+      createMockPlayer()
     );
   });
 

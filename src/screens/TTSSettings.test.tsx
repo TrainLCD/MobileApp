@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render } from '@testing-library/react-native';
-import { Provider, createStore } from 'jotai';
-import React from 'react';
+import { createStore, Provider } from 'jotai';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import speechState, { type StationState } from '~/store/atoms/speech';
 import TTSSettingsScreen from './TTSSettings';
