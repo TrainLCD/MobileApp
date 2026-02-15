@@ -60,7 +60,8 @@ const base64ToUint8Array = (input: string): Uint8Array => {
 const PLAYBACK_TIMEOUT_MS = 60_000;
 
 export const useTTS = (): void => {
-  const { enabled, backgroundEnabled } = useAtomValue(speechState);
+  const { enabled, backgroundEnabled, ttsEnabledLanguages } =
+    useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
   const currentLine = useCurrentLine();
 
@@ -82,6 +83,8 @@ export const useTTS = (): void => {
       : trainTTSText;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
+  const shouldSpeakJapanese = ttsEnabledLanguages.includes('JA');
+  const shouldSpeakEnglish = ttsEnabledLanguages.includes('EN');
 
   const user = useCachedInitAnonymousUser();
 
@@ -128,6 +131,13 @@ export const useTTS = (): void => {
         return;
       }
 
+      const playJapanese = shouldSpeakJapanese && Boolean(pathJa);
+      const playEnglish = shouldSpeakEnglish && Boolean(pathEn);
+      if (!playJapanese && !playEnglish) {
+        finishPlaying();
+        return;
+      }
+
       firstSpeechRef.current = false;
 
       // 既存のリスナーとプレイヤーをクリーンアップ
@@ -153,6 +163,74 @@ export const useTTS = (): void => {
       // 既存のタイムアウトをクリア
       if (playingTimeoutRef.current) {
         clearTimeout(playingTimeoutRef.current);
+      }
+
+      if (!playJapanese && playEnglish) {
+        const soundEn = createAudioPlayer({
+          uri: pathEn,
+        });
+        soundEnRef.current = soundEn;
+        playingRef.current = true;
+
+        playingTimeoutRef.current = setTimeout(() => {
+          if (!playingRef.current) {
+            return;
+          }
+          console.warn(
+            '[useTTS] Playback safety timeout reached, force resetting'
+          );
+          try {
+            enListenerRef.current?.remove();
+          } catch {}
+          enListenerRef.current = null;
+          try {
+            soundEnRef.current?.pause();
+            soundEnRef.current?.remove();
+          } catch {}
+          soundEnRef.current = null;
+          finishPlaying();
+        }, PLAYBACK_TIMEOUT_MS);
+
+        const enRemoveListener = soundEn.addListener(
+          'playbackStatusUpdate',
+          (enStatus) => {
+            if (enStatus.didJustFinish) {
+              enRemoveListener?.remove();
+              enListenerRef.current = null;
+              try {
+                soundEn.remove();
+              } catch (e) {
+                console.warn('[useTTS] Failed to remove soundEn:', e);
+              }
+              soundEnRef.current = null;
+              finishPlaying();
+            } else if ('error' in enStatus && enStatus.error) {
+              console.warn('[useTTS] soundEn error:', enStatus.error);
+              enRemoveListener?.remove();
+              enListenerRef.current = null;
+              try {
+                soundEn.remove();
+              } catch {}
+              soundEnRef.current = null;
+              finishPlaying();
+            }
+          }
+        );
+        enListenerRef.current = enRemoveListener;
+
+        try {
+          soundEn.play();
+        } catch (e) {
+          console.error('[useTTS] Failed to play soundEn:', e);
+          enRemoveListener?.remove();
+          enListenerRef.current = null;
+          try {
+            soundEn.remove();
+          } catch {}
+          soundEnRef.current = null;
+          finishPlaying();
+        }
+        return;
       }
 
       const soundJa = createAudioPlayer({
@@ -208,7 +286,7 @@ export const useTTS = (): void => {
                 soundJaRef.current = null;
               }
             };
-            if (isLoadableRef.current) {
+            if (isLoadableRef.current && playEnglish) {
               // 日本語再生完了後に英語プレイヤーを生成して再生（リソース節約）
               const soundEn = createAudioPlayer({
                 uri: pathEn,
@@ -289,7 +367,7 @@ export const useTTS = (): void => {
         finishPlaying();
       }
     },
-    [finishPlaying]
+    [finishPlaying, shouldSpeakEnglish, shouldSpeakJapanese]
   );
 
   const ttsApiUrl = useMemo(() => {

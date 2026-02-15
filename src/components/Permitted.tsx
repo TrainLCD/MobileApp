@@ -276,12 +276,14 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         enabledLanguagesStr,
         speechEnabledStr,
         bgTTSEnabledStr,
+        ttsEnabledLanguagesStr,
         telemetryEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
       ]);
 
@@ -312,6 +314,27 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         // Android 16以上で保存値がtrueの場合、永続化もfalseに上書き
         if (isAndroid16OrHigher && bgTTSEnabledStr === 'true') {
           AsyncStorage.setItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED, 'false');
+        }
+      }
+      if (ttsEnabledLanguagesStr) {
+        try {
+          const parsedLanguages = JSON.parse(ttsEnabledLanguagesStr) as Array<
+            'JA' | 'EN'
+          >;
+          const hasJapanese = parsedLanguages.includes('JA');
+          const hasEnglish = parsedLanguages.includes('EN');
+          if (hasJapanese || hasEnglish) {
+            const normalizedLanguages = [
+              ...(hasJapanese ? (['JA'] as const) : []),
+              ...(hasEnglish ? (['EN'] as const) : []),
+            ];
+            setSpeech((prev) => ({
+              ...prev,
+              ttsEnabledLanguages: normalizedLanguages,
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to parse TTS enabled languages:', error);
         }
       }
       if (telemetryEnabledStr) {
