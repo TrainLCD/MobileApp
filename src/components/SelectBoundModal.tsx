@@ -546,7 +546,11 @@ export const SelectBoundModal: React.FC<Props> = ({
             : null}
 
           <View style={styles.stopsContainer}>
-            <Button outline onPress={() => setRouteInfoModalVisible(true)}>
+            <Button
+              outline
+              onPress={() => setRouteInfoModalVisible(true)}
+              disabled={loading}
+            >
               {isBus
                 ? translate('viewBusStops')
                 : translate('viewStopStations')}
@@ -555,7 +559,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             <Button
               outline
               onPress={() => setIsTrainTypeModalVisible(true)}
-              disabled={!fetchedTrainTypes.length}
+              disabled={!fetchedTrainTypes.length || loading}
             >
               {trainTypeText}
             </Button>
@@ -565,7 +569,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               style={savedRoute ? styles.redOutlinedButton : null}
               textStyle={savedRoute ? styles.redOutlinedButtonText : null}
               onPress={handleSaveRoutePress}
-              disabled={!line || !isRoutesDBInitialized}
+              disabled={!line || !isRoutesDBInitialized || loading}
             >
               {translate(
                 !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'

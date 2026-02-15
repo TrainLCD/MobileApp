@@ -271,5 +271,6 @@
   "settingsWalkthroughTitle3": "Auto Announcements",
   "settingsWalkthroughDescription3": "Configure auto announcement settings. You can receive voice guidance when arriving at stations.",
   "settingsWalkthroughTitle4": "Display Languages",
-  "settingsWalkthroughDescription4": "Set the languages to display on screen. You can choose from Japanese, English, Chinese, and Korean."
+  "settingsWalkthroughDescription4": "Set the languages to display on screen. You can choose from Japanese, English, Chinese, and Korean.",
+  "requireJapaneseOrEnglish": "Either Japanese or English must be set."
 }
