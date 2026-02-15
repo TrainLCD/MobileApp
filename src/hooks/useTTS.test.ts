@@ -105,6 +105,7 @@ describe('useTTS', () => {
   afterEach(() => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   it('英語のみ有効時は英語音声のみ再生プレイヤーを生成する', async () => {
