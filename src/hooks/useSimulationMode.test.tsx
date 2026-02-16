@@ -198,7 +198,7 @@ describe('useSimulationMode', () => {
     (useAtomValue as jest.Mock)
       .mockReturnValueOnce({
         stations,
-        selectedDirection: 'OUTBOUND' as const,
+        selectedDirection: 'INBOUND' as const,
       })
       .mockReturnValueOnce({
         autoModeEnabled: true,
@@ -227,9 +227,63 @@ describe('useSimulationMode', () => {
     });
 
     // 1秒目でインデックス正規化、2秒目で実際の移動更新が走る
-    jest.advanceTimersByTime(2000);
+    jest.advanceTimersByTime(3000);
 
     expect(locationAtomModule.setLocation).toHaveBeenCalled();
+  });
+
+  it('現在駅のセグメント選択はgroupIdではなくidを使う', () => {
+    const stations = [
+      mockStation(10, 10, 35.681, 139.767),
+      mockStation(20, 20, 35.691, 139.777),
+      mockStation(30, 30, 35.791, 139.877),
+    ];
+
+    (useAtomValue as jest.Mock)
+      .mockReturnValueOnce({
+        stations,
+        selectedDirection: 'OUTBOUND' as const,
+      })
+      .mockReturnValueOnce({
+        autoModeEnabled: true,
+      });
+
+    jest
+      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
+      .mockReturnValue({ ...stations[1], groupId: 10 } as Station);
+
+    jest
+      .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+      .mockImplementationOnce(() => [100])
+      .mockImplementationOnce(() => [200]);
+
+    (store.get as jest.Mock).mockReturnValue({
+      coords: {
+        latitude: 35.691,
+        longitude: 139.777,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: 0,
+        heading: null,
+      },
+      timestamp: 100000,
+    });
+
+    renderHook(() => useSimulationMode(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    jest.advanceTimersByTime(1000);
+
+    const movementCall = (
+      locationAtomModule.setLocation as jest.Mock
+    ).mock.calls
+      .map((call) => call[0])
+      .find((arg) => arg?.coords?.speed != null);
+
+    expect(movementCall).toBeDefined();
+    expect(movementCall.coords.speed).toBeLessThan(5000);
   });
 
   it('速度プロファイルを生成し、位置情報を更新する', () => {
@@ -616,5 +670,56 @@ describe('useSimulationMode', () => {
     }
 
     expect(locationAtomModule.setLocation).toHaveBeenCalled();
+  });
+
+  it('セグメント終端で0km/hの停車を入れる', () => {
+    const stations = [
+      mockStation(1, 1, 35.681, 139.767),
+      mockStation(2, 2, 35.691, 139.777),
+    ];
+
+    (useAtomValue as jest.Mock)
+      .mockReturnValueOnce({
+        stations,
+        selectedDirection: 'INBOUND' as const,
+      })
+      .mockReturnValueOnce({
+        autoModeEnabled: true,
+      });
+
+    jest
+      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
+      .mockReturnValue(stations[0]);
+
+    jest
+      .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+      .mockReturnValue([2000]);
+
+    (store.get as jest.Mock).mockReturnValue({
+      coords: {
+        latitude: 35.681,
+        longitude: 139.767,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: 0,
+        heading: null,
+      },
+      timestamp: 100000,
+    });
+
+    renderHook(() => useSimulationMode(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    jest.advanceTimersByTime(3000);
+
+    const movementCalls = (
+      locationAtomModule.setLocation as jest.Mock
+    ).mock.calls
+      .map((call) => call[0])
+      .filter((arg) => arg?.coords?.speed != null);
+
+    expect(movementCalls.some((call) => call.coords.speed === 0)).toBe(true);
   });
 });
