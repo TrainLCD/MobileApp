@@ -1,7 +1,5 @@
 import * as Location from 'expo-location';
-import computeDestinationPoint from 'geolib/es/computeDestinationPoint';
 import getDistance from 'geolib/es/getDistance';
-import getGreatCircleBearing from 'geolib/es/getGreatCircleBearing';
 import getPathLength from 'geolib/es/getPathLength';
 import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
@@ -41,6 +39,7 @@ export const useSimulationMode = (): void => {
   const childIndexRef = useRef(0);
   const speedProfilesRef = useRef<number[][]>([]);
   const segmentProgressDistanceRef = useRef(0);
+  const dwellPendingRef = useRef(false);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -174,11 +173,12 @@ export const useSimulationMode = (): void => {
     });
 
     segmentIndexRef.current = maybeRevsersedStations.findIndex(
-      (s) => s.groupId === station?.groupId
+      (s) => s.id === station?.id
     );
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
+    dwellPendingRef.current = false;
   }, []);
 
   const step = useCallback(
@@ -307,49 +307,77 @@ export const useSimulationMode = (): void => {
         []
       );
 
-      const targetWaypointIndex = cumulativeDistances.findIndex(
-        (distance) => distance >= progressedDistance
-      );
-      const targetStation = waypoints[targetWaypointIndex] ?? nextStopStation;
-      const targetLatitude = targetStation.latitude;
-      const targetLongitude = targetStation.longitude;
-
-      if (targetLatitude == null || targetLongitude == null) {
+      const segmentDistance =
+        cumulativeDistances[cumulativeDistances.length - 1];
+      if (segmentDistance == null) {
         return;
       }
 
-      const bearingForNextStation = getGreatCircleBearing(
-        {
-          latitude: prev.coords.latitude,
-          longitude: prev.coords.longitude,
-        },
-        {
-          latitude: targetLatitude,
-          longitude: targetLongitude,
-        }
+      const nextProgressDistance = Math.min(
+        progressedDistance,
+        segmentDistance
+      );
+      const moveDistance = Math.max(
+        0,
+        nextProgressDistance - segmentProgressDistanceRef.current
       );
 
-      const nextPoint = computeDestinationPoint(
-        {
-          lat: prev.coords.latitude,
-          lon: prev.coords.longitude,
-        },
-        speed,
-        bearingForNextStation
+      const targetWaypointIndex = cumulativeDistances.findIndex(
+        (distance) => distance >= nextProgressDistance
       );
+      if (targetWaypointIndex < 0) {
+        return;
+      }
+
+      const targetWaypoint = waypoints[targetWaypointIndex];
+      if (!targetWaypoint) {
+        return;
+      }
+
+      let targetLatitude = targetWaypoint.latitude as number;
+      let targetLongitude = targetWaypoint.longitude as number;
+
+      if (targetWaypointIndex > 0) {
+        const prevWaypoint = waypoints[targetWaypointIndex - 1];
+        const prevDistance = cumulativeDistances[targetWaypointIndex - 1] ?? 0;
+        const targetDistance = cumulativeDistances[targetWaypointIndex] ?? 0;
+        const distanceDelta = targetDistance - prevDistance;
+
+        if (
+          prevWaypoint &&
+          prevWaypoint.latitude != null &&
+          prevWaypoint.longitude != null &&
+          targetWaypoint.latitude != null &&
+          targetWaypoint.longitude != null &&
+          distanceDelta > 0
+        ) {
+          const ratio = (nextProgressDistance - prevDistance) / distanceDelta;
+          targetLatitude =
+            (prevWaypoint.latitude as number) +
+            ((targetWaypoint.latitude as number) -
+              (prevWaypoint.latitude as number)) *
+              ratio;
+          targetLongitude =
+            (prevWaypoint.longitude as number) +
+            ((targetWaypoint.longitude as number) -
+              (prevWaypoint.longitude as number)) *
+              ratio;
+        }
+      }
 
       setLocation({
         timestamp: Date.now(),
         coords: {
-          ...nextPoint,
+          latitude: targetLatitude,
+          longitude: targetLongitude,
           accuracy: 0,
           altitude: null,
           altitudeAccuracy: null,
-          speed,
+          speed: moveDistance,
           heading: null,
         },
       });
-      segmentProgressDistanceRef.current = progressedDistance;
+      segmentProgressDistanceRef.current = nextProgressDistance;
     },
     [maybeRevsersedStations]
   );
@@ -387,15 +415,31 @@ export const useSimulationMode = (): void => {
 
       const speeds = speedProfilesRef.current[segmentIndexRef.current] ?? [];
 
-      if (i >= speeds.length) {
+      if (dwellPendingRef.current) {
+        const prev = store.get(locationAtom);
+        if (prev) {
+          setLocation({
+            timestamp: Date.now(),
+            coords: {
+              ...prev.coords,
+              speed: 0,
+              heading: null,
+            },
+          });
+        }
         const nextSegmentIndex = speedProfilesRef.current.findIndex(
           (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
         );
-
         segmentIndexRef.current =
           nextSegmentIndex === -1 ? 0 : nextSegmentIndex;
         childIndexRef.current = 0;
         segmentProgressDistanceRef.current = 0;
+        dwellPendingRef.current = false;
+        return;
+      }
+
+      if (i >= speeds.length) {
+        dwellPendingRef.current = true;
         return;
       }
 
