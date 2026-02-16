@@ -58,7 +58,9 @@ describe('generateTrainSpeedProfile', () => {
       const start = profile.findIndex((v) => v === 25);
       expect(start).not.toBe(-1);
 
-      const coastStart = profile.findIndex((v, index) => index > start && v < 25);
+      const coastStart = profile.findIndex(
+        (v, index) => index > start && v < 25
+      );
       expect(coastStart).not.toBe(-1);
 
       const coastSegment = profile.slice(coastStart, coastStart + 5);
