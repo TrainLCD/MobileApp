@@ -42,21 +42,33 @@ describe('generateTrainSpeedProfile', () => {
   });
 
   it('惰行が有効な場合は最高速度以降で速度が低下する区間を作る', () => {
-    jest
+    const randomSpy = jest
       .spyOn(Math, 'random')
       .mockImplementationOnce(() => 0.3) // enable coasting
       .mockImplementationOnce(() => 0.1) // coastingDecel
       .mockImplementationOnce(() => 0.5); // tCoast
 
-    const profile = generateTrainSpeedProfile({
-      distance: 1500,
-      maxSpeed: 25,
-      enableRandomCoast: true,
-    });
+    try {
+      const profile = generateTrainSpeedProfile({
+        distance: 1500,
+        maxSpeed: 25,
+        enableRandomCoast: true,
+      });
 
-    const start = profile.findIndex((v) => v === 25);
-    const coastSegment = profile.slice(start, start + 5);
-    expect(coastSegment).toEqual([...coastSegment].sort((a, b) => b - a));
+      const start = profile.findIndex((v) => v === 25);
+      expect(start).not.toBe(-1);
+
+      const coastStart = profile.findIndex((v, index) => index > start && v < 25);
+      expect(coastStart).not.toBe(-1);
+
+      const coastSegment = profile.slice(coastStart, coastStart + 5);
+      expect(coastSegment.length).toBe(5);
+      for (let i = 1; i < coastSegment.length; i += 1) {
+        expect(coastSegment[i]).toBeLessThan(coastSegment[i - 1]);
+      }
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 
   it('does not throw with short distance', () => {
