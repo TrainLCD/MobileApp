@@ -1206,7 +1206,7 @@ PODS:
     - ExpoModulesCore
   - EXNotifications (0.32.16):
     - ExpoModulesCore
-  - Expo (54.0.32):
+  - Expo (54.0.33):
     - boost
     - DoubleConversion
     - ExpoModulesCore
@@ -5043,7 +5043,7 @@ SPEC CHECKSUMS:
   EXApplication: 1e98d4b1dccdf30627f92917f4b2c5a53c330e5f
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
   EXNotifications: 9eec98712cc814ceff916d876cb53859003b0597
-  Expo: d250c5bf72fce6dbace5d2e7470f522a3e80810d
+  Expo: ec20d60a9ba93352323b8f773c0e59bc7aa1c492
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
   ExpoAudio: e4cfe3a2f3317b8487460685385a9867a07fb4fb
   ExpoBattery: 01773ee7ce17cf970c98bc35f85f13dc985336b7
