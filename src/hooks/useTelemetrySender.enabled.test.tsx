@@ -1,5 +1,6 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import * as Battery from 'expo-battery';
 import { Provider, useAtomValue } from 'jotai';
 import { useCurrentLine } from '~/hooks/useCurrentLine';
 import { useCurrentStation } from '~/hooks/useCurrentStation';
@@ -11,6 +12,16 @@ import stationState from '~/store/atoms/station';
 const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
+jest.mock('expo-battery', () => ({
+  BatteryState: {
+    UNKNOWN: 0,
+    UNPLUGGED: 1,
+    CHARGING: 2,
+    FULL: 3,
+  },
+  getBatteryLevelAsync: jest.fn(),
+  getBatteryStateAsync: jest.fn(),
+}));
 jest.mock('expo-network', () => ({
   useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
   NetworkStateType: { WIFI: 'WIFI' },
@@ -74,6 +85,8 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 let mockFetch: jest.Mock;
+const mockGetBatteryLevelAsync = Battery.getBatteryLevelAsync as jest.Mock;
+const mockGetBatteryStateAsync = Battery.getBatteryStateAsync as jest.Mock;
 
 describe('useTelemetrySender', () => {
   beforeEach(() => {
@@ -102,6 +115,8 @@ describe('useTelemetrySender', () => {
     (useCurrentStation as jest.Mock).mockReturnValue({ id: 1130224 });
     (useIsPassing as jest.Mock).mockReturnValue(false);
     (useTelemetryEnabled as jest.Mock).mockReturnValue(true);
+    mockGetBatteryLevelAsync.mockResolvedValue(0.5);
+    mockGetBatteryStateAsync.mockResolvedValue(Battery.BatteryState.CHARGING);
 
     jest.useFakeTimers();
   });
@@ -301,6 +316,27 @@ describe('useTelemetrySender', () => {
           (call: any[]) => call[0] === 'https://example.com/api/log'
         );
         expect(logCalls.length).toBe(2);
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test('should send location payload with null battery level when battery API returns -1', async () => {
+    mockGetBatteryLevelAsync.mockResolvedValueOnce(-1);
+
+    renderHook(
+      () => useTelemetrySender(true, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await waitFor(
+      () => {
+        const locationCall = mockFetch.mock.calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/location';
+        });
+        expect(locationCall).toBeDefined();
+        const body = JSON.parse(locationCall[1].body);
+        expect(body.batteryLevel).toBeNull();
       },
       { timeout: 2000 }
     );
