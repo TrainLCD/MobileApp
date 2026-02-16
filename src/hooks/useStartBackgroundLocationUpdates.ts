@@ -29,7 +29,7 @@ export const useStartBackgroundLocationUpdates = () => {
           foregroundService: {
             notificationTitle: translate('bgAlertTitle'),
             notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: true,
+            killServiceOnDestroy: false,
           },
         });
       } catch (error) {
