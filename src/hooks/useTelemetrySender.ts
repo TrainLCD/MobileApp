@@ -175,7 +175,12 @@ export const useTelemetrySender = (
     let batteryLevel: number | null = null;
     let batteryState: Battery.BatteryState | null = null;
     try {
-      batteryLevel = await Battery.getBatteryLevelAsync();
+      const batteryLevelRaw = await Battery.getBatteryLevelAsync();
+      if (batteryLevelRaw === -1) {
+        batteryLevel = null;
+      } else {
+        batteryLevel = batteryLevelRaw;
+      }
       batteryState = await Battery.getBatteryStateAsync();
     } catch {
       batteryLevel = null;

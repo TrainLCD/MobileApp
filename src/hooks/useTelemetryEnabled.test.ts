@@ -21,13 +21,9 @@ describe('useTelemetryEnabled', () => {
     typeof useAtomValue
   >;
 
-  const setAtomValues = ({
-    telemetryEnabled = true,
-    autoModeEnabled = false,
-  } = {}) => {
+  const setAtomValues = ({ telemetryEnabled = true } = {}) => {
     mockUseAtomValue.mockReset();
     mockUseAtomValue.mockImplementationOnce(() => ({ telemetryEnabled }));
-    mockUseAtomValue.mockImplementationOnce(() => ({ autoModeEnabled }));
   };
 
   beforeEach(() => {
@@ -55,15 +51,7 @@ describe('useTelemetryEnabled', () => {
     expect(result.current).toBe(false);
   });
 
-  it('自動運転モード時は false を返す', () => {
-    setAtomValues({ autoModeEnabled: true });
-
-    const { result } = renderHook(() => useTelemetryEnabled());
-
-    expect(result.current).toBe(false);
-  });
-
-  it('ビルド・ユーザー設定が有効で自動運転モードでなければ true を返す', () => {
+  it('ビルド・ユーザー設定が有効なら true を返す', () => {
     const { result } = renderHook(() => useTelemetryEnabled());
 
     expect(result.current).toBe(true);
