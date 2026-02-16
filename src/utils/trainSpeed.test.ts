@@ -3,7 +3,7 @@ import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 
 describe('generateTrainSpeedProfile', () => {
   afterEach(() => {
-    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   it('returns a non-empty array with only non-negative speeds', () => {
