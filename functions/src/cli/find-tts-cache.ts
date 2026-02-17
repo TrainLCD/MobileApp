@@ -60,12 +60,24 @@ function parseArgs(argv: string[]): CliArgs | null {
       case '--delete':
         deleteMode = true;
         break;
-      case '--bucket':
-        bucket = args[++i];
+      case '--bucket': {
+        const value = args[++i];
+        if (!value || value.startsWith('--')) {
+          console.error('Error: --bucket には値の指定が必要です');
+          process.exit(1);
+        }
+        bucket = value;
         break;
-      case '--project':
-        projectId = args[++i];
+      }
+      case '--project': {
+        const value = args[++i];
+        if (!value || value.startsWith('--')) {
+          console.error('Error: --project には値の指定が必要です');
+          process.exit(1);
+        }
+        projectId = value;
         break;
+      }
       default:
         searchTerm = args[i];
         break;
@@ -197,14 +209,20 @@ async function main(): Promise<void> {
     ]);
 
     const labels = ['Firestore', 'Storage (JA)', 'Storage (EN)'];
+    let hasFailure = false;
     for (let i = 0; i < deleteResults.length; i++) {
       const result = deleteResults[i];
       if (result.status === 'rejected') {
         console.warn(`  ${labels[i]} の削除に失敗: ${result.reason}`);
+        hasFailure = true;
       }
     }
 
-    console.log(`  削除完了: ${id}`);
+    if (hasFailure) {
+      console.log(`  削除完了（部分失敗）: ${id}`);
+    } else {
+      console.log(`  削除完了: ${id}`);
+    }
   }
 
   console.log(`\n${results.length}件の削除が完了しました。`);
@@ -223,9 +241,7 @@ function confirm(prompt: string): Promise<boolean> {
   });
 }
 
-main()
-  .catch((err: Error) => {
-    console.error('Error:', err.message);
-    process.exit(1);
-  })
-  .finally(() => process.exit(0));
+main().catch((err: Error) => {
+  console.error('Error:', err.message);
+  process.exitCode = 1;
+});
