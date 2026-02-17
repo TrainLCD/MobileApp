@@ -688,6 +688,52 @@ describe('useSimulationMode', () => {
       expect(callArgs.distance).toBeGreaterThan(0);
     });
 
+    it('駅リストが非同期に変わったら速度プロファイルを再計算する', () => {
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      // 初回レンダー: 空の駅リスト
+      (useAtomValue as jest.Mock)
+        .mockReturnValueOnce({
+          station: null,
+          stations: [],
+          selectedDirection: 'INBOUND',
+        })
+        .mockReturnValueOnce({ autoModeEnabled: true });
+
+      const { rerender } = renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 駅が空なのでプロファイル生成は呼ばれない
+      expect(generateSpy).not.toHaveBeenCalled();
+
+      // 再レンダー: 駅リストが到着
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      (useAtomValue as jest.Mock)
+        .mockReturnValueOnce({
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        })
+        .mockReturnValueOnce({ autoModeEnabled: true });
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      rerender({});
+
+      // 駅が到着したのでプロファイル生成が呼ばれる
+      expect(generateSpy).toHaveBeenCalled();
+    });
+
     it('新幹線の路線タイプでは最高速度が適用される', () => {
       setupAtomMocks(
         { stations: [], selectedDirection: 'OUTBOUND' },

@@ -138,7 +138,6 @@ export const useSimulationMode = (): void => {
     stopLocationUpdates();
   }, [enabled]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: プロファイル生成は初回のみ
   useEffect(() => {
     const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
       const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
@@ -214,7 +213,13 @@ export const useSimulationMode = (): void => {
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
     dwellPendingRef.current = false;
-  }, []);
+  }, [
+    maybeRevsersedStations,
+    isBus,
+    currentLineType,
+    maxSpeed,
+    resolveStartIndex,
+  ]);
 
   const step = useCallback(
     (speed: number) => {
