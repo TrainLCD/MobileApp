@@ -99,7 +99,7 @@ export const useHeaderStateText = ({
   ) {
     return {
       stateText: stateText.replaceAll('\n', ' '),
-      stateTextRight: stateTextRight,
+      stateTextRight,
     };
   }
 
