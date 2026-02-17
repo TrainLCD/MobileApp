@@ -95,7 +95,8 @@ export const useHeaderStateText = ({
   if (
     currentTheme === APP_THEME.YAMANOTE ||
     currentTheme === APP_THEME.JL ||
-    currentTheme === APP_THEME.JO
+    currentTheme === APP_THEME.JO ||
+    currentTheme === APP_THEME.JR_WEST
   ) {
     return {
       stateText: stateText.replaceAll('\n', ' '),
