@@ -7,9 +7,9 @@ import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
-import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
+import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
 import { isDevApp } from '../utils/isDevApp';
 import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
@@ -69,14 +69,11 @@ export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
-  const { autoModeEnabled } = useAtomValue(navigationState);
   const currentLine = useCurrentLine();
 
   const firstSpeechRef = useRef(true);
   // 行先選択直後の初回TTSを抑止し、発車後（arrived=false）でのみ解放する
   const suppressFirstSpeechUntilDepartureRef = useRef(false);
-  // オートモード初期化中にarrived=falseで誤ってsuppressが解除されるのを防ぐフラグ
-  const suppressInitialCheckDoneRef = useRef(false);
   const prevSelectedBoundIdRef = useRef<string | number | null>(null);
   // 初回放送後にfirstSpeechRef変更で生じるテキスト変化を無視するフラグ
   const suppressPostFirstSpeechRef = useRef(false);
@@ -498,7 +495,6 @@ export const useTTS = (): void => {
     // 初回かつ行先変更時のみ、停車中の初回読み上げをスキップ対象にする
     if (firstSpeechRef.current && hasSelectedBoundChanged && selectedBound) {
       suppressFirstSpeechUntilDepartureRef.current = true;
-      suppressInitialCheckDoneRef.current = false;
     }
 
     prevSelectedBoundIdRef.current = currentSelectedBoundId;
@@ -513,29 +509,15 @@ export const useTTS = (): void => {
       return;
     }
 
-    // 初回放送の再生開始後にfirstSpeechRefがfalseになることで
-    // テキストが変化するが、同じ状態の通常放送を続けて再生する必要はない
-    if (suppressPostFirstSpeechRef.current) {
-      suppressPostFirstSpeechRef.current = false;
-      return;
-    }
-
     if (
-      firstSpeechRef.current &&
-      suppressFirstSpeechUntilDepartureRef.current
+      computeSuppressionDecision({
+        suppressPostFirstSpeechRef,
+        firstSpeechRef,
+        suppressFirstSpeechUntilDepartureRef,
+        arrived,
+      })
     ) {
-      // 停車中は初回TTSを抑止し、発車後の更新で初回を再開する
-      if (arrived) {
-        suppressInitialCheckDoneRef.current = true;
-        return;
-      }
-      // オートモード時は初期化中にarrived=falseの場合があるため、
-      // 初回のarrived=falseチェックはスキップして誤解除を防ぐ
-      if (autoModeEnabled && !suppressInitialCheckDoneRef.current) {
-        suppressInitialCheckDoneRef.current = true;
-        return;
-      }
-      suppressFirstSpeechUntilDepartureRef.current = false;
+      return;
     }
 
     // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
@@ -554,15 +536,7 @@ export const useTTS = (): void => {
         console.error(err);
       }
     })();
-  }, [
-    arrived,
-    autoModeEnabled,
-    enabled,
-    prevTextEn,
-    prevTextJa,
-    textEn,
-    textJa,
-  ]);
+  }, [arrived, enabled, prevTextEn, prevTextJa, textEn, textJa]);
 
   useEffect(() => {
     return () => {
