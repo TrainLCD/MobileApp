@@ -78,6 +78,8 @@ export const useTTS = (): void => {
   // オートモード初期化中にarrived=falseで誤ってsuppressが解除されるのを防ぐフラグ
   const suppressInitialCheckDoneRef = useRef(false);
   const prevSelectedBoundIdRef = useRef<string | number | null>(null);
+  // 初回放送後にfirstSpeechRef変更で生じるテキスト変化を無視するフラグ
+  const suppressPostFirstSpeechRef = useRef(false);
   const playingRef = useRef(false);
   const isLoadableRef = useRef(true);
   const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
@@ -148,6 +150,7 @@ export const useTTS = (): void => {
       }
 
       firstSpeechRef.current = false;
+      suppressPostFirstSpeechRef.current = true;
 
       // 既存のリスナーとプレイヤーをクリーンアップ
       try {
@@ -507,6 +510,13 @@ export const useTTS = (): void => {
     }
 
     if (!textJa || !textEn) {
+      return;
+    }
+
+    // 初回放送の再生開始後にfirstSpeechRefがfalseになることで
+    // テキストが変化するが、同じ状態の通常放送を続けて再生する必要はない
+    if (suppressPostFirstSpeechRef.current) {
+      suppressPostFirstSpeechRef.current = false;
       return;
     }
 
