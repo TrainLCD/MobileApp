@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { Provider, useAtomValue } from 'jotai';
@@ -125,6 +124,7 @@ const setupAtomMocks = (
   },
   navigationStateValue: { autoModeEnabled: boolean }
 ) => {
+  // biome-ignore lint/suspicious/noExplicitAny: モック用コールバックの引数型が不明
   (useAtomValue as jest.Mock).mockImplementation((atom: any) => {
     if (atom.toString() === 'stationState') {
       return {
@@ -148,6 +148,7 @@ describe('useSimulationMode', () => {
     jest.spyOn(useCurrentLineModule, 'useCurrentLine').mockReturnValue({
       id: YAMANOTE_LINE_ID,
       lineType: LineType.Normal,
+      // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
     } as any);
 
     jest
@@ -760,6 +761,7 @@ describe('useSimulationMode', () => {
 
       jest
         .spyOn(useCurrentLineModule, 'useCurrentLine')
+        // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
         .mockReturnValue({ id: 1, lineType: LineType.BulletTrain } as any);
 
       const generateSpy = jest.spyOn(
@@ -794,6 +796,7 @@ describe('useSimulationMode', () => {
         .mockReturnValue({
           id: 1,
           kind: TrainTypeKind.LimitedExpress,
+          // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
         } as any);
 
       const generateSpy = jest.spyOn(
