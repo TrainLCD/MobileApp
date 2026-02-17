@@ -16,7 +16,7 @@ import {
   TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
 } from '~/constants';
 import { store } from '~/store';
-import { locationAtom, setLocation } from '~/store/atoms/location';
+import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import stationState from '../store/atoms/station';
@@ -25,11 +25,13 @@ import getIsPass from '../utils/isPass';
 import { isBusLine } from '../utils/line';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
-import { useInRadiusStation } from './useInRadiusStation';
 
 export const useSimulationMode = (): void => {
-  const { stations: rawStations, selectedDirection } =
-    useAtomValue(stationState);
+  const {
+    station: currentStation,
+    stations: rawStations,
+    selectedDirection,
+  } = useAtomValue(stationState);
   const { autoModeEnabled } = useAtomValue(navigationState);
 
   const currentLine = useCurrentLine();
@@ -73,8 +75,6 @@ export const useSimulationMode = (): void => {
     return defaultMaxSpeed;
   }, [isBus, currentLineType, trainType]);
 
-  const station = useInRadiusStation(maxSpeed / 2);
-
   const maybeRevsersedStations = useMemo(
     () =>
       selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
@@ -84,6 +84,43 @@ export const useSimulationMode = (): void => {
   const enabled = useMemo(() => {
     return autoModeEnabled;
   }, [autoModeEnabled]);
+
+  const resolveStartIndex = useCallback((): number => {
+    const directIndex = maybeRevsersedStations.findIndex(
+      (s) => s.id === currentStation?.id
+    );
+    if (directIndex !== -1) {
+      return directIndex;
+    }
+
+    // 対象路線に含まれない駅の場合、座標から路線上の最寄り停車駅を探す
+    if (currentStation?.latitude != null && currentStation?.longitude != null) {
+      let minDistance = Number.POSITIVE_INFINITY;
+      let nearestIndex = 0;
+      for (let idx = 0; idx < maybeRevsersedStations.length; idx++) {
+        const s = maybeRevsersedStations[idx];
+        if (getIsPass(s)) {
+          continue;
+        }
+        if (s.latitude != null && s.longitude != null) {
+          const d = getDistance(
+            {
+              latitude: currentStation.latitude,
+              longitude: currentStation.longitude,
+            },
+            { latitude: s.latitude, longitude: s.longitude }
+          );
+          if (d < minDistance) {
+            minDistance = d;
+            nearestIndex = idx;
+          }
+        }
+      }
+      return nearestIndex;
+    }
+
+    return 0;
+  }, [currentStation, maybeRevsersedStations]);
 
   useEffect(() => {
     if (!enabled) {
@@ -172,9 +209,7 @@ export const useSimulationMode = (): void => {
       return correctedProfile;
     });
 
-    segmentIndexRef.current = maybeRevsersedStations.findIndex(
-      (s) => s.id === station?.id
-    );
+    segmentIndexRef.current = resolveStartIndex();
     speedProfilesRef.current = speedProfiles;
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
@@ -227,28 +262,24 @@ export const useSimulationMode = (): void => {
         segmentIndexRef.current = 0;
         segmentProgressDistanceRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
-        const prev = store.get(locationAtom);
-        if (
-          prev &&
-          firstStation?.latitude != null &&
-          firstStation?.longitude != null
-        ) {
-          setLocation({
-            ...prev,
+        if (firstStation?.latitude != null && firstStation?.longitude != null) {
+          store.set(locationAtom, {
+            timestamp: Date.now(),
             coords: {
-              ...prev.coords,
               latitude: firstStation.latitude,
               longitude: firstStation.longitude,
+              accuracy: 0,
+              altitude: null,
+              altitudeAccuracy: null,
+              speed: 0,
+              heading: null,
             },
-            timestamp: Date.now(),
           });
         }
         return;
       }
 
-      const prev = store.get(locationAtom);
       if (
-        !prev ||
         nextStopStation.latitude == null ||
         nextStopStation.longitude == null
       ) {
@@ -365,7 +396,7 @@ export const useSimulationMode = (): void => {
         }
       }
 
-      setLocation({
+      store.set(locationAtom, {
         timestamp: Date.now(),
         coords: {
           latitude: targetLatitude,
@@ -383,14 +414,16 @@ export const useSimulationMode = (): void => {
   );
 
   useEffect(() => {
-    if (
-      enabled &&
-      stations.length > 0 &&
-      station &&
-      station.latitude != null &&
-      station.longitude != null
-    ) {
-      setLocation({
+    if (!enabled || stations.length === 0) {
+      return;
+    }
+
+    // アプリが認識している現在駅から開始位置を決定
+    const targetIndex = resolveStartIndex();
+    const targetStation = maybeRevsersedStations[targetIndex];
+
+    if (targetStation?.latitude != null && targetStation?.longitude != null) {
+      store.set(locationAtom, {
         timestamp: Date.now(),
         coords: {
           accuracy: null,
@@ -398,12 +431,15 @@ export const useSimulationMode = (): void => {
           altitudeAccuracy: null,
           speed: null,
           heading: null,
-          latitude: station.latitude,
-          longitude: station.longitude,
+          latitude: targetStation.latitude,
+          longitude: targetStation.longitude,
         },
       });
+      segmentIndexRef.current = targetIndex;
+      childIndexRef.current = 0;
+      segmentProgressDistanceRef.current = 0;
     }
-  }, [enabled, station, stations.length]);
+  }, [enabled, stations.length, maybeRevsersedStations, resolveStartIndex]);
 
   useEffect(() => {
     if (!enabled || !selectedDirection) {
@@ -418,7 +454,7 @@ export const useSimulationMode = (): void => {
       if (dwellPendingRef.current) {
         const prev = store.get(locationAtom);
         if (prev) {
-          setLocation({
+          store.set(locationAtom, {
             timestamp: Date.now(),
             coords: {
               ...prev.coords,
@@ -430,6 +466,25 @@ export const useSimulationMode = (): void => {
         const nextSegmentIndex = speedProfilesRef.current.findIndex(
           (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
         );
+        if (nextSegmentIndex === -1) {
+          const firstStation = maybeRevsersedStations[0];
+          if (
+            prev &&
+            firstStation?.latitude != null &&
+            firstStation?.longitude != null
+          ) {
+            store.set(locationAtom, {
+              timestamp: Date.now(),
+              coords: {
+                ...prev.coords,
+                latitude: firstStation.latitude,
+                longitude: firstStation.longitude,
+                speed: 0,
+                heading: null,
+              },
+            });
+          }
+        }
         segmentIndexRef.current =
           nextSegmentIndex === -1 ? 0 : nextSegmentIndex;
         childIndexRef.current = 0;
@@ -452,5 +507,5 @@ export const useSimulationMode = (): void => {
     return () => {
       clearInterval(intervalId);
     };
-  }, [enabled, selectedDirection, step]);
+  }, [enabled, maybeRevsersedStations, selectedDirection, step]);
 };
