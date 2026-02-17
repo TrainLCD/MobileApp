@@ -89,6 +89,25 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       /Fukiage/gi,
       '<phoneme alphabet="ipa" ph="ɸɯkʲiaɡe">ふきあげ</phoneme>'
     )
+    // 布施
+    .replace(/\bFuse\b/gi, '<phoneme alphabet="ipa" ph="ɸɯse">ふせ</phoneme>')
+    // 稲毛海岸
+    .replace(
+      /\bInagekaigan\b/gi,
+      '<phoneme alphabet="ipa" ph="inaɡekaiɡaɴ">いなげかいがん</phoneme>'
+    )
+    // 稲毛
+    .replace(
+      /\bInage\b/gi,
+      '<phoneme alphabet="ipa" ph="inaɡe">いなげ</phoneme>'
+    )
+    // 喜連瓜破
+    .replace(
+      /\bKire-Uriwari\b/gi,
+      '<phoneme alphabet="ipa" ph="kiɾeɯɾiwaɾi">きれうりわり</phoneme>'
+    )
+    // 八尾
+    .replace(/\bYao\b/gi, '<phoneme alphabet="ipa" ph="jao">やお</phoneme>')
     // 新橋
     .replace(
       /Shimbashi/gi,

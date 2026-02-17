@@ -1,3 +1,4 @@
+import { getIdToken } from '@react-native-firebase/auth';
 import { fetch } from 'expo/fetch';
 import type { AudioPlayer } from 'expo-audio';
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
@@ -388,7 +389,7 @@ export const useTTS = (): void => {
       };
 
       try {
-        const idToken = await user?.getIdToken();
+        const idToken = user && (await getIdToken(user));
         if (!idToken) {
           console.warn('[useTTS] idToken is missing, skipping fetch');
           return;
