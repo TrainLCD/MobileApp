@@ -316,6 +316,42 @@ describe('useSimulationMode', () => {
       expect(initialSetCall.coords.longitude).toBe(stations[1].longitude);
     });
 
+    it('currentStationが通過駅の場合、座標から最寄り停車駅を選ぶ', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockPassStation(2, 2, 35.699, 139.786), // 通過駅（currentStation、station 3に近い座標）
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[1], // 通過駅を現在駅として設定
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.699, 139.786)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      // 通過駅(id=2)はdirectIndexで見つかるがgetIsPassでスキップされ、
+      // 座標フォールバックで最寄り停車駅のstations[2](id=3)が選ばれる
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[2].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[2].longitude);
+    });
+
     it('フォールバックで通過駅をスキップして最寄り停車駅を選ぶ', () => {
       const stations = [
         mockStation(1, 1, 35.681, 139.767),

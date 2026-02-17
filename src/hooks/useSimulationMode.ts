@@ -89,7 +89,7 @@ export const useSimulationMode = (): void => {
     const directIndex = maybeRevsersedStations.findIndex(
       (s) => s.id === currentStation?.id
     );
-    if (directIndex !== -1) {
+    if (directIndex !== -1 && !getIsPass(maybeRevsersedStations[directIndex])) {
       return directIndex;
     }
 
