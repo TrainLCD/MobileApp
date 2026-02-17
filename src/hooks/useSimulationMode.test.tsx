@@ -9,7 +9,11 @@ import {
   StopCondition,
   TrainTypeKind,
 } from '~/@types/graphql';
-import { YAMANOTE_LINE_ID } from '~/constants';
+import {
+  LINE_TYPE_MAX_SPEEDS_IN_M_S,
+  TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
+  YAMANOTE_LINE_ID,
+} from '~/constants';
 import * as useCurrentLineModule from '~/hooks/useCurrentLine';
 import * as useCurrentTrainTypeModule from '~/hooks/useCurrentTrainType';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
@@ -20,6 +24,16 @@ import * as trainSpeedModule from '~/utils/trainSpeed';
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
+}));
+
+jest.mock('~/store/atoms/station', () => ({
+  __esModule: true,
+  default: { toString: () => 'stationState' },
+}));
+
+jest.mock('~/store/atoms/navigation', () => ({
+  __esModule: true,
+  default: { toString: () => 'navigationState' },
 }));
 
 jest.mock('~/store', () => ({
@@ -111,20 +125,19 @@ const setupAtomMocks = (
   },
   navigationStateValue: { autoModeEnabled: boolean }
 ) => {
-  (useAtomValue as jest.Mock).mockImplementation((_atom: any) => {
-    // atomの参照ではなくコール順で判定
-    // useSimulationModeは stationState → navigationState の順に呼ぶ
+  (useAtomValue as jest.Mock).mockImplementation((atom: any) => {
+    if (atom.toString() === 'stationState') {
+      return {
+        station: stationStateValue.station ?? null,
+        stations: stationStateValue.stations,
+        selectedDirection: stationStateValue.selectedDirection,
+      };
+    }
+    if (atom.toString() === 'navigationState') {
+      return navigationStateValue;
+    }
     return undefined;
   });
-
-  // useAtomValueは2回呼ばれる: stationState, navigationState
-  (useAtomValue as jest.Mock)
-    .mockReturnValueOnce({
-      station: stationStateValue.station ?? null,
-      stations: stationStateValue.stations,
-      selectedDirection: stationStateValue.selectedDirection,
-    })
-    .mockReturnValueOnce(navigationStateValue);
 };
 
 describe('useSimulationMode', () => {
@@ -735,8 +748,13 @@ describe('useSimulationMode', () => {
     });
 
     it('新幹線の路線タイプでは最高速度が適用される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
       setupAtomMocks(
-        { stations: [], selectedDirection: 'OUTBOUND' },
+        { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
         { autoModeEnabled: false }
       );
 
@@ -744,16 +762,30 @@ describe('useSimulationMode', () => {
         .spyOn(useCurrentLineModule, 'useCurrentLine')
         .mockReturnValue({ id: 1, lineType: LineType.BulletTrain } as any);
 
-      const { result } = renderHook(() => useSimulationMode(), {
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
 
-      expect(result).toBeTruthy();
+      expect(generateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          maxSpeed: LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain],
+        })
+      );
     });
 
     it('列車種別の最高速度が適用される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
       setupAtomMocks(
-        { stations: [], selectedDirection: 'OUTBOUND' },
+        { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
         { autoModeEnabled: false }
       );
 
@@ -764,11 +796,21 @@ describe('useSimulationMode', () => {
           kind: TrainTypeKind.LimitedExpress,
         } as any);
 
-      const { result } = renderHook(() => useSimulationMode(), {
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
 
-      expect(result).toBeTruthy();
+      expect(generateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          maxSpeed:
+            TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[TrainTypeKind.LimitedExpress],
+        })
+      );
     });
   });
 });
