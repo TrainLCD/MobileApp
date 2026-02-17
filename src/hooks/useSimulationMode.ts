@@ -34,6 +34,9 @@ export const useSimulationMode = (): void => {
   } = useAtomValue(stationState);
   const { autoModeEnabled } = useAtomValue(navigationState);
 
+  const currentStationRef = useRef(currentStation);
+  currentStationRef.current = currentStation;
+
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
 
@@ -86,15 +89,16 @@ export const useSimulationMode = (): void => {
   }, [autoModeEnabled]);
 
   const resolveStartIndex = useCallback((): number => {
+    const cs = currentStationRef.current;
     const directIndex = maybeRevsersedStations.findIndex(
-      (s) => s.id === currentStation?.id
+      (s) => s.id === cs?.id
     );
     if (directIndex !== -1 && !getIsPass(maybeRevsersedStations[directIndex])) {
       return directIndex;
     }
 
     // 対象路線に含まれない駅の場合、座標から路線上の最寄り停車駅を探す
-    if (currentStation?.latitude != null && currentStation?.longitude != null) {
+    if (cs?.latitude != null && cs?.longitude != null) {
       let minDistance = Number.POSITIVE_INFINITY;
       let nearestIndex = 0;
       for (let idx = 0; idx < maybeRevsersedStations.length; idx++) {
@@ -105,8 +109,8 @@ export const useSimulationMode = (): void => {
         if (s.latitude != null && s.longitude != null) {
           const d = getDistance(
             {
-              latitude: currentStation.latitude,
-              longitude: currentStation.longitude,
+              latitude: cs.latitude,
+              longitude: cs.longitude,
             },
             { latitude: s.latitude, longitude: s.longitude }
           );
@@ -120,7 +124,7 @@ export const useSimulationMode = (): void => {
     }
 
     return 0;
-  }, [currentStation, maybeRevsersedStations]);
+  }, [maybeRevsersedStations]);
 
   useEffect(() => {
     if (!enabled) {
