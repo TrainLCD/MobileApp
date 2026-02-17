@@ -465,6 +465,52 @@ describe('useSimulationMode', () => {
       );
     });
 
+    it('終端駅到達後、先頭に戻ったときに速度プロファイルを最初から再生する', () => {
+      // 駅が1つだけ → nextStopStationがない → 即座に先頭リセット
+      const stations = [mockStation(1, 1, 35.681, 139.767)];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      // step内でstore.getが呼ばれる
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      // 速度プロファイルは空（駅が1つで次の駅がない）なので
+      // interval tick 1: speeds=[], i(0)>=0 → dwellPending=true
+      // interval tick 2: dwell handler → nextSegment=-1 → 先頭に戻る
+      // interval tick 3: speeds=[] again → dwellPending=true
+      // 先頭に戻る際にchildIndexがリセットされていれば、
+      // 毎回i=0から開始される（リセットされていないとiが進み続ける）
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 6秒分進める（複数回のリセットサイクルを経る）
+      jest.advanceTimersByTime(6000);
+
+      // 先頭駅の位置が繰り返しセットされることを確認（リセットが正しく機能している）
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+
+      const resetCalls = locationSetCalls.filter(
+        (loc) =>
+          loc?.coords?.latitude === stations[0].latitude &&
+          loc?.coords?.longitude === stations[0].longitude &&
+          loc?.coords?.speed === 0
+      );
+      // 初期化 + dwellハンドラでの複数回リセット
+      expect(resetCalls.length).toBeGreaterThanOrEqual(2);
+    });
+
     it('速度プロファイルの終端に達したら次のセグメントに移動する', () => {
       const stations = [
         mockStation(1, 1, 35.681, 139.767),
