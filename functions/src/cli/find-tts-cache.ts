@@ -149,7 +149,7 @@ async function main(): Promise<void> {
 
   for (const doc of results) {
     const data = doc.data();
-    console.log(`ID:         ${data.id}`);
+    console.log(`ID:         ${doc.id}`);
     console.log(`SSML (JA):  ${data.ssmlJa}`);
     console.log(`SSML (EN):  ${data.ssmlEn}`);
     console.log(`Path (JA):  ${data.pathJa}`);
@@ -184,7 +184,7 @@ async function main(): Promise<void> {
 
   for (const doc of results) {
     const data = doc.data();
-    const id: string = data.id;
+    const id: string = doc.id;
     const storagePathJa = `caches/tts/ja/${id}.mp3`;
     const storagePathEn = `caches/tts/en/${id}.mp3`;
 
