@@ -260,6 +260,7 @@ export const useSimulationMode = (): void => {
 
       if (!nextStopStation) {
         segmentIndexRef.current = 0;
+        childIndexRef.current = 0;
         segmentProgressDistanceRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         if (firstStation?.latitude != null && firstStation?.longitude != null) {
