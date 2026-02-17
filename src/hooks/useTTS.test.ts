@@ -50,10 +50,12 @@ jest.mock('./usePrevious', () => ({
   usePrevious: jest.fn(() => ['', '']),
 }));
 
+jest.mock('@react-native-firebase/auth', () => ({
+  getIdToken: jest.fn(async () => 'token'),
+}));
+
 jest.mock('./useCachedAnonymousUser', () => ({
-  useCachedInitAnonymousUser: jest.fn(() => ({
-    getIdToken: jest.fn(async () => 'token'),
-  })),
+  useCachedInitAnonymousUser: jest.fn(() => ({ uid: 'test-user' })),
 }));
 
 const createMockPlayer = () => {
