@@ -1,5 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import { APP_THEME } from '~/models/Theme';
+import { themeAtom } from '~/store/atoms/theme';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -23,6 +25,7 @@ export const useHeaderStateText = ({
 }: UseHeaderStateTextOptions): UseHeaderStateTextResult => {
   const { headerState } = useAtomValue(navigationState);
   const { selectedBound } = useAtomValue(stationState);
+  const currentTheme = useAtomValue(themeAtom);
 
   const stateText = useMemo<string>(() => {
     if (firstStop && selectedBound) {
@@ -88,6 +91,17 @@ export const useHeaderStateText = ({
     }
     return '';
   }, [firstStop, selectedBound, headerLangState]);
+
+  if (
+    currentTheme === APP_THEME.YAMANOTE ||
+    currentTheme === APP_THEME.JL ||
+    currentTheme === APP_THEME.JO
+  ) {
+    return {
+      stateText: stateText.replaceAll('\n', ' '),
+      stateTextRight: stateTextRight,
+    };
+  }
 
   return { stateText, stateTextRight };
 };
