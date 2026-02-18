@@ -210,8 +210,12 @@ export const useSimulationMode = (): void => {
         });
 
         const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
-        const distanceRatio = distanceForNextStation / profileDistance;
-        const correctedProfile = speedProfile.map((v) => v * distanceRatio);
+        const correctedProfile =
+          profileDistance === 0
+            ? speedProfile.map(() => 0)
+            : speedProfile.map(
+                (v) => v * (distanceForNextStation / profileDistance)
+              );
 
         return correctedProfile;
       }
