@@ -816,4 +816,133 @@ describe('useSimulationMode', () => {
       );
     });
   });
+
+  describe('重複する駅IDの処理', () => {
+    /**
+     * 駅リスト構成:
+     *   index 0: A (id=10)
+     *   index 1: B (id=20) ← 1回目
+     *   index 2: C (id=30)
+     *   index 3: D (id=20, groupId=60) ← 同じid=20の2回目
+     *   index 4: E (id=50)
+     *
+     * dropEitherJunctionStation は隣接groupIdの重複のみ除去するため、
+     * 非隣接の同一IDは残る。
+     */
+    const duplicateIdStations = () => [
+      mockStation(10, 10, 35.0, 139.0),
+      mockStation(20, 20, 35.05, 139.05),
+      mockStation(30, 30, 35.1, 139.1),
+      mockStation(20, 60, 35.2, 139.2),
+      mockStation(50, 50, 35.25, 139.25),
+    ];
+
+    it('重複する駅IDがある場合に速度プロファイルが正しい距離で生成される', () => {
+      const stations = duplicateIdStations();
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 4つの停車駅セグメント: A→B, B→C, C→D, D→E
+      expect(generateSpy).toHaveBeenCalledTimes(4);
+
+      // D→E (4番目) の距離がD→E直線距離と同程度（約7km）であること
+      // バグ時は findIndex(id=20) が B(index=1) を返すため
+      // betweenNextStation に C,D を含むジグザグ経路（約35km）になる
+      const deDistance = generateSpy.mock.calls[3][0].distance;
+      expect(deDistance).toBeLessThan(10000);
+      expect(deDistance).toBeGreaterThan(3000);
+    });
+
+    it('重複する駅IDがある場合でもシミュレーションが正しく前進する', () => {
+      const stations = duplicateIdStations();
+
+      setupAtomMocks(
+        {
+          station: stations[2], // C(id=30)から開始
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue([2000]);
+
+      (store.get as jest.Mock).mockReturnValue(mockLocationObject(35.1, 139.1));
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 4秒分進める:
+      // tick 1: C→Dステップ (lat ≈ 35.2)
+      // tick 2: dwellPending
+      // tick 3: dwell処理 → D→Eセグメントへ移動
+      // tick 4: D→Eステップ (lat ≈ 35.25)
+      jest.advanceTimersByTime(4000);
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+
+      // 実際の移動を伴うstep呼び出し（speed > 0）を抽出
+      const steppingCalls = locationSetCalls.filter(
+        (loc) => typeof loc?.coords?.speed === 'number' && loc.coords.speed > 0
+      );
+
+      // C→D(tick1) と D→E(tick4) の2回、D以降の緯度(>= 35.15)に到達するはず
+      // バグ時は findIndex(id=20) が B を返すため D→Eステップが
+      // B→C区間(lat ≈ 35.05〜35.1)を通り、1回しか >= 35.15 にならない
+      const callsBeyondMidpoint = steppingCalls.filter(
+        (loc) => loc.coords.latitude >= 35.15
+      );
+      expect(callsBeyondMidpoint.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('重複IDの駅間に通過駅がある場合も正しいウェイポイントが使用される', () => {
+      const stations = [
+        mockStation(10, 10, 35.0, 139.0),
+        mockStation(20, 20, 35.05, 139.05),
+        mockStation(30, 30, 35.1, 139.1), // C
+        mockPassStation(40, 40, 35.1, 139.2), // 通過駅（東にオフセット）
+        mockStation(20, 60, 35.2, 139.1), // D (id=20, same as B)
+        mockStation(50, 50, 35.25, 139.15),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // C→D (3番目) の距離が通過駅経由の経路距離であること
+      // 直線 C(35.1,139.1)→D(35.2,139.1) ≈ 11km
+      // 経路 C→pass(35.1,139.2)→D ≈ 9km + 14km ≈ 23km
+      // バグ時は findIndex(id=20) が B(index=1) を返し、
+      // arr.slice(3, 1) が空配列となって通過駅ウェイポイントが失われる
+      const cdDistance = generateSpy.mock.calls[2][0].distance;
+      expect(cdDistance).toBeGreaterThan(15000);
+    });
+  });
 });
