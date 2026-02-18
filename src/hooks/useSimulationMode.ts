@@ -143,74 +143,79 @@ export const useSimulationMode = (): void => {
   }, [enabled]);
 
   useEffect(() => {
-    const speedProfiles = maybeRevsersedStations.map((cur, _, arr) => {
-      const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
+    const speedProfiles = maybeRevsersedStations.map(
+      (cur, curMapIndex, arr) => {
+        const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
 
-      const curIdx = stationsWithoutPass.indexOf(cur);
-      if (curIdx === -1) {
-        // 通過駅は速度プロファイル生成対象外
-        return [];
+        const curIdx = stationsWithoutPass.indexOf(cur);
+        if (curIdx === -1) {
+          // 通過駅は速度プロファイル生成対象外
+          return [];
+        }
+
+        const next = stationsWithoutPass[curIdx + 1];
+        if (!next) {
+          return [];
+        }
+
+        const stationIndex = curMapIndex;
+        const nextStationIndex = arr.indexOf(next);
+
+        const betweenNextStation = arr.slice(
+          stationIndex + 1,
+          nextStationIndex
+        );
+
+        if (
+          cur.latitude == null ||
+          cur.longitude == null ||
+          next.latitude == null ||
+          next.longitude == null
+        ) {
+          return [];
+        }
+
+        const points: GeolibInputCoordinates[] = [
+          {
+            latitude: cur.latitude as number,
+            longitude: cur.longitude as number,
+          },
+          ...betweenNextStation
+            .filter((s) => s.latitude != null && s.longitude != null)
+            .map((s) => ({
+              latitude: s.latitude as number,
+              longitude: s.longitude as number,
+            })),
+          {
+            latitude: next.latitude as number,
+            longitude: next.longitude as number,
+          },
+        ];
+
+        const distanceForNextStation = getPathLength(points);
+
+        const accel = isBus
+          ? BUS_MAX_ACCEL_IN_M_S
+          : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
+        const decel = isBus
+          ? BUS_MAX_DECEL_IN_M_S
+          : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
+
+        const speedProfile = generateTrainSpeedProfile({
+          distance: distanceForNextStation,
+          maxSpeed,
+          accel,
+          decel,
+          interval: 1,
+        });
+
+        const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
+        const distanceRatio = distanceForNextStation / profileDistance;
+        const correctedProfile = speedProfile.map((v) => v * distanceRatio);
+
+        return correctedProfile;
       }
-
-      const next = stationsWithoutPass[curIdx + 1];
-      if (!next) {
-        return [];
-      }
-
-      const stationIndex = arr.findIndex((s) => s.id === cur.id);
-      const nextStationIndex = arr.findIndex((s) => s.id === next.id);
-
-      const betweenNextStation = arr.slice(stationIndex + 1, nextStationIndex);
-
-      if (
-        cur.latitude == null ||
-        cur.longitude == null ||
-        next.latitude == null ||
-        next.longitude == null
-      ) {
-        return [];
-      }
-
-      const points: GeolibInputCoordinates[] = [
-        {
-          latitude: cur.latitude as number,
-          longitude: cur.longitude as number,
-        },
-        ...betweenNextStation
-          .filter((s) => s.latitude != null && s.longitude != null)
-          .map((s) => ({
-            latitude: s.latitude as number,
-            longitude: s.longitude as number,
-          })),
-        {
-          latitude: next.latitude as number,
-          longitude: next.longitude as number,
-        },
-      ];
-
-      const distanceForNextStation = getPathLength(points);
-
-      const accel = isBus
-        ? BUS_MAX_ACCEL_IN_M_S
-        : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
-      const decel = isBus
-        ? BUS_MAX_DECEL_IN_M_S
-        : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
-
-      const speedProfile = generateTrainSpeedProfile({
-        distance: distanceForNextStation,
-        maxSpeed,
-        accel,
-        decel,
-        interval: 1,
-      });
-
-      const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
-      const distanceRatio = distanceForNextStation / profileDistance;
-      const correctedProfile = speedProfile.map((v) => v * distanceRatio);
-
-      return correctedProfile;
-    });
+    );
 
     segmentIndexRef.current = resolveStartIndex();
     speedProfilesRef.current = speedProfiles;
@@ -252,18 +257,13 @@ export const useSimulationMode = (): void => {
 
       const currentSegmentStation =
         maybeRevsersedStations[normalizedSegmentIndex];
-      const currentSegmentStationIndex = maybeRevsersedStations.findIndex(
-        (s) => s.id === currentSegmentStation?.id
-      );
-      if (currentSegmentStationIndex < 0) {
-        segmentIndexRef.current = 0;
-        childIndexRef.current = 0;
-        segmentProgressDistanceRef.current = 0;
+      if (!currentSegmentStation) {
         return;
       }
+      const currentSegmentStationIndex = normalizedSegmentIndex;
 
-      const currentSegmentStopIndex = stationsWithoutPass.findIndex(
-        (s) => s.id === currentSegmentStation?.id
+      const currentSegmentStopIndex = stationsWithoutPass.indexOf(
+        currentSegmentStation
       );
       const nextStopStation = stationsWithoutPass[currentSegmentStopIndex + 1];
 
@@ -296,9 +296,8 @@ export const useSimulationMode = (): void => {
         return;
       }
 
-      const nextStopStationIndex = maybeRevsersedStations.findIndex(
-        (s) => s.id === nextStopStation.id
-      );
+      const nextStopStationIndex =
+        maybeRevsersedStations.indexOf(nextStopStation);
       if (
         nextStopStationIndex < 0 ||
         nextStopStationIndex < currentSegmentStationIndex
