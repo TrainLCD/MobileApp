@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import {
   useCurrentLine,
+  useCurrentTrainType,
   useGetLineMark,
   useNextStation,
   useStationNumberIndexFunc,
@@ -24,6 +25,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const isEn = useAtomValue(isEnAtom);
 
   const currentLine = useCurrentLine();
+  const trainType = useCurrentTrainType();
   const getLineMarkFunc = useGetLineMark();
   const nextStation = useNextStation();
   const transferLines = useTransferLines();
@@ -114,6 +116,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       station={switchedStation}
       numberingInfo={numberingInfo}
       lineMarks={lineMarks}
+      trainTypeLines={trainType?.lines ?? []}
       isEn={isEn}
     />
   );

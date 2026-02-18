@@ -2,7 +2,6 @@ export { useAfterNextStation } from './useAfterNextStation';
 export { useAndroidWearable } from './useAndroidWearable';
 export { useAnonymousUser } from './useAnonymousUser';
 export { useAppleWatch } from './useAppleWatch';
-export { useAutoMode } from './useAutoMode';
 export { useBadAccuracy } from './useBadAccuracy';
 export { useBounds } from './useBounds';
 export { useBoundText } from './useBoundText';

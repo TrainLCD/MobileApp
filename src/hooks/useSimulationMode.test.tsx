@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { Provider, useAtomValue } from 'jotai';
@@ -9,19 +8,31 @@ import {
   StopCondition,
   TrainTypeKind,
 } from '~/@types/graphql';
-import { YAMANOTE_LINE_ID } from '~/constants';
+import {
+  LINE_TYPE_MAX_SPEEDS_IN_M_S,
+  TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
+  YAMANOTE_LINE_ID,
+} from '~/constants';
 import * as useCurrentLineModule from '~/hooks/useCurrentLine';
 import * as useCurrentTrainTypeModule from '~/hooks/useCurrentTrainType';
-import * as useInRadiusStationModule from '~/hooks/useInRadiusStation';
-import * as useNextStationModule from '~/hooks/useNextStation';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
 import { store } from '~/store';
-import * as locationAtomModule from '~/store/atoms/location';
+import { locationAtom } from '~/store/atoms/location';
 import * as trainSpeedModule from '~/utils/trainSpeed';
 
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
+}));
+
+jest.mock('~/store/atoms/station', () => ({
+  __esModule: true,
+  default: { toString: () => 'stationState' },
+}));
+
+jest.mock('~/store/atoms/navigation', () => ({
+  __esModule: true,
+  default: { toString: () => 'navigationState' },
 }));
 
 jest.mock('~/store', () => ({
@@ -32,9 +43,7 @@ jest.mock('~/store', () => ({
 }));
 
 jest.mock('~/store/atoms/location', () => ({
-  locationAtom: {},
-  accuracyHistoryAtom: {},
-  setLocation: jest.fn(),
+  locationAtom: { toString: () => 'locationAtom' },
 }));
 
 jest.mock('expo-location', () => ({
@@ -83,28 +92,68 @@ const mockStation = (
     trainType: undefined,
   }) as unknown as Station;
 
+const mockPassStation = (
+  id: number,
+  groupId: number,
+  lat: number,
+  lon: number
+): Station => ({
+  ...mockStation(id, groupId, lat, lon),
+  stopCondition: StopCondition.Not,
+});
+
+const mockLocationObject = (lat: number, lon: number) => ({
+  coords: {
+    latitude: lat,
+    longitude: lon,
+    accuracy: 0,
+    altitude: null,
+    altitudeAccuracy: null,
+    speed: 0,
+    heading: null,
+  },
+  timestamp: 100000,
+});
+
+/** useAtomValueの戻り値を設定するヘルパー */
+const setupAtomMocks = (
+  stationStateValue: {
+    station?: Station | null;
+    stations: Station[];
+    selectedDirection: 'INBOUND' | 'OUTBOUND';
+  },
+  navigationStateValue: { autoModeEnabled: boolean }
+) => {
+  // biome-ignore lint/suspicious/noExplicitAny: モック用コールバックの引数型が不明
+  (useAtomValue as jest.Mock).mockImplementation((atom: any) => {
+    if (atom.toString() === 'stationState') {
+      return {
+        station: stationStateValue.station ?? null,
+        stations: stationStateValue.stations,
+        selectedDirection: stationStateValue.selectedDirection,
+      };
+    }
+    if (atom.toString() === 'navigationState') {
+      return navigationStateValue;
+    }
+    return undefined;
+  });
+};
+
 describe('useSimulationMode', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(100000));
 
-    // デフォルトのモック設定
     jest.spyOn(useCurrentLineModule, 'useCurrentLine').mockReturnValue({
       id: YAMANOTE_LINE_ID,
       lineType: LineType.Normal,
+      // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
     } as any);
 
     jest
       .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
       .mockReturnValue(null);
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(undefined);
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(mockStation(2, 2, 35.681, 139.767));
 
     (Location.hasStartedLocationUpdatesAsync as jest.Mock).mockResolvedValue(
       false
@@ -112,9 +161,6 @@ describe('useSimulationMode', () => {
     (Location.stopLocationUpdatesAsync as jest.Mock).mockResolvedValue(
       undefined
     );
-
-    //  setLocationをリセット
-    (locationAtomModule.setLocation as jest.Mock).mockClear();
   });
 
   afterEach(() => {
@@ -124,65 +170,50 @@ describe('useSimulationMode', () => {
   });
 
   it('自動モードが無効の場合は何もしない', () => {
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations: [],
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: false,
-      });
-
-    const { result } = renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    expect(result).toBeTruthy();
-    expect(Location.hasStartedLocationUpdatesAsync).not.toHaveBeenCalled();
-  });
-
-  it('レガシー自動モードが有効の場合は何もしない', () => {
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations: [],
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: true,
-        autoModeEnabled: true,
-      });
-
-    const { result } = renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    expect(result).toBeTruthy();
-  });
-
-  it('自動モードが有効で位置情報更新が開始されている場合、停止する', async () => {
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations: [],
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true,
-      });
-
-    (Location.hasStartedLocationUpdatesAsync as jest.Mock).mockResolvedValue(
-      true
-    );
-    (Location.stopLocationUpdatesAsync as jest.Mock).mockResolvedValue(
-      undefined
+    setupAtomMocks(
+      { stations: [], selectedDirection: 'OUTBOUND' },
+      { autoModeEnabled: false }
     );
 
     renderHook(() => useSimulationMode(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,
     });
 
-    // Wait for the effect to call stopLocationUpdatesAsync
+    expect(Location.hasStartedLocationUpdatesAsync).not.toHaveBeenCalled();
+    expect(store.set).not.toHaveBeenCalled();
+  });
+
+  it('自動モード有効の場合でも駅がなければ位置を設定しない', () => {
+    setupAtomMocks(
+      { stations: [], selectedDirection: 'OUTBOUND' },
+      { autoModeEnabled: true }
+    );
+
+    renderHook(() => useSimulationMode(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    // 駅が空なので store.set(locationAtom, ...) は呼ばれない
+    const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+      (call) => call[0] === locationAtom
+    );
+    expect(locationSetCalls).toHaveLength(0);
+  });
+
+  it('自動モードが有効で位置情報更新が開始されている場合、停止する', async () => {
+    setupAtomMocks(
+      { stations: [], selectedDirection: 'OUTBOUND' },
+      { autoModeEnabled: true }
+    );
+
+    (Location.hasStartedLocationUpdatesAsync as jest.Mock).mockResolvedValue(
+      true
+    );
+
+    renderHook(() => useSimulationMode(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
     await waitFor(
       () => {
         expect(Location.stopLocationUpdatesAsync).toHaveBeenCalledTimes(1);
@@ -191,398 +222,727 @@ describe('useSimulationMode', () => {
     );
   });
 
-  it('速度プロファイルを生成し、位置情報を更新する', () => {
-    const stations = [
-      mockStation(1, 1, 35.681, 139.767),
-      mockStation(2, 2, 35.691, 139.777), // 約1.5km離れた地点
-      mockStation(3, 3, 35.701, 139.787),
+  describe('開始駅の決定（resolveStartIndex）', () => {
+    it('currentStationが対象路線に含まれる場合、その駅から開始する', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[1],
+          stations,
+          selectedDirection: 'OUTBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.691, 139.777)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // OUTBOUNDなのでreverse → [3,2,1]の順。station[1](id=2)のインデックスは1
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[1].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[1].longitude);
+    });
+
+    it('currentStationが対象路線に含まれない場合、座標から最寄り停車駅を探す', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      // 別路線の駅（id=99）で、座標的にはstations[2]に最も近い
+      const otherLineStation = mockStation(99, 99, 35.7, 139.786, 9999);
+
+      setupAtomMocks(
+        {
+          station: otherLineStation,
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.7, 139.786)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      // INBOUND → 駅順はそのまま [1,2,3]。座標的にstations[2]が最寄り
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[2].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[2].longitude);
+    });
+
+    it('currentStationがnullの場合、先頭の駅から開始する', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        {
+          station: null,
+          stations,
+          selectedDirection: 'OUTBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      // OUTBOUNDなのでreverse → [2,1]。nullフォールバックで先頭=stations[1](id=2)
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[1].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[1].longitude);
+    });
+
+    it('currentStationが通過駅の場合、座標から最寄り停車駅を選ぶ', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockPassStation(2, 2, 35.699, 139.786), // 通過駅（currentStation、station 3に近い座標）
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[1], // 通過駅を現在駅として設定
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.699, 139.786)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      // 通過駅(id=2)はdirectIndexで見つかるがgetIsPassでスキップされ、
+      // 座標フォールバックで最寄り停車駅のstations[2](id=3)が選ばれる
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[2].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[2].longitude);
+    });
+
+    it('フォールバックで通過駅をスキップして最寄り停車駅を選ぶ', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockPassStation(2, 2, 35.7, 139.786), // 通過駅（座標的に最も近い）
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      // 別路線の駅、座標的にはpassStation(id=2)に最も近い
+      const otherLineStation = mockStation(99, 99, 35.7, 139.786, 9999);
+
+      setupAtomMocks(
+        {
+          station: otherLineStation,
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.7, 139.786)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      // 通過駅(id=2)はスキップされ、停車駅のうち最寄りのstations[2](id=3)が選ばれる
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[2].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[2].longitude);
+    });
+  });
+
+  describe('シミュレーション進行', () => {
+    it('全ての位置更新がstore.setを使用する（setLocationを使わない）', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'OUTBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.691, 139.777)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      jest.advanceTimersByTime(3000);
+
+      // store.setがlocationAtomに対して呼ばれている
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+    });
+
+    it('インターバルで位置情報が定期的に更新される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'OUTBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      const { unmount } = renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const callsBefore = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      ).length;
+
+      jest.advanceTimersByTime(3000);
+
+      const callsAfter = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      ).length;
+
+      // インターバルにより追加の位置更新が行われる
+      expect(callsAfter).toBeGreaterThan(callsBefore);
+
+      unmount();
+    });
+
+    it('セグメント終端で0km/hの停車を入れる', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue([2000]);
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      jest.advanceTimersByTime(3000);
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+
+      expect(locationSetCalls.some((loc) => loc?.coords?.speed === 0)).toBe(
+        true
+      );
+    });
+
+    it('終端駅到達後、先頭に戻ったときに速度プロファイルを最初から再生する', () => {
+      // 駅が1つだけ → nextStopStationがない → 即座に先頭リセット
+      const stations = [mockStation(1, 1, 35.681, 139.767)];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      // step内でstore.getが呼ばれる
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      // 速度プロファイルは空（駅が1つで次の駅がない）なので
+      // interval tick 1: speeds=[], i(0)>=0 → dwellPending=true
+      // interval tick 2: dwell handler → nextSegment=-1 → 先頭に戻る
+      // interval tick 3: speeds=[] again → dwellPending=true
+      // 先頭に戻る際にchildIndexがリセットされていれば、
+      // 毎回i=0から開始される（リセットされていないとiが進み続ける）
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 6秒分進める（複数回のリセットサイクルを経る）
+      jest.advanceTimersByTime(6000);
+
+      // 先頭駅の位置が繰り返しセットされることを確認（リセットが正しく機能している）
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+
+      const resetCalls = locationSetCalls.filter(
+        (loc) =>
+          loc?.coords?.latitude === stations[0].latitude &&
+          loc?.coords?.longitude === stations[0].longitude &&
+          loc?.coords?.speed === 0
+      );
+      // 初期化 + dwellハンドラでの複数回リセット
+      expect(resetCalls.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('速度プロファイルの終端に達したら次のセグメントに移動する', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.682, 139.768),
+        mockStation(3, 3, 35.683, 139.769),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'OUTBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.683, 139.769)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      for (let i = 0; i < 10; i++) {
+        jest.advanceTimersByTime(1000);
+      }
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(1);
+    });
+  });
+
+  describe('駅リストの方向', () => {
+    it('INBOUNDの場合、駅リストはそのまま使われる', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[2],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.701, 139.787)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+
+      const initialSetCall = locationSetCalls[0][1];
+      expect(initialSetCall.coords.latitude).toBe(stations[2].latitude);
+      expect(initialSetCall.coords.longitude).toBe(stations[2].longitude);
+    });
+  });
+
+  describe('速度プロファイル生成', () => {
+    it('通過駅を除外して速度プロファイルを生成する', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockPassStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: false }
+      );
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 通過駅(id=2)は除外され、station 1→3 の1セグメントのみ生成
+      expect(generateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('緯度・経度が未定義の駅は速度プロファイル生成から除外される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        {
+          ...mockStation(2, 2, 0, 0),
+          latitude: undefined,
+          longitude: undefined,
+        },
+        mockStation(3, 3, 35.701, 139.787),
+        mockStation(4, 4, 35.711, 139.797),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[2],
+          stations,
+          selectedDirection: 'OUTBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.701, 139.787)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // station 2は座標未定義のためスキップ。有効なのは station 3→4 の1セグメント
+      expect(generateSpy).toHaveBeenCalledTimes(1);
+      const callArgs = generateSpy.mock.calls[0][0];
+      expect(callArgs.distance).toBeGreaterThan(0);
+    });
+
+    it('駅リストが非同期に変わったら速度プロファイルを再計算する', () => {
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      // 初回レンダー: 空の駅リスト
+      (useAtomValue as jest.Mock)
+        .mockReturnValueOnce({
+          station: null,
+          stations: [],
+          selectedDirection: 'INBOUND',
+        })
+        .mockReturnValueOnce({ autoModeEnabled: true });
+
+      const { rerender } = renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 駅が空なのでプロファイル生成は呼ばれない
+      expect(generateSpy).not.toHaveBeenCalled();
+
+      // 再レンダー: 駅リストが到着
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      (useAtomValue as jest.Mock)
+        .mockReturnValueOnce({
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        })
+        .mockReturnValueOnce({ autoModeEnabled: true });
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      rerender({});
+
+      // 駅が到着したのでプロファイル生成が呼ばれる
+      expect(generateSpy).toHaveBeenCalled();
+    });
+
+    it('新幹線の路線タイプでは最高速度が適用される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      jest
+        .spyOn(useCurrentLineModule, 'useCurrentLine')
+        // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
+        .mockReturnValue({ id: 1, lineType: LineType.BulletTrain } as any);
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(generateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          maxSpeed: LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain],
+        })
+      );
+    });
+
+    it('列車種別の最高速度が適用される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      jest
+        .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
+        .mockReturnValue({
+          id: 1,
+          kind: TrainTypeKind.LimitedExpress,
+          // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
+        } as any);
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(generateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          maxSpeed:
+            TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[TrainTypeKind.LimitedExpress],
+        })
+      );
+    });
+  });
+
+  describe('重複する駅IDの処理', () => {
+    /**
+     * 駅リスト構成:
+     *   index 0: A (id=10)
+     *   index 1: B (id=20) ← 1回目
+     *   index 2: C (id=30)
+     *   index 3: D (id=20, groupId=60) ← 同じid=20の2回目
+     *   index 4: E (id=50)
+     *
+     * dropEitherJunctionStation は隣接groupIdの重複のみ除去するため、
+     * 非隣接の同一IDは残る。
+     */
+    const duplicateIdStations = () => [
+      mockStation(10, 10, 35.0, 139.0),
+      mockStation(20, 20, 35.05, 139.05),
+      mockStation(30, 30, 35.1, 139.1),
+      mockStation(20, 60, 35.2, 139.2),
+      mockStation(50, 50, 35.25, 139.25),
     ];
 
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true,
+    it('重複する駅IDがある場合に速度プロファイルが正しい距離で生成される', () => {
+      const stations = duplicateIdStations();
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
 
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[0]);
+      // 4つの停車駅セグメント: A→B, B→C, C→D, D→E
+      expect(generateSpy).toHaveBeenCalledTimes(4);
 
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(stations[1]);
-
-    (store.get as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.681,
-        longitude: 139.767,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: 0,
-        heading: null,
-      },
-      timestamp: 100000,
+      // D→E (4番目) の距離がD→E直線距離と同程度（約7km）であること
+      // バグ時は findIndex(id=20) が B(index=1) を返すため
+      // betweenNextStation に C,D を含むジグザグ経路（約35km）になる
+      const deDistance = generateSpy.mock.calls[3][0].distance;
+      expect(deDistance).toBeLessThan(10000);
+      expect(deDistance).toBeGreaterThan(3000);
     });
 
-    renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
+    it('重複する駅IDがある場合でもシミュレーションが正しく前進する', () => {
+      const stations = duplicateIdStations();
 
-    expect(locationAtomModule.setLocation).toHaveBeenCalled();
-  });
+      setupAtomMocks(
+        {
+          station: stations[2], // C(id=30)から開始
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
 
-  it('新幹線の路線タイプでは最高速度が適用される', () => {
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations: [],
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: false,
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue([2000]);
+
+      (store.get as jest.Mock).mockReturnValue(mockLocationObject(35.1, 139.1));
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
 
-    jest
-      .spyOn(useCurrentLineModule, 'useCurrentLine')
-      .mockReturnValue({ id: 1, lineType: LineType.BulletTrain } as any);
+      // 4秒分進める:
+      // tick 1: C→Dステップ (lat ≈ 35.2)
+      // tick 2: dwellPending
+      // tick 3: dwell処理 → D→Eセグメントへ移動
+      // tick 4: D→Eステップ (lat ≈ 35.25)
+      jest.advanceTimersByTime(4000);
 
-    const { result } = renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+
+      // 実際の移動を伴うstep呼び出し（speed > 0）を抽出
+      const steppingCalls = locationSetCalls.filter(
+        (loc) => typeof loc?.coords?.speed === 'number' && loc.coords.speed > 0
+      );
+
+      // C→D(tick1) と D→E(tick4) の2回、D以降の緯度(>= 35.15)に到達するはず
+      // バグ時は findIndex(id=20) が B を返すため D→Eステップが
+      // B→C区間(lat ≈ 35.05〜35.1)を通り、1回しか >= 35.15 にならない
+      const callsBeyondMidpoint = steppingCalls.filter(
+        (loc) => loc.coords.latitude >= 35.15
+      );
+      expect(callsBeyondMidpoint.length).toBeGreaterThanOrEqual(2);
     });
 
-    expect(result).toBeTruthy();
-    // 新幹線の速度プロファイルが生成されることを期待
-  });
+    it('重複IDの駅間に通過駅がある場合も正しいウェイポイントが使用される', () => {
+      const stations = [
+        mockStation(10, 10, 35.0, 139.0),
+        mockStation(20, 20, 35.05, 139.05),
+        mockStation(30, 30, 35.1, 139.1), // C
+        mockPassStation(40, 40, 35.1, 139.2), // 通過駅（東にオフセット）
+        mockStation(20, 60, 35.2, 139.1), // D (id=20, same as B)
+        mockStation(50, 50, 35.25, 139.15),
+      ];
 
-  it('列車種別の最高速度が適用される', () => {
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations: [],
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: false,
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
 
-    jest
-      .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
-      .mockReturnValue({
-        id: 1,
-        kind: TrainTypeKind.LimitedExpress,
-      } as any);
-
-    const { result } = renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
+      // C→D (3番目) の距離が通過駅経由の経路距離であること
+      // 直線 C(35.1,139.1)→D(35.2,139.1) ≈ 11km
+      // 経路 C→pass(35.1,139.2)→D ≈ 9km + 14km ≈ 23km
+      // バグ時は findIndex(id=20) が B(index=1) を返し、
+      // arr.slice(3, 1) が空配列となって通過駅ウェイポイントが失われる
+      const cdDistance = generateSpy.mock.calls[2][0].distance;
+      expect(cdDistance).toBeGreaterThan(15000);
     });
-
-    expect(result).toBeTruthy();
-    // 特急の速度プロファイルが生成されることを期待
-  });
-
-  it('通過駅を除外して速度プロファイルを生成する', () => {
-    const stations = [
-      mockStation(1, 1, 35.681, 139.767),
-      {
-        ...mockStation(2, 2, 35.691, 139.777),
-        stopCondition: StopCondition.Not,
-      },
-      mockStation(3, 3, 35.701, 139.787),
-    ];
-
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: false,
-      });
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[0]);
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(stations[2]);
-
-    const { result } = renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    expect(result).toBeTruthy();
-    // 通過駅を除外した速度プロファイルが生成されることを期待
-  });
-
-  it('INBOUNDの場合、駅リストを逆順にする', () => {
-    const stations = [
-      mockStation(1, 1, 35.681, 139.767),
-      mockStation(2, 2, 35.691, 139.777),
-      mockStation(3, 3, 35.701, 139.787),
-    ];
-
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'INBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true,
-      });
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[2]);
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(stations[1]);
-
-    (store.get as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.701,
-        longitude: 139.787,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: 0,
-        heading: null,
-      },
-      timestamp: 100000,
-    });
-
-    renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    // 初期化時に現在駅の位置にsetLocationが呼ばれることを検証
-    const setLocationCalls = (locationAtomModule.setLocation as jest.Mock).mock
-      .calls;
-
-    expect(setLocationCalls.length).toBeGreaterThan(0);
-
-    // INBOUNDの場合、駅リストが逆順になるため、
-    // 速度プロファイルも逆順の駅間で生成される
-    // 初期化時の位置が期待する駅（stations[2]）に設定されることを確認
-    const initialCall = setLocationCalls[0][0];
-    expect(initialCall.coords.latitude).toBe(35.701);
-    expect(initialCall.coords.longitude).toBe(139.787);
-  });
-
-  it('次の駅がない場合、最初の駅に戻る', () => {
-    const stations = [mockStation(1, 1, 35.681, 139.767)];
-
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true,
-      });
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[0]);
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(undefined);
-
-    (store.get as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.681,
-        longitude: 139.767,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: 0,
-        heading: null,
-      },
-      timestamp: 100000,
-    });
-
-    renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    // step関数が呼ばれたときに最初の駅に戻ることを期待
-    expect(locationAtomModule.setLocation).toHaveBeenCalled();
-  });
-
-  it('緯度・経度が未定義の駅は速度プロファイル生成から除外される', () => {
-    const stations = [
-      mockStation(1, 1, 35.681, 139.767),
-      { ...mockStation(2, 2, 0, 0), latitude: undefined, longitude: undefined },
-      mockStation(3, 3, 35.701, 139.787),
-      mockStation(4, 4, 35.711, 139.797),
-    ];
-
-    // Spy on generateTrainSpeedProfile to verify it's not called for stations with undefined coordinates
-    const generateSpeedProfileSpy = jest.spyOn(
-      trainSpeedModule,
-      'generateTrainSpeedProfile'
-    );
-
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true, // Enable auto mode to trigger profile generation
-      });
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[2]); // Start at station 3 (which has valid coordinates)
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(stations[3]); // Next station is station 4
-
-    (store.get as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.701,
-        longitude: 139.787,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: 0,
-        heading: null,
-      },
-      timestamp: 100000,
-    });
-
-    renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    // Verify that generateTrainSpeedProfile was called only for segments with valid coordinates
-    // With stations [1, 2 (undefined), 3, 4]:
-    // - Station 1 → Station 2: NOT called (station 2 has undefined coords)
-    // - Station 2 → Station 3: NOT called (station 2 has undefined coords)
-    // - Station 3 → Station 4: CALLED (both have valid coords)
-    // Total: 1 call
-    expect(generateSpeedProfileSpy).toHaveBeenCalledTimes(1);
-
-    // Verify the call was made with valid distance (station 3 to station 4)
-    const callArgs = generateSpeedProfileSpy.mock.calls[0][0];
-    expect(callArgs.distance).toBeGreaterThan(0);
-    expect(callArgs.maxSpeed).toBeDefined();
-    expect(callArgs.accel).toBeDefined();
-    expect(callArgs.decel).toBeDefined();
-  });
-
-  it('インターバルで位置情報が定期的に更新される', () => {
-    const stations = [
-      mockStation(1, 1, 35.681, 139.767),
-      mockStation(2, 2, 35.691, 139.777),
-    ];
-
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true,
-      });
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[0]);
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(stations[1]);
-
-    (store.get as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.681,
-        longitude: 139.767,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: 0,
-        heading: null,
-      },
-      timestamp: 100000,
-    });
-
-    const { unmount } = renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    // 1秒進める
-    jest.advanceTimersByTime(1000);
-
-    // setLocationが複数回呼ばれることを期待（初期化 + インターバル更新）
-    expect(
-      (locationAtomModule.setLocation as jest.Mock).mock.calls.length
-    ).toBeGreaterThan(0);
-
-    unmount();
-  });
-
-  it('速度プロファイルの終端に達したら次のセグメントに移動する', () => {
-    const stations = [
-      mockStation(1, 1, 35.681, 139.767),
-      mockStation(2, 2, 35.682, 139.768), // 短距離
-      mockStation(3, 3, 35.683, 139.769),
-    ];
-
-    (useAtomValue as jest.Mock)
-      .mockReturnValueOnce({
-        stations,
-        selectedDirection: 'OUTBOUND' as const,
-      })
-      .mockReturnValueOnce({
-        enableLegacyAutoMode: false,
-        autoModeEnabled: true,
-      });
-
-    jest
-      .spyOn(useInRadiusStationModule, 'useInRadiusStation')
-      .mockReturnValue(stations[0]);
-
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(stations[1]);
-
-    (store.get as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.681,
-        longitude: 139.767,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: 0,
-        heading: null,
-      },
-      timestamp: 100000,
-    });
-
-    renderHook(() => useSimulationMode(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    // 複数回タイマーを進めてセグメント移動をテスト
-    for (let i = 0; i < 10; i++) {
-      jest.advanceTimersByTime(1000);
-    }
-
-    expect(locationAtomModule.setLocation).toHaveBeenCalled();
   });
 });

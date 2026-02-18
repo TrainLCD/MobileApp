@@ -1,6 +1,6 @@
 import { darken } from 'polished';
-import React, { useCallback, useEffect } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '~/@types/graphql';
+import type { Line, LineNested, Station } from '~/@types/graphql';
 import { isBusLine } from '~/utils/line';
 import {
   MANY_LINES_THRESHOLD,
@@ -45,7 +45,79 @@ type Props = {
   station: Station | null;
   numberingInfo: (NumberingInfo | null)[];
   lineMarks: (LineMark | null)[];
+  trainTypeLines: LineNested[];
   isEn: boolean;
+};
+
+type ColorSegment = {
+  color: string;
+  yStart: number;
+  yEnd: number;
+};
+
+// animatedSurface の bottom: -200 によるSVG座標系オフセット
+const ARC_SVG_Y_OFFSET = 200;
+
+const computeColorSegments = (
+  stations: Station[],
+  trainTypeLines: LineNested[],
+  fallbackColor: string,
+  height: number
+): ColorSegment[] => {
+  if (stations.length === 0) {
+    return [{ color: fallbackColor, yStart: -height, yEnd: 2 * height }];
+  }
+
+  // station.lines と trainType.lines の路線IDを照合して色を決定
+  const stationColors = stations.map((s) => {
+    if (!s) return fallbackColor;
+
+    for (const ttLine of trainTypeLines) {
+      if (s.lines?.some((sl) => sl.id === ttLine.id)) {
+        return ttLine.color ?? fallbackColor;
+      }
+    }
+
+    return s.line?.color ?? fallbackColor;
+  });
+
+  // 駅のドットy座標（スクリーン座標）
+  const dotYs = stations.map((_, i) =>
+    i === 0 ? height / 30 : (i * height) / 7
+  );
+
+  const segments: ColorSegment[] = [];
+  let currentColor = stationColors[0];
+  let segStartIdx = 0;
+
+  for (let i = 1; i <= stationColors.length; i++) {
+    if (i === stationColors.length || stationColors[i] !== currentColor) {
+      // アニメーションSVGはARC_SVG_Y_OFFSETだけ下にずれているため境界もずらす
+      // 境界位置: 前の駅ドットと次の駅ドットの間を 0.65 の比率で按分（やや次の駅寄り）
+      const BOUNDARY_RATIO = 0.65;
+      const yStart =
+        segStartIdx === 0
+          ? -height
+          : dotYs[segStartIdx - 1] * (1 - BOUNDARY_RATIO) +
+            dotYs[segStartIdx] * BOUNDARY_RATIO +
+            ARC_SVG_Y_OFFSET;
+      const yEnd =
+        i === stationColors.length
+          ? 2 * height
+          : dotYs[i - 1] * (1 - BOUNDARY_RATIO) +
+            dotYs[i] * BOUNDARY_RATIO +
+            ARC_SVG_Y_OFFSET;
+
+      segments.push({ color: currentColor, yStart, yEnd });
+
+      if (i < stationColors.length) {
+        currentColor = stationColors[i];
+        segStartIdx = i;
+      }
+    }
+  }
+
+  return segments;
 };
 
 const styles = StyleSheet.create({
@@ -91,8 +163,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 60,
     height: 45,
-    right: Platform.OS === 'ios' ? screenWidth / 3 : screenWidth / 3.25,
-    bottom: 72,
+    right: screenWidth / 3.15,
+    top: (4 * screenHeight) / 7 + 84,
     // 非到着時のベース角度
     transform: [{ rotate: '-20deg' }],
     zIndex: 1,
@@ -101,8 +173,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 54,
     top: (4 * screenHeight) / 7,
-    right: screenWidth / (Platform.OS === 'ios' ? 2.985 : 3.1),
-    bottom: undefined,
+    right: screenWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
@@ -262,6 +333,7 @@ const PadArch: React.FC<Props> = ({
   station,
   numberingInfo,
   lineMarks,
+  trainTypeLines,
   isEn,
 }: Props) => {
   // 共有値（Reanimated）
@@ -315,14 +387,12 @@ const PadArch: React.FC<Props> = ({
   const chevronContainerStyle = useAnimatedStyle(() => {
     if (arrived) return {};
     const p = chevronTimeline.value; // サイクル全体で 0..1 の進行度
-    // 前半(0..0.5): 位置 128 → 104、後半は 104 を維持
+    // 前半(0..0.5): 上方向に 24px 移動、後半は維持
     const movePhase = Math.min(p / 0.5, 1); // 前半中は 0..1
-    const bottom = 128 - (128 - 104) * movePhase;
-    // 後半(0.5..1): 不透明度 1 → 0、前半は 1 を維持
+    // 後半(0.5..1): 不透明度 1 → 0.2、前半は 1 を維持
     const fadePhase = Math.max((p - 0.5) / 0.5, 0); // 後半中は 0..1
     const opacity = 0.2 + (1 - fadePhase) * 0.8; // 0.2..1 の範囲
-    // 128→104 を 56→32 に変換
-    const translateY = bottom - 72;
+    const translateY = -movePhase * 24;
     return {
       // 既定の rotate(-20deg) を維持したまま並記（transform は配列全体が上書きされるためここで回転も指定）
       transform: [{ rotate: '-20deg' }, { translateY }],
@@ -342,14 +412,21 @@ const PadArch: React.FC<Props> = ({
     screenWidth / 1.5
   } ${screenHeight}`;
   const hexLineColor = line.color ?? '#000';
-  const strokeWidth = Platform.select({
-    ios: 128,
-    android: 96,
-    default: 128,
-  });
+  const strokeWidth = 128;
+
+  const colorSegments = useMemo(
+    () =>
+      computeColorSegments(
+        stations,
+        trainTypeLines,
+        hexLineColor,
+        screenHeight
+      ),
+    [stations, trainTypeLines, hexLineColor]
+  );
 
   const getDotLeft = useCallback((i: number): number => {
-    const leftPad = Platform.OS === 'ios' ? 0 : 21;
+    const leftPad = 0;
     switch (i) {
       case 0:
         return screenWidth / 3 + leftPad;
@@ -360,7 +437,7 @@ const PadArch: React.FC<Props> = ({
       case 3:
         return screenWidth / 1.785 + leftPad;
       case 4:
-        return screenWidth / 1.655 - (Platform.OS === 'ios' ? 3.5 : 0);
+        return screenWidth / 1.655 - 3.5;
       default:
         return 0;
     }
@@ -442,29 +519,63 @@ const PadArch: React.FC<Props> = ({
         <Path d={pathD2} stroke="#505a6e" strokeWidth={strokeWidth} />
       </Svg>
 
+      {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
       <Animated.View style={[styles.clipViewStyle, fillStyle]}>
-        <Svg
-          style={styles.animatedSurface}
-          width={screenWidth}
-          height={screenHeight}
-          fill="transparent"
-        >
-          <Path
-            d={pathD1}
-            stroke={darken(0.3, hexLineColor)}
-            strokeWidth={strokeWidth}
-          />
-        </Svg>
+        {colorSegments.map((seg) => (
+          <View
+            key={`dk-${seg.color}-${seg.yStart}`}
+            style={{
+              position: 'absolute',
+              bottom: screenHeight - seg.yEnd,
+              width: screenWidth,
+              height: seg.yEnd - seg.yStart,
+              overflow: 'hidden',
+            }}
+          >
+            <Svg
+              style={{
+                position: 'absolute',
+                bottom: seg.yEnd - screenHeight - ARC_SVG_Y_OFFSET,
+              }}
+              width={screenWidth}
+              height={screenHeight}
+              fill="transparent"
+            >
+              <Path
+                d={pathD1}
+                stroke={darken(0.3, seg.color)}
+                strokeWidth={strokeWidth}
+              />
+            </Svg>
+          </View>
+        ))}
       </Animated.View>
+      {/* 主色層: 区間ごとにViewクリッピングで色分け */}
       <Animated.View style={[styles.clipViewStyle, fillStyle]}>
-        <Svg
-          style={styles.animatedSurface}
-          width={screenWidth}
-          height={screenHeight}
-          fill="transparent"
-        >
-          <Path d={pathD3} stroke={hexLineColor} strokeWidth={strokeWidth} />
-        </Svg>
+        {colorSegments.map((seg) => (
+          <View
+            key={`mn-${seg.color}-${seg.yStart}`}
+            style={{
+              position: 'absolute',
+              bottom: screenHeight - seg.yEnd,
+              width: screenWidth,
+              height: seg.yEnd - seg.yStart,
+              overflow: 'hidden',
+            }}
+          >
+            <Svg
+              style={{
+                position: 'absolute',
+                bottom: seg.yEnd - screenHeight - ARC_SVG_Y_OFFSET,
+              }}
+              width={screenWidth}
+              height={screenHeight}
+              fill="transparent"
+            >
+              <Path d={pathD3} stroke={seg.color} strokeWidth={strokeWidth} />
+            </Svg>
+          </View>
+        ))}
       </Animated.View>
       <Animated.View
         style={[

@@ -55,7 +55,7 @@ describe('useStartBackgroundLocationUpdates', () => {
           ...LOCATION_TASK_OPTIONS,
           activityType: Location.ActivityType.OtherNavigation,
           foregroundService: expect.objectContaining({
-            killServiceOnDestroy: true,
+            killServiceOnDestroy: false,
           }),
         })
       );

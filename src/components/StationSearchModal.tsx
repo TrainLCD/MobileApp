@@ -1,7 +1,7 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Platform, StyleSheet, View } from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,11 +11,12 @@ import type {
 } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
+import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
 import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
-import { locationAtom } from '~/store/atoms/location';
+import { locationAtom, setLocation } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -44,7 +45,7 @@ type GetStationsByNameVariables = {
 
 const getStationUniqueKey = (station: Station) => {
   if (station.groupId) {
-    return String(station.groupId);
+    return `${station.groupId}|${station.name}`;
   }
   if (station.id) {
     return String(station.id);
@@ -116,9 +117,15 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
+  const wasVisibleRef = useRef(false);
   const location = useAtomValue(locationAtom);
-  const latitude = location?.coords.latitude;
-  const longitude = location?.coords.longitude;
+  const [modalCoords, setModalCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const latitude = modalCoords?.latitude ?? location?.coords.latitude;
+  const longitude = modalCoords?.longitude ?? location?.coords.longitude;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
@@ -147,6 +154,36 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
     GET_STATIONS_BY_NAME
   );
+
+  useEffect(() => {
+    if (!visible) {
+      setModalCoords(null);
+      wasVisibleRef.current = false;
+      return;
+    }
+    if (wasVisibleRef.current) return;
+    wasVisibleRef.current = true;
+
+    let active = true;
+    const refreshLocation = async () => {
+      try {
+        const currentLocation = await fetchCurrentLocation();
+        if (!active) return;
+        setModalCoords({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+        });
+        setLocation(currentLocation);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    refreshLocation();
+    return () => {
+      active = false;
+    };
+  }, [visible, fetchCurrentLocation]);
 
   useEffect(() => {
     if (fetchStationsByNameError || fetchStationsNearbyError) {

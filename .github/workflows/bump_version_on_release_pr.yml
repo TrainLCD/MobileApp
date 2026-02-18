@@ -1,0 +1,149 @@
+name: Bump Version on Release PR
+
+on:
+  pull_request:
+    types: opened
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  TZ: "Asia/Tokyo"
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-22.04
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'release/v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Extract and resolve version
+        id: version
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+
+            const branch = process.env.HEAD_REF;
+            const match = branch.match(/^release\/v(\d+(\.\d+){0,2})$/);
+            if (!match) {
+              console.log('status=invalid');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=invalid\n');
+              process.exit(0);
+            }
+
+            const raw = match[1];
+            const parts = raw.split('.');
+            const depth = parts.length;
+            const hasPatch = depth === 3;
+            const target = depth === 1
+              ? raw + '.0.0'
+              : depth === 2
+                ? raw + '.0'
+                : raw;
+
+            const packageJson = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
+            const current = packageJson.version;
+
+            const toparts = (v) => v.split('.').map(Number);
+            const [tMajor, tMinor, tPatch] = toparts(target);
+            const [cMajor, cMinor, cPatch] = toparts(current);
+
+            // 明示された部分のみで比較
+            let cmp = 0;
+            if (tMajor !== cMajor) cmp = tMajor > cMajor ? 1 : -1;
+            else if (depth >= 2 && tMinor !== cMinor) cmp = tMinor > cMinor ? 1 : -1;
+            else if (depth >= 3 && tPatch !== cPatch) cmp = tPatch > cPatch ? 1 : -1;
+
+            if (cmp < 0) {
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=older\n');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'target=' + target + '\n');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'current=' + current + '\n');
+              process.exit(0);
+            }
+
+            if (cmp === 0) {
+              if (hasPatch) {
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=same\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'target=' + target + '\n');
+                process.exit(0);
+              }
+              const resolved = tMajor + '.' + cMinor + '.' + (cPatch + 1);
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=ok\n');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'resolved=' + resolved + '\n');
+              process.exit(0);
+            }
+
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=ok\n');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'resolved=' + target + '\n');
+          "
+
+      - name: Comment on PR (invalid branch name)
+        if: steps.version.outputs.status == 'invalid'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "ブランチ名からバージョンを抽出できませんでした。ブランチ名は \`release/vX.Y\` または \`release/vX.Y.Z\` の形式にしてください。"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR (older version)
+        if: steps.version.outputs.status == 'older'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "抽出したバージョン ${{ steps.version.outputs.target }} は現在のバージョン ${{ steps.version.outputs.current }} より古いです。"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR (same version)
+        if: steps.version.outputs.status == 'same'
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "抽出したバージョン ${{ steps.version.outputs.target }} は現在のバージョンと同一です。バージョンを上げる必要がある場合はブランチ名を変更してください。"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump version
+        if: steps.version.outputs.status == 'ok'
+        run: pnpm run version:bump ${{ steps.version.outputs.resolved }}
+
+      - name: Create Pull Request
+        if: steps.version.outputs.status == 'ok'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Bump version to ${{ steps.version.outputs.resolved }}"
+          title: "chore: Bump version to ${{ steps.version.outputs.resolved }} for PR #${{ github.event.pull_request.number }}"
+          body: |
+            This PR was automatically created by the release version bump workflow.
+
+            It bumps the version to **${{ steps.version.outputs.resolved }}** for the release.
+
+            **Related PR:** #${{ github.event.pull_request.number }}
+
+            Please merge this PR into the source branch of PR #${{ github.event.pull_request.number }} to update its version numbers.
+          branch: "auto-release-version-bump-${{ github.event.pull_request.number }}"
+          base: ${{ github.event.pull_request.head.ref }}
+          delete-branch: true
+          labels: |
+            automated
+            version-bump

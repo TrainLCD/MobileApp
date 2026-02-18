@@ -12,6 +12,7 @@ jest.mock('jotai', () => ({
 
 jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
+  useCurrentTrainType: jest.fn(() => null),
   useGetLineMark: jest.fn(() => jest.fn(() => null)),
   useNextStation: jest.fn(() => null),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),

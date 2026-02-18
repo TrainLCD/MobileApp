@@ -30,8 +30,7 @@ const GITHUB_LABELS = {
   CRASH_TYPE: '💣 Crash',
   SPAM_TYPE: '💩 Spam',
   UNKNOWN_TYPE: '❓ Unknown Type',
-  AUTOMODE_V1: '🤖 Auto Mode 1.0',
-  AUTOMODE_V2: '🤖 Auto Mode 2.0',
+  AUTOMODE_ENABLED: '🤖 Auto Mode',
 } as const;
 
 function looksLikeSpam(text: string) {
@@ -349,7 +348,6 @@ export const feedbackTriageWorker = onMessagePublished(
       appEdition,
       appClip,
       autoModeEnabled,
-      enableLegacyAutoMode,
       sentryEventId,
     } = report;
 
@@ -368,11 +366,8 @@ export const feedbackTriageWorker = onMessagePublished(
     })();
 
     const autoModeLabel = (() => {
-      if (autoModeEnabled && !enableLegacyAutoMode) {
-        return GITHUB_LABELS.AUTOMODE_V2;
-      }
-      if (autoModeEnabled && enableLegacyAutoMode) {
-        return GITHUB_LABELS.AUTOMODE_V1;
+      if (autoModeEnabled) {
+        return GITHUB_LABELS.AUTOMODE_ENABLED;
       }
       return undefined;
     })();
@@ -419,7 +414,7 @@ ${language}
 ${appVersion}
 
 ## オートモード
-${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
+${autoModeEnabled ? '有効' : '無効'}
 
 ## スタックトレース
 ${'```'}

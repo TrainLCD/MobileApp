@@ -2,99 +2,126 @@
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 
 describe('generateTrainSpeedProfile', () => {
-  it('returns a non-empty array ending in 0', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns a non-empty array with only non-negative speeds', () => {
     const profile = generateTrainSpeedProfile({
       distance: 1500,
       maxSpeed: 25,
+      enableRandomCoast: false,
     });
 
     expect(profile.length).toBeGreaterThan(0);
     expect(typeof profile[0]).toBe('number');
-    expect(profile[profile.length - 1]).toBeCloseTo(0, 1);
+    expect(profile.every((v) => v >= 0)).toBe(true);
   });
 
-  it('can generate profile without coasting if randomness disables it', () => {
-    jest.spyOn(Math, 'random').mockImplementationOnce(() => 0.9); // no coasting
+  it('短距離では maxSpeed に到達しない', () => {
+    const profile = generateTrainSpeedProfile({
+      distance: 100,
+      maxSpeed: 30,
+      accel: 1,
+      decel: 1,
+      enableRandomCoast: false,
+    });
+
+    expect(Math.max(...profile)).toBeLessThan(30);
+  });
+
+  it('enableRandomCoast=false なら惰行を入れない', () => {
     const profile = generateTrainSpeedProfile({
       distance: 1500,
       maxSpeed: 25,
+      enableRandomCoast: false,
     });
 
-    expect(profile.some((v) => v < 25)).toBe(true);
-    expect(profile[profile.length - 1]).toBe(0);
+    expect(profile[profile.length - 1]).toBeGreaterThan(0);
+    expect(profile.some((v) => v === 25)).toBe(true);
   });
 
-  it('can generate profile with coasting if randomness enables it', () => {
-    const mockRandom = jest
+  it('惰行が有効な場合は最高速度以降で速度が低下する区間を作る', () => {
+    const randomSpy = jest
       .spyOn(Math, 'random')
       .mockImplementationOnce(() => 0.3) // enable coasting
-      .mockImplementationOnce(() => 0.1) // decel = 0.2
-      .mockImplementationOnce(() => 0.5); // tCoast = 20
+      .mockImplementationOnce(() => 0.1) // coastingDecel
+      .mockImplementationOnce(() => 0.5); // tCoast
 
-    const profile = generateTrainSpeedProfile({
-      distance: 1500,
-      maxSpeed: 25,
-    });
+    try {
+      const profile = generateTrainSpeedProfile({
+        distance: 1500,
+        maxSpeed: 25,
+        enableRandomCoast: true,
+      });
 
-    const start = profile.findIndex((v) => v === 25);
-    const coastSegment = profile.slice(start, start + 5);
-    expect(coastSegment).toEqual([...coastSegment].sort((a, b) => b - a));
+      const start = profile.findIndex((v) => v === 25);
+      expect(start).not.toBe(-1);
 
-    mockRandom.mockRestore();
+      const coastStart = profile.findIndex(
+        (v, index) => index > start && v < 25
+      );
+      expect(coastStart).not.toBe(-1);
+
+      const coastSegment = profile.slice(coastStart, coastStart + 5);
+      expect(coastSegment.length).toBe(5);
+      for (let i = 1; i < coastSegment.length; i += 1) {
+        expect(coastSegment[i]).toBeLessThan(coastSegment[i - 1]);
+      }
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 
   it('does not throw with short distance', () => {
     const profile = generateTrainSpeedProfile({
       distance: 100,
       maxSpeed: 15,
+      enableRandomCoast: false,
     });
 
     expect(Array.isArray(profile)).toBe(true);
-    expect(profile[profile.length - 1]).toBeCloseTo(0, 1);
+    expect(profile.every((v) => v >= 0)).toBe(true);
   });
 
   it('ensures speed does not exceed maxSpeed during coasting', () => {
     const profile = generateTrainSpeedProfile({
       distance: 1000,
       maxSpeed: 30,
+      enableRandomCoast: true,
     });
     const overSpeed = profile.some((v) => v > 30);
     expect(overSpeed).toBe(false);
   });
 
-  it('profile length differs with and without coasting', () => {
-    jest
-      .spyOn(Math, 'random')
-      .mockImplementationOnce(() => 0.1)
-      .mockImplementationOnce(() => 0.3)
-      .mockImplementationOnce(() => 0.5);
-    const withCoast = generateTrainSpeedProfile({
-      distance: 1000,
+  it('不正な入力は停止状態のみを返す', () => {
+    const profile = generateTrainSpeedProfile({
+      distance: 0,
       maxSpeed: 25,
     });
 
-    jest.spyOn(Math, 'random').mockImplementation(() => 0.9);
-    const withoutCoast = generateTrainSpeedProfile({
-      distance: 1000,
-      maxSpeed: 25,
-    });
-
-    expect(withCoast.length).not.toBe(withoutCoast.length);
+    expect(profile).toEqual([0]);
   });
 
-  it('gracefully handles tCoast = 0', () => {
-    jest
-      .spyOn(Math, 'random')
-      .mockImplementationOnce(() => 0.1) // enable coasting
-      .mockImplementationOnce(() => 0.2) // decel
-      .mockImplementationOnce(() => 0.0); // tCoast = 10
-
+  it('距離に対して極端に乖離したプロファイルにならない', () => {
     const profile = generateTrainSpeedProfile({
-      distance: 1000,
+      distance: 1500,
       maxSpeed: 25,
+      enableRandomCoast: false,
+    });
+    const approxDistance = profile.reduce((sum, speed) => sum + speed, 0);
+
+    expect(approxDistance).toBeGreaterThan(1000);
+    expect(approxDistance).toBeLessThan(2000);
+  });
+
+  it('0km/h は速度プロファイルに含めない', () => {
+    const profile = generateTrainSpeedProfile({
+      distance: 1500,
+      maxSpeed: 25,
+      enableRandomCoast: false,
     });
 
-    expect(profile.length).toBeGreaterThan(0);
-    expect(profile[profile.length - 1]).toBe(0);
+    expect(profile.some((v) => v === 0)).toBe(false);
   });
 });

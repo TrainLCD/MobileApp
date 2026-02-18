@@ -24,6 +24,10 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
 import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
+import {
+  getToggledEnabledLanguages,
+  isLanguageToggleDisabled,
+} from '../utils/enabledLanguages';
 
 const LANGUAGE_MAP = {
   japanese: 'JA',
@@ -115,7 +119,6 @@ const EnabledLanguagesSettings: React.FC = () => {
           id: 'japanese',
           title: translate('japanese'),
           nationalFlag: '🇯🇵',
-          disabled: true,
         },
         {
           id: 'english',
@@ -138,9 +141,10 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   const handleToggleLanguage = useCallback(
     async (language: AvailableLanguage) => {
-      const newEnabledLanguages = enabledLanguages.includes(language)
-        ? enabledLanguages.filter((lang) => lang !== language)
-        : [...enabledLanguages, language];
+      const newEnabledLanguages = getToggledEnabledLanguages(
+        enabledLanguages,
+        language
+      );
 
       setNavigation((prev) => ({
         ...prev,
@@ -169,9 +173,14 @@ const EnabledLanguagesSettings: React.FC = () => {
       const state = languageCode
         ? enabledLanguages.includes(languageCode)
         : false;
+      const disabled =
+        (item.disabled ?? false) ||
+        (languageCode
+          ? isLanguageToggleDisabled(enabledLanguages, languageCode, state)
+          : false);
 
       const onToggle = () => {
-        if (!languageCode) {
+        if (!languageCode || disabled) {
           return;
         }
         handleToggleLanguage(languageCode);
@@ -184,7 +193,7 @@ const EnabledLanguagesSettings: React.FC = () => {
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
           state={state}
-          disabled={item.disabled ?? false}
+          disabled={disabled}
         />
       );
     },
@@ -225,6 +234,15 @@ const EnabledLanguagesSettings: React.FC = () => {
           onScroll={handleScroll}
           ListFooterComponent={() => (
             <>
+              <Typography
+                style={{
+                  marginTop: 16,
+                  textAlign: 'center',
+                  color: '#8B8B8B',
+                }}
+              >
+                {translate('requireJapaneseOrEnglish')}
+              </Typography>
               <Button
                 style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
                 textStyle={{ fontWeight: 'bold' }}
