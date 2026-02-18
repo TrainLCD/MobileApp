@@ -45,7 +45,7 @@ type GetStationsByNameVariables = {
 
 const getStationUniqueKey = (station: Station) => {
   if (station.groupId) {
-    return String(station.groupId);
+    return `${station.groupId}|${station.name}`;
   }
   if (station.id) {
     return String(station.id);
