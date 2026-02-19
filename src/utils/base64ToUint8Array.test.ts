@@ -1,6 +1,10 @@
 import { base64ToUint8Array } from './base64ToUint8Array';
 
 describe('base64ToUint8Array', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('既知文字列をデコードできる', () => {
     // "Hello" = SGVsbG8=
     const result = base64ToUint8Array('SGVsbG8=');
