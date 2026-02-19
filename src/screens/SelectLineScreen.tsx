@@ -562,18 +562,10 @@ const SelectLineScreen = () => {
 
       setIsSelectBoundModalOpen(true);
 
-      const result = await fetchStationsByLineId({
-        variables: { lineId, stationId: lineStationId },
-      });
-      const fetchedStations = result.data?.lineStations ?? [];
-
-      const pendingStation =
-        fetchedStations.find((s) => s.id === lineStationId) ?? null;
-
       setStationState((prev) => ({
         ...prev,
-        pendingStation,
-        pendingStations: fetchedStations,
+        pendingStation: null,
+        pendingStations: [],
         selectedDirection: null,
         wantedDestination: null,
         selectedBound: null,
@@ -587,6 +579,20 @@ const SelectLineScreen = () => {
         fetchedTrainTypes: [],
         trainType: null,
         pendingTrainType: null,
+      }));
+
+      const result = await fetchStationsByLineId({
+        variables: { lineId, stationId: lineStationId },
+      });
+      const fetchedStations = result.data?.lineStations ?? [];
+
+      const pendingStation =
+        fetchedStations.find((s) => s.id === lineStationId) ?? null;
+
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation,
+        pendingStations: fetchedStations,
       }));
 
       if (line.station?.hasTrainTypes) {
