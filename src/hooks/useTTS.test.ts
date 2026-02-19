@@ -2,36 +2,19 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import React from 'react';
 import speechState from '~/store/atoms/speech';
+import { mockFetch } from '~/utils/test/ttsMocks';
 import { useTTS } from './useTTS';
 
 jest.mock('~/utils/isDevApp', () => ({
   isDevApp: false,
 }));
 
-const mockFetch = jest.fn();
 const mockCreateAudioPlayer = jest.fn();
 const mockSetAudioModeAsync = jest.fn();
-
-jest.mock('expo/fetch', () => ({
-  fetch: (...args: unknown[]) => mockFetch(...args),
-}));
 
 jest.mock('expo-audio', () => ({
   createAudioPlayer: (...args: unknown[]) => mockCreateAudioPlayer(...args),
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioModeAsync(...args),
-}));
-
-jest.mock('expo-file-system', () => ({
-  Paths: { cache: '/tmp' },
-  File: class {
-    public uri: string;
-
-    constructor(basePath: string, name: string) {
-      this.uri = `${basePath}/${name}`;
-    }
-
-    write() {}
-  },
 }));
 
 jest.mock('./useCurrentLine', () => ({
