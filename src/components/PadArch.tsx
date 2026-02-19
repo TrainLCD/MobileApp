@@ -180,11 +180,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
-  transfers: {
-    position: 'absolute',
-    left: 24,
-  },
-  transfersMany: {
+  transfersBase: {
     position: 'absolute',
     left: 24,
   },
@@ -264,12 +260,19 @@ const Transfers: React.FC<TransfersProps> = ({
 
   const dynamicStyles = useMemo(
     () => ({
-      transfers: { width: windowWidth / 2, top: windowHeight / 4 },
-      transfersMany: { top: windowHeight / 6 },
+      transfers: {
+        width: windowWidth / 2,
+        top: windowHeight / 4,
+      },
+      transfersMany: {
+        top: windowHeight / 6,
+      },
       transferLines: { width: windowWidth / 3 },
     }),
     [windowWidth, windowHeight]
   );
+
+  const isMany = transferLines?.length > MANY_LINES_THRESHOLD;
 
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
@@ -307,12 +310,8 @@ const Transfers: React.FC<TransfersProps> = ({
       {isEn ? (
         <View
           style={[
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? styles.transfersMany
-              : styles.transfers,
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? dynamicStyles.transfersMany
-              : dynamicStyles.transfers,
+            styles.transfersBase,
+            isMany ? dynamicStyles.transfersMany : dynamicStyles.transfers,
           ]}
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
@@ -326,12 +325,8 @@ const Transfers: React.FC<TransfersProps> = ({
       ) : (
         <View
           style={[
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? styles.transfersMany
-              : styles.transfers,
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? dynamicStyles.transfersMany
-              : dynamicStyles.transfers,
+            styles.transfersBase,
+            isMany ? dynamicStyles.transfersMany : dynamicStyles.transfers,
           ]}
         >
           <Typography style={styles.transfersCurrentStationName}>
