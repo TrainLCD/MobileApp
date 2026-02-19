@@ -15,6 +15,7 @@ import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
+import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
 
 const BASE64_ALPHABET =
@@ -70,6 +71,8 @@ export const useTTS = (): void => {
     useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
   const currentLine = useCurrentLine();
+  const stoppingState = useStoppingState();
+  const prevStoppingState = usePrevious(stoppingState);
 
   const firstSpeechRef = useRef(true);
   // 行先選択直後の初回TTSを抑止し、発車後（arrived=false）でのみ解放する
@@ -506,6 +509,7 @@ export const useTTS = (): void => {
     }
 
     if (!textJa || !textEn) {
+      pendingRef.current = null;
       return;
     }
 
@@ -515,6 +519,7 @@ export const useTTS = (): void => {
         firstSpeechRef,
         suppressFirstSpeechUntilDepartureRef,
         arrived,
+        stoppingStateChanged: stoppingState !== prevStoppingState,
       })
     ) {
       return;
@@ -536,7 +541,16 @@ export const useTTS = (): void => {
         console.error(err);
       }
     })();
-  }, [arrived, enabled, prevTextEn, prevTextJa, textEn, textJa]);
+  }, [
+    arrived,
+    enabled,
+    prevStoppingState,
+    prevTextEn,
+    prevTextJa,
+    stoppingState,
+    textEn,
+    textJa,
+  ]);
 
   useEffect(() => {
     return () => {

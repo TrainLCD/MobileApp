@@ -18,11 +18,15 @@ export const computeSuppressionDecision = (params: {
   firstSpeechRef: { current: boolean };
   suppressFirstSpeechUntilDepartureRef: { current: boolean };
   arrived: boolean;
+  stoppingStateChanged: boolean;
 }): boolean => {
   // 1. Post-first-speech: firstSpeechRef→falseで生じるテキスト変化を1回だけ無視
+  //    ただしstoppingStateが変化した場合は正当なテキスト変化なので抑止しない
   if (params.suppressPostFirstSpeechRef.current) {
     params.suppressPostFirstSpeechRef.current = false;
-    return true;
+    if (!params.stoppingStateChanged) {
+      return true;
+    }
   }
 
   // 2. Suppress-until-departure
