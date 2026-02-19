@@ -103,8 +103,8 @@ const computeColorSegments = (
   for (let i = 1; i <= stationColors.length; i++) {
     if (i === stationColors.length || stationColors[i] !== currentColor) {
       // アニメーションSVGはARC_SVG_Y_OFFSETだけ下にずれているため境界もずらす
-      // 境界位置: 前の駅ドットと次の駅ドットの間を 0.65 の比率で按分（やや次の駅寄り）
-      const BOUNDARY_RATIO = 0.65;
+      // 境界位置: 前の駅ドットと次の駅ドットの間を 0.8 の比率で按分（やや次の駅寄り）
+      const BOUNDARY_RATIO = 0.8;
       const yStart =
         segStartIdx === 0
           ? -height
