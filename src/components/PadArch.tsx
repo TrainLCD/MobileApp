@@ -69,17 +69,29 @@ const computeColorSegments = (
   }
 
   // station.lines と trainType.lines の路線IDを照合して色を決定
-  const stationColors = stations.map((s) => {
-    if (!s) return fallbackColor;
+  // マッチしない駅は null にして隣接する確定色で埋める
+  const resolvedColors: (string | null)[] = stations.map((s) => {
+    if (!s) return null;
 
     for (const ttLine of trainTypeLines) {
       if (s.lines?.some((sl) => sl.id === ttLine.id)) {
-        return ttLine.color ?? fallbackColor;
+        return ttLine.color ?? null;
       }
     }
 
-    return s.line?.color ?? fallbackColor;
+    // trainTypeLinesが空なら駅固有の色を使用
+    return trainTypeLines.length > 0 ? null : (s.line?.color ?? null);
   });
+
+  // null を隣接する確定色で埋める（前方 → 後方の順）
+  for (let i = 1; i < resolvedColors.length; i++) {
+    if (resolvedColors[i] === null) resolvedColors[i] = resolvedColors[i - 1];
+  }
+  for (let i = resolvedColors.length - 2; i >= 0; i--) {
+    if (resolvedColors[i] === null) resolvedColors[i] = resolvedColors[i + 1];
+  }
+
+  const stationColors = resolvedColors.map((c) => c ?? fallbackColor);
 
   // 駅のドットy座標（スクリーン座標）
   const dotYs = stations.map((_, i) =>
