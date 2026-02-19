@@ -44,6 +44,7 @@ export const useRefreshStation = (): void => {
   const approachingNotifiedIdRef = useRef<number | null>(null);
   const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
+  const lastArrivedStationIdRef = useRef<number | null>(null);
   const { targetStationIds } = useAtomValue(notifyState);
 
   const nearestStation = useNearestStation();
@@ -64,14 +65,17 @@ export const useRefreshStation = (): void => {
   const effectiveApproachingThreshold = approachingThreshold + accuracyBonus;
 
   const isArrived = useMemo((): boolean => {
+    if (latitude == null || longitude == null || !nearestStation) {
+      return true;
+    }
+
+    // グレース期間は到着を引き起こした駅にのみ適用する
+    // 別の駅に対してtrueを返すと誤って駅が進んでしまう
     const inGracePeriod =
       Date.now() - lastArrivedTimeRef.current < ARRIVED_GRACE_PERIOD_MS;
-
     if (
-      latitude == null ||
-      longitude == null ||
-      !nearestStation ||
-      inGracePeriod
+      inGracePeriod &&
+      nearestStation.id === lastArrivedStationIdRef.current
     ) {
       return true;
     }
@@ -91,6 +95,7 @@ export const useRefreshStation = (): void => {
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
+      lastArrivedStationIdRef.current = nearestStation.id ?? null;
     }
     return arrived;
   }, [effectiveArrivedThreshold, latitude, longitude, nearestStation]);
