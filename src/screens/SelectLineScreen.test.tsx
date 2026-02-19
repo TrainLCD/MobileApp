@@ -724,13 +724,14 @@ describe('SelectLineScreen - 路線切り替え時の前回データクリア', 
       stationsCache: [],
     };
 
-    (useAtom as jest.Mock).mockReturnValue([
-      resetState,
-      mockSetStationState,
-    ]);
+    (useAtom as jest.Mock).mockReturnValue([resetState, mockSetStationState]);
 
     // fetch 完了後に行われる状態更新をシミュレート
-    const newPendingStation = { id: 5, name: '大門', line: { id: 200, name: '都営浅草線' } };
+    const newPendingStation = {
+      id: 5,
+      name: '大門',
+      line: { id: 200, name: '都営浅草線' },
+    };
     const newPendingStations = [
       { id: 5, name: '大門' },
       { id: 6, name: '新橋' },
