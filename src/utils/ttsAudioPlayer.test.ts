@@ -89,6 +89,9 @@ describe('playAudio', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it('再生完了時に onFinish を呼ぶ', () => {
     const mock = createMockPlayer();
     mockCreateAudioPlayer.mockReturnValue(mock.player);
