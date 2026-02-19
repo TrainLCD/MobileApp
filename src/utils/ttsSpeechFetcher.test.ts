@@ -31,6 +31,9 @@ describe('fetchSpeechAudio', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it('成功レスポンスでファイルパスを返す', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
