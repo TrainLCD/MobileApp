@@ -421,15 +421,17 @@ const PadArch: React.FC<Props> = ({
 
   // AnimatedChevron不要。SharedValueを直接渡す
 
-  const pathD1 = `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
-    windowWidth / 1.5 - 4
-  } ${windowHeight}`;
-  const pathD2 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
-    windowWidth / 1.5
-  } ${windowHeight}`;
-  const pathD3 = `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
-    windowWidth / 1.5
-  } ${windowHeight}`;
+  const paths = useMemo(
+    () => ({
+      shadow: `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+        windowWidth / 1.5 - 4
+      } ${windowHeight}`,
+      main: `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+        windowWidth / 1.5
+      } ${windowHeight}`,
+    }),
+    [windowWidth, windowHeight]
+  );
   const hexLineColor = line.color ?? '#000';
   const strokeWidth = 128;
 
@@ -562,8 +564,8 @@ const PadArch: React.FC<Props> = ({
       />
 
       <Svg width={windowWidth} height={windowHeight} fill="transparent">
-        <Path d={pathD1} stroke="#333" strokeWidth={strokeWidth} />
-        <Path d={pathD2} stroke="#505a6e" strokeWidth={strokeWidth} />
+        <Path d={paths.shadow} stroke="#333" strokeWidth={strokeWidth} />
+        <Path d={paths.main} stroke="#505a6e" strokeWidth={strokeWidth} />
       </Svg>
 
       {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
@@ -591,7 +593,7 @@ const PadArch: React.FC<Props> = ({
               fill="transparent"
             >
               <Path
-                d={pathD1}
+                d={paths.shadow}
                 stroke={darken(0.3, seg.color)}
                 strokeWidth={strokeWidth}
               />
@@ -623,7 +625,11 @@ const PadArch: React.FC<Props> = ({
               height={windowHeight}
               fill="transparent"
             >
-              <Path d={pathD3} stroke={seg.color} strokeWidth={strokeWidth} />
+              <Path
+                d={paths.main}
+                stroke={seg.color}
+                strokeWidth={strokeWidth}
+              />
             </Svg>
           </View>
         ))}
