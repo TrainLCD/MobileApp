@@ -65,8 +65,12 @@ describe('safeRemovePlayer', () => {
       remove: jest.fn(),
     } as unknown as Parameters<typeof safeRemovePlayer>[0];
     safeRemovePlayer(player);
-    expect((player as { pause: jest.Mock }).pause).toHaveBeenCalledTimes(1);
-    expect((player as { remove: jest.Mock }).remove).toHaveBeenCalledTimes(1);
+    expect(
+      (player as unknown as { pause: jest.Mock }).pause
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      (player as unknown as { remove: jest.Mock }).remove
+    ).toHaveBeenCalledTimes(1);
   });
 
   it('pause/remove が例外を投げても安全', () => {
