@@ -1,6 +1,6 @@
 import { darken } from 'polished';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -28,8 +28,6 @@ import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
 
 type NumberingInfo = {
   stationNumber: string;
@@ -138,14 +136,12 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
-    width: screenWidth / 4,
     flexDirection: 'row',
     alignItems: 'center',
   },
   stationName: {
     fontSize: 32,
     fontWeight: 'bold',
-    width: screenWidth / 4,
   },
   circle: {
     position: 'absolute',
@@ -169,14 +165,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'absolute',
     bottom: 0,
-    width: screenWidth,
   },
   chevron: {
     position: 'absolute',
     width: 60,
     height: 45,
-    right: screenWidth / 3.15,
-    top: (4 * screenHeight) / 7 + 84,
     // 非到着時のベース角度
     transform: [{ rotate: '-20deg' }],
     zIndex: 1,
@@ -184,20 +177,11 @@ const styles = StyleSheet.create({
   chevronArrived: {
     width: 72,
     height: 54,
-    top: (4 * screenHeight) / 7,
-    right: screenWidth / 2.985,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
-  transfers: {
-    width: screenWidth / 2,
+  transfersBase: {
     position: 'absolute',
-    top: screenHeight / 4,
-    left: 24,
-  },
-  transfersMany: {
-    position: 'absolute',
-    top: screenHeight / 6,
     left: 24,
   },
   transfersCurrentStationName: {
@@ -220,7 +204,6 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   transferLines: {
-    width: screenWidth / 3,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
@@ -261,6 +244,8 @@ type TransfersProps = {
   lineMarks: (LineMark | null)[];
   station: Station | null;
   isEn: boolean;
+  windowWidth: number;
+  windowHeight: number;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
@@ -268,8 +253,26 @@ const Transfers: React.FC<TransfersProps> = ({
   station,
   lineMarks,
   isEn,
+  windowWidth,
+  windowHeight,
 }: TransfersProps) => {
   const isBus = isBusLine(station?.line);
+
+  const dynamicStyles = useMemo(
+    () => ({
+      transfers: {
+        width: windowWidth / 2,
+        top: windowHeight / 4,
+      },
+      transfersMany: {
+        top: windowHeight / 6,
+      },
+      transferLines: { width: windowWidth / 3 },
+    }),
+    [windowWidth, windowHeight]
+  );
+
+  const isMany = transferLines?.length > MANY_LINES_THRESHOLD;
 
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
@@ -306,31 +309,33 @@ const Transfers: React.FC<TransfersProps> = ({
     <>
       {isEn ? (
         <View
-          style={
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? styles.transfersMany
-              : styles.transfers
-          }
+          style={[
+            styles.transfersBase,
+            isMany ? dynamicStyles.transfersMany : dynamicStyles.transfers,
+          ]}
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
           <Typography style={styles.transfersCurrentStationNameEn}>
             {`${station?.nameRoman}${isBus ? '' : ' Station'}`}
           </Typography>
-          <View style={styles.transferLines}>{renderTransferLines()}</View>
+          <View style={[styles.transferLines, dynamicStyles.transferLines]}>
+            {renderTransferLines()}
+          </View>
         </View>
       ) : (
         <View
-          style={
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? styles.transfersMany
-              : styles.transfers
-          }
+          style={[
+            styles.transfersBase,
+            isMany ? dynamicStyles.transfersMany : dynamicStyles.transfers,
+          ]}
         >
           <Typography style={styles.transfersCurrentStationName}>
             {`${station?.name ?? ''}${isBus ? '' : '駅'}`}
           </Typography>
           <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
-          <View style={styles.transferLines}>{renderTransferLines()}</View>
+          <View style={[styles.transferLines, dynamicStyles.transferLines]}>
+            {renderTransferLines()}
+          </View>
         </View>
       )}
     </>
@@ -348,6 +353,8 @@ const PadArch: React.FC<Props> = ({
   trainTypeLines,
   isEn,
 }: Props) => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
   // 共有値（Reanimated）
   const bgScale = useSharedValue(0.95);
   // シェブロンのアニメーションは 0..1 の単一タイムラインで駆動
@@ -389,10 +396,10 @@ const PadArch: React.FC<Props> = ({
   // biome-ignore lint/correctness/useExhaustiveDependencies: 到着状態の変化時のみ再実行
   useEffect(() => {
     fillHeight.value = 0;
-    fillHeight.value = withTiming(Dimensions.get('window').height, {
+    fillHeight.value = withTiming(windowHeight, {
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
     });
-  }, [arrived, fillHeight]);
+  }, [arrived, fillHeight, windowHeight]);
 
   // アニメーション用スタイル
   const fillStyle = useAnimatedStyle(() => ({ height: fillHeight.value }));
@@ -414,15 +421,17 @@ const PadArch: React.FC<Props> = ({
 
   // AnimatedChevron不要。SharedValueを直接渡す
 
-  const pathD1 = `M -4 -60 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-    screenWidth / 1.5 - 4
-  } ${screenHeight}`;
-  const pathD2 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-    screenWidth / 1.5
-  } ${screenHeight}`;
-  const pathD3 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-    screenWidth / 1.5
-  } ${screenHeight}`;
+  const paths = useMemo(
+    () => ({
+      shadow: `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+        windowWidth / 1.5 - 4
+      } ${windowHeight}`,
+      main: `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+        windowWidth / 1.5
+      } ${windowHeight}`,
+    }),
+    [windowWidth, windowHeight]
+  );
   const hexLineColor = line.color ?? '#000';
   const strokeWidth = 128;
 
@@ -432,62 +441,88 @@ const PadArch: React.FC<Props> = ({
         stations,
         trainTypeLines,
         hexLineColor,
-        screenHeight
+        windowHeight
       ),
-    [stations, trainTypeLines, hexLineColor]
+    [stations, trainTypeLines, hexLineColor, windowHeight]
   );
 
-  const getDotLeft = useCallback((i: number): number => {
-    const leftPad = 0;
-    switch (i) {
-      case 0:
-        return screenWidth / 3 + leftPad;
-      case 1:
-        return screenWidth / 2.35 + leftPad;
-      case 2:
-        return screenWidth / 1.975 + leftPad;
-      case 3:
-        return screenWidth / 1.785 + leftPad;
-      case 4:
-        return screenWidth / 1.655 - 3.5;
-      default:
-        return 0;
-    }
-  }, []);
+  const dynamicStyles = useMemo(
+    () => ({
+      stationNameContainer: { width: windowWidth / 4 },
+      stationName: { width: windowWidth / 4 },
+      clipViewStyle: { width: windowWidth },
+      chevron: {
+        right: windowWidth / 3.15,
+        top: (4 * windowHeight) / 7 + 84,
+      },
+      chevronArrived: {
+        top: (4 * windowHeight) / 7,
+        right: windowWidth / 2.985,
+      },
+    }),
+    [windowWidth, windowHeight]
+  );
 
-  const getStationNameLeft = useCallback((i: number): number => {
-    switch (i) {
-      case 0:
-        return screenWidth / 2.2;
-      case 1:
-        return screenWidth / 1.925;
-      case 2:
-        return screenWidth / 1.7;
-      case 3:
-        return screenWidth / 1.55;
-      case 4:
-        return screenWidth / 1.47;
-      default:
-        return 0;
-    }
-  }, []);
+  const getDotLeft = useCallback(
+    (i: number): number => {
+      const leftPad = 0;
+      switch (i) {
+        case 0:
+          return windowWidth / 3 + leftPad;
+        case 1:
+          return windowWidth / 2.35 + leftPad;
+        case 2:
+          return windowWidth / 1.975 + leftPad;
+        case 3:
+          return windowWidth / 1.785 + leftPad;
+        case 4:
+          return windowWidth / 1.655 - 3.5;
+        default:
+          return 0;
+      }
+    },
+    [windowWidth]
+  );
 
-  const getStationNameTop = useCallback((i: number): number => {
-    switch (i) {
-      case 0:
-        return -8;
-      case 1:
-        return screenHeight / 11.5;
-      case 2:
-        return screenHeight / 4.5;
-      case 3:
-        return screenHeight / 2.75;
-      case 4:
-        return screenHeight / 1.9;
-      default:
-        return 0;
-    }
-  }, []);
+  const getStationNameLeft = useCallback(
+    (i: number): number => {
+      switch (i) {
+        case 0:
+          return windowWidth / 2.2;
+        case 1:
+          return windowWidth / 1.925;
+        case 2:
+          return windowWidth / 1.7;
+        case 3:
+          return windowWidth / 1.55;
+        case 4:
+          return windowWidth / 1.47;
+        default:
+          return 0;
+      }
+    },
+    [windowWidth]
+  );
+
+  const getStationNameTop = useCallback(
+    (i: number): number => {
+      switch (i) {
+        case 0:
+          return -8;
+        case 1:
+          return windowHeight / 11.5;
+        case 2:
+          return windowHeight / 4.5;
+        case 3:
+          return windowHeight / 2.75;
+        case 4:
+          return windowHeight / 1.9;
+        default:
+          return 0;
+      }
+    },
+    [windowHeight]
+  );
 
   const getCustomDotStyle = useCallback(
     (
@@ -502,11 +537,11 @@ const PadArch: React.FC<Props> = ({
           : 'white';
       return {
         left: getDotLeft(i),
-        top: !i ? screenHeight / 30 : (i * screenHeight) / 7,
+        top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
         backgroundColor: dotColor,
       };
     },
-    [getDotLeft]
+    [getDotLeft, windowHeight]
   );
 
   const getCustomStationNameStyle = useCallback(
@@ -524,22 +559,26 @@ const PadArch: React.FC<Props> = ({
         station={station}
         lineMarks={lineMarks}
         isEn={isEn}
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
       />
 
-      <Svg width={screenWidth} height={screenHeight} fill="transparent">
-        <Path d={pathD1} stroke="#333" strokeWidth={strokeWidth} />
-        <Path d={pathD2} stroke="#505a6e" strokeWidth={strokeWidth} />
+      <Svg width={windowWidth} height={windowHeight} fill="transparent">
+        <Path d={paths.shadow} stroke="#333" strokeWidth={strokeWidth} />
+        <Path d={paths.main} stroke="#505a6e" strokeWidth={strokeWidth} />
       </Svg>
 
       {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
-      <Animated.View style={[styles.clipViewStyle, fillStyle]}>
+      <Animated.View
+        style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
+      >
         {colorSegments.map((seg) => (
           <View
             key={`dk-${seg.color}-${seg.yStart}`}
             style={{
               position: 'absolute',
-              bottom: screenHeight - seg.yEnd,
-              width: screenWidth,
+              bottom: windowHeight - seg.yEnd,
+              width: windowWidth,
               height: seg.yEnd - seg.yStart,
               overflow: 'hidden',
             }}
@@ -547,14 +586,14 @@ const PadArch: React.FC<Props> = ({
             <Svg
               style={{
                 position: 'absolute',
-                bottom: seg.yEnd - screenHeight - ARC_SVG_Y_OFFSET,
+                bottom: seg.yEnd - windowHeight - ARC_SVG_Y_OFFSET,
               }}
-              width={screenWidth}
-              height={screenHeight}
+              width={windowWidth}
+              height={windowHeight}
               fill="transparent"
             >
               <Path
-                d={pathD1}
+                d={paths.shadow}
                 stroke={darken(0.3, seg.color)}
                 strokeWidth={strokeWidth}
               />
@@ -563,14 +602,16 @@ const PadArch: React.FC<Props> = ({
         ))}
       </Animated.View>
       {/* 主色層: 区間ごとにViewクリッピングで色分け */}
-      <Animated.View style={[styles.clipViewStyle, fillStyle]}>
+      <Animated.View
+        style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
+      >
         {colorSegments.map((seg) => (
           <View
             key={`mn-${seg.color}-${seg.yStart}`}
             style={{
               position: 'absolute',
-              bottom: screenHeight - seg.yEnd,
-              width: screenWidth,
+              bottom: windowHeight - seg.yEnd,
+              width: windowWidth,
               height: seg.yEnd - seg.yStart,
               overflow: 'hidden',
             }}
@@ -578,13 +619,17 @@ const PadArch: React.FC<Props> = ({
             <Svg
               style={{
                 position: 'absolute',
-                bottom: seg.yEnd - screenHeight - ARC_SVG_Y_OFFSET,
+                bottom: seg.yEnd - windowHeight - ARC_SVG_Y_OFFSET,
               }}
-              width={screenWidth}
-              height={screenHeight}
+              width={windowWidth}
+              height={windowHeight}
               fill="transparent"
             >
-              <Path d={pathD3} stroke={seg.color} strokeWidth={strokeWidth} />
+              <Path
+                d={paths.main}
+                stroke={seg.color}
+                strokeWidth={strokeWidth}
+              />
             </Svg>
           </View>
         ))}
@@ -592,7 +637,10 @@ const PadArch: React.FC<Props> = ({
       <Animated.View
         style={[
           styles.chevron,
-          arrived ? styles.chevronArrived : chevronContainerStyle,
+          dynamicStyles.chevron,
+          arrived
+            ? [styles.chevronArrived, dynamicStyles.chevronArrived]
+            : chevronContainerStyle,
         ]}
       >
         <ChevronYamanote backgroundScaleSV={bgScale} arrived={arrived} />
@@ -614,6 +662,7 @@ const PadArch: React.FC<Props> = ({
               <View
                 style={[
                   styles.stationNameContainer,
+                  dynamicStyles.stationNameContainer,
                   getCustomStationNameStyle(i),
                 ]}
               >
@@ -644,6 +693,7 @@ const PadArch: React.FC<Props> = ({
                 <Typography
                   style={[
                     styles.stationName,
+                    dynamicStyles.stationName,
                     getIsPass(s) ? styles.halfOpacity : null,
                   ]}
                 >
