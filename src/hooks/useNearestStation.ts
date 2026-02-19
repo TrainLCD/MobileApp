@@ -49,10 +49,11 @@ export const useNearestStation = (): Station | undefined => {
         sta.longitude === nearestCoordinates.longitude
     );
 
+    // currentStationを優先して返すことで、到着直後にnextStationへ誤って進むのを防ぐ
     return (
-      nearestStations.find(
-        (s) => s.id === currentStation?.id || s.id === nextStation?.id
-      ) ?? nearestStations[0]
+      nearestStations.find((s) => s.id === currentStation?.id) ??
+      nearestStations.find((s) => s.id === nextStation?.id) ??
+      nearestStations[0]
     );
   }, [latitude, longitude, validStations, currentStation, nextStation]);
 
