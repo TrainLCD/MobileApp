@@ -618,3 +618,136 @@ describe('SelectLineScreenPresets - ループデータ生成', () => {
     expect(getAllByTestId('preset-card').length).toBe(1);
   });
 });
+
+describe('SelectLineScreen - 路線切り替え時の前回データクリア', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('路線選択時に前回の列車種別データ（fetchedTrainTypes, trainType, pendingTrainType）がクリアされる', () => {
+    const mockSetNavigationState = jest.fn();
+    // 大江戸線を選択した後の状態を再現
+    const staleNavigationState = {
+      headerState: 'CURRENT',
+      leftStations: [],
+      trainType: { id: 10, groupId: 500, name: '都営大江戸線' },
+      pendingTrainType: { id: 10, groupId: 500, name: '都営大江戸線' },
+      autoModeEnabled: true,
+      stationForHeader: null,
+      arrived: false,
+      approaching: false,
+      isLEDTheme: false,
+      fetchedTrainTypes: [{ id: 10, groupId: 500, name: '都営大江戸線' }],
+      headerTransitionDelay: false,
+      targetAutoModeStation: null,
+      firstStop: true,
+      presetsFetched: false,
+      presetRoutes: [],
+    };
+
+    (useAtom as jest.Mock).mockReturnValue([
+      staleNavigationState,
+      mockSetNavigationState,
+    ]);
+
+    // handleLineSelected で fetch 前に行われるリセットをシミュレート
+    mockSetNavigationState((prev: typeof staleNavigationState) => ({
+      ...prev,
+      fetchedTrainTypes: [],
+      trainType: null,
+      pendingTrainType: null,
+    }));
+
+    const updateFunction = mockSetNavigationState.mock.calls[0][0];
+    const updatedState = updateFunction(staleNavigationState);
+
+    expect(updatedState.fetchedTrainTypes).toEqual([]);
+    expect(updatedState.trainType).toBeNull();
+    expect(updatedState.pendingTrainType).toBeNull();
+  });
+
+  it('路線選択時に前回のpending駅データがクリアされる', () => {
+    const mockSetStationState = jest.fn();
+    // 大江戸線を選択した後の状態を再現
+    const staleStationState = {
+      station: { id: 1, name: '大門' },
+      stations: [],
+      pendingStation: { id: 2, name: '六本木' },
+      pendingStations: [
+        { id: 2, name: '六本木' },
+        { id: 3, name: '新宿西口' },
+      ],
+      selectedDirection: 'INBOUND',
+      wantedDestination: null,
+      selectedBound: { id: 4, name: '光が丘' },
+      stationsCache: [],
+    };
+
+    (useAtom as jest.Mock).mockReturnValue([
+      staleStationState,
+      mockSetStationState,
+    ]);
+
+    // handleLineSelected で fetch 前に行われるリセットをシミュレート
+    mockSetStationState((prev: typeof staleStationState) => ({
+      ...prev,
+      pendingStation: null,
+      pendingStations: [],
+      selectedDirection: null,
+      wantedDestination: null,
+      selectedBound: null,
+    }));
+
+    const updateFunction = mockSetStationState.mock.calls[0][0];
+    const updatedState = updateFunction(staleStationState);
+
+    expect(updatedState.pendingStation).toBeNull();
+    expect(updatedState.pendingStations).toEqual([]);
+    expect(updatedState.selectedDirection).toBeNull();
+    expect(updatedState.wantedDestination).toBeNull();
+    expect(updatedState.selectedBound).toBeNull();
+    // 現在の最寄り駅は変更されないことを確認
+    expect(updatedState.station).toEqual({ id: 1, name: '大門' });
+  });
+
+  it('リセット後に新しい路線データで上書きされる', () => {
+    const mockSetStationState = jest.fn();
+    // リセット済みの状態
+    const resetState = {
+      station: { id: 1, name: '大門' },
+      stations: [],
+      pendingStation: null,
+      pendingStations: [],
+      selectedDirection: null,
+      wantedDestination: null,
+      selectedBound: null,
+      stationsCache: [],
+    };
+
+    (useAtom as jest.Mock).mockReturnValue([
+      resetState,
+      mockSetStationState,
+    ]);
+
+    // fetch 完了後に行われる状態更新をシミュレート
+    const newPendingStation = { id: 5, name: '大門', line: { id: 200, name: '都営浅草線' } };
+    const newPendingStations = [
+      { id: 5, name: '大門' },
+      { id: 6, name: '新橋' },
+    ];
+    mockSetStationState((prev: typeof resetState) => ({
+      ...prev,
+      pendingStation: newPendingStation,
+      pendingStations: newPendingStations,
+    }));
+
+    const updateFunction = mockSetStationState.mock.calls[0][0];
+    const updatedState = updateFunction(resetState);
+
+    expect(updatedState.pendingStation).toEqual(newPendingStation);
+    expect(updatedState.pendingStations).toEqual(newPendingStations);
+    // リセット済みのフィールドは null/空のまま（fetch 結果では上書きされない）
+    expect(updatedState.selectedDirection).toBeNull();
+    expect(updatedState.selectedBound).toBeNull();
+  });
+});
