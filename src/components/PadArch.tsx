@@ -272,7 +272,7 @@ const Transfers: React.FC<TransfersProps> = ({
     [windowWidth, windowHeight]
   );
 
-  const isMany = transferLines?.length > MANY_LINES_THRESHOLD;
+  const isMany = transferLines.length > MANY_LINES_THRESHOLD;
 
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
@@ -301,7 +301,7 @@ const Transfers: React.FC<TransfersProps> = ({
     [isEn, lineMarks, transferLines]
   );
 
-  if (!transferLines?.length) {
+  if (!transferLines.length) {
     return null;
   }
 
@@ -392,8 +392,8 @@ const PadArch: React.FC<Props> = ({
     }
   }, [arrived]);
 
-  // エフェクト: マウント時と到着/出発切替ごとに塗りつぶしアニメーション
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 到着状態の変化時のみ再実行
+  // エフェクト: マウント時と到着/出発切替またはウィンドウサイズ変更ごとに塗りつぶしアニメーション
+  // biome-ignore lint/correctness/useExhaustiveDependencies: SharedValue は安定した参照のため依存配列に含めません
   useEffect(() => {
     fillHeight.value = 0;
     fillHeight.value = withTiming(windowHeight, {
