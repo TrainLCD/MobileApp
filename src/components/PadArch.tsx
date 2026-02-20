@@ -53,8 +53,76 @@ type ColorSegment = {
   yEnd: number;
 };
 
-// animatedSurface の bottom: -200 によるSVG座標系オフセット
-const ARC_SVG_Y_OFFSET = 200;
+const STROKE_WIDTH = 128;
+const DOT_RADIUS = 34; // circle width(68) / 2
+const NAME_TOP_OFFSET = 42;
+
+/** SVG 楕円弧の中心パラメータを算出する (SVG Spec F.6.5) */
+const ARC_EPS = 1e-6;
+const computeArcEllipse = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  rawRx: number,
+  rawRy: number,
+  largeArc: boolean,
+  sweep: boolean
+): { cx: number; cy: number; rx: number; ry: number } => {
+  let rx = Math.max(rawRx, ARC_EPS);
+  let ry = Math.max(rawRy, ARC_EPS);
+  const dx = (x1 - x2) / 2;
+  const dy = (y1 - y2) / 2;
+  const d = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+  if (d > 1) {
+    const s = Math.sqrt(d);
+    rx *= s;
+    ry *= s;
+  }
+  const num = Math.max(
+    0,
+    rx * rx * ry * ry - rx * rx * dy * dy - ry * ry * dx * dx
+  );
+  const denom = rx * rx * dy * dy + ry * ry * dx * dx;
+  const root = denom > 0 ? Math.sqrt(num / denom) : 0;
+  const sign = largeArc === sweep ? -1 : 1;
+  return {
+    cx: (sign * root * rx * dy) / ry + (x1 + x2) / 2,
+    cy: (sign * root * -(ry * dx)) / rx + (y1 + y2) / 2,
+    rx,
+    ry,
+  };
+};
+
+/** 楕円弧上で指定した y 座標に対応する x 座標を返す（外側の弧） */
+const getArcXAtY = (
+  y: number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number
+): number => {
+  if (ry < ARC_EPS) return cx;
+  const t = Math.max(-1, Math.min(1, (y - cy) / ry));
+  return cx + rx * Math.sqrt(1 - t * t);
+};
+
+/** 楕円上の指定座標における外向き単位法線の水平成分を返す */
+const getOutwardNormalX = (
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number
+): number => {
+  const clampedRx = Math.max(rx, ARC_EPS);
+  const clampedRy = Math.max(ry, ARC_EPS);
+  const gx = (x - cx) / (clampedRx * clampedRx);
+  const gy = (y - cy) / (clampedRy * clampedRy);
+  const len = Math.sqrt(gx * gx + gy * gy);
+  return len > 0 ? gx / len : 1;
+};
 
 const computeColorSegments = (
   stations: Station[],
@@ -102,21 +170,17 @@ const computeColorSegments = (
 
   for (let i = 1; i <= stationColors.length; i++) {
     if (i === stationColors.length || stationColors[i] !== currentColor) {
-      // アニメーションSVGはARC_SVG_Y_OFFSETだけ下にずれているため境界もずらす
       // 境界位置: 前の駅ドットと次の駅ドットの間を 0.8 の比率で按分（やや次の駅寄り）
       const BOUNDARY_RATIO = 0.8;
       const yStart =
         segStartIdx === 0
           ? -height
           : dotYs[segStartIdx - 1] * (1 - BOUNDARY_RATIO) +
-            dotYs[segStartIdx] * BOUNDARY_RATIO +
-            ARC_SVG_Y_OFFSET;
+            dotYs[segStartIdx] * BOUNDARY_RATIO;
       const yEnd =
         i === stationColors.length
           ? 2 * height
-          : dotYs[i - 1] * (1 - BOUNDARY_RATIO) +
-            dotYs[i] * BOUNDARY_RATIO +
-            ARC_SVG_Y_OFFSET;
+          : dotYs[i - 1] * (1 - BOUNDARY_RATIO) + dotYs[i] * BOUNDARY_RATIO;
 
       segments.push({ color: currentColor, yStart, yEnd });
 
@@ -154,12 +218,8 @@ const styles = StyleSheet.create({
   arrivedCircle: {
     width: 18,
     height: 18,
-    marginLeft: 32,
-    marginTop: 24,
-  },
-  animatedSurface: {
-    position: 'absolute',
-    bottom: -200,
+    marginLeft: 21,
+    marginTop: 25,
   },
   clipViewStyle: {
     overflow: 'hidden',
@@ -433,7 +493,22 @@ const PadArch: React.FC<Props> = ({
     [windowWidth, windowHeight]
   );
   const hexLineColor = line.color ?? '#000';
-  const strokeWidth = 128;
+  const strokeWidth = STROKE_WIDTH;
+
+  // アークの楕円中心を算出（ドット・ラベル・シェブロンの位置計算に使用）
+  const arc = useMemo(() => {
+    const rx = windowWidth / 1.5;
+    return computeArcEllipse(
+      0,
+      -64,
+      rx,
+      windowHeight,
+      rx,
+      windowHeight,
+      false,
+      true
+    );
+  }, [windowWidth, windowHeight]);
 
   const colorSegments = useMemo(
     () =>
@@ -446,80 +521,60 @@ const PadArch: React.FC<Props> = ({
     [stations, trainTypeLines, hexLineColor, windowHeight]
   );
 
-  const dynamicStyles = useMemo(
-    () => ({
+  const dynamicStyles = useMemo(() => {
+    const chevronY = (4 * windowHeight) / 7 + 84;
+    const chevronArrivedY = (4 * windowHeight) / 7;
+    return {
+      arcContainer: { width: windowWidth, height: windowHeight },
       stationNameContainer: { width: windowWidth / 4 },
       stationName: { width: windowWidth / 4 },
       clipViewStyle: { width: windowWidth },
       chevron: {
-        right: windowWidth / 3.15,
-        top: (4 * windowHeight) / 7 + 84,
+        right:
+          windowWidth -
+          getArcXAtY(chevronY, arc.cx, arc.cy, arc.rx, arc.ry) -
+          30,
+        top: chevronY,
       },
       chevronArrived: {
-        top: (4 * windowHeight) / 7,
-        right: windowWidth / 2.985,
+        top: chevronArrivedY,
+        right:
+          windowWidth -
+          getArcXAtY(chevronArrivedY, arc.cx, arc.cy, arc.rx, arc.ry) -
+          36,
       },
-    }),
-    [windowWidth, windowHeight]
-  );
+    };
+  }, [windowWidth, windowHeight, arc]);
 
   const getDotLeft = useCallback(
     (i: number): number => {
-      const leftPad = 0;
-      switch (i) {
-        case 0:
-          return windowWidth / 3 + leftPad;
-        case 1:
-          return windowWidth / 2.35 + leftPad;
-        case 2:
-          return windowWidth / 1.975 + leftPad;
-        case 3:
-          return windowWidth / 1.785 + leftPad;
-        case 4:
-          return windowWidth / 1.655 - 3.5;
-        default:
-          return 0;
-      }
+      const dotY = i === 0 ? windowHeight / 30 : (i * windowHeight) / 7;
+      const arcX = getArcXAtY(dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      const nx = getOutwardNormalX(arcX, dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      // ストロークの曲率によりバンドの視覚的中心がアーク中心線より外側にずれるため補正
+      const ny2 = 1 - nx * nx;
+      const bandCenterOffset = (STROKE_WIDTH / 2) * ny2;
+      return arcX + bandCenterOffset - DOT_RADIUS;
     },
-    [windowWidth]
+    [windowHeight, arc]
   );
 
   const getStationNameLeft = useCallback(
     (i: number): number => {
-      switch (i) {
-        case 0:
-          return windowWidth / 2.2;
-        case 1:
-          return windowWidth / 1.925;
-        case 2:
-          return windowWidth / 1.7;
-        case 3:
-          return windowWidth / 1.55;
-        case 4:
-          return windowWidth / 1.47;
-        default:
-          return 0;
-      }
+      const dotY = i === 0 ? windowHeight / 30 : (i * windowHeight) / 7;
+      const arcX = getArcXAtY(dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      const nx = getOutwardNormalX(arcX, dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      // ストローク幅の水平断面（64/nx）でバンド外縁を超えた位置にラベルを配置
+      const safeNx = Math.max(nx, 0.3);
+      return arcX + STROKE_WIDTH / 2 / safeNx + 12;
     },
-    [windowWidth]
+    [windowHeight, arc]
   );
 
   const getStationNameTop = useCallback(
     (i: number): number => {
-      switch (i) {
-        case 0:
-          return -8;
-        case 1:
-          return windowHeight / 11.5;
-        case 2:
-          return windowHeight / 4.5;
-        case 3:
-          return windowHeight / 2.75;
-        case 4:
-          return windowHeight / 1.9;
-        default:
-          return 0;
-      }
+      const dotY = i === 0 ? windowHeight / 30 : (i * windowHeight) / 7;
+      return dotY - NAME_TOP_OFFSET;
     },
     [windowHeight]
   );
@@ -563,77 +618,80 @@ const PadArch: React.FC<Props> = ({
         windowHeight={windowHeight}
       />
 
-      <Svg width={windowWidth} height={windowHeight} fill="transparent">
-        <Path d={paths.shadow} stroke="#333" strokeWidth={strokeWidth} />
-        <Path d={paths.main} stroke="#505a6e" strokeWidth={strokeWidth} />
-      </Svg>
+      {/* 背景アークと色セグメントを同一コンテナに格納し座標系を統一 */}
+      <View style={dynamicStyles.arcContainer}>
+        <Svg width={windowWidth} height={windowHeight} fill="transparent">
+          <Path d={paths.shadow} stroke="#333" strokeWidth={strokeWidth} />
+          <Path d={paths.main} stroke="#505a6e" strokeWidth={strokeWidth} />
+        </Svg>
 
-      {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
-      <Animated.View
-        style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
-      >
-        {colorSegments.map((seg) => (
-          <View
-            key={`dk-${seg.color}-${seg.yStart}`}
-            style={{
-              position: 'absolute',
-              bottom: windowHeight - seg.yEnd,
-              width: windowWidth,
-              height: seg.yEnd - seg.yStart,
-              overflow: 'hidden',
-            }}
-          >
-            <Svg
+        {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
+        <Animated.View
+          style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
+        >
+          {colorSegments.map((seg) => (
+            <View
+              key={`dk-${seg.color}-${seg.yStart}`}
               style={{
                 position: 'absolute',
-                bottom: seg.yEnd - windowHeight - ARC_SVG_Y_OFFSET,
+                bottom: windowHeight - seg.yEnd,
+                width: windowWidth,
+                height: seg.yEnd - seg.yStart,
+                overflow: 'hidden',
               }}
-              width={windowWidth}
-              height={windowHeight}
-              fill="transparent"
             >
-              <Path
-                d={paths.shadow}
-                stroke={darken(0.3, seg.color)}
-                strokeWidth={strokeWidth}
-              />
-            </Svg>
-          </View>
-        ))}
-      </Animated.View>
-      {/* 主色層: 区間ごとにViewクリッピングで色分け */}
-      <Animated.View
-        style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
-      >
-        {colorSegments.map((seg) => (
-          <View
-            key={`mn-${seg.color}-${seg.yStart}`}
-            style={{
-              position: 'absolute',
-              bottom: windowHeight - seg.yEnd,
-              width: windowWidth,
-              height: seg.yEnd - seg.yStart,
-              overflow: 'hidden',
-            }}
-          >
-            <Svg
+              <Svg
+                style={{
+                  position: 'absolute',
+                  bottom: seg.yEnd - windowHeight,
+                }}
+                width={windowWidth}
+                height={windowHeight}
+                fill="transparent"
+              >
+                <Path
+                  d={paths.shadow}
+                  stroke={darken(0.3, seg.color)}
+                  strokeWidth={strokeWidth}
+                />
+              </Svg>
+            </View>
+          ))}
+        </Animated.View>
+        {/* 主色層: 区間ごとにViewクリッピングで色分け */}
+        <Animated.View
+          style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
+        >
+          {colorSegments.map((seg) => (
+            <View
+              key={`mn-${seg.color}-${seg.yStart}`}
               style={{
                 position: 'absolute',
-                bottom: seg.yEnd - windowHeight - ARC_SVG_Y_OFFSET,
+                bottom: windowHeight - seg.yEnd,
+                width: windowWidth,
+                height: seg.yEnd - seg.yStart,
+                overflow: 'hidden',
               }}
-              width={windowWidth}
-              height={windowHeight}
-              fill="transparent"
             >
-              <Path
-                d={paths.main}
-                stroke={seg.color}
-                strokeWidth={strokeWidth}
-              />
-            </Svg>
-          </View>
-        ))}
-      </Animated.View>
+              <Svg
+                style={{
+                  position: 'absolute',
+                  bottom: seg.yEnd - windowHeight,
+                }}
+                width={windowWidth}
+                height={windowHeight}
+                fill="transparent"
+              >
+                <Path
+                  d={paths.main}
+                  stroke={seg.color}
+                  strokeWidth={strokeWidth}
+                />
+              </Svg>
+            </View>
+          ))}
+        </Animated.View>
+      </View>
       <Animated.View
         style={[
           styles.chevron,

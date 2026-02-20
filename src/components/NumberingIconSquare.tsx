@@ -131,7 +131,7 @@ const NumberingIconSquare: React.FC<Props> = ({
   threeLetterCode,
   allowScaling,
   size,
-  transformOrigin = Platform.OS === 'android' ? 'center' : 'bottom',
+  transformOrigin = 'center',
   withOutline,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
@@ -143,7 +143,7 @@ const NumberingIconSquare: React.FC<Props> = ({
         style={[
           styles.tlcRoot,
           {
-            transformOrigin: transformOrigin,
+            transformOrigin,
           },
         ]}
       >
@@ -178,7 +178,7 @@ const NumberingIconSquare: React.FC<Props> = ({
       style={
         allowScaling && {
           transform: [{ scale: 0.8 }],
-          transformOrigin: 'bottom',
+          transformOrigin,
           paddingVertical: isTablet ? 8 : 4,
           paddingHorizontal: isTablet ? 8 : 4,
         }

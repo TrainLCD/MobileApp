@@ -9,10 +9,6 @@
     "test": "TZ=UTC jest",
     "typecheck": "tsc --noEmit",
     "watch:test": "TZ=UTC jest --watch",
-    "deploy:ios": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy",
-    "deploy:ios:canary": "cd ios && bundle exec fastlane bump_version && bundle exec fastlane deploy_canary",
-    "deploy:android": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd bundle exec fastlane deploy",
-    "deploy:android:canary": "cd android && bundle exec fastlane bump_version && PACKAGE_NAME=me.tinykitten.trainlcd.dev bundle exec fastlane deploy_canary",
     "gql:codegen": "graphql-codegen --config utils/codegen.ts",
     "version:bump": "node scripts/bump-version.js"
   },
@@ -147,5 +143,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.1.1"
+  "version": "10.1.2"
 }

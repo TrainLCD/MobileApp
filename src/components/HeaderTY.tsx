@@ -1,12 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
@@ -225,7 +219,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
               stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               allowScaling
-              transformOrigin={Platform.OS === 'android' ? 'bottom' : undefined}
+              transformOrigin="bottom"
               withDarkTheme
             />
           ) : null}
