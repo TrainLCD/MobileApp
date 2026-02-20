@@ -43,9 +43,9 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         nm.createNotificationChannel(channel)
     }
 
-    private fun createContentIntent(): PendingIntent {
+    private fun createContentIntent(): PendingIntent? {
         val intent = reactApplicationContext.packageManager
-            .getLaunchIntentForPackage(reactApplicationContext.packageName)
+            .getLaunchIntentForPackage(reactApplicationContext.packageName) ?: return null
         return PendingIntent.getActivity(
             reactApplicationContext,
             0,
@@ -55,14 +55,14 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun startLiveUpdate(state: ReadableMap) {
-        if (Build.VERSION.SDK_INT < 36) return
+    fun startLiveUpdate(state: ReadableMap?) {
+        if (Build.VERSION.SDK_INT < 36 || state == null) return
         postProgressNotification(state)
     }
 
     @ReactMethod
-    fun updateLiveUpdate(state: ReadableMap) {
-        if (Build.VERSION.SDK_INT < 36) return
+    fun updateLiveUpdate(state: ReadableMap?) {
+        if (Build.VERSION.SDK_INT < 36 || state == null) return
         postProgressNotification(state)
     }
 
@@ -132,16 +132,18 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
                 )
             )
 
-        val notification = Notification.Builder(reactApplicationContext, CHANNEL_ID)
+        val builder = Notification.Builder(reactApplicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_live_update)
             .setContentTitle(contentTitle)
             .setContentText(contentText)
             .setSubText(subText)
             .setStyle(progressStyle)
-            .setContentIntent(createContentIntent())
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .build()
+
+        createContentIntent()?.let { builder.setContentIntent(it) }
+
+        val notification = builder.build()
 
         getNotificationManager().notify(NOTIFICATION_ID, notification)
     }
