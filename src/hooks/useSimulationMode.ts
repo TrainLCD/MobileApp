@@ -25,6 +25,7 @@ import getIsPass from '../utils/isPass';
 import { isBusLine } from '../utils/line';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useLoopLine } from './useLoopLine';
 
 export const useSimulationMode = (): void => {
   const {
@@ -39,6 +40,7 @@ export const useSimulationMode = (): void => {
 
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
+  const { isLoopLine } = useLoopLine();
 
   const segmentIndexRef = useRef(0);
   const childIndexRef = useRef(0);
@@ -80,8 +82,11 @@ export const useSimulationMode = (): void => {
 
   const maybeRevsersedStations = useMemo(
     () =>
-      selectedDirection === 'INBOUND' ? stations : stations.slice().reverse(),
-    [stations, selectedDirection]
+      // ループ線では INBOUND/OUTBOUND の進行方向が非ループ線と逆になる
+      (isLoopLine ? selectedDirection !== 'INBOUND' : selectedDirection === 'INBOUND')
+        ? stations
+        : stations.slice().reverse(),
+    [stations, selectedDirection, isLoopLine]
   );
 
   const enabled = useMemo(() => {
