@@ -1,19 +1,8 @@
-import { useLazyQuery } from '@apollo/client/react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
-import findNearest from 'geolib/es/findNearest';
-import orderByDistance from 'geolib/es/orderByDistance';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { useAtomValue } from 'jotai';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedScrollHandler,
@@ -24,77 +13,33 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Line, LineNested, Station, TrainType } from '~/@types/graphql';
+import type { Line, LineNested } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
-import { type HeaderLayout, NowHeader } from '~/components/NowHeader';
+import { NowHeader } from '~/components/NowHeader';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
-import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
-import { gqlClient } from '~/lib/gql';
-import {
-  GET_LINE_GROUP_LIST_STATIONS_PRESET,
-  GET_LINE_GROUP_STATIONS,
-  GET_LINE_LIST_STATIONS_LIGHT,
-  GET_LINE_LIST_STATIONS_PRESET,
-  GET_LINE_STATIONS,
-  GET_STATION_TRAIN_TYPES_LIGHT,
-} from '~/lib/graphql/queries';
-import type { SavedRoute } from '~/models/SavedRoute';
+import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
+import { useLineSelection } from '~/hooks/useLineSelection';
+import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
+import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
+import { useStationsCache } from '~/hooks/useStationsCache';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
-import FooterTabBar, {
-  type ButtonLayout,
-  FOOTER_BASE_HEIGHT,
-} from '../components/FooterTabBar';
+import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
-import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
-import { useFetchCurrentLocationOnce, useFetchNearbyStation } from '../hooks';
-import { useSavedRoutes } from '../hooks/useSavedRoutes';
-import lineStateAtom from '../store/atoms/line';
-import { locationAtom, setLocation } from '../store/atoms/location';
-import navigationState, { type LoopItem } from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
 import { SelectLineScreenPresets } from './SelectLineScreenPresets';
 
-type GetLineStationsData = {
-  lineStations: Station[];
-};
-
-type GetLineStationsVariables = {
-  lineId: number;
-  stationId?: number;
-};
-
-type GetLineGroupStationsData = {
-  lineGroupStations: Station[];
-};
-
-type GetLineGroupStationsVariables = {
-  lineGroupId: number;
-};
-
-type GetStationTrainTypesData = {
-  stationTrainTypes: TrainType[];
-};
-
-type GetStationTrainTypesVariables = {
-  stationId: number;
-};
-
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
   listContainerStyle: {
     paddingBottom: 24,
     paddingHorizontal: 24,
-  },
-  lineName: {
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   heading: {
     fontSize: 24,
@@ -118,57 +63,54 @@ const NearbyStationLoader = () => (
   </SkeletonPlaceholder>
 );
 
-const INITIAL_LOCATION_FALLBACK_DELAY_MS = 800;
-
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
-  const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
-  const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
 
-  const [stationAtomState, setStationState] = useAtom(stationState);
-  const [, setLineState] = useAtom(lineStateAtom);
-  const { station: stationFromAtom, stationsCache } = stationAtomState;
-  const setNavigationState = useSetAtom(navigationState);
-  const insets = useSafeAreaInsets();
-  const scrollY = useSharedValue(0);
-
-  const [settingsButtonLayout, setSettingsButtonLayout] =
-    useState<ButtonLayout | null>(null);
-  const [nowHeaderLayout, setNowHeaderLayout] = useState<HeaderLayout | null>(
-    null
-  );
-  const [lineListLayout, setLineListLayout] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const [presetsLayout, setPresetsLayout] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const lineListRef = useRef<View>(null);
-  const presetsRef = useRef<View>(null);
-  const prevRoutesKeyRef = useRef('');
-  const initialNearbyFetchInFlightRef = useRef(false);
-
+  // --- カスタムフック ---
+  const { station, nearbyStationLoading } = useInitialNearbyStation();
+  useStationsCache(station);
+  const { carouselData, isRoutesDBInitialized } = usePresetCarouselData();
+  const {
+    handleLineSelected,
+    handleTrainTypeSelect,
+    handlePresetPress,
+    handleCloseSelectBoundModal,
+    isSelectBoundModalOpen,
+    fetchTrainTypesLoading,
+    fetchStationsByLineIdLoading,
+    fetchStationsByLineGroupIdLoading,
+    fetchTrainTypesError,
+    fetchStationsByLineIdError,
+    fetchStationsByLineGroupIdError,
+  } = useLineSelection();
   const {
     isWalkthroughActive,
     currentStepIndex,
-    currentStepId,
     currentStep,
     totalSteps,
     nextStep,
     goToStep,
     skipWalkthrough,
-    setSpotlightArea,
-  } = useWalkthroughCompleted();
+    setSettingsButtonLayout,
+    setNowHeaderLayout,
+    lineListRef,
+    presetsRef,
+    handlePresetsLayout,
+    handleLineListLayout,
+  } = useSelectLineWalkthrough();
 
-  const location = useAtomValue(locationAtom);
-  const latitude = location?.coords.latitude;
-  const longitude = location?.coords.longitude;
+  // --- atom 読み取り ---
+  const { stationsCache } = useAtomValue(stationState);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const insets = useSafeAreaInsets();
+  const scrollY = useSharedValue(0);
+
+  // --- 画面回転ロック解除 ---
+  useEffect(() => {
+    ScreenOrientation.unlockAsync().catch(console.error);
+  }, []);
+
+  // --- 派生値 ---
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
@@ -177,7 +119,6 @@ const SelectLineScreen = () => {
     return (flattened?.paddingBottom ?? 24) + footerHeight;
   }, [footerHeight]);
 
-  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const orientation = useDeviceOrientation();
   const isPortraitOrientation = useMemo(
     () =>
@@ -190,17 +131,6 @@ const SelectLineScreen = () => {
     [isPortraitOrientation]
   );
 
-  const {
-    stations: nearbyStations,
-    fetchByCoords,
-    isLoading: nearbyStationLoading,
-    error: nearbyStationFetchError,
-  } = useFetchNearbyStation();
-  const station = useMemo(
-    () => stationFromAtom ?? nearbyStations[0] ?? null,
-    [stationFromAtom, nearbyStations]
-  );
-
   const stationLines = useMemo<Line[]>(() => {
     return (station?.lines ?? []).filter(
       (line): line is LineNested => line?.id != null && !isBusLine(line)
@@ -211,589 +141,6 @@ const SelectLineScreen = () => {
       (line): line is LineNested => line?.id != null && isBusLine(line)
     );
   }, [station?.lines]);
-
-  const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
-  const {
-    routes,
-    updateRoutes,
-    isInitialized: isRoutesDBInitialized,
-  } = useSavedRoutes();
-
-  const [
-    fetchStationsByLineId,
-    {
-      loading: fetchStationsByLineIdLoading,
-      error: fetchStationsByLineIdError,
-    },
-  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
-    GET_LINE_STATIONS
-  );
-  const [
-    fetchStationsByLineGroupId,
-    {
-      loading: fetchStationsByLineGroupIdLoading,
-      error: fetchStationsByLineGroupIdError,
-    },
-  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
-    GET_LINE_GROUP_STATIONS
-  );
-  const [
-    fetchTrainTypes,
-    { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
-  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES_LIGHT
-  );
-
-  useEffect(() => {
-    ScreenOrientation.unlockAsync().catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    if (!isRoutesDBInitialized) return;
-    updateRoutes();
-  }, [isRoutesDBInitialized, updateRoutes]);
-
-  useEffect(() => {
-    const routesKey = routes
-      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
-      .join(',');
-    if (routesKey === prevRoutesKeyRef.current) return;
-
-    const fetchAsync = async () => {
-      try {
-        const lineRoutes = routes.filter((r) => !r.hasTrainType);
-        const trainTypeRoutes = routes.filter((r) => r.hasTrainType);
-
-        // !hasTrainType のルートを lineListStations で一括取得
-        const lineStationsMap = new Map<number, Station[]>();
-        const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
-        if (validLineRoutes.length > 0) {
-          const lineIds = validLineRoutes.map((r) => r.lineId);
-          const result = await gqlClient.query<{
-            lineListStations: Station[];
-          }>({
-            query: GET_LINE_LIST_STATIONS_PRESET,
-            variables: { lineIds },
-          });
-          for (const s of result.data?.lineListStations ?? []) {
-            const lid = s.line?.id;
-            if (lid == null) continue;
-            const arr = lineStationsMap.get(lid);
-            if (arr) {
-              arr.push(s);
-            } else {
-              lineStationsMap.set(lid, [s]);
-            }
-          }
-        }
-
-        // hasTrainType のルートを lineGroupListStations で一括取得
-        const trainTypeStationsMap = new Map<number, Station[]>();
-        if (trainTypeRoutes.length > 0) {
-          const lineGroupIds = trainTypeRoutes.map((r) => r.trainTypeId);
-          const result = await gqlClient.query<{
-            lineGroupListStations: Station[];
-          }>({
-            query: GET_LINE_GROUP_LIST_STATIONS_PRESET,
-            variables: { lineGroupIds },
-          });
-          for (const s of result.data?.lineGroupListStations ?? []) {
-            const gid = s.trainType?.groupId;
-            if (gid == null) continue;
-            const arr = trainTypeStationsMap.get(gid);
-            if (arr) {
-              arr.push(s);
-            } else {
-              trainTypeStationsMap.set(gid, [s]);
-            }
-          }
-        }
-
-        setCarouselData(
-          routes.map((r, i) => ({
-            ...r,
-            __k: `${r.id}-${i}`,
-            stations: r.hasTrainType
-              ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
-              : (lineStationsMap.get(r.lineId) ?? []),
-          }))
-        );
-        prevRoutesKeyRef.current = routesKey;
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchAsync();
-  }, [routes]);
-
-  useEffect(() => {
-    const stopLocationUpdates = async () => {
-      const hasStartedLocationUpdates =
-        await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      if (hasStartedLocationUpdates) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      }
-    };
-    stopLocationUpdates();
-  }, []);
-
-  const updateStationsCache = useCallback(
-    async (station: Station) => {
-      const fetchedLines = (station.lines ?? []).filter(
-        (line): line is LineNested => line?.id != null
-      );
-
-      const lineIds = fetchedLines.map((line) => line.id as number);
-      if (lineIds.length === 0) return;
-
-      let allStations: Station[];
-      try {
-        const result = await gqlClient.query<{
-          lineListStations: Station[];
-        }>({
-          query: GET_LINE_LIST_STATIONS_LIGHT,
-          variables: { lineIds },
-        });
-        allStations = result.data?.lineListStations ?? [];
-      } catch (err) {
-        console.error(err);
-        return;
-      }
-      const stationsByLineId = new Map<number, Station[]>();
-      for (const s of allStations) {
-        const lid = s.line?.id;
-        if (lid == null) continue;
-        const arr = stationsByLineId.get(lid);
-        if (arr) {
-          arr.push(s);
-        } else {
-          stationsByLineId.set(lid, [s]);
-        }
-      }
-
-      const stationsCache: Station[][] = fetchedLines.map(
-        (line) => stationsByLineId.get(line.id as number) ?? []
-      );
-
-      setStationState((prev) => ({
-        ...prev,
-        stationsCache,
-      }));
-    },
-    [setStationState]
-  );
-
-  useEffect(() => {
-    const fetchInitialNearbyStationAsync = async (coords?: {
-      latitude: number;
-      longitude: number;
-    }) => {
-      if (station || initialNearbyFetchInFlightRef.current) return;
-      initialNearbyFetchInFlightRef.current = true;
-
-      try {
-        let requestCoords = coords;
-        if (!requestCoords) {
-          const currentLocation = await fetchCurrentLocation(true);
-          if (!currentLocation) return;
-          setLocation(currentLocation);
-          requestCoords = {
-            latitude: currentLocation.coords.latitude,
-            longitude: currentLocation.coords.longitude,
-          };
-        }
-
-        const data = await fetchByCoords({
-          latitude: requestCoords.latitude,
-          longitude: requestCoords.longitude,
-          limit: 1,
-        });
-
-        const stationFromAPI = data.data?.stationsNearby[0] ?? null;
-        setStationState((prev) => ({
-          ...prev,
-          station: stationFromAPI,
-        }));
-        setNavigationState((prev) => ({
-          ...prev,
-          stationForHeader: stationFromAPI,
-        }));
-      } catch (error) {
-        console.error(error);
-      } finally {
-        initialNearbyFetchInFlightRef.current = false;
-      }
-    };
-
-    if (latitude != null && longitude != null) {
-      fetchInitialNearbyStationAsync({ latitude, longitude });
-      return;
-    }
-
-    const fallbackTimerId = setTimeout(() => {
-      fetchInitialNearbyStationAsync();
-    }, INITIAL_LOCATION_FALLBACK_DELAY_MS);
-
-    return () => {
-      clearTimeout(fallbackTimerId);
-    };
-  }, [
-    fetchByCoords,
-    fetchCurrentLocation,
-    latitude,
-    longitude,
-    setNavigationState,
-    setStationState,
-    station,
-  ]);
-
-  useEffect(() => {
-    if (!station) return;
-    updateStationsCache(station);
-  }, [station, updateStationsCache]);
-
-  useEffect(() => {
-    const checkFirstLaunch = async () => {
-      const firstLaunchPassed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      );
-      if (firstLaunchPassed === null) {
-        Alert.alert(translate('notice'), translate('firstAlertText'), [
-          {
-            text: 'OK',
-            onPress: (): void => {
-              AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                'true'
-              );
-            },
-          },
-        ]);
-      }
-    };
-    checkFirstLaunch();
-  }, []);
-
-  useEffect(() => {
-    if (nearbyStationFetchError) {
-      console.error(nearbyStationFetchError);
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
-    }
-  }, [nearbyStationFetchError]);
-
-  // ウォークスルーの「現在地を変更」ステップでNowHeaderをハイライト
-  useEffect(() => {
-    if (currentStepId === 'changeLocation' && nowHeaderLayout) {
-      setSpotlightArea({
-        x: nowHeaderLayout.x,
-        y: nowHeaderLayout.y,
-        width: nowHeaderLayout.width,
-        height: nowHeaderLayout.height,
-        borderRadius: 16,
-      });
-    }
-  }, [currentStepId, nowHeaderLayout, setSpotlightArea]);
-
-  // ウォークスルーの「路線を選択」ステップで路線一覧をハイライト
-  useEffect(() => {
-    if (currentStepId === 'selectLine' && lineListLayout) {
-      setSpotlightArea({
-        x: lineListLayout.x,
-        y: lineListLayout.y,
-        width: lineListLayout.width,
-        height: lineListLayout.height,
-        borderRadius: 12,
-      });
-    }
-  }, [currentStepId, lineListLayout, setSpotlightArea]);
-
-  // ウォークスルーの「プリセット」ステップでプリセットエリアをハイライト
-  // SelectLineScreenPresetsのmarginTop: -16を補正
-  useEffect(() => {
-    if (currentStepId === 'savedRoutes' && presetsLayout) {
-      setSpotlightArea({
-        x: presetsLayout.x,
-        y: presetsLayout.y - 16,
-        width: presetsLayout.width,
-        height: presetsLayout.height,
-        borderRadius: 12,
-      });
-    }
-  }, [currentStepId, presetsLayout, setSpotlightArea]);
-
-  // ウォークスルーの「カスタマイズ」ステップで設定ボタンをハイライト
-  useEffect(() => {
-    if (currentStepId === 'customize' && settingsButtonLayout) {
-      setSpotlightArea({
-        x: settingsButtonLayout.x,
-        y: settingsButtonLayout.y,
-        width: settingsButtonLayout.width,
-        height: settingsButtonLayout.height,
-        borderRadius: 24,
-      });
-    }
-  }, [currentStepId, settingsButtonLayout, setSpotlightArea]);
-
-  const handlePresetsLayout = useCallback(() => {
-    if (presetsRef.current) {
-      presetsRef.current.measureInWindow(
-        (x: number, y: number, width: number, height: number) => {
-          setPresetsLayout({ x, y, width, height });
-        }
-      );
-    }
-  }, []);
-
-  const handleLineListLayout = useCallback(() => {
-    if (lineListRef.current) {
-      lineListRef.current.measureInWindow(
-        (x: number, y: number, width: number, height: number) => {
-          setLineListLayout({ x, y, width, height });
-        }
-      );
-    }
-  }, []);
-
-  const handleLineSelected = useCallback(
-    async (line: Line) => {
-      const lineId = line.id;
-      const lineStationId = line.station?.id;
-      if (!lineId || !lineStationId) return;
-
-      setIsSelectBoundModalOpen(true);
-
-      setStationState((prev) => ({
-        ...prev,
-        pendingStation: null,
-        pendingStations: [],
-        selectedDirection: null,
-        wantedDestination: null,
-        selectedBound: null,
-      }));
-      setLineState((prev) => ({
-        ...prev,
-        pendingLine: line ?? null,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: [],
-        trainType: null,
-        pendingTrainType: null,
-      }));
-
-      const result = await fetchStationsByLineId({
-        variables: { lineId, stationId: lineStationId },
-      });
-      const fetchedStations = result.data?.lineStations ?? [];
-
-      const pendingStation =
-        fetchedStations.find((s) => s.id === lineStationId) ?? null;
-
-      setStationState((prev) => ({
-        ...prev,
-        pendingStation,
-        pendingStations: fetchedStations,
-      }));
-
-      if (line.station?.hasTrainTypes) {
-        const result = await fetchTrainTypes({
-          variables: {
-            stationId: lineStationId,
-          },
-        });
-        const fetchedTrainTypes = result.data?.stationTrainTypes ?? [];
-        const designatedTrainTypeId =
-          fetchedStations.find((s) => s.id === lineStationId)?.trainType?.id ??
-          null;
-        const designatedTrainType =
-          fetchedTrainTypes.find((tt) => tt.id === designatedTrainTypeId) ??
-          null;
-        setNavigationState((prev) => ({
-          ...prev,
-          fetchedTrainTypes,
-          pendingTrainType: designatedTrainType as TrainType | null,
-        }));
-      }
-    },
-    [
-      fetchTrainTypes,
-      setNavigationState,
-      setStationState,
-      setLineState,
-      fetchStationsByLineId,
-    ]
-  );
-
-  const handleTrainTypeSelect = useCallback(
-    async (trainType: TrainType) => {
-      if (trainType.groupId == null) return;
-      const res = await fetchStationsByLineGroupId({
-        variables: {
-          lineGroupId: trainType.groupId,
-        },
-      });
-      setStationState((prev) => ({
-        ...prev,
-        pendingStations: res.data?.lineGroupStations ?? [],
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        pendingTrainType: trainType,
-      }));
-    },
-    [fetchStationsByLineGroupId, setStationState, setNavigationState]
-  );
-
-  // PresetCard押下時のモーダル表示ロジック
-  const openModalByLineId = useCallback(
-    async (lineId: number) => {
-      const result = await fetchStationsByLineId({
-        variables: { lineId },
-      });
-      const stations = result.data?.lineStations ?? [];
-      if (!stations.length) return;
-
-      const nearestCoordinates =
-        latitude && longitude
-          ? (findNearest(
-              { latitude, longitude },
-              stations.map((sta: Station) => ({
-                latitude: sta.latitude as number,
-                longitude: sta.longitude as number,
-              }))
-            ) as { latitude: number; longitude: number })
-          : stations.map((s) => ({
-              latitude: s.latitude,
-              longitude: s.longitude,
-            }))[0];
-
-      const station = stations.find(
-        (sta: Station) =>
-          sta.latitude === nearestCoordinates.latitude &&
-          sta.longitude === nearestCoordinates.longitude
-      );
-
-      if (!station) return;
-
-      setStationState((prev) => ({
-        ...prev,
-        selectedDirection: null,
-        pendingStation: station,
-        pendingStations: stations,
-        wantedDestination: null,
-      }));
-      setLineState((prev) => ({
-        ...prev,
-        pendingLine: (station.line as Line) ?? null,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes: [],
-        pendingTrainType: null,
-      }));
-    },
-    [
-      fetchStationsByLineId,
-      latitude,
-      longitude,
-      setStationState,
-      setLineState,
-      setNavigationState,
-    ]
-  );
-
-  // PresetCard押下時のモーダル表示ロジック
-  const openModalByTrainTypeId = useCallback(
-    async (lineGroupId: number) => {
-      const result = await fetchStationsByLineGroupId({
-        variables: { lineGroupId },
-      });
-      const stations = result.data?.lineGroupStations ?? [];
-      if (!stations.length) return;
-
-      const sortedStationCoords =
-        latitude && longitude
-          ? (orderByDistance(
-              { lat: latitude, lon: longitude },
-              stations.map((sta) => ({
-                latitude: sta.latitude as number,
-                longitude: sta.longitude as number,
-              }))
-            ) as { latitude: number; longitude: number }[])
-          : stations.map((sta) => ({
-              latitude: sta.latitude,
-              longitude: sta.longitude,
-            }));
-
-      const sortedStations = stations.slice().sort((a, b) => {
-        const aIndex = sortedStationCoords.findIndex(
-          (coord) =>
-            coord.latitude === a.latitude && coord.longitude === a.longitude
-        );
-        const bIndex = sortedStationCoords.findIndex(
-          (coord) =>
-            coord.latitude === b.latitude && coord.longitude === b.longitude
-        );
-        return aIndex - bIndex;
-      });
-
-      const station = sortedStations.find(
-        (sta: Station) => sta.trainType?.groupId === lineGroupId
-      );
-
-      if (!station) return;
-
-      setStationState((prev) => ({
-        ...prev,
-        selectedDirection: null,
-        pendingStation: station,
-        pendingStations: stations,
-        wantedDestination: null,
-      }));
-      setLineState((prev) => ({
-        ...prev,
-        pendingLine: station?.line ?? null,
-      }));
-
-      const fetchedTrainTypesData = await fetchTrainTypes({
-        variables: {
-          stationId: station.id as number,
-        },
-      });
-      const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
-
-      setNavigationState((prev) => ({
-        ...prev,
-        pendingTrainType: station.trainType ?? null,
-        fetchedTrainTypes: trainTypes,
-      }));
-    },
-    [
-      fetchStationsByLineGroupId,
-      fetchTrainTypes,
-      setNavigationState,
-      setStationState,
-      setLineState,
-      latitude,
-      longitude,
-    ]
-  );
-
-  const handlePresetPress = useCallback(
-    async (route: SavedRoute) => {
-      setIsSelectBoundModalOpen(true);
-      if (route.hasTrainType) {
-        await openModalByTrainTypeId(route.trainTypeId);
-      } else {
-        await openModalByLineId(route.lineId);
-      }
-    },
-    [openModalByLineId, openModalByTrainTypeId]
-  );
-
-  const handleCloseSelectBoundModal = useCallback(() => {
-    setIsSelectBoundModalOpen(false);
-  }, []);
 
   const headingTitleForRailway = useMemo(() => {
     if (!station) return translate('selectLineTitle');
@@ -808,12 +155,6 @@ const SelectLineScreen = () => {
     });
   }, [station]);
 
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
-    },
-  });
-
   const isPresetsLoading = useMemo(
     () =>
       !isRoutesDBInitialized ||
@@ -826,6 +167,14 @@ const SelectLineScreen = () => {
     ]
   );
 
+  // --- スクロールハンドラ ---
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
+
+  // --- レンダーコールバック ---
   const renderLineCard = useCallback(
     (line: Line, index: number) => {
       if (fetchStationsByLineIdLoading) {
@@ -901,6 +250,7 @@ const SelectLineScreen = () => {
     [numColumns, renderLineCard, renderPlaceholders]
   );
 
+  // --- JSX ---
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
