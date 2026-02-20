@@ -41,8 +41,11 @@ export const useTTSText = (
 ): [string, string] | [] => {
   const theme = useAtomValue(themeAtom);
 
-  const { selectedBound: selectedBoundOrigin, stations } =
-    useAtomValue(stationState);
+  const {
+    selectedBound: selectedBoundOrigin,
+    selectedDirection,
+    stations,
+  } = useAtomValue(stationState);
   const station = useCurrentStation();
   const currentLineOrigin = useCurrentLine();
 
@@ -54,7 +57,7 @@ export const useTTSText = (
   const { directionalStops } = useBounds(stations);
   const nextStationOrigin = useNextStation();
   const isNextStopTerminus = useIsTerminus(nextStationOrigin);
-  const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
+  const { isLoopLine, isPartiallyLoopLine, isYamanoteLine } = useLoopLine();
   const slicedStationsOrigin = useSlicedStations();
   const stoppingState = useStoppingState();
   const getStationNumberIndex = useStationNumberIndexFunc();
@@ -114,6 +117,17 @@ export const useTTSText = (
       },
     [currentTrainTypeOrigin]
   );
+
+  const yamanoteTrainTypeJa = useMemo(() => {
+    if (!isYamanoteLine || !selectedDirection) {
+      return null;
+    }
+    return selectedDirection === 'INBOUND'
+      ? 'やまのて線内回り'
+      : 'やまのて線外回り';
+  }, [isYamanoteLine, selectedDirection]);
+
+  const yamanoteTrainTypeEn = isYamanoteLine ? 'Yamanote Line' : null;
 
   const boundForJa = useMemo(
     () =>
@@ -283,12 +297,13 @@ export const useTTSText = (
                       .join('、')}直通、`
                   : ''
               }${
-                currentTrainType
+                yamanoteTrainTypeJa ??
+                (currentTrainType
                   ? replaceJapaneseText(
                       currentTrainType.name,
                       currentTrainType.nameKatakana
                     )
-                  : '各駅停車'
+                  : '各駅停車')
               }、${boundForJa}ゆきです。${
                 currentTrainType && afterNextStation
                   ? `${replaceJapaneseText(
@@ -371,12 +386,13 @@ export const useTTSText = (
                         .join('、')}直通、`
                     : ''
                 }${
-                  currentTrainType
+                  yamanoteTrainTypeJa ??
+                  (currentTrainType
                     ? replaceJapaneseText(
                         currentTrainType.name,
                         currentTrainType.nameKatakana
                       )
-                    : '各駅停車'
+                    : '各駅停車')
                 }、${boundForJa}ゆきです。`
               : ''
           }次は、${
@@ -501,10 +517,13 @@ export const useTTSText = (
             firstSpeech
               ? `今日も、${
                   currentLine.company?.nameShort
-                }をご利用くださいまして、ありがとうございます。この電車は、${replaceJapaneseText(
-                  currentTrainType?.name,
-                  currentTrainType?.nameKatakana
-                )}、${
+                }をご利用くださいまして、ありがとうございます。この電車は、${
+                  yamanoteTrainTypeJa ??
+                  replaceJapaneseText(
+                    currentTrainType?.name,
+                    currentTrainType?.nameKatakana
+                  )
+                }、${
                   viaStation
                     ? `${replaceJapaneseText(
                         viaStation.name,
@@ -626,12 +645,13 @@ export const useTTSText = (
                   .join('、')}直通、`
               : ''
           }${
-            currentTrainType
+            yamanoteTrainTypeJa ??
+            (currentTrainType
               ? replaceJapaneseText(
                   currentTrainType.name,
                   currentTrainType.nameKatakana
                 )
-              : '各駅停車'
+              : '各駅停車')
           }、${boundForJa}ゆきです。${
             currentTrainType && afterNextStation
               ? `${replaceJapaneseText(
@@ -698,12 +718,13 @@ export const useTTSText = (
           NEXT: `${
             firstSpeech
               ? `この列車は${
-                  currentTrainType
+                  yamanoteTrainTypeJa ??
+                  (currentTrainType
                     ? replaceJapaneseText(
                         currentTrainType.name,
                         currentTrainType.nameKatakana
                       )
-                    : '普通'
+                    : '普通')
                 }、${boundForJa}行きです。`
               : ''
           }次は${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? '終点、' : ''}${replaceJapaneseText(
@@ -758,6 +779,7 @@ export const useTTSText = (
       selectedBound,
       transferLines,
       viaStation,
+      yamanoteTrainTypeJa,
       nextStation?.groupId,
       selectedBound?.groupId,
     ]);
@@ -785,7 +807,8 @@ export const useTTSText = (
           }${
             firstSpeech
               ? ` This train is the ${
-                  currentTrainType ? currentTrainType.nameRoman : 'Local'
+                  yamanoteTrainTypeEn ??
+                  (currentTrainType ? currentTrainType.nameRoman : 'Local')
                 } Service on the ${
                   currentLine.nameRoman
                 } bound for ${boundForEn}. ${
@@ -826,7 +849,7 @@ export const useTTSText = (
             firstSpeech
               ? `Thank you for using the ${
                   currentLine.nameRoman
-                }. This is the ${currentTrainType?.nameRoman ?? 'Local'} train ${
+                }. This is the ${yamanoteTrainTypeEn ?? currentTrainType?.nameRoman ?? 'Local'} train ${
                   connectedLines[0]?.nameRoman
                     ? `on the ${connectedLines[0]?.nameRoman}`
                     : ''
@@ -957,7 +980,7 @@ export const useTTSText = (
         [APP_THEME.JR_WEST]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${currentTrainType?.nameRoman ?? 'Local'} Service bound for ${boundForEn} ${
+              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${yamanoteTrainTypeEn ?? currentTrainType?.nameRoman ?? 'Local'} Service bound for ${boundForEn} ${
                   viaStation ? `via ${viaStation.nameRoman}` : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
@@ -1024,7 +1047,7 @@ export const useTTSText = (
             firstSpeech
               ? `Thank you for using the ${currentLine.nameRoman}. `
               : ''
-          }This is the ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}. The next station is ${
+          }This is the ${yamanoteTrainTypeEn ?? currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}. The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText} ${
             transferLines.length
@@ -1066,7 +1089,7 @@ export const useTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `${firstSpeech ? `This is a ${currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}.` : ''} The next station is ${
+          NEXT: `${firstSpeech ? `This is a ${yamanoteTrainTypeEn ?? currentTrainType?.nameRoman ?? 'Local'} train bound for ${boundForEn}.` : ''} The next station is ${
             nextStation?.nameRoman
           } ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}. ${
             transferLines.length
@@ -1117,6 +1140,7 @@ export const useTTSText = (
       selectedBound,
       transferLines,
       viaStation,
+      yamanoteTrainTypeEn,
     ]);
 
   const jaText = useMemo(() => {
