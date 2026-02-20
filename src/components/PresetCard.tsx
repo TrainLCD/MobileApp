@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
 
 const renderTextWithSmallerParens = (
   text: string,
-  _baseStyle: typeof styles.stationCode,
+  baseStyle: typeof styles.stationCode,
   parenStyle: typeof styles.stationCodeParen,
   color: string
 ) => {
@@ -114,7 +114,9 @@ const renderTextWithSmallerParens = (
         {part}
       </Typography>
     ) : (
-      <React.Fragment key={key}>{part}</React.Fragment>
+      <Typography key={key} style={[baseStyle, { color }]}>
+        {part}
+      </Typography>
     );
   });
 };
