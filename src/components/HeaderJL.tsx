@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useLoopLine } from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
@@ -223,7 +223,7 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
               threeLetterCode={threeLetterCode}
               withDarkTheme
               allowScaling
-              transformOrigin={Platform.OS === 'android' ? 'bottom' : undefined}
+              transformOrigin="bottom"
             />
           ) : null}
           <Typography
