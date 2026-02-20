@@ -31,7 +31,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `assets/`: static media (images, fonts, icons).
 - `docs/`: human-facing documentation including changelog and incident notes.
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
-- `android/`, `ios/`: native projects managed via Fastlane.
+- `android/`, `ios/`: native projects.
 - `functions/`: Firebase Cloud Functions.
 
 ## Tooling & Environment Expectations
@@ -39,13 +39,13 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Target **Node.js 20.x** and **pnpm 10.x**; use the globally installed pnpm (Corepack is unnecessary).
 - Run `pnpm install` when dependencies shift; avoid re-locking packages unless instructed.
 - Metro cache issues: run `expo start --clear` only when debugging build failures and document the action.
-- For native builds, rely on project scripts (`pnpm android`, `pnpm ios`) rather than invoking Fastlane directly.
+- For native builds, rely on project scripts (`pnpm android`, `pnpm ios`).
 - GraphQL codegen requires `GQL_API_URL` in `.env.local`; run `pnpm gql:codegen` after document or schema updates.
 
 ## Build, Test & Development Commands
 
 - `pnpm start`: start the Expo Dev Client locally.
-- `pnpm android` / `pnpm ios`: build native binaries through Fastlane lanes.
+- `pnpm android` / `pnpm ios`: build native binaries.
 - `pnpm web`: run the web preview.
 - `pnpm lint`: execute Biome linting (`biome ci ./src` in CI).
 - `pnpm format`: apply Biome formatting fixes.
@@ -87,7 +87,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 - Store secrets in `.env.local`; treat `.env` as the template, and keep `.env.example` synchronized for onboarding.
 - Never commit credentials, access tokens, or production endpoints.
-- Protect Expo and Fastlane credentials with 2FA and rotate access when automations change.
+- Protect Expo credentials with 2FA and rotate access when automations change.
 - After dependency upgrades (`pnpm up --interactive`) or Expo SDK migrations, run `expo-doctor`, `pnpm lint`, `pnpm test`, and `pnpm typecheck`, then capture results in `docs/changelog.md`.
 
 ## Automation Checklists
@@ -108,7 +108,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 **For workflow, release, or CI updates**
 
-- [ ] Cross-check `.github/workflows/` and Fastlane lanes for consistency.
+- [ ] Cross-check `.github/workflows/` for consistency.
 - [ ] Provide dry-run instructions or environment prerequisites.
 - [ ] Document required secrets, environment variables, or service accounts.
 
