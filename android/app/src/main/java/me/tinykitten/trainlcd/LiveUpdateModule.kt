@@ -101,11 +101,7 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             else -> "$stationName → $nextStationName"
         }
 
-        val contentText = if (boundStationName.isNotEmpty()) {
-            "${boundStationName}方面"
-        } else {
-            ""
-        }
+        val contentText = boundStationName
 
         val subText = buildString {
             if (trainTypeName.isNotEmpty()) {

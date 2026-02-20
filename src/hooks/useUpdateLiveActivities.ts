@@ -87,12 +87,12 @@ export const useUpdateLiveActivities = (): void => {
   ]);
 
   const boundStationName = useMemo(() => {
-    const jaSuffix = isFullLoopLine || isPartiallyLoopLine ? '方面' : '';
-
-    return `${directionalStops
+    const names = directionalStops
       .map((s) => (isJapanese ? s.name : s.nameRoman))
-      .join(isJapanese ? '・' : '/')}${isJapanese ? jaSuffix : ''}`;
-  }, [directionalStops, isFullLoopLine, isPartiallyLoopLine]);
+      .join(isJapanese ? '・' : '/');
+
+    return isJapanese ? `${names}方面` : names;
+  }, [directionalStops]);
 
   const boundStationNumber = useMemo(() => {
     return directionalStops
