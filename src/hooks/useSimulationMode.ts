@@ -83,7 +83,11 @@ export const useSimulationMode = (): void => {
   const maybeRevsersedStations = useMemo(
     () =>
       // ループ線では INBOUND/OUTBOUND の進行方向が非ループ線と逆になる
-      (isLoopLine ? selectedDirection !== 'INBOUND' : selectedDirection === 'INBOUND')
+      (
+        isLoopLine
+          ? selectedDirection !== 'INBOUND'
+          : selectedDirection === 'INBOUND'
+      )
         ? stations
         : stations.slice().reverse(),
     [stations, selectedDirection, isLoopLine]
