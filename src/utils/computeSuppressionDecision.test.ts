@@ -6,6 +6,7 @@ const createParams = (
     firstSpeech: boolean;
     suppressFirstSpeechUntilDeparture: boolean;
     arrived: boolean;
+    stoppingStateChanged: boolean;
   }> = {}
 ) => ({
   suppressPostFirstSpeechRef: {
@@ -16,6 +17,7 @@ const createParams = (
     current: overrides.suppressFirstSpeechUntilDeparture ?? false,
   },
   arrived: overrides.arrived ?? false,
+  stoppingStateChanged: overrides.stoppingStateChanged ?? false,
 });
 
 describe('computeSuppressionDecision', () => {
@@ -25,9 +27,18 @@ describe('computeSuppressionDecision', () => {
   });
 
   describe('Post-first-speech 抑制', () => {
-    it('suppressPostFirstSpeechが有効なら抑制してフラグをクリアする', () => {
+    it('suppressPostFirstSpeechが有効でstoppingState未変化なら抑制してフラグをクリアする', () => {
       const params = createParams({ suppressPostFirstSpeech: true });
       expect(computeSuppressionDecision(params)).toBe(true);
+      expect(params.suppressPostFirstSpeechRef.current).toBe(false);
+    });
+
+    it('suppressPostFirstSpeechが有効でもstoppingStateが変化していれば抑制しない', () => {
+      const params = createParams({
+        suppressPostFirstSpeech: true,
+        stoppingStateChanged: true,
+      });
+      expect(computeSuppressionDecision(params)).toBe(false);
       expect(params.suppressPostFirstSpeechRef.current).toBe(false);
     });
 

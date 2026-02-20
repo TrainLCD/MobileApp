@@ -23,6 +23,7 @@ import Typography from '~/components/Typography';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { isDevApp } from '~/utils/isDevApp';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 
 type SettingItem = {
@@ -115,7 +116,7 @@ const TTSSettingsScreen: React.FC = () => {
 
   // Android 16 (API 36) ではバックグラウンド音声再生が制限されるため無効化
   const isAndroid16OrHigher =
-    Platform.OS === 'android' && Number(Platform.Version) >= 36;
+    !isDevApp && Platform.OS === 'android' && Number(Platform.Version) >= 36;
 
   // Android 16以上ではバックグラウンド再生を強制的にfalseにする
   useEffect(() => {

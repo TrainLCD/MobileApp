@@ -1,8 +1,5 @@
 import { getIdToken } from '@react-native-firebase/auth';
-import { fetch } from 'expo/fetch';
-import type { AudioPlayer } from 'expo-audio';
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import { File, Paths } from 'expo-file-system';
+import { setAudioModeAsync } from 'expo-audio';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
@@ -11,52 +8,19 @@ import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
 import { isDevApp } from '../utils/isDevApp';
+import {
+  type PlayAudioHandle,
+  playAudio,
+  safeRemoveListener,
+  safeRemovePlayer,
+} from '../utils/ttsAudioPlayer';
+import { fetchSpeechAudio } from '../utils/ttsSpeechFetcher';
 import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
+import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
-
-const BASE64_ALPHABET =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-
-const base64ToUint8Array = (input: string): Uint8Array => {
-  const sanitized = input.replace(/[^A-Za-z0-9+/=]/g, '');
-  const length =
-    (sanitized.length * 3) / 4 -
-    (sanitized.endsWith('==') ? 2 : sanitized.endsWith('=') ? 1 : 0);
-  const bytes = new Uint8Array(length);
-
-  let byteIndex = 0;
-  const decodeChar = (char: string): number => {
-    if (char === '=') {
-      return 0;
-    }
-    const index = BASE64_ALPHABET.indexOf(char);
-    if (index === -1) {
-      throw new Error('Invalid base64 character.');
-    }
-    return index;
-  };
-
-  for (let i = 0; i < sanitized.length; i += 4) {
-    const chunk =
-      (decodeChar(sanitized[i]) << 18) |
-      (decodeChar(sanitized[i + 1]) << 12) |
-      (decodeChar(sanitized[i + 2]) << 6) |
-      decodeChar(sanitized[i + 3]);
-
-    bytes[byteIndex++] = (chunk >> 16) & 0xff;
-    if (sanitized[i + 2] !== '=') {
-      bytes[byteIndex++] = (chunk >> 8) & 0xff;
-    }
-    if (sanitized[i + 3] !== '=') {
-      bytes[byteIndex++] = chunk & 0xff;
-    }
-  }
-
-  return bytes;
-};
 
 // 再生が完了しない場合のフォールバックタイムアウト（ミリ秒）
 const PLAYBACK_TIMEOUT_MS = 60_000;
@@ -70,6 +34,8 @@ export const useTTS = (): void => {
     useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
   const currentLine = useCurrentLine();
+  const stoppingState = useStoppingState();
+  const prevStoppingState = usePrevious(stoppingState);
 
   const firstSpeechRef = useRef(true);
   // 行先選択直後の初回TTSを抑止し、発車後（arrived=false）でのみ解放する
@@ -96,11 +62,18 @@ export const useTTS = (): void => {
 
   const user = useCachedInitAnonymousUser();
 
-  const soundJaRef = useRef<AudioPlayer | null>(null);
-  const soundEnRef = useRef<AudioPlayer | null>(null);
+  const jaHandleRef = useRef<PlayAudioHandle | null>(null);
+  const enHandleRef = useRef<PlayAudioHandle | null>(null);
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const jaListenerRef = useRef<{ remove: () => void } | null>(null);
-  const enListenerRef = useRef<{ remove: () => void } | null>(null);
+
+  const cleanupAllPlayers = useCallback(() => {
+    safeRemoveListener(jaHandleRef.current?.listener ?? null);
+    safeRemoveListener(enHandleRef.current?.listener ?? null);
+    safeRemovePlayer(jaHandleRef.current?.player ?? null);
+    safeRemovePlayer(enHandleRef.current?.player ?? null);
+    jaHandleRef.current = null;
+    enHandleRef.current = null;
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -149,107 +122,14 @@ export const useTTS = (): void => {
       firstSpeechRef.current = false;
       suppressPostFirstSpeechRef.current = true;
 
-      // 既存のリスナーとプレイヤーをクリーンアップ
-      try {
-        jaListenerRef.current?.remove();
-      } catch {}
-      jaListenerRef.current = null;
-      try {
-        enListenerRef.current?.remove();
-      } catch {}
-      enListenerRef.current = null;
-      try {
-        soundJaRef.current?.pause();
-        soundJaRef.current?.remove();
-      } catch {}
-      try {
-        soundEnRef.current?.pause();
-        soundEnRef.current?.remove();
-      } catch {}
-      soundJaRef.current = null;
-      soundEnRef.current = null;
+      cleanupAllPlayers();
 
-      // 既存のタイムアウトをクリア
       if (playingTimeoutRef.current) {
         clearTimeout(playingTimeoutRef.current);
       }
 
-      if (!playJapanese && playEnglish) {
-        const soundEn = createAudioPlayer({
-          uri: pathEn,
-        });
-        soundEnRef.current = soundEn;
-        playingRef.current = true;
-
-        playingTimeoutRef.current = setTimeout(() => {
-          if (!playingRef.current) {
-            return;
-          }
-          console.warn(
-            '[useTTS] Playback safety timeout reached, force resetting'
-          );
-          try {
-            enListenerRef.current?.remove();
-          } catch {}
-          enListenerRef.current = null;
-          try {
-            soundEnRef.current?.pause();
-            soundEnRef.current?.remove();
-          } catch {}
-          soundEnRef.current = null;
-          finishPlaying();
-        }, PLAYBACK_TIMEOUT_MS);
-
-        const enRemoveListener = soundEn.addListener(
-          'playbackStatusUpdate',
-          (enStatus) => {
-            if (enStatus.didJustFinish) {
-              enRemoveListener?.remove();
-              enListenerRef.current = null;
-              try {
-                soundEn.remove();
-              } catch (e) {
-                console.warn('[useTTS] Failed to remove soundEn:', e);
-              }
-              soundEnRef.current = null;
-              finishPlaying();
-            } else if ('error' in enStatus && enStatus.error) {
-              console.warn('[useTTS] soundEn error:', enStatus.error);
-              enRemoveListener?.remove();
-              enListenerRef.current = null;
-              try {
-                soundEn.remove();
-              } catch {}
-              soundEnRef.current = null;
-              finishPlaying();
-            }
-          }
-        );
-        enListenerRef.current = enRemoveListener;
-
-        try {
-          soundEn.play();
-        } catch (e) {
-          console.error('[useTTS] Failed to play soundEn:', e);
-          enRemoveListener?.remove();
-          enListenerRef.current = null;
-          try {
-            soundEn.remove();
-          } catch {}
-          soundEnRef.current = null;
-          finishPlaying();
-        }
-        return;
-      }
-
-      const soundJa = createAudioPlayer({
-        uri: pathJa,
-      });
-
-      soundJaRef.current = soundJa;
       playingRef.current = true;
 
-      // 再生が完了しない場合のフォールバックタイムアウト
       playingTimeoutRef.current = setTimeout(() => {
         if (!playingRef.current) {
           return;
@@ -257,232 +137,115 @@ export const useTTS = (): void => {
         console.warn(
           '[useTTS] Playback safety timeout reached, force resetting'
         );
-        try {
-          jaListenerRef.current?.remove();
-        } catch {}
-        jaListenerRef.current = null;
-        try {
-          enListenerRef.current?.remove();
-        } catch {}
-        enListenerRef.current = null;
-        try {
-          soundJaRef.current?.pause();
-          soundJaRef.current?.remove();
-        } catch {}
-        try {
-          soundEnRef.current?.pause();
-          soundEnRef.current?.remove();
-        } catch {}
-        soundJaRef.current = null;
-        soundEnRef.current = null;
+        cleanupAllPlayers();
         finishPlaying();
       }, PLAYBACK_TIMEOUT_MS);
 
-      const jaRemoveListener = soundJa.addListener(
-        'playbackStatusUpdate',
-        (jaStatus) => {
-          if (jaStatus.didJustFinish) {
-            jaRemoveListener?.remove();
-            jaListenerRef.current = null;
-            // 日本語プレイヤーはまだremoveしない
-            // コールバック内でremoveするとオーディオセッションが不安定になり
-            // 直後に生成する英語プレイヤーの再生が開始されないことがある
-            const removeSoundJa = () => {
-              try {
-                soundJa.remove();
-              } catch {}
-              if (soundJaRef.current === soundJa) {
-                soundJaRef.current = null;
+      if (!playJapanese && playEnglish) {
+        const enCleanup = () => {
+          safeRemovePlayer(enHandleRef.current?.player ?? null);
+          enHandleRef.current = null;
+          finishPlaying();
+        };
+
+        enHandleRef.current = playAudio({
+          uri: pathEn,
+          onFinish: enCleanup,
+          onError: () => enCleanup(),
+        });
+        return;
+      }
+
+      // JA（+ 任意で EN）再生
+      const removeSoundJa = () => {
+        const handle = jaHandleRef.current;
+        if (handle) {
+          safeRemovePlayer(handle.player);
+          jaHandleRef.current = null;
+        }
+      };
+
+      jaHandleRef.current = playAudio({
+        uri: pathJa,
+        onFinish: () => {
+          // 日本語プレイヤーはまだremoveしない
+          // コールバック内でremoveするとオーディオセッションが不安定になり
+          // 直後に生成する英語プレイヤーの再生が開始されないことがある
+          if (isLoadableRef.current && playEnglish) {
+            // 音声セッションが安定するまで短いディレイを入れてから英語を再生
+            setTimeout(() => {
+              if (!isLoadableRef.current) {
+                removeSoundJa();
+                finishPlaying();
+                return;
               }
-            };
-            if (isLoadableRef.current && playEnglish) {
-              // 音声セッションが安定するまで短いディレイを入れてから英語を再生
-              setTimeout(() => {
-                if (!isLoadableRef.current) {
-                  removeSoundJa();
-                  finishPlaying();
-                  return;
-                }
 
-                // 日本語再生完了後に英語プレイヤーを生成して再生（リソース節約）
-                const soundEn = createAudioPlayer({
-                  uri: pathEn,
-                });
-                soundEnRef.current = soundEn;
+              const enCleanup = () => {
+                safeRemovePlayer(enHandleRef.current?.player ?? null);
+                enHandleRef.current = null;
+                removeSoundJa();
+                finishPlaying();
+              };
 
-                const enRemoveListener = soundEn.addListener(
-                  'playbackStatusUpdate',
-                  (enStatus) => {
-                    if (enStatus.didJustFinish) {
-                      enRemoveListener?.remove();
-                      enListenerRef.current = null;
-                      try {
-                        soundEn.remove();
-                      } catch (e) {
-                        console.warn('[useTTS] Failed to remove soundEn:', e);
-                      }
-                      soundEnRef.current = null;
-                      removeSoundJa();
-                      finishPlaying();
-                    } else if ('error' in enStatus && enStatus.error) {
-                      console.warn('[useTTS] soundEn error:', enStatus.error);
-                      enRemoveListener?.remove();
-                      enListenerRef.current = null;
-                      try {
-                        soundEn.remove();
-                      } catch {}
-                      soundEnRef.current = null;
-                      removeSoundJa();
-                      finishPlaying();
-                    }
-                  }
-                );
-                enListenerRef.current = enRemoveListener;
-
-                try {
-                  soundEn.play();
-                } catch (e) {
-                  console.error('[useTTS] Failed to play soundEn:', e);
-                  enRemoveListener?.remove();
-                  enListenerRef.current = null;
-                  try {
-                    soundEn.remove();
-                  } catch {}
-                  soundEnRef.current = null;
-                  removeSoundJa();
-                  finishPlaying();
-                }
-              }, EN_PLAYBACK_DELAY_MS);
-            } else {
-              // 既にアンマウント等で再生不可なら英語を鳴らさず完全停止
-              removeSoundJa();
-              finishPlaying();
-            }
-          } else if ('error' in jaStatus && jaStatus.error) {
-            console.warn('[useTTS] soundJa error:', jaStatus.error);
-            jaRemoveListener?.remove();
-            jaListenerRef.current = null;
-            try {
-              soundJa.remove();
-            } catch {}
-            soundJaRef.current = null;
+              enHandleRef.current = playAudio({
+                uri: pathEn,
+                onFinish: enCleanup,
+                onError: () => enCleanup(),
+              });
+            }, EN_PLAYBACK_DELAY_MS);
+          } else {
+            removeSoundJa();
             finishPlaying();
           }
-        }
-      );
-      jaListenerRef.current = jaRemoveListener;
-
-      try {
-        soundJa.play();
-      } catch (e) {
-        console.error('[useTTS] Failed to play soundJa:', e);
-        jaRemoveListener?.remove();
-        jaListenerRef.current = null;
-        try {
-          soundJa.remove();
-        } catch {}
-        soundJaRef.current = null;
-        finishPlaying();
-      }
+        },
+        onError: () => {
+          removeSoundJa();
+          finishPlaying();
+        },
+      });
     },
-    [finishPlaying, shouldSpeakEnglish, shouldSpeakJapanese]
+    [cleanupAllPlayers, finishPlaying, shouldSpeakEnglish, shouldSpeakJapanese]
   );
 
   const ttsApiUrl = useMemo(() => {
     return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
   }, []);
 
-  const fetchSpeechWithText = useCallback(
+  const speechWithText = useCallback(
     async (ja: string, en: string) => {
       if (!ja.length || !en.length || !isLoadableRef.current) {
         return;
       }
 
-      const reqBody = {
-        data: {
-          ssmlJa: `<speak>${ja.trim()}</speak>`,
-          ssmlEn: `<speak>${en.trim()}</speak>`,
-        },
-      };
-
+      playingRef.current = true;
       try {
         const idToken = user && (await getIdToken(user));
         if (!idToken) {
           console.warn('[useTTS] idToken is missing, skipping fetch');
+          finishPlaying();
           return;
         }
 
-        const response = await fetch(ttsApiUrl, {
-          headers: {
-            'content-type': 'application/json; charset=UTF-8',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify(reqBody),
-          method: 'POST',
+        const fetched = await fetchSpeechAudio({
+          textJa: ja,
+          textEn: en,
+          apiUrl: ttsApiUrl,
+          idToken,
         });
 
-        if (!response.ok) {
-          console.warn(
-            `[useTTS] TTS API returned ${response.status}: ${response.statusText}`
-          );
-          return;
-        }
-
-        const ttsJson = await response.json();
-
-        if (!ttsJson?.result?.id) {
-          console.warn('[useTTS] Invalid TTS response: missing result.id');
-          return;
-        }
-
-        const { jaAudioContent, enAudioContent, id } = ttsJson.result;
-
-        if (!jaAudioContent || !enAudioContent) {
-          console.warn(
-            '[useTTS] Missing audio content in TTS response, skipping file write'
-          );
-          return;
-        }
-
-        const fileJa = new File(Paths.cache, `${id}_ja.mp3`);
-        const fileEn = new File(Paths.cache, `${id}_en.mp3`);
-
-        fileJa.write(base64ToUint8Array(jaAudioContent));
-        fileEn.write(base64ToUint8Array(enAudioContent));
-
-        return {
-          id,
-          pathJa: fileJa.uri,
-          pathEn: fileEn.uri,
-        };
-      } catch (error) {
-        console.error('[useTTS] fetchSpeech error:', error);
-        return;
-      }
-    },
-    [ttsApiUrl, user]
-  );
-
-  const speechWithText = useCallback(
-    async (ja: string, en: string) => {
-      playingRef.current = true;
-      try {
-        const fetched = await fetchSpeechWithText(ja, en);
         if (!fetched) {
           console.warn('[useTTS] Failed to fetch speech audio');
           finishPlaying();
           return;
         }
 
-        const { pathJa, pathEn } = fetched;
-
-        await speakFromPath(pathJa, pathEn);
+        await speakFromPath(fetched.pathJa, fetched.pathEn);
       } catch (error) {
         console.error('[useTTS] speech error:', error);
         finishPlaying();
       }
     },
-    [fetchSpeechWithText, finishPlaying, speakFromPath]
+    [finishPlaying, speakFromPath, ttsApiUrl, user]
   );
 
   speechWithTextRef.current = speechWithText;
@@ -506,6 +269,7 @@ export const useTTS = (): void => {
     }
 
     if (!textJa || !textEn) {
+      pendingRef.current = null;
       return;
     }
 
@@ -515,6 +279,7 @@ export const useTTS = (): void => {
         firstSpeechRef,
         suppressFirstSpeechUntilDepartureRef,
         arrived,
+        stoppingStateChanged: stoppingState !== prevStoppingState,
       })
     ) {
       return;
@@ -536,7 +301,16 @@ export const useTTS = (): void => {
         console.error(err);
       }
     })();
-  }, [arrived, enabled, prevTextEn, prevTextJa, textEn, textJa]);
+  }, [
+    arrived,
+    enabled,
+    prevStoppingState,
+    prevTextEn,
+    prevTextJa,
+    stoppingState,
+    textEn,
+    textJa,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -546,29 +320,8 @@ export const useTTS = (): void => {
         clearTimeout(playingTimeoutRef.current);
         playingTimeoutRef.current = null;
       }
-      try {
-        jaListenerRef.current?.remove();
-      } catch {}
-      jaListenerRef.current = null;
-      try {
-        enListenerRef.current?.remove();
-      } catch {}
-      enListenerRef.current = null;
-      try {
-        soundJaRef.current?.pause();
-      } catch {}
-      try {
-        soundEnRef.current?.pause();
-      } catch {}
-      try {
-        soundJaRef.current?.remove();
-      } catch {}
-      try {
-        soundEnRef.current?.remove();
-      } catch {}
-      soundJaRef.current = null;
-      soundEnRef.current = null;
+      cleanupAllPlayers();
       playingRef.current = false;
     };
-  }, []);
+  }, [cleanupAllPlayers]);
 };
