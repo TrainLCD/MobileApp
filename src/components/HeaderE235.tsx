@@ -26,7 +26,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     width: '100%',
-    justifyContent: 'center',
   },
   boundGrayText: {
     color: '#aaa',
