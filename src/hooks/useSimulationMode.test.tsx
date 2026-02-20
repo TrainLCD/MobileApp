@@ -46,6 +46,12 @@ jest.mock('~/store/atoms/location', () => ({
   locationAtom: { toString: () => 'locationAtom' },
 }));
 
+jest.mock('~/hooks/useLoopLine', () => ({
+  useLoopLine: jest.fn(() => ({
+    isLoopLine: false,
+  })),
+}));
+
 jest.mock('expo-location', () => ({
   hasStartedLocationUpdatesAsync: jest.fn(),
   stopLocationUpdatesAsync: jest.fn(),
