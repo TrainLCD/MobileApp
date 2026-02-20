@@ -86,6 +86,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlignVertical: 'auto',
   },
+  stationCodeParen: {
+    fontSize: RFValue(8),
+    fontWeight: 'bold',
+    textAlignVertical: 'auto',
+  },
   lineDot: {
     width: 16,
     height: 16,
@@ -93,6 +98,28 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
 });
+
+const renderTextWithSmallerParens = (
+  text: string,
+  baseStyle: typeof styles.stationCode,
+  parenStyle: typeof styles.stationCodeParen,
+  color: string
+) => {
+  const parts = text.split(/([(\uFF08][^)\uFF09]*[)\uFF09])/);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => {
+    const key = `${i}-${part}`;
+    return /^[(\uFF08]/.test(part) ? (
+      <Typography key={key} style={[parenStyle, { color }]}>
+        {part}
+      </Typography>
+    ) : (
+      <Typography key={key} style={[baseStyle, { color }]}>
+        {part}
+      </Typography>
+    );
+  });
+};
 
 const BrokenIcon = () => (
   <Svg width="34" height="34" viewBox="0 0 24 24">
@@ -243,7 +270,12 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             {leftName}
           </Typography>
           <Typography style={[styles.stationCode, { color: metaFg }]}>
-            {leftCode}
+            {renderTextWithSmallerParens(
+              leftCode,
+              styles.stationCode,
+              styles.stationCodeParen,
+              metaFg
+            )}
           </Typography>
         </View>
         <View style={styles.colCenter}>
@@ -268,7 +300,12 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             {rightName}
           </Typography>
           <Typography style={[styles.stationCode, { color: metaFg }]}>
-            {rightCode}
+            {renderTextWithSmallerParens(
+              rightCode,
+              styles.stationCode,
+              styles.stationCodeParen,
+              metaFg
+            )}
           </Typography>
         </View>
       </View>
