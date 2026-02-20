@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useLoopLine } from '../hooks';
 import isTablet from '../utils/isTablet';
@@ -220,7 +220,7 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
               threeLetterCode={threeLetterCode}
               withDarkTheme
               allowScaling
-              transformOrigin={Platform.OS === 'android' ? 'bottom' : undefined}
+              transformOrigin="bottom"
             />
           ) : null}
           <Typography
