@@ -20,13 +20,13 @@ const styles = StyleSheet.create({
   },
   boundContainer: {
     width: '100%',
-    height: '50%',
     justifyContent: 'flex-end',
   },
   bound: {
     color: '#fff',
     fontWeight: 'bold',
     width: '100%',
+    justifyContent: 'center',
   },
   boundGrayText: {
     color: '#aaa',
@@ -177,7 +177,9 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
               },
             ]}
             adjustsFontSizeToFit
-            numberOfLines={1}
+            numberOfLines={2}
+            lineBreakStrategyIOS="push-out"
+            textBreakStrategy="balanced"
           >
             {boundText}
           </Typography>
