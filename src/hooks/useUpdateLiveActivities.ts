@@ -7,6 +7,11 @@ import stationState from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import {
+  startLiveUpdate,
+  stopLiveUpdate,
+  updateLiveUpdate,
+} from '../utils/native/android/liveUpdateModule';
+import {
   startLiveActivity,
   stopLiveActivity,
   updateLiveActivity,
@@ -236,6 +241,7 @@ export const useUpdateLiveActivities = (): void => {
   useEffect(() => {
     if (selectedBound && !started) {
       startLiveActivity(activityState);
+      startLiveUpdate(activityState);
       setStarted(true);
     }
   }, [activityState, selectedBound, started]);
@@ -243,6 +249,7 @@ export const useUpdateLiveActivities = (): void => {
   useEffect(() => {
     return () => {
       stopLiveActivity();
+      stopLiveUpdate();
       setStarted(false);
     };
   }, []);
@@ -250,6 +257,7 @@ export const useUpdateLiveActivities = (): void => {
   useEffect(() => {
     if (started) {
       updateLiveActivity(activityState);
+      updateLiveUpdate(activityState);
     }
   }, [activityState, started]);
 };

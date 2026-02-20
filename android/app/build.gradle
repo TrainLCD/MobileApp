@@ -86,7 +86,8 @@ android {
     ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    // Android 16 (API 36) の Notification.ProgressStyle を使用するため最低 36 が必要
+    compileSdk Math.max(rootProject.ext.compileSdkVersion as int, 36)
 
     namespace 'me.tinykitten.trainlcd'
     defaultConfig {
