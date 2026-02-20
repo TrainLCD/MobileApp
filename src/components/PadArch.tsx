@@ -58,6 +58,7 @@ const DOT_RADIUS = 34; // circle width(68) / 2
 const NAME_TOP_OFFSET = 42;
 
 /** SVG 楕円弧の中心パラメータを算出する (SVG Spec F.6.5) */
+const ARC_EPS = 1e-6;
 const computeArcEllipse = (
   x1: number,
   y1: number,
@@ -68,8 +69,8 @@ const computeArcEllipse = (
   largeArc: boolean,
   sweep: boolean
 ): { cx: number; cy: number; rx: number; ry: number } => {
-  let rx = rawRx;
-  let ry = rawRy;
+  let rx = Math.max(rawRx, ARC_EPS);
+  let ry = Math.max(rawRy, ARC_EPS);
   const dx = (x1 - x2) / 2;
   const dy = (y1 - y2) / 2;
   const d = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
@@ -83,7 +84,7 @@ const computeArcEllipse = (
     rx * rx * ry * ry - rx * rx * dy * dy - ry * ry * dx * dx
   );
   const denom = rx * rx * dy * dy + ry * ry * dx * dx;
-  const root = Math.sqrt(num / denom);
+  const root = denom > 0 ? Math.sqrt(num / denom) : 0;
   const sign = largeArc === sweep ? -1 : 1;
   return {
     cx: (sign * root * rx * dy) / ry + (x1 + x2) / 2,
@@ -101,6 +102,7 @@ const getArcXAtY = (
   rx: number,
   ry: number
 ): number => {
+  if (ry < ARC_EPS) return cx;
   const t = Math.max(-1, Math.min(1, (y - cy) / ry));
   return cx + rx * Math.sqrt(1 - t * t);
 };
@@ -114,8 +116,10 @@ const getOutwardNormalX = (
   rx: number,
   ry: number
 ): number => {
-  const gx = (x - cx) / (rx * rx);
-  const gy = (y - cy) / (ry * ry);
+  const clampedRx = Math.max(rx, ARC_EPS);
+  const clampedRy = Math.max(ry, ARC_EPS);
+  const gx = (x - cx) / (clampedRx * clampedRx);
+  const gy = (y - cy) / (clampedRy * clampedRy);
   const len = Math.sqrt(gx * gx + gy * gy);
   return len > 0 ? gx / len : 1;
 };
