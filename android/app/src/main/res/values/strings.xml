@@ -5,6 +5,7 @@
   <string name="live_update_channel_description">現在の運行状況をリアルタイムで表示します</string>
   <string name="live_update_passing">%1$sを通過中</string>
   <string name="live_update_approaching">まもなく%1$s</string>
+  <string name="live_update_next">次は%1$s</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
 </resources>
