@@ -13,6 +13,15 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 
+private fun ReadableMap.optString(key: String, default: String = ""): String =
+    if (hasKey(key) && !isNull(key)) getString(key) ?: default else default
+
+private fun ReadableMap.optBoolean(key: String, default: Boolean = false): Boolean =
+    if (hasKey(key) && !isNull(key)) getBoolean(key) else default
+
+private fun ReadableMap.optDouble(key: String, default: Double = 0.0): Double =
+    if (hasKey(key) && !isNull(key)) getDouble(key) else default
+
 class LiveUpdateModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
@@ -75,16 +84,16 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
     private fun postProgressNotification(state: ReadableMap) {
         ensureChannel()
 
-        val stationName = state.getString("stationName") ?: ""
-        val nextStationName = state.getString("nextStationName") ?: ""
-        val approaching = state.getBoolean("approaching")
-        val stopped = state.getBoolean("stopped")
-        val lineName = state.getString("lineName") ?: ""
-        val lineColor = state.getString("lineColor") ?: "#000000"
-        val progress = state.getDouble("progress")
-        val trainTypeName = state.getString("trainTypeName") ?: ""
-        val boundStationName = state.getString("boundStationName") ?: ""
-        val passingStationName = state.getString("passingStationName") ?: ""
+        val stationName = state.optString("stationName")
+        val nextStationName = state.optString("nextStationName")
+        val approaching = state.optBoolean("approaching")
+        val stopped = state.optBoolean("stopped")
+        val lineName = state.optString("lineName")
+        val lineColor = state.optString("lineColor", "#000000")
+        val progress = state.optDouble("progress")
+        val trainTypeName = state.optString("trainTypeName")
+        val boundStationName = state.optString("boundStationName")
+        val passingStationName = state.optString("passingStationName")
 
         val parsedColor = try {
             Color.parseColor(lineColor)
