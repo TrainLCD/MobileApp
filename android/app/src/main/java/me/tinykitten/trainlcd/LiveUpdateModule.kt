@@ -45,10 +45,10 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
 
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "運行情報",
+            reactApplicationContext.getString(R.string.live_update_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "現在の運行状況をリアルタイムで表示します"
+            description = reactApplicationContext.getString(R.string.live_update_channel_description)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
@@ -130,9 +130,9 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         val progressInt = (progress * MAX_PROGRESS).toInt().coerceIn(0, MAX_PROGRESS)
 
         val contentTitle = when {
-            passingStationName.isNotEmpty() -> "$passingStationName 通過中"
+            passingStationName.isNotEmpty() -> reactApplicationContext.getString(R.string.live_update_passing, passingStationName)
             stopped -> stationName
-            approaching -> "まもなく $nextStationName"
+            approaching -> reactApplicationContext.getString(R.string.live_update_approaching, nextStationName)
             else -> "$stationName → $nextStationName"
         }
 

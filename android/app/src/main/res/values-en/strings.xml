@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="live_update_channel_name">Train Updates</string>
+  <string name="live_update_channel_description">Shows real-time updates of current train operations</string>
+  <string name="live_update_passing">Passing through %1$s</string>
+  <string name="live_update_approaching">Approaching %1$s</string>
+</resources>
