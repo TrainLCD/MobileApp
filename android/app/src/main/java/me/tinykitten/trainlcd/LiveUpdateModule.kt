@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.Bundle
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
@@ -199,7 +200,9 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShortCriticalText(shortCriticalText)
-            .setRequestPromotedOngoing(true)
+            .addExtras(Bundle().apply {
+                putBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING, true)
+            })
 
         createContentIntent()?.let { builder.setContentIntent(it) }
 
