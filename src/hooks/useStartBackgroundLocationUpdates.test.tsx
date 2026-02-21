@@ -181,7 +181,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       unmount();
 
       // startが完了
-      resolveStart!();
+      resolveStart?.();
       await new Promise(process.nextTick);
 
       // クリーンアップのstop + cancelled検知後のstopで2回呼ばれる
@@ -205,9 +205,7 @@ describe('useStartBackgroundLocationUpdates', () => {
             resolveStart = resolve;
           })
       );
-      mockStopLocationUpdatesAsync.mockRejectedValue(
-        new Error('Stop failed')
-      );
+      mockStopLocationUpdatesAsync.mockRejectedValue(new Error('Stop failed'));
 
       const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
 
@@ -215,7 +213,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       unmount();
 
       // startが完了 → cancelled=trueなのでstopを試みるが失敗する
-      resolveStart!();
+      resolveStart?.();
       await new Promise(process.nextTick);
 
       // startは1回だけ（stop失敗でリトライされない）
