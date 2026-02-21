@@ -110,15 +110,15 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             else -> "$stationName → $nextStationName"
         }
 
-        val contentText = boundStationName
-
-        val subText = buildString {
+        val contentText = buildString {
             if (trainTypeName.isNotEmpty()) {
                 append(trainTypeName)
                 append(" ")
             }
-            append(lineName)
+            append(boundStationName)
         }
+
+        val subText = lineName
 
         val trackerIcon = Icon.createWithResource(
             reactApplicationContext,
