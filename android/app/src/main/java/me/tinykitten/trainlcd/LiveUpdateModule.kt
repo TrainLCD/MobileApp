@@ -5,7 +5,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.Icon
 import android.os.Build
 import com.facebook.react.bridge.ReactApplicationContext
@@ -80,6 +83,29 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         getNotificationManager().cancel(NOTIFICATION_ID)
     }
 
+    private fun createTrackerIcon(color: Int): Icon {
+        val density = reactApplicationContext.resources.displayMetrics.density
+        val sizePx = (24 * density).toInt()
+        val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val cx = sizePx / 2f
+        val cy = sizePx / 2f
+        val strokeWidth = 2f * density
+        val radius = cx - strokeWidth / 2f
+
+        paint.style = Paint.Style.FILL
+        paint.color = color
+        canvas.drawCircle(cx, cy, radius, paint)
+
+        paint.style = Paint.Style.STROKE
+        paint.color = Color.WHITE
+        paint.strokeWidth = strokeWidth
+        canvas.drawCircle(cx, cy, radius, paint)
+
+        return Icon.createWithBitmap(bitmap)
+    }
+
     @Suppress("NewApi")
     private fun postProgressNotification(state: ReadableMap) {
         ensureChannel()
@@ -120,10 +146,7 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
 
         val subText = lineName
 
-        val trackerIcon = Icon.createWithResource(
-            reactApplicationContext,
-            R.drawable.ic_notification_live_update
-        )
+        val trackerIcon = createTrackerIcon(parsedColor)
 
         val progressStyle = Notification.ProgressStyle()
             .setStyledByProgress(true)
