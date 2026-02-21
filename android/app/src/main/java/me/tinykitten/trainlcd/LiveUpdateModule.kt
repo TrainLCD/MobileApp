@@ -201,7 +201,7 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             .setOnlyAlertOnce(true)
             .setShortCriticalText(shortCriticalText)
             .addExtras(Bundle().apply {
-                putBoolean(Notification.EXTRA_REQUEST_PROMOTED_ONGOING, true)
+                putBoolean("android.requestPromotedOngoing", true)
             })
 
         createContentIntent()?.let { builder.setContentIntent(it) }
