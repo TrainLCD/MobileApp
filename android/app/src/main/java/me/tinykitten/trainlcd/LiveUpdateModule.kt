@@ -184,6 +184,12 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
                 )
             )
 
+        val shortCriticalText = when {
+            passingStationName.isNotEmpty() -> passingStationName
+            stopped -> stationName
+            else -> nextStationName
+        }
+
         val builder = Notification.Builder(reactApplicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_live_update)
             .setContentTitle(contentTitle)
@@ -192,6 +198,8 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             .setStyle(progressStyle)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setShortCriticalText(shortCriticalText)
+            .setRequestPromotedOngoing(true)
 
         createContentIntent()?.let { builder.setContentIntent(it) }
 
