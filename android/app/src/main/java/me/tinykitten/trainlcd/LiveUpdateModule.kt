@@ -186,9 +186,10 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
             )
 
         val shortCriticalText = when {
-            passingStationName.isNotEmpty() -> passingStationName
+            passingStationName.isNotEmpty() -> reactApplicationContext.getString(R.string.live_update_passing, passingStationName)
             stopped -> stationName
-            else -> nextStationName
+            approaching -> reactApplicationContext.getString(R.string.live_update_approaching, nextStationName)
+            else -> reactApplicationContext.getString(R.string.live_update_next, nextStationName)
         }
 
         val builder = Notification.Builder(reactApplicationContext, CHANNEL_ID)
