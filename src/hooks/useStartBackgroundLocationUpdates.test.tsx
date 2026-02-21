@@ -162,6 +162,35 @@ describe('useStartBackgroundLocationUpdates', () => {
       jest.useRealTimers();
     });
 
+    test('should stop location updates if cancelled during startLocationUpdatesAsync', async () => {
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      // startLocationUpdatesAsyncが解決する前にunmountされるケースをシミュレート
+      let resolveStart: () => void;
+      mockStartLocationUpdatesAsync.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveStart = resolve;
+          })
+      );
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      // startが進行中の間にクリーンアップ
+      unmount();
+
+      // startが完了
+      resolveStart!();
+      await new Promise(process.nextTick);
+
+      // クリーンアップのstop + cancelled検知後のstopで2回呼ばれる
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledTimes(2);
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
+    });
+
     test('should stop retrying on cleanup', async () => {
       jest.useFakeTimers();
       const consoleWarnSpy = jest

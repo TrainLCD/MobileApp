@@ -49,6 +49,11 @@ export const useStartBackgroundLocationUpdates = () => {
               killServiceOnDestroy: false,
             },
           });
+          // クリーンアップがstartの完了前に実行された場合、
+          // stopが先に走り開始済みの更新が残るため、ここで再度停止する
+          if (cancelled) {
+            await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+          }
           return;
         } catch (error) {
           if (attempt < LOCATION_START_MAX_RETRIES) {
