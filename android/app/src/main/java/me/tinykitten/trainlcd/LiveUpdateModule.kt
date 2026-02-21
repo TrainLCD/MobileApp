@@ -45,10 +45,10 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
 
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "運行情報",
+            reactApplicationContext.getString(R.string.live_update_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "現在の運行状況をリアルタイムで表示します"
+            description = reactApplicationContext.getString(R.string.live_update_channel_description)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
@@ -112,6 +112,8 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
 
         val stationName = state.optString("stationName")
         val nextStationName = state.optString("nextStationName")
+        val stationNumber = state.optString("stationNumber")
+        val nextStationNumber = state.optString("nextStationNumber")
         val approaching = state.optBoolean("approaching")
         val stopped = state.optBoolean("stopped")
         val lineName = state.optString("lineName")
@@ -119,7 +121,9 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         val progress = state.optDouble("progress")
         val trainTypeName = state.optString("trainTypeName")
         val boundStationName = state.optString("boundStationName")
+        val boundStationNumber = state.optString("boundStationNumber")
         val passingStationName = state.optString("passingStationName")
+        val passingStationNumber = state.optString("passingStationNumber")
 
         val parsedColor = try {
             Color.parseColor(lineColor)
@@ -129,11 +133,27 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
 
         val progressInt = (progress * MAX_PROGRESS).toInt().coerceIn(0, MAX_PROGRESS)
 
+        fun formatStationWithNumber(name: String, number: String): String =
+            if (number.isNotEmpty()) "$name ($number)" else name
+
         val contentTitle = when {
-            passingStationName.isNotEmpty() -> "$passingStationName 通過中"
-            stopped -> stationName
-            approaching -> "まもなく $nextStationName"
-            else -> "$stationName → $nextStationName"
+            passingStationName.isNotEmpty() -> reactApplicationContext.getString(R.string.live_update_passing, formatStationWithNumber(passingStationName, passingStationNumber))
+            stopped -> formatStationWithNumber(stationName, stationNumber)
+            approaching -> reactApplicationContext.getString(R.string.live_update_approaching, formatStationWithNumber(nextStationName, nextStationNumber))
+            else -> reactApplicationContext.getString(R.string.live_update_next, formatStationWithNumber(nextStationName, nextStationNumber))
+        }
+
+        val formattedBoundName = run {
+            val hasSuffix = boundStationName.endsWith("方面")
+            val baseName = if (hasSuffix) boundStationName.removeSuffix("方面") else boundStationName
+            val delimiter = if (hasSuffix) "・" else "/"
+            val names = baseName.split(delimiter)
+            val numbers = boundStationNumber.split("/")
+            val formatted = names.mapIndexed { index, name ->
+                val number = numbers.getOrElse(index) { "" }
+                formatStationWithNumber(name, number)
+            }.joinToString(delimiter)
+            if (hasSuffix) "${formatted} 方面" else formatted
         }
 
         val contentText = buildString {
@@ -141,7 +161,7 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
                 append(trainTypeName)
                 append(" ")
             }
-            append(boundStationName)
+            append(formattedBoundName)
         }
 
         val subText = lineName
