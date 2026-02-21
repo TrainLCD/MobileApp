@@ -191,6 +191,43 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
+    test('should not retry when cancelled stop fails after successful start', async () => {
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      let resolveStart: () => void;
+      mockStartLocationUpdatesAsync.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveStart = resolve;
+          })
+      );
+      mockStopLocationUpdatesAsync.mockRejectedValue(
+        new Error('Stop failed')
+      );
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      // startが進行中の間にクリーンアップ
+      unmount();
+
+      // startが完了 → cancelled=trueなのでstopを試みるが失敗する
+      resolveStart!();
+      await new Promise(process.nextTick);
+
+      // startは1回だけ（stop失敗でリトライされない）
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'バックグラウンド位置情報の更新停止に失敗しました:',
+        expect.any(Error)
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+
     test('should stop retrying on cleanup', async () => {
       jest.useFakeTimers();
       const consoleWarnSpy = jest

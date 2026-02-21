@@ -52,7 +52,14 @@ export const useStartBackgroundLocationUpdates = () => {
           // クリーンアップがstartの完了前に実行された場合、
           // stopが先に走り開始済みの更新が残るため、ここで再度停止する
           if (cancelled) {
-            await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+            try {
+              await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+            } catch (stopError) {
+              console.warn(
+                'バックグラウンド位置情報の更新停止に失敗しました:',
+                stopError
+              );
+            }
           }
           return;
         } catch (error) {
