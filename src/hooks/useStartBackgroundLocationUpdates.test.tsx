@@ -1,6 +1,10 @@
 import { renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
-import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
+import {
+  LOCATION_START_MAX_RETRIES,
+  LOCATION_TASK_NAME,
+  LOCATION_TASK_OPTIONS,
+} from '../constants';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationUpdates';
 
@@ -98,26 +102,156 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
-    test('should handle startLocationUpdatesAsync error gracefully', async () => {
+    test('should retry startLocationUpdatesAsync on failure and succeed', async () => {
+      jest.useFakeTimers();
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockStartLocationUpdatesAsync
+        .mockRejectedValueOnce(new Error('Temporary failure'))
+        .mockResolvedValueOnce(undefined);
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      // 初回失敗
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        `バックグラウンド位置情報の更新開始に失敗しました（リトライ 1/${LOCATION_START_MAX_RETRIES}）:`,
+        expect.any(Error)
+      );
+
+      // リトライ待機（1000ms）後に成功
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(2);
+
+      consoleWarnSpy.mockRestore();
+      jest.useRealTimers();
+    });
+
+    test('should log final error after all retries exhausted', async () => {
+      jest.useFakeTimers();
       const consoleWarnSpy = jest
         .spyOn(console, 'warn')
         .mockImplementation(() => {});
       mockStartLocationUpdatesAsync.mockRejectedValue(
-        new Error('Permission denied')
+        new Error('Persistent failure')
       );
       mockAutoModeEnabled = false;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
       renderHook(() => useStartBackgroundLocationUpdates());
 
-      await new Promise(process.nextTick);
+      // 初回 + リトライ3回分すべて実行
+      for (let i = 0; i <= LOCATION_START_MAX_RETRIES; i++) {
+        await jest.advanceTimersByTimeAsync(1000 * 2 ** i);
+      }
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'バックグラウンド位置情報の更新開始に失敗しました:',
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(
+        LOCATION_START_MAX_RETRIES + 1
+      );
+      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+        'バックグラウンド位置情報の更新開始に失敗しました（リトライ上限到達）:',
         expect.any(Error)
       );
 
       consoleWarnSpy.mockRestore();
+      jest.useRealTimers();
+    });
+
+    test('should stop location updates if cancelled during startLocationUpdatesAsync', async () => {
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      // startLocationUpdatesAsyncが解決する前にunmountされるケースをシミュレート
+      let resolveStart: () => void = () => {};
+      mockStartLocationUpdatesAsync.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveStart = resolve;
+          })
+      );
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      // startが進行中の間にクリーンアップ
+      unmount();
+
+      // startが完了
+      resolveStart();
+      await new Promise(process.nextTick);
+
+      // クリーンアップのstop + cancelled検知後のstopで2回呼ばれる
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledTimes(2);
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
+    });
+
+    test('should not retry when cancelled stop fails after successful start', async () => {
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      let resolveStart: () => void = () => {};
+      mockStartLocationUpdatesAsync.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveStart = resolve;
+          })
+      );
+      mockStopLocationUpdatesAsync.mockRejectedValue(new Error('Stop failed'));
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      // startが進行中の間にクリーンアップ
+      unmount();
+
+      // startが完了 → cancelled=trueなのでstopを試みるが失敗する
+      resolveStart();
+      await new Promise(process.nextTick);
+
+      // startは1回だけ（stop失敗でリトライされない）
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'バックグラウンド位置情報の更新停止に失敗しました:',
+        expect.any(Error)
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+
+    test('should stop retrying on cleanup', async () => {
+      jest.useFakeTimers();
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockStartLocationUpdatesAsync.mockRejectedValue(new Error('Failure'));
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      // 初回失敗
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(1);
+
+      // クリーンアップでリトライを中止
+      unmount();
+
+      // リトライ待機時間を経過させてもこれ以上呼ばれない
+      await jest.advanceTimersByTimeAsync(10000);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(1);
+
+      consoleWarnSpy.mockRestore();
+      jest.useRealTimers();
     });
   });
 

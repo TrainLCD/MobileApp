@@ -3,9 +3,19 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { setLocation } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
-import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
+import {
+  LOCATION_START_MAX_RETRIES,
+  LOCATION_START_RETRY_BASE_DELAY_MS,
+  LOCATION_TASK_NAME,
+  LOCATION_TASK_OPTIONS,
+} from '../constants';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
@@ -16,31 +26,62 @@ export const useStartBackgroundLocationUpdates = () => {
       return;
     }
 
+    let cancelled = false;
+
     (async () => {
-      try {
-        // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
-        // Android 16以降ではJobSchedulerにランタイムクォータが適用されるため、
-        // expo-locationのフォアグラウンドサービス内で直接位置更新を実行する必要がある
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          ...LOCATION_TASK_OPTIONS,
-          // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
-          // OtherNavigationは必須
-          activityType: Location.ActivityType.OtherNavigation,
-          foregroundService: {
-            notificationTitle: translate('bgAlertTitle'),
-            notificationBody: translate('bgAlertContent'),
-            killServiceOnDestroy: false,
-          },
-        });
-      } catch (error) {
-        console.warn(
-          'バックグラウンド位置情報の更新開始に失敗しました:',
-          error
-        );
+      for (let attempt = 0; attempt <= LOCATION_START_MAX_RETRIES; attempt++) {
+        if (cancelled) {
+          return;
+        }
+
+        try {
+          // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
+          // Android 16以降ではJobSchedulerにランタイムクォータが適用されるため、
+          // expo-locationのフォアグラウンドサービス内で直接位置更新を実行する必要がある
+          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+            ...LOCATION_TASK_OPTIONS,
+            // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
+            // OtherNavigationは必須
+            activityType: Location.ActivityType.OtherNavigation,
+            foregroundService: {
+              notificationTitle: translate('bgAlertTitle'),
+              notificationBody: translate('bgAlertContent'),
+              killServiceOnDestroy: false,
+            },
+          });
+          // クリーンアップがstartの完了前に実行された場合、
+          // stopが先に走り開始済みの更新が残るため、ここで再度停止する
+          if (cancelled) {
+            try {
+              await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+            } catch (stopError) {
+              console.warn(
+                'バックグラウンド位置情報の更新停止に失敗しました:',
+                stopError
+              );
+            }
+          }
+          return;
+        } catch (error) {
+          if (attempt < LOCATION_START_MAX_RETRIES) {
+            const delay = LOCATION_START_RETRY_BASE_DELAY_MS * 2 ** attempt;
+            console.warn(
+              `バックグラウンド位置情報の更新開始に失敗しました（リトライ ${attempt + 1}/${LOCATION_START_MAX_RETRIES}）:`,
+              error
+            );
+            await wait(delay);
+          } else {
+            console.warn(
+              'バックグラウンド位置情報の更新開始に失敗しました（リトライ上限到達）:',
+              error
+            );
+          }
+        }
       }
     })();
 
     return () => {
+      cancelled = true;
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
         console.warn(
           'バックグラウンド位置情報の更新停止に失敗しました:',
