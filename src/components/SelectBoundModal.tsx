@@ -509,6 +509,11 @@ export const SelectBoundModal: React.FC<Props> = ({
       !!targetLine &&
       stationLines.some((stationLine) => stationLine.id === targetLine.id);
 
+    // pendingLine（選択中の路線）をselectedLine（前回確定した路線）より優先する
+    // 路線選択画面から別の路線を選び直した場合にselectedLineが古い値のまま残るため
+    if (hasStationLine(line)) {
+      return line;
+    }
     if (hasStationLine(selectedLine)) {
       return selectedLine;
     }
@@ -518,11 +523,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     if (hasStationLine(pendingTrainType?.line)) {
       return pendingTrainType?.line ?? null;
     }
-    if (hasStationLine(line)) {
-      return line;
-    }
 
-    return station?.line ?? stationLines[0] ?? selectedLine ?? line ?? null;
+    return station?.line ?? stationLines[0] ?? line ?? selectedLine ?? null;
   }, [
     line,
     pendingTrainType?.line,

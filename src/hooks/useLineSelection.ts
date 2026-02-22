@@ -107,6 +107,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
       }));
       setLineState((prev) => ({
         ...prev,
+        selectedLine: null,
         pendingLine: line ?? null,
       }));
       setNavigationState((prev) => ({
