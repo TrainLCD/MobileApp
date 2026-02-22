@@ -28,6 +28,8 @@ const mockStartLocationUpdatesAsync =
   Location.startLocationUpdatesAsync as jest.Mock;
 const mockStopLocationUpdatesAsync =
   Location.stopLocationUpdatesAsync as jest.Mock;
+const mockHasStartedLocationUpdatesAsync =
+  Location.hasStartedLocationUpdatesAsync as jest.Mock;
 const mockWatchPositionAsync = Location.watchPositionAsync as jest.Mock;
 
 // jotai useAtomValueのモック
@@ -41,10 +43,15 @@ describe('useStartBackgroundLocationUpdates', () => {
   const mockRemove = jest.fn();
 
   beforeEach(() => {
+    // React Testing Libraryのauto-cleanupはafterEachでフックをunmountし、
+    // effectクリーンアップ（stopLocationUpdatesAsync等）を発火する。
+    // このクリーンアップは登録順の関係でafterEachよりも後に実行されるため、
+    // beforeEachでclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
     jest.clearAllMocks();
     mockAutoModeEnabled = false;
     mockStartLocationUpdatesAsync.mockResolvedValue(undefined);
     mockStopLocationUpdatesAsync.mockResolvedValue(undefined);
+    mockHasStartedLocationUpdatesAsync.mockResolvedValue(false);
     mockWatchPositionAsync.mockResolvedValue({ remove: mockRemove });
   });
 
@@ -104,6 +111,77 @@ describe('useStartBackgroundLocationUpdates', () => {
       expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME
       );
+    });
+
+    test('should stop stale location task before starting new one', async () => {
+      mockHasStartedLocationUpdatesAsync.mockResolvedValue(true);
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockHasStartedLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+
+      // stopがstartより先に呼ばれていることを検証
+      const stopOrder =
+        mockStopLocationUpdatesAsync.mock.invocationCallOrder[0];
+      const startOrder =
+        mockStartLocationUpdatesAsync.mock.invocationCallOrder[0];
+      expect(stopOrder).toBeLessThan(startOrder);
+    });
+
+    test('should not stop when no stale task exists', async () => {
+      mockHasStartedLocationUpdatesAsync.mockResolvedValue(false);
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockHasStartedLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
+      // 残存タスクがないためstopはまだ呼ばれていない
+      expect(mockStopLocationUpdatesAsync).not.toHaveBeenCalled();
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+
+      // アンマウント時のクリーンアップでstopが呼ばれることを確認
+      unmount();
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
+    });
+
+    test('should continue starting even if stale task cleanup fails', async () => {
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockHasStartedLocationUpdatesAsync.mockRejectedValue(
+        new Error('Check failed')
+      );
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        '前回セッションの位置情報タスクの停止に失敗しました:',
+        expect.any(Error)
+      );
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+
+      consoleWarnSpy.mockRestore();
     });
 
     test('should retry startLocationUpdatesAsync on failure and succeed', async () => {
@@ -181,6 +259,9 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
 
+      // hasStartedLocationUpdatesAsyncの解決を待ち、startLocationUpdatesAsyncに到達させる
+      await new Promise(process.nextTick);
+
       // startが進行中の間にクリーンアップ
       unmount();
 
@@ -212,6 +293,9 @@ describe('useStartBackgroundLocationUpdates', () => {
       mockStopLocationUpdatesAsync.mockRejectedValue(new Error('Stop failed'));
 
       const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      // hasStartedLocationUpdatesAsyncの解決を待ち、startLocationUpdatesAsyncに到達させる
+      await new Promise(process.nextTick);
 
       // startが進行中の間にクリーンアップ
       unmount();

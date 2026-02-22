@@ -33,6 +33,24 @@ export const useStartBackgroundLocationUpdates = () => {
     let cancelled = false;
 
     (async () => {
+      // 前回セッションのフォアグラウンドサービスが残存している場合（killServiceOnDestroy: false）、
+      // 明示的に停止してからstartすることで、FusedLocationProviderClientのサブスクリプションが
+      // システムレベルで蓄積するのを防ぐ。
+      // Android 16ではJobSchedulerクォータが厳格化されており、蓄積したサブスクリプションが
+      // クォータ超過を引き起こしバックグラウンド更新が停止する原因となる。
+      try {
+        const hasStarted =
+          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStarted) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      } catch (cleanupError) {
+        console.warn(
+          '前回セッションの位置情報タスクの停止に失敗しました:',
+          cleanupError
+        );
+      }
+
       for (let attempt = 0; attempt <= LOCATION_START_MAX_RETRIES; attempt++) {
         if (cancelled) {
           return;
