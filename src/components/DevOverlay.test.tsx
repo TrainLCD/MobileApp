@@ -64,7 +64,8 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 describe('DevOverlay', () => {
   beforeEach(() => {
     // Default mock implementations for useAtomValue
-    // locationAtom, accuracyHistoryAtomの順で呼ばれる (useTelemetryEnabledは別途モック済み)
+    // locationAtom, accuracyHistoryAtom, backgroundLocationTrackingAtomの順で呼ばれる
+    // (useTelemetryEnabledは別途モック済み)
     mockUseAtomValue
       .mockReturnValueOnce({
         coords: {
@@ -72,7 +73,8 @@ describe('DevOverlay', () => {
           accuracy: 15,
         },
       }) // locationAtom
-      .mockReturnValue([10, 15, 20]); // accuracyHistoryAtom
+      .mockReturnValueOnce([10, 15, 20]) // accuracyHistoryAtom
+      .mockReturnValue(false); // backgroundLocationTrackingAtom
 
     mockUseDistanceToNextStation.mockReturnValue('500');
     mockUseNextStation.mockReturnValue({
@@ -106,6 +108,24 @@ describe('DevOverlay', () => {
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Telemetry: ON')).toBeTruthy();
     });
+
+    it('バックグラウンド位置情報のOFF状態を表示する', () => {
+      const { getByText } = render(<DevOverlay />);
+      expect(getByText('BG Loc: OFF')).toBeTruthy();
+    });
+
+    it('バックグラウンド位置情報のON状態を表示する', () => {
+      mockUseAtomValue.mockReset();
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { speed: 10, accuracy: 15 },
+        }) // locationAtom
+        .mockReturnValueOnce([10, 15, 20]) // accuracyHistoryAtom
+        .mockReturnValue(true); // backgroundLocationTrackingAtom
+
+      const { getByText } = render(<DevOverlay />);
+      expect(getByText('BG Loc: ON')).toBeTruthy();
+    });
   });
 
   describe('位置情報の表示', () => {
@@ -138,7 +158,7 @@ describe('DevOverlay', () => {
       mockUseAtomValue
         .mockReturnValueOnce(null) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       expect(() => {
         render(<DevOverlay />);
@@ -152,7 +172,7 @@ describe('DevOverlay', () => {
           coords: { speed: null, accuracy: 15 },
         }) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 0km/h')).toBeTruthy();
@@ -165,7 +185,7 @@ describe('DevOverlay', () => {
           coords: { speed: -5, accuracy: 15 },
         }) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 0km/h')).toBeTruthy();
@@ -178,7 +198,7 @@ describe('DevOverlay', () => {
           coords: { speed: 10, accuracy: null },
         }) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Accuracy: m')).toBeTruthy();
@@ -191,7 +211,7 @@ describe('DevOverlay', () => {
           coords: { speed: 10, accuracy: 15 },
         }) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       expect(() => {
         render(<DevOverlay />);
@@ -242,7 +262,7 @@ describe('DevOverlay', () => {
           coords: { speed: 0, accuracy: 15 },
         }) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 0km/h')).toBeTruthy();
@@ -255,7 +275,7 @@ describe('DevOverlay', () => {
           coords: { speed: 13.89, accuracy: 15 }, // 約50 km/h
         }) // locationAtom
         .mockReturnValueOnce([]) // accuracyHistoryAtom
-        .mockReturnValue({ telemetryEnabled: true });
+        .mockReturnValue(false); // backgroundLocationTrackingAtom
 
       const { getByText } = render(<DevOverlay />);
       expect(getByText('Speed: 50km/h')).toBeTruthy();

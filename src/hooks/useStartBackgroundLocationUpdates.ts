@@ -1,7 +1,11 @@
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
-import { setLocation } from '~/store/atoms/location';
+import { store } from '~/store';
+import {
+  backgroundLocationTrackingAtom,
+  setLocation,
+} from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import {
   LOCATION_START_MAX_RETRIES,
@@ -60,6 +64,8 @@ export const useStartBackgroundLocationUpdates = () => {
                 stopError
               );
             }
+          } else {
+            store.set(backgroundLocationTrackingAtom, true);
           }
           return;
         } catch (error) {
@@ -82,6 +88,7 @@ export const useStartBackgroundLocationUpdates = () => {
 
     return () => {
       cancelled = true;
+      store.set(backgroundLocationTrackingAtom, false);
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
         console.warn(
           'バックグラウンド位置情報の更新停止に失敗しました:',
