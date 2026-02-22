@@ -4,6 +4,7 @@ import {
   LOCATION_START_MAX_RETRIES,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
+  LOCATION_WATCH_OPTIONS,
 } from '../constants';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationUpdates';
@@ -361,7 +362,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       await new Promise(process.nextTick);
 
       expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        LOCATION_TASK_OPTIONS,
+        LOCATION_WATCH_OPTIONS,
         expect.any(Function)
       );
     });
@@ -437,7 +438,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       await new Promise(process.nextTick);
 
       expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        LOCATION_TASK_OPTIONS,
+        LOCATION_WATCH_OPTIONS,
         expect.any(Function)
       );
     });

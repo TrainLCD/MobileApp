@@ -12,6 +12,7 @@ import {
   LOCATION_START_RETRY_BASE_DELAY_MS,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
+  LOCATION_WATCH_OPTIONS,
 } from '../constants';
 import { NEEDS_JOBSCHEDULER_BYPASS } from '../constants/native';
 import { translate } from '../translation';
@@ -97,7 +98,7 @@ export const useStartBackgroundLocationUpdates = () => {
             if (NEEDS_JOBSCHEDULER_BYPASS) {
               try {
                 const sub = await Location.watchPositionAsync(
-                  LOCATION_TASK_OPTIONS,
+                  LOCATION_WATCH_OPTIONS,
                   setLocation
                 );
                 if (cancelled) {
@@ -156,7 +157,7 @@ export const useStartBackgroundLocationUpdates = () => {
     (async () => {
       try {
         const sub = await Location.watchPositionAsync(
-          LOCATION_TASK_OPTIONS,
+          LOCATION_WATCH_OPTIONS,
           setLocation
         );
         if (cancelled) {
