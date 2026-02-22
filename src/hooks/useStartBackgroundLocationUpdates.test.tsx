@@ -43,6 +43,10 @@ describe('useStartBackgroundLocationUpdates', () => {
   const mockRemove = jest.fn();
 
   beforeEach(() => {
+    // React Testing Libraryのauto-cleanupはafterEachでフックをunmountし、
+    // effectクリーンアップ（stopLocationUpdatesAsync等）を発火する。
+    // このクリーンアップは登録順の関係でafterEachよりも後に実行されるため、
+    // beforeEachでclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
     jest.clearAllMocks();
     mockAutoModeEnabled = false;
     mockStartLocationUpdatesAsync.mockResolvedValue(undefined);
@@ -125,6 +129,13 @@ describe('useStartBackgroundLocationUpdates', () => {
         LOCATION_TASK_NAME
       );
       expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+
+      // stopがstartより先に呼ばれていることを検証
+      const stopOrder =
+        mockStopLocationUpdatesAsync.mock.invocationCallOrder[0];
+      const startOrder =
+        mockStartLocationUpdatesAsync.mock.invocationCallOrder[0];
+      expect(stopOrder).toBeLessThan(startOrder);
     });
 
     test('should not stop when no stale task exists', async () => {
@@ -132,15 +143,22 @@ describe('useStartBackgroundLocationUpdates', () => {
       mockAutoModeEnabled = false;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
-      renderHook(() => useStartBackgroundLocationUpdates());
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
 
       await new Promise(process.nextTick);
 
       expect(mockHasStartedLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME
       );
-      // stopはクリーンアップ用のstartの前には呼ばれない
+      // 残存タスクがないためstopはまだ呼ばれていない
+      expect(mockStopLocationUpdatesAsync).not.toHaveBeenCalled();
       expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+
+      // アンマウント時のクリーンアップでstopが呼ばれることを確認
+      unmount();
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME
+      );
     });
 
     test('should continue starting even if stale task cleanup fails', async () => {
