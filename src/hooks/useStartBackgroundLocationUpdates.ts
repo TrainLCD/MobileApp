@@ -12,7 +12,9 @@ import {
   LOCATION_START_RETRY_BASE_DELAY_MS,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
+  LOCATION_WATCH_OPTIONS,
 } from '../constants';
+import { NEEDS_JOBSCHEDULER_BYPASS } from '../constants/native';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 
@@ -31,6 +33,7 @@ export const useStartBackgroundLocationUpdates = () => {
     }
 
     let cancelled = false;
+    let watchPositionSub: Location.LocationSubscription | null = null;
 
     (async () => {
       // 前回セッションのフォアグラウンドサービスが残存している場合（killServiceOnDestroy: false）、
@@ -60,8 +63,6 @@ export const useStartBackgroundLocationUpdates = () => {
           // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
           // Androidではフォアグラウンドサービスにより、バックグラウンドでの位置情報更新の
           // スロットリングを回避し、アプリプロセスの生存を維持する（Android 8以降の制約）
-          // ただしexpo-task-managerのJS配信はJobScheduler経由のため、
-          // Android 16のクォータ制限の影響を受ける点に注意
           await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             ...LOCATION_TASK_OPTIONS,
             // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
@@ -87,6 +88,31 @@ export const useStartBackgroundLocationUpdates = () => {
             }
           } else {
             store.set(backgroundLocationTrackingAtom, true);
+
+            // Android 16(API 36)ではexpo-task-managerのJobScheduler経由のJS配信が
+            // クォータ制限でスロットルされるため、watchPositionAsyncによる
+            // 直接コールバックを併用してリアルタイム更新を確保する。
+            // フォアグラウンドサービスがプロセスを維持するため、
+            // バックグラウンドでもwatchPositionAsyncのコールバックは正常に動作する。
+            // iOS・Android 15以前ではTaskManager経由の配信で十分なため不要。
+            if (NEEDS_JOBSCHEDULER_BYPASS) {
+              try {
+                const sub = await Location.watchPositionAsync(
+                  LOCATION_WATCH_OPTIONS,
+                  setLocation
+                );
+                if (cancelled) {
+                  sub.remove();
+                } else {
+                  watchPositionSub = sub;
+                }
+              } catch (watchError) {
+                console.warn(
+                  '直接位置情報コールバックの開始に失敗しました:',
+                  watchError
+                );
+              }
+            }
           }
           return;
         } catch (error) {
@@ -109,6 +135,7 @@ export const useStartBackgroundLocationUpdates = () => {
 
     return () => {
       cancelled = true;
+      watchPositionSub?.remove();
       store.set(backgroundLocationTrackingAtom, false);
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
         console.warn(
@@ -130,7 +157,7 @@ export const useStartBackgroundLocationUpdates = () => {
     (async () => {
       try {
         const sub = await Location.watchPositionAsync(
-          LOCATION_TASK_OPTIONS,
+          LOCATION_WATCH_OPTIONS,
           setLocation
         );
         if (cancelled) {
