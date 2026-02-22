@@ -109,7 +109,7 @@ export const useConsoleTelemetry = (
             device,
             timestamp: log.timestamp,
             log: {
-              type: 'client',
+              type: 'app',
               level: log.level,
               message: log.message,
             },

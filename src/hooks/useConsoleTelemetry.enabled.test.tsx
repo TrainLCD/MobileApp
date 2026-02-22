@@ -67,7 +67,7 @@ describe('useConsoleTelemetry (enabled)', () => {
     const body = JSON.parse(logCalls[0][1].body);
     expect(body.log.message).toBe('test message');
     expect(body.log.level).toBe('info');
-    expect(body.log.type).toBe('client');
+    expect(body.log.type).toBe('app');
     expect(body.device).toBe('MockDevice');
 
     unmount();
