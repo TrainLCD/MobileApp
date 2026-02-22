@@ -10,7 +10,11 @@ import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationU
 
 jest.mock('expo-location');
 jest.mock('./useLocationPermissionsGranted');
+jest.mock('~/store', () => ({
+  store: { set: jest.fn() },
+}));
 jest.mock('~/store/atoms/location', () => ({
+  backgroundLocationTrackingAtom: {},
   setLocation: jest.fn(),
 }));
 jest.mock('~/store/atoms/navigation', () => ({

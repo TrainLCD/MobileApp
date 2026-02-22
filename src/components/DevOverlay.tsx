@@ -4,7 +4,11 @@ import React, { useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
-import { accuracyHistoryAtom, locationAtom } from '~/store/atoms/location';
+import {
+  accuracyHistoryAtom,
+  backgroundLocationTrackingAtom,
+  locationAtom,
+} from '~/store/atoms/location';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
 
@@ -35,6 +39,9 @@ const DevOverlay: React.FC = () => {
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
+  const isBackgroundLocationTracking = useAtomValue(
+    backgroundLocationTrackingAtom
+  );
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
 
@@ -87,6 +94,9 @@ const DevOverlay: React.FC = () => {
       </Typography>
       <Typography style={styles.text}>
         Telemetry: {isTelemetryEnabled ? 'ON' : 'OFF'}
+      </Typography>
+      <Typography style={styles.text}>
+        BG Loc: {isBackgroundLocationTracking ? 'ON' : 'OFF'}
       </Typography>
     </View>
   );

@@ -12,6 +12,7 @@ const SMOOTHING_ALPHA = 0.6;
 
 export const locationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
+export const backgroundLocationTrackingAtom = atom(false);
 
 export const setLocation = (location: Location.LocationObject) => {
   const prev = store.get(locationAtom);
