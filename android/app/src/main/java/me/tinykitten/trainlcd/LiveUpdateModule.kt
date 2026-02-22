@@ -188,7 +188,6 @@ class LiveUpdateModule(reactContext: ReactApplicationContext) :
         val shortCriticalText = when {
             passingStationName.isNotEmpty() -> reactApplicationContext.getString(R.string.live_update_passing, passingStationName)
             stopped -> stationName
-            approaching -> reactApplicationContext.getString(R.string.live_update_approaching, nextStationName)
             else -> reactApplicationContext.getString(R.string.live_update_next, nextStationName)
         }
 
