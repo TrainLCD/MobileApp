@@ -86,7 +86,8 @@ android {
     ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    // Android 16 (API 36) の Notification.ProgressStyle を使用するため最低 36 が必要
+    compileSdk Math.max(rootProject.ext.compileSdkVersion as int, 36)
 
     namespace 'me.tinykitten.trainlcd'
     defaultConfig {
@@ -142,13 +143,13 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000260
-            versionName "10.1.2"
+            versionCode 100000274
+            versionName "10.2.0"
         }
         prod {
             dimension "environment"
-            versionCode 100000260
-            versionName "10.1.2"
+            versionCode 100000274
+            versionName "10.2.0"
         }
     }
 }

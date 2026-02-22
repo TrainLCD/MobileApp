@@ -5,6 +5,15 @@
   "build": {
     "development": {
       "distribution": "store",
+      "env": {
+        "EAS_USE_CACHE": "1"
+      },
+      "cache": {
+        "paths": [
+          "./ios/Pods",
+          "./ios/Podfile.lock"
+        ]
+      },
       "android": {
         "gradleCommand": ":app:bundleDevRelease"
       },
@@ -14,10 +23,28 @@
       }
     },
     "preview": {
-      "distribution": "store"
+      "distribution": "store",
+      "env": {
+        "EAS_USE_CACHE": "1"
+      },
+      "cache": {
+        "paths": [
+          "./ios/Pods",
+          "./ios/Podfile.lock"
+        ]
+      }
     },
     "production": {
       "distribution": "store",
+      "env": {
+        "EAS_USE_CACHE": "1"
+      },
+      "cache": {
+        "paths": [
+          "./ios/Pods",
+          "./ios/Podfile.lock"
+        ]
+      },
       "android": {
         "gradleCommand": ":app:bundleProdRelease"
       },

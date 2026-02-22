@@ -22,7 +22,6 @@ import Typography from '~/components/Typography';
 import navigationState from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { isDevApp } from '~/utils/isDevApp';
 import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
 import {
   getToggledEnabledLanguages,
@@ -251,24 +250,21 @@ const EnabledLanguagesSettings: React.FC = () => {
                 OK
               </Button>
 
-              {/* NOTE: 現状未実装のため本番では非表示 */}
-              {isDevApp ? (
-                <View
+              <View
+                style={{
+                  marginTop: 32,
+                }}
+              >
+                <Link
                   style={{
-                    marginTop: 32,
+                    textAlign: 'center',
+                    fontWeight: 'bold',
                   }}
+                  action={CommonActions.navigate('TTSSettings' as never)}
                 >
-                  <Link
-                    style={{
-                      textAlign: 'center',
-                      fontWeight: 'bold',
-                    }}
-                    action={CommonActions.navigate('TTSSettings' as never)}
-                  >
-                    {translate('ttsLanguageSettings')}
-                  </Link>
-                </View>
-              ) : null}
+                  {translate('ttsLanguageSettings')}
+                </Link>
+              </View>
             </>
           )}
         />

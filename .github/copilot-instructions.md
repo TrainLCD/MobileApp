@@ -88,7 +88,7 @@ src/
 
 ```bash
 pnpm start              # Expo開発サーバー起動
-pnpm android / pnpm ios # ネイティブビルド（Fastlane経由）
+pnpm android / pnpm ios # ネイティブビルド
 pnpm web               # Web版実行
 pnpm lint              # Biome Lint実行
 pnpm format            # Biomeフォーマット適用

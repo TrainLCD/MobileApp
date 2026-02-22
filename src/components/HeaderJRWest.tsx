@@ -2,7 +2,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { LineType, TrainTypeKind } from '~/@types/graphql';
 import { useGetLineMark } from '~/hooks';
 import {
@@ -511,9 +511,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
                 threeLetterCode={threeLetterCode}
                 withDarkTheme
                 allowScaling
-                transformOrigin={
-                  Platform.OS === 'android' ? 'bottom' : undefined
-                }
+                transformOrigin="bottom"
               />
             </View>
           ) : null}

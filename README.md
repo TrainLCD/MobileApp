@@ -135,8 +135,8 @@ src/
 ├── translation.ts     # i18n resources
 └── lineSymbolImage.ts # Line symbol metadata
 
-android/               # Native Android project (Fastlane-managed)
-ios/                   # Native iOS project (Fastlane-managed)
+android/               # Native Android project
+ios/                   # Native iOS project
 functions/             # Firebase Cloud Functions
 docs/                  # Architectural notes and runbooks
 assets/                # Static media bundled with the app
@@ -146,7 +146,7 @@ utils/                 # Tooling scripts and codegen helpers
 ### Available Scripts
 
 - `pnpm start` - Start the Expo development server
-- `pnpm android` / `pnpm ios` - Build and launch native binaries through Fastlane
+- `pnpm android` / `pnpm ios` - Build and launch native binaries
 - `pnpm web` - Serve the Expo web build
 - `pnpm lint` - Run Biome linter
 - `pnpm format` - Format code with Biome
