@@ -50,11 +50,15 @@ jest.mock('jotai', () => ({
 describe('useStartBackgroundLocationUpdates', () => {
   const mockRemove = jest.fn();
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   beforeEach(() => {
     // React Testing Libraryのauto-cleanupはafterEachでフックをunmountし、
     // effectクリーンアップ（stopLocationUpdatesAsync等）を発火する。
     // このクリーンアップは登録順の関係でafterEachよりも後に実行されるため、
-    // beforeEachでclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
+    // beforeEachでもclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
     jest.clearAllMocks();
     mockAutoModeEnabled = false;
     mockNeedsJobSchedulerBypass = false;
