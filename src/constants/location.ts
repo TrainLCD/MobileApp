@@ -14,8 +14,10 @@ export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   accuracy: LOCATION_ACCURACY,
   distanceInterval: LOCATION_DISTANCE_INTERVAL,
   timeInterval: LOCATION_TIME_INTERVAL,
-  // Androidでバッチ配信を無効化し、位置情報をリアルタイムで受け取る
-  deferredUpdatesInterval: 0,
-  deferredUpdatesDistance: 0,
+  // expo-task-managerはバックグラウンドでJobScheduler経由でJS側にデータを配信するため、
+  // deferredUpdatesを0にするとFLPの更新ごとにジョブがスケジュールされ、
+  // Android 16でクォータ超過によりバックグラウンド更新が停止する
+  deferredUpdatesInterval: LOCATION_TIME_INTERVAL,
+  deferredUpdatesDistance: LOCATION_DISTANCE_INTERVAL,
   pausesUpdatesAutomatically: false,
 } as const;
