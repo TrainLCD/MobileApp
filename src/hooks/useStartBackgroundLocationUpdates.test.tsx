@@ -4,9 +4,17 @@ import {
   LOCATION_START_MAX_RETRIES,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
+  LOCATION_WATCH_OPTIONS,
 } from '../constants';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationUpdates';
+
+let mockNeedsJobSchedulerBypass = false;
+jest.mock('../constants/native', () => ({
+  get NEEDS_JOBSCHEDULER_BYPASS() {
+    return mockNeedsJobSchedulerBypass;
+  },
+}));
 
 jest.mock('expo-location');
 jest.mock('./useLocationPermissionsGranted');
@@ -42,13 +50,18 @@ jest.mock('jotai', () => ({
 describe('useStartBackgroundLocationUpdates', () => {
   const mockRemove = jest.fn();
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   beforeEach(() => {
     // React Testing Libraryのauto-cleanupはafterEachでフックをunmountし、
     // effectクリーンアップ（stopLocationUpdatesAsync等）を発火する。
     // このクリーンアップは登録順の関係でafterEachよりも後に実行されるため、
-    // beforeEachでclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
+    // beforeEachでもclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
     jest.clearAllMocks();
     mockAutoModeEnabled = false;
+    mockNeedsJobSchedulerBypass = false;
     mockStartLocationUpdatesAsync.mockResolvedValue(undefined);
     mockStopLocationUpdatesAsync.mockResolvedValue(undefined);
     mockHasStartedLocationUpdatesAsync.mockResolvedValue(false);
@@ -353,7 +366,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       await new Promise(process.nextTick);
 
       expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        LOCATION_TASK_OPTIONS,
+        LOCATION_WATCH_OPTIONS,
         expect.any(Function)
       );
     });
@@ -369,7 +382,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       expect(mockWatchPositionAsync).not.toHaveBeenCalled();
     });
 
-    test('should not start watchPositionAsync when bgPermGranted=true', async () => {
+    test('should not start watchPositionAsync when bgPermGranted=true and NEEDS_JOBSCHEDULER_BYPASS=false', async () => {
       mockAutoModeEnabled = false;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
@@ -377,6 +390,7 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       await new Promise(process.nextTick);
 
+      // JobSchedulerバイパスが不要なプラットフォームではwatchPositionAsyncは呼ばれない
       expect(mockWatchPositionAsync).not.toHaveBeenCalled();
     });
 
@@ -407,6 +421,75 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         '位置情報の監視開始に失敗しました:',
+        expect.any(Error)
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe('background mode direct callback (JobScheduler bypass)', () => {
+    beforeEach(() => {
+      mockNeedsJobSchedulerBypass = true;
+    });
+
+    test('should start watchPositionAsync when NEEDS_JOBSCHEDULER_BYPASS=true', async () => {
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
+        LOCATION_WATCH_OPTIONS,
+        expect.any(Function)
+      );
+    });
+
+    test('should not start watchPositionAsync when NEEDS_JOBSCHEDULER_BYPASS=false', async () => {
+      mockNeedsJobSchedulerBypass = false;
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockWatchPositionAsync).not.toHaveBeenCalled();
+    });
+
+    test('should remove watch subscription on cleanup when bgPermGranted=true', async () => {
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      unmount();
+
+      expect(mockRemove).toHaveBeenCalled();
+    });
+
+    test('should handle direct callback watchPositionAsync failure gracefully', async () => {
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockWatchPositionAsync.mockRejectedValue(
+        new Error('Direct callback failed')
+      );
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      // watchPositionAsyncが失敗してもstartLocationUpdatesAsyncは成功している
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        '直接位置情報コールバックの開始に失敗しました:',
         expect.any(Error)
       );
 
