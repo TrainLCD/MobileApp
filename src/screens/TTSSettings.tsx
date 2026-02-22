@@ -1,11 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
-  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -23,7 +22,6 @@ import Typography from '~/components/Typography';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { isDevApp } from '~/utils/isDevApp';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 
 type SettingItem = {
@@ -113,18 +111,6 @@ const TTSSettingsScreen: React.FC = () => {
   ] = useAtom(speechState);
 
   const navigation = useNavigation();
-
-  // Android 16 (API 36) ではバックグラウンド音声再生が制限されるため無効化
-  const isAndroid16OrHigher =
-    !isDevApp && Platform.OS === 'android' && Number(Platform.Version) >= 36;
-
-  // Android 16以上ではバックグラウンド再生を強制的にfalseにする
-  useEffect(() => {
-    if (isAndroid16OrHigher && backgroundEnabled) {
-      setSpeechState((prev) => ({ ...prev, backgroundEnabled: false }));
-      AsyncStorage.setItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED, 'false');
-    }
-  }, [isAndroid16OrHigher, backgroundEnabled, setSpeechState]);
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -335,16 +321,8 @@ const TTSSettingsScreen: React.FC = () => {
           isFirst={index === 0}
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
-          state={
-            item.id === 'enable_bg_tts' &&
-            (!speechEnabled || isAndroid16OrHigher)
-              ? false
-              : state
-          }
-          disabled={
-            item.id === 'enable_bg_tts' &&
-            (!speechEnabled || isAndroid16OrHigher)
-          }
+          state={item.id === 'enable_bg_tts' && !speechEnabled ? false : state}
+          disabled={item.id === 'enable_bg_tts' && !speechEnabled}
         />
       );
     },
@@ -353,7 +331,6 @@ const TTSSettingsScreen: React.FC = () => {
       handleToggleBgTTS,
       speechEnabled,
       backgroundEnabled,
-      isAndroid16OrHigher,
       SETTING_ITEMS.length,
     ]
   );
@@ -379,17 +356,6 @@ const TTSSettingsScreen: React.FC = () => {
           onScroll={handleScroll}
           ListFooterComponent={() => (
             <>
-              {isAndroid16OrHigher ? (
-                <Typography
-                  style={{
-                    marginTop: 12,
-                    fontSize: 14,
-                    color: isLEDTheme ? '#ccc' : '#666',
-                  }}
-                >
-                  {translate('bgTtsUnavailableOnAndroid16')}
-                </Typography>
-              ) : null}
               <View style={{ marginTop: 16 }}>
                 {TTS_LANGUAGE_ITEMS.map((item, index) => {
                   const state = ttsEnabledLanguages.includes(item.id);
