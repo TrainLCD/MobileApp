@@ -13,6 +13,7 @@ import {
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
 } from '../constants';
+import { NEEDS_JOBSCHEDULER_BYPASS } from '../constants/native';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 
@@ -87,26 +88,29 @@ export const useStartBackgroundLocationUpdates = () => {
           } else {
             store.set(backgroundLocationTrackingAtom, true);
 
-            // Android 16ではexpo-task-managerのJobScheduler経由のJS配信が
+            // Android 16(API 36)ではexpo-task-managerのJobScheduler経由のJS配信が
             // クォータ制限でスロットルされるため、watchPositionAsyncによる
             // 直接コールバックを併用してリアルタイム更新を確保する。
             // フォアグラウンドサービスがプロセスを維持するため、
             // バックグラウンドでもwatchPositionAsyncのコールバックは正常に動作する。
-            try {
-              const sub = await Location.watchPositionAsync(
-                LOCATION_TASK_OPTIONS,
-                setLocation
-              );
-              if (cancelled) {
-                sub.remove();
-              } else {
-                watchPositionSub = sub;
+            // iOS・Android 15以前ではTaskManager経由の配信で十分なため不要。
+            if (NEEDS_JOBSCHEDULER_BYPASS) {
+              try {
+                const sub = await Location.watchPositionAsync(
+                  LOCATION_TASK_OPTIONS,
+                  setLocation
+                );
+                if (cancelled) {
+                  sub.remove();
+                } else {
+                  watchPositionSub = sub;
+                }
+              } catch (watchError) {
+                console.warn(
+                  '直接位置情報コールバックの開始に失敗しました:',
+                  watchError
+                );
               }
-            } catch (watchError) {
-              console.warn(
-                '直接位置情報コールバックの開始に失敗しました:',
-                watchError
-              );
             }
           }
           return;
