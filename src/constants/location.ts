@@ -14,10 +14,11 @@ export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   accuracy: LOCATION_ACCURACY,
   distanceInterval: LOCATION_DISTANCE_INTERVAL,
   timeInterval: LOCATION_TIME_INTERVAL,
-  // expo-task-managerはバックグラウンドでJobScheduler経由でJS側にデータを配信するため、
-  // deferredUpdatesを0にするとFLPの更新ごとにジョブがスケジュールされ、
-  // Android 16でクォータ超過によりバックグラウンド更新が停止する
+  // expo-task-managerはバックグラウンドでJobScheduler経由でJS側にデータを配信する。
+  // deferredUpdatesを両方0にするとFLPの更新ごとにジョブがスケジュールされ、
+  // Android 16でクォータ超過によりバックグラウンド更新が停止する。
+  // distanceは0にしないと停車中に更新が届かなくなる（AND条件のため）
   deferredUpdatesInterval: LOCATION_TIME_INTERVAL,
-  deferredUpdatesDistance: LOCATION_DISTANCE_INTERVAL,
+  deferredUpdatesDistance: 0,
   pausesUpdatesAutomatically: false,
 } as const;
