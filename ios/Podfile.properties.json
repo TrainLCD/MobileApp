@@ -4,5 +4,5 @@
   "ios.buildReactNativeFromSource": "true",
   "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
   "newArchEnabled": "true",
-  "apple.ccacheEnabled": "false"
+  "apple.ccacheEnabled": "true"
 }
