@@ -157,7 +157,6 @@
   "selectFirstStationTitle": "始発駅を選択してください",
   "longPressNotice": "画面を長押しするとメニューが開けます",
   "autoAnnounceBackgroundTitle": "バックグラウンド再生",
-  "bgTtsUnavailableOnAndroid16": "Android 16以降ではOSの制限によりバックグラウンド再生を利用できません。",
   "loadingLocation": "位置情報を取得中です",
   "loadingAPI": "サーバーと通信中です",
   "routeSearchTitle": "経路を検索",
