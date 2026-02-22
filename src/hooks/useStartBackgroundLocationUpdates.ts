@@ -40,8 +40,10 @@ export const useStartBackgroundLocationUpdates = () => {
 
         try {
           // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
-          // Android 16以降ではJobSchedulerにランタイムクォータが適用されるため、
-          // expo-locationのフォアグラウンドサービス内で直接位置更新を実行する必要がある
+          // Androidではフォアグラウンドサービスにより、バックグラウンドでの位置情報更新の
+          // スロットリングを回避し、アプリプロセスの生存を維持する（Android 8以降の制約）
+          // ただしexpo-task-managerのJS配信はJobScheduler経由のため、
+          // Android 16のクォータ制限の影響を受ける点に注意
           await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             ...LOCATION_TASK_OPTIONS,
             // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
