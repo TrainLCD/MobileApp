@@ -369,7 +369,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       expect(mockWatchPositionAsync).not.toHaveBeenCalled();
     });
 
-    test('should not start watchPositionAsync when bgPermGranted=true', async () => {
+    test('should not start foreground-only watchPositionAsync when bgPermGranted=true', async () => {
       mockAutoModeEnabled = false;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
@@ -377,7 +377,12 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       await new Promise(process.nextTick);
 
-      expect(mockWatchPositionAsync).not.toHaveBeenCalled();
+      // bgPermGranted=trueの場合、フォールバック用の第2エフェクトは起動しないが、
+      // 第1エフェクト内でJobSchedulerバイパス用のwatchPositionAsyncが併用される
+      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_OPTIONS,
+        expect.any(Function)
+      );
     });
 
     test('should remove watch subscription on cleanup', async () => {
@@ -407,6 +412,45 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         '位置情報の監視開始に失敗しました:',
+        expect.any(Error)
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe('background mode direct callback (JobScheduler bypass)', () => {
+    test('should remove watch subscription on cleanup when bgPermGranted=true', async () => {
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      unmount();
+
+      expect(mockRemove).toHaveBeenCalled();
+    });
+
+    test('should handle direct callback watchPositionAsync failure gracefully', async () => {
+      const consoleWarnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      mockWatchPositionAsync.mockRejectedValue(
+        new Error('Direct callback failed')
+      );
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      // watchPositionAsyncが失敗してもstartLocationUpdatesAsyncは成功している
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        '直接位置情報コールバックの開始に失敗しました:',
         expect.any(Error)
       );
 
