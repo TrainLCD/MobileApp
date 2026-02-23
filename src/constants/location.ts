@@ -5,7 +5,7 @@ export const LOCATION_ACCURACY = Location.Accuracy.Highest;
 export const LOCATION_DISTANCE_INTERVAL = 5;
 export const LOCATION_TIME_INTERVAL = 3000;
 
-export const MAX_PERMIT_ACCURACY = 4000;
+export const MAX_PERMIT_ACCURACY = 1000;
 
 export const LOCATION_START_MAX_RETRIES = 3;
 export const LOCATION_START_RETRY_BASE_DELAY_MS = 1000;
