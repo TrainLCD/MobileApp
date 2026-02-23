@@ -24,7 +24,7 @@ tags:
 
 # アプリを停止し、ディープリンクでコールドスタート
 - stopApp
-- openLink: "CanaryTrainLCD://?lid=11302&sgid=1130208&dir=1"
+- openLink: "trainlcd-canary://?lid=11302&sgid=1130208&dir=1&auto=1"
 
 # Main画面に新宿駅が表示されることを確認
 - extendedWaitUntil:
@@ -42,5 +42,5 @@ tags:
     label: "シミュレーション進行: 新大久保駅が表示される"
 
 - assertTrue:
-    condition: true
+    condition: "true"
     label: "外回り: 新宿から新大久保への駅進行を確認"

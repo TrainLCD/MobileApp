@@ -136,11 +136,13 @@ export const useDeepLink = () => {
       direction,
       lineGroupId,
       lineId,
+      autoMode,
     }: {
       stationGroupId: number;
       direction: 0 | 1;
       lineGroupId: number | undefined;
       lineId: number;
+      autoMode: boolean;
     }) => {
       const lineDirection: LineDirection =
         direction === 0 ? 'INBOUND' : 'OUTBOUND';
@@ -157,6 +159,9 @@ export const useDeepLink = () => {
         }
 
         applyRoute(station, stations, lineDirection);
+        if (autoMode) {
+          setNavigationState((prev) => ({ ...prev, autoModeEnabled: true }));
+        }
         await navigateToMain();
         return;
       }
@@ -172,6 +177,9 @@ export const useDeepLink = () => {
       }
 
       applyRoute(station, stations, lineDirection);
+      if (autoMode) {
+        setNavigationState((prev) => ({ ...prev, autoModeEnabled: true }));
+      }
       await navigateToMain();
     },
     [
@@ -179,6 +187,7 @@ export const useDeepLink = () => {
       fetchStationsByLineGroupId,
       fetchStationsByLineId,
       navigateToMain,
+      setNavigationState,
     ]
   );
 
@@ -188,7 +197,7 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
-      const { sgid, dir, lgid, lid } = parsed.queryParams;
+      const { sgid, dir, lgid, lid, auto } = parsed.queryParams;
 
       const stationGroupId = Number(sgid);
       const direction = Number(dir);
@@ -202,12 +211,14 @@ export const useDeepLink = () => {
       }
 
       const lineGroupId = lgid ? Number(lgid) : undefined;
+      const autoMode = auto === '1';
 
       await openLink({
         stationGroupId,
         direction,
         lineGroupId,
         lineId,
+        autoMode,
       });
     },
     [openLink]
