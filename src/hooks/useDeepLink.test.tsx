@@ -95,10 +95,17 @@ describe('useDeepLink', () => {
     const mockSetStationState = jest.fn();
     const mockSetNavigationState = jest.fn();
     const mockSetLineState = jest.fn();
-    mockUseSetAtom
-      .mockReturnValueOnce(mockSetStationState)
-      .mockReturnValueOnce(mockSetNavigationState)
-      .mockReturnValueOnce(mockSetLineState);
+    const setters = [
+      mockSetStationState,
+      mockSetNavigationState,
+      mockSetLineState,
+    ];
+    let atomCallIdx = 0;
+    mockUseSetAtom.mockImplementation(() => {
+      const result = setters[atomCallIdx % 3];
+      atomCallIdx++;
+      return result;
+    });
     return { mockSetStationState, mockSetNavigationState, mockSetLineState };
   };
 
@@ -115,15 +122,16 @@ describe('useDeepLink', () => {
   } = {}) => {
     const mockFetchByGroup = jest.fn();
     const mockFetchByLine = jest.fn();
-    mockUseLazyQuery
-      .mockReturnValueOnce([
-        mockFetchByGroup,
-        { loading: groupLoading, error: groupError },
-      ])
-      .mockReturnValueOnce([
-        mockFetchByLine,
-        { loading: lineLoading, error: lineError },
-      ]);
+    const queryResults = [
+      [mockFetchByGroup, { loading: groupLoading, error: groupError }],
+      [mockFetchByLine, { loading: lineLoading, error: lineError }],
+    ];
+    let queryCallIdx = 0;
+    mockUseLazyQuery.mockImplementation(() => {
+      const result = queryResults[queryCallIdx % 2];
+      queryCallIdx++;
+      return result;
+    });
     return { mockFetchByGroup, mockFetchByLine };
   };
 
@@ -367,5 +375,43 @@ describe('useDeepLink', () => {
       'url',
       expect.any(Function)
     );
+  });
+
+  it('初回URL処理完了前はinitialUrlProcessedがfalse', () => {
+    mockGetInitialURL.mockReturnValue(new Promise(() => {}));
+
+    setupAtoms();
+    setupQueries();
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(value) => {
+          hookRef.current = value;
+        }}
+      />
+    );
+
+    expect(hookRef.current?.initialUrlProcessed).toBe(false);
+  });
+
+  it('初回URL処理完了後にinitialUrlProcessedがtrue', async () => {
+    mockGetInitialURL.mockResolvedValue(null);
+
+    setupAtoms();
+    setupQueries();
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(value) => {
+          hookRef.current = value;
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(hookRef.current?.initialUrlProcessed).toBe(true);
+    });
   });
 });

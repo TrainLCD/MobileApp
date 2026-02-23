@@ -8,14 +8,14 @@ type Props = {
 };
 
 const DeepLinkProvider = ({ children }: Props) => {
-  const { isLoading, error } = useDeepLink();
+  const { initialUrlProcessed, isLoading, error } = useDeepLink();
   useEffect(() => {
     if (error) {
       console.error(error);
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
     }
   }, [error]);
-  if (isLoading && !error) {
+  if (!initialUrlProcessed || (isLoading && !error)) {
     return null;
   }
 

@@ -1,7 +1,7 @@
 import { useLazyQuery } from '@apollo/client/react';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Station, TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -161,12 +161,15 @@ export const useDeepLink = () => {
     [openLink]
   );
 
+  const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);
+
   useEffect(() => {
     const checkInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
-        handleUrl(initialUrl);
+        await handleUrl(initialUrl);
       }
+      setInitialUrlProcessed(true);
     };
     checkInitialUrl();
   }, [handleUrl]);
@@ -180,6 +183,7 @@ export const useDeepLink = () => {
   }, [handleUrl]);
 
   return {
+    initialUrlProcessed,
     isLoading:
       fetchStationsByLineGroupIdLoading || fetchStationsByLineIdLoading,
     error: fetchStationsByLineGroupIdError || fetchStationsByLineIdError,
