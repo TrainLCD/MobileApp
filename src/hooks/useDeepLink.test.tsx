@@ -547,6 +547,8 @@ describe('useDeepLink', () => {
   });
 
   it('ナビゲーターが未準備の場合はリトライ後にナビゲートしない', async () => {
+    jest.useFakeTimers();
+
     const mockDispatch = navigationRef.dispatch as jest.Mock;
     const mockIsReady = navigationRef.isReady as jest.Mock;
     mockIsReady.mockReturnValue(false);
@@ -586,19 +588,30 @@ describe('useDeepLink', () => {
       />
     );
 
-    // Wait for the retry loop to exhaust all attempts (~1.5s total backoff)
-    await waitFor(
-      () => {
-        expect(warnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('not ready after retries')
-        );
-      },
-      { timeout: 5000 }
-    );
+    // Flush the async chain: getInitialURL → handleUrl → openLink → fetchByLine → navigateToMain → waitForNavReady
+    await act(async () => {
+      for (let i = 0; i < 10; i++) {
+        await Promise.resolve();
+      }
+    });
+
+    // Advance past all retry delays (100 + 200 + 400 + 800 = 1500ms)
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
+
+    // Flush the promise resolution after retries exhaust
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(mockDispatch).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not ready after retries')
+    );
 
     warnSpy.mockRestore();
+    jest.useRealTimers();
   });
 
   it('ナビゲーターがリトライ中に準備完了した場合はナビゲートする', async () => {
