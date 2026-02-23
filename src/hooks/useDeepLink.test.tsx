@@ -472,10 +472,70 @@ describe('useDeepLink', () => {
     );
   });
 
-  it('ナビゲーターが未準備の場合はナビゲートしない', async () => {
+  it('ナビゲーターが未準備の場合はリトライ後にナビゲートしない', async () => {
     const mockDispatch = navigationRef.dispatch as jest.Mock;
     const mockIsReady = navigationRef.isReady as jest.Mock;
     mockIsReady.mockReturnValue(false);
+
+    const stations = [
+      createStation(1, {
+        groupId: 1,
+        line: { id: 999, nameShort: 'Yamanote' },
+        trainType: createTrainType(),
+      } as Parameters<typeof createStation>[1]),
+      createStation(2, {
+        groupId: 2,
+        line: { id: 999, nameShort: 'Yamanote' },
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=1&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '0' },
+    });
+
+    setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockResolvedValue({
+      data: { lineStations: stations },
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    // Wait for the retry loop to exhaust all attempts (~1.5s total backoff)
+    await waitFor(
+      () => {
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('not ready after retries')
+        );
+      },
+      { timeout: 5000 }
+    );
+
+    expect(mockDispatch).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
+  it('ナビゲーターがリトライ中に準備完了した場合はナビゲートする', async () => {
+    const mockDispatch = navigationRef.dispatch as jest.Mock;
+    const mockIsReady = navigationRef.isReady as jest.Mock;
+    // First two calls return false (navigateToMain check + waitForNavReady first check),
+    // then true on the first retry
+    mockIsReady
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false)
+      .mockReturnValue(true);
 
     const stations = [
       createStation(1, {
@@ -510,10 +570,17 @@ describe('useDeepLink', () => {
       />
     );
 
-    await waitFor(() => {
-      expect(mockFetchByLine).toHaveBeenCalled();
-    });
-
-    expect(mockDispatch).not.toHaveBeenCalled();
+    // Wait for the retry to succeed and dispatch to be called (~100ms for first retry)
+    await waitFor(
+      () => {
+        expect(mockDispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'NAVIGATE',
+            payload: { name: 'MainStack', params: { screen: 'Main' } },
+          })
+        );
+      },
+      { timeout: 5000 }
+    );
   });
 });

@@ -14,6 +14,9 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 
+const MAX_NAV_RETRIES = 5;
+const INITIAL_RETRY_DELAY_MS = 100;
+
 type GetLineStationsData = {
   lineStations: Station[];
 };
@@ -30,6 +33,29 @@ type GetLineGroupStationsData = {
 type GetLineGroupStationsVariables = {
   lineGroupId: number;
 };
+
+const navigateToMainAction = CommonActions.navigate({
+  name: 'MainStack',
+  params: { screen: 'Main' },
+});
+
+const waitForNavReady = (): Promise<boolean> =>
+  new Promise((resolve) => {
+    let attempt = 0;
+    const check = () => {
+      if (navigationRef.isReady()) {
+        resolve(true);
+        return;
+      }
+      attempt++;
+      if (attempt >= MAX_NAV_RETRIES) {
+        resolve(false);
+        return;
+      }
+      setTimeout(check, INITIAL_RETRY_DELAY_MS * 2 ** (attempt - 1));
+    };
+    check();
+  });
 
 export const useDeepLink = () => {
   const setStationState = useSetAtom(stationState);
@@ -87,6 +113,21 @@ export const useDeepLink = () => {
     [setLineState, setStationState, setNavigationState]
   );
 
+  const navigateToMain = useCallback(async () => {
+    if (navigationRef.isReady()) {
+      navigationRef.dispatch(navigateToMainAction);
+      return;
+    }
+    const ready = await waitForNavReady();
+    if (ready) {
+      navigationRef.dispatch(navigateToMainAction);
+    } else {
+      console.warn(
+        'useDeepLink: navigationRef not ready after retries, navigation skipped'
+      );
+    }
+  }, []);
+
   const openLink = useCallback(
     async ({
       stationGroupId,
@@ -114,14 +155,7 @@ export const useDeepLink = () => {
         }
 
         applyRoute(station, stations, lineDirection);
-        if (navigationRef.isReady()) {
-          navigationRef.dispatch(
-            CommonActions.navigate({
-              name: 'MainStack',
-              params: { screen: 'Main' },
-            })
-          );
-        }
+        await navigateToMain();
         return;
       }
 
@@ -136,16 +170,14 @@ export const useDeepLink = () => {
       }
 
       applyRoute(station, stations, lineDirection);
-      if (navigationRef.isReady()) {
-        navigationRef.dispatch(
-          CommonActions.navigate({
-            name: 'MainStack',
-            params: { screen: 'Main' },
-          })
-        );
-      }
+      await navigateToMain();
     },
-    [applyRoute, fetchStationsByLineGroupId, fetchStationsByLineId]
+    [
+      applyRoute,
+      fetchStationsByLineGroupId,
+      fetchStationsByLineId,
+      navigateToMain,
+    ]
   );
 
   const handleUrl = useCallback(
