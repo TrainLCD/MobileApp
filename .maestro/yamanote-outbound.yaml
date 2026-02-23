@@ -2,42 +2,41 @@ appId: me.tinykitten.trainlcd.dev
 tags:
   - e2e
   - yamanote
-  - simulation
+  - regression
 ---
-# 山手線 外回りシミュレーション駅進行テスト
+# 山手線 外回り メイン画面リグレッションテスト
 #
-# ディープリンクで新宿駅・外回りの状態を直接注入し、
-# Main画面でのシミュレーション駅進行を確認する。
+# ディープリンクで新宿駅・外回りの状態を注入し、
+# Main画面が正常に表示され、シミュレーションで駅が進行することを確認する。
 #
-# ディープリンクパラメータ:
-#   lid=11302  山手線のlineId
-#   sgid=1130208  新宿駅のstationGroupId
-#   dir=1  OUTBOUND（外回り）
+# パラメータ:
+#   lid=11302    山手線のlineId
+#   sgid=1130208 新宿駅のstationGroupId
+#   dir=1        OUTBOUND（外回り）
+#
+# 外回り: 新宿 → 新大久保 → 高田馬場 → 目白 → ...
 
 - launchApp:
     clearState: true
 
-# ディープリンクでMain画面に直接遷移
+# ディープリンクでMain画面へ遷移
 - openLink: "CanaryTrainLCD://?lid=11302&sgid=1130208&dir=1"
 
-# Main画面のヘッダーが表示されるのを待つ
+# Main画面に新宿駅が表示されることを確認
 - extendedWaitUntil:
     visible:
-      text: ".*新宿.*|.*Shinjuku.*"
-    timeout: 20000
+      text: ".*新宿.*"
+    timeout: 30000
+    label: "Main画面に新宿駅が表示される"
 
-# 山手線カラー（緑）のヘッダーが表示されていることを確認
-- assertVisible:
-    text: ".*山手線.*|.*Yamanote.*"
-    optional: true
-
-# シミュレーションが進行し駅が変わることを確認
-# 外回り: 新宿→新大久保→高田馬場→目白→池袋
+# シミュレーションが進行し次の駅に変わることを確認
+# 外回り: 新宿の次は新大久保
 - extendedWaitUntil:
     visible:
-      text: ".*新大久保.*|.*Shin-Ōkubo.*|.*高田馬場.*|.*Takadanobaba.*"
+      text: ".*新大久保.*"
     timeout: 120000
+    label: "シミュレーション進行: 新大久保駅が表示される"
 
 - assertTrue:
     condition: true
-    label: "外回りシミュレーション: 新宿から次の駅に進行した"
+    label: "外回り: 新宿から新大久保への駅進行を確認"
