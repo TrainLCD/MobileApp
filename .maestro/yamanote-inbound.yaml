@@ -16,10 +16,14 @@ tags:
 #
 # 内回り: 新宿 → 代々木 → 原宿 → 渋谷 → ...
 
+# アプリの状態をクリアし、位置情報権限を付与
 - launchApp:
     clearState: true
+    permissions:
+      all: allow
 
-# ディープリンクでMain画面へ遷移
+# アプリを停止し、ディープリンクでコールドスタート
+- stopApp
 - openLink: "CanaryTrainLCD://?lid=11302&sgid=1130208&dir=0"
 
 # Main画面に新宿駅が表示されることを確認

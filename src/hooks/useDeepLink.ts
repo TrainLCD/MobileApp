@@ -1,4 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
+import { CommonActions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import {
   GET_LINE_STATIONS,
 } from '~/lib/graphql/queries';
 import type { LineDirection } from '../models/Bound';
+import { navigationRef } from '../stacks/rootNavigation';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
@@ -112,6 +114,14 @@ export const useDeepLink = () => {
         }
 
         applyRoute(station, stations, lineDirection);
+        if (navigationRef.isReady()) {
+          navigationRef.dispatch(
+            CommonActions.navigate({
+              name: 'MainStack',
+              params: { screen: 'Main' },
+            })
+          );
+        }
         return;
       }
 
@@ -126,6 +136,14 @@ export const useDeepLink = () => {
       }
 
       applyRoute(station, stations, lineDirection);
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.navigate({
+            name: 'MainStack',
+            params: { screen: 'Main' },
+          })
+        );
+      }
     },
     [applyRoute, fetchStationsByLineGroupId, fetchStationsByLineId]
   );

@@ -6,6 +6,7 @@ import type React from 'react';
 import type { TrainType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import type { LineDirection } from '../models/Bound';
+import { navigationRef } from '../stacks/rootNavigation';
 import type { LineState } from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
 import type { StationState } from '../store/atoms/station';
@@ -22,6 +23,12 @@ jest.mock('expo-linking', () => ({
   getInitialURL: jest.fn().mockResolvedValue(null),
   addEventListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
   parse: jest.fn(),
+}));
+jest.mock('../stacks/rootNavigation', () => ({
+  navigationRef: {
+    isReady: jest.fn().mockReturnValue(false),
+    dispatch: jest.fn(),
+  },
 }));
 
 type HookResult = ReturnType<typeof useDeepLink> | null;
@@ -413,5 +420,100 @@ describe('useDeepLink', () => {
     await waitFor(() => {
       expect(hookRef.current?.initialUrlProcessed).toBe(true);
     });
+  });
+
+  it('ナビゲーターが準備済みの場合はMain画面へナビゲートする', async () => {
+    const mockDispatch = navigationRef.dispatch as jest.Mock;
+    const mockIsReady = navigationRef.isReady as jest.Mock;
+    mockIsReady.mockReturnValue(true);
+
+    const stations = [
+      createStation(1, {
+        groupId: 1,
+        line: { id: 999, nameShort: 'Yamanote' },
+        trainType: createTrainType(),
+      } as Parameters<typeof createStation>[1]),
+      createStation(2, {
+        groupId: 2,
+        line: { id: 999, nameShort: 'Yamanote' },
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=1&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '0' },
+    });
+
+    setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockResolvedValue({
+      data: { lineStations: stations },
+    });
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockFetchByLine).toHaveBeenCalled();
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'NAVIGATE',
+        payload: { name: 'MainStack', params: { screen: 'Main' } },
+      })
+    );
+  });
+
+  it('ナビゲーターが未準備の場合はナビゲートしない', async () => {
+    const mockDispatch = navigationRef.dispatch as jest.Mock;
+    const mockIsReady = navigationRef.isReady as jest.Mock;
+    mockIsReady.mockReturnValue(false);
+
+    const stations = [
+      createStation(1, {
+        groupId: 1,
+        line: { id: 999, nameShort: 'Yamanote' },
+        trainType: createTrainType(),
+      } as Parameters<typeof createStation>[1]),
+      createStation(2, {
+        groupId: 2,
+        line: { id: 999, nameShort: 'Yamanote' },
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=1&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '0' },
+    });
+
+    setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockResolvedValue({
+      data: { lineStations: stations },
+    });
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockFetchByLine).toHaveBeenCalled();
+    });
+
+    expect(mockDispatch).not.toHaveBeenCalled();
   });
 });

@@ -22,6 +22,7 @@ import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
+import { navigationRef } from './stacks/rootNavigation';
 import { store } from './store';
 import { setI18nConfig } from './translation';
 
@@ -82,7 +83,7 @@ const App: React.FC = () => {
           <ApolloProvider client={gqlClient}>
             <ActionSheetProvider>
               <Provider store={store}>
-                <NavigationContainer>
+                <NavigationContainer ref={navigationRef}>
                   <DeepLinkProvider>
                     <PortalProvider>
                       <Stack.Navigator screenOptions={screenOptions}>

@@ -16,10 +16,14 @@ tags:
 #
 # 外回り: 新宿 → 新大久保 → 高田馬場 → 目白 → ...
 
+# アプリの状態をクリアし、位置情報権限を付与
 - launchApp:
     clearState: true
+    permissions:
+      all: allow
 
-# ディープリンクでMain画面へ遷移
+# アプリを停止し、ディープリンクでコールドスタート
+- stopApp
 - openLink: "CanaryTrainLCD://?lid=11302&sgid=1130208&dir=1"
 
 # Main画面に新宿駅が表示されることを確認
