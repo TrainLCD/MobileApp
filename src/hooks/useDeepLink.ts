@@ -128,6 +128,8 @@ export const useDeepLink = () => {
     }
   }, []);
 
+  // lineId is always required: it serves as the fallback query key when
+  // lineGroupId is absent and is validated upstream in handleUrl.
   const openLink = useCallback(
     async ({
       stationGroupId,
@@ -215,18 +217,25 @@ export const useDeepLink = () => {
 
   useEffect(() => {
     const checkInitialUrl = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        await handleUrl(initialUrl);
+      try {
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) {
+          await handleUrl(initialUrl);
+        }
+      } catch (e) {
+        console.warn('useDeepLink: failed to process initial URL', e);
+      } finally {
+        setInitialUrlProcessed(true);
       }
-      setInitialUrlProcessed(true);
     };
     checkInitialUrl();
   }, [handleUrl]);
 
   useEffect(() => {
     const listener = Linking.addEventListener('url', (e) => {
-      handleUrl(e.url);
+      handleUrl(e.url).catch((err) => {
+        console.warn('useDeepLink: failed to process runtime URL', err);
+      });
     });
 
     return listener.remove;

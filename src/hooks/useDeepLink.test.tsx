@@ -98,6 +98,8 @@ describe('useDeepLink', () => {
   const mockParse = Linking.parse as jest.Mock;
   const mockAddEventListener = Linking.addEventListener as jest.Mock;
 
+  // Relies on useDeepLink calling useSetAtom in this exact order:
+  // stationState, navigationState, lineState (matching the hook's declaration order).
   const setupAtoms = () => {
     const mockSetStationState = jest.fn();
     const mockSetNavigationState = jest.fn();
@@ -420,6 +422,78 @@ describe('useDeepLink', () => {
     await waitFor(() => {
       expect(hookRef.current?.initialUrlProcessed).toBe(true);
     });
+  });
+
+  it('handleUrl例外時でもinitialUrlProcessedがtrueになる', async () => {
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=1&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '0' },
+    });
+
+    setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockRejectedValue(new Error('network'));
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(value) => {
+          hookRef.current = value;
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(hookRef.current?.initialUrlProcessed).toBe(true);
+    });
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('failed to process initial URL'),
+      expect.any(Error)
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it('ランタイムURLイベントのPromise拒否をキャッチする', async () => {
+    mockGetInitialURL.mockResolvedValue(null);
+
+    setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockRejectedValue(new Error('network'));
+
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '0' },
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    // Fire the runtime URL event listener
+    const listenerCallback = mockAddEventListener.mock.calls[0][1];
+    await act(async () => {
+      await listenerCallback({ url: 'CanaryTrainLCD://?lid=999&sgid=1&dir=0' });
+    });
+
+    await waitFor(() => {
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('failed to process runtime URL'),
+        expect.any(Error)
+      );
+    });
+
+    warnSpy.mockRestore();
   });
 
   it('ナビゲーターが準備済みの場合はMain画面へナビゲートする', async () => {
