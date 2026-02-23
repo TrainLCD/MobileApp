@@ -1,0 +1,38 @@
+appId: me.tinykitten.trainlcd.dev
+tags:
+  - e2e
+  - yamanote
+  - simulation
+---
+# 山手線 内回りシミュレーション駅進行テスト
+#
+# ディープリンクで新宿駅・内回りの状態を直接注入し、
+# Main画面でのシミュレーション駅進行を確認する。
+#
+# ディープリンクパラメータ:
+#   lid=11302  山手線のlineId
+#   sgid=1130208  新宿駅のstationGroupId
+#   dir=0  INBOUND（内回り）
+
+- launchApp:
+    clearState: true
+
+# ディープリンクでMain画面に直接遷移
+- openLink: "CanaryTrainLCD://?lid=11302&sgid=1130208&dir=0"
+
+# Main画面のヘッダーが表示されるのを待つ
+- extendedWaitUntil:
+    visible:
+      text: ".*新宿.*|.*Shinjuku.*"
+    timeout: 20000
+
+# シミュレーションが進行し駅が変わることを確認
+# 内回り: 新宿→代々木→千駄ヶ谷→信濃町→四ツ谷→...→渋谷方面
+- extendedWaitUntil:
+    visible:
+      text: ".*代々木.*|.*Yoyogi.*|.*渋谷.*|.*Shibuya.*"
+    timeout: 120000
+
+- assertTrue:
+    condition: true
+    label: "内回りシミュレーション: 新宿から次の駅に進行した"

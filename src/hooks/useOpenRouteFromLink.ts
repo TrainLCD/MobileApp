@@ -71,11 +71,16 @@ export const useOpenRouteFromLink = () => {
       }));
       setStationState((prev) => ({
         ...prev,
+        // Main画面で直接使う値
+        station,
+        stations,
+        // SelectBoundModal経由の場合に参照される値（後方互換）
         pendingStation: station,
         pendingStations: stations,
         selectedDirection: direction,
         selectedBound:
           direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],
+        wantedDestination: null,
       }));
     },
     [setLineState, setNavigationState, setStationState]
