@@ -7,8 +7,19 @@ const MAX_ACCURACY_HISTORY = 12;
 
 // 物理的にありえない速度でのジャンプを棄却する閾値(m/s ≒ 360km/h)
 const MAX_PLAUSIBLE_SPEED = 100;
-// 座標スムージングの重み（0に近いほどスムージングが強い）
-const SMOOTHING_ALPHA = 0.6;
+// GPS精度に応じたスムージング重みを返す（精度が良いほど新しい値を信頼する）
+const getSmoothingAlpha = (accuracy: number | null): number => {
+  if (accuracy == null || accuracy <= 0) {
+    return 0.6;
+  }
+  if (accuracy < 50) {
+    return 0.8;
+  }
+  if (accuracy < 200) {
+    return 0.6;
+  }
+  return 0.3;
+};
 
 export const locationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
@@ -48,12 +59,12 @@ export const setLocation = (location: Location.LocationObject) => {
     }
 
     // EMA(指数移動平均)で座標をスムージングする
+    // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
+    const alpha = getSmoothingAlpha(newAccuracy);
     const smoothedLat =
-      SMOOTHING_ALPHA * location.coords.latitude +
-      (1 - SMOOTHING_ALPHA) * prev.coords.latitude;
+      alpha * location.coords.latitude + (1 - alpha) * prev.coords.latitude;
     const smoothedLon =
-      SMOOTHING_ALPHA * location.coords.longitude +
-      (1 - SMOOTHING_ALPHA) * prev.coords.longitude;
+      alpha * location.coords.longitude + (1 - alpha) * prev.coords.longitude;
 
     const smoothedLocation: Location.LocationObject = {
       ...location,
