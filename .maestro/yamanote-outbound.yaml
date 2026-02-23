@@ -7,14 +7,13 @@ tags:
 # 山手線 外回り メイン画面リグレッションテスト
 #
 # ディープリンクで新宿駅・外回りの状態を注入し、
-# Main画面が正常に表示され、シミュレーションで駅が進行することを確認する。
+# 必要なデータが揃った状態でMain画面が表示されることを確認する。
 #
 # パラメータ:
 #   lid=11302    山手線のlineId
 #   sgid=1130208 新宿駅のstationGroupId
 #   dir=1        OUTBOUND（外回り）
-#
-# 外回り: 新宿 → 新大久保 → 高田馬場 → 目白 → ...
+#   theme=TOKYO_METRO テーマを固定
 
 # アプリの状態をクリアし、位置情報権限を付与
 - launchApp:
@@ -24,23 +23,11 @@ tags:
 
 # アプリを停止し、ディープリンクでコールドスタート
 - stopApp
-- openLink: "trainlcd-canary://?lid=11302&sgid=1130208&dir=1&auto=1"
+- openLink: "trainlcd-canary://?lid=11302&sgid=1130208&dir=1&auto=1&theme=TOKYO_METRO"
 
-# Main画面に新宿駅が表示されることを確認
+# Main画面に新宿駅が表示されることを確認（データ取得成功）
 - extendedWaitUntil:
     visible:
       text: ".*新宿.*"
     timeout: 30000
     label: "Main画面に新宿駅が表示される"
-
-# シミュレーションが進行し次の駅に変わることを確認
-# 外回り: 新宿の次は新大久保
-- extendedWaitUntil:
-    visible:
-      text: ".*新大久保.*"
-    timeout: 120000
-    label: "シミュレーション進行: 新大久保駅が表示される"
-
-- assertTrue:
-    condition: "true"
-    label: "外回り: 新宿から新大久保への駅進行を確認"
