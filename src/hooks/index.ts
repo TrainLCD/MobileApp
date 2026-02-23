@@ -46,7 +46,6 @@ export { useNextLine } from './useNextLine';
 export { useNextStation } from './useNextStation';
 export { useNextTrainType } from './useNextTrainType';
 export { useNumbering } from './useNumbering';
-export { useOpenRouteFromLink } from './useOpenRouteFromLink';
 export { usePresetCarouselData } from './usePresetCarouselData';
 export { usePrevious } from './usePrevious';
 export { usePreviousStation } from './usePreviousStation';

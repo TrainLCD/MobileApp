@@ -1,6 +1,6 @@
 import { memo, type ReactNode, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { useDeepLink } from '../hooks';
+import { useDeepLink } from '../hooks/useDeepLink';
 import { translate } from '../translation';
 
 type Props = {
@@ -8,15 +8,14 @@ type Props = {
 };
 
 const DeepLinkProvider = ({ children }: Props) => {
-  const { isLoading: isRoutesLoadingByLink, error: fetchRoutesByLinkError } =
-    useDeepLink();
+  const { isLoading, error } = useDeepLink();
   useEffect(() => {
-    if (fetchRoutesByLinkError) {
-      console.error(fetchRoutesByLinkError);
+    if (error) {
+      console.error(error);
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
     }
-  }, [fetchRoutesByLinkError]);
-  if (isRoutesLoadingByLink && !fetchRoutesByLinkError) {
+  }, [error]);
+  if (isLoading && !error) {
     return null;
   }
 

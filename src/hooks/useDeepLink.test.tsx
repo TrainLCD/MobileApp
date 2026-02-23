@@ -1,0 +1,371 @@
+import { useLazyQuery } from '@apollo/client/react';
+import { act, render, waitFor } from '@testing-library/react-native';
+import * as Linking from 'expo-linking';
+import { useSetAtom } from 'jotai';
+import type React from 'react';
+import type { TrainType } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
+import type { LineDirection } from '../models/Bound';
+import type { LineState } from '../store/atoms/line';
+import type { NavigationState } from '../store/atoms/navigation';
+import type { StationState } from '../store/atoms/station';
+import { useDeepLink } from './useDeepLink';
+
+jest.mock('@apollo/client/react', () => ({
+  useLazyQuery: jest.fn(),
+}));
+jest.mock('jotai', () => ({
+  useSetAtom: jest.fn(),
+  atom: jest.fn(),
+}));
+jest.mock('expo-linking', () => ({
+  getInitialURL: jest.fn().mockResolvedValue(null),
+  addEventListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
+  parse: jest.fn(),
+}));
+
+type HookResult = ReturnType<typeof useDeepLink> | null;
+
+const HookBridge: React.FC<{ onReady: (value: HookResult) => void }> = ({
+  onReady,
+}) => {
+  onReady(useDeepLink());
+  return null;
+};
+
+const createTrainType = (overrides: Partial<TrainType> = {}): TrainType =>
+  ({
+    __typename: 'TrainTypeNested',
+    typeId: 'local',
+    name: 'Local',
+    nameRoman: 'Local',
+    color: '#fff',
+    ...overrides,
+  }) as TrainType;
+
+const createStationState = (
+  overrides: Partial<StationState> = {}
+): StationState => ({
+  arrived: true,
+  approaching: false,
+  station: null,
+  stations: [],
+  stationsCache: [],
+  pendingStation: null,
+  pendingStations: [],
+  selectedDirection: null,
+  selectedBound: null,
+  wantedDestination: null,
+  ...overrides,
+});
+
+const createNavigationState = (
+  overrides: Partial<NavigationState> = {}
+): NavigationState => ({
+  headerState: 'CURRENT',
+  trainType: null,
+  bottomState: 'LINE',
+  leftStations: [],
+  stationForHeader: null,
+  enabledLanguages: [],
+  fetchedTrainTypes: [],
+  autoModeEnabled: false,
+  isAppLatest: false,
+  firstStop: true,
+  presetsFetched: false,
+  presetRoutes: [],
+  pendingTrainType: null,
+  ...overrides,
+});
+
+const createLineState = (overrides: Partial<LineState> = {}): LineState => ({
+  selectedLine: null,
+  pendingLine: null,
+  ...overrides,
+});
+
+describe('useDeepLink', () => {
+  const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
+  const mockUseSetAtom = useSetAtom as jest.MockedFunction<typeof useSetAtom>;
+  const mockGetInitialURL = Linking.getInitialURL as jest.Mock;
+  const mockParse = Linking.parse as jest.Mock;
+  const mockAddEventListener = Linking.addEventListener as jest.Mock;
+
+  const setupAtoms = () => {
+    const mockSetStationState = jest.fn();
+    const mockSetNavigationState = jest.fn();
+    const mockSetLineState = jest.fn();
+    mockUseSetAtom
+      .mockReturnValueOnce(mockSetStationState)
+      .mockReturnValueOnce(mockSetNavigationState)
+      .mockReturnValueOnce(mockSetLineState);
+    return { mockSetStationState, mockSetNavigationState, mockSetLineState };
+  };
+
+  const setupQueries = ({
+    groupLoading = false,
+    lineLoading = false,
+    groupError,
+    lineError,
+  }: {
+    groupLoading?: boolean;
+    lineLoading?: boolean;
+    groupError?: Error;
+    lineError?: Error;
+  } = {}) => {
+    const mockFetchByGroup = jest.fn();
+    const mockFetchByLine = jest.fn();
+    mockUseLazyQuery
+      .mockReturnValueOnce([
+        mockFetchByGroup,
+        { loading: groupLoading, error: groupError },
+      ])
+      .mockReturnValueOnce([
+        mockFetchByLine,
+        { loading: lineLoading, error: lineError },
+      ]);
+    return { mockFetchByGroup, mockFetchByLine };
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('初回URLがある場合にstateを設定する', async () => {
+    const stations = [
+      createStation(1, {
+        groupId: 1,
+        line: { id: 999, nameShort: 'Yamanote' },
+        trainType: createTrainType(),
+      } as Parameters<typeof createStation>[1]),
+      createStation(2, {
+        groupId: 2,
+        line: { id: 999, nameShort: 'Yamanote' },
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=1&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '0' },
+    });
+
+    const { mockSetStationState, mockSetNavigationState, mockSetLineState } =
+      setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockResolvedValue({
+      data: { lineStations: stations },
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(value) => {
+          hookRef.current = value;
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockFetchByLine).toHaveBeenCalled();
+    });
+
+    expect(mockFetchByLine).toHaveBeenCalledWith({
+      variables: { lineId: 999 },
+    });
+
+    const stationSetter = mockSetStationState.mock.calls[0][0];
+    const stationResult = stationSetter(createStationState());
+    expect(stationResult.station?.groupId).toBe(1);
+    expect(stationResult.stations).toEqual(stations);
+    expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
+    expect(stationResult.selectedBound?.groupId).toBe(2);
+    expect(stationResult.pendingStation).toBeNull();
+    expect(stationResult.pendingStations).toEqual([]);
+
+    const navSetter = mockSetNavigationState.mock.calls[0][0];
+    const navResult = navSetter(createNavigationState());
+    expect(navResult.trainType?.typeId).toBe('local');
+    expect(navResult.leftStations).toEqual([]);
+
+    const lineSetter = mockSetLineState.mock.calls[0][0];
+    const lineResult = lineSetter(createLineState());
+    expect(lineResult.selectedLine?.id).toBe(999);
+    expect(lineResult.pendingLine).toBeNull();
+  });
+
+  it('lgidが指定された場合はlineGroupStationsで取得する', async () => {
+    const stations = [
+      createStation(10, {
+        groupId: 10,
+        line: { id: 500, nameShort: 'Express' },
+      } as Parameters<typeof createStation>[1]),
+      createStation(20, {
+        groupId: 20,
+        line: { id: 500, nameShort: 'Express' },
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=500&lgid=50&sgid=20&dir=1'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '500', lgid: '50', sgid: '20', dir: '1' },
+    });
+
+    const { mockSetStationState } = setupAtoms();
+    const { mockFetchByGroup } = setupQueries();
+    mockFetchByGroup.mockResolvedValue({
+      data: { lineGroupStations: stations },
+    });
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockFetchByGroup).toHaveBeenCalled();
+    });
+
+    expect(mockFetchByGroup).toHaveBeenCalledWith({
+      variables: { lineGroupId: 50 },
+    });
+
+    const stationSetter = mockSetStationState.mock.calls[0][0];
+    const result = stationSetter(createStationState());
+    expect(result.selectedDirection).toBe<LineDirection>('OUTBOUND');
+    expect(result.selectedBound?.groupId).toBe(10);
+    expect(result.station?.groupId).toBe(20);
+  });
+
+  it('lidが欠落している場合はstateを変更しない', async () => {
+    mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://?sgid=1&dir=0');
+    mockParse.mockReturnValue({
+      queryParams: { sgid: '1', dir: '0' },
+    });
+
+    const { mockSetStationState, mockSetNavigationState, mockSetLineState } =
+      setupAtoms();
+    setupQueries();
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockSetStationState).not.toHaveBeenCalled();
+    expect(mockSetNavigationState).not.toHaveBeenCalled();
+    expect(mockSetLineState).not.toHaveBeenCalled();
+  });
+
+  it('dirが不正な場合はstateを変更しない', async () => {
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=1&dir=2'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '1', dir: '2' },
+    });
+
+    const { mockSetStationState } = setupAtoms();
+    setupQueries();
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockSetStationState).not.toHaveBeenCalled();
+  });
+
+  it('駅が見つからなければstateを変更しない', async () => {
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://?lid=999&sgid=99&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { lid: '999', sgid: '99', dir: '0' },
+    });
+
+    const { mockSetStationState, mockSetNavigationState, mockSetLineState } =
+      setupAtoms();
+    const { mockFetchByLine } = setupQueries();
+    mockFetchByLine.mockResolvedValue({ data: { lineStations: [] } });
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockFetchByLine).toHaveBeenCalled();
+    });
+
+    expect(mockSetStationState).not.toHaveBeenCalled();
+    expect(mockSetNavigationState).not.toHaveBeenCalled();
+    expect(mockSetLineState).not.toHaveBeenCalled();
+  });
+
+  it('loading/errorフラグを集約する', () => {
+    mockGetInitialURL.mockResolvedValue(null);
+
+    setupAtoms();
+    setupQueries({
+      groupLoading: true,
+      lineLoading: false,
+      groupError: new Error('group'),
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(value) => {
+          hookRef.current = value;
+        }}
+      />
+    );
+
+    expect(hookRef.current?.isLoading).toBe(true);
+    expect(hookRef.current?.error?.message).toBe('group');
+  });
+
+  it('URLイベントリスナーを登録する', () => {
+    mockGetInitialURL.mockResolvedValue(null);
+
+    setupAtoms();
+    setupQueries();
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    expect(mockAddEventListener).toHaveBeenCalledWith(
+      'url',
+      expect.any(Function)
+    );
+  });
+});
