@@ -2,16 +2,10 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, {
   LinearTransition,
+  useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
 import {
@@ -188,12 +182,11 @@ const SelectLineScreen = () => {
   );
 
   // --- スクロールハンドラ ---
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.value = e.nativeEvent.contentOffset.y;
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
     },
-    [scrollY]
-  );
+  });
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -284,7 +277,7 @@ const SelectLineScreen = () => {
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <ScrollView
+        <Animated.ScrollView
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -363,7 +356,7 @@ const SelectLineScreen = () => {
             </>
           )}
           <EmptyLineSeparator />
-        </ScrollView>
+        </Animated.ScrollView>
       </SafeAreaView>
 
       {/* 固定ヘッダー */}
