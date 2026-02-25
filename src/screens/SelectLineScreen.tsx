@@ -2,7 +2,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedScrollHandler,
@@ -65,9 +65,10 @@ const NearbyStationLoader = () => (
 
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // --- カスタムフック ---
-  const { station, nearbyStationLoading } = useInitialNearbyStation();
+  const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
   useStationsCache(station);
   const { carouselData, isRoutesDBInitialized } = usePresetCarouselData();
   const {
@@ -174,6 +175,15 @@ const SelectLineScreen = () => {
     },
   });
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
+
   // --- レンダーコールバック ---
   const renderLineCard = useCallback(
     (line: Line, index: number) => {
@@ -258,13 +268,20 @@ const SelectLineScreen = () => {
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={isLEDTheme ? '#fff' : undefined}
+            />
+          }
           contentContainerStyle={[
             styles.listContainerStyle,
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
             { paddingBottom: listPaddingBottom },
           ]}
         >
-          {nearbyStationLoading ? (
+          {nearbyStationLoading && !refreshing ? (
             <NearbyStationLoader />
           ) : (
             <>
