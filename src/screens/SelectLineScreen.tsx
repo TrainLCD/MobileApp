@@ -2,10 +2,16 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Animated, {
   LinearTransition,
-  useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
 import {
@@ -111,6 +117,19 @@ const SelectLineScreen = () => {
     ScreenOrientation.unlockAsync().catch(console.error);
   }, []);
 
+  // --- RefreshControl tintColor ワークアラウンド ---
+  // RN 0.81 + New Architecture で tintColor がマウント時に無視されるバグの回避策
+  // https://github.com/facebook/react-native/issues/53987
+  const [refreshTintColor, setRefreshTintColor] = useState<
+    string | undefined
+  >();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setRefreshTintColor(isLEDTheme ? '#fff' : undefined);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isLEDTheme]);
+
   // --- 派生値 ---
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
   const listPaddingBottom = useMemo(() => {
@@ -169,11 +188,12 @@ const SelectLineScreen = () => {
   );
 
   // --- スクロールハンドラ ---
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.value = e.nativeEvent.contentOffset.y;
     },
-  });
+    [scrollY]
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -264,7 +284,7 @@ const SelectLineScreen = () => {
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.ScrollView
+        <ScrollView
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -272,7 +292,9 @@ const SelectLineScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={isLEDTheme ? '#fff' : undefined}
+              progressViewOffset={nowHeaderHeight}
+              tintColor={refreshTintColor}
+              colors={isLEDTheme ? ['#fff'] : undefined}
             />
           }
           contentContainerStyle={[
@@ -341,8 +363,9 @@ const SelectLineScreen = () => {
             </>
           )}
           <EmptyLineSeparator />
-        </Animated.ScrollView>
+        </ScrollView>
       </SafeAreaView>
+
       {/* 固定ヘッダー */}
       <NowHeader
         station={station}

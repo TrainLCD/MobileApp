@@ -156,13 +156,20 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
     if (fetchInFlightRef.current) return;
     fetchInFlightRef.current = true;
     try {
-      await fetchNearbyAndUpdate();
+      // refetch は常に新鮮な位置情報を取得する
+      const currentLocation = await fetchCurrentLocation();
+      if (!currentLocation) return;
+      setLocation(currentLocation);
+      await fetchNearbyAndUpdate({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
     } catch (error) {
       console.error(error);
     } finally {
       fetchInFlightRef.current = false;
     }
-  }, [fetchNearbyAndUpdate]);
+  }, [fetchCurrentLocation, fetchNearbyAndUpdate]);
 
   return { station, nearbyStationLoading, refetch };
 };
