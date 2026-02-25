@@ -57,6 +57,10 @@ const styles = StyleSheet.create({
   },
 });
 
+// RN 0.81 + New Architecture で tintColor がマウント時に無視されるバグの回避用遅延(ms)
+// https://github.com/facebook/react-native/issues/53987
+const REFRESH_TINT_DELAY_MS = 500;
+
 const NearbyStationLoader = () => (
   <SkeletonPlaceholder borderRadius={4} speed={1500}>
     <SkeletonPlaceholder.Item width="100%" height={72} />
@@ -112,15 +116,13 @@ const SelectLineScreen = () => {
   }, []);
 
   // --- RefreshControl tintColor ワークアラウンド ---
-  // RN 0.81 + New Architecture で tintColor がマウント時に無視されるバグの回避策
-  // https://github.com/facebook/react-native/issues/53987
   const [refreshTintColor, setRefreshTintColor] = useState<
     string | undefined
   >();
   useEffect(() => {
     const timer = setTimeout(() => {
       setRefreshTintColor(isLEDTheme ? '#fff' : undefined);
-    }, 500);
+    }, REFRESH_TINT_DELAY_MS);
     return () => clearTimeout(timer);
   }, [isLEDTheme]);
 
