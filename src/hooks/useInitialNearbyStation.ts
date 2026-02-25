@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Alert } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
@@ -17,6 +17,7 @@ const INITIAL_LOCATION_FALLBACK_DELAY_MS = 800;
 export type UseInitialNearbyStationResult = {
   station: Station | null;
   nearbyStationLoading: boolean;
+  refetch: () => Promise<void>;
 };
 
 export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
@@ -27,7 +28,7 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
   const longitude = location?.coords.longitude;
 
   const { station: stationFromAtom } = stationAtomState;
-  const initialNearbyFetchInFlightRef = useRef(false);
+  const fetchInFlightRef = useRef(false);
 
   const {
     stations: nearbyStations,
@@ -41,6 +42,39 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
   const station = useMemo(
     () => stationFromAtom ?? nearbyStations[0] ?? null,
     [stationFromAtom, nearbyStations]
+  );
+
+  // 位置情報から最寄り駅を取得し atom を更新する共通処理
+  const fetchNearbyAndUpdate = useCallback(
+    async (coords?: { latitude: number; longitude: number }) => {
+      let requestCoords = coords;
+      if (!requestCoords) {
+        const currentLocation = await fetchCurrentLocation(true);
+        if (!currentLocation) return;
+        setLocation(currentLocation);
+        requestCoords = {
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+        };
+      }
+
+      const data = await fetchByCoords({
+        latitude: requestCoords.latitude,
+        longitude: requestCoords.longitude,
+        limit: 1,
+      });
+
+      const stationFromAPI = data.data?.stationsNearby[0] ?? null;
+      setStationState((prev) => ({
+        ...prev,
+        station: stationFromAPI,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        stationForHeader: stationFromAPI,
+      }));
+    },
+    [fetchByCoords, fetchCurrentLocation, setNavigationState, setStationState]
   );
 
   // バックグラウンド位置更新を停止
@@ -61,40 +95,15 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
       latitude: number;
       longitude: number;
     }) => {
-      if (station || initialNearbyFetchInFlightRef.current) return;
-      initialNearbyFetchInFlightRef.current = true;
+      if (station || fetchInFlightRef.current) return;
+      fetchInFlightRef.current = true;
 
       try {
-        let requestCoords = coords;
-        if (!requestCoords) {
-          const currentLocation = await fetchCurrentLocation(true);
-          if (!currentLocation) return;
-          setLocation(currentLocation);
-          requestCoords = {
-            latitude: currentLocation.coords.latitude,
-            longitude: currentLocation.coords.longitude,
-          };
-        }
-
-        const data = await fetchByCoords({
-          latitude: requestCoords.latitude,
-          longitude: requestCoords.longitude,
-          limit: 1,
-        });
-
-        const stationFromAPI = data.data?.stationsNearby[0] ?? null;
-        setStationState((prev) => ({
-          ...prev,
-          station: stationFromAPI,
-        }));
-        setNavigationState((prev) => ({
-          ...prev,
-          stationForHeader: stationFromAPI,
-        }));
+        await fetchNearbyAndUpdate(coords);
       } catch (error) {
         console.error(error);
       } finally {
-        initialNearbyFetchInFlightRef.current = false;
+        fetchInFlightRef.current = false;
       }
     };
 
@@ -110,15 +119,7 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
     return () => {
       clearTimeout(fallbackTimerId);
     };
-  }, [
-    fetchByCoords,
-    fetchCurrentLocation,
-    latitude,
-    longitude,
-    setNavigationState,
-    setStationState,
-    station,
-  ]);
+  }, [fetchNearbyAndUpdate, latitude, longitude, station]);
 
   // 初回起動アラート
   useEffect(() => {
@@ -151,5 +152,24 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
     }
   }, [nearbyStationFetchError]);
 
-  return { station, nearbyStationLoading };
+  const refetch = useCallback(async () => {
+    if (fetchInFlightRef.current) return;
+    fetchInFlightRef.current = true;
+    try {
+      // refetch は常に新鮮な位置情報を取得する
+      const currentLocation = await fetchCurrentLocation();
+      if (!currentLocation) return;
+      setLocation(currentLocation);
+      await fetchNearbyAndUpdate({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      fetchInFlightRef.current = false;
+    }
+  }, [fetchCurrentLocation, fetchNearbyAndUpdate]);
+
+  return { station, nearbyStationLoading, refetch };
 };
