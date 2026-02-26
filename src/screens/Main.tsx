@@ -24,6 +24,7 @@ import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
+  useConsoleTelemetry,
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
@@ -118,6 +119,7 @@ const MainScreen: React.FC = () => {
   useLockLandscapeOnActive();
 
   useTelemetrySender(true);
+  useConsoleTelemetry();
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
