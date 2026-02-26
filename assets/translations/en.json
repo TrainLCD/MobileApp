@@ -177,6 +177,7 @@
   "routeListTitle": "Directions to %{stationName} Station",
   "legacyAutoModeTitle": "Enable legacy auto mode",
   "inUse": "In use",
+  "select": "Select",
   "updateRequiredForReport": "Please update the app to send a feedback.",
   "updateApp": "Update app",
   "jrKyushuLike": "JR Kyushu",

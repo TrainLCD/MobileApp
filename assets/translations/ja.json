@@ -178,6 +178,7 @@
   "routeListTitle": "%{stationName}駅までの経路",
   "legacyAutoModeTitle": "従来のオートモードを有効にする",
   "inUse": "使用中",
+  "select": "設定",
   "updateRequiredForReport": "フィードバックを送信するにはアプリをアップデートしてください。",
   "updateApp": "アプリをアップデート",
   "jrKyushuLike": "JR九州風",
