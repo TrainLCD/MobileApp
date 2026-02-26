@@ -289,7 +289,6 @@ const SelectLineScreen = () => {
               onRefresh={handleRefresh}
               progressViewOffset={nowHeaderHeight}
               tintColor={refreshTintColor}
-              colors={isLEDTheme ? ['#fff'] : undefined}
             />
           }
           contentContainerStyle={[
