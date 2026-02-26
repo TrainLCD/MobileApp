@@ -21,7 +21,6 @@ import Marquee from './Marquee';
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    flex: 1,
     gap: 16,
   },
   text: {
