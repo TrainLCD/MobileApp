@@ -47,11 +47,16 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
+  nameCommon: {
+    marginBottom: isTablet ? undefined : 84,
+  },
   stationNumber: {
+    position: isTablet ? 'relative' : 'absolute',
     width: isTablet ? 60 : 45,
     fontSize: RFValue(12),
     fontWeight: 'bold',
-    marginLeft: -5,
+    left: isTablet ? undefined : -5,
+    marginLeft: isTablet ? -5 : undefined,
     bottom: isTablet ? 0 : 64,
     textAlign: 'center',
   },
