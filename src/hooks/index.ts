@@ -11,6 +11,7 @@ export { useCheckStoreVersion } from './useCheckStoreVersion';
 export { useClock } from './useClock';
 export { useConnectedLines } from './useConnectedLines';
 export { useConnectivity } from './useConnectivity';
+export { useConsoleTelemetry } from './useConsoleTelemetry';
 export { useCurrentLine } from './useCurrentLine';
 export { useCurrentStation } from './useCurrentStation';
 export { useCurrentTrainType } from './useCurrentTrainType';
