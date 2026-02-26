@@ -85,6 +85,7 @@ const Marquee = ({ children }: Props) => {
       style: childStyle,
       onLayout: handleLayout,
       ref: wrapperViewRef,
+      numberOfLines: 1,
     };
 
     return cloneElement(children, mergedProps);
