@@ -47,6 +47,9 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
+  nameCommon: {
+    marginBottom: isTablet ? undefined : 84,
+  },
   stationNumber: {
     position: isTablet ? 'relative' : 'absolute',
     width: isTablet ? 60 : 45,
