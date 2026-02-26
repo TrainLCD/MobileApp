@@ -34,13 +34,19 @@ const styles = StyleSheet.create({
 });
 
 const GreenText = ({ children }: { children: React.ReactNode }) => (
-  <Text style={[styles.text, styles.green]}>{children}</Text>
+  <Text numberOfLines={1} style={[styles.text, styles.green]}>
+    {children}
+  </Text>
 );
 const OrangeText = ({ children }: { children: React.ReactNode }) => (
-  <Text style={[styles.text, styles.orange]}>{children}</Text>
+  <Text numberOfLines={1} style={[styles.text, styles.orange]}>
+    {children}
+  </Text>
 );
 const CrimsonText = ({ children }: { children: React.ReactNode }) => (
-  <Text style={[styles.text, styles.crimson]}>{children}</Text>
+  <Text numberOfLines={1} style={[styles.text, styles.crimson]}>
+    {children}
+  </Text>
 );
 
 // Helper component for arriving state content
@@ -87,7 +93,7 @@ const ArrivingContent = ({
     ) : null}
 
     <GreenText>The next stop is</GreenText>
-    <Text>
+    <Text numberOfLines={1}>
       <OrangeText>
         {nextStation?.nameRoman}
         {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
@@ -98,7 +104,7 @@ const ArrivingContent = ({
     {afterNextStation ? (
       <>
         <GreenText>The stop after</GreenText>
-        <Text>
+        <Text numberOfLines={1}>
           <OrangeText>
             {nextStation?.nameRoman}
             {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
@@ -108,7 +114,7 @@ const ArrivingContent = ({
 
         <GreenText>will be</GreenText>
 
-        <Text>
+        <Text numberOfLines={1}>
           <OrangeText>
             {afterNextStation?.nameRoman}
             {afterNextStation?.stationNumbers?.[0]
@@ -123,7 +129,7 @@ const ArrivingContent = ({
       <>
         <GreenText>Please change here for</GreenText>
 
-        <Text>
+        <Text numberOfLines={1}>
           <OrangeText>
             {transferLines
               .map((l) => l.nameRoman)
@@ -167,7 +173,7 @@ const CurrentContent = ({
     </GreenText>
     <OrangeText>{trainTypeTexts[1]}</OrangeText>
     <GreenText>train for</GreenText>
-    <Text>
+    <Text numberOfLines={1}>
       <OrangeText>{boundTexts[1]}</OrangeText>
       <GreenText>.</GreenText>
     </Text>
@@ -216,7 +222,7 @@ const NextStopContent = ({
       </>
     ) : null}
     <GreenText>The next stop is</GreenText>
-    <Text>
+    <Text numberOfLines={1}>
       <OrangeText>
         {nextStation?.nameRoman}
         {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
@@ -226,7 +232,7 @@ const NextStopContent = ({
     {afterNextStation ? (
       <>
         <GreenText>The stop after</GreenText>
-        <Text>
+        <Text numberOfLines={1}>
           <OrangeText>
             {nextStation?.nameRoman}
             {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
@@ -235,7 +241,7 @@ const NextStopContent = ({
         </Text>
 
         <GreenText>will be</GreenText>
-        <Text>
+        <Text numberOfLines={1}>
           <OrangeText>
             {afterNextStation?.nameRoman}
             {afterNextStation?.stationNumbers?.[0]
@@ -249,7 +255,7 @@ const NextStopContent = ({
     {transferLines.length > 0 ? (
       <>
         <GreenText>Please change here for</GreenText>
-        <Text>
+        <Text numberOfLines={1}>
           <OrangeText>
             {transferLines
               .map((l) => l.nameRoman)
