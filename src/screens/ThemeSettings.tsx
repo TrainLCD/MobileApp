@@ -113,7 +113,7 @@ const SettingsItem = ({
       <StatePanel
         state={state}
         onText={translate('inUse')}
-        offText={translate('settings')}
+        offText={translate('select')}
       />
     </Pressable>
   );
