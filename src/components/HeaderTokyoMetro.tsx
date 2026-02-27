@@ -205,7 +205,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
           <TrainTypeBox trainType={trainType} />
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
-              <RNAnimated.View
+              <RNAnimated.Text
                 style={[styles.boundTextContainer, { opacity: currentOpacity }]}
               >
                 <Text
@@ -218,8 +218,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                     : null}
                 </Text>
                 <Text style={styles.boundText}>{boundText}</Text>
-              </RNAnimated.View>
-              <RNAnimated.View
+              </RNAnimated.Text>
+              <RNAnimated.Text
                 style={[
                   styles.boundTextContainer,
                   { opacity: previousOpacity },
@@ -235,7 +235,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                     : null}
                 </Text>
                 <Text style={styles.boundText}>{previousTexts.boundText}</Text>
-              </RNAnimated.View>
+              </RNAnimated.Text>
             </View>
           ) : null}
         </View>
