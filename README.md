@@ -61,7 +61,7 @@ This app recreates the authentic experience of Japanese train travel by displayi
 Before you begin, ensure you have met the following requirements:
 
 - **Node.js 20.x**
-- **pnpm 10.x** (use the globally installed pnpm binary)
+- **npm 10.x**
 - **React Native development environment** set up
 - **Expo CLI** installed globally
 - **Firebase CLI** (for Cloud Functions development)
@@ -78,10 +78,10 @@ Before you begin, ensure you have met the following requirements:
 
 2. Install dependencies:
    ```bash
-   pnpm install
+   npm install
    ```
 
-   Note: Configure `GQL_API_URL` before running `pnpm gql:codegen` to regenerate GraphQL types.
+   Note: Configure `GQL_API_URL` before running `npm run gql:codegen` to regenerate GraphQL types.
 
 ### Running the App
 
@@ -90,14 +90,14 @@ Before you begin, ensure you have met the following requirements:
 To start the development server:
 
 ```bash
-pnpm start
+npm run start
 ```
 
 #### Platform-specific Commands
 
-- **iOS**: `pnpm ios`
-- **Android**: `pnpm android`
-- **Web**: `pnpm web`
+- **iOS**: `npm run ios`
+- **Android**: `npm run android`
+- **Web**: `npm run web`
 
 ## Download
 
@@ -145,28 +145,28 @@ utils/                 # Tooling scripts and codegen helpers
 
 ### Available Scripts
 
-- `pnpm start` - Start the Expo development server
-- `pnpm android` / `pnpm ios` - Build and launch native binaries
-- `pnpm web` - Serve the Expo web build
-- `pnpm lint` - Run Biome linter
-- `pnpm format` - Format code with Biome
-- `pnpm test` - Run Jest tests
-- `pnpm typecheck` - Run TypeScript type checking
-- `pnpm watch:test` - Run tests in watch mode
-- `pnpm gql:codegen` - Regenerate GraphQL types after schema or documents change (requires `GQL_API_URL`)
+- `npm run start` - Start the Expo development server
+- `npm run android` / `npm run ios` - Build and launch native binaries
+- `npm run web` - Serve the Expo web build
+- `npm run lint` - Run Biome linter
+- `npm run format` - Format code with Biome
+- `npm test` - Run Jest tests
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run watch:test` - Run tests in watch mode
+- `npm run gql:codegen` - Regenerate GraphQL types after schema or documents change (requires `GQL_API_URL`)
 
 ### Testing
 
 This project uses Jest for testing. Run the test suite with:
 
 ```bash
-pnpm test
+npm test
 ```
 
 For watch mode during development:
 
 ```bash
-pnpm watch:test
+npm run watch:test
 ```
 
 ### Firebase Cloud Functions
@@ -202,8 +202,8 @@ We welcome contributions from the community! Here's how you can help:
 1. **Fork the repository**
 2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
 3. **Make your changes** and ensure they follow our coding standards
-4. **Run tests**: `pnpm test`
-5. **Run linting**: `pnpm lint`
+4. **Run tests**: `npm test`
+5. **Run linting**: `npm run lint`
 6. **Commit your changes**: `git commit -m 'Add some amazing feature'`
 7. **Push to the branch**: `git push origin feature/amazing-feature`
 8. **Open a Pull Request**

@@ -1,7 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import {
+  Platform,
+  Animated as RNAnimated,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
@@ -171,7 +176,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
         <View style={styles.headerTexts}>
           <TrainTypeBox lineColor={lineColor} trainType={trainType} />
           <View style={styles.boundWrapper}>
-            <Animated.Text
+            <RNAnimated.Text
               style={[
                 animation.boundTopAnimatedStyles,
                 styles.boundTextContainer,
@@ -183,9 +188,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                   : null}
               </Text>
               <Text style={styles.boundText}>{boundText}</Text>
-            </Animated.Text>
+            </RNAnimated.Text>
 
-            <Animated.Text
+            <RNAnimated.Text
               style={[
                 animation.boundBottomAnimatedStyles,
                 styles.boundTextContainer,
@@ -197,25 +202,25 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                   : null}
               </Text>
               <Text style={styles.boundText}>{animation.prevBoundText}</Text>
-            </Animated.Text>
+            </RNAnimated.Text>
           </View>
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Animated.Text
+            <RNAnimated.Text
               style={[animation.stateTopAnimatedStyles, styles.state]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
               {stateText}
-            </Animated.Text>
-            <Animated.Text
+            </RNAnimated.Text>
+            <RNAnimated.Text
               style={[animation.stateBottomAnimatedStyles, styles.state]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
               {animation.prevStateText}
-            </Animated.Text>
+            </RNAnimated.Text>
           </View>
 
           {currentStationNumber ? (
@@ -230,7 +235,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
           ) : null}
           <View style={styles.stationNameWrapper}>
             <View style={styles.stationNameContainer}>
-              <Animated.Text
+              <RNAnimated.Text
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
@@ -244,11 +249,11 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                 ]}
               >
                 {stationText}
-              </Animated.Text>
+              </RNAnimated.Text>
             </View>
 
             <View style={styles.stationNameContainer}>
-              <Animated.Text
+              <RNAnimated.Text
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
@@ -262,7 +267,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                 ]}
               >
                 {animation.prevStationText}
-              </Animated.Text>
+              </RNAnimated.Text>
             </View>
           </View>
         </View>

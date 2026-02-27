@@ -23,17 +23,13 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm i
+        run: npm ci
 
       - name: Extract and resolve version
         id: version
@@ -124,7 +120,7 @@ jobs:
 
       - name: Bump version
         if: steps.version.outputs.status == 'ok'
-        run: pnpm run version:bump ${{ steps.version.outputs.resolved }}
+        run: npm run version:bump -- ${{ steps.version.outputs.resolved }}
 
       - name: Create Pull Request
         if: steps.version.outputs.status == 'ok'
