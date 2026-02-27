@@ -5,6 +5,7 @@ export default ({ config }: ConfigContext) => ({
   slug: 'trainlcd',
   version: '10.2.0',
   plugins: [
+    'expo-image',
     'expo-font',
     'expo-localization',
     'expo-web-browser',
@@ -64,53 +65,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

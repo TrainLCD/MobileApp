@@ -4,19 +4,17 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
   Platform,
   Pressable,
+  Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import { CustomModal } from '~/components/CustomModal';
 import FooterTabBar from '~/components/FooterTabBar';
@@ -123,7 +121,7 @@ const ThemeSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [pendingTheme, setPendingTheme] = useState<SettingItem | null>(null);
 
-  const scrollY = useSharedValue(0);
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const currentTheme = useAtomValue(themeAtom);
   const setTheme = useSetAtom(themeAtom);
@@ -216,11 +214,12 @@ const ThemeSettingsScreen: React.FC = () => {
     []
   );
 
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
-  });
+    [scrollY]
+  );
 
   return (
     <>

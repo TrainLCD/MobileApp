@@ -2,17 +2,13 @@ import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import {
+  Animated,
   type LayoutChangeEvent,
   Platform,
   StyleSheet,
   View,
   type ViewStyle,
 } from 'react-native';
-import Animated, {
-  interpolate,
-  type SharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -69,7 +65,7 @@ const styles = StyleSheet.create({
 type Props = {
   title: string;
   onLayout?: (event: LayoutChangeEvent) => void;
-  scrollY: SharedValue<number>;
+  scrollY: Animated.Value;
 };
 
 export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
@@ -82,30 +78,36 @@ export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
   );
 
   const COLLAPSE_RANGE = 64;
-  const stackedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5],
-      [1, 0],
-      'clamp'
-    ),
-  }));
-  const inlineStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
-      [0, 0, 1],
-      'clamp'
-    ),
-  }));
-  const animatedStationFont = useAnimatedStyle(() => ({
-    fontSize: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE],
-      [32, 21],
-      'clamp'
-    ),
-  }));
+  const stackedStyle = useMemo(
+    () => ({
+      opacity: scrollY.interpolate({
+        inputRange: [0, COLLAPSE_RANGE * 0.5],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      }),
+    }),
+    [scrollY]
+  );
+  const inlineStyle = useMemo(
+    () => ({
+      opacity: scrollY.interpolate({
+        inputRange: [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+        outputRange: [0, 0, 1],
+        extrapolate: 'clamp',
+      }),
+    }),
+    [scrollY]
+  );
+  const animatedStationFont = useMemo(
+    () => ({
+      fontSize: scrollY.interpolate({
+        inputRange: [0, COLLAPSE_RANGE],
+        outputRange: [32, 21],
+        extrapolate: 'clamp',
+      }),
+    }),
+    [scrollY]
+  );
 
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
     const androidBGColor = isLEDTheme
