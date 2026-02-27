@@ -11,7 +11,9 @@ export default ({ config }: ConfigContext) => ({
     'expo-web-browser',
     'expo-sqlite',
     'expo-asset',
-    'expo-build-properties',
+    'expo-asset',
+    [
+      'expo-location',
     [
       'expo-location',
       {
