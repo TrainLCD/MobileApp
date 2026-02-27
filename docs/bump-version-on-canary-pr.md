@@ -10,9 +10,9 @@
 ## 動作
 
 1. PRのヘッドブランチをチェックアウト
-2. pnpm 10 + Node.js 20 をセットアップ
-3. `pnpm i` で依存関係インストール
-4. `pnpm run version:bump --no-version-increment` を実行
+2. npm + Node.js 20 をセットアップ
+3. `npm ci` で依存関係インストール
+4. `npm run version:bump -- --no-version-increment` を実行
    - アプリのバージョン（`X.Y.Z`）は変更しない
    - iOS ビルド番号と Android versionCode のみ+1
 5. `peter-evans/create-pull-request@v7` でversion-bump PRを作成

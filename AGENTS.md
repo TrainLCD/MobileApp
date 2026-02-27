@@ -17,7 +17,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 2. **Reconnaissance:** map relevant files with `rg`, `ls`, or `find`; review interfaces and existing patterns to plan compatible changes.
 3. **Plan:** outline discrete steps, keep the plan updated as you progress, and expose blockers early.
 4. **Implement:** use `apply_patch` for targeted edits, commit in small logical units, and avoid regenerating large files unless required.
-5. **Validate:** run only the necessary commands (`pnpm lint`, `pnpm test`, `pnpm typecheck`, etc.) and capture summarized output.
+5. **Validate:** run only the necessary commands (`npm run lint`, `npm test`, `npm run typecheck`, etc.) and capture summarized output.
 6. **Document & Handoff:** update READMEs or docs when behavior changes, summarize modifications, list executed commands, and attach artifacts (logs, screenshots) before opening PRs.
 
 ## Repository Map
@@ -36,23 +36,23 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 ## Tooling & Environment Expectations
 
-- Target **Node.js 20.x** and **pnpm 10.x**; use the globally installed pnpm (Corepack is unnecessary).
-- Run `pnpm install` when dependencies shift; avoid re-locking packages unless instructed.
+- Target **Node.js 20.x** and **npm 10.x**.
+- Run `npm install` when dependencies shift; avoid re-locking packages unless instructed.
 - Metro cache issues: run `expo start --clear` only when debugging build failures and document the action.
-- For native builds, rely on project scripts (`pnpm android`, `pnpm ios`).
-- GraphQL codegen requires `GQL_API_URL` in `.env.local`; run `pnpm gql:codegen` after document or schema updates.
+- For native builds, rely on project scripts (`npm run android`, `npm run ios`).
+- GraphQL codegen requires `GQL_API_URL` in `.env.local`; run `npm run gql:codegen` after document or schema updates.
 
 ## Build, Test & Development Commands
 
-- `pnpm start`: start the Expo Dev Client locally.
-- `pnpm android` / `pnpm ios`: build native binaries.
-- `pnpm web`: run the web preview.
-- `pnpm lint`: execute Biome linting (`biome ci ./src` in CI).
-- `pnpm format`: apply Biome formatting fixes.
-- `pnpm test`: run Jest in UTC; add `--watch` or `--runInBand` for debugging.
-- `pnpm test --updateSnapshot`: refresh Jest snapshots when output diffs are intentional.
-- `pnpm typecheck`: enforce TypeScript constraints.
-- `pnpm gql:codegen`: regenerate generated GraphQL types.
+- `npm run start`: start the Expo Dev Client locally.
+- `npm run android` / `npm run ios`: build native binaries.
+- `npm run web`: run the web preview.
+- `npm run lint`: execute Biome linting (`biome ci ./src` in CI).
+- `npm run format`: apply Biome formatting fixes.
+- `npm test`: run Jest in UTC; add `--watch` or `--runInBand` for debugging.
+- `npm test -- --updateSnapshot`: refresh Jest snapshots when output diffs are intentional.
+- `npm run typecheck`: enforce TypeScript constraints.
+- `npm run gql:codegen`: regenerate generated GraphQL types.
 
 ## Coding Style & Naming Conventions
 
@@ -78,7 +78,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Pull requests must include:
   - Purpose and summary of key changes.
   - Regression risk assessment and mitigation.
-  - Commands executed locally (e.g., `pnpm lint && pnpm test && pnpm typecheck`).
+  - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
   - Linked issues or tickets.
   - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
@@ -88,7 +88,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Store secrets in `.env.local`; treat `.env` as the template, and keep `.env.example` synchronized for onboarding.
 - Never commit credentials, access tokens, or production endpoints.
 - Protect Expo credentials with 2FA and rotate access when automations change.
-- After dependency upgrades (`pnpm up --interactive`) or Expo SDK migrations, run `expo-doctor`, `pnpm lint`, `pnpm test`, and `pnpm typecheck`, then capture results in `docs/changelog.md`.
+- After dependency upgrades (`npm update`) or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, and `npm run typecheck`, then capture results in `docs/changelog.md`.
 
 ## Automation Checklists
 
@@ -96,7 +96,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 - [ ] Confirm requirements and flag conflicts.
 - [ ] Update or add tests relevant to code changes.
-- [ ] Run `pnpm lint`, `pnpm test`, and `pnpm typecheck`; record summaries.
+- [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
 - [ ] Capture screenshots/video for UI changes with device labels.
 

@@ -23,22 +23,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm i
+        run: npm ci
 
       - name: Bump version
         run: |
           set -e
-          pnpm run version:bump --no-version-increment
+          npm run version:bump -- --no-version-increment
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7

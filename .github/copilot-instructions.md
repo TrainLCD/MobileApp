@@ -80,21 +80,21 @@ src/
 ## 開発環境
 
 - **Node.js 20.x**を使用
-- **pnpm 10.x**を使用（グローバルインストール版、Corepack は不要）
+- **npm 10.x**を使用（Node.js 20 同梱版）
 - Metro キャッシュ問題が発生した場合のみ`expo start --clear`を実行
 - GraphQL codegen には`.env.local`に`GQL_API_URL`が必要
 
 ## 主要コマンド
 
 ```bash
-pnpm start              # Expo開発サーバー起動
-pnpm android / pnpm ios # ネイティブビルド
-pnpm web               # Web版実行
-pnpm lint              # Biome Lint実行
-pnpm format            # Biomeフォーマット適用
-pnpm test              # Jestテスト実行（UTC環境）
-pnpm typecheck         # TypeScript型チェック
-pnpm gql:codegen       # GraphQL型定義再生成
+npm run start              # Expo開発サーバー起動
+npm run android / npm run ios # ネイティブビルド
+npm run web               # Web版実行
+npm run lint              # Biome Lint実行
+npm run format            # Biomeフォーマット適用
+npm test              # Jestテスト実行（UTC環境）
+npm run typecheck         # TypeScript型チェック
+npm run gql:codegen       # GraphQL型定義再生成
 ```
 
 ## テスト戦略
@@ -120,7 +120,7 @@ pnpm gql:codegen       # GraphQL型定義再生成
 
 - [ ] 要件を確認し、競合する要求があれば報告
 - [ ] コード変更に関連するテストを更新または追加
-- [ ] `pnpm lint`、`pnpm test`、`pnpm typecheck`を実行し、結果を記録
+- [ ] `npm run lint`、`npm test`、`npm run typecheck`を実行し、結果を記録
 - [ ] 挙動が変わる場合はドキュメント（README、docs/、インラインコメント）を更新
 - [ ] UI 変更の場合はスクリーンショット/動画をデバイス名とともに記録
 
@@ -137,7 +137,7 @@ pnpm gql:codegen       # GraphQL型定義再生成
 
 - 目的と主要な変更内容の要約
 - リグレッションリスクの評価と軽減策
-- ローカルで実行したコマンド（例: `pnpm lint && pnpm test && pnpm typecheck`）
+- ローカルで実行したコマンド（例: `npm run lint && npm test && npm run typecheck`）
 - 関連する Issue またはチケットへのリンク
 - UI/UX 変更の場合はスクリーンショットまたは録画（デバイス名を記載、例: Pixel 8、iPhone 15 Pro）
 
@@ -148,7 +148,7 @@ CI が失敗した場合は、根本原因のメモと再現手順を追加す�
 - シークレットは`.env.local`に保存
 - `.env`をテンプレートとして扱い、`.env.example`をオンボーディング用に同期
 - クレデンシャル、アクセストークン、本番エンドポイントは絶対にコミットしない
-- 依存関係のアップグレード（`pnpm up --interactive`）や Expo SDK マイグレーション後は、`expo-doctor`、`pnpm lint`、`pnpm test`、`pnpm typecheck`を実行し、結果を`docs/changelog.md`に記録
+- 依存関係のアップグレード（`npm update`）や Expo SDK マイグレーション後は、`expo-doctor`、`npm run lint`、`npm test`、`npm run typecheck`を実行し、結果を`docs/changelog.md`に記録
 
 ## AI 支援開発の原則
 
@@ -167,7 +167,7 @@ GitHub Copilot を使用する際は、以下の原則に従ってください�
 2. **偵察**: `rg`、`ls`、`find`で関連ファイルをマッピング。インターフェースと既存パターンを確認して互換性のある変更を計画
 3. **計画**: 個別のステップを概説し、進捗に応じて計画を更新。ブロッカーは早期に報告
 4. **実装**: 対象を絞った編集を実施。小さな論理単位でコミット。必要でない限り大きなファイルの再生成は避ける
-5. **検証**: 必要なコマンド（`pnpm lint`、`pnpm test`、`pnpm typecheck`など）のみ実行し、要約された出力を記録
+5. **検証**: 必要なコマンド（`npm run lint`、`npm test`、`npm run typecheck`など）のみ実行し、要約された出力を記録
 6. **文書化とハンドオフ**: 挙動が変わる場合は README やドキュメントを更新。変更内容を要約し、実行したコマンドをリストアップ。PR を開く前にアーティファクト（ログ、スクリーンショット）を添付
 
 ## コミュニケーションとインシデント報告
