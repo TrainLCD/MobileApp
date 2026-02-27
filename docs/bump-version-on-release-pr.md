@@ -67,7 +67,7 @@
 
 ## 成功時の動作
 
-1. `npm run version:bump <バージョン>` を実行（ビルド番号は自動インクリメント）
+1. `npm run version:bump -- <バージョン>` を実行（ビルド番号は自動インクリメント）
 2. `peter-evans/create-pull-request@v7` でversion-bump PRを作成
    - ブランチ: `auto-release-version-bump-<PR番号>`
    - ベースブランチ: PRのヘッドブランチ（`release/v*`）
