@@ -211,13 +211,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                 <Text
                   adjustsFontSizeToFit
                   numberOfLines={1}
-                  style={styles.connectedLines}
+                  style={styles.boundText}
                 >
-                  {connectedLines?.length && isJapaneseState
-                    ? `${connectionText}直通 `
-                    : null}
+                  {connectedLines?.length && isJapaneseState ? (
+                    <Text style={styles.connectedLines}>
+                      {`${connectionText}直通 `}
+                    </Text>
+                  ) : null}
+                  {boundText}
                 </Text>
-                <Text style={styles.boundText}>{boundText}</Text>
               </RNAnimated.View>
               <RNAnimated.View
                 style={[
@@ -228,13 +230,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                 <Text
                   adjustsFontSizeToFit
                   numberOfLines={1}
-                  style={styles.connectedLines}
+                  style={styles.boundText}
                 >
-                  {connectedLines?.length && previousTexts.isJapaneseState
-                    ? `${previousTexts.connectionText}直通 `
-                    : null}
+                  {connectedLines?.length && previousTexts.isJapaneseState ? (
+                    <Text style={styles.connectedLines}>
+                      {`${previousTexts.connectionText}直通 `}
+                    </Text>
+                  ) : null}
+                  {previousTexts.boundText}
                 </Text>
-                <Text style={styles.boundText}>{previousTexts.boundText}</Text>
               </RNAnimated.View>
             </View>
           ) : null}
