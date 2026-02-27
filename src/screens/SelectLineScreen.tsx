@@ -2,7 +2,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedScrollHandler,
@@ -57,6 +57,10 @@ const styles = StyleSheet.create({
   },
 });
 
+// RN 0.81 + New Architecture で tintColor がマウント時に無視されるバグの回避用遅延(ms)
+// https://github.com/facebook/react-native/issues/53987
+const REFRESH_TINT_DELAY_MS = 500;
+
 const NearbyStationLoader = () => (
   <SkeletonPlaceholder borderRadius={4} speed={1500}>
     <SkeletonPlaceholder.Item width="100%" height={72} />
@@ -65,9 +69,10 @@ const NearbyStationLoader = () => (
 
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // --- カスタムフック ---
-  const { station, nearbyStationLoading } = useInitialNearbyStation();
+  const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
   useStationsCache(station);
   const { carouselData, isRoutesDBInitialized } = usePresetCarouselData();
   const {
@@ -109,6 +114,17 @@ const SelectLineScreen = () => {
   useEffect(() => {
     ScreenOrientation.unlockAsync().catch(console.error);
   }, []);
+
+  // --- RefreshControl tintColor ワークアラウンド ---
+  const [refreshTintColor, setRefreshTintColor] = useState<
+    string | undefined
+  >();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setRefreshTintColor(isLEDTheme ? '#fff' : undefined);
+    }, REFRESH_TINT_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isLEDTheme]);
 
   // --- 派生値 ---
   const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
@@ -173,6 +189,15 @@ const SelectLineScreen = () => {
       scrollY.value = e.contentOffset.y;
     },
   });
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   // --- レンダーコールバック ---
   const renderLineCard = useCallback(
@@ -258,13 +283,21 @@ const SelectLineScreen = () => {
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              progressViewOffset={nowHeaderHeight}
+              tintColor={refreshTintColor}
+            />
+          }
           contentContainerStyle={[
             styles.listContainerStyle,
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
             { paddingBottom: listPaddingBottom },
           ]}
         >
-          {nearbyStationLoading ? (
+          {nearbyStationLoading && !refreshing ? (
             <NearbyStationLoader />
           ) : (
             <>
@@ -326,6 +359,7 @@ const SelectLineScreen = () => {
           <EmptyLineSeparator />
         </Animated.ScrollView>
       </SafeAreaView>
+
       {/* 固定ヘッダー */}
       <NowHeader
         station={station}
