@@ -10,12 +10,16 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Animated as RNAnimated,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -173,7 +177,7 @@ const AppSettingsScreen: React.FC = () => {
   const [languagesItemLayout, setLanguagesItemLayout] =
     useState<ItemLayout | null>(null);
 
-  const scrollY = useSharedValue(0);
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -328,11 +332,12 @@ const AppSettingsScreen: React.FC = () => {
     [navigation]
   );
 
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
-  });
+    [scrollY]
+  );
 
   const showTtsItem = !isClip();
 

@@ -1,17 +1,13 @@
 import { Portal } from '@gorhom/portal';
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useMemo, useRef } from 'react';
 import {
   Platform,
   Pressable,
+  Animated as RNAnimated,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { translate } from '../translation';
@@ -171,26 +167,30 @@ const WalkthroughOverlay: React.FC<Props> = ({
   };
 
   // アニメーション用のshared value
-  const animatedY = useSharedValue(calculateTooltipY());
+  const animatedY = useRef(new RNAnimated.Value(calculateTooltipY())).current;
 
   // ステップが変わったときに位置をアニメーション
   // biome-ignore lint/correctness/useExhaustiveDependencies: 位置変更時にアニメーションをトリガーする
   useEffect(() => {
     const targetY = calculateTooltipY();
-    animatedY.value = withTiming(targetY, { duration: ANIMATION_DURATION });
+    RNAnimated.timing(animatedY, {
+      toValue: targetY,
+      duration: ANIMATION_DURATION,
+      useNativeDriver: false,
+    }).start();
   }, [currentStepIndex, spotlightArea?.y, screenHeight]);
 
   // タブレットで中央揃えになるよう左位置を計算
   const tooltipWidth = Math.min(Math.max(0, screenWidth - 48), 640);
   const tooltipLeft = (screenWidth - tooltipWidth) / 2;
 
-  const animatedTooltipStyle = useAnimatedStyle(
+  const animatedTooltipStyle = useMemo(
     () => ({
-      top: animatedY.value,
+      top: animatedY,
       left: tooltipLeft,
       width: tooltipWidth,
     }),
-    [tooltipLeft, tooltipWidth]
+    [animatedY, tooltipLeft, tooltipWidth]
   );
 
   if (!visible) {
@@ -235,7 +235,9 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </Svg>
         </Pressable>
 
-        <Animated.View style={[styles.tooltipContainer, animatedTooltipStyle]}>
+        <RNAnimated.View
+          style={[styles.tooltipContainer, animatedTooltipStyle]}
+        >
           <Typography style={styles.title}>
             {translate(step.titleKey)}
           </Typography>
@@ -296,7 +298,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
               </Typography>
             </Pressable>
           </View>
-        </Animated.View>
+        </RNAnimated.View>
       </View>
     </Portal>
   );

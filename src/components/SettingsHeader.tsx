@@ -4,15 +4,11 @@ import { useMemo } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
+  Animated as RNAnimated,
   StyleSheet,
   View,
   type ViewStyle,
 } from 'react-native';
-import Animated, {
-  interpolate,
-  type SharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -64,48 +60,37 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
   },
+  nowStationScaleWrap: {
+    alignSelf: 'flex-start',
+  },
 });
 
 type Props = {
   title: string;
   onLayout?: (event: LayoutChangeEvent) => void;
-  scrollY: SharedValue<number>;
+  scrollY: RNAnimated.Value;
 };
 
 export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
 
-  const AnimatedTypography = useMemo(
-    () => Animated.createAnimatedComponent(Typography),
-    []
-  );
-
   const COLLAPSE_RANGE = 64;
-  const stackedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5],
-      [1, 0],
-      'clamp'
-    ),
-  }));
-  const inlineStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
-      [0, 0, 1],
-      'clamp'
-    ),
-  }));
-  const animatedStationFont = useAnimatedStyle(() => ({
-    fontSize: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE],
-      [32, 21],
-      'clamp'
-    ),
-  }));
+  const stackedOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE * 0.5],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  const inlineOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+    outputRange: [0, 0, 1],
+    extrapolate: 'clamp',
+  });
+  const stationScale = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE],
+    outputRange: [1, 21 / 32],
+    extrapolate: 'clamp',
+  });
 
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
     const androidBGColor = isLEDTheme
@@ -138,17 +123,26 @@ export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
         ) : null}
         <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
           {/* Stacked layout (fades out) */}
-          <Animated.View style={stackedStyle}>
-            <AnimatedTypography
-              style={[styles.nowStation, animatedStationFont]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
+          <RNAnimated.View style={{ opacity: stackedOpacity }}>
+            <RNAnimated.View
+              style={[
+                styles.nowStationScaleWrap,
+                { transform: [{ scale: stationScale }] },
+              ]}
             >
-              {title}
-            </AnimatedTypography>
-          </Animated.View>
+              <Typography
+                style={styles.nowStation}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {title}
+              </Typography>
+            </RNAnimated.View>
+          </RNAnimated.View>
           {/* Inline layout (fades in) */}
-          <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
+          <RNAnimated.View
+            style={[styles.nowHeaderInline, { opacity: inlineOpacity }]}
+          >
             <Typography
               style={styles.nowStation}
               numberOfLines={1}
@@ -156,7 +150,7 @@ export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
             >
               {title}
             </Typography>
-          </Animated.View>
+          </RNAnimated.View>
         </View>
       </View>
     </View>
