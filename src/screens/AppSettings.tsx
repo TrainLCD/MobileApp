@@ -11,6 +11,8 @@ import React, {
   useState,
 } from 'react';
 import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Animated as RNAnimated,
   StyleSheet,
   TouchableOpacity,
@@ -331,7 +333,7 @@ const AppSettingsScreen: React.FC = () => {
   );
 
   const handleScroll = useCallback(
-    (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
     [scrollY]

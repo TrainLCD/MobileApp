@@ -8,7 +8,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, Animated as RNAnimated, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Animated as RNAnimated,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -501,7 +508,7 @@ const RouteSearchScreen = () => {
   );
 
   const handleScroll = useCallback(
-    (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
     [scrollY]

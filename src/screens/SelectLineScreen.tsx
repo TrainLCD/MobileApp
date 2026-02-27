@@ -9,6 +9,8 @@ import React, {
   useState,
 } from 'react';
 import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   RefreshControl,
   Animated as RNAnimated,
   StyleSheet,
@@ -192,7 +194,7 @@ const SelectLineScreen = () => {
 
   // --- スクロールハンドラ ---
   const handleScroll = useCallback(
-    (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
     [scrollY]

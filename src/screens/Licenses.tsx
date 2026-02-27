@@ -4,6 +4,8 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Linking,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Animated as RNAnimated,
   StyleSheet,
@@ -240,7 +242,7 @@ const Licenses: React.FC = () => {
   );
 
   const handleScroll = useCallback(
-    (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
     [scrollY]

@@ -5,6 +5,8 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -334,7 +336,7 @@ const TTSSettingsScreen: React.FC = () => {
   );
 
   const handleScroll = useCallback(
-    (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
     [scrollY]
