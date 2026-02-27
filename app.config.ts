@@ -11,6 +11,9 @@ export default ({ config }: ConfigContext) => ({
     'expo-web-browser',
     'expo-sqlite',
     'expo-asset',
+    'expo-asset',
+    [
+      'expo-location',
     [
       'expo-location',
       {
@@ -33,6 +36,13 @@ export default ({ config }: ConfigContext) => ({
       {
         backgroundColor: '#fff',
         image: './assets/splash-icon.png',
+      },
+    ],
+    [
+      'expo-build-properties',
+      {
+        buildReactNativeFromSource: true,
+        useHermesV1: true,
       },
     ],
   ],
