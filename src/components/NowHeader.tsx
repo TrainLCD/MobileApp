@@ -2,10 +2,10 @@ import { BlurView } from 'expo-blur';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
   type LayoutChangeEvent,
   Platform,
   Pressable,
+  Animated as RNAnimated,
   StyleSheet,
   View,
   type ViewStyle,
@@ -70,6 +70,10 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 44 : 32,
     fontWeight: 'bold',
   },
+  nowStationScaleWrap: {
+    alignSelf: 'flex-start',
+    transformOrigin: 'left bottom',
+  },
 });
 
 export type HeaderLayout = {
@@ -83,7 +87,7 @@ type Props = {
   station: Station | null;
   onLayout?: (event: LayoutChangeEvent) => void;
   onHeaderLayout?: (layout: HeaderLayout) => void;
-  scrollY: Animated.Value;
+  scrollY: RNAnimated.Value;
 };
 
 export const NowHeader = ({
@@ -103,11 +107,6 @@ export const NowHeader = ({
   const insets = useSafeAreaInsets();
   const locationPermissionsGranted = useLocationPermissionsGranted();
 
-  const AnimatedTypography = useMemo(
-    () => Animated.createAnimatedComponent(Typography),
-    []
-  );
-
   const nowHeader = useMemo(() => {
     const label = locationPermissionsGranted
       ? translate('nowAtLabel')
@@ -121,36 +120,21 @@ export const NowHeader = ({
   }, [station, locationPermissionsGranted]);
 
   const COLLAPSE_RANGE = 64;
-  const stackedStyle = useMemo(
-    () => ({
-      opacity: scrollY.interpolate({
-        inputRange: [0, COLLAPSE_RANGE * 0.5],
-        outputRange: [1, 0],
-        extrapolate: 'clamp',
-      }),
-    }),
-    [scrollY]
-  );
-  const inlineStyle = useMemo(
-    () => ({
-      opacity: scrollY.interpolate({
-        inputRange: [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
-        outputRange: [0, 0, 1],
-        extrapolate: 'clamp',
-      }),
-    }),
-    [scrollY]
-  );
-  const animatedStationFont = useMemo(
-    () => ({
-      fontSize: scrollY.interpolate({
-        inputRange: [0, COLLAPSE_RANGE],
-        outputRange: isTablet ? [44, 32] : [32, 24],
-        extrapolate: 'clamp',
-      }),
-    }),
-    [scrollY]
-  );
+  const stackedOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE * 0.5],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  const inlineOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+    outputRange: [0, 0, 1],
+    extrapolate: 'clamp',
+  });
+  const stationScale = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE],
+    outputRange: isTablet ? [1, 32 / 44] : [1, 24 / 32],
+    extrapolate: 'clamp',
+  });
 
   const handlePress = useCallback(() => {
     setIsSearchModalVisible(true);
@@ -231,18 +215,25 @@ export const NowHeader = ({
           ) : null}
           <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
             {/* Stacked layout (fades out) */}
-            <Animated.View style={stackedStyle}>
+            <RNAnimated.View style={{ opacity: stackedOpacity }}>
               <Typography style={styles.nowLabel}>
                 {nowHeader.label ?? ''}
               </Typography>
               {station ? (
-                <AnimatedTypography
-                  style={[styles.nowStation, animatedStationFont]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
+                <RNAnimated.View
+                  style={[
+                    styles.nowStationScaleWrap,
+                    { transform: [{ scale: stationScale }] },
+                  ]}
                 >
-                  {nowHeader.name ?? ''}
-                </AnimatedTypography>
+                  <Typography
+                    style={styles.nowStation}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {nowHeader.name ?? ''}
+                  </Typography>
+                </RNAnimated.View>
               ) : locationPermissionsGranted ? (
                 <SkeletonPlaceholder borderRadius={4} speed={1500}>
                   <SkeletonPlaceholder.Item width={128} height={32} />
@@ -252,9 +243,11 @@ export const NowHeader = ({
                   {translate('searchByStationName')}
                 </Typography>
               )}
-            </Animated.View>
+            </RNAnimated.View>
             {/* Inline layout (fades in) */}
-            <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
+            <RNAnimated.View
+              style={[styles.nowHeaderInline, { opacity: inlineOpacity }]}
+            >
               <Typography style={styles.nowLabel}>
                 {nowHeader.label ?? ''}
               </Typography>
@@ -267,7 +260,7 @@ export const NowHeader = ({
                   ? (nowHeader.name ?? '')
                   : translate('searchByStationName')}
               </Typography>
-            </Animated.View>
+            </RNAnimated.View>
           </View>
         </View>
       </Pressable>
