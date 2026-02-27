@@ -14,8 +14,6 @@ export default ({ config }: ConfigContext) => ({
     'expo-asset',
     [
       'expo-location',
-    [
-      'expo-location',
       {
         isAndroidBackgroundLocationEnabled: true,
         isAndroidForegroundServiceEnabled: true,
@@ -75,4 +73,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
