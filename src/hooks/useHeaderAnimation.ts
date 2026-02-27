@@ -1,16 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Easing, Animated as RNAnimated } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import type { HeaderAnimationState } from '../components/Header.types';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
 import { useLazyPrevious } from './useLazyPrevious';
-import { usePrevious } from './usePrevious';
 
 type UseHeaderAnimationOptions = {
   selectedBound: Station | null;
@@ -44,158 +37,220 @@ export const useHeaderAnimation = (
   } = options;
 
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
-
-  // SharedValues
-  const nameFadeAnim = useSharedValue<number>(1);
-  const topNameScaleYAnim = useSharedValue<number>(0);
-  const stateOpacityAnim = useSharedValue<number>(0);
-  const boundOpacityAnim = useSharedValue<number>(0);
-  const bottomNameScaleYAnim = useSharedValue<number>(1);
+  const [previousTexts, setPreviousTexts] = useState(() => ({
+    stationText,
+    stateText,
+    stateTextRight,
+    boundText,
+    connectionText,
+    isJapaneseState,
+  }));
+  const progress = useRef(new RNAnimated.Value(1)).current;
+  const boundProgress = useRef(new RNAnimated.Value(1)).current;
 
   // Previous value tracking
   const prevHeaderState = useLazyPrevious(headerState, fadeOutFinished);
-  const prevStationText = usePrevious(stationText);
-  const prevStateText = usePrevious(stateText);
-  const prevStateTextRight = usePrevious(stateTextRight);
-  const prevBoundText = usePrevious(boundText);
-  const prevConnectionText = usePrevious(connectionText);
-  const prevIsJapaneseState = useLazyPrevious(isJapaneseState, fadeOutFinished);
+  const prevBoundIsDifferent = previousTexts.boundText !== boundText;
 
-  const prevBoundIsDifferent = useMemo(
-    () => prevBoundText !== boundText,
-    [boundText, prevBoundText]
+  const hasHeaderContentChanged = useMemo(
+    () =>
+      previousTexts.stationText !== stationText ||
+      previousTexts.stateText !== stateText ||
+      previousTexts.stateTextRight !== stateTextRight ||
+      previousTexts.boundText !== boundText ||
+      previousTexts.connectionText !== connectionText ||
+      previousTexts.isJapaneseState !== isJapaneseState,
+    [
+      boundText,
+      connectionText,
+      isJapaneseState,
+      previousTexts,
+      stationText,
+      stateText,
+      stateTextRight,
+    ]
   );
 
-  const fadeIn = useCallback((): void => {
+  useEffect(() => {
     if (!selectedBound) {
-      if (prevHeaderState === headerState) {
-        topNameScaleYAnim.value = 0;
-        nameFadeAnim.value = 1;
-        bottomNameScaleYAnim.value = 1;
-        stateOpacityAnim.value = 0;
-        setFadeOutFinished(true);
-      }
+      progress.stopAnimation();
+      boundProgress.stopAnimation();
+      progress.setValue(1);
+      boundProgress.setValue(1);
+      setPreviousTexts({
+        stationText,
+        stateText,
+        stateTextRight,
+        boundText,
+        connectionText,
+        isJapaneseState,
+      });
+      setFadeOutFinished(true);
       return;
     }
 
-    const handleFinish = (finished: boolean | undefined) => {
+    if (
+      prevHeaderState === headerState &&
+      !hasHeaderContentChanged &&
+      !prevBoundIsDifferent
+    ) {
+      setFadeOutFinished(true);
+      return;
+    }
+
+    setFadeOutFinished(false);
+
+    progress.stopAnimation();
+    progress.setValue(0);
+    RNAnimated.timing(progress, {
+      toValue: 1,
+      duration: headerTransitionDelay,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
       if (finished) {
+        setPreviousTexts({
+          stationText,
+          stateText,
+          stateTextRight,
+          boundText,
+          connectionText,
+          isJapaneseState,
+        });
         setFadeOutFinished(true);
       }
-    };
+    });
 
-    if (prevHeaderState !== headerState) {
-      topNameScaleYAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-      nameFadeAnim.value = withTiming(
-        1,
-        {
-          duration: headerTransitionDelay,
-          easing: Easing.linear,
-        },
-        (finished) => runOnJS(handleFinish)(finished)
-      );
-      bottomNameScaleYAnim.value = withTiming(1, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-      stateOpacityAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
+    if (!prevBoundIsDifferent) {
+      boundProgress.stopAnimation();
+      boundProgress.setValue(1);
+      return;
     }
-    if (prevBoundIsDifferent) {
-      boundOpacityAnim.value = withTiming(0, {
-        duration: headerTransitionDelay,
-        easing: Easing.linear,
-      });
-    }
+
+    boundProgress.stopAnimation();
+    boundProgress.setValue(0);
+    RNAnimated.timing(boundProgress, {
+      toValue: 1,
+      duration: headerTransitionDelay,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
   }, [
-    bottomNameScaleYAnim,
-    boundOpacityAnim,
-    headerState,
+    boundProgress,
+    hasHeaderContentChanged,
     headerTransitionDelay,
-    nameFadeAnim,
+    headerState,
+    isJapaneseState,
+    boundText,
+    connectionText,
     prevBoundIsDifferent,
     prevHeaderState,
+    progress,
+    stateText,
+    stateTextRight,
+    stationText,
     selectedBound,
-    stateOpacityAnim,
-    topNameScaleYAnim,
   ]);
 
-  const fadeOut = useCallback((): void => {
-    if (!selectedBound) {
-      return;
-    }
+  const inverseProgress = useMemo(
+    () =>
+      progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 0],
+      }),
+    [progress]
+  );
 
-    nameFadeAnim.value = 0;
-    topNameScaleYAnim.value = 1;
-    stateOpacityAnim.value = 1;
-    boundOpacityAnim.value = 1;
-    bottomNameScaleYAnim.value = 0;
-  }, [
-    selectedBound,
-    nameFadeAnim,
-    topNameScaleYAnim,
-    stateOpacityAnim,
-    boundOpacityAnim,
-    bottomNameScaleYAnim,
-  ]);
+  const inverseBoundProgress = useMemo(
+    () =>
+      boundProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 0],
+      }),
+    [boundProgress]
+  );
 
-  const fade = useCallback(() => {
-    fadeOut();
-    fadeIn();
-  }, [fadeIn, fadeOut]);
+  const stateTopAnimatedStyles = useMemo(
+    () => ({
+      opacity: progress,
+    }),
+    [progress]
+  );
 
-  useEffect(() => {
-    setFadeOutFinished(!selectedBound);
-    fade();
-  }, [fade, selectedBound]);
+  const stateBottomAnimatedStyles = useMemo(
+    () => ({
+      opacity: inverseProgress,
+    }),
+    [inverseProgress]
+  );
 
-  // Animated styles
-  const stateTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - stateOpacityAnim.value,
-  }));
+  const stateTopAnimatedStylesRight = useMemo(
+    () => ({
+      opacity: progress,
+    }),
+    [progress]
+  );
 
-  const stateBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: stateOpacityAnim.value,
-  }));
+  const stateBottomAnimatedStylesRight = useMemo(
+    () => ({
+      opacity: inverseProgress,
+    }),
+    [inverseProgress]
+  );
 
-  const topNameAnimatedAnchorStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleY: 1 - topNameScaleYAnim.value }],
-  }));
+  const topNameAnimatedAnchorStyle = useMemo(
+    () => ({
+      transform: [{ scaleY: progress }],
+    }),
+    [progress]
+  );
 
-  const bottomNameAnimatedAnchorStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleY: topNameScaleYAnim.value }],
-  }));
+  const bottomNameAnimatedAnchorStyle = useMemo(
+    () => ({
+      transform: [{ scaleY: inverseProgress }],
+    }),
+    [inverseProgress]
+  );
 
-  const topNameAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: nameFadeAnim.value,
-  }));
+  const topNameAnimatedStyles = useMemo(
+    () => ({
+      opacity: progress,
+    }),
+    [progress]
+  );
 
-  const bottomNameAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - nameFadeAnim.value,
-  }));
+  const bottomNameAnimatedStyles = useMemo(
+    () => ({
+      opacity: inverseProgress,
+    }),
+    [inverseProgress]
+  );
 
-  const boundTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - boundOpacityAnim.value,
-  }));
+  const boundTopAnimatedStyles = useMemo(
+    () => ({
+      opacity: boundProgress,
+    }),
+    [boundProgress]
+  );
 
-  const boundBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: boundOpacityAnim.value,
-  }));
+  const boundBottomAnimatedStyles = useMemo(
+    () => ({
+      opacity: inverseBoundProgress,
+    }),
+    [inverseBoundProgress]
+  );
 
   return {
-    prevStationText,
-    prevStateText,
-    prevStateTextRight,
-    prevBoundText,
-    prevConnectionText,
-    prevIsJapaneseState,
+    prevStationText: previousTexts.stationText,
+    prevStateText: previousTexts.stateText,
+    prevStateTextRight: previousTexts.stateTextRight,
+    prevBoundText: previousTexts.boundText,
+    prevConnectionText: previousTexts.connectionText,
+    prevIsJapaneseState: previousTexts.isJapaneseState,
     stateTopAnimatedStyles,
     stateBottomAnimatedStyles,
+    stateTopAnimatedStylesRight,
+    stateBottomAnimatedStylesRight,
     topNameAnimatedAnchorStyle,
     bottomNameAnimatedAnchorStyle,
     topNameAnimatedStyles,
