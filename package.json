@@ -101,7 +101,7 @@
     "@types/i18n-js": "^3.0.1",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.14.161",
-    "@types/node": "^12.20.55",
+    "@types/node": "^20.19.0",
     "@types/react": "^19.2.14",
     "@types/react-native-share": "^3.3.1",
     "@types/react-native-version-check": "^3.4.8",
@@ -153,6 +153,11 @@
       "^~/(.*)$": "<rootDir>/src/$1",
       "^~/@types/graphql$": "<rootDir>/src/@types/graphql.ts",
       "^react-native-reanimated/mock$": "<rootDir>/src/__mocks__/react-native-reanimated-mock.js"
+    }
+  },
+  "overrides": {
+    "react-native-skeleton-placeholder": {
+      "@react-native-masked-view/masked-view": "0.3.2"
     }
   },
   "name": "trainlcd",
