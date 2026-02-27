@@ -278,7 +278,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
               style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
             >
               <RNAnimated.Text
-                style={[animation.stateTopAnimatedStylesRight, styles.firstText]}
+                style={[
+                  animation.stateTopAnimatedStylesRight,
+                  styles.firstText,
+                ]}
               >
                 {stateTextRight}
               </RNAnimated.Text>
