@@ -35,13 +35,6 @@ export default ({ config }: ConfigContext) => ({
         image: './assets/splash-icon.png',
       },
     ],
-    [
-      'expo-build-properties',
-      {
-        buildReactNativeFromSource: true,
-        useHermesV1: true,
-      },
-    ],
   ],
   extra: {
     eas: {
@@ -51,7 +44,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2503',
+    buildNumber: '2504',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -68,11 +61,8 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000290,
+    versionCode: 100000291,
   },
   owner: 'trainlcd',
 });
-
-
-
 
