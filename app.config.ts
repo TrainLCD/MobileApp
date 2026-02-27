@@ -35,13 +35,6 @@ export default ({ config }: ConfigContext) => ({
         image: './assets/splash-icon.png',
       },
     ],
-    [
-      'expo-build-properties',
-      {
-        buildReactNativeFromSource: true,
-        useHermesV1: true,
-      },
-    ],
   ],
   extra: {
     eas: {
@@ -72,7 +65,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
-
-
-
