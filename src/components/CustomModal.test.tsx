@@ -61,7 +61,8 @@ describe('CustomModal - onCloseAnimationEnd', () => {
       .spyOn(Animated, 'timing')
       .mockImplementation((_value, _config) => {
         return {
-          start: (callback?: Animated.EndCallback) => callback?.({ finished: true }),
+          start: (callback?: Animated.EndCallback) =>
+            callback?.({ finished: true }),
           stop: jest.fn(),
           reset: jest.fn(),
         } as unknown as Animated.CompositeAnimation;
