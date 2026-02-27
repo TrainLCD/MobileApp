@@ -7,7 +7,7 @@ export const useInterval = (
   isPausing: boolean;
   pause: () => void;
 } => {
-  const intervalId = useRef<number | null>(null);
+  const intervalId = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPausing, setIsPausing] = useState(false);
 
   useEffect(() => {
