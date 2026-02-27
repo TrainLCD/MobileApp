@@ -36,7 +36,6 @@
     "expo-audio": "^55.0.8",
     "expo-battery": "~55.0.8",
     "expo-blur": "~55.0.8",
-    "expo-build-properties": "~55.0.9",
     "expo-constants": "~55.0.7",
     "expo-crypto": "~55.0.8",
     "expo-device": "~55.0.9",
@@ -159,8 +158,7 @@
   "overrides": {
     "react-native-skeleton-placeholder": {
       "@react-native-masked-view/masked-view": "0.3.2"
-    },
-    "hermes-compiler": "250829098.0.4"
+    }
   },
   "name": "trainlcd",
   "version": "10.2.1"
