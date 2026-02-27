@@ -135,6 +135,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
     stateTextRight,
     boundText,
     connectionText,
+    connectedLines,
     isJapaneseState,
   }));
 
@@ -167,11 +168,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
         stateTextRight,
         boundText,
         connectionText,
+        connectedLines,
         isJapaneseState,
       });
     });
   }, [
     boundText,
+    connectedLines,
     connectionText,
     headerTransitionDelay,
     isJapaneseState,
@@ -232,7 +235,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                   numberOfLines={1}
                   style={styles.boundText}
                 >
-                  {connectedLines?.length && previousTexts.isJapaneseState ? (
+                  {previousTexts.connectedLines?.length && previousTexts.isJapaneseState ? (
                     <Text style={styles.connectedLines}>
                       {`${previousTexts.connectionText}直通 `}
                     </Text>
