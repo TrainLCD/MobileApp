@@ -235,7 +235,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                   numberOfLines={1}
                   style={styles.boundText}
                 >
-                  {previousTexts.connectedLines?.length && previousTexts.isJapaneseState ? (
+                  {previousTexts.connectedLines?.length &&
+                  previousTexts.isJapaneseState ? (
                     <Text style={styles.connectedLines}>
                       {`${previousTexts.connectionText}直通 `}
                     </Text>
