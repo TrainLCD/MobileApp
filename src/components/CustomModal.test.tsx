@@ -1,7 +1,6 @@
 import { render, waitFor } from '@testing-library/react-native';
 import type React from 'react';
-import { Text } from 'react-native';
-import { withTiming } from 'react-native-reanimated';
+import { Animated, Text } from 'react-native';
 import { CustomModal } from './CustomModal';
 
 // jotaiのモック
@@ -14,33 +13,6 @@ jest.mock('jotai', () => ({
 jest.mock('@gorhom/portal', () => ({
   Portal: ({ children }: { children: React.ReactNode }) => children,
 }));
-
-// react-native-reanimated のモックを拡張
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  const { View } = require('react-native');
-  return {
-    ...Reanimated,
-    useSharedValue: jest.fn((initial) => ({ value: initial })),
-    useAnimatedStyle: jest.fn(() => ({})),
-    withTiming: jest.fn((value, _config, callback) => {
-      if (callback) callback(true);
-      return value;
-    }),
-    runOnJS: jest.fn((fn) => fn),
-    cancelAnimation: jest.fn(),
-    interpolate: jest.fn((value, inputRange, outputRange) => {
-      const progress =
-        (value - inputRange[0]) / (inputRange[1] - inputRange[0]);
-      return outputRange[0] + progress * (outputRange[1] - outputRange[0]);
-    }),
-    createAnimatedComponent: jest.fn((component) => component),
-    default: {
-      View,
-      ScrollView: View,
-    },
-  };
-});
 
 describe('CustomModal', () => {
   beforeEach(() => {
@@ -81,8 +53,23 @@ describe('CustomModal', () => {
 });
 
 describe('CustomModal - onCloseAnimationEnd', () => {
+  let timingSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    timingSpy = jest
+      .spyOn(Animated, 'timing')
+      .mockImplementation((_value, _config) => {
+        return {
+          start: (callback?: Animated.EndCallback) => callback?.({ finished: true }),
+          stop: jest.fn(),
+          reset: jest.fn(),
+        } as unknown as Animated.CompositeAnimation;
+      });
+  });
+
+  afterEach(() => {
+    timingSpy.mockRestore();
   });
 
   it('onCloseAnimationEnd が prop として渡される', () => {
@@ -105,22 +92,12 @@ describe('CustomModal - onCloseAnimationEnd', () => {
       </CustomModal>
     );
 
-    // withTiming が呼ばれることを確認
-    expect(withTiming).toHaveBeenCalled();
+    // Animated.timing が呼ばれることを確認
+    expect(timingSpy).toHaveBeenCalled();
   });
 
   it('閉じるアニメーション完了後に onCloseAnimationEnd が呼ばれる', async () => {
     const onCloseAnimationEnd = jest.fn();
-
-    // visible=true の時は withTiming のコールバックを呼ばない（開くアニメーション）
-    // visible=false の時だけコールバックを呼ぶ（閉じるアニメーション）
-    (withTiming as jest.Mock).mockImplementation((value, _config, callback) => {
-      // value が 0 の時（閉じるアニメーション）のみコールバックを実行
-      if (callback && value === 0) {
-        callback(true);
-      }
-      return value;
-    });
 
     const { rerender } = render(
       <CustomModal visible={true} onCloseAnimationEnd={onCloseAnimationEnd}>
@@ -147,13 +124,6 @@ describe('CustomModal - onCloseAnimationEnd', () => {
   });
 
   it('onCloseAnimationEnd が未指定の場合でもエラーにならない', () => {
-    (withTiming as jest.Mock).mockImplementation((value, _config, callback) => {
-      if (callback) {
-        callback(true);
-      }
-      return value;
-    });
-
     const { rerender } = render(
       <CustomModal visible={true}>
         <Text>Test Content</Text>
