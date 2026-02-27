@@ -1,7 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React from 'react';
 import {
-  Easing,
   Platform,
   Animated as RNAnimated,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../constants';
+import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import type { CommonHeaderProps } from './Header.types';
@@ -109,14 +109,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const isJapaneseHeaderState = (state: string): boolean =>
-  state === 'JA' || state === 'KANA';
-
-const parseHeaderState = (state: string): { stoppingState: string; lang: string } => {
-  const [stoppingState, lang] = state.split('_');
-  return { stoppingState, lang: lang ?? 'JA' };
-};
-
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
   const {
     currentLine,
@@ -137,96 +129,17 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
     isJapaneseState,
   } = props;
 
-  const progress = useRef(new RNAnimated.Value(1)).current;
-  const [previousTexts, setPreviousTexts] = useState(() => ({
-    headerState,
-    stationText,
-    stateText,
-    stateTextRight,
-    boundText,
-    connectionText,
-    isJapaneseState,
-  }));
-
-  useEffect(() => {
-    const previousHeaderState = parseHeaderState(previousTexts.headerState);
-    const currentHeaderState = parseHeaderState(headerState);
-    const shouldSkipFadeForJapaneseToggle =
-      previousTexts.headerState !== headerState &&
-      previousHeaderState.stoppingState === currentHeaderState.stoppingState &&
-      isJapaneseHeaderState(previousHeaderState.lang) &&
-      isJapaneseHeaderState(currentHeaderState.lang);
-
-    if (shouldSkipFadeForJapaneseToggle) {
-      progress.stopAnimation();
-      progress.setValue(1);
-      setPreviousTexts({
-        headerState,
-        stationText,
-        stateText,
-        stateTextRight,
-        boundText,
-        connectionText,
-        isJapaneseState,
-      });
-      return;
-    }
-
-    const hasChange =
-      previousTexts.headerState !== headerState ||
-      previousTexts.stationText !== stationText ||
-      previousTexts.stateText !== stateText ||
-      previousTexts.stateTextRight !== stateTextRight ||
-      previousTexts.boundText !== boundText ||
-      previousTexts.connectionText !== connectionText ||
-      previousTexts.isJapaneseState !== isJapaneseState;
-    if (!hasChange) {
-      return;
-    }
-
-    progress.stopAnimation();
-    progress.setValue(0);
-    RNAnimated.timing(progress, {
-      toValue: 1,
-      duration: headerTransitionDelay,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (!finished) {
-        return;
-      }
-      setPreviousTexts({
-        headerState,
-        stationText,
-        stateText,
-        stateTextRight,
-        boundText,
-        connectionText,
-        isJapaneseState,
-      });
-    });
-  }, [
-    boundText,
-    connectionText,
+  const animation = useHeaderAnimation({
+    selectedBound,
     headerState,
     headerTransitionDelay,
-    isJapaneseState,
-    previousTexts,
-    progress,
+    stationText,
     stateText,
     stateTextRight,
-    stationText,
-  ]);
-
-  const currentOpacity = useMemo(() => progress, [progress]);
-  const previousOpacity = useMemo(
-    () =>
-      progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 0],
-      }),
-    [progress]
-  );
+    boundText,
+    connectionText,
+    isJapaneseState,
+  });
 
   const dim = useWindowDimensions();
 
@@ -242,7 +155,10 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
               <RNAnimated.Text
-                style={[styles.boundTextContainer, { opacity: currentOpacity }]}
+                style={[
+                  animation.boundTopAnimatedStyles,
+                  styles.boundTextContainer,
+                ]}
               >
                 <Text
                   adjustsFontSizeToFit
@@ -257,8 +173,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
               </RNAnimated.Text>
               <RNAnimated.Text
                 style={[
+                  animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
-                  { opacity: previousOpacity },
                 ]}
               >
                 <Text
@@ -266,11 +182,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                   numberOfLines={1}
                   style={styles.connectedLines}
                 >
-                  {connectedLines?.length && previousTexts.isJapaneseState
-                    ? `${previousTexts.connectionText}直通 `
+                  {connectedLines?.length && animation.prevIsJapaneseState
+                    ? `${animation.prevConnectionText}直通 `
                     : null}
                 </Text>
-                <Text style={styles.boundText}>{previousTexts.boundText}</Text>
+                <Text style={styles.boundText}>{animation.prevBoundText}</Text>
               </RNAnimated.Text>
             </View>
           ) : null}
@@ -279,8 +195,8 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
           <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
             <RNAnimated.Text
               style={[
+                animation.stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
-                { opacity: currentOpacity },
               ]}
               adjustsFontSizeToFit
               numberOfLines={2}
@@ -289,13 +205,13 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
             </RNAnimated.Text>
             <RNAnimated.Text
               style={[
+                animation.stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
-                { opacity: previousOpacity },
               ]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
-              {previousTexts.stateText}
+              {animation.prevStateText}
             </RNAnimated.Text>
           </View>
 
@@ -327,23 +243,11 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                 numberOfLines={1}
                 style={[
                   styles.stationName,
-                  {
-                    opacity: currentOpacity,
-                  },
-                  {
-                    transformOrigin: 'top',
-                    transform: [
-                      {
-                        scaleY: progress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 1],
-                          extrapolate: 'clamp',
-                        }),
-                      },
-                    ],
-                  },
+                  animation.topNameAnimatedStyles,
+                  animation.topNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'top',
                   },
                 ]}
               >
@@ -356,27 +260,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                 numberOfLines={1}
                 style={[
                   styles.stationName,
-                  {
-                    opacity: previousOpacity,
-                  },
-                  {
-                    transformOrigin: 'bottom',
-                    transform: [
-                      {
-                        scaleY: progress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 0],
-                          extrapolate: 'clamp',
-                        }),
-                      },
-                    ],
-                  },
+                  animation.bottomNameAnimatedStyles,
+                  animation.bottomNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
+                    transformOrigin: 'bottom',
                   },
                 ]}
               >
-                {previousTexts.stationText}
+                {animation.prevStationText}
               </RNAnimated.Text>
             </View>
           </View>
@@ -386,14 +278,17 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
               style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
             >
               <RNAnimated.Text
-                style={[styles.firstText, { opacity: currentOpacity }]}
+                style={[animation.stateTopAnimatedStylesRight, styles.firstText]}
               >
                 {stateTextRight}
               </RNAnimated.Text>
               <RNAnimated.Text
-                style={[styles.firstText, { opacity: previousOpacity }]}
+                style={[
+                  animation.stateBottomAnimatedStylesRight,
+                  styles.firstText,
+                ]}
               >
-                {previousTexts.stateTextRight}
+                {animation.prevStateTextRight}
               </RNAnimated.Text>
             </View>
           ) : null}
