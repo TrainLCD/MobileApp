@@ -129,13 +129,15 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
   } = props;
 
   const progress = useRef(new RNAnimated.Value(1)).current;
+  const connectedLinesRef = useRef(connectedLines);
+  connectedLinesRef.current = connectedLines;
   const [previousTexts, setPreviousTexts] = useState(() => ({
     stationText,
     stateText,
     stateTextRight,
     boundText,
     connectionText,
-    connectedLines,
+    hasConnectedLines: !!connectedLines?.length,
     isJapaneseState,
   }));
 
@@ -168,13 +170,12 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
         stateTextRight,
         boundText,
         connectionText,
-        connectedLines,
+        hasConnectedLines: !!connectedLinesRef.current?.length,
         isJapaneseState,
       });
     });
   }, [
     boundText,
-    connectedLines,
     connectionText,
     headerTransitionDelay,
     isJapaneseState,
@@ -235,7 +236,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
                   numberOfLines={1}
                   style={styles.boundText}
                 >
-                  {previousTexts.connectedLines?.length &&
+                  {previousTexts.hasConnectedLines &&
                   previousTexts.isJapaneseState ? (
                     <Text style={styles.connectedLines}>
                       {`${previousTexts.connectionText}直通 `}
