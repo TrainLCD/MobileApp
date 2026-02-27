@@ -109,10 +109,19 @@ const styles = StyleSheet.create({
   },
 });
 
+const isJapaneseHeaderState = (state: string): boolean =>
+  state === 'JA' || state === 'KANA';
+
+const parseHeaderState = (state: string): { stoppingState: string; lang: string } => {
+  const [stoppingState, lang] = state.split('_');
+  return { stoppingState, lang: lang ?? 'JA' };
+};
+
 const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
   const {
     currentLine,
     selectedBound,
+    headerState,
     headerTransitionDelay,
     stationText,
     stateText,
@@ -130,6 +139,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
 
   const progress = useRef(new RNAnimated.Value(1)).current;
   const [previousTexts, setPreviousTexts] = useState(() => ({
+    headerState,
     stationText,
     stateText,
     stateTextRight,
@@ -139,7 +149,31 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
   }));
 
   useEffect(() => {
+    const previousHeaderState = parseHeaderState(previousTexts.headerState);
+    const currentHeaderState = parseHeaderState(headerState);
+    const shouldSkipFadeForJapaneseToggle =
+      previousTexts.headerState !== headerState &&
+      previousHeaderState.stoppingState === currentHeaderState.stoppingState &&
+      isJapaneseHeaderState(previousHeaderState.lang) &&
+      isJapaneseHeaderState(currentHeaderState.lang);
+
+    if (shouldSkipFadeForJapaneseToggle) {
+      progress.stopAnimation();
+      progress.setValue(1);
+      setPreviousTexts({
+        headerState,
+        stationText,
+        stateText,
+        stateTextRight,
+        boundText,
+        connectionText,
+        isJapaneseState,
+      });
+      return;
+    }
+
     const hasChange =
+      previousTexts.headerState !== headerState ||
       previousTexts.stationText !== stationText ||
       previousTexts.stateText !== stateText ||
       previousTexts.stateTextRight !== stateTextRight ||
@@ -162,6 +196,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
         return;
       }
       setPreviousTexts({
+        headerState,
         stationText,
         stateText,
         stateTextRight,
@@ -173,6 +208,7 @@ const HeaderTokyoMetro: React.FC<CommonHeaderProps> = (props) => {
   }, [
     boundText,
     connectionText,
+    headerState,
     headerTransitionDelay,
     isJapaneseState,
     previousTexts,
