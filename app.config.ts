@@ -38,10 +38,14 @@ export default ({ config }: ConfigContext) => ({
     [
       'expo-build-properties',
       {
-        buildReactNativeFromSource: true,
-        useHermesV1: false,
+        ios: {
+    buildNumber: '2508',
+          buildReactNativeFromSource: true,
+        },
       },
     ],
+    '@react-native-firebase/app',
+    '@react-native-firebase/auth',
   ],
   extra: {
     eas: {
@@ -68,9 +72,8 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000294,
+    versionCode: 100000295,
   },
   owner: 'trainlcd',
 });
-
 
