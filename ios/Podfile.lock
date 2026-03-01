@@ -1204,7 +1204,7 @@ PODS:
     - ExpoModulesCore
   - EXConstants (55.0.7):
     - ExpoModulesCore
-  - Expo (55.0.3):
+  - Expo (55.0.4):
     - boost
     - DoubleConversion
     - ExpoModulesCore
@@ -5276,7 +5276,7 @@ SPEC CHECKSUMS:
   EASClient: 7eead1417d9970757ad2654d1eddee4de796d1ee
   EXApplication: b86f81225a9cd817cfe86a79655b9829f12629db
   EXConstants: b3c63be5f8648e4ab8e6ff5099b62f629247f969
-  Expo: b9708b8600a85056efc1ca4e7534f12225c00aeb
+  Expo: 8a1f7e26392fad5b4118bd6c407adad414913dad
   ExpoAsset: bdc7bc21fe25d197c3aa7547e14c12c42087d9c9
   ExpoAudio: af1b3b6271e309bfc1ea4626284a47d3af49c7e1
   ExpoBattery: 6248dea4b5c9e9c05e16bdd2fe8c7c5d7b3b02c9
@@ -5434,6 +5434,6 @@ SPEC CHECKSUMS:
   UMAppLoader: 71b50bcc31d86495e52c0b4cd17e2708bf297be3
   Yoga: 89dfd64939cad2d0d2cc2dc48193100cef28bd98
 
-PODFILE CHECKSUM: b9df5ea4b83ecd7fd4a1a2702b295480e1dbc400
+PODFILE CHECKSUM: dc1b7d3b1f802518cc24e27ca3f58296719ceecc
 
 COCOAPODS: 1.16.2
