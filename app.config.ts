@@ -35,7 +35,13 @@ export default ({ config }: ConfigContext) => ({
         image: './assets/splash-icon.png',
       },
     ],
-    'expo-build-properties',
+    [
+      'expo-build-properties',
+      {
+        buildReactNativeFromSource: true,
+        useHermesV1: false,
+      },
+    ],
   ],
   extra: {
     eas: {
