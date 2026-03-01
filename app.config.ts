@@ -35,6 +35,7 @@ export default ({ config }: ConfigContext) => ({
         image: './assets/splash-icon.png',
       },
     ],
+    'expo-build-properties',
   ],
   extra: {
     eas: {
@@ -65,5 +66,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
-

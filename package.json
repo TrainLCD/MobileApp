@@ -36,6 +36,7 @@
     "expo-audio": "^55.0.8",
     "expo-battery": "~55.0.8",
     "expo-blur": "~55.0.8",
+    "expo-build-properties": "~55.0.9",
     "expo-constants": "~55.0.7",
     "expo-crypto": "~55.0.8",
     "expo-device": "~55.0.9",
