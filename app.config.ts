@@ -38,10 +38,13 @@ export default ({ config }: ConfigContext) => ({
     [
       'expo-build-properties',
       {
-        buildReactNativeFromSource: true,
-        useHermesV1: false,
+        ios: {
+          buildReactNativeFromSource: true,
+        },
       },
     ],
+    '@react-native-firebase/app',
+    '@react-native-firebase/auth',
   ],
   extra: {
     eas: {
@@ -72,5 +75,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
-
