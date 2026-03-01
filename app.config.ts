@@ -39,7 +39,6 @@ export default ({ config }: ConfigContext) => ({
       'expo-build-properties',
       {
         ios: {
-    buildNumber: '2509',
           buildReactNativeFromSource: true,
         },
       },
@@ -74,4 +73,3 @@ export default ({ config }: ConfigContext) => ({
   },
   owner: 'trainlcd',
 });
-
