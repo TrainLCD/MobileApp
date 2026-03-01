@@ -39,7 +39,6 @@ export default ({ config }: ConfigContext) => ({
       'expo-build-properties',
       {
         ios: {
-    buildNumber: '2509',
           buildReactNativeFromSource: true,
         },
       },
@@ -53,7 +52,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2507',
+    buildNumber: '2510',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -70,7 +69,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000296,
+    versionCode: 100000297,
   },
   owner: 'trainlcd',
 });
