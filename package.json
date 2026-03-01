@@ -160,7 +160,7 @@
     "react-native-skeleton-placeholder": {
       "@react-native-masked-view/masked-view": "0.3.2"
     },
-    "hermes-compiler": "250829098.0.1"
+    "hermes-compiler": "250829098.0.4"
   },
   "name": "trainlcd",
   "version": "10.2.1"
