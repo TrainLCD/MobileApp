@@ -43,8 +43,6 @@ export default ({ config }: ConfigContext) => ({
         },
       },
     ],
-    '@react-native-firebase/app',
-    '@react-native-firebase/auth',
   ],
   extra: {
     eas: {
@@ -64,10 +62,6 @@ export default ({ config }: ConfigContext) => ({
         ? 'TrainLCD'
         : 'CanaryTrainLCD',
     supportsTablet: true,
-    googleServicesFile:
-      process.env.EXPO_BUILD_PROFILE === 'production'
-        ? './ios/Schemes/Prod/GoogleService-Info.plist'
-        : './ios/Schemes/Dev/GoogleService-Info.plist',
   },
   android: {
     package:
@@ -76,7 +70,6 @@ export default ({ config }: ConfigContext) => ({
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
     versionCode: 100000294,
-    googleServicesFile: './android/app/google-services.json',
   },
   owner: 'trainlcd',
 });
