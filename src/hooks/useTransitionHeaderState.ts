@@ -139,13 +139,16 @@ export const useTransitionHeaderState = (): void => {
   const isJapaneseEnabled = enabledLanguages.includes('JA');
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
-    // 停車中は等前ながらfalse
-    if (!nextStation || arrived) {
+    if (!nextStation) {
       return false;
     }
-    // 最寄駅が通過駅の場合は無条件でtrue
+    // 最寄駅が通過駅の場合は無条件でtrue（到着中でも次の駅を表示）
     if (station && getIsPass(station)) {
       return true;
+    }
+    // 停車中はfalse
+    if (arrived) {
+      return false;
     }
     // 急行停車駅発車直後trueにする
     if (stationForHeader?.id === station?.id && !arrived) {
