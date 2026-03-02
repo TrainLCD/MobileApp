@@ -139,24 +139,27 @@ export const useTransitionHeaderState = (): void => {
   const isJapaneseEnabled = enabledLanguages.includes('JA');
   const showNextExpression = useMemo(() => {
     // 次の停車駅が存在しない場合無条件でfalse
-    // 停車中は等前ながらfalse
-    if (!nextStation || arrived) {
+    if (!nextStation) {
       return false;
     }
-    // 最寄駅が通過駅の場合は無条件でtrue
+    // 最寄駅が通過駅の場合は無条件でtrue（到着中でも次の駅を表示）
     if (station && getIsPass(station)) {
       return true;
     }
+    // 停車中はfalse
+    if (arrived) {
+      return false;
+    }
     // 急行停車駅発車直後trueにする
-    if (stationForHeader?.id === station?.id && !arrived) {
+    if (stationForHeader?.id === station?.id) {
       return true;
     }
-    // 地理的な最寄り駅と次の停車駅が違う場合場合 かつ 次の停車駅に近づいていなければtrue
+    // 地理的な最寄り駅と次の停車駅が違う場合 かつ 次の停車駅に近づいていなければtrue
     if (stationForHeader?.id !== station?.id && !approaching) {
       return true;
     }
-    // 地理的な最寄り駅と次の停車駅が同じ場合に到着していない かつ 接近もしていない場合true
-    return !arrived && !approaching;
+    // 接近していない場合true
+    return !approaching;
   }, [approaching, arrived, nextStation, station, stationForHeader?.id]);
 
   const isExtraLangAvailable = useMemo(
