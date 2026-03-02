@@ -151,15 +151,15 @@ export const useTransitionHeaderState = (): void => {
       return false;
     }
     // 急行停車駅発車直後trueにする
-    if (stationForHeader?.id === station?.id && !arrived) {
+    if (stationForHeader?.id === station?.id) {
       return true;
     }
-    // 地理的な最寄り駅と次の停車駅が違う場合場合 かつ 次の停車駅に近づいていなければtrue
+    // 地理的な最寄り駅と次の停車駅が違う場合 かつ 次の停車駅に近づいていなければtrue
     if (stationForHeader?.id !== station?.id && !approaching) {
       return true;
     }
-    // 地理的な最寄り駅と次の停車駅が同じ場合に到着していない かつ 接近もしていない場合true
-    return !arrived && !approaching;
+    // 接近していない場合true
+    return !approaching;
   }, [approaching, arrived, nextStation, station, stationForHeader?.id]);
 
   const isExtraLangAvailable = useMemo(
