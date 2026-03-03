@@ -252,6 +252,8 @@
   "walkthroughDescription4": "テーマ設定で東急東横線風や埼京線風など、お好みの表示スタイルに変更できます。",
   "walkthroughTitle5": "プリセット",
   "walkthroughDescription5": "よく使う路線をプリセットとして保存できます。保存した路線はここに表示され、タップするだけで素早く選択できます。",
+  "walkthroughTitle6": "経路検索",
+  "walkthroughDescription6": "ここから経路検索画面に移動できます。目的地の駅名を入力して、最適な経路を見つけましょう。",
   "walkthroughNext": "次へ",
   "walkthroughStart": "はじめる",
   "walkthroughSkip": "スキップ",

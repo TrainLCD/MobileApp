@@ -32,6 +32,12 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
     tooltipPosition: 'bottom',
   },
   {
+    id: 'routeSearch',
+    titleKey: 'walkthroughTitle6',
+    descriptionKey: 'walkthroughDescription6',
+    tooltipPosition: 'top',
+  },
+  {
     id: 'customize',
     titleKey: 'walkthroughTitle4',
     descriptionKey: 'walkthroughDescription4',

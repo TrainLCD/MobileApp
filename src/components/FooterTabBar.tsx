@@ -62,18 +62,32 @@ const styles = StyleSheet.create({
 type Props = {
   active?: FooterTab;
   visible?: boolean;
+  onSearchButtonLayout?: (layout: ButtonLayout) => void;
   onSettingsButtonLayout?: (layout: ButtonLayout) => void;
 };
 
 const FooterTabBar: React.FC<Props> = ({
   active = 'home',
   visible = true,
+  onSearchButtonLayout,
   onSettingsButtonLayout,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const searchButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
+
+  const handleSearchButtonLayout = useCallback(
+    (_event: LayoutChangeEvent) => {
+      if (onSearchButtonLayout && searchButtonRef.current) {
+        searchButtonRef.current.measureInWindow((x, y, width, height) => {
+          onSearchButtonLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onSearchButtonLayout]
+  );
 
   const handleSettingsButtonLayout = useCallback(
     (_event: LayoutChangeEvent) => {
@@ -111,11 +125,13 @@ const FooterTabBar: React.FC<Props> = ({
       >
         <View style={styles.content}>
           <Pressable
+            ref={searchButtonRef}
             style={styles.button}
             accessibilityRole="button"
             onPress={() => {
               navigation.navigate('RouteSearch' as never);
             }}
+            onLayout={handleSearchButtonLayout}
           >
             <Ionicons
               name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
