@@ -102,6 +102,13 @@ describe('useWalkthroughCompleted', () => {
       });
 
       expect(result.current.currentStepIndex).toBe(4);
+      expect(result.current.currentStepId).toBe('routeSearch');
+
+      act(() => {
+        result.current.nextStep();
+      });
+
+      expect(result.current.currentStepIndex).toBe(5);
       expect(result.current.currentStepId).toBe('customize');
     });
 
@@ -117,7 +124,7 @@ describe('useWalkthroughCompleted', () => {
 
       // 最後のステップまで進む
       act(() => {
-        result.current.goToStep(4);
+        result.current.goToStep(5);
       });
 
       expect(result.current.currentStepId).toBe('customize');
@@ -295,7 +302,14 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStep?.id).toBe('savedRoutes');
       expect(result.current.currentStep?.titleKey).toBe('walkthroughTitle5');
 
-      // Step 4: customize
+      // Step 4: routeSearch
+      act(() => {
+        result.current.nextStep();
+      });
+      expect(result.current.currentStep?.id).toBe('routeSearch');
+      expect(result.current.currentStep?.titleKey).toBe('walkthroughTitle6');
+
+      // Step 5: customize
       act(() => {
         result.current.nextStep();
       });
@@ -312,7 +326,7 @@ describe('useWalkthroughCompleted', () => {
         expect(result.current.isWalkthroughActive).toBe(true);
       });
 
-      expect(result.current.totalSteps).toBe(5);
+      expect(result.current.totalSteps).toBe(6);
     });
   });
 
@@ -332,7 +346,7 @@ describe('useWalkthroughCompleted', () => {
 
       // 最後のステップに移動してnextStepを呼ぶ
       act(() => {
-        result.current.goToStep(4);
+        result.current.goToStep(5);
       });
 
       await act(async () => {

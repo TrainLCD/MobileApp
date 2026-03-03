@@ -22,7 +22,7 @@ const createMockWalkthrough = (
     descriptionKey: 'walkthroughDescription1',
     tooltipPosition: 'bottom',
   },
-  totalSteps: 5,
+  totalSteps: 6,
   nextStep: mockNextStep,
   goToStep: mockGoToStep,
   skipWalkthrough: mockSkipWalkthrough,
@@ -42,7 +42,7 @@ describe('useSelectLineWalkthrough', () => {
     const { result } = renderHook(() => useSelectLineWalkthrough());
 
     expect(result.current.isWalkthroughActive).toBe(true);
-    expect(result.current.totalSteps).toBe(5);
+    expect(result.current.totalSteps).toBe(6);
     expect(result.current.currentStepIndex).toBe(0);
   });
 

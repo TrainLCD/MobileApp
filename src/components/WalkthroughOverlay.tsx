@@ -27,6 +27,7 @@ export type WalkthroughStepId =
   | 'changeLocation'
   | 'savedRoutes'
   | 'selectLine'
+  | 'routeSearch'
   | 'customize'
   | 'routeSearchIntro'
   | 'routeSearchBar'

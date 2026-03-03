@@ -105,6 +105,7 @@ const SelectLineScreen = () => {
     nextStep,
     goToStep,
     skipWalkthrough,
+    setSearchButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,
@@ -381,6 +382,7 @@ const SelectLineScreen = () => {
       {/* フッター */}
       <FooterTabBar
         active="home"
+        onSearchButtonLayout={setSearchButtonLayout}
         onSettingsButtonLayout={setSettingsButtonLayout}
       />
       {/* モーダル */}

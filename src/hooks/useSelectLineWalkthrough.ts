@@ -24,6 +24,8 @@ export const useSelectLineWalkthrough = () => {
     setSpotlightArea,
   } = useWalkthroughCompleted();
 
+  const [searchButtonLayout, setSearchButtonLayout] =
+    useState<ButtonLayout | null>(null);
   const [settingsButtonLayout, setSettingsButtonLayout] =
     useState<ButtonLayout | null>(null);
   const [nowHeaderLayout, setNowHeaderLayout] = useState<HeaderLayout | null>(
@@ -73,6 +75,19 @@ export const useSelectLineWalkthrough = () => {
     }
   }, [currentStepId, presetsLayout, setSpotlightArea]);
 
+  // 経路検索ボタンをハイライト
+  useEffect(() => {
+    if (currentStepId === 'routeSearch' && searchButtonLayout) {
+      setSpotlightArea({
+        x: searchButtonLayout.x,
+        y: searchButtonLayout.y,
+        width: searchButtonLayout.width,
+        height: searchButtonLayout.height,
+        borderRadius: 24,
+      });
+    }
+  }, [currentStepId, searchButtonLayout, setSpotlightArea]);
+
   // 設定ボタンをハイライト
   useEffect(() => {
     if (currentStepId === 'customize' && settingsButtonLayout) {
@@ -114,6 +129,7 @@ export const useSelectLineWalkthrough = () => {
     nextStep,
     goToStep,
     skipWalkthrough,
+    setSearchButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,
