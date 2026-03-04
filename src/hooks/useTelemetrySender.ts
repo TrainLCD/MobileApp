@@ -13,6 +13,7 @@ import {
   type GnssState,
   subscribeGnss,
 } from '~/utils/native/android/gnssModule';
+import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -113,7 +114,7 @@ export const useTelemetrySender = (
         log: {
           type: 'app',
           level,
-          message,
+          message: sanitizeTelemetryMessage(message),
         },
       });
 
