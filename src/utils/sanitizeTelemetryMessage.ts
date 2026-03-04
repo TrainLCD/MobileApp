@@ -21,7 +21,8 @@ const stringify = (value: unknown): string => {
     return `${value.name}: ${value.message}`;
   }
   try {
-    return JSON.stringify(value);
+    const json = JSON.stringify(value);
+    return json ?? String(value);
   } catch {
     return String(value);
   }
@@ -38,5 +39,6 @@ export const sanitizeTelemetryMessage = (value: unknown): string => {
     return redacted;
   }
 
-  return `${redacted.slice(0, MAX_TELEMETRY_MESSAGE_LENGTH)}...<truncated>`;
+  const suffix = '...<truncated>';
+  return `${redacted.slice(0, MAX_TELEMETRY_MESSAGE_LENGTH - suffix.length)}${suffix}`;
 };
