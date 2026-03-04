@@ -9,11 +9,11 @@ import {
 import { z } from 'zod';
 import { TELEMETRY_THROTTLE_MS } from '~/constants/telemetry';
 import { locationAtom } from '~/store/atoms/location';
-import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
 import {
   type GnssState,
   subscribeGnss,
 } from '~/utils/native/android/gnssModule';
+import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';

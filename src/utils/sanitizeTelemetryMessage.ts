@@ -1,10 +1,7 @@
 const MAX_TELEMETRY_MESSAGE_LENGTH = 2000;
 
 const TELEMETRY_REDACTIONS: Array<[RegExp, string]> = [
-  [
-    /\b(Authorization["']?\s*[:=]\s*["']?Bearer\s+)[^\s"']+/gi,
-    '$1[REDACTED]',
-  ],
+  [/\b(Authorization["']?\s*[:=]\s*["']?Bearer\s+)[^\s"']+/gi, '$1[REDACTED]'],
   [/\b(Bearer\s+)[A-Za-z0-9\-._~+/]+=*/g, '$1[REDACTED]'],
   [
     /(\b(?:idToken|accessToken|refreshToken|token|apiKey|secret|password|authorization)\b["']?\s*[:=]\s*["']?)([^"',\s}]+)/gi,
@@ -43,4 +40,3 @@ export const sanitizeTelemetryMessage = (value: unknown): string => {
 
   return `${redacted.slice(0, MAX_TELEMETRY_MESSAGE_LENGTH)}...<truncated>`;
 };
-
