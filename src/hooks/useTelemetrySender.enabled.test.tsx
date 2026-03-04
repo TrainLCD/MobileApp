@@ -182,6 +182,33 @@ describe('useTelemetrySender', () => {
     );
   });
 
+  test('should redact sensitive token-like values in telemetry payload', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('token=abc123-secret-value', 'error');
+      await Promise.resolve();
+    });
+
+    await waitFor(
+      () => {
+        expect(mockFetch).toHaveBeenCalled();
+        const calls = mockFetch.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/log';
+        });
+        expect(logCall).toBeDefined();
+        const body = JSON.parse(logCall[1].body);
+        expect(body.log.message).toContain('token=[REDACTED]');
+        expect(body.log.message).not.toContain('abc123-secret-value');
+      },
+      { timeout: 2000 }
+    );
+  });
+
   test('should not send log if telemetry is disabled', async () => {
     (useTelemetryEnabled as jest.Mock).mockReturnValue(false);
 

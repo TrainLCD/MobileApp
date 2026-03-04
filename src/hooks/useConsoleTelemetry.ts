@@ -6,6 +6,7 @@ import {
 } from 'react-native-dotenv';
 import { z } from 'zod';
 import { TELEMETRY_MAX_QUEUE_SIZE } from '~/constants/telemetry';
+import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
 import { useTelemetryEnabled } from './useTelemetryEnabled';
 
 const LogRequest = z.object({
@@ -63,7 +64,7 @@ export const useConsoleTelemetry = (
       if (isFlushingRef.current) {
         return;
       }
-      const message = formatArgs(args);
+      const message = sanitizeTelemetryMessage(formatArgs(args));
       if (!message) {
         return;
       }
