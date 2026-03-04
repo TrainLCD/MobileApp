@@ -9,6 +9,7 @@ import {
 import { z } from 'zod';
 import { TELEMETRY_THROTTLE_MS } from '~/constants/telemetry';
 import { locationAtom } from '~/store/atoms/location';
+import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
 import {
   type GnssState,
   subscribeGnss,
@@ -113,7 +114,7 @@ export const useTelemetrySender = (
         log: {
           type: 'app',
           level,
-          message,
+          message: sanitizeTelemetryMessage(message),
         },
       });
 

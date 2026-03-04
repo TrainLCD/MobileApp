@@ -179,6 +179,28 @@ describe('useConsoleTelemetry (enabled)', () => {
     unmount();
   });
 
+  test('should redact sensitive token-like values before sending', async () => {
+    const { unmount } = renderHook(() =>
+      useConsoleTelemetry('https://example.com', 'test-token')
+    );
+
+    console.error('Authorization: Bearer my-super-secret-token');
+
+    jest.advanceTimersByTime(1000);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const logCalls = mockFetch.mock.calls.filter(
+      (call: any[]) => call[0] === 'https://example.com/api/log'
+    );
+    expect(logCalls.length).toBeGreaterThanOrEqual(1);
+    const body = JSON.parse(logCalls[0][1].body);
+    expect(body.log.message).toContain('[REDACTED]');
+    expect(body.log.message).not.toContain('my-super-secret-token');
+
+    unmount();
+  });
+
   test('should include Authorization header', async () => {
     const { unmount } = renderHook(() =>
       useConsoleTelemetry('https://example.com', 'my-secret-token')
