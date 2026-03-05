@@ -31,6 +31,7 @@ const mockStation: Station = {
   id: 1,
   groupId: 1,
   name: 'Test Station',
+  nameIpa: undefined,
   nameKatakana: 'テストステーション',
   nameRoman: 'Test Station',
   nameChinese: undefined,
