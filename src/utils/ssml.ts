@@ -1,5 +1,21 @@
 type SSMLElementType = 'sub' | 'phoneme' | 'say-as';
 
+/**
+ * nameIpaが存在する場合は<phoneme>タグでラップし、なければnameRomanをそのまま返す
+ */
+export const wrapIpa = (
+  nameRoman: string | null | undefined,
+  nameIpa: string | null | undefined
+): string => {
+  if (!nameRoman) {
+    return '';
+  }
+  if (!nameIpa) {
+    return nameRoman;
+  }
+  return `<phoneme alphabet="ipa" ph="${nameIpa}">${nameRoman}</phoneme>`;
+};
+
 export class SSMLBuilder {
   private addSpaceByDefault = true;
   private elms: string[] = [];
