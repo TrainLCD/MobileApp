@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { PubSub } from '@google-cloud/pubsub';
 import * as admin from 'firebase-admin';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { applyLegacyIpaReplacements } from '../utils/legacyIpa';
 import { normalizeRomanText } from '../utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
@@ -30,7 +31,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const ssmlEn = normalizeRomanText(req.data.ssmlEn)
+  let ssmlEn = normalizeRomanText(req.data.ssmlEn)
     // Airport Terminal 1･2等
     .replace(/･/g, ' ')
     // Otsuka・Teikyo-Daigakuなど
@@ -46,6 +47,11 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     .replace(/.Sta\./gi, ' Station')
     .replace(/.Univ\./gi, ' University')
     .replace(/.Hp\./gi, ' Hospital');
+
+  // アプリ側でnameIpaによる<phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
+  if (!ssmlEn.includes('<phoneme')) {
+    ssmlEn = applyLegacyIpaReplacements(ssmlEn);
+  }
 
   if (ssmlEn.trim().length === 0) {
     throw new HttpsError(
