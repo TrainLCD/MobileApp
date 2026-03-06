@@ -21,7 +21,7 @@ export const wrapIpa = (
   if (!nameIpa) {
     return nameRoman;
   }
-  return `<phoneme alphabet="ipa" ph="${escapeXml(nameIpa)}">${escapeXml(nameRoman)}</phoneme>`;
+  return `<phoneme alphabet="ipa" ph="${escapeXml(nameIpa)}" xml:lang="ja-JP">${escapeXml(nameRoman)}</phoneme>`;
 };
 
 export class SSMLBuilder {
