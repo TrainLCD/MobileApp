@@ -13,4 +13,24 @@ describe('utils/normalize.ts', () => {
   it.each(['Tokyo', 'tOkyo'])('text: %s', (text) => {
     expect(normalizeRomanText(text)).toBe('Tokyo');
   });
+
+  it('should not modify SSML/XML tags', () => {
+    expect(
+      normalizeRomanText(
+        '<phoneme alphabet="ipa" ph="çɯɯga" xml:lang="ja-JP">HYUGA</phoneme>'
+      )
+    ).toBe(
+      '<phoneme alphabet="ipa" ph="çɯɯga" xml:lang="ja-JP">Hyuga</phoneme>'
+    );
+  });
+
+  it('should handle mixed text and SSML tags', () => {
+    expect(
+      normalizeRomanText(
+        'The next stop is <phoneme alphabet="ipa" ph="naɾɯtoː" xml:lang="ja-JP">NARUTO</phoneme>.'
+      )
+    ).toBe(
+      'The next stop is <phoneme alphabet="ipa" ph="naɾɯtoː" xml:lang="ja-JP">Naruto</phoneme>.'
+    );
+  });
 });
