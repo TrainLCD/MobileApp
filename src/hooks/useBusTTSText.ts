@@ -138,7 +138,7 @@ export const useBusTTSText = (
   const allStops = useMemo(
     () =>
       slicedStations.filter((s) => {
-        if (s.id === station?.id) {
+        if (s.groupId === station?.groupId) {
           return false;
         }
         return !getIsPass(s);
