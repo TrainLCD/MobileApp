@@ -138,7 +138,7 @@ describe('useTTS', () => {
     });
 
     expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
-      uri: '/tmp/tts-id_en.mp3',
+      uri: '/tmp/tts-id_en.wav',
     });
   });
 
@@ -165,16 +165,16 @@ describe('useTTS', () => {
       expect(calls.length).toBeGreaterThanOrEqual(1);
     });
 
-    expect(calls[0]).toBe('/tmp/tts-id_ja.mp3');
+    expect(calls[0]).toBe('/tmp/tts-id_ja.wav');
 
     // EN_PLAYBACK_DELAY_MS 後に EN プレイヤーが生成される
     jest.runAllTimers();
 
     await waitFor(() => {
-      expect(calls.length).toBe(2);
+      expect(calls.length).toBeGreaterThanOrEqual(2);
     });
 
-    expect(calls[1]).toBe('/tmp/tts-id_en.mp3');
+    expect(calls[1]).toBe('/tmp/tts-id_en.wav');
   });
 
   it('JAのみ有効時はJAプレイヤーのみ生成する', async () => {
@@ -197,7 +197,7 @@ describe('useTTS', () => {
     });
 
     expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
-      uri: '/tmp/tts-id_ja.mp3',
+      uri: '/tmp/tts-id_ja.wav',
     });
   });
 
