@@ -32,8 +32,8 @@ describe('fetchSpeechAudio', () => {
 
     expect(result).toEqual({
       id: 'tts-123',
-      pathJa: '/tmp/tts-123_ja.mp3',
-      pathEn: '/tmp/tts-123_en.mp3',
+      pathJa: '/tmp/tts-123_ja.wav',
+      pathEn: '/tmp/tts-123_en.wav',
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -124,5 +124,72 @@ describe('fetchSpeechAudio', () => {
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.data.ssmlJa).toBe('<speak>テスト</speak>');
     expect(body.data.ssmlEn).toBe('<speak>test</speak>');
+  });
+
+  it('PCM MIME の場合は WAV として保存する', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-124',
+          jaAudioContent: 'AAECAw==',
+          enAudioContent: 'AAECAw==',
+          jaAudioMimeType: 'audio/pcm;rate=24000',
+          enAudioMimeType: 'audio/L16;rate=24000',
+        },
+      }),
+    });
+
+    const result = await fetchSpeechAudio(defaultOptions);
+
+    expect(result).toEqual({
+      id: 'tts-124',
+      pathJa: '/tmp/tts-124_ja.wav',
+      pathEn: '/tmp/tts-124_en.wav',
+    });
+  });
+
+  it('MP3 MIME の場合は MP3 として保存する', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-125',
+          jaAudioContent: 'QQ==',
+          enAudioContent: 'QQ==',
+          jaAudioMimeType: 'audio/mpeg',
+          enAudioMimeType: 'audio/mp3',
+        },
+      }),
+    });
+
+    const result = await fetchSpeechAudio(defaultOptions);
+
+    expect(result).toEqual({
+      id: 'tts-125',
+      pathJa: '/tmp/tts-125_ja.mp3',
+      pathEn: '/tmp/tts-125_en.mp3',
+    });
+  });
+
+  it('MIME 不明の場合は WAV として保存する', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-126',
+          jaAudioContent: 'AAECAw==',
+          enAudioContent: 'AAECAw==',
+        },
+      }),
+    });
+
+    const result = await fetchSpeechAudio(defaultOptions);
+
+    expect(result).toEqual({
+      id: 'tts-126',
+      pathJa: '/tmp/tts-126_ja.wav',
+      pathEn: '/tmp/tts-126_en.wav',
+    });
   });
 });

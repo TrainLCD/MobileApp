@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
+  ActionSheetIOS,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -60,7 +62,32 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: 'bold',
   },
+  picker: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    width: '50%',
+  },
 });
+
+const TTS_VOICE_NAMES = [
+  'Achernar',
+  'Aoede',
+  'Autonoe',
+  'Callirrhoe',
+  'Despina',
+  'Erinome',
+  'Gacrux',
+  'Kore',
+  'Laomedeia',
+  'Leda',
+  'Pulcherrima',
+  'Sulafat',
+  'Vindemiatrix',
+  'Zephyr',
+] as const;
 
 const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useAtom(tuningState);
@@ -68,6 +95,20 @@ const TuningSettings: React.FC = () => {
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+
+  useEffect(() => {
+    (async () => {
+      const [jaVoice, enVoice] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
+      ]);
+      setSettings((prev) => ({
+        ...prev,
+        ttsJaVoiceName: jaVoice ?? '',
+        ttsEnVoiceName: enVoice ?? '',
+      }));
+    })();
+  }, [setSettings]);
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
@@ -125,6 +166,44 @@ const TuningSettings: React.FC = () => {
         text
       ),
     }));
+
+  const showVoicePicker = (
+    current: string,
+    onSelect: (voice: string) => void
+  ) => {
+    if (Platform.OS === 'ios') {
+      const options = [...TTS_VOICE_NAMES, translate('cancel')];
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: options.length - 1,
+        },
+        (index) => {
+          if (index < TTS_VOICE_NAMES.length) {
+            onSelect(TTS_VOICE_NAMES[index]);
+          }
+        }
+      );
+    } else {
+      Alert.alert(translate('tuningItemTTSVoice'), undefined, [
+        ...TTS_VOICE_NAMES.map((name) => ({
+          text: current === name ? `● ${name}` : name,
+          onPress: () => onSelect(name),
+        })),
+        { text: translate('cancel'), style: 'cancel' as const },
+      ]);
+    }
+  };
+
+  const handleJaVoiceNameChange = (voice: string) => {
+    setSettings((prev) => ({ ...prev, ttsJaVoiceName: voice }));
+    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME, voice);
+  };
+
+  const handleEnVoiceNameChange = (voice: string) => {
+    setSettings((prev) => ({ ...prev, ttsEnVoiceName: voice }));
+    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME, voice);
+  };
 
   const toggleDevOverlayEnabled = () =>
     setSettings((prev) => ({
@@ -244,6 +323,56 @@ const TuningSettings: React.FC = () => {
           />
           <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
+
+        <Typography style={styles.settingItemGroupTitle}>
+          {translate('tuningItemTTSVoice')}
+        </Typography>
+
+        <Typography style={styles.settingItemTitle}>
+          {translate('tuningItemTTSJaVoiceName')}
+        </Typography>
+        <Pressable
+          style={[styles.picker, { borderColor: isLEDTheme ? '#666' : '#aaa' }]}
+          onPress={() =>
+            showVoicePicker(settings.ttsJaVoiceName, handleJaVoiceNameChange)
+          }
+        >
+          <Typography
+            style={{
+              color: settings.ttsJaVoiceName
+                ? isLEDTheme
+                  ? '#fff'
+                  : 'black'
+                : '#999',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            }}
+          >
+            {settings.ttsJaVoiceName || 'Kore'}
+          </Typography>
+        </Pressable>
+
+        <Typography style={styles.settingItemTitle}>
+          {translate('tuningItemTTSEnVoiceName')}
+        </Typography>
+        <Pressable
+          style={[styles.picker, { borderColor: isLEDTheme ? '#666' : '#aaa' }]}
+          onPress={() =>
+            showVoicePicker(settings.ttsEnVoiceName, handleEnVoiceNameChange)
+          }
+        >
+          <Typography
+            style={{
+              color: settings.ttsEnVoiceName
+                ? isLEDTheme
+                  ? '#fff'
+                  : 'black'
+                : '#999',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            }}
+          >
+            {settings.ttsEnVoiceName || 'Kore'}
+          </Typography>
+        </Pressable>
 
         <View style={styles.switchSettingItem}>
           {isLEDTheme ? (

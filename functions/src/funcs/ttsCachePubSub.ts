@@ -5,6 +5,17 @@ import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 const firestore = admin.firestore();
 const storage = admin.storage();
 
+const getCacheFileExtension = (mimeType: string): 'mp3' | 'wav' | 'pcm' => {
+  const normalized = mimeType.toLowerCase();
+  if (normalized.includes('mpeg') || normalized.includes('mp3')) {
+    return 'mp3';
+  }
+  if (normalized.includes('wav')) {
+    return 'wav';
+  }
+  return 'pcm';
+};
+
 export const ttsCachePubSub = onMessagePublished(
   { topic: 'tts-cache', region: 'asia-northeast1' },
   async (event) => {
@@ -12,6 +23,8 @@ export const ttsCachePubSub = onMessagePublished(
       id,
       jaAudioContent,
       enAudioContent,
+      jaAudioMimeType,
+      enAudioMimeType,
       ssmlJa,
       ssmlEn,
       voiceJa,
@@ -29,21 +42,31 @@ export const ttsCachePubSub = onMessagePublished(
 
     const jaTtsCachePathBase = 'caches/tts/ja';
     const jaTtsBuf = Buffer.from(jaAudioContent, 'base64');
-    const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.mp3`;
+    const jaContentType =
+      typeof jaAudioMimeType === 'string' && jaAudioMimeType
+        ? jaAudioMimeType
+        : 'audio/pcm';
+    const jaExt = getCacheFileExtension(jaContentType);
+    const jaTtsCachePath = `${jaTtsCachePathBase}/${id}.${jaExt}`;
 
     const enTtsCachePathBase = 'caches/tts/en';
     const enTtsBuf = Buffer.from(enAudioContent, 'base64');
-    const enTtsCachePath = `${enTtsCachePathBase}/${id}.mp3`;
+    const enContentType =
+      typeof enAudioMimeType === 'string' && enAudioMimeType
+        ? enAudioMimeType
+        : 'audio/pcm';
+    const enExt = getCacheFileExtension(enContentType);
+    const enTtsCachePath = `${enTtsCachePathBase}/${id}.${enExt}`;
 
     await Promise.all([
       storage
         .bucket()
         .file(jaTtsCachePath)
-        .save(jaTtsBuf, { contentType: 'audio/mpeg', resumable: false }),
+        .save(jaTtsBuf, { contentType: jaContentType, resumable: false }),
       storage
         .bucket()
         .file(enTtsCachePath)
-        .save(enTtsBuf, { contentType: 'audio/mpeg', resumable: false }),
+        .save(enTtsBuf, { contentType: enContentType, resumable: false }),
     ]);
 
     await firestore
@@ -55,9 +78,11 @@ export const ttsCachePubSub = onMessagePublished(
         id,
         ssmlJa,
         pathJa: jaTtsCachePath,
+        jaAudioMimeType: jaContentType,
         voiceJa,
         ssmlEn,
         pathEn: enTtsCachePath,
+        enAudioMimeType: enContentType,
         voiceEn,
         createdAt: Timestamp.now(),
       });

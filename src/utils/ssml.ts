@@ -21,7 +21,12 @@ export const wrapIpa = (
   if (!nameIpa) {
     return nameRoman;
   }
-  return `<phoneme alphabet="ipa" ph="${escapeXml(nameIpa)}" xml:lang="ja-JP">${escapeXml(nameRoman)}</phoneme>`;
+
+  const suffixMatch = nameRoman.match(/\s(Main\sLine|Line)$/);
+  const suffix = suffixMatch ? suffixMatch[0] : '';
+  const core = suffix ? nameRoman.slice(0, -suffix.length) : nameRoman;
+
+  return `<phoneme alphabet="ipa" ph="${escapeXml(nameIpa)}" xml:lang="ja-JP">${escapeXml(core)}</phoneme>${suffix}`;
 };
 
 export class SSMLBuilder {

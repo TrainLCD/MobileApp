@@ -12,7 +12,7 @@ function printUsage(): void {
   );
   console.error('  --exact                  部分一致ではなく完全一致で検索');
   console.error(
-    '  --delete                 検索結果を確認後、FirestoreドキュメントとストレージのMP3を削除'
+    '  --delete                 検索結果を確認後、Firestoreドキュメントとストレージ音声を削除'
   );
   console.error(
     '  --bucket <name>          Cloud Storageバケット名を指定（--delete時は必須）'
@@ -178,14 +178,12 @@ async function main(): Promise<void> {
   }
 
   if (!bucket) {
-    console.error(
-      'Error: --delete には --bucket の指定が必要です。'
-    );
+    console.error('Error: --delete には --bucket の指定が必要です。');
     process.exit(1);
   }
 
   const confirmed = await confirm(
-    `\n上記 ${results.length}件のドキュメントとストレージのMP3ファイルを削除しますか？ (y/N): `
+    `\n上記 ${results.length}件のドキュメントとストレージ音声ファイルを削除しますか？ (y/N): `
   );
   if (!confirmed) {
     console.log('削除をキャンセルしました。');
@@ -197,8 +195,10 @@ async function main(): Promise<void> {
   for (const doc of results) {
     const data = doc.data();
     const id: string = doc.id;
-    const storagePathJa = `caches/tts/ja/${id}.mp3`;
-    const storagePathEn = `caches/tts/en/${id}.mp3`;
+    const storagePathJa =
+      typeof data.pathJa === 'string' ? data.pathJa : `caches/tts/ja/${id}.mp3`;
+    const storagePathEn =
+      typeof data.pathEn === 'string' ? data.pathEn : `caches/tts/en/${id}.mp3`;
 
     console.log(`削除中: ${id}...`);
 

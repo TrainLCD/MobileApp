@@ -1,11 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getIdToken } from '@react-native-firebase/auth';
 import { setAudioModeAsync } from 'expo-audio';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
+import { ASYNC_STORAGE_KEYS } from '../constants';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
+import tuningState from '../store/atoms/tuning';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
 import { isDevApp } from '../utils/isDevApp';
 import {
@@ -33,6 +36,8 @@ export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
+  const { ttsJaVoiceName, ttsEnVoiceName } = useAtomValue(tuningState);
+  const setTuning = useSetAtom(tuningState);
   const currentLine = useCurrentLine();
   const stoppingState = useStoppingState();
   const prevStoppingState = usePrevious(stoppingState);
@@ -74,6 +79,20 @@ export const useTTS = (): void => {
     jaHandleRef.current = null;
     enHandleRef.current = null;
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const [jaVoice, enVoice] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
+      ]);
+      setTuning((prev) => ({
+        ...prev,
+        ttsJaVoiceName: jaVoice ?? '',
+        ttsEnVoiceName: enVoice ?? '',
+      }));
+    })();
+  }, [setTuning]);
 
   useEffect(() => {
     (async () => {
@@ -231,6 +250,8 @@ export const useTTS = (): void => {
           textEn: en,
           apiUrl: ttsApiUrl,
           idToken,
+          jaVoiceName: ttsJaVoiceName || undefined,
+          enVoiceName: ttsEnVoiceName || undefined,
         });
 
         if (!fetched) {
@@ -245,7 +266,14 @@ export const useTTS = (): void => {
         finishPlaying();
       }
     },
-    [finishPlaying, speakFromPath, ttsApiUrl, user]
+    [
+      finishPlaying,
+      speakFromPath,
+      ttsApiUrl,
+      ttsEnVoiceName,
+      ttsJaVoiceName,
+      user,
+    ]
   );
 
   speechWithTextRef.current = speechWithText;
