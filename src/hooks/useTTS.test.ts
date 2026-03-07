@@ -3,6 +3,7 @@ import { createStore, Provider } from 'jotai';
 import React from 'react';
 import speechState from '~/store/atoms/speech';
 import { mockFetch } from '~/utils/test/ttsMocks';
+import { clearFetchCache } from '~/utils/ttsSpeechFetcher';
 import { useTTS } from './useTTS';
 
 jest.mock('~/utils/isDevApp', () => ({
@@ -22,11 +23,17 @@ jest.mock('./useCurrentLine', () => ({
 }));
 
 jest.mock('./useTTSText', () => ({
-  useTTSText: jest.fn(() => ['ja text', 'en text']),
+  useTTSText: jest.fn(() => ({
+    text: ['ja text', 'en text'],
+    nextText: ['ja next', 'en next'],
+  })),
 }));
 
 jest.mock('./useBusTTSText', () => ({
-  useBusTTSText: jest.fn(() => ['ja text', 'en text']),
+  useBusTTSText: jest.fn(() => ({
+    text: ['ja text', 'en text'],
+    nextText: ['ja next', 'en next'],
+  })),
 }));
 
 jest.mock('./usePrevious', () => ({
@@ -94,6 +101,8 @@ const mockSuccessfulFetch = () => {
         id: 'tts-id',
         jaAudioContent: 'QQ==',
         enAudioContent: 'QQ==',
+        jaAudioMimeType: 'audio/mpeg',
+        enAudioMimeType: 'audio/mpeg',
       },
     }),
   });
@@ -103,13 +112,17 @@ describe('useTTS', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
+    clearFetchCache();
     mockSuccessfulFetch();
     mockCreateAudioPlayer.mockImplementation(() => createMockPlayer());
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
-    useTTSText.mockReturnValue(['ja text', 'en text']);
+    useTTSText.mockReturnValue({
+      text: ['ja text', 'en text'],
+      nextText: ['ja next', 'en next'],
+    });
   });
 
   afterEach(() => {
@@ -171,7 +184,7 @@ describe('useTTS', () => {
     jest.runAllTimers();
 
     await waitFor(() => {
-      expect(calls.length).toBe(2);
+      expect(calls.length).toBeGreaterThanOrEqual(2);
     });
 
     expect(calls[1]).toBe('/tmp/tts-id_en.mp3');
@@ -227,7 +240,10 @@ describe('useTTS', () => {
     store.set(speechState, defaultSpeechState);
 
     // 最初は有効なテキストで再生開始
-    useTTSText.mockReturnValue(['ja text', 'en text']);
+    useTTSText.mockReturnValue({
+      text: ['ja text', 'en text'],
+      nextText: ['ja next', 'en next'],
+    });
 
     const { rerender } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),
@@ -238,13 +254,13 @@ describe('useTTS', () => {
     });
 
     // テキストを空にして再描画
-    useTTSText.mockReturnValue(['', '']);
+    useTTSText.mockReturnValue({ text: ['', ''], nextText: [] });
     rerender({});
 
     jest.runAllTimers();
 
-    // 空テキストではfetchが追加で呼ばれない
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+    // 空テキストではfetchが追加で呼ばれない（本来のfetch + prefetch = 2回）
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it('APIエラー時にfinishPlayingが呼ばれる', async () => {

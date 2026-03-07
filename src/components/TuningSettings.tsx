@@ -1,11 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActionSheetIOS,
   Alert,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -60,7 +64,32 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: 'bold',
   },
+  picker: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    width: '50%',
+  },
 });
+
+const TTS_VOICE_NAMES = [
+  'Achernar',
+  'Aoede',
+  'Autonoe',
+  'Callirrhoe',
+  'Despina',
+  'Erinome',
+  'Gacrux',
+  'Kore',
+  'Laomedeia',
+  'Leda',
+  'Pulcherrima',
+  'Sulafat',
+  'Vindemiatrix',
+  'Zephyr',
+] as const;
 
 const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useAtom(tuningState);
@@ -68,6 +97,18 @@ const TuningSettings: React.FC = () => {
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+
+  useEffect(() => {
+    (async () => {
+      const enVoice = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME
+      );
+      setSettings((prev) => ({
+        ...prev,
+        ttsEnVoiceName: enVoice ?? '',
+      }));
+    })();
+  }, [setSettings]);
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
@@ -125,6 +166,38 @@ const TuningSettings: React.FC = () => {
         text
       ),
     }));
+
+  const [voicePickerState, setVoicePickerState] = useState<{
+    current: string;
+    onSelect: (voice: string) => void;
+  } | null>(null);
+
+  const showVoicePicker = (
+    current: string,
+    onSelect: (voice: string) => void
+  ) => {
+    if (Platform.OS === 'ios') {
+      const options = [...TTS_VOICE_NAMES, translate('cancel')];
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: options.length - 1,
+        },
+        (index) => {
+          if (index < TTS_VOICE_NAMES.length) {
+            onSelect(TTS_VOICE_NAMES[index]);
+          }
+        }
+      );
+    } else {
+      setVoicePickerState({ current, onSelect });
+    }
+  };
+
+  const handleEnVoiceNameChange = (voice: string) => {
+    setSettings((prev) => ({ ...prev, ttsEnVoiceName: voice }));
+    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME, voice);
+  };
 
   const toggleDevOverlayEnabled = () =>
     setSettings((prev) => ({
@@ -245,6 +318,33 @@ const TuningSettings: React.FC = () => {
           <Typography style={styles.settingItemUnit}>ms</Typography>
         </View>
 
+        <Typography style={styles.settingItemGroupTitle}>
+          {translate('tuningItemTTSVoice')}
+        </Typography>
+
+        <Typography style={styles.settingItemTitle}>
+          {translate('tuningItemTTSEnVoiceName')}
+        </Typography>
+        <Pressable
+          style={[styles.picker, { borderColor: isLEDTheme ? '#666' : '#aaa' }]}
+          onPress={() =>
+            showVoicePicker(settings.ttsEnVoiceName, handleEnVoiceNameChange)
+          }
+        >
+          <Typography
+            style={{
+              color: settings.ttsEnVoiceName
+                ? isLEDTheme
+                  ? '#fff'
+                  : 'black'
+                : '#999',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            }}
+          >
+            {settings.ttsEnVoiceName || translate('notSpecified')}
+          </Typography>
+        </Pressable>
+
         <View style={styles.switchSettingItem}>
           {isLEDTheme ? (
             <LEDThemeSwitch
@@ -321,6 +421,80 @@ const TuningSettings: React.FC = () => {
         </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />
+
+      {voicePickerState && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible
+          onRequestClose={() => setVoicePickerState(null)}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={() => setVoicePickerState(null)}
+          >
+            <Pressable
+              style={{
+                backgroundColor: isLEDTheme ? '#222' : '#fff',
+                borderRadius: 12,
+                width: '80%',
+                maxHeight: '60%',
+                paddingVertical: 8,
+              }}
+            >
+              <FlatList
+                data={TTS_VOICE_NAMES}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={{ paddingHorizontal: 20, paddingVertical: 12 }}
+                    onPress={() => {
+                      voicePickerState.onSelect(item);
+                      setVoicePickerState(null);
+                    }}
+                  >
+                    <Typography
+                      style={{
+                        fontSize: RFValue(14),
+                        color: isLEDTheme ? '#fff' : '#000',
+                        fontFamily: isLEDTheme
+                          ? FONTS.JFDotJiskan24h
+                          : undefined,
+                      }}
+                    >
+                      {voicePickerState.current === item ? `● ${item}` : item}
+                    </Typography>
+                  </Pressable>
+                )}
+              />
+              <Pressable
+                style={{
+                  paddingVertical: 12,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopColor: isLEDTheme ? '#555' : '#ccc',
+                  alignItems: 'center',
+                }}
+                onPress={() => setVoicePickerState(null)}
+              >
+                <Typography
+                  style={{
+                    fontSize: RFValue(14),
+                    color: '#999',
+                    fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                  }}
+                >
+                  {translate('cancel')}
+                </Typography>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </KeyboardAvoidingView>
   );
 };

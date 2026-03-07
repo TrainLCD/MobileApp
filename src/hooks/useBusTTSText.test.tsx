@@ -110,7 +110,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([]);
+      expect(result.current).toEqual({ text: [], nextText: [] });
     });
   });
 
@@ -148,7 +148,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText?.indexOf('undefined')).toBe(-1);
       expect(enText?.indexOf('undefined')).toBe(-1);
     }
@@ -162,7 +162,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('をご利用くださいまして、ありがとうございます');
       expect(jaText).toContain('次は');
       expect(jaText).toContain('このバスは');
@@ -179,7 +179,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('次は');
       expect(jaText).not.toContain('ご利用くださいまして');
       expect(enText).toContain('The next stop is');
@@ -193,7 +193,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('Arriving at');
     });
@@ -207,7 +207,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('をご利用くださいまして');
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
@@ -222,7 +222,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('We will soon make a brief stop at');
     });
@@ -236,7 +236,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('今日も');
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
@@ -251,7 +251,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('The next stop is');
     });
@@ -265,7 +265,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('今日も');
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
@@ -281,7 +281,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('We will soon be making a brief stop at');
     });
@@ -295,7 +295,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('今日も');
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
@@ -310,7 +310,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('The next stop is');
     });
@@ -324,7 +324,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('をご利用くださいまして');
       expect(jaText).toContain('次は');
       expect(jaText).toContain('このバスは');
@@ -339,7 +339,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('We will soon be arriving at');
     });
@@ -353,7 +353,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('次は');
       expect(enText).toContain('The next stop is');
     });
@@ -365,7 +365,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('Arriving at');
     });
@@ -379,7 +379,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('今日も');
       expect(jaText).toContain('次は');
       expect(enText).toContain('This is the');
@@ -392,7 +392,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('The next stop is');
     });
@@ -406,7 +406,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('今日も');
       expect(jaText).toContain('次は');
       expect(enText).toContain('This is the');
@@ -419,7 +419,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('The next stop is');
     });
@@ -433,7 +433,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('行きです');
       expect(jaText).toContain('次は');
@@ -448,7 +448,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText, enText] = result.current;
+      const [jaText, enText] = result.current.text;
       expect(jaText).toContain('まもなく');
       expect(enText).toContain('We will soon be arriving at');
     });
@@ -462,7 +462,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [, enText] = result.current;
+      const [, enText] = result.current.text;
       expect(enText).not.toContain('Station Number');
       expect(enText).not.toContain('station number');
     });
@@ -476,7 +476,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [jaText] = result.current;
+      const [jaText] = result.current.text;
       expect(jaText).not.toContain('直通');
     });
 
@@ -487,7 +487,7 @@ describe('useBusTTSText', () => {
           wrapper: wrapper,
         }
       );
-      const [, enText] = result.current;
+      const [, enText] = result.current.text;
       expect(enText).not.toContain('on the');
     });
   });

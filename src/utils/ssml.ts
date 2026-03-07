@@ -1,29 +1,5 @@
 type SSMLElementType = 'sub' | 'phoneme' | 'say-as';
 
-const escapeXml = (s: string): string =>
-  s
-    .replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-
-/**
- * nameIpaが存在する場合は<phoneme>タグでラップし、なければnameRomanをそのまま返す
- */
-export const wrapIpa = (
-  nameRoman: string | null | undefined,
-  nameIpa: string | null | undefined
-): string => {
-  if (!nameRoman) {
-    return '';
-  }
-  if (!nameIpa) {
-    return nameRoman;
-  }
-  return `<phoneme alphabet="ipa" ph="${escapeXml(nameIpa)}" xml:lang="ja-JP">${escapeXml(nameRoman)}</phoneme>`;
-};
-
 export class SSMLBuilder {
   private addSpaceByDefault = true;
   private elms: string[] = [];

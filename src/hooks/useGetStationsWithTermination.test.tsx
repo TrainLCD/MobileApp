@@ -20,7 +20,6 @@ const mkStation = (groupId: number, id: number = groupId): StationType => ({
   id,
   groupId,
   name: '',
-  nameIpa: undefined,
   nameKatakana: '',
   nameRoman: undefined,
   nameChinese: undefined,

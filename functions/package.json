@@ -21,7 +21,7 @@
     "find-orphaned-tts:prod": "tsx src/cli/find-orphaned-tts.ts --project trainlcd-ea91e --bucket trainlcd-ea91e.firebasestorage.app"
   },
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "lib/index.js",
   "dependencies": {

@@ -18,10 +18,7 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /Isesaki/gi,
       '<phoneme alphabet="ipa" ph="isesakʲi">いせさき</phoneme>'
     )
-    .replace(
-      /Mejiro/gi,
-      '<phoneme alphabet="ipa" ph="meʤiɾo">めじろ</phoneme>'
-    )
+    .replace(/Mejiro/gi, '<phoneme alphabet="ipa" ph="meʤiɾo">めじろ</phoneme>')
     .replace(
       /Keisei/gi,
       '<phoneme alphabet="ipa" ph="keisei">けいせい</phoneme>'
@@ -34,10 +31,7 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /Meitetsu/gi,
       '<phoneme alphabet="ipa" ph="meitetsɯ">めいてつ</phoneme>'
     )
-    .replace(
-      /Seibu/gi,
-      '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>'
-    )
+    .replace(/Seibu/gi, '<phoneme alphabet="ipa" ph="seibɯ">せいぶ</phoneme>')
     .replace(
       /Toride/gi,
       '<phoneme alphabet="ipa" ph="toɾʲide">とりで</phoneme>'
@@ -46,10 +40,7 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /Fukiage/gi,
       '<phoneme alphabet="ipa" ph="ɸɯkʲiaɡe">ふきあげ</phoneme>'
     )
-    .replace(
-      /\bFuse\b/gi,
-      '<phoneme alphabet="ipa" ph="ɸɯse">ふせ</phoneme>'
-    )
+    .replace(/\bFuse\b/gi, '<phoneme alphabet="ipa" ph="ɸɯse">ふせ</phoneme>')
     .replace(
       /\bInagekaigan\b/gi,
       '<phoneme alphabet="ipa" ph="inaɡekaiɡaɴ">いなげかいがん</phoneme>'
@@ -62,10 +53,7 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /\bKire-Uriwari\b/gi,
       '<phoneme alphabet="ipa" ph="kiɾeɯɾiwaɾi">きれうりわり</phoneme>'
     )
-    .replace(
-      /\bYao\b/gi,
-      '<phoneme alphabet="ipa" ph="jao">やお</phoneme>'
-    )
+    .replace(/\bYao\b/gi, '<phoneme alphabet="ipa" ph="jao">やお</phoneme>')
     .replace(
       /Shimbashi/gi,
       '<phoneme alphabet="ipa" ph="ɕimbaɕi">しんばし</phoneme>'
@@ -78,10 +66,7 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /Shinagawa/gi,
       '<phoneme alphabet="ipa" ph="ɕinaɡawa">しながわ</phoneme>'
     )
-    .replace(
-      /Ueno/gi,
-      '<phoneme alphabet="ipa" ph="ɯeno">うえの</phoneme>'
-    )
+    .replace(/Ueno/gi, '<phoneme alphabet="ipa" ph="ɯeno">うえの</phoneme>')
     .replace(
       /Ikebukuro/gi,
       '<phoneme alphabet="ipa" ph="ikebɯkɯɾo">いけぶくろ</phoneme>'
@@ -102,10 +87,7 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /Yokohama/gi,
       '<phoneme alphabet="ipa" ph="jokohama">よこはま</phoneme>'
     )
-    .replace(
-      /Chiba/gi,
-      '<phoneme alphabet="ipa" ph="t͡ɕiba">ちば</phoneme>'
-    )
+    .replace(/Chiba/gi, '<phoneme alphabet="ipa" ph="t͡ɕiba">ちば</phoneme>')
     .replace(
       /Kawasaki/gi,
       '<phoneme alphabet="ipa" ph="kawasakʲi">かわさき</phoneme>'
@@ -118,7 +100,4 @@ export const applyLegacyIpaReplacements = (text: string): string =>
       /Ryogoku/gi,
       '<phoneme alphabet="ipa" ph="ɾʲoːɡokɯ">りょうごく</phoneme>'
     )
-    .replace(
-      /koen/gi,
-      '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>'
-    );
+    .replace(/koen/gi, '<phoneme alphabet="ipa" ph="koeɴ">こえん</phoneme>');

@@ -60,7 +60,6 @@ export type Line = {
   lineType: Maybe<LineType>;
   nameChinese: Maybe<Scalars['String']['output']>;
   nameFull: Maybe<Scalars['String']['output']>;
-  nameIpa: Maybe<Scalars['String']['output']>;
   nameKatakana: Maybe<Scalars['String']['output']>;
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
@@ -81,7 +80,6 @@ export type LineNested = {
   lineType: Maybe<LineType>;
   nameChinese: Maybe<Scalars['String']['output']>;
   nameFull: Maybe<Scalars['String']['output']>;
-  nameIpa: Maybe<Scalars['String']['output']>;
   nameKatakana: Maybe<Scalars['String']['output']>;
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
@@ -256,7 +254,6 @@ export type Station = {
   longitude: Maybe<Scalars['Float']['output']>;
   name: Maybe<Scalars['String']['output']>;
   nameChinese: Maybe<Scalars['String']['output']>;
-  nameIpa: Maybe<Scalars['String']['output']>;
   nameKatakana: Maybe<Scalars['String']['output']>;
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
@@ -285,7 +282,6 @@ export type StationNested = {
   longitude: Maybe<Scalars['Float']['output']>;
   name: Maybe<Scalars['String']['output']>;
   nameChinese: Maybe<Scalars['String']['output']>;
-  nameIpa: Maybe<Scalars['String']['output']>;
   nameKatakana: Maybe<Scalars['String']['output']>;
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
@@ -424,7 +420,6 @@ export type LineNestedFieldsFragment = {
   averageDistance: number | null | undefined;
   color: string | null | undefined;
   lineType: LineType | null | undefined;
-  nameIpa: string | null | undefined;
   nameFull: string | null | undefined;
   nameKatakana: string | null | undefined;
   nameRoman: string | null | undefined;
@@ -465,7 +460,6 @@ export type LineNestedFieldsFragment = {
         id: number | null | undefined;
         groupId: number | null | undefined;
         name: string | null | undefined;
-        nameIpa: string | null | undefined;
         nameRoman: string | null | undefined;
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
@@ -522,7 +516,6 @@ export type TrainTypeNestedFieldsFragment = {
         averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameIpa: string | null | undefined;
         nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
@@ -563,7 +556,6 @@ export type TrainTypeNestedFieldsFragment = {
               id: number | null | undefined;
               groupId: number | null | undefined;
               name: string | null | undefined;
-              nameIpa: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
@@ -608,7 +600,6 @@ export type TrainTypeNestedFieldsFragment = {
         averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameIpa: string | null | undefined;
         nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
@@ -649,7 +640,6 @@ export type TrainTypeNestedFieldsFragment = {
               id: number | null | undefined;
               groupId: number | null | undefined;
               name: string | null | undefined;
-              nameIpa: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
@@ -694,7 +684,6 @@ export type StationFieldsFragment = {
   id: number | null | undefined;
   groupId: number | null | undefined;
   name: string | null | undefined;
-  nameIpa: string | null | undefined;
   nameKatakana: string | null | undefined;
   nameRoman: string | null | undefined;
   nameChinese: string | null | undefined;
@@ -729,7 +718,6 @@ export type StationFieldsFragment = {
         averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameIpa: string | null | undefined;
         nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
@@ -770,7 +758,6 @@ export type StationFieldsFragment = {
               id: number | null | undefined;
               groupId: number | null | undefined;
               name: string | null | undefined;
-              nameIpa: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
@@ -815,7 +802,6 @@ export type StationFieldsFragment = {
         averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameIpa: string | null | undefined;
         nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
@@ -856,7 +842,6 @@ export type StationFieldsFragment = {
               id: number | null | undefined;
               groupId: number | null | undefined;
               name: string | null | undefined;
-              nameIpa: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
@@ -915,7 +900,6 @@ export type StationFieldsFragment = {
               averageDistance: number | null | undefined;
               color: string | null | undefined;
               lineType: LineType | null | undefined;
-              nameIpa: string | null | undefined;
               nameFull: string | null | undefined;
               nameKatakana: string | null | undefined;
               nameRoman: string | null | undefined;
@@ -956,7 +940,6 @@ export type StationFieldsFragment = {
                     id: number | null | undefined;
                     groupId: number | null | undefined;
                     name: string | null | undefined;
-                    nameIpa: string | null | undefined;
                     nameRoman: string | null | undefined;
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
@@ -1001,7 +984,6 @@ export type StationFieldsFragment = {
               averageDistance: number | null | undefined;
               color: string | null | undefined;
               lineType: LineType | null | undefined;
-              nameIpa: string | null | undefined;
               nameFull: string | null | undefined;
               nameKatakana: string | null | undefined;
               nameRoman: string | null | undefined;
@@ -1042,7 +1024,6 @@ export type StationFieldsFragment = {
                     id: number | null | undefined;
                     groupId: number | null | undefined;
                     name: string | null | undefined;
-                    nameIpa: string | null | undefined;
                     nameRoman: string | null | undefined;
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
@@ -1098,7 +1079,6 @@ export type GetStationsNearbyQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
     nameChinese: string | null | undefined;
@@ -1133,7 +1113,6 @@ export type GetStationsNearbyQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -1174,7 +1153,6 @@ export type GetStationsNearbyQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -1219,7 +1197,6 @@ export type GetStationsNearbyQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -1260,7 +1237,6 @@ export type GetStationsNearbyQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -1319,7 +1295,6 @@ export type GetStationsNearbyQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -1360,7 +1335,6 @@ export type GetStationsNearbyQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -1405,7 +1379,6 @@ export type GetStationsNearbyQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -1446,7 +1419,6 @@ export type GetStationsNearbyQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -1495,7 +1467,6 @@ export type StationPresetFieldsFragment = {
   id: number | null | undefined;
   groupId: number | null | undefined;
   name: string | null | undefined;
-  nameIpa: string | null | undefined;
   nameRoman: string | null | undefined;
   stationNumbers:
     | Array<{
@@ -1569,7 +1540,6 @@ export type GetLineListStationsPresetQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameRoman: string | null | undefined;
     stationNumbers:
       | Array<{
@@ -1644,7 +1614,6 @@ export type GetLineGroupListStationsPresetQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameRoman: string | null | undefined;
     stationNumbers:
       | Array<{
@@ -1714,7 +1683,6 @@ export type StationLightFieldsFragment = {
   id: number | null | undefined;
   groupId: number | null | undefined;
   name: string | null | undefined;
-  nameIpa: string | null | undefined;
   nameRoman: string | null | undefined;
   nameChinese: string | null | undefined;
   nameKorean: string | null | undefined;
@@ -1734,7 +1702,6 @@ export type GetLineListStationsLightQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameRoman: string | null | undefined;
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
@@ -1756,7 +1723,6 @@ export type GetLineStationsQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
     nameChinese: string | null | undefined;
@@ -1791,7 +1757,6 @@ export type GetLineStationsQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -1832,7 +1797,6 @@ export type GetLineStationsQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -1877,7 +1841,6 @@ export type GetLineStationsQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -1918,7 +1881,6 @@ export type GetLineStationsQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -1977,7 +1939,6 @@ export type GetLineStationsQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -2018,7 +1979,6 @@ export type GetLineStationsQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -2063,7 +2023,6 @@ export type GetLineStationsQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -2104,7 +2063,6 @@ export type GetLineStationsQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -2160,7 +2118,6 @@ export type GetStationsByNameQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
     nameChinese: string | null | undefined;
@@ -2195,7 +2152,6 @@ export type GetStationsByNameQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -2236,7 +2192,6 @@ export type GetStationsByNameQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -2281,7 +2236,6 @@ export type GetStationsByNameQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -2322,7 +2276,6 @@ export type GetStationsByNameQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -2381,7 +2334,6 @@ export type GetStationsByNameQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -2422,7 +2374,6 @@ export type GetStationsByNameQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -2467,7 +2418,6 @@ export type GetStationsByNameQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -2508,7 +2458,6 @@ export type GetStationsByNameQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -2562,7 +2511,6 @@ export type GetLineGroupStationsQuery = {
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
-    nameIpa: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
     nameChinese: string | null | undefined;
@@ -2597,7 +2545,6 @@ export type GetLineGroupStationsQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -2638,7 +2585,6 @@ export type GetLineGroupStationsQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -2683,7 +2629,6 @@ export type GetLineGroupStationsQuery = {
           averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
@@ -2724,7 +2669,6 @@ export type GetLineGroupStationsQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -2783,7 +2727,6 @@ export type GetLineGroupStationsQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -2824,7 +2767,6 @@ export type GetLineGroupStationsQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -2869,7 +2811,6 @@ export type GetLineGroupStationsQuery = {
                 averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameRoman: string | null | undefined;
@@ -2910,7 +2851,6 @@ export type GetLineGroupStationsQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -2959,7 +2899,6 @@ export type LineRouteFieldsFragment = {
   id: number | null | undefined;
   color: string | null | undefined;
   lineType: LineType | null | undefined;
-  nameIpa: string | null | undefined;
   nameShort: string | null | undefined;
   nameRoman: string | null | undefined;
   lineSymbols:
@@ -2977,7 +2916,6 @@ export type LineRouteFieldsFragment = {
         id: number | null | undefined;
         groupId: number | null | undefined;
         name: string | null | undefined;
-        nameIpa: string | null | undefined;
         nameRoman: string | null | undefined;
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
@@ -3029,7 +2967,6 @@ export type TrainTypeRouteFieldsFragment = {
         id: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameIpa: string | null | undefined;
         nameShort: string | null | undefined;
         nameRoman: string | null | undefined;
         lineSymbols:
@@ -3047,7 +2984,6 @@ export type TrainTypeRouteFieldsFragment = {
               id: number | null | undefined;
               groupId: number | null | undefined;
               name: string | null | undefined;
-              nameIpa: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
@@ -3092,7 +3028,6 @@ export type TrainTypeRouteFieldsFragment = {
         id: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameIpa: string | null | undefined;
         nameShort: string | null | undefined;
         nameRoman: string | null | undefined;
         lineSymbols:
@@ -3110,7 +3045,6 @@ export type TrainTypeRouteFieldsFragment = {
               id: number | null | undefined;
               groupId: number | null | undefined;
               name: string | null | undefined;
-              nameIpa: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
@@ -3178,7 +3112,6 @@ export type GetRouteTypesLightQuery = {
                 id: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameShort: string | null | undefined;
                 nameRoman: string | null | undefined;
                 lineSymbols:
@@ -3196,7 +3129,6 @@ export type GetRouteTypesLightQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -3241,7 +3173,6 @@ export type GetRouteTypesLightQuery = {
                 id: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
-                nameIpa: string | null | undefined;
                 nameShort: string | null | undefined;
                 nameRoman: string | null | undefined;
                 lineSymbols:
@@ -3259,7 +3190,6 @@ export type GetRouteTypesLightQuery = {
                       id: number | null | undefined;
                       groupId: number | null | undefined;
                       name: string | null | undefined;
-                      nameIpa: string | null | undefined;
                       nameRoman: string | null | undefined;
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
@@ -3323,7 +3253,6 @@ export type GetStationTrainTypesLightQuery = {
           id: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameRoman: string | null | undefined;
           lineSymbols:
@@ -3341,7 +3270,6 @@ export type GetStationTrainTypesLightQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
@@ -3386,7 +3314,6 @@ export type GetStationTrainTypesLightQuery = {
           id: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameRoman: string | null | undefined;
           lineSymbols:
@@ -3404,7 +3331,6 @@ export type GetStationTrainTypesLightQuery = {
                 id: number | null | undefined;
                 groupId: number | null | undefined;
                 name: string | null | undefined;
-                nameIpa: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
