@@ -130,7 +130,12 @@ export const useBusTTSText = (
   );
 
   const betweenNextStation = useMemo(
-    () => slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
+    () =>
+      nextStationIndex === -1 ||
+      afterNextStationIndex === -1 ||
+      afterNextStationIndex <= nextStationIndex
+        ? []
+        : slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
     [afterNextStationIndex, nextStationIndex, slicedStations]
   );
 
