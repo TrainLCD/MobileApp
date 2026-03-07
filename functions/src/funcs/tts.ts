@@ -166,13 +166,6 @@ const synthesizeWithGoogleTts = async (
     );
   }
 
-  const volumeGainEnv = process.env.GOOGLE_TTS_VOLUME_GAIN_DB;
-  const volumeGainParsed =
-    volumeGainEnv === undefined ? 6 : Number(volumeGainEnv);
-  const volumeGainDb = Number.isFinite(volumeGainParsed)
-    ? Math.max(-96, Math.min(16, volumeGainParsed))
-    : 6;
-
   const ttsUrl = `https://texttospeech.googleapis.com/${GOOGLE_TTS_API_VERSION}/text:synthesize?key=${apiKey}`;
 
   const res = await fetch(ttsUrl, {
@@ -182,8 +175,7 @@ const synthesizeWithGoogleTts = async (
       voice: { languageCode, name: voiceName },
       audioConfig: {
         audioEncoding: 'MP3',
-        volumeGainDb,
-        effectsProfileId: ['handset-class-device'],
+        effectsProfileId: [],
       },
     }),
     method: 'POST',
@@ -387,6 +379,9 @@ export const tts = onCall(
         enAudioMimeType,
       };
     } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
       console.error('TTS API call failed:', error);
       throw new HttpsError('internal', 'TTS synthesis failed');
     }

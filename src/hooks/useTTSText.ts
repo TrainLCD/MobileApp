@@ -22,6 +22,17 @@ import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useStoppingState } from './useStoppingState';
 import { useTransferLines } from './useTransferLines';
 
+export interface TTSTextResult {
+  text: [string, string] | [];
+  nextText: [string, string] | [];
+}
+
+const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
+  if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
+  if (theme === APP_THEME.JO || theme === APP_THEME.JL) return APP_THEME.YAMANOTE;
+  return theme;
+};
+
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.TY]: { NEXT: '', ARRIVING: '' },
@@ -38,7 +49,7 @@ const EMPTY_TTS_TEXT = {
 export const useTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | [] => {
+): TTSTextResult => {
   const theme = useAtomValue(themeAtom);
 
   const {
@@ -1120,61 +1131,40 @@ export const useTTSText = (
       yamanoteTrainTypeEn,
     ]);
 
-  const jaText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = japaneseTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const resolved = resolveTemplateTheme(theme);
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const jaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.[stoppingState] ?? '',
+    [japaneseTemplate, resolved, stoppingState]
+  );
 
-    const tmpl = japaneseTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-    return tmpl;
-  }, [japaneseTemplate, stoppingState, theme]);
+  const enText = useMemo(
+    () => englishTemplate?.[resolved]?.[stoppingState] ?? '',
+    [englishTemplate, resolved, stoppingState]
+  );
 
-  const enText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const nextJaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.NEXT ?? '',
+    [japaneseTemplate, resolved]
+  );
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
-
-    const tmpl = englishTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-
-    return tmpl;
-  }, [englishTemplate, stoppingState, theme]);
+  const nextEnText = useMemo(
+    () => englishTemplate?.[resolved]?.NEXT ?? '',
+    [englishTemplate, resolved]
+  );
 
   if (!enabled) {
-    return [];
+    return { text: [], nextText: [] };
   }
 
-  return [
-    jaText.trim().replace(parenthesisRegexp, ''),
-    enText.trim().replace(parenthesisRegexp, ''),
-  ];
+  return {
+    text: [
+      jaText.trim().replace(parenthesisRegexp, ''),
+      enText.trim().replace(parenthesisRegexp, ''),
+    ],
+    nextText: [
+      nextJaText.trim().replace(parenthesisRegexp, ''),
+      nextEnText.trim().replace(parenthesisRegexp, ''),
+    ],
+  };
 };

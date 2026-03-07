@@ -54,14 +54,19 @@ export const useTTS = (): void => {
   const speechWithTextRef = useRef<
     ((ja: string, en: string) => Promise<void>) | null
   >(null);
-  const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
-  const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
-  const ttsText =
+  const trainTTSResult = useTTSText(firstSpeechRef.current, enabled);
+  const busTTSResult = useBusTTSText(firstSpeechRef.current, enabled);
+  const ttsResult =
     currentLine?.transportType === TransportType.Bus
-      ? busTTSText
-      : trainTTSText;
+      ? busTTSResult
+      : trainTTSResult;
+  const ttsText = ttsResult.text;
+  const prefetchText = ttsResult.nextText;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
+  const [prefetchJa, prefetchEn] = prefetchText.length
+    ? prefetchText
+    : [undefined, undefined];
   const shouldSpeakJapanese = ttsEnabledLanguages.includes('JA');
   const shouldSpeakEnglish = ttsEnabledLanguages.includes('EN');
 
@@ -277,6 +282,47 @@ export const useTTS = (): void => {
   );
 
   speechWithTextRef.current = speechWithText;
+
+  // 停車中に次の NEXT アナウンス音声を先読みフェッチする
+  const prefetchingRef = useRef(false);
+  useEffect(() => {
+    if (!enabled || !prefetchJa || !prefetchEn || prefetchingRef.current) {
+      return;
+    }
+    // 現在のテキストと同じなら既にフェッチ済み or これからフェッチされるので不要
+    if (prefetchJa === textJa && prefetchEn === textEn) {
+      return;
+    }
+    prefetchingRef.current = true;
+    (async () => {
+      try {
+        const idToken = user && (await getIdToken(user));
+        if (!idToken) return;
+        await fetchSpeechAudio({
+          textJa: prefetchJa,
+          textEn: prefetchEn,
+          apiUrl: ttsApiUrl,
+          idToken,
+          jaVoiceName: ttsJaVoiceName || undefined,
+          enVoiceName: ttsEnVoiceName || undefined,
+        });
+      } catch (e) {
+        console.warn('[useTTS] Prefetch failed:', e);
+      } finally {
+        prefetchingRef.current = false;
+      }
+    })();
+  }, [
+    enabled,
+    prefetchJa,
+    prefetchEn,
+    textJa,
+    textEn,
+    ttsApiUrl,
+    ttsEnVoiceName,
+    ttsJaVoiceName,
+    user,
+  ]);
 
   useEffect(() => {
     const currentSelectedBoundId = selectedBound?.id ?? null;

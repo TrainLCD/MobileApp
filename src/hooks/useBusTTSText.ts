@@ -7,6 +7,7 @@ import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
+import type { TTSTextResult } from './useTTSText';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -31,10 +32,16 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
 };
 
+const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
+  if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
+  if (theme === APP_THEME.JO || theme === APP_THEME.JL) return APP_THEME.YAMANOTE;
+  return theme;
+};
+
 export const useBusTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | [] => {
+): TTSTextResult => {
   const theme = useAtomValue(themeAtom);
 
   const { selectedBound: selectedBoundOrigin, stations } =
@@ -688,61 +695,40 @@ export const useBusTTSText = (
       station?.line?.company?.nameEnglishShort,
     ]);
 
-  const jaText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = japaneseTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const resolved = resolveTemplateTheme(theme);
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const jaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.[stoppingState] ?? '',
+    [japaneseTemplate, resolved, stoppingState]
+  );
 
-    const tmpl = japaneseTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-    return tmpl;
-  }, [japaneseTemplate, stoppingState, theme]);
+  const enText = useMemo(
+    () => englishTemplate?.[resolved]?.[stoppingState] ?? '',
+    [englishTemplate, resolved, stoppingState]
+  );
 
-  const enText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const nextJaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.NEXT ?? '',
+    [japaneseTemplate, resolved]
+  );
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
-
-    const tmpl = englishTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-
-    return tmpl;
-  }, [englishTemplate, stoppingState, theme]);
+  const nextEnText = useMemo(
+    () => englishTemplate?.[resolved]?.NEXT ?? '',
+    [englishTemplate, resolved]
+  );
 
   if (!enabled) {
-    return [];
+    return { text: [], nextText: [] };
   }
 
-  return [
-    jaText.trim().replace(parenthesisRegexp, ''),
-    enText.trim().replace(parenthesisRegexp, ''),
-  ];
+  return {
+    text: [
+      jaText.trim().replace(parenthesisRegexp, ''),
+      enText.trim().replace(parenthesisRegexp, ''),
+    ],
+    nextText: [
+      nextJaText.trim().replace(parenthesisRegexp, ''),
+      nextEnText.trim().replace(parenthesisRegexp, ''),
+    ],
+  };
 };

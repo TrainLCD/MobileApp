@@ -90,6 +90,18 @@ const normalizeAudioForFile = (
   };
 };
 
+const fetchCache = new Map<
+  string,
+  { id: string; pathJa: string; pathEn: string }
+>();
+
+const buildCacheKey = (opts: FetchSpeechOptions): string =>
+  `${opts.textJa}\0${opts.textEn}\0${opts.enVoiceName ?? ''}`;
+
+export const clearFetchCache = (): void => {
+  fetchCache.clear();
+};
+
 export const fetchSpeechAudio = async (
   options: FetchSpeechOptions
 ): Promise<{ id: string; pathJa: string; pathEn: string } | null> => {
@@ -97,6 +109,12 @@ export const fetchSpeechAudio = async (
 
   if (!textJa.length || !textEn.length) {
     return null;
+  }
+
+  const cacheKey = buildCacheKey(options);
+  const cached = fetchCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const reqBody = {
@@ -158,11 +176,9 @@ export const fetchSpeechAudio = async (
     fileJa.write(normalizedJa.bytes);
     fileEn.write(normalizedEn.bytes);
 
-    return {
-      id,
-      pathJa: fileJa.uri,
-      pathEn: fileEn.uri,
-    };
+    const result = { id, pathJa: fileJa.uri, pathEn: fileEn.uri };
+    fetchCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('[ttsSpeechFetcher] fetchSpeech error:', error);
     return null;

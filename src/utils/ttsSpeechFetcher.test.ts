@@ -1,5 +1,5 @@
 import { mockFetch } from '~/utils/test/ttsMocks';
-import { fetchSpeechAudio } from './ttsSpeechFetcher';
+import { clearFetchCache, fetchSpeechAudio } from './ttsSpeechFetcher';
 
 const defaultOptions = {
   textJa: 'こんにちは',
@@ -11,6 +11,7 @@ const defaultOptions = {
 describe('fetchSpeechAudio', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearFetchCache();
   });
 
   afterEach(() => {
