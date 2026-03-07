@@ -6,7 +6,6 @@ import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import { wrapIpa } from '../utils/ssml';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -93,22 +92,12 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : `${directionalStops?.map((s) => wrapIpa(s?.nameRoman, s?.nameIpa)).join(' and ')}`,
+        : `${directionalStops?.map((s) => s?.nameRoman ?? '').join(' and ')}`,
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
-  const nextStation = useMemo(
-    () =>
-      nextStationOrigin && {
-        ...nextStationOrigin,
-        nameRoman: wrapIpa(
-          nextStationOrigin.nameRoman,
-          nextStationOrigin.nameIpa
-        ),
-      },
-    [nextStationOrigin]
-  );
+  const nextStation = nextStationOrigin ?? null;
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
   const slicedStations = Array.from(
@@ -118,29 +107,7 @@ export const useBusTTSText = (
     .filter((s) => !!s) as Station[];
 
   const afterNextStationOrigin = useAfterNextStation();
-  const afterNextStation = useMemo<Station | undefined>(() => {
-    if (!afterNextStationOrigin) {
-      return undefined;
-    }
-
-    return {
-      ...afterNextStationOrigin,
-      nameRoman: wrapIpa(
-        afterNextStationOrigin?.nameRoman,
-        afterNextStationOrigin?.nameIpa
-      ),
-      lines:
-        afterNextStationOrigin.lines?.map(
-          (l: {
-            nameRoman: string | null | undefined;
-            nameIpa: string | null | undefined;
-          }) => ({
-            ...l,
-            nameRoman: wrapIpa(l.nameRoman, l.nameIpa),
-          })
-        ) ?? [],
-    } as Station;
-  }, [afterNextStationOrigin]);
+  const afterNextStation = afterNextStationOrigin;
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
@@ -161,17 +128,12 @@ export const useBusTTSText = (
 
   const allStops = useMemo(
     () =>
-      slicedStations
-        .filter((s) => {
-          if (s.id === station?.id) {
-            return false;
-          }
-          return !getIsPass(s);
-        })
-        .map((s) => ({
-          ...s,
-          nameRoman: wrapIpa(s.nameRoman, s.nameIpa),
-        })),
+      slicedStations.filter((s) => {
+        if (s.id === station?.id) {
+          return false;
+        }
+        return !getIsPass(s);
+      }),
     [slicedStations, station]
   );
 

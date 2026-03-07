@@ -7,7 +7,6 @@ import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import { wrapIpa } from '../utils/ssml';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useConnectedLines } from './useConnectedLines';
@@ -53,22 +52,8 @@ export const useTTSText = (
   const connectedLinesOrigin = useConnectedLines();
   const transferLinesOrigin = useTransferLines();
 
-  const connectedLines = useMemo(
-    () =>
-      connectedLinesOrigin.map((l) => ({
-        ...l,
-        nameRoman: wrapIpa(l.nameRoman, l.nameIpa),
-      })),
-    [connectedLinesOrigin]
-  );
-  const transferLines = useMemo(
-    () =>
-      transferLinesOrigin.map((l) => ({
-        ...l,
-        nameRoman: wrapIpa(l.nameRoman, l.nameIpa),
-      })),
-    [transferLinesOrigin]
-  );
+  const connectedLines = connectedLinesOrigin;
+  const transferLines = transferLinesOrigin;
   const currentTrainTypeOrigin = useCurrentTrainType();
   const loopLineBoundJa = useLoopLineBound(false, 'JA');
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
@@ -114,19 +99,7 @@ export const useTTSText = (
     []
   );
 
-  const currentLine = useMemo(
-    () =>
-      currentLineOrigin
-        ? {
-            ...currentLineOrigin,
-            nameRoman: wrapIpa(
-              currentLineOrigin.nameRoman,
-              currentLineOrigin.nameIpa
-            ),
-          }
-        : null,
-    [currentLineOrigin]
-  );
+  const currentLine = currentLineOrigin ?? null;
 
   const selectedBound = useMemo(
     () => selectedBoundOrigin ?? null,
@@ -182,7 +155,7 @@ export const useTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : `${directionalStops?.map((s) => wrapIpa(s?.nameRoman, s?.nameIpa)).join(' and ')}`,
+        : `${directionalStops?.map((s) => s?.nameRoman ?? '').join(' and ')}`,
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
@@ -219,17 +192,7 @@ export const useTTSText = (
     }${symbol} ${num}.`;
   }, [nextStationNumber, theme]);
 
-  const nextStation = useMemo(
-    () =>
-      nextStationOrigin && {
-        ...nextStationOrigin,
-        nameRoman: wrapIpa(
-          nextStationOrigin.nameRoman,
-          nextStationOrigin.nameIpa
-        ),
-      },
-    [nextStationOrigin]
-  );
+  const nextStation = nextStationOrigin ?? null;
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
   const slicedStations = Array.from(
@@ -239,29 +202,7 @@ export const useTTSText = (
     .filter((s) => !!s) as Station[];
 
   const afterNextStationOrigin = useAfterNextStation();
-  const afterNextStation = useMemo<Station | undefined>(() => {
-    if (!afterNextStationOrigin) {
-      return undefined;
-    }
-
-    return {
-      ...afterNextStationOrigin,
-      nameRoman: wrapIpa(
-        afterNextStationOrigin?.nameRoman,
-        afterNextStationOrigin?.nameIpa
-      ),
-      lines:
-        afterNextStationOrigin.lines?.map(
-          (l: {
-            nameRoman: string | null | undefined;
-            nameIpa: string | null | undefined;
-          }) => ({
-            ...l,
-            nameRoman: wrapIpa(l.nameRoman, l.nameIpa),
-          })
-        ) ?? [],
-    } as Station;
-  }, [afterNextStationOrigin]);
+  const afterNextStation = afterNextStationOrigin;
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
@@ -287,17 +228,12 @@ export const useTTSText = (
 
   const allStops = useMemo(
     () =>
-      slicedStations
-        .filter((s) => {
-          if (s.id === station?.id) {
-            return false;
-          }
-          return !getIsPass(s);
-        })
-        .map((s) => ({
-          ...s,
-          nameRoman: wrapIpa(s.nameRoman, s.nameIpa),
-        })),
+      slicedStations.filter((s) => {
+        if (s.id === station?.id) {
+          return false;
+        }
+        return !getIsPass(s);
+      }),
     [slicedStations, station]
   );
 
@@ -1237,5 +1173,8 @@ export const useTTSText = (
     return [];
   }
 
-  return [jaText.trim(), enText.trim()];
+  return [
+    jaText.trim().replace(parenthesisRegexp, ''),
+    enText.trim().replace(parenthesisRegexp, ''),
+  ];
 };
