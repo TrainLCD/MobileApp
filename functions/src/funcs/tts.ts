@@ -286,13 +286,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
         projectId,
         ssmlJa,
         jaVoiceName,
-        '以下のテキストを日本の鉄道車内アナウンスとして読み上げてください。駅名・路線名は正確に発音してください:'
+        '以下のテキストを日本の鉄道車内アナウンスとしてやや早口で読み上げてください。駅名・路線名は正確に発音してください:'
       ),
       synthesizeWithGemini(
         projectId,
         ssmlEn,
         enVoiceName,
-        'Read the following at a natural, slightly fast pace like a train announcement. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
+        'Read the following at a brisk, quick pace like a train announcement. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
       ),
     ]);
 
