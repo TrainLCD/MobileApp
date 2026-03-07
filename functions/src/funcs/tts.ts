@@ -77,6 +77,19 @@ const stripSsml = (text: string): string =>
     .replace(/\s{2,}/g, ' ')
     .trim();
 
+/**
+ * Gemini TTS を使用してテキストを音声に変換する。
+ *
+ * @param projectId - GCP プロジェクト ID
+ * @param text - 読み上げ対象テキスト（SSML タグは内部で除去される）
+ * @param voiceName - 使用する音声名（例: "Aoede"）
+ * @param prompt - 読み上げスタイルを指示するプロンプト（任意）
+ * @returns Base64 エンコードされた音声データと MIME タイプ
+ *
+ * @remarks
+ * `@google-cloud/vertexai` の型定義には `speechConfig` が含まれていないため、
+ * `generationConfig` に対する型アサーションは意図的なものである。
+ */
 const synthesizeWithGemini = async (
   projectId: string,
   text: string,
@@ -118,8 +131,10 @@ const synthesizeWithGemini = async (
   const audioData = inlineData?.data;
 
   if (!audioData) {
+    const status = result.candidates?.[0]?.finishReason ?? 'UNKNOWN';
+    const usage = result.usageMetadata;
     throw new Error(
-      `Gemini TTS returned no audio data: ${JSON.stringify(result)}`
+      `Gemini TTS (${GEMINI_TTS_MODEL}) returned no audio data — finishReason: ${status}, usage: ${JSON.stringify(usage)}`
     );
   }
 
@@ -271,7 +286,7 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
         projectId,
         ssmlJa,
         jaVoiceName,
-        'Read the following as a Japanese train announcement. The text contains Japanese railway station names and line names. Pronounce them accurately:'
+        '以下のテキストを日本の鉄道車内アナウンスとして読み上げてください。駅名・路線名は正確に発音してください:'
       ),
       synthesizeWithGemini(
         projectId,
