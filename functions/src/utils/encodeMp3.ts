@@ -11,12 +11,20 @@ export const encodePcmToMp3 = async (
   sampleRate = 24000,
   volumeDb?: number
 ): Promise<{ buffer: Buffer; mimeType: string }> => {
-  const isWav =
-    pcmBuffer.length >= 12 &&
-    pcmBuffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-    pcmBuffer.subarray(8, 12).toString('ascii') === 'WAVE';
+  const hasKnownHeader =
+    // WAV (RIFF....WAVE)
+    (pcmBuffer.length >= 12 &&
+      pcmBuffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      pcmBuffer.subarray(8, 12).toString('ascii') === 'WAVE') ||
+    // MP3 with ID3 header
+    (pcmBuffer.length >= 3 &&
+      pcmBuffer.subarray(0, 3).toString('ascii') === 'ID3') ||
+    // MP3 frame sync
+    (pcmBuffer.length >= 2 &&
+      pcmBuffer[0] === 0xff &&
+      (pcmBuffer[1] & 0xe0) === 0xe0);
 
-  const inputArgs = isWav
+  const inputArgs = hasKnownHeader
     ? ['-i', 'pipe:0']
     : ['-f', 's16le', '-ar', String(sampleRate), '-ac', '1', '-i', 'pipe:0'];
 
