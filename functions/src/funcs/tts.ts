@@ -67,10 +67,14 @@ const ensureMp3 = async (
   return encodePcmToMp3(audioBuffer);
 };
 
-/** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → X） */
+/** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → Y（X）） */
 const stripSsml = (text: string): string =>
   text
-    .replace(/<sub\s+alias="([^"]*)">[^<]*<\/sub>/gi, '$1')
+    .replace(
+      /<sub\s+alias="([^"]*)">([^<]*)<\/sub>/gi,
+      (_match, alias, original) =>
+        original === alias ? alias : `${original}（${alias}）`
+    )
     .replace(/<break\s*[^/]*\/>/gi, ' ')
     .replace(/<speak>|<\/speak>/gi, '')
     .replace(/<[^>]+>/g, '')
