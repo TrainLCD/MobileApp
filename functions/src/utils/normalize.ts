@@ -35,8 +35,8 @@ export const normalizeRomanText = (str: string | undefined): string => {
       .replace(/`/g, '')
       .replace(/JR/gi, 'J-R')
       // 都営バスを想定
-      .replace(/.Sta\./gi, ' Station')
-      .replace(/.Univ\./gi, ' University')
-      .replace(/.Hp\./gi, ' Hospital')
+      .replace(/\bSta\./gi, ' Station')
+      .replace(/\bUniv\./gi, ' University')
+      .replace(/\bHp\./gi, ' Hospital')
   );
 };

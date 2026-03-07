@@ -135,9 +135,16 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
+  if (typeof req.data.ssmlEn !== 'string' || req.data.ssmlEn.length === 0) {
+    throw new HttpsError(
+      'invalid-argument',
+      `The function must be called with one argument "ssmlEn" containing the message to add.`
+    );
+  }
+
   let ssmlEn = normalizeRomanText(req.data.ssmlEn);
 
-  // アプリ側でnameIpaによる<phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
+  // <phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
   if (!ssmlEn.includes('<phoneme')) {
     ssmlEn = applyLegacyIpaReplacements(ssmlEn);
   }
@@ -256,14 +263,17 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       ),
     ]);
 
+    const jaAudioBuffer = Buffer.from(jaAudio.audioContent, 'base64');
+    const enAudioBuffer = Buffer.from(enAudio.audioContent, 'base64');
+
     const [jaMp3, enMp3] = await Promise.all([
       ensureMp3(
-        Buffer.from(jaAudio.audioContent, 'base64'),
-        jaAudio.mimeType || 'audio/pcm'
+        jaAudioBuffer,
+        jaAudio.mimeType || sniffAudioMimeType(jaAudioBuffer)
       ),
       ensureMp3(
-        Buffer.from(enAudio.audioContent, 'base64'),
-        enAudio.mimeType || 'audio/pcm'
+        enAudioBuffer,
+        enAudio.mimeType || sniffAudioMimeType(enAudioBuffer)
       ),
     ]);
 

@@ -10,7 +10,7 @@
 ## 動作
 
 1. PRのヘッドブランチをチェックアウト
-2. npm + Node.js 20 をセットアップ
+2. npm + Node.js 22 をセットアップ
 3. `npm ci` で依存関係インストール
 4. `npm run version:bump -- --no-version-increment` を実行
    - アプリのバージョン（`X.Y.Z`）は変更しない

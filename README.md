@@ -60,7 +60,7 @@ This app recreates the authentic experience of Japanese train travel by displayi
 
 Before you begin, ensure you have met the following requirements:
 
-- **Node.js 20.x**
+- **Node.js 22.x**
 - **npm 10.x**
 - **React Native development environment** set up
 - **Expo CLI** installed globally
