@@ -1,7 +1,10 @@
 import { createHash } from 'node:crypto';
 import { PubSub } from '@google-cloud/pubsub';
+import { type GenerateContentResponse, VertexAI } from '@google-cloud/vertexai';
 import * as admin from 'firebase-admin';
+import { defineSecret } from 'firebase-functions/params';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { encodePcmToMp3 } from '../utils/encodeMp3';
 import { applyLegacyIpaReplacements } from '../utils/legacyIpa';
 import { normalizeRomanText } from '../utils/normalize';
 
@@ -15,206 +18,372 @@ const firestore = admin.firestore();
 const storage = admin.storage();
 const pubsub = new PubSub();
 
-export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
-  if (!req.auth) {
-    throw new HttpsError(
-      'failed-precondition',
-      'The function must be called while authenticated.'
+const googleTtsApiKey = defineSecret('GOOGLE_TTS_API_KEY');
+
+const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
+const VERTEX_AI_LOCATION = 'us-central1';
+const GOOGLE_TTS_API_VERSION = 'v1';
+
+interface SynthesizedAudio {
+  audioContent: string;
+  mimeType?: string;
+}
+
+const sniffAudioMimeType = (audioBuffer: Buffer): string => {
+  // RIFF....WAVE
+  if (
+    audioBuffer.length >= 12 &&
+    audioBuffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    audioBuffer.subarray(8, 12).toString('ascii') === 'WAVE'
+  ) {
+    return 'audio/wav';
+  }
+
+  // MP3 with ID3 header
+  if (
+    audioBuffer.length >= 3 &&
+    audioBuffer.subarray(0, 3).toString('ascii') === 'ID3'
+  ) {
+    return 'audio/mpeg';
+  }
+
+  // MP3 frame sync: 11111111 111xxxxx
+  if (
+    audioBuffer.length >= 2 &&
+    audioBuffer[0] === 0xff &&
+    (audioBuffer[1] & 0xe0) === 0xe0
+  ) {
+    return 'audio/mpeg';
+  }
+
+  // Fallback: raw PCM/L16 として扱う
+  return 'audio/pcm';
+};
+
+/** 音声バッファが既にMP3であればそのまま返し、PCM/WAVならMP3にエンコードする */
+const ensureMp3 = async (
+  audioBuffer: Buffer,
+  mimeType: string
+): Promise<{ buffer: Buffer; mimeType: string }> => {
+  if (mimeType === 'audio/mpeg') {
+    return { buffer: audioBuffer, mimeType };
+  }
+  return encodePcmToMp3(audioBuffer);
+};
+
+/** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → Y（X）） */
+const stripSsml = (text: string): string =>
+  text
+    .replace(
+      /<sub\s+alias="([^"]*)">([^<]*)<\/sub>/gi,
+      (_match, alias, original) =>
+        original === alias ? alias : `${original}（${alias}）`
+    )
+    .replace(/<break\s*[^/]*\/>/gi, ' ')
+    .replace(/<speak>|<\/speak>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+/**
+ * Gemini TTS を使用してテキストを音声に変換する。
+ *
+ * @param projectId - GCP プロジェクト ID
+ * @param text - 読み上げ対象テキスト（SSML タグは内部で除去される）
+ * @param voiceName - 使用する音声名（例: "Aoede"）
+ * @param prompt - 読み上げスタイルを指示するプロンプト（任意）
+ * @returns Base64 エンコードされた音声データと MIME タイプ
+ *
+ * @remarks
+ * `@google-cloud/vertexai` の型定義には `speechConfig` が含まれていないため、
+ * `generationConfig` に対する型アサーションは意図的なものである。
+ */
+const synthesizeWithGemini = async (
+  projectId: string,
+  text: string,
+  voiceName: string,
+  prompt?: string
+): Promise<SynthesizedAudio> => {
+  const vertexAI = new VertexAI({
+    project: projectId,
+    location: VERTEX_AI_LOCATION,
+  });
+
+  const model = vertexAI.getGenerativeModel({
+    model: GEMINI_TTS_MODEL,
+    generationConfig: {
+      responseModalities: ['AUDIO'],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName },
+        },
+      },
+    } as Parameters<typeof vertexAI.getGenerativeModel>[0]['generationConfig'],
+  });
+
+  const response = await model.generateContent({
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          {
+            text: prompt ? `${prompt}\n${stripSsml(text)}` : stripSsml(text),
+          },
+        ],
+      },
+    ],
+  });
+
+  const result: GenerateContentResponse = response.response;
+  const inlineData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+  const audioData = inlineData?.data;
+
+  if (!audioData) {
+    const status = result.candidates?.[0]?.finishReason ?? 'UNKNOWN';
+    const usage = result.usageMetadata;
+    throw new Error(
+      `Gemini TTS (${GEMINI_TTS_MODEL}) returned no audio data — finishReason: ${status}, usage: ${JSON.stringify(usage)}`
     );
   }
 
-  const ssmlJa: string | undefined = req.data.ssmlJa;
-  if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
-    throw new HttpsError(
-      'invalid-argument',
-      `The function must be called with one argument "ssmlJa" containing the message to add.`
-    );
-  }
+  return {
+    audioContent: audioData,
+    mimeType: inlineData?.mimeType,
+  };
+};
 
-  let ssmlEn = normalizeRomanText(req.data.ssmlEn)
-    // Airport Terminal 1･2等
-    .replace(/･/g, ' ')
-    // Otsuka・Teikyo-Daigakuなど
-    .replace(/・/g, ' ')
-    // 環状運転の場合に & が含まれる可能性があるため置換
-    .replace(/&(?!#\d+;|#x[0-9A-Fa-f]+;|\w+;)/g, 'and')
-    // 全角記号
-    .replace(/[！-／：-＠［-｀｛-～、-〜”・]+/g, ' ')
-    // 明治神宮前駅等の駅名にバッククォートが含まれる場合があるため除去
-    .replace(/`/g, '')
-    .replace(/JR/gi, 'J-R')
-    // 都営バスを想定
-    .replace(/.Sta\./gi, ' Station')
-    .replace(/.Univ\./gi, ' University')
-    .replace(/.Hp\./gi, ' Hospital');
-
-  // アプリ側でnameIpaによる<phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
-  if (!ssmlEn.includes('<phoneme')) {
-    ssmlEn = applyLegacyIpaReplacements(ssmlEn);
-  }
-
-  if (ssmlEn.trim().length === 0) {
-    throw new HttpsError(
-      'invalid-argument',
-      `The function must be called with one argument "ssmlEn" containing the message to add.`
-    );
-  }
-
-  const jaVoiceName =
-    process.env.GOOGLE_TTS_JA_VOICE_NAME || 'ja-JP-Standard-B';
-  const enVoiceName =
-    process.env.GOOGLE_TTS_EN_VOICE_NAME || 'en-US-Standard-G';
-  const audioEncoding = 'MP3';
-  const volumeGainEnv = process.env.GOOGLE_TTS_VOLUME_GAIN_DB;
-  const volumeGainParsed =
-    volumeGainEnv === undefined ? 6 : Number(volumeGainEnv);
-  const volumeGainDb = Number.isFinite(volumeGainParsed)
-    ? Math.max(-96, Math.min(16, volumeGainParsed))
-    : 6;
-  const effectsProfileId = ['handset-class-device'];
-  const apiVersion = 'v1';
-
-  const voicesCollection = firestore
-    .collection('caches')
-    .doc('tts')
-    .collection('voices');
-
-  const hashAlgorithm = 'sha256';
-  const version = 1;
-  const hashPayloadObj = {
-    apiVersion,
-    audioEncoding,
-    effectsProfileId,
-    enVoiceName,
-    jaVoiceName,
-    ssmlEn,
-    ssmlJa,
-    volumeGainDb,
-    version,
-  } as const;
-  const hashPayload = JSON.stringify(
-    hashPayloadObj,
-    Object.keys(hashPayloadObj).sort()
-  );
-
-  const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
-
-  const snapshot = await voicesCollection.doc(id).get();
-
-  if (snapshot.exists) {
-    const data = snapshot.data() ?? {};
-    const pathJa = data?.pathJa;
-    const pathEn = data?.pathEn;
-    if (typeof pathJa === 'string' && typeof pathEn === 'string') {
-      try {
-        const [jaAudioData, enAudioData] = await Promise.all([
-          storage.bucket().file(pathJa).download(),
-          storage.bucket().file(pathEn).download(),
-        ]);
-        const jaAudioContent = jaAudioData?.[0]?.toString('base64') ?? null;
-        const enAudioContent = enAudioData?.[0]?.toString('base64') ?? null;
-        if (jaAudioContent && enAudioContent) {
-          return { id, jaAudioContent, enAudioContent };
-        }
-      } catch (e) {
-        console.warn(
-          'Cache hit but download failed. Falling back to synthesis.',
-          e
-        );
-      }
-    } else {
-      console.warn(
-        'Cache doc missing pathJa/pathEn. Falling back to synthesis.'
-      );
-    }
-  }
-
-  if (!process.env.GOOGLE_TTS_API_KEY) {
+/** Google Cloud Text-to-Speech API を使用して SSML を音声に変換する */
+const synthesizeWithGoogleTts = async (
+  ssml: string,
+  voiceName: string,
+  languageCode: string
+): Promise<string> => {
+  const apiKey = googleTtsApiKey.value();
+  if (!apiKey) {
     throw new HttpsError(
       'failed-precondition',
       'GOOGLE_TTS_API_KEY is not set'
     );
   }
-  const ttsUrl = `https://texttospeech.googleapis.com/${apiVersion}/text:synthesize?key=${process.env.GOOGLE_TTS_API_KEY}`;
 
-  const reqBodyJa = {
-    input: {
-      ssml: ssmlJa,
-    },
-    voice: {
-      languageCode: 'ja-JP',
-      name: jaVoiceName,
-    },
-    audioConfig: {
-      audioEncoding,
-      volumeGainDb,
-      effectsProfileId,
-    },
-  };
+  const ttsUrl = `https://texttospeech.googleapis.com/${GOOGLE_TTS_API_VERSION}/text:synthesize?key=${apiKey}`;
 
-  const reqBodyEn = {
-    input: {
-      ssml: ssmlEn,
-    },
-    voice: {
-      languageCode: 'en-US',
-      name: enVoiceName,
-    },
-    audioConfig: {
-      audioEncoding,
-      volumeGainDb,
-      effectsProfileId,
-    },
-  };
+  const res = await fetch(ttsUrl, {
+    headers: { 'content-type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify({
+      input: { ssml },
+      voice: { languageCode, name: voiceName },
+      audioConfig: {
+        audioEncoding: 'MP3',
+        effectsProfileId: [],
+      },
+    }),
+    method: 'POST',
+    signal: AbortSignal.timeout(30000),
+  });
 
-  try {
-    const [jaRes, enRes] = await Promise.all([
-      fetch(ttsUrl, {
-        headers: {
-          'content-type': 'application/json; charset=UTF-8',
-        },
-        body: JSON.stringify(reqBodyJa),
-        method: 'POST',
-        signal: AbortSignal.timeout(30000), // 30秒のタイムアウト
-      }),
-      fetch(ttsUrl, {
-        headers: {
-          'content-type': 'application/json; charset=UTF-8',
-        },
-        body: JSON.stringify(reqBodyEn),
-        method: 'POST',
-        signal: AbortSignal.timeout(30000), // 30秒のタイムアウト
-      }),
-    ]);
-
-    const [{ audioContent: jaAudioContent }, { audioContent: enAudioContent }] =
-      await Promise.all([jaRes.json(), enRes.json()]);
-
-    const cacheTopic = pubsub.topic('tts-cache');
-    cacheTopic
-      .publishMessage({
-        json: {
-          id,
-          jaAudioContent,
-          enAudioContent,
-          ssmlJa,
-          ssmlEn,
-          voiceJa: jaVoiceName,
-          voiceEn: enVoiceName,
-          audioEncoding,
-          volumeGainDb,
-          effectsProfileId,
-          apiVersion,
-        },
-      })
-      .catch((err) => {
-        console.error('Failed to publish cache message:', err);
-        // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
-      });
-
-    return { id, jaAudioContent, enAudioContent };
-  } catch (error) {
-    console.error('TTS API call failed:', error);
-    throw new HttpsError('internal', 'TTS synthesis failed');
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      `Google TTS API returned ${res.status}: ${JSON.stringify(json.error ?? json)}`
+    );
   }
-});
+  return json.audioContent;
+};
+
+export const tts = onCall(
+  { region: 'asia-northeast1', secrets: [googleTtsApiKey] },
+  async (req) => {
+    if (!req.auth) {
+      throw new HttpsError(
+        'failed-precondition',
+        'The function must be called while authenticated.'
+      );
+    }
+
+    const ssmlJa: string | undefined = req.data.ssmlJa;
+    if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        `The function must be called with one argument "ssmlJa" containing the message to add.`
+      );
+    }
+
+    if (typeof req.data.ssmlEn !== 'string' || req.data.ssmlEn.length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        `The function must be called with one argument "ssmlEn" containing the message to add.`
+      );
+    }
+
+    let ssmlEn = normalizeRomanText(req.data.ssmlEn);
+
+    // <phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
+    if (!ssmlEn.includes('<phoneme')) {
+      ssmlEn = applyLegacyIpaReplacements(ssmlEn);
+    }
+
+    if (ssmlEn.trim().length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        `The function must be called with one argument "ssmlEn" containing the message to add.`
+      );
+    }
+
+    const jaVoiceName = 'ja-JP-Standard-B';
+
+    let ttsConfig: FirebaseFirestore.DocumentData | undefined;
+    try {
+      const ttsConfigDoc = await firestore
+        .collection('configs')
+        .doc('tts')
+        .get();
+      ttsConfig = ttsConfigDoc.data();
+    } catch (e) {
+      console.warn(
+        'Failed to read TTS config from Firestore, using defaults:',
+        e
+      );
+    }
+    const defaultEnVoice = ttsConfig?.enVoiceName || 'Aoede';
+
+    const enVoiceName =
+      (typeof req.data.enVoiceName === 'string' && req.data.enVoiceName) ||
+      defaultEnVoice;
+
+    const voicesCollection = firestore
+      .collection('caches')
+      .doc('tts')
+      .collection('voices');
+
+    const hashAlgorithm = 'sha256';
+    const version = 6;
+    const hashPayloadObj = {
+      enModel: GEMINI_TTS_MODEL,
+      enVoiceName,
+      jaVoiceName,
+      ssmlEn,
+      ssmlJa,
+      version,
+    } as const;
+    const hashPayload = JSON.stringify(
+      hashPayloadObj,
+      Object.keys(hashPayloadObj).sort()
+    );
+
+    const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
+
+    const snapshot = await voicesCollection.doc(id).get();
+
+    if (snapshot.exists) {
+      const data = snapshot.data() ?? {};
+      const pathJa = data?.pathJa;
+      const pathEn = data?.pathEn;
+      if (typeof pathJa === 'string' && typeof pathEn === 'string') {
+        try {
+          const [jaAudioData, enAudioData] = await Promise.all([
+            storage.bucket().file(pathJa).download(),
+            storage.bucket().file(pathEn).download(),
+          ]);
+          const jaBuffer = jaAudioData?.[0] ?? null;
+          const enBuffer = enAudioData?.[0] ?? null;
+          const jaAudioContent = jaBuffer?.toString('base64') ?? null;
+          const enAudioContent = enBuffer?.toString('base64') ?? null;
+          if (jaAudioContent && enAudioContent) {
+            const jaRawMime =
+              (typeof data?.jaAudioMimeType === 'string' &&
+                data.jaAudioMimeType) ||
+              (jaBuffer ? sniffAudioMimeType(jaBuffer) : 'audio/pcm');
+            const enRawMime =
+              (typeof data?.enAudioMimeType === 'string' &&
+                data.enAudioMimeType) ||
+              (enBuffer ? sniffAudioMimeType(enBuffer) : 'audio/pcm');
+
+            const [jaMp3, enMp3] = await Promise.all([
+              ensureMp3(jaBuffer, jaRawMime),
+              ensureMp3(enBuffer, enRawMime),
+            ]);
+
+            return {
+              id,
+              jaAudioContent: jaMp3.buffer.toString('base64'),
+              enAudioContent: enMp3.buffer.toString('base64'),
+              jaAudioMimeType: jaMp3.mimeType,
+              enAudioMimeType: enMp3.mimeType,
+            };
+          }
+        } catch (e) {
+          console.warn(
+            'Cache hit but download failed. Falling back to synthesis.',
+            e
+          );
+        }
+      } else {
+        console.warn(
+          'Cache doc missing pathJa/pathEn. Falling back to synthesis.'
+        );
+      }
+    }
+
+    const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+    if (!projectId) {
+      throw new HttpsError('failed-precondition', 'GCP project ID is not set');
+    }
+
+    try {
+      const [jaAudioContent, enAudio] = await Promise.all([
+        synthesizeWithGoogleTts(ssmlJa, jaVoiceName, 'ja-JP'),
+        synthesizeWithGemini(
+          projectId,
+          ssmlEn,
+          enVoiceName,
+          'Read the following at a brisk, quick pace like a train announcement. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
+        ),
+      ]);
+
+      const enAudioBuffer = Buffer.from(enAudio.audioContent, 'base64');
+      const enMp3 = await ensureMp3(
+        enAudioBuffer,
+        enAudio.mimeType || sniffAudioMimeType(enAudioBuffer)
+      );
+
+      const enAudioContent = enMp3.buffer.toString('base64');
+      const enAudioMimeType = enMp3.mimeType;
+
+      const cacheTopic = pubsub.topic('tts-cache');
+      cacheTopic
+        .publishMessage({
+          json: {
+            id,
+            jaAudioContent,
+            enAudioContent,
+            jaAudioMimeType: 'audio/mpeg',
+            enAudioMimeType,
+            ssmlJa,
+            ssmlEn,
+            voiceJa: jaVoiceName,
+            voiceEn: enVoiceName,
+            enModel: GEMINI_TTS_MODEL,
+          },
+        })
+        .catch((err) => {
+          console.error('Failed to publish cache message:', err);
+          // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
+        });
+
+      return {
+        id,
+        jaAudioContent,
+        enAudioContent,
+        jaAudioMimeType: 'audio/mpeg',
+        enAudioMimeType,
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      console.error('TTS API call failed:', error);
+      throw new HttpsError('internal', 'TTS synthesis failed');
+    }
+  }
+);

@@ -79,8 +79,8 @@ src/
 
 ## 開発環境
 
-- **Node.js 20.x**を使用
-- **npm 10.x**を使用（Node.js 20 同梱版）
+- **Node.js 22.x**を使用
+- **npm 10.x**を使用（Node.js 22 同梱版）
 - Metro キャッシュ問題が発生した場合のみ`expo start --clear`を実行
 - GraphQL codegen には`.env.local`に`GQL_API_URL`が必要
 

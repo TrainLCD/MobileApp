@@ -12,6 +12,8 @@ export type TuningState = {
   devOverlayEnabled: boolean;
   untouchableModeEnabled: boolean;
   telemetryEnabled: boolean;
+  ttsJaVoiceName: string;
+  ttsEnVoiceName: string;
 };
 
 const tuningState = atom<TuningState>({
@@ -21,6 +23,8 @@ const tuningState = atom<TuningState>({
   devOverlayEnabled: true,
   untouchableModeEnabled: false,
   telemetryEnabled: false,
+  ttsJaVoiceName: '',
+  ttsEnVoiceName: '',
 });
 
 export default tuningState;

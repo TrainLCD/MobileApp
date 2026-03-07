@@ -1,12 +1,12 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import type { Maybe, Station } from '~/@types/graphql';
+import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import { wrapIpa } from '../utils/ssml';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -17,6 +17,7 @@ import { useLoopLineBound } from './useLoopLineBound';
 import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
 import { useStoppingState } from './useStoppingState';
+import type { TTSTextResult } from './useTTSText';
 
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
@@ -31,10 +32,17 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
 };
 
+const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
+  if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
+  if (theme === APP_THEME.JO || theme === APP_THEME.JL)
+    return APP_THEME.YAMANOTE;
+  return theme;
+};
+
 export const useBusTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | [] => {
+): TTSTextResult => {
   const theme = useAtomValue(themeAtom);
 
   const { selectedBound: selectedBoundOrigin, stations } =
@@ -93,22 +101,13 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : `${directionalStops?.map((s) => wrapIpa(s?.nameRoman, s?.nameIpa)).join(' and ')}`,
+        : (directionalStops?.map((s) => s?.nameRoman ?? '').join(' and ') ??
+          ''),
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
-  const nextStation = useMemo(
-    () =>
-      nextStationOrigin && {
-        ...nextStationOrigin,
-        nameRoman: wrapIpa(
-          nextStationOrigin.nameRoman,
-          nextStationOrigin.nameIpa
-        ),
-      },
-    [nextStationOrigin]
-  );
+  const nextStation = nextStationOrigin ?? null;
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
   const slicedStations = Array.from(
@@ -118,29 +117,7 @@ export const useBusTTSText = (
     .filter((s) => !!s) as Station[];
 
   const afterNextStationOrigin = useAfterNextStation();
-  const afterNextStation = useMemo<Station | undefined>(() => {
-    if (!afterNextStationOrigin) {
-      return undefined;
-    }
-
-    return {
-      ...afterNextStationOrigin,
-      nameRoman: wrapIpa(
-        afterNextStationOrigin?.nameRoman,
-        afterNextStationOrigin?.nameIpa
-      ),
-      lines:
-        afterNextStationOrigin.lines?.map(
-          (l: {
-            nameRoman: string | null | undefined;
-            nameIpa: string | null | undefined;
-          }) => ({
-            ...l,
-            nameRoman: wrapIpa(l.nameRoman, l.nameIpa),
-          })
-        ) ?? [],
-    } as Station;
-  }, [afterNextStationOrigin]);
+  const afterNextStation = afterNextStationOrigin;
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
@@ -153,7 +130,12 @@ export const useBusTTSText = (
   );
 
   const betweenNextStation = useMemo(
-    () => slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
+    () =>
+      nextStationIndex === -1 ||
+      afterNextStationIndex === -1 ||
+      afterNextStationIndex <= nextStationIndex
+        ? []
+        : slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
     [afterNextStationIndex, nextStationIndex, slicedStations]
   );
 
@@ -161,17 +143,12 @@ export const useBusTTSText = (
 
   const allStops = useMemo(
     () =>
-      slicedStations
-        .filter((s) => {
-          if (s.id === station?.id) {
-            return false;
-          }
-          return !getIsPass(s);
-        })
-        .map((s) => ({
-          ...s,
-          nameRoman: wrapIpa(s.nameRoman, s.nameIpa),
-        })),
+      slicedStations.filter((s) => {
+        if (s.groupId === station?.groupId) {
+          return false;
+        }
+        return !getIsPass(s);
+      }),
     [slicedStations, station]
   );
 
@@ -725,58 +702,40 @@ export const useBusTTSText = (
       station?.line?.company?.nameEnglishShort,
     ]);
 
-  const jaText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = japaneseTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const resolved = resolveTemplateTheme(theme);
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const jaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.[stoppingState] ?? '',
+    [japaneseTemplate, resolved, stoppingState]
+  );
 
-    const tmpl = japaneseTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-    return tmpl;
-  }, [japaneseTemplate, stoppingState, theme]);
+  const enText = useMemo(
+    () => englishTemplate?.[resolved]?.[stoppingState] ?? '',
+    [englishTemplate, resolved, stoppingState]
+  );
 
-  const enText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const nextJaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.NEXT ?? '',
+    [japaneseTemplate, resolved]
+  );
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
-
-    const tmpl = englishTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-
-    return tmpl;
-  }, [englishTemplate, stoppingState, theme]);
+  const nextEnText = useMemo(
+    () => englishTemplate?.[resolved]?.NEXT ?? '',
+    [englishTemplate, resolved]
+  );
 
   if (!enabled) {
-    return [];
+    return { text: [], nextText: [] };
   }
 
-  return [jaText.trim(), enText.trim()];
+  return {
+    text: [
+      jaText.trim().replace(parenthesisRegexp, ''),
+      enText.trim().replace(parenthesisRegexp, ''),
+    ],
+    nextText: [
+      nextJaText.trim().replace(parenthesisRegexp, ''),
+      nextEnText.trim().replace(parenthesisRegexp, ''),
+    ],
+  };
 };
