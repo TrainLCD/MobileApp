@@ -347,7 +347,7 @@ const TuningSettings: React.FC = () => {
               fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
           >
-            {settings.ttsJaVoiceName || 'Aoede'}
+            {settings.ttsJaVoiceName || translate('notSpecified')}
           </Typography>
         </Pressable>
 
@@ -370,7 +370,7 @@ const TuningSettings: React.FC = () => {
               fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
           >
-            {settings.ttsEnVoiceName || 'Aoede'}
+            {settings.ttsEnVoiceName || translate('notSpecified')}
           </Typography>
         </Pressable>
 
