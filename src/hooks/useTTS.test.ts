@@ -94,6 +94,8 @@ const mockSuccessfulFetch = () => {
         id: 'tts-id',
         jaAudioContent: 'QQ==',
         enAudioContent: 'QQ==',
+        jaAudioMimeType: 'audio/mpeg',
+        enAudioMimeType: 'audio/mpeg',
       },
     }),
   });
@@ -138,7 +140,7 @@ describe('useTTS', () => {
     });
 
     expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
-      uri: '/tmp/tts-id_en.wav',
+      uri: '/tmp/tts-id_en.mp3',
     });
   });
 
@@ -165,7 +167,7 @@ describe('useTTS', () => {
       expect(calls.length).toBeGreaterThanOrEqual(1);
     });
 
-    expect(calls[0]).toBe('/tmp/tts-id_ja.wav');
+    expect(calls[0]).toBe('/tmp/tts-id_ja.mp3');
 
     // EN_PLAYBACK_DELAY_MS 後に EN プレイヤーが生成される
     jest.runAllTimers();
@@ -174,7 +176,7 @@ describe('useTTS', () => {
       expect(calls.length).toBeGreaterThanOrEqual(2);
     });
 
-    expect(calls[1]).toBe('/tmp/tts-id_en.wav');
+    expect(calls[1]).toBe('/tmp/tts-id_en.mp3');
   });
 
   it('JAのみ有効時はJAプレイヤーのみ生成する', async () => {
@@ -197,7 +199,7 @@ describe('useTTS', () => {
     });
 
     expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
-      uri: '/tmp/tts-id_ja.wav',
+      uri: '/tmp/tts-id_ja.mp3',
     });
   });
 

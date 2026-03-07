@@ -3,6 +3,7 @@ import { PubSub } from '@google-cloud/pubsub';
 import { type GenerateContentResponse, VertexAI } from '@google-cloud/vertexai';
 import * as admin from 'firebase-admin';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import { encodePcmToMp3 } from '../utils/encodeMp3';
 import { applyLegacyIpaReplacements } from '../utils/legacyIpa';
 import { normalizeRomanText } from '../utils/normalize';
 
@@ -53,6 +54,17 @@ const sniffAudioMimeType = (audioBuffer: Buffer): string => {
 
   // Fallback: raw PCM/L16 として扱う
   return 'audio/pcm';
+};
+
+/** 音声バッファが既にMP3であればそのまま返し、PCM/WAVならMP3にエンコードする */
+const ensureMp3 = async (
+  audioBuffer: Buffer,
+  mimeType: string
+): Promise<{ buffer: Buffer; mimeType: string }> => {
+  if (mimeType === 'audio/mpeg') {
+    return { buffer: audioBuffer, mimeType };
+  }
+  return encodePcmToMp3(audioBuffer);
 };
 
 const synthesizeWithGemini = async (
@@ -188,20 +200,26 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
         const jaAudioContent = jaBuffer?.toString('base64') ?? null;
         const enAudioContent = enBuffer?.toString('base64') ?? null;
         if (jaAudioContent && enAudioContent) {
-          const jaAudioMimeType =
+          const jaRawMime =
             (typeof data?.jaAudioMimeType === 'string' &&
               data.jaAudioMimeType) ||
             (jaBuffer ? sniffAudioMimeType(jaBuffer) : 'audio/pcm');
-          const enAudioMimeType =
+          const enRawMime =
             (typeof data?.enAudioMimeType === 'string' &&
               data.enAudioMimeType) ||
             (enBuffer ? sniffAudioMimeType(enBuffer) : 'audio/pcm');
+
+          const [jaMp3, enMp3] = await Promise.all([
+            ensureMp3(jaBuffer, jaRawMime),
+            ensureMp3(enBuffer, enRawMime),
+          ]);
+
           return {
             id,
-            jaAudioContent,
-            enAudioContent,
-            jaAudioMimeType,
-            enAudioMimeType,
+            jaAudioContent: jaMp3.buffer.toString('base64'),
+            enAudioContent: enMp3.buffer.toString('base64'),
+            jaAudioMimeType: jaMp3.mimeType,
+            enAudioMimeType: enMp3.mimeType,
           };
         }
       } catch (e) {
@@ -238,10 +256,21 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
       ),
     ]);
 
-    const jaAudioContent = jaAudio.audioContent;
-    const enAudioContent = enAudio.audioContent;
-    const jaAudioMimeType = jaAudio.mimeType || 'audio/pcm';
-    const enAudioMimeType = enAudio.mimeType || 'audio/pcm';
+    const [jaMp3, enMp3] = await Promise.all([
+      ensureMp3(
+        Buffer.from(jaAudio.audioContent, 'base64'),
+        jaAudio.mimeType || 'audio/pcm'
+      ),
+      ensureMp3(
+        Buffer.from(enAudio.audioContent, 'base64'),
+        enAudio.mimeType || 'audio/pcm'
+      ),
+    ]);
+
+    const jaAudioContent = jaMp3.buffer.toString('base64');
+    const enAudioContent = enMp3.buffer.toString('base64');
+    const jaAudioMimeType = jaMp3.mimeType;
+    const enAudioMimeType = enMp3.mimeType;
 
     const cacheTopic = pubsub.topic('tts-cache');
     cacheTopic
