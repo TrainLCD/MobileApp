@@ -7,7 +7,6 @@ import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
-import type { TTSTextResult } from './useTTSText';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -18,6 +17,7 @@ import { useLoopLineBound } from './useLoopLineBound';
 import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
 import { useStoppingState } from './useStoppingState';
+import type { TTSTextResult } from './useTTSText';
 
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
@@ -34,7 +34,8 @@ const EMPTY_TTS_TEXT = {
 
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
   if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
-  if (theme === APP_THEME.JO || theme === APP_THEME.JL) return APP_THEME.YAMANOTE;
+  if (theme === APP_THEME.JO || theme === APP_THEME.JL)
+    return APP_THEME.YAMANOTE;
   return theme;
 };
 

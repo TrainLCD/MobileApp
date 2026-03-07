@@ -23,11 +23,17 @@ jest.mock('./useCurrentLine', () => ({
 }));
 
 jest.mock('./useTTSText', () => ({
-  useTTSText: jest.fn(() => ({ text: ['ja text', 'en text'], nextText: ['ja next', 'en next'] })),
+  useTTSText: jest.fn(() => ({
+    text: ['ja text', 'en text'],
+    nextText: ['ja next', 'en next'],
+  })),
 }));
 
 jest.mock('./useBusTTSText', () => ({
-  useBusTTSText: jest.fn(() => ({ text: ['ja text', 'en text'], nextText: ['ja next', 'en next'] })),
+  useBusTTSText: jest.fn(() => ({
+    text: ['ja text', 'en text'],
+    nextText: ['ja next', 'en next'],
+  })),
 }));
 
 jest.mock('./usePrevious', () => ({
@@ -113,7 +119,10 @@ describe('useTTS', () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
-    useTTSText.mockReturnValue({ text: ['ja text', 'en text'], nextText: ['ja next', 'en next'] });
+    useTTSText.mockReturnValue({
+      text: ['ja text', 'en text'],
+      nextText: ['ja next', 'en next'],
+    });
   });
 
   afterEach(() => {
@@ -231,7 +240,10 @@ describe('useTTS', () => {
     store.set(speechState, defaultSpeechState);
 
     // 最初は有効なテキストで再生開始
-    useTTSText.mockReturnValue({ text: ['ja text', 'en text'], nextText: ['ja next', 'en next'] });
+    useTTSText.mockReturnValue({
+      text: ['ja text', 'en text'],
+      nextText: ['ja next', 'en next'],
+    });
 
     const { rerender } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),

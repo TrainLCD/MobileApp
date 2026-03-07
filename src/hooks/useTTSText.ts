@@ -29,7 +29,8 @@ export interface TTSTextResult {
 
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
   if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
-  if (theme === APP_THEME.JO || theme === APP_THEME.JL) return APP_THEME.YAMANOTE;
+  if (theme === APP_THEME.JO || theme === APP_THEME.JL)
+    return APP_THEME.YAMANOTE;
   return theme;
 };
 
