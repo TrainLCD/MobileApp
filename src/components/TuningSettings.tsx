@@ -497,9 +497,7 @@ const TuningSettings: React.FC = () => {
                           : undefined,
                       }}
                     >
-                      {voicePickerState.current === item
-                        ? `● ${item}`
-                        : item}
+                      {voicePickerState.current === item ? `● ${item}` : item}
                     </Typography>
                   </Pressable>
                 )}
