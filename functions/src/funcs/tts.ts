@@ -48,11 +48,17 @@ const sniffAudioMimeType = (audioBuffer: Buffer): string => {
     return 'audio/mpeg';
   }
 
-  // MP3 frame sync: 11111111 111xxxxx
+  // MP3 frame sync (validate 4-byte header to avoid PCM false positives)
   if (
-    audioBuffer.length >= 2 &&
+    audioBuffer.length >= 4 &&
     audioBuffer[0] === 0xff &&
-    (audioBuffer[1] & 0xe0) === 0xe0
+    (audioBuffer[1] & 0xe0) === 0xe0 &&
+    // version bits must not be 0x01 (reserved)
+    ((audioBuffer[1] >> 3) & 0x03) !== 0x01 &&
+    // layer bits must not be 0x00 (reserved)
+    ((audioBuffer[1] >> 1) & 0x03) !== 0x00 &&
+    // sampling rate index must not be 0x03 (reserved)
+    ((audioBuffer[2] >> 2) & 0x03) !== 0x03
   ) {
     return 'audio/mpeg';
   }

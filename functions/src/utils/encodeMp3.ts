@@ -19,10 +19,16 @@ export const encodePcmToMp3 = async (
     // MP3 with ID3 header
     (pcmBuffer.length >= 3 &&
       pcmBuffer.subarray(0, 3).toString('ascii') === 'ID3') ||
-    // MP3 frame sync
-    (pcmBuffer.length >= 2 &&
+    // MP3 frame sync (validate 4-byte header to avoid PCM false positives)
+    (pcmBuffer.length >= 4 &&
       pcmBuffer[0] === 0xff &&
-      (pcmBuffer[1] & 0xe0) === 0xe0);
+      (pcmBuffer[1] & 0xe0) === 0xe0 &&
+      // version bits must not be 0x01 (reserved)
+      ((pcmBuffer[1] >> 3) & 0x03) !== 0x01 &&
+      // layer bits must not be 0x00 (reserved)
+      ((pcmBuffer[1] >> 1) & 0x03) !== 0x00 &&
+      // sampling rate index must not be 0x03 (reserved)
+      ((pcmBuffer[2] >> 2) & 0x03) !== 0x03);
 
   const inputArgs = hasKnownHeader
     ? ['-i', 'pipe:0']
