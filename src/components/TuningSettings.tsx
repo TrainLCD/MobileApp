@@ -100,13 +100,11 @@ const TuningSettings: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const [jaVoice, enVoice] = await Promise.all([
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
-      ]);
+      const enVoice = await AsyncStorage.getItem(
+        ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME
+      );
       setSettings((prev) => ({
         ...prev,
-        ttsJaVoiceName: jaVoice ?? '',
         ttsEnVoiceName: enVoice ?? '',
       }));
     })();
@@ -194,11 +192,6 @@ const TuningSettings: React.FC = () => {
     } else {
       setVoicePickerState({ current, onSelect });
     }
-  };
-
-  const handleJaVoiceNameChange = (voice: string) => {
-    setSettings((prev) => ({ ...prev, ttsJaVoiceName: voice }));
-    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME, voice);
   };
 
   const handleEnVoiceNameChange = (voice: string) => {
@@ -328,29 +321,6 @@ const TuningSettings: React.FC = () => {
         <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemTTSVoice')}
         </Typography>
-
-        <Typography style={styles.settingItemTitle}>
-          {translate('tuningItemTTSJaVoiceName')}
-        </Typography>
-        <Pressable
-          style={[styles.picker, { borderColor: isLEDTheme ? '#666' : '#aaa' }]}
-          onPress={() =>
-            showVoicePicker(settings.ttsJaVoiceName, handleJaVoiceNameChange)
-          }
-        >
-          <Typography
-            style={{
-              color: settings.ttsJaVoiceName
-                ? isLEDTheme
-                  ? '#fff'
-                  : 'black'
-                : '#999',
-              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
-            }}
-          >
-            {settings.ttsJaVoiceName || translate('notSpecified')}
-          </Typography>
-        </Pressable>
 
         <Typography style={styles.settingItemTitle}>
           {translate('tuningItemTTSEnVoiceName')}
