@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActionSheetIOS,
   Alert,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -167,6 +169,11 @@ const TuningSettings: React.FC = () => {
       ),
     }));
 
+  const [voicePickerState, setVoicePickerState] = useState<{
+    current: string;
+    onSelect: (voice: string) => void;
+  } | null>(null);
+
   const showVoicePicker = (
     current: string,
     onSelect: (voice: string) => void
@@ -185,13 +192,7 @@ const TuningSettings: React.FC = () => {
         }
       );
     } else {
-      Alert.alert(translate('tuningItemTTSVoice'), undefined, [
-        ...TTS_VOICE_NAMES.map((name) => ({
-          text: current === name ? `● ${name}` : name,
-          onPress: () => onSelect(name),
-        })),
-        { text: translate('cancel'), style: 'cancel' as const },
-      ]);
+      setVoicePickerState({ current, onSelect });
     }
   };
 
@@ -450,6 +451,82 @@ const TuningSettings: React.FC = () => {
         </View>
       </ScrollView>
       <FAB onPress={onPressBack} icon="close" />
+
+      {voicePickerState && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible
+          onRequestClose={() => setVoicePickerState(null)}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={() => setVoicePickerState(null)}
+          >
+            <Pressable
+              style={{
+                backgroundColor: isLEDTheme ? '#222' : '#fff',
+                borderRadius: 12,
+                width: '80%',
+                maxHeight: '60%',
+                paddingVertical: 8,
+              }}
+            >
+              <FlatList
+                data={TTS_VOICE_NAMES}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={{ paddingHorizontal: 20, paddingVertical: 12 }}
+                    onPress={() => {
+                      voicePickerState.onSelect(item);
+                      setVoicePickerState(null);
+                    }}
+                  >
+                    <Typography
+                      style={{
+                        fontSize: RFValue(14),
+                        color: isLEDTheme ? '#fff' : '#000',
+                        fontFamily: isLEDTheme
+                          ? FONTS.JFDotJiskan24h
+                          : undefined,
+                      }}
+                    >
+                      {voicePickerState.current === item
+                        ? `● ${item}`
+                        : item}
+                    </Typography>
+                  </Pressable>
+                )}
+              />
+              <Pressable
+                style={{
+                  paddingVertical: 12,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopColor: isLEDTheme ? '#555' : '#ccc',
+                  alignItems: 'center',
+                }}
+                onPress={() => setVoicePickerState(null)}
+              >
+                <Typography
+                  style={{
+                    fontSize: RFValue(14),
+                    color: '#999',
+                    fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                  }}
+                >
+                  {translate('cancel')}
+                </Typography>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </KeyboardAvoidingView>
   );
 };
