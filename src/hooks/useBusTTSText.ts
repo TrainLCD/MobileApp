@@ -101,7 +101,7 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : `${directionalStops?.map((s) => s?.nameRoman ?? '').join(' and ')}`,
+        : (directionalStops?.map((s) => s?.nameRoman ?? '').join(' and ') ?? ''),
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
