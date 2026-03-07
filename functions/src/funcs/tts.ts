@@ -106,9 +106,7 @@ const synthesizeWithGemini = async (
         role: 'user',
         parts: [
           {
-            text: prompt
-              ? `${prompt}\n${stripSsml(text)}`
-              : stripSsml(text),
+            text: prompt ? `${prompt}\n${stripSsml(text)}` : stripSsml(text),
           },
         ],
       },
@@ -173,10 +171,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     const ttsConfigDoc = await firestore.collection('configs').doc('tts').get();
     ttsConfig = ttsConfigDoc.data();
   } catch (e) {
-    console.warn('Failed to read TTS config from Firestore, using defaults:', e);
+    console.warn(
+      'Failed to read TTS config from Firestore, using defaults:',
+      e
+    );
   }
   const defaultJaVoice = ttsConfig?.jaVoiceName || 'Aoede';
-  const defaultEnVoice = ttsConfig?.enVoiceName || 'Kore';
+  const defaultEnVoice = ttsConfig?.enVoiceName || 'Aoede';
 
   const jaVoiceName =
     (typeof req.data.jaVoiceName === 'string' && req.data.jaVoiceName) ||
