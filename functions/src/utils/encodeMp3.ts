@@ -8,7 +8,8 @@ const MP3_BITRATE = '128k';
  */
 export const encodePcmToMp3 = async (
   pcmBuffer: Buffer,
-  sampleRate = 24000
+  sampleRate = 24000,
+  volumeDb?: number
 ): Promise<{ buffer: Buffer; mimeType: string }> => {
   const isWav =
     pcmBuffer.length >= 12 &&
@@ -19,11 +20,15 @@ export const encodePcmToMp3 = async (
     ? ['-i', 'pipe:0']
     : ['-f', 's16le', '-ar', String(sampleRate), '-ac', '1', '-i', 'pipe:0'];
 
+  const filterArgs =
+    volumeDb != null ? ['-af', `volume=${volumeDb}dB`] : [];
+
   const args = [
     '-hide_banner',
     '-loglevel',
     'error',
     ...inputArgs,
+    ...filterArgs,
     '-codec:a',
     'libmp3lame',
     '-b:a',

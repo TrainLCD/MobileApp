@@ -23,6 +23,7 @@ const googleTtsApiKey = defineSecret('GOOGLE_TTS_API_KEY');
 const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
 const VERTEX_AI_LOCATION = 'us-central1';
 const GOOGLE_TTS_API_VERSION = 'v1';
+const EN_GEMINI_VOLUME_BOOST_DB = 8;
 
 interface SynthesizedAudio {
   audioContent: string;
@@ -63,12 +64,13 @@ const sniffAudioMimeType = (audioBuffer: Buffer): string => {
 /** 音声バッファが既にMP3であればそのまま返し、PCM/WAVならMP3にエンコードする */
 const ensureMp3 = async (
   audioBuffer: Buffer,
-  mimeType: string
+  mimeType: string,
+  volumeDb?: number
 ): Promise<{ buffer: Buffer; mimeType: string }> => {
-  if (mimeType === 'audio/mpeg') {
+  if (mimeType === 'audio/mpeg' && volumeDb == null) {
     return { buffer: audioBuffer, mimeType };
   }
-  return encodePcmToMp3(audioBuffer);
+  return encodePcmToMp3(audioBuffer, undefined, volumeDb);
 };
 
 /** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → Y（X）） */
@@ -301,7 +303,7 @@ export const tts = onCall(
 
             const [jaMp3, enMp3] = await Promise.all([
               ensureMp3(jaBuffer, jaRawMime),
-              ensureMp3(enBuffer, enRawMime),
+              ensureMp3(enBuffer, enRawMime, EN_GEMINI_VOLUME_BOOST_DB),
             ]);
 
             return {
@@ -344,7 +346,8 @@ export const tts = onCall(
       const enAudioBuffer = Buffer.from(enAudio.audioContent, 'base64');
       const enMp3 = await ensureMp3(
         enAudioBuffer,
-        enAudio.mimeType || sniffAudioMimeType(enAudioBuffer)
+        enAudio.mimeType || sniffAudioMimeType(enAudioBuffer),
+        EN_GEMINI_VOLUME_BOOST_DB
       );
 
       const enAudioContent = enMp3.buffer.toString('base64');
