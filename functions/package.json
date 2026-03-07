@@ -25,7 +25,6 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@breezystack/lamejs": "^1.2.7",
     "@google-cloud/pubsub": "^4.3.3",
     "@google-cloud/vertexai": "^1.10.0",
     "@googleapis/androidpublisher": "^15.0.0",

@@ -1,60 +1,60 @@
-const MP3_BITRATE = 128;
+import { spawn } from 'node:child_process';
+
+const MP3_BITRATE = '128k';
 
 /**
- * PCM 16-bit LE mono を MP3 にエンコードする。
- * WAV (RIFF) ヘッダー付きの場合は自動でスキップする。
+ * PCM 16-bit LE mono を ffmpeg で MP3 にエンコードする。
+ * WAV (RIFF) ヘッダー付きの場合は自動判別される。
  */
 export const encodePcmToMp3 = async (
   pcmBuffer: Buffer,
   sampleRate = 24000
 ): Promise<{ buffer: Buffer; mimeType: string }> => {
-  // TypeScript の "module": "commonjs" 設定では await import() が require() に変換され、
-  // @breezystack/lamejs の IIFE ビルドは module.exports を設定しないため空オブジェクトになる。
-  // new Function を使って真の ESM dynamic import を強制する。
-  const dynamicImport = new Function(
-    'specifier',
-    'return import(specifier)'
-  ) as (specifier: string) => Promise<typeof import('@breezystack/lamejs')>;
-  const { Mp3Encoder } = await dynamicImport('@breezystack/lamejs');
+  const isWav =
+    pcmBuffer.length >= 12 &&
+    pcmBuffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    pcmBuffer.subarray(8, 12).toString('ascii') === 'WAVE';
 
-  let pcmData = pcmBuffer;
-  let rate = sampleRate;
+  const inputArgs = isWav
+    ? ['-i', 'pipe:0']
+    : ['-f', 's16le', '-ar', String(sampleRate), '-ac', '1', '-i', 'pipe:0'];
 
-  // WAV ヘッダーがあれば解析してスキップ
-  if (
-    pcmData.length >= 44 &&
-    pcmData.subarray(0, 4).toString('ascii') === 'RIFF' &&
-    pcmData.subarray(8, 12).toString('ascii') === 'WAVE'
-  ) {
-    rate = pcmData.readUInt32LE(24);
-    pcmData = pcmData.subarray(44);
-  }
+  const args = [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    ...inputArgs,
+    '-codec:a',
+    'libmp3lame',
+    '-b:a',
+    MP3_BITRATE,
+    '-f',
+    'mp3',
+    'pipe:1',
+  ];
 
-  const samples = new Int16Array(
-    pcmData.buffer,
-    pcmData.byteOffset,
-    pcmData.byteLength / 2
-  );
+  const mp3Buffer = await new Promise<Buffer>((resolve, reject) => {
+    const proc = spawn('ffmpeg', args, { stdio: ['pipe', 'pipe', 'pipe'] });
 
-  const encoder = new Mp3Encoder(1, rate, MP3_BITRATE);
-  const chunkSize = 1152;
-  const mp3Parts: Buffer[] = [];
+    const chunks: Buffer[] = [];
+    proc.stdout.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-  for (let i = 0; i < samples.length; i += chunkSize) {
-    const chunk = samples.subarray(i, i + chunkSize);
-    const mp3buf = encoder.encodeBuffer(chunk);
-    if (mp3buf.length > 0) {
-      mp3Parts.push(Buffer.from(mp3buf.buffer, mp3buf.byteOffset, mp3buf.byteLength));
-    }
-  }
+    let stderr = '';
+    proc.stderr.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
 
-  const flush = encoder.flush();
-  if (flush.length > 0) {
-    mp3Parts.push(Buffer.from(flush.buffer, flush.byteOffset, flush.byteLength));
-  }
+    proc.on('error', reject);
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`ffmpeg exited with code ${code}: ${stderr}`));
+        return;
+      }
+      resolve(Buffer.concat(chunks as unknown as Uint8Array[]));
+    });
 
-  return {
-    buffer: Buffer.concat(mp3Parts as unknown as Uint8Array[]),
-    mimeType: 'audio/mpeg',
-  };
+    proc.stdin.end(pcmBuffer);
+  });
+
+  return { buffer: mp3Buffer, mimeType: 'audio/mpeg' };
 };
