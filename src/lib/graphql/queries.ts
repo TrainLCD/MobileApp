@@ -69,7 +69,6 @@ export const LINE_NESTED_FRAGMENT = gql`
       id
       groupId
       name
-      nameIpa
       nameRoman
       nameChinese
       nameKorean
@@ -82,7 +81,6 @@ export const LINE_NESTED_FRAGMENT = gql`
       ...TinyTrainTypeFields
     }
     lineType
-    nameIpa
     nameFull
     nameKatakana
     nameRoman
@@ -125,7 +123,6 @@ export const STATION_FRAGMENT = gql`
     id
     groupId
     name
-    nameIpa
     nameKatakana
     nameRoman
     nameChinese
@@ -186,7 +183,6 @@ export const STATION_PRESET_FRAGMENT = gql`
     id
     groupId
     name
-    nameIpa
     nameRoman
     stationNumbers {
       ...StationNumberFields
@@ -247,7 +243,6 @@ export const STATION_LIGHT_FRAGMENT = gql`
     id
     groupId
     name
-    nameIpa
     nameRoman
     nameChinese
     nameKorean
@@ -313,7 +308,6 @@ export const LINE_ROUTE_FRAGMENT = gql`
     id
     color
     lineType
-    nameIpa
     nameShort
     nameRoman
     lineSymbols {
@@ -323,7 +317,6 @@ export const LINE_ROUTE_FRAGMENT = gql`
       id
       groupId
       name
-      nameIpa
       nameRoman
       nameChinese
       nameKorean
