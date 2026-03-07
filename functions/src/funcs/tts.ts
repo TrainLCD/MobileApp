@@ -259,7 +259,7 @@ export const tts = onCall(
       .collection('voices');
 
     const hashAlgorithm = 'sha256';
-    const version = 6;
+    const version = 7;
     const hashPayloadObj = {
       enModel: GEMINI_TTS_MODEL,
       enVoiceName,
@@ -303,7 +303,7 @@ export const tts = onCall(
 
             const [jaMp3, enMp3] = await Promise.all([
               ensureMp3(jaBuffer, jaRawMime),
-              ensureMp3(enBuffer, enRawMime, EN_GEMINI_VOLUME_BOOST_DB),
+              ensureMp3(enBuffer, enRawMime),
             ]);
 
             return {
