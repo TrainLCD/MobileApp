@@ -67,6 +67,16 @@ const ensureMp3 = async (
   return encodePcmToMp3(audioBuffer);
 };
 
+/** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → X） */
+const stripSsml = (text: string): string =>
+  text
+    .replace(/<sub\s+alias="([^"]*)">[^<]*<\/sub>/gi, '$1')
+    .replace(/<break\s*[^/]*\/>/gi, ' ')
+    .replace(/<speak>|<\/speak>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
 const synthesizeWithGemini = async (
   projectId: string,
   text: string,
@@ -96,7 +106,9 @@ const synthesizeWithGemini = async (
         role: 'user',
         parts: [
           {
-            text: prompt ? `${prompt}\n${text}` : text,
+            text: prompt
+              ? `${prompt}\n${stripSsml(text)}`
+              : stripSsml(text),
           },
         ],
       },
@@ -156,8 +168,13 @@ export const tts = onCall({ region: 'asia-northeast1' }, async (req) => {
     );
   }
 
-  const ttsConfigDoc = await firestore.collection('configs').doc('tts').get();
-  const ttsConfig = ttsConfigDoc.data();
+  let ttsConfig: FirebaseFirestore.DocumentData | undefined;
+  try {
+    const ttsConfigDoc = await firestore.collection('configs').doc('tts').get();
+    ttsConfig = ttsConfigDoc.data();
+  } catch (e) {
+    console.warn('Failed to read TTS config from Firestore, using defaults:', e);
+  }
   const defaultJaVoice = ttsConfig?.jaVoiceName || 'Aoede';
   const defaultEnVoice = ttsConfig?.enVoiceName || 'Kore';
 

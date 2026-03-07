@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import type { Maybe, Station } from '~/@types/graphql';
+import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
@@ -740,5 +741,8 @@ export const useBusTTSText = (
     return [];
   }
 
-  return [jaText.trim(), enText.trim()];
+  return [
+    jaText.trim().replace(parenthesisRegexp, ''),
+    enText.trim().replace(parenthesisRegexp, ''),
+  ];
 };
