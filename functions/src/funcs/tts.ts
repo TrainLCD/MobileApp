@@ -190,198 +190,205 @@ const synthesizeWithGoogleTts = async (
     signal: AbortSignal.timeout(30000),
   });
 
-  const { audioContent } = await res.json();
-  return audioContent;
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      `Google TTS API returned ${res.status}: ${JSON.stringify(json.error ?? json)}`
+    );
+  }
+  return json.audioContent;
 };
 
 export const tts = onCall(
   { region: 'asia-northeast1', secrets: [googleTtsApiKey] },
   async (req) => {
-  if (!req.auth) {
-    throw new HttpsError(
-      'failed-precondition',
-      'The function must be called while authenticated.'
-    );
-  }
-
-  const ssmlJa: string | undefined = req.data.ssmlJa;
-  if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
-    throw new HttpsError(
-      'invalid-argument',
-      `The function must be called with one argument "ssmlJa" containing the message to add.`
-    );
-  }
-
-  if (typeof req.data.ssmlEn !== 'string' || req.data.ssmlEn.length === 0) {
-    throw new HttpsError(
-      'invalid-argument',
-      `The function must be called with one argument "ssmlEn" containing the message to add.`
-    );
-  }
-
-  let ssmlEn = normalizeRomanText(req.data.ssmlEn);
-
-  // <phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
-  if (!ssmlEn.includes('<phoneme')) {
-    ssmlEn = applyLegacyIpaReplacements(ssmlEn);
-  }
-
-  if (ssmlEn.trim().length === 0) {
-    throw new HttpsError(
-      'invalid-argument',
-      `The function must be called with one argument "ssmlEn" containing the message to add.`
-    );
-  }
-
-  const jaVoiceName =
-    process.env.GOOGLE_TTS_JA_VOICE_NAME || 'ja-JP-Standard-B';
-
-  let ttsConfig: FirebaseFirestore.DocumentData | undefined;
-  try {
-    const ttsConfigDoc = await firestore.collection('configs').doc('tts').get();
-    ttsConfig = ttsConfigDoc.data();
-  } catch (e) {
-    console.warn(
-      'Failed to read TTS config from Firestore, using defaults:',
-      e
-    );
-  }
-  const defaultEnVoice = ttsConfig?.enVoiceName || 'Aoede';
-
-  const enVoiceName =
-    (typeof req.data.enVoiceName === 'string' && req.data.enVoiceName) ||
-    defaultEnVoice;
-
-  const voicesCollection = firestore
-    .collection('caches')
-    .doc('tts')
-    .collection('voices');
-
-  const hashAlgorithm = 'sha256';
-  const version = 6;
-  const hashPayloadObj = {
-    enModel: GEMINI_TTS_MODEL,
-    enVoiceName,
-    jaVoiceName,
-    ssmlEn,
-    ssmlJa,
-    version,
-  } as const;
-  const hashPayload = JSON.stringify(
-    hashPayloadObj,
-    Object.keys(hashPayloadObj).sort()
-  );
-
-  const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
-
-  const snapshot = await voicesCollection.doc(id).get();
-
-  if (snapshot.exists) {
-    const data = snapshot.data() ?? {};
-    const pathJa = data?.pathJa;
-    const pathEn = data?.pathEn;
-    if (typeof pathJa === 'string' && typeof pathEn === 'string') {
-      try {
-        const [jaAudioData, enAudioData] = await Promise.all([
-          storage.bucket().file(pathJa).download(),
-          storage.bucket().file(pathEn).download(),
-        ]);
-        const jaBuffer = jaAudioData?.[0] ?? null;
-        const enBuffer = enAudioData?.[0] ?? null;
-        const jaAudioContent = jaBuffer?.toString('base64') ?? null;
-        const enAudioContent = enBuffer?.toString('base64') ?? null;
-        if (jaAudioContent && enAudioContent) {
-          const jaRawMime =
-            (typeof data?.jaAudioMimeType === 'string' &&
-              data.jaAudioMimeType) ||
-            (jaBuffer ? sniffAudioMimeType(jaBuffer) : 'audio/pcm');
-          const enRawMime =
-            (typeof data?.enAudioMimeType === 'string' &&
-              data.enAudioMimeType) ||
-            (enBuffer ? sniffAudioMimeType(enBuffer) : 'audio/pcm');
-
-          const [jaMp3, enMp3] = await Promise.all([
-            ensureMp3(jaBuffer, jaRawMime),
-            ensureMp3(enBuffer, enRawMime),
-          ]);
-
-          return {
-            id,
-            jaAudioContent: jaMp3.buffer.toString('base64'),
-            enAudioContent: enMp3.buffer.toString('base64'),
-            jaAudioMimeType: jaMp3.mimeType,
-            enAudioMimeType: enMp3.mimeType,
-          };
-        }
-      } catch (e) {
-        console.warn(
-          'Cache hit but download failed. Falling back to synthesis.',
-          e
-        );
-      }
-    } else {
-      console.warn(
-        'Cache doc missing pathJa/pathEn. Falling back to synthesis.'
+    if (!req.auth) {
+      throw new HttpsError(
+        'failed-precondition',
+        'The function must be called while authenticated.'
       );
     }
-  }
 
-  const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
-  if (!projectId) {
-    throw new HttpsError('failed-precondition', 'GCP project ID is not set');
-  }
+    const ssmlJa: string | undefined = req.data.ssmlJa;
+    if (!(typeof ssmlJa === 'string') || ssmlJa.length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        `The function must be called with one argument "ssmlJa" containing the message to add.`
+      );
+    }
 
-  try {
-    const [jaAudioContent, enAudio] = await Promise.all([
-      synthesizeWithGoogleTts(ssmlJa, jaVoiceName, 'ja-JP'),
-      synthesizeWithGemini(
-        projectId,
-        ssmlEn,
-        enVoiceName,
-        'Read the following at a brisk, quick pace like a train announcement. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
-      ),
-    ]);
+    if (typeof req.data.ssmlEn !== 'string' || req.data.ssmlEn.length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        `The function must be called with one argument "ssmlEn" containing the message to add.`
+      );
+    }
 
-    const enAudioBuffer = Buffer.from(enAudio.audioContent, 'base64');
-    const enMp3 = await ensureMp3(
-      enAudioBuffer,
-      enAudio.mimeType || sniffAudioMimeType(enAudioBuffer)
+    let ssmlEn = normalizeRomanText(req.data.ssmlEn);
+
+    // <phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
+    if (!ssmlEn.includes('<phoneme')) {
+      ssmlEn = applyLegacyIpaReplacements(ssmlEn);
+    }
+
+    if (ssmlEn.trim().length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        `The function must be called with one argument "ssmlEn" containing the message to add.`
+      );
+    }
+
+    const jaVoiceName = 'ja-JP-Standard-B';
+
+    let ttsConfig: FirebaseFirestore.DocumentData | undefined;
+    try {
+      const ttsConfigDoc = await firestore
+        .collection('configs')
+        .doc('tts')
+        .get();
+      ttsConfig = ttsConfigDoc.data();
+    } catch (e) {
+      console.warn(
+        'Failed to read TTS config from Firestore, using defaults:',
+        e
+      );
+    }
+    const defaultEnVoice = ttsConfig?.enVoiceName || 'Aoede';
+
+    const enVoiceName =
+      (typeof req.data.enVoiceName === 'string' && req.data.enVoiceName) ||
+      defaultEnVoice;
+
+    const voicesCollection = firestore
+      .collection('caches')
+      .doc('tts')
+      .collection('voices');
+
+    const hashAlgorithm = 'sha256';
+    const version = 6;
+    const hashPayloadObj = {
+      enModel: GEMINI_TTS_MODEL,
+      enVoiceName,
+      jaVoiceName,
+      ssmlEn,
+      ssmlJa,
+      version,
+    } as const;
+    const hashPayload = JSON.stringify(
+      hashPayloadObj,
+      Object.keys(hashPayloadObj).sort()
     );
 
-    const enAudioContent = enMp3.buffer.toString('base64');
-    const enAudioMimeType = enMp3.mimeType;
+    const id = createHash(hashAlgorithm).update(hashPayload).digest('hex');
 
-    const cacheTopic = pubsub.topic('tts-cache');
-    cacheTopic
-      .publishMessage({
-        json: {
-          id,
-          jaAudioContent,
-          enAudioContent,
-          jaAudioMimeType: 'audio/mpeg',
-          enAudioMimeType,
-          ssmlJa,
+    const snapshot = await voicesCollection.doc(id).get();
+
+    if (snapshot.exists) {
+      const data = snapshot.data() ?? {};
+      const pathJa = data?.pathJa;
+      const pathEn = data?.pathEn;
+      if (typeof pathJa === 'string' && typeof pathEn === 'string') {
+        try {
+          const [jaAudioData, enAudioData] = await Promise.all([
+            storage.bucket().file(pathJa).download(),
+            storage.bucket().file(pathEn).download(),
+          ]);
+          const jaBuffer = jaAudioData?.[0] ?? null;
+          const enBuffer = enAudioData?.[0] ?? null;
+          const jaAudioContent = jaBuffer?.toString('base64') ?? null;
+          const enAudioContent = enBuffer?.toString('base64') ?? null;
+          if (jaAudioContent && enAudioContent) {
+            const jaRawMime =
+              (typeof data?.jaAudioMimeType === 'string' &&
+                data.jaAudioMimeType) ||
+              (jaBuffer ? sniffAudioMimeType(jaBuffer) : 'audio/pcm');
+            const enRawMime =
+              (typeof data?.enAudioMimeType === 'string' &&
+                data.enAudioMimeType) ||
+              (enBuffer ? sniffAudioMimeType(enBuffer) : 'audio/pcm');
+
+            const [jaMp3, enMp3] = await Promise.all([
+              ensureMp3(jaBuffer, jaRawMime),
+              ensureMp3(enBuffer, enRawMime),
+            ]);
+
+            return {
+              id,
+              jaAudioContent: jaMp3.buffer.toString('base64'),
+              enAudioContent: enMp3.buffer.toString('base64'),
+              jaAudioMimeType: jaMp3.mimeType,
+              enAudioMimeType: enMp3.mimeType,
+            };
+          }
+        } catch (e) {
+          console.warn(
+            'Cache hit but download failed. Falling back to synthesis.',
+            e
+          );
+        }
+      } else {
+        console.warn(
+          'Cache doc missing pathJa/pathEn. Falling back to synthesis.'
+        );
+      }
+    }
+
+    const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+    if (!projectId) {
+      throw new HttpsError('failed-precondition', 'GCP project ID is not set');
+    }
+
+    try {
+      const [jaAudioContent, enAudio] = await Promise.all([
+        synthesizeWithGoogleTts(ssmlJa, jaVoiceName, 'ja-JP'),
+        synthesizeWithGemini(
+          projectId,
           ssmlEn,
-          voiceJa: jaVoiceName,
-          voiceEn: enVoiceName,
-          enModel: GEMINI_TTS_MODEL,
-        },
-      })
-      .catch((err) => {
-        console.error('Failed to publish cache message:', err);
-        // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
-      });
+          enVoiceName,
+          'Read the following at a brisk, quick pace like a train announcement. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
+        ),
+      ]);
 
-    return {
-      id,
-      jaAudioContent,
-      enAudioContent,
-      jaAudioMimeType: 'audio/mpeg',
-      enAudioMimeType,
-    };
-  } catch (error) {
-    console.error('TTS API call failed:', error);
-    throw new HttpsError('internal', 'TTS synthesis failed');
-  }
+      const enAudioBuffer = Buffer.from(enAudio.audioContent, 'base64');
+      const enMp3 = await ensureMp3(
+        enAudioBuffer,
+        enAudio.mimeType || sniffAudioMimeType(enAudioBuffer)
+      );
+
+      const enAudioContent = enMp3.buffer.toString('base64');
+      const enAudioMimeType = enMp3.mimeType;
+
+      const cacheTopic = pubsub.topic('tts-cache');
+      cacheTopic
+        .publishMessage({
+          json: {
+            id,
+            jaAudioContent,
+            enAudioContent,
+            jaAudioMimeType: 'audio/mpeg',
+            enAudioMimeType,
+            ssmlJa,
+            ssmlEn,
+            voiceJa: jaVoiceName,
+            voiceEn: enVoiceName,
+            enModel: GEMINI_TTS_MODEL,
+          },
+        })
+        .catch((err) => {
+          console.error('Failed to publish cache message:', err);
+          // キャッシュ失敗はユーザーに影響しないため、エラーは投げない
+        });
+
+      return {
+        id,
+        jaAudioContent,
+        enAudioContent,
+        jaAudioMimeType: 'audio/mpeg',
+        enAudioMimeType,
+      };
+    } catch (error) {
+      console.error('TTS API call failed:', error);
+      throw new HttpsError('internal', 'TTS synthesis failed');
+    }
   }
 );
