@@ -188,15 +188,15 @@ export const useTTSText = (
       return '';
     }
     if (split.length === 1) {
-      return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}${Number(
+      return `${theme === APP_THEME.JR_WEST ? '' : 'Station Number '}<say-as interpret-as="cardinal">${Number(
         nextStationNumber.stationNumber
-      )}`;
+      )}</say-as>`;
     }
 
     const symbol = split[0]?.split('').join(' ');
     const num = split[2]
-      ? `${Number(split[1])}-${Number(split[2])}`
-      : Number(split[1]).toString();
+      ? `<say-as interpret-as="cardinal">${Number(split[1])}</say-as>-<say-as interpret-as="cardinal">${Number(split[2])}</say-as>`
+      : `<say-as interpret-as="cardinal">${Number(split[1])}</say-as>`;
 
     return `${
       nextStationNumber.lineSymbol?.length || theme === APP_THEME.JR_WEST

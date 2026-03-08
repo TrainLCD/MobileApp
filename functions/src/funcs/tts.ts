@@ -23,7 +23,7 @@ const googleTtsApiKey = defineSecret('GOOGLE_TTS_API_KEY');
 const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
 const VERTEX_AI_LOCATION = 'us-central1';
 const GOOGLE_TTS_API_VERSION = 'v1';
-const EN_GEMINI_VOLUME_BOOST_DB = 8;
+const EN_GEMINI_VOLUME_BOOST_DB = 6;
 
 interface SynthesizedAudio {
   audioContent: string;
@@ -79,6 +79,26 @@ const ensureMp3 = async (
   return encodePcmToMp3(audioBuffer, undefined, volumeDb);
 };
 
+/** 0〜99 の整数を英単語に変換する */
+const numberToEnglishWord = (n: number): string => {
+  const ones = [
+    'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+    'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+    'sixteen', 'seventeen', 'eighteen', 'nineteen',
+  ];
+  const tens = [
+    '', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy',
+    'eighty', 'ninety',
+  ];
+  if (n < 20) return ones[n] ?? String(n);
+  if (n < 100) {
+    const t = Math.floor(n / 10);
+    const o = n % 10;
+    return (tens[t] ?? '') + (o ? `-${ones[o]}` : '');
+  }
+  return String(n);
+};
+
 /** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → Y（X）） */
 const stripSsml = (text: string): string =>
   text
@@ -86,6 +106,10 @@ const stripSsml = (text: string): string =>
       /<sub\s+alias="([^"]*)">([^<]*)<\/sub>/gi,
       (_match, alias, original) =>
         original === alias ? alias : `${original}（${alias}）`
+    )
+    .replace(
+      /<say-as\s+interpret-as="cardinal">(\d+)<\/say-as>/gi,
+      (_match, num) => numberToEnglishWord(Number(num))
     )
     .replace(/<break\s*[^/]*\/>/gi, ' ')
     .replace(/<speak>|<\/speak>/gi, '')
@@ -200,7 +224,7 @@ const synthesizeWithGoogleTts = async (
 };
 
 export const tts = onCall(
-  { region: 'asia-northeast1', secrets: [googleTtsApiKey] },
+  { region: 'asia-northeast1', cpu: 2, secrets: [googleTtsApiKey] },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError(
@@ -345,7 +369,7 @@ export const tts = onCall(
           projectId,
           ssmlEn,
           enVoiceName,
-          'Read the following at a brisk, quick pace like a train announcement. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
+          'Read the following in a calm, clear, and composed tone like a modern train announcement. Speak quickly and crisply with a swift, efficient delivery — do not linger on words or pause unnecessarily. Maintain a steady, relaxed intonation despite the fast pace. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
         ),
       ]);
 
