@@ -322,7 +322,8 @@ describe('Without trainType & With numbering', () => {
       expect(en).toHaveLength(en.length);
 
       // 日本語: 英語SSMLに駅番号（例: S 2 や station number S 2 など）が含まれていることを検証
-      const stationNumberRegex = /(S <say-as interpret-as="cardinal">\d{1,2}<\/say-as>|station number S ?<say-as interpret-as="cardinal">\d{1,2}<\/say-as>)/;
+      const stationNumberRegex =
+        /(S <say-as interpret-as="cardinal">\d{1,2}<\/say-as>|station number S ?<say-as interpret-as="cardinal">\d{1,2}<\/say-as>)/;
       expect(en).toMatch(stationNumberRegex);
     });
   });
