@@ -1,5 +1,4 @@
-import type React from 'react';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import getStationNameR from '~/utils/getStationNameR';
@@ -15,7 +14,7 @@ export interface StationNameProps {
   marginBottom?: number;
 }
 
-export const StationName: React.FC<StationNameProps> = ({
+export const StationName: React.FC<StationNameProps> = React.memo(({
   station,
   en,
   horizontal,
@@ -23,6 +22,7 @@ export const StationName: React.FC<StationNameProps> = ({
   marginBottom,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+  const characters = useMemo(() => station.name?.split('') ?? [], [station.name]);
   const dim = useWindowDimensions();
 
   const horizontalAdditionalStyle = useMemo(
@@ -64,7 +64,7 @@ export const StationName: React.FC<StationNameProps> = ({
 
   return (
     <View style={styles.stationNameMapContainer}>
-      {station.name?.split('').map((c, j) => (
+      {characters.map((c, j) => (
         <Typography
           style={[styles.stationName, passed ? styles.grayColor : null]}
           key={`${j + 1}${c}`}
@@ -74,4 +74,4 @@ export const StationName: React.FC<StationNameProps> = ({
       ))}
     </View>
   );
-};
+});
