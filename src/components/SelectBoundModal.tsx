@@ -233,26 +233,39 @@ export const SelectBoundModal: React.FC<Props> = ({
     [wantedDestination]
   );
 
+  const inboundNames = useMemo(
+    () => inboundStations.map((s) => s.name).join('・'),
+    [inboundStations]
+  );
+  const outboundNames = useMemo(
+    () => outboundStations.map((s) => s.name).join('・'),
+    [outboundStations]
+  );
+  const inboundNamesRoman = useMemo(
+    () => inboundStations.map((s) => s.nameRoman).join(' and '),
+    [inboundStations]
+  );
+  const outboundNamesRoman = useMemo(
+    () => outboundStations.map((s) => s.nameRoman).join(' and '),
+    [outboundStations]
+  );
+
   const loopLineDirectionText = useCallback(
     (direction: LineDirection) => {
       const directionName = directionToDirectionName(line, direction);
 
       if (isJapanese) {
         if (direction === 'INBOUND') {
-          return `${directionName}(${inboundStations
-            .map((s) => s.name)
-            .join('・')}方面)`;
+          return `${directionName}(${inboundNames}方面)`;
         }
-        return `${directionName}(${outboundStations
-          .map((s) => s.name)
-          .join('・')}方面)`;
+        return `${directionName}(${outboundNames}方面)`;
       }
       if (direction === 'INBOUND') {
-        return `for ${inboundStations.map((s) => s.nameRoman).join(' and ')}`;
+        return `for ${inboundNamesRoman}`;
       }
-      return `for ${outboundStations.map((s) => s.nameRoman).join(' and ')}`;
+      return `for ${outboundNamesRoman}`;
     },
-    [inboundStations, outboundStations, line]
+    [inboundNames, outboundNames, inboundNamesRoman, outboundNamesRoman, line]
   );
 
   const renderButton = useCallback(

@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
@@ -122,47 +122,44 @@ type SubtitleProps = {
   loading?: boolean;
 };
 
-const Subtitle = ({
-  inboundText,
-  outboundText,
-  numberOfLines,
-  loading,
-}: SubtitleProps) => {
-  if (loading) {
+const Subtitle = memo(
+  ({ inboundText, outboundText, numberOfLines, loading }: SubtitleProps) => {
+    if (loading) {
+      return (
+        <View style={styles.subtitleContainer}>
+          <SkeletonPlaceholder borderRadius={1} speed={1500}>
+            <SkeletonPlaceholder.Item opacity={0.9} width={60} height={12} />
+          </SkeletonPlaceholder>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.subtitleContainer}>
-        <SkeletonPlaceholder borderRadius={1} speed={1500}>
-          <SkeletonPlaceholder.Item opacity={0.9} width={60} height={12} />
-        </SkeletonPlaceholder>
+        {inboundText ? (
+          <Typography style={styles.subtitle} numberOfLines={numberOfLines}>
+            {inboundText}
+          </Typography>
+        ) : null}
+        {inboundText && outboundText ? (
+          <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.arrow}>
+            <Path
+              d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
+              fill="none"
+              stroke="#fff"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        ) : null}
+        {outboundText ? (
+          <Typography style={styles.subtitle}>{outboundText}</Typography>
+        ) : null}
       </View>
     );
   }
-
-  return (
-    <View style={styles.subtitleContainer}>
-      {inboundText ? (
-        <Typography style={styles.subtitle} numberOfLines={numberOfLines}>
-          {inboundText}
-        </Typography>
-      ) : null}
-      {inboundText && outboundText ? (
-        <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.arrow}>
-          <Path
-            d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
-            fill="none"
-            stroke="#fff"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      ) : null}
-      {outboundText ? (
-        <Typography style={styles.subtitle}>{outboundText}</Typography>
-      ) : null}
-    </View>
-  );
-};
+);
 
 export const CommonCard: React.FC<Props> = ({
   line,
@@ -215,6 +212,11 @@ export const CommonCard: React.FC<Props> = ({
   const targetStationColor =
     targetStation?.stationNumbers?.[0]?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
+
+  const titleParts = useMemo(
+    () => titleOrLineName.split(/(\([^)]*\))/),
+    [titleOrLineName]
+  );
 
   const additionalRootStyle = useMemo(
     () => ({
@@ -291,10 +293,10 @@ export const CommonCard: React.FC<Props> = ({
       )}
       <View style={styles.texts}>
         <Typography style={styles.title} numberOfLines={1}>
-          {titleOrLineName.split(/(\([^)]*\))/).map((part, index, parts) =>
+          {titleParts.map((part, index) =>
             /^\(.*\)$/.test(part) ? (
               <Typography key={`${index}-${part}`} style={styles.titleParens}>
-                {index > 0 && !/\s$/.test(parts[index - 1] ?? '')
+                {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
                   ? ` ${part}`
                   : part}
               </Typography>

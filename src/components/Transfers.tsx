@@ -91,46 +91,44 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const stationNumbers = useMemo(
     () =>
-      lines
-        ?.map((l) => l)
-        ?.map((l) => {
-          const stationNumberData = l.station?.stationNumbers?.find((sn) =>
-            l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
-          );
-          const lineSymbol = stationNumberData?.lineSymbol ?? '';
-          const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
-          const stationNumber = stationNumberData?.stationNumber ?? '';
-          const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
+      lines?.map((l) => {
+        const stationNumberData = l.station?.stationNumbers?.find((sn) =>
+          l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
+        );
+        const lineSymbol = stationNumberData?.lineSymbol ?? '';
+        const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
+        const stationNumber = stationNumberData?.stationNumber ?? '';
+        const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
 
-          if (!lineSymbol.length || !stationNumber.length) {
-            const stationNumberWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.stationNumber ?? '';
-            const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
-            const lineSymbolColorWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.lineSymbolColor ?? '#000000';
-            const lineSymbolShapeWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.lineSymbolShape ?? 'NOOP';
-
-            return {
-              __typename: 'StationNumber' as const,
-              lineSymbol: lineSymbolWhenEmptySymbol,
-              lineSymbolColor: lineSymbolColorWhenEmptySymbol,
-              stationNumber: stationNumberWhenEmptySymbol,
-              lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
-            };
-          }
+        if (!lineSymbol.length || !stationNumber.length) {
+          const stationNumberWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.stationNumber ?? '';
+          const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
+          const lineSymbolColorWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.lineSymbolColor ?? '#000000';
+          const lineSymbolShapeWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.lineSymbolShape ?? 'NOOP';
 
           return {
             __typename: 'StationNumber' as const,
-            lineSymbol,
-            lineSymbolColor,
-            stationNumber,
-            lineSymbolShape,
+            lineSymbol: lineSymbolWhenEmptySymbol,
+            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
+            stationNumber: stationNumberWhenEmptySymbol,
+            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
           };
-        }),
+        }
+
+        return {
+          __typename: 'StationNumber' as const,
+          lineSymbol,
+          lineSymbolColor,
+          stationNumber,
+          lineSymbolShape,
+        };
+      }),
     [lines]
   );
 
