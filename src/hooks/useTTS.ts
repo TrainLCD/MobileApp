@@ -51,6 +51,10 @@ export const useTTS = (): void => {
   const playingRef = useRef(false);
   const isLoadableRef = useRef(true);
   const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
+  // 最後にTTS再生を実行（または再生キューに追加）したテキストを保持する。
+  // usePreviousと異なり、抑制やスキップされたテキストでは更新されないため、
+  // 再訪駅でテキスト変更が「消費」されてTTSが発火しなくなる問題を防ぐ。
+  const lastTriggeredTextRef = useRef<[string, string] | null>(null);
   const speechWithTextRef = useRef<
     ((ja: string, en: string) => Promise<void>) | null
   >(null);
@@ -62,7 +66,6 @@ export const useTTS = (): void => {
       : trainTTSResult;
   const ttsText = ttsResult.text;
   const prefetchText = ttsResult.nextText;
-  const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
   const [prefetchJa, prefetchEn] = prefetchText.length
     ? prefetchText
@@ -143,8 +146,10 @@ export const useTTS = (): void => {
         return;
       }
 
-      firstSpeechRef.current = false;
-      suppressPostFirstSpeechRef.current = true;
+      if (firstSpeechRef.current) {
+        firstSpeechRef.current = false;
+        suppressPostFirstSpeechRef.current = true;
+      }
 
       cleanupAllPlayers();
 
@@ -338,12 +343,23 @@ export const useTTS = (): void => {
   }, [selectedBound]);
 
   useEffect(() => {
-    if (!enabled || (prevTextJa === textJa && prevTextEn === textEn)) {
+    if (!enabled) {
       return;
     }
 
     if (!textJa || !textEn) {
       pendingRef.current = null;
+      return;
+    }
+
+    const textChanged =
+      !lastTriggeredTextRef.current ||
+      lastTriggeredTextRef.current[0] !== textJa ||
+      lastTriggeredTextRef.current[1] !== textEn;
+    const stoppingStateChanged = stoppingState !== prevStoppingState;
+
+    // テキストもstoppingStateも変化していなければスキップ
+    if (!textChanged && !stoppingStateChanged) {
       return;
     }
 
@@ -353,11 +369,13 @@ export const useTTS = (): void => {
         firstSpeechRef,
         suppressFirstSpeechUntilDepartureRef,
         arrived,
-        stoppingStateChanged: stoppingState !== prevStoppingState,
+        stoppingStateChanged,
       })
     ) {
       return;
     }
+
+    lastTriggeredTextRef.current = [textJa, textEn];
 
     // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
     if (playingRef.current) {
@@ -375,16 +393,7 @@ export const useTTS = (): void => {
         console.error(err);
       }
     })();
-  }, [
-    arrived,
-    enabled,
-    prevStoppingState,
-    prevTextEn,
-    prevTextJa,
-    stoppingState,
-    textEn,
-    textJa,
-  ]);
+  }, [arrived, enabled, prevStoppingState, stoppingState, textEn, textJa]);
 
   useEffect(() => {
     return () => {

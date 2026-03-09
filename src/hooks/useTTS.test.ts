@@ -37,7 +37,7 @@ jest.mock('./useBusTTSText', () => ({
 }));
 
 jest.mock('./usePrevious', () => ({
-  usePrevious: jest.fn(() => ['', '']),
+  usePrevious: jest.fn(() => 'CURRENT'),
 }));
 
 jest.mock('@react-native-firebase/auth', () => ({
