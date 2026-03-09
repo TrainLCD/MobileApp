@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -23,6 +23,11 @@ export type ButtonLayout = {
   width: number;
   height: number;
 };
+
+const ICON_COLOR = {
+  active: '#0A84FF',
+  inactive: '#6B7280', // gray-500 相当
+} as const;
 
 const styles = StyleSheet.create({
   container: {
@@ -100,14 +105,6 @@ const FooterTabBar: React.FC<Props> = ({
     [onSettingsButtonLayout]
   );
 
-  const iconColor = useMemo(
-    () => ({
-      active: '#0A84FF',
-      inactive: '#6B7280', // gray-500 相当
-    }),
-    []
-  );
-
   if (!visible) return null;
 
   const safePad = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
@@ -137,7 +134,7 @@ const FooterTabBar: React.FC<Props> = ({
               name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
               size={26}
               color={
-                active === 'search' ? iconColor.active : iconColor.inactive
+                active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive
               }
             />
           </Pressable>
@@ -152,7 +149,9 @@ const FooterTabBar: React.FC<Props> = ({
             <Ionicons
               name={active === 'home' ? 'navigate' : 'navigate-outline'}
               size={28}
-              color={active === 'home' ? iconColor.active : iconColor.inactive}
+              color={
+                active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive
+              }
             />
           </Pressable>
 
@@ -169,7 +168,7 @@ const FooterTabBar: React.FC<Props> = ({
               name={active === 'settings' ? 'settings' : 'settings-outline'}
               size={26}
               color={
-                active === 'settings' ? iconColor.active : iconColor.inactive
+                active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
               }
             />
           </Pressable>

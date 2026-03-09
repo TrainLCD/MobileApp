@@ -103,20 +103,31 @@ export const RouteInfoModal = ({
     ? (trainType?.name ?? '普通/各駅停車')
     : (trainType?.nameRoman ?? 'Local');
 
+  const stationSubtitles = useMemo(
+    () =>
+      new Map(
+        stations.map((item) => {
+          const lines = filterBusLinesForNonBusStation(item.line, item.lines);
+          const subtitle = Array.from(
+            new Set(
+              (lines ?? [])
+                .map((l) => getLocalizedLineName(l, isJapanese))
+                .filter(Boolean)
+            )
+          ).join(isJapanese ? ' ' : ', ');
+          return [item.id, subtitle];
+        })
+      ),
+    [stations]
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
-      const { line, lines: linesRaw } = item;
-      const lines = filterBusLinesForNonBusStation(line, linesRaw);
+      const { line } = item;
       if (!line) return null;
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
-      const subtitle = Array.from(
-        new Set(
-          (lines ?? [])
-            .map((l) => getLocalizedLineName(l, isJapanese))
-            .filter(Boolean)
-        )
-      ).join(isJapanese ? ' ' : ', ');
+      const subtitle = stationSubtitles.get(item.id) ?? '';
 
       return (
         <CommonCard
@@ -129,7 +140,7 @@ export const RouteInfoModal = ({
         />
       );
     },
-    [onSelect]
+    [onSelect, stationSubtitles]
   );
 
   const keyExtractor = useCallback(

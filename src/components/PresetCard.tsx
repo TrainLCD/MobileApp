@@ -184,6 +184,27 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
       : (rightLine.nameRoman ?? rightLine.nameShort ?? null);
   })();
 
+  const leftCodeRendered = useMemo(
+    () =>
+      renderTextWithSmallerParens(
+        leftCode,
+        styles.stationCode,
+        styles.stationCodeParen,
+        metaFg
+      ),
+    [leftCode, metaFg]
+  );
+  const rightCodeRendered = useMemo(
+    () =>
+      renderTextWithSmallerParens(
+        rightCode,
+        styles.stationCode,
+        styles.stationCodeParen,
+        metaFg
+      ),
+    [rightCode, metaFg]
+  );
+
   if (!from || !to)
     return (
       <NoPresetsCard
@@ -270,12 +291,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             {leftName}
           </Typography>
           <Typography style={[styles.stationCode, { color: metaFg }]}>
-            {renderTextWithSmallerParens(
-              leftCode,
-              styles.stationCode,
-              styles.stationCodeParen,
-              metaFg
-            )}
+            {leftCodeRendered}
           </Typography>
         </View>
         <View style={styles.colCenter}>
@@ -300,12 +316,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             {rightName}
           </Typography>
           <Typography style={[styles.stationCode, { color: metaFg }]}>
-            {renderTextWithSmallerParens(
-              rightCode,
-              styles.stationCode,
-              styles.stationCodeParen,
-              metaFg
-            )}
+            {rightCodeRendered}
           </Typography>
         </View>
       </View>
