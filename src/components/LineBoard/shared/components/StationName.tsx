@@ -14,64 +14,63 @@ export interface StationNameProps {
   marginBottom?: number;
 }
 
-export const StationName: React.FC<StationNameProps> = React.memo(({
-  station,
-  en,
-  horizontal,
-  passed,
-  marginBottom,
-}: StationNameProps) => {
-  const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const characters = useMemo(() => station.name?.split('') ?? [], [station.name]);
-  const dim = useWindowDimensions();
-
-  const horizontalAdditionalStyle = useMemo(
-    () => ({
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom:
-        marginBottom ?? (isTablet ? dim.height / 10 : dim.height / 6),
-    }),
-    [dim.height, marginBottom]
-  );
-
-  if (en) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAdditionalStyle,
-        ]}
-      >
-        {stationNameR}
-      </Typography>
+export const StationName: React.FC<StationNameProps> = React.memo(
+  ({ station, en, horizontal, passed, marginBottom }: StationNameProps) => {
+    const stationNameR = useMemo(() => getStationNameR(station), [station]);
+    const characters = useMemo(
+      () => station.name?.split('') ?? [],
+      [station.name]
     );
-  }
+    const dim = useWindowDimensions();
 
-  if (horizontal) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAdditionalStyle,
-        ]}
-      >
-        {station.name}
-      </Typography>
+    const horizontalAdditionalStyle = useMemo(
+      () => ({
+        width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+        marginBottom:
+          marginBottom ?? (isTablet ? dim.height / 10 : dim.height / 6),
+      }),
+      [dim.height, marginBottom]
     );
-  }
 
-  return (
-    <View style={styles.stationNameMapContainer}>
-      {characters.map((c, j) => (
+    if (en) {
+      return (
         <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
+          style={[
+            styles.stationNameHorizontal,
+            passed ? styles.grayColor : null,
+            horizontalAdditionalStyle,
+          ]}
         >
-          {c}
+          {stationNameR}
         </Typography>
-      ))}
-    </View>
-  );
-});
+      );
+    }
+
+    if (horizontal) {
+      return (
+        <Typography
+          style={[
+            styles.stationNameHorizontal,
+            passed ? styles.grayColor : null,
+            horizontalAdditionalStyle,
+          ]}
+        >
+          {station.name}
+        </Typography>
+      );
+    }
+
+    return (
+      <View style={styles.stationNameMapContainer}>
+        {characters.map((c, j) => (
+          <Typography
+            style={[styles.stationName, passed ? styles.grayColor : null]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+    );
+  }
+);
