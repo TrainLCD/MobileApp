@@ -84,6 +84,25 @@ const PadLineMarks: React.FC<Props> = ({
 
   const isDifferentStationName = useIsDifferentStationName();
 
+  const lineLabels = useMemo(
+    () =>
+      transferLines.map((tl) => {
+        const name = isEn
+          ? tl.nameRoman?.replace(parenthesisRegexp, '')
+          : tl.nameShort?.replace(parenthesisRegexp, '');
+        const diff = isDifferentStationName(station, tl);
+        const suffix = diff
+          ? `\n[ ${
+              isEn
+                ? tl.station?.nameRoman?.replace(parenthesisRegexp, '')
+                : tl.station?.name?.replace(parenthesisRegexp, '')
+            } ]`
+          : '';
+        return `${name}${suffix}`;
+      }),
+    [transferLines, isEn, isDifferentStationName, station]
+  );
+
   const { heightScale } = useScale();
 
   if (!isTablet) {
@@ -128,31 +147,7 @@ const PadLineMarks: React.FC<Props> = ({
                   },
                 ]}
               >
-                {`${
-                  isEn
-                    ? transferLines[i]?.nameRoman?.replace(
-                        parenthesisRegexp,
-                        ''
-                      )
-                    : transferLines[i]?.nameShort?.replace(
-                        parenthesisRegexp,
-                        ''
-                      )
-                }${
-                  isDifferentStationName(station, transferLines[i])
-                    ? `\n[ ${
-                        isEn
-                          ? transferLines[i]?.station?.nameRoman?.replace(
-                              parenthesisRegexp,
-                              ''
-                            )
-                          : transferLines[i]?.station?.name?.replace(
-                              parenthesisRegexp,
-                              ''
-                            )
-                      } ]`
-                    : ''
-                }`}
+                {lineLabels[i]}
               </Typography>
             </View>
           </View>
