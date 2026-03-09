@@ -143,8 +143,10 @@ export const useTTS = (): void => {
         return;
       }
 
-      firstSpeechRef.current = false;
-      suppressPostFirstSpeechRef.current = true;
+      if (firstSpeechRef.current) {
+        firstSpeechRef.current = false;
+        suppressPostFirstSpeechRef.current = true;
+      }
 
       cleanupAllPlayers();
 
