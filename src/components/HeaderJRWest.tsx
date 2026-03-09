@@ -17,6 +17,77 @@ import NumberingIcon from './NumberingIcon';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
+const styles = StyleSheet.create({
+  gradientRoot: {
+    paddingRight: 21,
+    paddingLeft: 21,
+    height: isTablet ? 210 : 150,
+    flexDirection: 'row',
+  },
+  bound: {
+    position: 'absolute',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: RFValue(24),
+    top: 32,
+    left: 32,
+  },
+  stationNameContainer: {
+    marginLeft: isTablet ? 72 * 1.5 : 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: STATION_NAME_FONT_SIZE * 2 - 24,
+  },
+  stationName: {
+    textAlign: 'center',
+    fontSize: STATION_NAME_FONT_SIZE,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  top: {
+    position: 'absolute',
+    width: '20%',
+    top: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  left: {
+    flex: 0.3,
+    justifyContent: 'center',
+    height: '100%',
+    marginTop: 48,
+  },
+  right: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignContent: 'center',
+    height: isTablet ? 200 : 150,
+  },
+  state: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: RFValue(24),
+    textAlign: 'center',
+    marginBottom: isTablet ? 0 : 12,
+  },
+  trainTypeImageContainer: {
+    width: '100%',
+    marginLeft: 4,
+  },
+  trainTypeImage: {
+    height: '100%',
+  },
+  numberingContainer: {
+    position: 'absolute',
+    bottom: isTablet ? 0 : 8,
+  },
+  emptyNumbering: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+  },
+});
+
 const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
   const {
     currentStation,
@@ -30,77 +101,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
     numberingColor,
     trainType,
   } = props;
-
-  const styles = StyleSheet.create({
-    gradientRoot: {
-      paddingRight: 21,
-      paddingLeft: 21,
-      height: isTablet ? 210 : 150,
-      flexDirection: 'row',
-    },
-    bound: {
-      position: 'absolute',
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: RFValue(24),
-      top: 32,
-      left: 32,
-    },
-    stationNameContainer: {
-      marginLeft: isTablet ? 72 * 1.5 : 72,
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: STATION_NAME_FONT_SIZE * 2 - 24,
-    },
-    stationName: {
-      textAlign: 'center',
-      fontSize: STATION_NAME_FONT_SIZE,
-      fontWeight: 'bold',
-      color: '#fff',
-    },
-    top: {
-      position: 'absolute',
-      width: '20%',
-      top: 24,
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    left: {
-      flex: 0.3,
-      justifyContent: 'center',
-      height: '100%',
-      marginTop: 48,
-    },
-    right: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      alignContent: 'center',
-      height: isTablet ? 200 : 150,
-    },
-    state: {
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: RFValue(24),
-      textAlign: 'center',
-      marginBottom: isTablet ? 0 : 12,
-    },
-    trainTypeImageContainer: {
-      width: '100%',
-      marginLeft: 4,
-    },
-    trainTypeImage: {
-      height: '100%',
-    },
-    numberingContainer: {
-      position: 'absolute',
-      bottom: isTablet ? 0 : 8,
-    },
-    emptyNumbering: {
-      width: isTablet ? 35 * 1.5 : 35,
-      height: isTablet ? 35 * 1.5 : 35,
-    },
-  });
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
