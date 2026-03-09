@@ -43,6 +43,12 @@ const styles = StyleSheet.create({
 
 const Separator = () => <View style={styles.separator} />;
 
+const ListEmptyComponent = () => (
+  <Typography style={styles.emptyText}>
+    {translate('trainTypeListEmpty')}
+  </Typography>
+);
+
 const ItemCell = React.memo(
   ({
     item,
@@ -151,7 +157,7 @@ export const TrainTypeList = ({
 
   return (
     <FlatList
-      initialNumToRender={data.length}
+      initialNumToRender={15}
       removeClippedSubviews={Platform.OS === 'android'}
       style={[
         styles.root,
@@ -165,11 +171,7 @@ export const TrainTypeList = ({
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={Separator}
       ListFooterComponent={data.length ? Separator : undefined}
-      ListEmptyComponent={() => (
-        <Typography style={styles.emptyText}>
-          {translate('trainTypeListEmpty')}
-        </Typography>
-      )}
+      ListEmptyComponent={ListEmptyComponent}
     />
   );
 };
