@@ -29,6 +29,7 @@ const createLineRoute = (id: string, lineId: number): SavedRoute => ({
   name: `Route ${lineId}`,
   lineId,
   trainTypeId: null,
+  wantedDestinationId: null,
   hasTrainType: false,
   createdAt: new Date('2024-01-01'),
 });
@@ -42,6 +43,7 @@ const createTrainTypeRoute = (
   name: `Route ${trainTypeId}`,
   lineId,
   trainTypeId,
+  wantedDestinationId: null,
   hasTrainType: true,
   createdAt: new Date('2024-01-01'),
 });

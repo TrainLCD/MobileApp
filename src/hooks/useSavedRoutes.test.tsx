@@ -65,7 +65,7 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(4));
+      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(5));
       expect(mockDb.execAsync).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
@@ -183,6 +183,7 @@ describe('useSavedRoutes', () => {
       hasTrainType: true,
       lineId: 1,
       trainTypeId: 9,
+      wantedDestinationId: null,
       name: 'WithType',
       createdAt: new Date('2025-01-01T00:00:00.000Z'),
     };
@@ -190,6 +191,7 @@ describe('useSavedRoutes', () => {
       hasTrainType: false,
       lineId: 2,
       trainTypeId: null,
+      wantedDestinationId: null,
       name: 'WithoutType',
       createdAt: new Date('2025-01-02T00:00:00.000Z'),
     };
@@ -227,6 +229,7 @@ describe('useSavedRoutes', () => {
           withType.name,
           withType.lineId,
           withType.trainTypeId,
+          withType.wantedDestinationId,
           1,
           saved1Defined.createdAt.toISOString(),
         ]
@@ -306,6 +309,7 @@ describe('useSavedRoutes', () => {
       hasTrainType: true,
       lineId: 100,
       trainTypeId: 7,
+      wantedDestinationId: null,
       name: 'With Train Type',
       createdAt: new Date('2025-01-03T00:00:00.000Z'),
     };
@@ -314,6 +318,7 @@ describe('useSavedRoutes', () => {
       hasTrainType: false,
       lineId: 200,
       trainTypeId: null,
+      wantedDestinationId: null,
       name: 'Without Train Type',
       createdAt: new Date('2025-01-04T00:00:00.000Z'),
     };
@@ -417,6 +422,7 @@ describe('useSavedRoutes', () => {
         hasTrainType: true,
         lineId: 300,
         trainTypeId: 10,
+        wantedDestinationId: null,
         name: 'Route 1',
         createdAt: new Date('2025-01-05T00:00:00.000Z'),
       };
@@ -425,6 +431,7 @@ describe('useSavedRoutes', () => {
         hasTrainType: true,
         lineId: 300,
         trainTypeId: 20,
+        wantedDestinationId: null,
         name: 'Route 2',
         createdAt: new Date('2025-01-06T00:00:00.000Z'),
       };
@@ -433,6 +440,7 @@ describe('useSavedRoutes', () => {
         hasTrainType: false,
         lineId: 300,
         trainTypeId: null,
+        wantedDestinationId: null,
         name: 'Route 3 (no train type)',
         createdAt: new Date('2025-01-07T00:00:00.000Z'),
       };
@@ -480,6 +488,7 @@ describe('useSavedRoutes', () => {
         hasTrainType: true,
         lineId: 500, // JR神戸線のID
         trainTypeId: 50, // サンライズ出雲のgroupId
+        wantedDestinationId: null,
         name: 'サンライズ出雲',
         createdAt: new Date('2025-01-08T00:00:00.000Z'),
       };

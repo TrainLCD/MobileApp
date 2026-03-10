@@ -374,6 +374,7 @@ const createMockLoopItem = (
   name,
   lineId: id * 100,
   trainTypeId: null,
+  wantedDestinationId: null,
   hasTrainType: false,
   createdAt: new Date('2024-01-01'),
   stations,
