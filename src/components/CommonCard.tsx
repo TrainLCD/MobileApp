@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { memo, useMemo } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
@@ -20,12 +20,24 @@ type Props = {
   targetStation?: Station;
   stations?: Station[];
   title?: string;
+  /** カッコ内の文字を小さく表示する際、カッコ自体を非表示にする */
+  hideParens?: boolean;
   subtitle?: string;
   subtitleNumberOfLines?: number;
+  /** 右端のシェブロンを非表示にする */
+  hideChevron?: boolean;
+  /** 右端にチェックマークを表示する */
+  checked?: boolean;
   disabled?: boolean;
   testID?: string;
   loading?: boolean;
   onPress?: () => void;
+  /** アコーディオンとして展開されるコンテンツ */
+  expandableContent?: React.ReactNode;
+  /** アコーディオンの展開状態（外部制御用） */
+  expanded?: boolean;
+  /** アコーディオンの展開状態が変わった時のコールバック */
+  onExpandedChange?: (expanded: boolean) => void;
 };
 
 const styles = StyleSheet.create({
@@ -113,6 +125,29 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     alignSelf: 'center',
   },
+  expandableWrapper: {
+    overflow: 'hidden',
+  },
+  expandableMeasure: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  fullHeightColorBar: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 4,
+    zIndex: 1,
+  },
+  expandableContent: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
 });
 
 type SubtitleProps = {
@@ -161,17 +196,25 @@ const Subtitle = memo(
   }
 );
 
+const AnimatedCardChevron = Animated.createAnimatedComponent(View);
+
 export const CommonCard: React.FC<Props> = ({
   line,
   targetStation,
   stations = [],
   title,
+  hideParens,
   subtitle,
   subtitleNumberOfLines,
+  hideChevron,
+  checked,
   disabled,
   testID,
   loading,
   onPress,
+  expandableContent,
+  expanded,
+  onExpandedChange,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
@@ -179,6 +222,36 @@ export const CommonCard: React.FC<Props> = ({
   const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
+
+  const hasAccordion = expandableContent != null;
+  const animValue = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    Animated.timing(animValue, {
+      toValue: expanded ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded, animValue]);
+
+  const handlePress = useCallback(() => {
+    if (hasAccordion) {
+      onExpandedChange?.(!expanded);
+      return;
+    }
+    onPress?.();
+  }, [hasAccordion, expanded, onExpandedChange, onPress]);
+
+  const animatedHeight = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, contentHeight],
+  });
+
+  const chevronRotation = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
 
   const [inboundText, outboundText] = useMemo(() => {
     if (!stations?.length) {
@@ -228,103 +301,166 @@ export const CommonCard: React.FC<Props> = ({
   );
 
   return (
-    <TouchableOpacity
-      onPress={disabled ? undefined : onPress}
-      activeOpacity={1}
-      disabled={disabled}
-      testID={testID}
-      style={[
-        styles.root,
-        {
-          borderRadius: isLEDTheme ? 0 : 8,
-        },
-        additionalRootStyle,
-      ]}
+    <View
+      style={
+        hasAccordion
+          ? {
+              borderRadius: isLEDTheme ? 0 : 8,
+              overflow: 'hidden',
+            }
+          : undefined
+      }
     >
-      <View
+      {hasAccordion && expanded && (
+        <View
+          style={[
+            styles.fullHeightColorBar,
+            { backgroundColor: line.color ?? '#333' },
+          ]}
+          pointerEvents="none"
+        />
+      )}
+      <TouchableOpacity
+        onPress={disabled ? undefined : handlePress}
+        activeOpacity={1}
+        disabled={disabled}
+        testID={testID}
         style={[
-          styles.insetBorder,
+          styles.root,
           {
             borderRadius: isLEDTheme ? 0 : 8,
           },
+          additionalRootStyle,
         ]}
-        pointerEvents="none"
-      />
-      {mark ? (
+      >
         <View
           style={[
-            styles.mark,
-            !mark.signPath || targetStationNumber
-              ? {
-                  transform: [{ scale: 0.5 }],
-                }
-              : null,
+            styles.insetBorder,
+            {
+              borderRadius: isLEDTheme ? 0 : 8,
+            },
+          ]}
+          pointerEvents="none"
+        />
+        {mark ? (
+          <View
+            style={[
+              styles.mark,
+              !mark.signPath || targetStationNumber
+                ? {
+                    transform: [{ scale: 0.5 }],
+                  }
+                : null,
+            ]}
+          >
+            <TransferLineMark
+              line={line}
+              mark={mark}
+              size={NUMBERING_ICON_SIZE.LARGE}
+              withOutline
+              withDarkTheme={isLEDTheme}
+              stationNumber={targetStationNumber ?? undefined}
+              color={targetStationColor ?? line.color ?? undefined}
+              threeLetterCode={targetStationThreeLetterCode}
+            />
+          </View>
+        ) : (
+          <View style={styles.withoutMark}>
+            <TransferLineMark
+              line={line}
+              mark={{
+                sign: '',
+                signShape: MARK_SHAPE.ROUND,
+              }}
+              size={NUMBERING_ICON_SIZE.LARGE}
+              withOutline
+              withDarkTheme={isLEDTheme}
+              stationNumber={
+                isBus ? (line.nameShort ?? '') : (targetStationNumber ?? '')
+              }
+              color={targetStationColor ?? line.color ?? undefined}
+              threeLetterCode={targetStationThreeLetterCode}
+            />
+          </View>
+        )}
+        <View style={styles.texts}>
+          <Typography style={styles.title} numberOfLines={1}>
+            {titleParts.map((part, index) =>
+              /^\(.*\)$/.test(part) ? (
+                <Typography key={`${index}-${part}`} style={styles.titleParens}>
+                  {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
+                    ? ' '
+                    : ''}
+                  {hideParens ? part.slice(1, -1) : part}
+                </Typography>
+              ) : (
+                part
+              )
+            )}
+          </Typography>
+          {subtitle && (
+            <Subtitle
+              inboundText={subtitle}
+              outboundText=""
+              numberOfLines={subtitleNumberOfLines}
+              loading={loading}
+            />
+          )}
+          {!subtitle && (!!inboundText || !!outboundText) && (
+            <Subtitle
+              inboundText={inboundText}
+              outboundText={outboundText}
+              numberOfLines={subtitleNumberOfLines}
+              loading={loading}
+            />
+          )}
+        </View>
+        <View style={styles.chevron}>
+          {!hideChevron && hasAccordion && (
+            <AnimatedCardChevron
+              style={{ transform: [{ rotate: chevronRotation }] }}
+            >
+              <CardChevron />
+            </AnimatedCardChevron>
+          )}
+          {!hideChevron && !hasAccordion && <CardChevron />}
+          {hideChevron && !checked && (
+            <Svg width={24} height={24} viewBox="0 0 24 24">
+              <Path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
+                fill="#fff"
+                opacity={0.5}
+              />
+            </Svg>
+          )}
+          {hideChevron && checked && (
+            <Svg width={24} height={24} viewBox="0 0 24 24">
+              <Path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                fill="#fff"
+              />
+            </Svg>
+          )}
+        </View>
+      </TouchableOpacity>
+      {hasAccordion && (
+        <Animated.View
+          style={[
+            styles.expandableWrapper,
+            {
+              height: animatedHeight,
+              backgroundColor: isLEDTheme ? '#212121' : '#f5f5f5',
+            },
           ]}
         >
-          <TransferLineMark
-            line={line}
-            mark={mark}
-            size={NUMBERING_ICON_SIZE.LARGE}
-            withOutline
-            withDarkTheme={isLEDTheme}
-            stationNumber={targetStationNumber ?? undefined}
-            color={targetStationColor ?? line.color ?? undefined}
-            threeLetterCode={targetStationThreeLetterCode}
-          />
-        </View>
-      ) : (
-        <View style={styles.withoutMark}>
-          <TransferLineMark
-            line={line}
-            mark={{
-              sign: '',
-              signShape: MARK_SHAPE.ROUND,
-            }}
-            size={NUMBERING_ICON_SIZE.LARGE}
-            withOutline
-            withDarkTheme={isLEDTheme}
-            stationNumber={
-              isBus ? (line.nameShort ?? '') : (targetStationNumber ?? '')
-            }
-            color={targetStationColor ?? line.color ?? undefined}
-            threeLetterCode={targetStationThreeLetterCode}
-          />
-        </View>
+          <View
+            style={[styles.expandableContent, styles.expandableMeasure]}
+            onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}
+          >
+            {expandableContent}
+          </View>
+        </Animated.View>
       )}
-      <View style={styles.texts}>
-        <Typography style={styles.title} numberOfLines={1}>
-          {titleParts.map((part, index) =>
-            /^\(.*\)$/.test(part) ? (
-              <Typography key={`${index}-${part}`} style={styles.titleParens}>
-                {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
-                  ? ` ${part}`
-                  : part}
-              </Typography>
-            ) : (
-              part
-            )
-          )}
-        </Typography>
-        {subtitle && (
-          <Subtitle
-            inboundText={subtitle}
-            outboundText=""
-            numberOfLines={subtitleNumberOfLines}
-            loading={loading}
-          />
-        )}
-        {!subtitle && (!!inboundText || !!outboundText) && (
-          <Subtitle
-            inboundText={inboundText}
-            outboundText={outboundText}
-            numberOfLines={subtitleNumberOfLines}
-            loading={loading}
-          />
-        )}
-      </View>
-      <View style={styles.chevron}>
-        <CardChevron />
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 };

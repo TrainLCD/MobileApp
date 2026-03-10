@@ -1,13 +1,9 @@
 import { useId } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, {
-  type SharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import { Animated, StyleSheet, View } from 'react-native';
 import { LinearGradient, Path, Polygon, Stop, Svg } from 'react-native-svg';
 
 type Props = {
-  backgroundScaleSV?: SharedValue<number>;
+  backgroundScaleAV?: Animated.Value;
   arrived: boolean;
 };
 
@@ -21,13 +17,8 @@ const localStyles = StyleSheet.create({
   },
 });
 
-export const ChevronYamanote = ({ backgroundScaleSV, arrived }: Props) => {
+export const ChevronYamanote = ({ backgroundScaleAV, arrived }: Props) => {
   const id = useId();
-
-  // 赤い塗り部分だけを拡縮するアニメーションスタイル
-  const fillScaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: backgroundScaleSV?.value ?? 1 }],
-  }));
 
   if (!arrived) {
     return (
@@ -56,7 +47,14 @@ export const ChevronYamanote = ({ backgroundScaleSV, arrived }: Props) => {
         <Path fill="#fff" d="M268 4H4v288h264l120-144z" />
       </Svg>
       {/* 赤い塗りだけ Animated.View で拡縮 */}
-      <Animated.View style={[localStyles.fill, fillScaleStyle]}>
+      <Animated.View
+        style={[
+          localStyles.fill,
+          backgroundScaleAV
+            ? { transform: [{ scale: backgroundScaleAV }] }
+            : undefined,
+        ]}
+      >
         <Svg viewBox="0 0 393.2 296" width="100%" height="100%">
           <LinearGradient
             id={id}
