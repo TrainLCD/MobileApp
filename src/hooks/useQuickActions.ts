@@ -12,7 +12,7 @@ const INITIAL_RETRY_DELAY_MS = 100;
 
 let handledInitial = false;
 
-const navigateToSelectLine = async () => {
+const navigateToSelectLine = async (): Promise<boolean> => {
   const waitForNavReady = (): Promise<boolean> =>
     new Promise((resolve) => {
       let attempt = 0;
@@ -39,7 +39,13 @@ const navigateToSelectLine = async () => {
         params: { screen: 'SelectLine' },
       })
     );
+    return true;
   }
+
+  console.warn(
+    'useQuickActions: ナビゲーションの準備が完了しなかったためクイックアクションをスキップ'
+  );
+  return false;
 };
 
 /**
@@ -71,7 +77,7 @@ export const useQuickActions = () => {
 
   // クイックアクション選択を監視
   useEffect(() => {
-    const handleAction = (action: QuickActions.Action | null) => {
+    const handleAction = async (action: QuickActions.Action | null) => {
       const routeId = action?.params?.routeId;
       if (typeof routeId !== 'string') return;
 
@@ -80,7 +86,13 @@ export const useQuickActions = () => {
         pendingQuickActionRouteId: routeId,
       }));
 
-      navigateToSelectLine();
+      const navigated = await navigateToSelectLine();
+      if (!navigated) {
+        setNavigationState((prev) => ({
+          ...prev,
+          pendingQuickActionRouteId: null,
+        }));
+      }
     };
 
     // コールドスタート時（リマウントでの重複処理を防止）
