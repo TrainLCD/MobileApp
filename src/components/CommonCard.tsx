@@ -47,6 +47,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  cardShadow: {
     shadowColor: '#333',
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -300,17 +302,40 @@ export const CommonCard: React.FC<Props> = ({
     [disabled, line.color]
   );
 
+  const cardRadius = isLEDTheme ? 0 : 8;
+  const wrapperRadiusStyle = useMemo(
+    () => ({
+      borderRadius: cardRadius,
+      backgroundColor: line.color ?? '#333',
+      overflow: 'hidden' as const,
+    }),
+    [cardRadius, line.color]
+  );
+  const headerRadiusStyle = useMemo(() => {
+    if (!hasAccordion) {
+      return {
+        borderRadius: cardRadius,
+      };
+    }
+
+    if (!expanded) {
+      return undefined;
+    }
+
+    return {
+      borderTopLeftRadius: cardRadius,
+      borderTopRightRadius: cardRadius,
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
+    };
+  }, [cardRadius, expanded, hasAccordion]);
+  const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
+  const accordionWrapperStyle = hasAccordion
+    ? [styles.cardShadow, wrapperRadiusStyle]
+    : undefined;
+
   return (
-    <View
-      style={
-        hasAccordion
-          ? {
-              borderRadius: isLEDTheme ? 0 : 8,
-              overflow: 'hidden',
-            }
-          : undefined
-      }
-    >
+    <View style={accordionWrapperStyle}>
       {hasAccordion && (
         <View
           style={[
@@ -327,19 +352,13 @@ export const CommonCard: React.FC<Props> = ({
         testID={testID}
         style={[
           styles.root,
-          {
-            borderRadius: isLEDTheme ? 0 : 8,
-          },
+          rootShadowStyle,
+          headerRadiusStyle,
           additionalRootStyle,
         ]}
       >
         <View
-          style={[
-            styles.insetBorder,
-            {
-              borderRadius: isLEDTheme ? 0 : 8,
-            },
-          ]}
+          style={[styles.insetBorder, headerRadiusStyle]}
           pointerEvents="none"
         />
         {mark ? (
