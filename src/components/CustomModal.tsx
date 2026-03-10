@@ -131,7 +131,7 @@ export const CustomModal: React.FC<Props> = ({
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
-              pointerEvents="box-none"
+              pointerEvents="auto"
               onTouchEnd={stopModalTouchPropagation}
             >
               {children}
@@ -151,7 +151,7 @@ export const CustomModal: React.FC<Props> = ({
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
-              pointerEvents="box-none"
+              pointerEvents="auto"
               onTouchEnd={stopModalTouchPropagation}
             >
               {children}
