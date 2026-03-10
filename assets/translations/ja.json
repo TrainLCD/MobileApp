@@ -278,5 +278,11 @@
   "settingsWalkthroughDescription3": "自動アナウンス機能の設定ができます。駅到着時に音声で案内を受け取ることができます。",
   "settingsWalkthroughTitle4": "表示言語",
   "settingsWalkthroughDescription4": "画面に表示する言語を設定できます。日本語、英語、中国語、韓国語から選択可能です。",
-  "requireJapaneseOrEnglish": "日本語または英語のいずれかを設定する必要があります"
+  "requireJapaneseOrEnglish": "日本語または英語のいずれかを設定する必要があります",
+  "savePresetTitle": "プリセットを保存",
+  "presetNameLabel": "プリセット名",
+  "presetNamePlaceholder": "プリセット名",
+  "save": "保存",
+  "selectStartStationTitle": "始発駅を選択",
+  "departure": "始発"
 }
