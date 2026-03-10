@@ -23,7 +23,7 @@ const googleTtsApiKey = defineSecret('GOOGLE_TTS_API_KEY');
 const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
 const VERTEX_AI_LOCATION = 'us-central1';
 const GOOGLE_TTS_API_VERSION = 'v1';
-const EN_GEMINI_VOLUME_BOOST_DB = 6;
+const EN_GEMINI_VOLUME_BOOST_DB = 4;
 
 interface SynthesizedAudio {
   audioContent: string;
@@ -82,13 +82,38 @@ const ensureMp3 = async (
 /** 0〜99 の整数を英単語に変換する */
 const numberToEnglishWord = (n: number): string => {
   const ones = [
-    'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
-    'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
-    'sixteen', 'seventeen', 'eighteen', 'nineteen',
+    'zero',
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'nine',
+    'ten',
+    'eleven',
+    'twelve',
+    'thirteen',
+    'fourteen',
+    'fifteen',
+    'sixteen',
+    'seventeen',
+    'eighteen',
+    'nineteen',
   ];
   const tens = [
-    '', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy',
-    'eighty', 'ninety',
+    '',
+    '',
+    'twenty',
+    'thirty',
+    'forty',
+    'fifty',
+    'sixty',
+    'seventy',
+    'eighty',
+    'ninety',
   ];
   if (n < 20) return ones[n] ?? String(n);
   if (n < 100) {
