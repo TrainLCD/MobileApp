@@ -47,18 +47,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  cardShadow: {
     shadowColor: '#333',
     shadowOpacity: 0.25,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 0 },
     elevation: 2,
   },
-  insetBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  cardBorder: {
     borderColor: '#fff',
     borderWidth: 1,
   },
@@ -295,28 +292,56 @@ export const CommonCard: React.FC<Props> = ({
     () => ({
       backgroundColor: line.color ?? '#333',
       opacity: disabled ? 0.5 : 1,
-      borderWidth: 0,
     }),
     [disabled, line.color]
   );
 
+  const cardRadius = isLEDTheme ? 0 : 8;
+  const wrapperRadiusStyle = useMemo(
+    () => ({
+      borderRadius: cardRadius,
+      backgroundColor: line.color ?? '#333',
+      overflow: 'hidden' as const,
+    }),
+    [cardRadius, line.color]
+  );
+  const headerRadiusStyle = useMemo(() => {
+    if (!hasAccordion) {
+      return {
+        borderRadius: cardRadius,
+      };
+    }
+
+    if (!expanded) {
+      return undefined;
+    }
+
+    return {
+      borderTopLeftRadius: cardRadius,
+      borderTopRightRadius: cardRadius,
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
+    };
+  }, [cardRadius, expanded, hasAccordion]);
+  const colorBarRadiusStyle = useMemo(
+    () => ({
+      backgroundColor: line.color ?? '#333',
+      borderTopLeftRadius: cardRadius,
+      borderBottomLeftRadius: cardRadius,
+    }),
+    [cardRadius, line.color]
+  );
+  const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
+  const rootBorderStyle = hasAccordion ? undefined : styles.cardBorder;
+  const accordionWrapperStyle = hasAccordion
+    ? [styles.cardShadow, styles.cardBorder, wrapperRadiusStyle]
+    : undefined;
+
   return (
-    <View
-      style={
-        hasAccordion
-          ? {
-              borderRadius: isLEDTheme ? 0 : 8,
-              overflow: 'hidden',
-            }
-          : undefined
-      }
-    >
+    <View style={accordionWrapperStyle}>
       {hasAccordion && (
         <View
-          style={[
-            styles.fullHeightColorBar,
-            { backgroundColor: line.color ?? '#333' },
-          ]}
+          style={[styles.fullHeightColorBar, colorBarRadiusStyle]}
           pointerEvents="none"
         />
       )}
@@ -327,21 +352,12 @@ export const CommonCard: React.FC<Props> = ({
         testID={testID}
         style={[
           styles.root,
-          {
-            borderRadius: isLEDTheme ? 0 : 8,
-          },
+          rootShadowStyle,
+          rootBorderStyle,
+          headerRadiusStyle,
           additionalRootStyle,
         ]}
       >
-        <View
-          style={[
-            styles.insetBorder,
-            {
-              borderRadius: isLEDTheme ? 0 : 8,
-            },
-          ]}
-          pointerEvents="none"
-        />
         {mark ? (
           <View
             style={[
