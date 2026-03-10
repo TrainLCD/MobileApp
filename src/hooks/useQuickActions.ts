@@ -22,9 +22,9 @@ const navigateToSelectLine = () => {
   ScreenOrientation.unlockAsync().catch(console.error);
 
   navigationRef.dispatch(
-    CommonActions.navigate({
-      name: 'MainStack',
-      params: { screen: 'SelectLine' },
+    CommonActions.reset({
+      index: 0,
+      routes: [{ name: 'MainStack', params: { screen: 'SelectLine' } }],
     })
   );
   return true;
