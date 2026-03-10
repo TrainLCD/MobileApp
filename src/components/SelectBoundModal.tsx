@@ -176,7 +176,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
   }, [visible]);
 
-  // pendingStation が区間外の場合、stations 内の最寄り駅にフォールバック
+  // pendingStation が区間外の場合、stations の先頭駅にフォールバック
   const effectiveStation =
     station && stations.some((s) => s.groupId === station.groupId)
       ? station
@@ -567,8 +567,10 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   const handleToggleNotification = useCallback(
     (station: Station) => {
+      if (station.id == null) return;
+
+      const stationId = station.id;
       setNotifyState((prev) => {
-        const stationId = station.id ?? -1;
         const isEnabled = prev.targetStationIds.includes(stationId);
         return {
           ...prev,
@@ -707,7 +709,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             <Button
               outline
               onPress={() => setRouteInfoModalVisible(true)}
-              disabled={loading}
+              disabled={loading || isTransitioning}
             >
               {isBus
                 ? translate('viewBusStops')
@@ -717,7 +719,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             <Button
               outline
               onPress={() => setIsTrainTypeModalVisible(true)}
-              disabled={!fetchedTrainTypes.length || loading}
+              disabled={!fetchedTrainTypes.length || loading || isTransitioning}
             >
               {trainTypeText}
             </Button>
@@ -727,7 +729,9 @@ export const SelectBoundModal: React.FC<Props> = ({
               style={savedRoute ? styles.redOutlinedButton : null}
               textStyle={savedRoute ? styles.redOutlinedButtonText : null}
               onPress={handleSaveRoutePress}
-              disabled={!line || !isRoutesDBInitialized || loading}
+              disabled={
+                !line || !isRoutesDBInitialized || loading || isTransitioning
+              }
             >
               {translate(
                 !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
@@ -736,6 +740,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             <Button
               outline
               onPress={() => setSelectBoundSettingListModalVisible(true)}
+              disabled={isTransitioning}
             >
               {translate('settings')}
             </Button>

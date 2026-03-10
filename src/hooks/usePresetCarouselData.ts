@@ -19,6 +19,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
   const prevFetchKeyRef = useRef('');
   const prevDisplayKeyRef = useRef('');
+  const currentRequestIdRef = useRef(0);
 
   const {
     routes,
@@ -38,7 +39,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
     const displayKey = routes
       .map(
         (r) =>
-          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.name}:${r.direction}:${r.wantedDestinationId}`
+          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.name}:${r.direction}:${r.wantedDestinationId}:${r.notifyStationIds.join(';')}`
       )
       .join(',');
 
@@ -46,6 +47,8 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
     const needsDisplayUpdate = displayKey !== prevDisplayKeyRef.current;
 
     if (!needsFetch && !needsDisplayUpdate) return;
+
+    const requestId = ++currentRequestIdRef.current;
 
     const fetchAsync = async () => {
       try {
@@ -99,6 +102,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
             }
           }
 
+          if (requestId !== currentRequestIdRef.current) return;
           prevFetchKeyRef.current = fetchKey;
         } else {
           // fetch不要の場合は既存のcarouselDataから駅データを再利用
@@ -110,6 +114,8 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
             }
           }
         }
+
+        if (requestId !== currentRequestIdRef.current) return;
 
         setCarouselData(
           routes.map((r, i) => ({

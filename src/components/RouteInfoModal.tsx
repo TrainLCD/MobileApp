@@ -83,8 +83,11 @@ const styles = StyleSheet.create({
     elevation: 0,
     shadowOpacity: 0,
   },
-  expandableToggleText: {
+  expandableToggleTextLight: {
     color: '#333',
+  },
+  expandableToggleTextLED: {
+    color: '#fff',
   },
 });
 
@@ -182,7 +185,11 @@ export const RouteInfoModal = ({
                     onToggle={() => onToggleNotification(item)}
                     state={isNotifyEnabled}
                     style={styles.expandableToggle}
-                    textStyle={styles.expandableToggleText}
+                    textStyle={
+                      isLEDTheme
+                        ? styles.expandableToggleTextLED
+                        : styles.expandableToggleTextLight
+                    }
                     activeOpacity={1}
                   >
                     {translate('enableNotificationMode')}
@@ -192,7 +199,11 @@ export const RouteInfoModal = ({
                   <ToggleButton
                     outline
                     style={styles.expandableToggle}
-                    textStyle={styles.expandableToggleText}
+                    textStyle={
+                      isLEDTheme
+                        ? styles.expandableToggleTextLED
+                        : styles.expandableToggleTextLight
+                    }
                     activeOpacity={1}
                     onToggle={() => onToggleDestination(item)}
                     state={isSetAsTerminus}
@@ -226,6 +237,7 @@ export const RouteInfoModal = ({
       wantedDestinationGroupId,
       onToggleNotification,
       onToggleDestination,
+      isLEDTheme,
     ]
   );
 
