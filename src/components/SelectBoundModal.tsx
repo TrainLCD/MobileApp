@@ -548,6 +548,15 @@ export const SelectBoundModal: React.FC<Props> = ({
     return options.filter((o) => o.fromStation.groupId !== o.toStation.groupId);
   }, [wantedDestination, line, stations, inboundStations, outboundStations]);
 
+  const presetDefaultName = useMemo(() => {
+    const trainName = pendingTrainType
+      ? ((isJapanese ? pendingTrainType.name : pendingTrainType.nameRoman) ??
+        '')
+      : '';
+    const lineName = line ? getLocalizedLineName(line, isJapanese) : '';
+    return [trainName, lineName].filter(Boolean).join(' ');
+  }, [pendingTrainType, line]);
+
   const handlePresetNameSubmit = useCallback(
     async (name: string, direction: LineDirection | null) => {
       if (!line) return;
@@ -831,7 +840,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         visible={isPresetNameModalVisible}
         onClose={() => setIsPresetNameModalVisible(false)}
         onSubmit={handlePresetNameSubmit}
-        defaultName={`${pendingTrainType ? `${isJapanese ? (pendingTrainType.name ?? '') : (pendingTrainType.nameRoman ?? '')} ` : ''}${line ? getLocalizedLineName(line, isJapanese) : ''}`.trim()}
+        defaultName={presetDefaultName}
         directionOptions={presetDirectionOptions}
       />
     </CustomModal>
