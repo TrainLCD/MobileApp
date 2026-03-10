@@ -7,45 +7,24 @@ import { navigationRef } from '~/stacks/rootNavigation';
 import navigationState from '~/store/atoms/navigation';
 
 const MAX_QUICK_ACTIONS = 4;
-const MAX_NAV_RETRIES = 5;
-const INITIAL_RETRY_DELAY_MS = 100;
 
 let handledInitial = false;
 
-const navigateToSelectLine = async (): Promise<boolean> => {
-  const waitForNavReady = (): Promise<boolean> =>
-    new Promise((resolve) => {
-      let attempt = 0;
-      const check = () => {
-        if (navigationRef.isReady()) {
-          resolve(true);
-          return;
-        }
-        attempt++;
-        if (attempt >= MAX_NAV_RETRIES) {
-          resolve(false);
-          return;
-        }
-        setTimeout(check, INITIAL_RETRY_DELAY_MS * 2 ** (attempt - 1));
-      };
-      check();
-    });
-
-  const ready = navigationRef.isReady() || (await waitForNavReady());
-  if (ready) {
-    navigationRef.dispatch(
-      CommonActions.navigate({
-        name: 'MainStack',
-        params: { screen: 'SelectLine' },
-      })
+const navigateToSelectLine = () => {
+  if (!navigationRef.isReady()) {
+    console.warn(
+      'useQuickActions: ナビゲーションが未準備のためクイックアクションをスキップ'
     );
-    return true;
+    return false;
   }
 
-  console.warn(
-    'useQuickActions: ナビゲーションの準備が完了しなかったためクイックアクションをスキップ'
+  navigationRef.dispatch(
+    CommonActions.navigate({
+      name: 'MainStack',
+      params: { screen: 'SelectLine' },
+    })
   );
-  return false;
+  return true;
 };
 
 /**
@@ -77,7 +56,7 @@ export const useQuickActions = () => {
 
   // クイックアクション選択を監視
   useEffect(() => {
-    const handleAction = async (action: QuickActions.Action | null) => {
+    const handleAction = (action: QuickActions.Action | null) => {
       const routeId = action?.params?.routeId;
       if (typeof routeId !== 'string') return;
 
@@ -86,8 +65,7 @@ export const useQuickActions = () => {
         pendingQuickActionRouteId: routeId,
       }));
 
-      const navigated = await navigateToSelectLine();
-      if (!navigated) {
+      if (!navigateToSelectLine()) {
         setNavigationState((prev) => ({
           ...prev,
           pendingQuickActionRouteId: null,
