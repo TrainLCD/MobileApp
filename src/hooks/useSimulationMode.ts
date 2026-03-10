@@ -154,26 +154,23 @@ export const useSimulationMode = (): void => {
   useEffect(() => {
     const speedProfiles = maybeRevsersedStations.map(
       (cur, curMapIndex, arr) => {
-        const stationsWithoutPass = arr.filter((s) => !getIsPass(s));
-
-        const curIdx = stationsWithoutPass.indexOf(cur);
-        if (curIdx === -1) {
+        if (getIsPass(cur)) {
           // 通過駅は速度プロファイル生成対象外
           return [];
         }
 
-        const next = stationsWithoutPass[curIdx + 1];
+        const nextStationIndex = arr.findIndex(
+          (station, idx) => idx > curMapIndex && !getIsPass(station)
+        );
+        if (nextStationIndex === -1) {
+          return [];
+        }
+        const next = arr[nextStationIndex];
         if (!next) {
           return [];
         }
 
-        const stationIndex = curMapIndex;
-        const nextStationIndex = arr.indexOf(next);
-
-        const betweenNextStation = arr.slice(
-          stationIndex + 1,
-          nextStationIndex
-        );
+        const betweenNextStation = arr.slice(curMapIndex + 1, nextStationIndex);
 
         if (
           cur.latitude == null ||
@@ -261,26 +258,10 @@ export const useSimulationMode = (): void => {
       }
 
       // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
-      const stationsWithoutPass = maybeRevsersedStations.filter(
-        (s) => !getIsPass(s)
+      const nextStopStationIndex = maybeRevsersedStations.findIndex(
+        (station, idx) => idx > normalizedSegmentIndex && !getIsPass(station)
       );
-      if (stationsWithoutPass.length === 0) {
-        return;
-      }
-
-      const currentSegmentStation =
-        maybeRevsersedStations[normalizedSegmentIndex];
-      if (!currentSegmentStation) {
-        return;
-      }
-      const currentSegmentStationIndex = normalizedSegmentIndex;
-
-      const currentSegmentStopIndex = stationsWithoutPass.indexOf(
-        currentSegmentStation
-      );
-      const nextStopStation = stationsWithoutPass[currentSegmentStopIndex + 1];
-
-      if (!nextStopStation) {
+      if (nextStopStationIndex === -1) {
         segmentIndexRef.current = 0;
         childIndexRef.current = 0;
         segmentProgressDistanceRef.current = 0;
@@ -302,6 +283,18 @@ export const useSimulationMode = (): void => {
         return;
       }
 
+      const currentSegmentStation =
+        maybeRevsersedStations[normalizedSegmentIndex];
+      if (!currentSegmentStation) {
+        return;
+      }
+      const currentSegmentStationIndex = normalizedSegmentIndex;
+
+      const nextStopStation = maybeRevsersedStations[nextStopStationIndex];
+      if (!nextStopStation) {
+        return;
+      }
+
       if (
         nextStopStation.latitude == null ||
         nextStopStation.longitude == null
@@ -309,8 +302,6 @@ export const useSimulationMode = (): void => {
         return;
       }
 
-      const nextStopStationIndex =
-        maybeRevsersedStations.indexOf(nextStopStation);
       if (
         nextStopStationIndex < 0 ||
         nextStopStationIndex < currentSegmentStationIndex
