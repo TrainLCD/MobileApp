@@ -62,6 +62,7 @@ export const useSavedRoutes = () => {
         name TEXT NOT NULL,
         lineId INTEGER NOT NULL,
         trainTypeId INTEGER,
+        wantedDestinationId INTEGER,
         hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
         createdAt TEXT NOT NULL,
         CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
@@ -78,12 +79,16 @@ export const useSavedRoutes = () => {
         'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
       );
       // wantedDestinationId カラムを既存テーブルに追加（存在しない場合のみ）
-      try {
+      const columns = (await db.getAllAsync(
+        "PRAGMA table_info('saved_routes')"
+      )) as { name: string }[];
+      const hasWantedDestCol = columns.some(
+        (c) => c.name === 'wantedDestinationId'
+      );
+      if (!hasWantedDestCol) {
         await db.execAsync(
           'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
         );
-      } catch {
-        // カラムが既に存在する場合は無視
       }
       setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
     };

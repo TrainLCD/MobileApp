@@ -113,6 +113,7 @@ export const SavePresetNameModal: React.FC<Props> = ({
             },
           ]}
           placeholder={translate('presetNamePlaceholder')}
+          placeholderTextColor={isLEDTheme ? 'rgba(255,255,255,0.5)' : '#999'}
           returnKeyType="done"
           onSubmitEditing={handleSubmit}
         />
