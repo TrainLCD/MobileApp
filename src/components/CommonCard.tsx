@@ -55,12 +55,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     elevation: 2,
   },
-  insetBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  cardBorder: {
     borderColor: '#fff',
     borderWidth: 1,
   },
@@ -297,7 +292,6 @@ export const CommonCard: React.FC<Props> = ({
     () => ({
       backgroundColor: line.color ?? '#333',
       opacity: disabled ? 0.5 : 1,
-      borderWidth: 0,
     }),
     [disabled, line.color]
   );
@@ -329,19 +323,25 @@ export const CommonCard: React.FC<Props> = ({
       borderBottomRightRadius: 0,
     };
   }, [cardRadius, expanded, hasAccordion]);
+  const colorBarRadiusStyle = useMemo(
+    () => ({
+      backgroundColor: line.color ?? '#333',
+      borderTopLeftRadius: cardRadius,
+      borderBottomLeftRadius: cardRadius,
+    }),
+    [cardRadius, line.color]
+  );
   const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
+  const rootBorderStyle = hasAccordion ? undefined : styles.cardBorder;
   const accordionWrapperStyle = hasAccordion
-    ? [styles.cardShadow, wrapperRadiusStyle]
+    ? [styles.cardShadow, styles.cardBorder, wrapperRadiusStyle]
     : undefined;
 
   return (
     <View style={accordionWrapperStyle}>
       {hasAccordion && (
         <View
-          style={[
-            styles.fullHeightColorBar,
-            { backgroundColor: line.color ?? '#333' },
-          ]}
+          style={[styles.fullHeightColorBar, colorBarRadiusStyle]}
           pointerEvents="none"
         />
       )}
@@ -353,14 +353,11 @@ export const CommonCard: React.FC<Props> = ({
         style={[
           styles.root,
           rootShadowStyle,
+          rootBorderStyle,
           headerRadiusStyle,
           additionalRootStyle,
         ]}
       >
-        <View
-          style={[styles.insetBorder, headerRadiusStyle]}
-          pointerEvents="none"
-        />
         {mark ? (
           <View
             style={[
