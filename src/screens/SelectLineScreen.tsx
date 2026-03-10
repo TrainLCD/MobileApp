@@ -32,7 +32,6 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
 import { useLineSelection } from '~/hooks/useLineSelection';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
-import { useQuickActions } from '~/hooks/useQuickActions';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import isTablet from '~/utils/isTablet';
@@ -87,7 +86,6 @@ const SelectLineScreen = () => {
   useStationsCache(station);
   const { carouselData, routes, isRoutesDBInitialized } =
     usePresetCarouselData();
-  useQuickActions(routes);
   const {
     handleLineSelected,
     handleTrainTypeSelect,

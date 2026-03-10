@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react-native';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
 import type { Line, Station } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
@@ -70,7 +70,6 @@ jest.mock('~/hooks/usePresetCarouselData');
 jest.mock('~/hooks/useLineSelection');
 jest.mock('~/hooks/useSelectLineWalkthrough');
 jest.mock('~/hooks/useDeviceOrientation');
-jest.mock('~/hooks/useQuickActions');
 
 // 子コンポーネント
 jest.mock('~/components/CommonCard', () => ({
@@ -492,6 +491,78 @@ describe('SelectLineScreen', () => {
       const { getByTestId } = render(<SelectLineScreen />);
 
       expect(getByTestId('presets-count').props.children).toBe(2);
+    });
+  });
+
+  describe('クイックアクション', () => {
+    it('pendingQuickActionRouteId がセットされるとプリセットが自動選択される', () => {
+      const localHandlePresetPress = jest.fn();
+      const mockSetNavigationState = jest.fn();
+      const routeId = '00000000-0000-0000-0000-000000000001';
+
+      setupDefaults();
+
+      // handlePresetPress を差し替え
+      (useLineSelection as jest.Mock).mockReturnValue({
+        ...defaultLineSelection(),
+        handlePresetPress: localHandlePresetPress,
+      });
+
+      // routes に該当するプリセットを用意
+      (usePresetCarouselData as jest.Mock).mockReturnValue({
+        carouselData: [],
+        routes: [
+          {
+            id: routeId,
+            name: 'テスト路線',
+            lineId: 1,
+            trainTypeId: null,
+            hasTrainType: false,
+            wantedDestinationId: null,
+            direction: null,
+            notifyStationIds: [],
+            createdAt: new Date(),
+          },
+        ],
+        isRoutesDBInitialized: true,
+      });
+
+      (useAtom as jest.Mock).mockReturnValue([
+        { pendingQuickActionRouteId: routeId },
+        mockSetNavigationState,
+      ]);
+
+      render(<SelectLineScreen />);
+
+      expect(localHandlePresetPress).toHaveBeenCalledWith(
+        expect.objectContaining({ id: routeId })
+      );
+      expect(mockSetNavigationState).toHaveBeenCalledWith(expect.any(Function));
+      // setter が pendingQuickActionRouteId を null にリセットすることを検証
+      const setterFn = mockSetNavigationState.mock.calls[0][0];
+      const result = setterFn({ pendingQuickActionRouteId: routeId });
+      expect(result.pendingQuickActionRouteId).toBeNull();
+    });
+
+    it('pendingQuickActionRouteId に該当するルートがない場合は handlePresetPress を呼ばない', () => {
+      const mockSetNavigationState = jest.fn();
+
+      setupDefaults();
+
+      (usePresetCarouselData as jest.Mock).mockReturnValue({
+        carouselData: [],
+        routes: [],
+        isRoutesDBInitialized: true,
+      });
+
+      (useAtom as jest.Mock).mockReturnValue([
+        { pendingQuickActionRouteId: 'non-existent-id' },
+        mockSetNavigationState,
+      ]);
+
+      render(<SelectLineScreen />);
+
+      expect(mockHandlePresetPress).not.toHaveBeenCalled();
     });
   });
 
