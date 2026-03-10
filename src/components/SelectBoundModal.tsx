@@ -367,11 +367,17 @@ export const SelectBoundModal: React.FC<Props> = ({
         const targetStationIndex = stations.findIndex(
           (s) => s.groupId === targetDestination.groupId
         );
-        const dir: LineDirection =
-          currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
 
-        if (direction !== dir) {
-          return <></>;
+        if (
+          currentStationIndex !== -1 &&
+          targetStationIndex !== -1 &&
+          currentStationIndex !== targetStationIndex
+        ) {
+          const dir: LineDirection =
+            currentStationIndex < targetStationIndex ? 'INBOUND' : 'OUTBOUND';
+          if (direction !== dir) {
+            return <></>;
+          }
         }
       }
 
@@ -382,6 +388,15 @@ export const SelectBoundModal: React.FC<Props> = ({
         const wantedStationIndex = stations.findIndex(
           (s) => s.groupId === wantedDestination.groupId
         );
+
+        if (
+          currentStationIndex === -1 ||
+          wantedStationIndex === -1 ||
+          currentStationIndex === wantedStationIndex
+        ) {
+          return <></>;
+        }
+
         const dir: LineDirection =
           currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
 
@@ -495,7 +510,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   const presetDirectionOptions = useMemo(() => {
     if (!wantedDestination || !line || !stations.length) return undefined;
     const options: DirectionOption[] = [];
-    // INBOUND: 飯能方面に向かう列車。始発駅は stations[0] 側
+    // INBOUND: stations リスト先頭側から終点方向へ向かう列車
     const firstStation = stations[0];
     const lastStation = stations[stations.length - 1];
     if (inboundStations.length && firstStation) {
@@ -506,7 +521,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         line: (firstStation.line as Line) ?? line,
       });
     }
-    // OUTBOUND: 新木場方面に向かう列車。始発駅は stations 末尾側
+    // OUTBOUND: stations リスト末尾側から始点方向へ向かう列車
     if (outboundStations.length && lastStation) {
       options.push({
         direction: 'OUTBOUND',
@@ -525,6 +540,14 @@ export const SelectBoundModal: React.FC<Props> = ({
 
       setIsPresetNameModalVisible(false);
 
+      // 有効な駅IDのみ保存する（wantedDestinationで区間を絞った場合に範囲外を除外）
+      const validStationIds = new Set(
+        stations.map((s) => s.id).filter((id): id is number => id != null)
+      );
+      const filteredNotifyStationIds = targetStationIds.filter((id) =>
+        validStationIds.has(id)
+      );
+
       if (pendingTrainType?.groupId) {
         const newRoute: SavedRouteWithTrainTypeInput = {
           hasTrainType: true,
@@ -533,7 +556,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           trainTypeId: pendingTrainType?.groupId,
           wantedDestinationId: wantedDestination?.groupId ?? null,
           direction,
-          notifyStationIds: targetStationIds,
+          notifyStationIds: filteredNotifyStationIds,
           createdAt: new Date(),
         };
         setSavedRoute(await saveCurrentRoute(newRoute));
@@ -545,7 +568,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           trainTypeId: null,
           wantedDestinationId: wantedDestination?.groupId ?? null,
           direction,
-          notifyStationIds: targetStationIds,
+          notifyStationIds: filteredNotifyStationIds,
           createdAt: new Date(),
         };
         setSavedRoute(await saveCurrentRoute(newRoute));
@@ -562,6 +585,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       pendingTrainType,
       wantedDestination?.groupId,
       targetStationIds,
+      stations,
     ]
   );
 

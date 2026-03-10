@@ -17,6 +17,7 @@ export type UsePresetCarouselDataResult = {
 
 export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
+  const carouselDataRef = useRef<LoopItem[]>([]);
   const prevFetchKeyRef = useRef('');
   const prevDisplayKeyRef = useRef('');
   const currentRequestIdRef = useRef(0);
@@ -106,7 +107,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
           prevFetchKeyRef.current = fetchKey;
         } else {
           // fetch不要の場合は既存のcarouselDataから駅データを再利用
-          for (const item of carouselData) {
+          for (const item of carouselDataRef.current) {
             if (item.hasTrainType) {
               trainTypeStationsMap.set(item.trainTypeId, item.stations);
             } else {
@@ -117,22 +118,22 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
 
         if (requestId !== currentRequestIdRef.current) return;
 
-        setCarouselData(
-          routes.map((r, i) => ({
-            ...r,
-            __k: `${r.id}-${i}`,
-            stations: r.hasTrainType
-              ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
-              : (lineStationsMap.get(r.lineId) ?? []),
-          }))
-        );
+        const newData = routes.map((r, i) => ({
+          ...r,
+          __k: `${r.id}-${i}`,
+          stations: r.hasTrainType
+            ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
+            : (lineStationsMap.get(r.lineId) ?? []),
+        }));
+        carouselDataRef.current = newData;
+        setCarouselData(newData);
         prevDisplayKeyRef.current = displayKey;
       } catch (err) {
         console.error(err);
       }
     };
     fetchAsync();
-  }, [routes, carouselData]);
+  }, [routes]);
 
   return { carouselData, routes, isRoutesDBInitialized };
 };
