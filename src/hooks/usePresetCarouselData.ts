@@ -87,13 +87,28 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
         }
 
         setCarouselData(
-          routes.map((r, i) => ({
-            ...r,
-            __k: `${r.id}-${i}`,
-            stations: r.hasTrainType
+          routes.map((r, i) => {
+            const allStations = r.hasTrainType
               ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
-              : (lineStationsMap.get(r.lineId) ?? []),
-          }))
+              : (lineStationsMap.get(r.lineId) ?? []);
+
+            // wantedDestinationId が設定されている場合、その駅までスライス
+            let stations = allStations;
+            if (r.wantedDestinationId != null) {
+              const destIdx = allStations.findIndex(
+                (s) => s.groupId === r.wantedDestinationId
+              );
+              if (destIdx !== -1) {
+                stations = allStations.slice(0, destIdx + 1);
+              }
+            }
+
+            return {
+              ...r,
+              __k: `${r.id}-${i}`,
+              stations,
+            };
+          })
         );
         prevRoutesKeyRef.current = routesKey;
       } catch (err) {
