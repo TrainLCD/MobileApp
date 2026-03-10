@@ -673,8 +673,8 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [fetchedTrainTypes, pendingTrainType]);
 
   const stationsWithoutPass = useMemo(
-    () => effectiveStations.filter((s) => !getIsPass(s)),
-    [effectiveStations]
+    () => stations.filter((s) => !getIsPass(s)),
+    [stations]
   );
 
   const isBus = isBusLine(line);
@@ -710,107 +710,111 @@ export const SelectBoundModal: React.FC<Props> = ({
   ]);
 
   return (
-    <CustomModal
-      visible={visible}
-      onClose={onClose}
-      onCloseAnimationEnd={onCloseAnimationEnd}
-      dismissOnBackdropPress={!loading && !isTransitioning}
-      backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-      contentContainerStyle={[
-        styles.contentView,
-        {
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          borderRadius: isLEDTheme ? 0 : 8,
-        },
-        isTablet && {
-          width: '80%',
-          maxHeight: '90%',
-          shadowOpacity: 0.25,
-          shadowColor: '#333',
-          borderRadius: isLEDTheme ? 0 : 16,
-        },
-      ]}
-    >
-      <View style={styles.container}>
-        <Heading style={styles.heading}>
-          {translate('selectBoundTitle')}
-        </Heading>
+    <>
+      <CustomModal
+        visible={visible}
+        onClose={onClose}
+        onCloseAnimationEnd={onCloseAnimationEnd}
+        dismissOnBackdropPress={!loading && !isTransitioning}
+        backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        contentContainerStyle={[
+          styles.contentView,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+            borderRadius: isLEDTheme ? 0 : 8,
+          },
+          isTablet && {
+            width: '80%',
+            maxHeight: '90%',
+            shadowOpacity: 0.25,
+            shadowColor: '#333',
+            borderRadius: isLEDTheme ? 0 : 16,
+          },
+        ]}
+      >
+        <View style={styles.container}>
+          <Heading style={styles.heading}>
+            {translate('selectBoundTitle')}
+          </Heading>
 
-        <View style={styles.buttonsContainer}>
-          <View
-            pointerEvents={isTransitioning ? 'none' : 'auto'}
-            style={[
-              styles.boundCardsContainer,
-              isTransitioning && styles.boundCardsDisabled,
-            ]}
-          >
-            {inboundStations.length
-              ? renderButton({
-                  boundStations: inboundStations,
-                  direction: 'INBOUND',
-                  loading,
-                })
-              : null}
-            {outboundStations.length
-              ? renderButton({
-                  boundStations: outboundStations,
-                  direction: 'OUTBOUND',
-                  loading,
-                })
-              : null}
-          </View>
+          <View style={styles.buttonsContainer}>
+            <View
+              pointerEvents={isTransitioning ? 'none' : 'auto'}
+              style={[
+                styles.boundCardsContainer,
+                isTransitioning && styles.boundCardsDisabled,
+              ]}
+            >
+              {inboundStations.length
+                ? renderButton({
+                    boundStations: inboundStations,
+                    direction: 'INBOUND',
+                    loading,
+                  })
+                : null}
+              {outboundStations.length
+                ? renderButton({
+                    boundStations: outboundStations,
+                    direction: 'OUTBOUND',
+                    loading,
+                  })
+                : null}
+            </View>
 
-          <View style={styles.stopsContainer}>
+            <View style={styles.stopsContainer}>
+              <Button
+                outline
+                onPress={() => setRouteInfoModalVisible(true)}
+                disabled={loading || isTransitioning}
+              >
+                {isBus
+                  ? translate('viewBusStops')
+                  : translate('viewStopStations')}
+              </Button>
+
+              <Button
+                outline
+                onPress={() => setIsTrainTypeModalVisible(true)}
+                disabled={
+                  !fetchedTrainTypes.length || loading || isTransitioning
+                }
+              >
+                {trainTypeText}
+              </Button>
+
+              <Button
+                outline
+                style={savedRoute ? styles.redOutlinedButton : null}
+                textStyle={savedRoute ? styles.redOutlinedButtonText : null}
+                onPress={handleSaveRoutePress}
+                disabled={
+                  !line || !isRoutesDBInitialized || loading || isTransitioning
+                }
+              >
+                {translate(
+                  !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
+                )}
+              </Button>
+              <Button
+                outline
+                onPress={() => setSelectBoundSettingListModalVisible(true)}
+                disabled={isTransitioning}
+              >
+                {translate('settings')}
+              </Button>
+            </View>
+
             <Button
-              outline
-              onPress={() => setRouteInfoModalVisible(true)}
+              style={styles.closeButton}
+              textStyle={styles.closeButtonText}
+              onPress={onClose}
               disabled={loading || isTransitioning}
             >
-              {isBus
-                ? translate('viewBusStops')
-                : translate('viewStopStations')}
-            </Button>
-
-            <Button
-              outline
-              onPress={() => setIsTrainTypeModalVisible(true)}
-              disabled={!fetchedTrainTypes.length || loading || isTransitioning}
-            >
-              {trainTypeText}
-            </Button>
-
-            <Button
-              outline
-              style={savedRoute ? styles.redOutlinedButton : null}
-              textStyle={savedRoute ? styles.redOutlinedButtonText : null}
-              onPress={handleSaveRoutePress}
-              disabled={
-                !line || !isRoutesDBInitialized || loading || isTransitioning
-              }
-            >
-              {translate(
-                !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
-              )}
-            </Button>
-            <Button
-              outline
-              onPress={() => setSelectBoundSettingListModalVisible(true)}
-              disabled={isTransitioning}
-            >
-              {translate('settings')}
+              {translate('close')}
             </Button>
           </View>
-
-          <Button
-            style={styles.closeButton}
-            textStyle={styles.closeButtonText}
-            onPress={onClose}
-            disabled={loading || isTransitioning}
-          >
-            {translate('close')}
-          </Button>
         </View>
-      </View>
+      </CustomModal>
 
       <RouteInfoModal
         visible={routeInfoModalVisible}
@@ -842,6 +846,10 @@ export const SelectBoundModal: React.FC<Props> = ({
           onTrainTypeSelect(trainType);
         }}
       />
+      {/*
+        Keep the preset-name modal outside the parent modal tree to avoid
+        nested modal lifecycle glitches on iOS during route-save updates.
+      */}
       <SavePresetNameModal
         visible={isPresetNameModalVisible}
         onClose={() => setIsPresetNameModalVisible(false)}
@@ -849,6 +857,6 @@ export const SelectBoundModal: React.FC<Props> = ({
         defaultName={presetDefaultName}
         directionOptions={presetDirectionOptions}
       />
-    </CustomModal>
+    </>
   );
 };
