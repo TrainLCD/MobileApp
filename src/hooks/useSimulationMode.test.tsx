@@ -918,6 +918,57 @@ describe('useSimulationMode', () => {
       expect(callsBeyondMidpoint.length).toBeGreaterThanOrEqual(2);
     });
 
+    it('同一駅オブジェクトが再登場する場合でも終端まで前進する', () => {
+      const stationA = mockStation(10, 10, 35.0, 139.0);
+      const stationB = mockStation(20, 20, 35.05, 139.05);
+      const stationC = mockStation(30, 30, 35.1, 139.1);
+      const stationD = mockStation(50, 50, 35.25, 139.25);
+      const stations = [
+        stationA,
+        stationB,
+        stationC,
+        stationB, // 同一参照を再利用
+        stationD,
+      ];
+
+      setupAtomMocks(
+        {
+          station: stationC,
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue([2000]);
+
+      (store.get as jest.Mock).mockReturnValue(mockLocationObject(35.1, 139.1));
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // tick 1: C→(2回目の)B
+      // tick 2: dwellPending
+      // tick 3: dwell処理でDセグメントへ移動
+      // tick 4: B→D で緯度が大きく前進する
+      jest.advanceTimersByTime(4000);
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+      const steppingCalls = locationSetCalls.filter(
+        (loc) => typeof loc?.coords?.speed === 'number' && loc.coords.speed > 0
+      );
+      const reachedTerminalSide = steppingCalls.some(
+        (loc) => loc.coords.latitude >= 35.2
+      );
+
+      expect(reachedTerminalSide).toBe(true);
+    });
+
     it('重複IDの駅間に通過駅がある場合も正しいウェイポイントが使用される', () => {
       const stations = [
         mockStation(10, 10, 35.0, 139.0),
