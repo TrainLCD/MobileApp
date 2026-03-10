@@ -1344,6 +1344,8 @@ PODS:
     - ExpoModulesCore
   - ExpoNotifications (55.0.10):
     - ExpoModulesCore
+  - ExpoQuickActions (6.0.1):
+    - ExpoModulesCore
   - ExpoScreenCapture (55.0.8):
     - ExpoModulesCore
   - ExpoScreenOrientation (55.0.8):
@@ -4858,6 +4860,7 @@ DEPENDENCIES:
   - ExpoModulesJSI (from `../node_modules/expo-modules-core`)
   - ExpoNetwork (from `../node_modules/expo-network/ios`)
   - ExpoNotifications (from `../node_modules/expo-notifications/ios`)
+  - ExpoQuickActions (from `../node_modules/expo-quick-actions/ios`)
   - ExpoScreenCapture (from `../node_modules/expo-screen-capture/ios`)
   - ExpoScreenOrientation (from `../node_modules/expo-screen-orientation/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
@@ -5059,6 +5062,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-network/ios"
   ExpoNotifications:
     :path: "../node_modules/expo-notifications/ios"
+  ExpoQuickActions:
+    :path: "../node_modules/expo-quick-actions/ios"
   ExpoScreenCapture:
     :path: "../node_modules/expo-screen-capture/ios"
   ExpoScreenOrientation:
@@ -5299,13 +5304,14 @@ SPEC CHECKSUMS:
   ExpoModulesJSI: bcc87b51e04bdfc9a23102baac1d886630316e49
   ExpoNetwork: 567db7b29039cecd83c7b6fe9ee649f14aa84300
   ExpoNotifications: fa5cf77a46c8ea6bfc93bdbad9805c4f8d8a81fb
+  ExpoQuickActions: 61e27ec458e4e06b854ddc6967c2b57aa6a772d5
   ExpoScreenCapture: eb36e5572368a3862d128c9e09f08435a37b298e
   ExpoScreenOrientation: 51ac87fa33f0af12ace9b8992b41ac344da6cb0b
   ExpoSplashScreen: 6452aefb424acc76347d62482caef9b4e613e59e
   ExpoSQLite: 77506d3d056c57118280d1e2a2d76cc06e4926b3
   ExpoTaskManager: 6038b80fbe63915383dcf57fa0156b23e2615fab
   ExpoWebBrowser: f13a6e46e44049bbb8ce49ff8aaa4d819c87d1fe
-  fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
+  fast_float: 914e00b8b67cb8ba184a778c7bbc2e9fe98d37b3
   FBLazyVector: f1200e6ef6cf24885501668bdbb9eff4cf48843f
   Firebase: 9a58fdbc9d8655ed7b79a19cf9690bb007d3d46d
   FirebaseAnalytics: f20bbad8cb7f65d8a5eaefeb424ae8800a31bdfc
@@ -5320,21 +5326,21 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 6a14ab3d694ebd9f839c48d330da5547e9ca9dc0
   FirebaseSharedSwift: f57ed48f4542b2d7eb4738f4f23ba443f78b3780
   FirebaseStorage: 7c37558dc72731aa5f0a1a2401d8c6de10a513f5
-  fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
-  glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
+  fmt: b85d977e8fe789fd71c77123f9f4920d88c4d170
+  glog: 682871fb30f4a65f657bf357581110656ea90b08
   GoogleAppMeasurement: 72c9a682fec6290327ea5e3c4b829b247fcb2c17
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   "gRPC-C++": cc207623316fb041a7a3e774c252cf68a058b9e8
   gRPC-Core: 860978b7db482de8b4f5e10677216309b5ff6330
   GTMSessionFetcher: 02d6e866e90bc236f48a703a041dfe43e6221a29
-  hermes-engine: cf793502cf318098c07975b890e2de32bfcdcf3a
+  hermes-engine: daf64caf2c32346fe06a11b1a688f94e0c9731f8
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
+  RCT-Folly: fb64616e25cfac1c3d10bfd784d68926325ae67f
   RCTDeprecation: 3b915a7b166f7d04eaeb4ae30aaf24236a016551
   RCTRequired: fcfec6ba532cfe4e53c49e0a4061b5eff87f8c64
   RCTSwiftUI: b2f0c2f2761631b8cd605767536cbb1cbf8d020f
