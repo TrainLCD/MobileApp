@@ -73,6 +73,64 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
   };
 };
 
+// モジュールスコープで初期化 Promise を保持し、並行実行を防ぐ
+let initPromise: Promise<void> | null = null;
+
+const initDb = async (): Promise<void> => {
+  await db.execAsync(
+    `CREATE TABLE IF NOT EXISTS saved_routes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    lineId INTEGER NOT NULL,
+    trainTypeId INTEGER,
+    wantedDestinationId INTEGER,
+    direction TEXT,
+    notifyStationIds TEXT,
+    hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
+    createdAt TEXT NOT NULL,
+    CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
+  );`
+  );
+  // よく使う検索条件に合わせて索引を付与
+  await db.execAsync(
+    'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt ON saved_routes(createdAt DESC);'
+  );
+  await db.execAsync(
+    'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, hasTrainType, createdAt DESC);'
+  );
+  await db.execAsync(
+    'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
+  );
+  // 既存テーブルにカラムを追加（存在しない場合のみ）
+  const columns = (await db.getAllAsync(
+    "PRAGMA table_info('saved_routes')"
+  )) as { name: string }[];
+  const columnNames = new Set(columns.map((c) => c.name));
+  if (!columnNames.has('wantedDestinationId')) {
+    await db.execAsync(
+      'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
+    );
+  }
+  if (!columnNames.has('direction')) {
+    await db.execAsync('ALTER TABLE saved_routes ADD COLUMN direction TEXT;');
+  }
+  if (!columnNames.has('notifyStationIds')) {
+    await db.execAsync(
+      'ALTER TABLE saved_routes ADD COLUMN notifyStationIds TEXT;'
+    );
+  }
+};
+
+const ensureDbInitialized = (): Promise<void> => {
+  if (!initPromise) {
+    initPromise = initDb().catch((err) => {
+      initPromise = null;
+      throw err;
+    });
+  }
+  return initPromise;
+};
+
 export const useSavedRoutes = () => {
   const [
     { presetRoutes: routes, presetsFetched: isInitialized },
@@ -80,54 +138,14 @@ export const useSavedRoutes = () => {
   ] = useAtom(navigationState);
 
   useEffect(() => {
-    const initDb = async () => {
-      await db.execAsync(
-        `CREATE TABLE IF NOT EXISTS saved_routes (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        lineId INTEGER NOT NULL,
-        trainTypeId INTEGER,
-        wantedDestinationId INTEGER,
-        direction TEXT,
-        notifyStationIds TEXT,
-        hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
-        createdAt TEXT NOT NULL,
-        CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
-      );`
-      );
-      // よく使う検索条件に合わせて索引を付与
-      await db.execAsync(
-        'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt ON saved_routes(createdAt DESC);'
-      );
-      await db.execAsync(
-        'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, hasTrainType, createdAt DESC);'
-      );
-      await db.execAsync(
-        'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
-      );
-      // 既存テーブルにカラムを追加（存在しない場合のみ）
-      const columns = (await db.getAllAsync(
-        "PRAGMA table_info('saved_routes')"
-      )) as { name: string }[];
-      const columnNames = new Set(columns.map((c) => c.name));
-      if (!columnNames.has('wantedDestinationId')) {
-        await db.execAsync(
-          'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
-        );
-      }
-      if (!columnNames.has('direction')) {
-        await db.execAsync(
-          'ALTER TABLE saved_routes ADD COLUMN direction TEXT;'
-        );
-      }
-      if (!columnNames.has('notifyStationIds')) {
-        await db.execAsync(
-          'ALTER TABLE saved_routes ADD COLUMN notifyStationIds TEXT;'
-        );
-      }
-      setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
-    };
-    initDb();
+    ensureDbInitialized()
+      .then(() => {
+        setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
+      })
+      .catch((err) => {
+        console.error('useSavedRoutes: DB初期化に失敗しました', err);
+        setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
+      });
   }, [setNavigationAtom]);
 
   const updateRoutes = useCallback(async (): Promise<void> => {
