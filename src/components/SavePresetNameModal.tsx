@@ -109,6 +109,13 @@ export const SavePresetNameModal: React.FC<Props> = ({
       );
       inboundOpacity.setValue(1);
       outboundOpacity.setValue(1);
+
+      if (Platform.OS === 'ios') {
+        const timer = setTimeout(() => {
+          textInputRef.current?.focus();
+        }, 300);
+        return () => clearTimeout(timer);
+      }
     }
   }, [visible, defaultName, directionOptions, inboundOpacity, outboundOpacity]);
 
@@ -182,7 +189,7 @@ export const SavePresetNameModal: React.FC<Props> = ({
 
         <TextInput
           ref={textInputRef}
-          autoFocus={Platform.OS === 'ios'}
+          autoFocus={Platform.OS !== 'ios'}
           defaultValue={defaultName}
           onChangeText={handleChangeText}
           style={[
