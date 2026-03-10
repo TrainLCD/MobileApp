@@ -311,7 +311,7 @@ export const CommonCard: React.FC<Props> = ({
           : undefined
       }
     >
-      {hasAccordion && expanded && (
+      {hasAccordion && (
         <View
           style={[
             styles.fullHeightColorBar,
