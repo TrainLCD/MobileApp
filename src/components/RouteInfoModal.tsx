@@ -82,6 +82,11 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     elevation: 0,
     shadowOpacity: 0,
+    paddingHorizontal: 12,
+  },
+  expandableToggleStatePanel: {
+    minWidth: 56,
+    maxWidth: 56,
   },
   expandableToggleTextLight: {
     color: '#333',
@@ -185,6 +190,7 @@ export const RouteInfoModal = ({
                     onToggle={() => onToggleNotification(item)}
                     state={isNotifyEnabled}
                     style={styles.expandableToggle}
+                    statePanelStyle={styles.expandableToggleStatePanel}
                     textStyle={
                       isLEDTheme
                         ? styles.expandableToggleTextLED
@@ -199,6 +205,7 @@ export const RouteInfoModal = ({
                   <ToggleButton
                     outline
                     style={styles.expandableToggle}
+                    statePanelStyle={styles.expandableToggleStatePanel}
                     textStyle={
                       isLEDTheme
                         ? styles.expandableToggleTextLED
