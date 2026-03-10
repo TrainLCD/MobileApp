@@ -278,7 +278,10 @@
   "settingsWalkthroughTitle4": "Display Languages",
   "settingsWalkthroughDescription4": "Set the languages to display on screen. You can choose from Japanese, English, Chinese, and Korean.",
   "requireJapaneseOrEnglish": "Either Japanese or English must be set.",
-  "presetNameInputTitle": "Enter preset name",
+  "savePresetTitle": "Save preset",
+  "presetNameLabel": "Preset name",
   "presetNamePlaceholder": "Preset name",
-  "save": "Save"
+  "save": "Save",
+  "selectStartStationTitle": "Select starting station",
+  "departure": "Dep."
 }

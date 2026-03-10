@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
+const DirectionSchema = z.enum(['INBOUND', 'OUTBOUND']);
+
 export const SavedRouteWithTrainTypeSchema = z.object({
   id: z.string().uuid(),
   hasTrainType: z.literal(true),
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.number().int().nonnegative(),
   wantedDestinationId: z.number().int().nonnegative().nullable(),
+  direction: DirectionSchema.nullable(),
+  notifyStationIds: z.array(z.number().int().nonnegative()),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
 });
@@ -20,6 +24,8 @@ export const SavedRouteWithoutTrainTypeSchema = z.object({
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.null(),
   wantedDestinationId: z.number().int().nonnegative().nullable(),
+  direction: DirectionSchema.nullable(),
+  notifyStationIds: z.array(z.number().int().nonnegative()),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
 });

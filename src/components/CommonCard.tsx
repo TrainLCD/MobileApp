@@ -20,8 +20,14 @@ type Props = {
   targetStation?: Station;
   stations?: Station[];
   title?: string;
+  /** カッコ内の文字を小さく表示する際、カッコ自体を非表示にする */
+  hideParens?: boolean;
   subtitle?: string;
   subtitleNumberOfLines?: number;
+  /** 右端のシェブロンを非表示にする */
+  hideChevron?: boolean;
+  /** 右端にチェックマークを表示する */
+  checked?: boolean;
   disabled?: boolean;
   testID?: string;
   loading?: boolean;
@@ -166,8 +172,11 @@ export const CommonCard: React.FC<Props> = ({
   targetStation,
   stations = [],
   title,
+  hideParens,
   subtitle,
   subtitleNumberOfLines,
+  hideChevron,
+  checked,
   disabled,
   testID,
   loading,
@@ -297,8 +306,9 @@ export const CommonCard: React.FC<Props> = ({
             /^\(.*\)$/.test(part) ? (
               <Typography key={`${index}-${part}`} style={styles.titleParens}>
                 {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
-                  ? ` ${part}`
-                  : part}
+                  ? ' '
+                  : ''}
+                {hideParens ? part.slice(1, -1) : part}
               </Typography>
             ) : (
               part
@@ -323,7 +333,24 @@ export const CommonCard: React.FC<Props> = ({
         )}
       </View>
       <View style={styles.chevron}>
-        <CardChevron />
+        {!hideChevron && <CardChevron />}
+        {hideChevron && !checked && (
+          <Svg width={24} height={24} viewBox="0 0 24 24">
+            <Path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
+              fill="#fff"
+              opacity={0.5}
+            />
+          </Svg>
+        )}
+        {hideChevron && checked && (
+          <Svg width={24} height={24} viewBox="0 0 24 24">
+            <Path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+              fill="#fff"
+            />
+          </Svg>
+        )}
       </View>
     </TouchableOpacity>
   );

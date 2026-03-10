@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Animated,
+  type GestureResponderEvent,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -29,6 +30,10 @@ type Props = {
 
 const ANIMATION_DURATION = 180;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const captureModalTouch = () => true;
+const stopModalTouchPropagation = (event: GestureResponderEvent) => {
+  event.stopPropagation();
+};
 
 export const CustomModal: React.FC<Props> = ({
   visible,
@@ -128,6 +133,8 @@ export const CustomModal: React.FC<Props> = ({
                 animatedContentStyle,
               ]}
               pointerEvents="auto"
+              onStartShouldSetResponder={captureModalTouch}
+              onTouchEnd={stopModalTouchPropagation}
             >
               {children}
             </Animated.View>
@@ -147,6 +154,8 @@ export const CustomModal: React.FC<Props> = ({
                 animatedContentStyle,
               ]}
               pointerEvents="auto"
+              onStartShouldSetResponder={captureModalTouch}
+              onTouchEnd={stopModalTouchPropagation}
             >
               {children}
             </Animated.View>

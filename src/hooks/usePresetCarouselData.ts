@@ -32,7 +32,10 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
 
   useEffect(() => {
     const routesKey = routes
-      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
+      .map(
+        (r) =>
+          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.wantedDestinationId}`
+      )
       .join(',');
     if (routesKey === prevRoutesKeyRef.current) return;
 
@@ -87,28 +90,13 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
         }
 
         setCarouselData(
-          routes.map((r, i) => {
-            const allStations = r.hasTrainType
+          routes.map((r, i) => ({
+            ...r,
+            __k: `${r.id}-${i}`,
+            stations: r.hasTrainType
               ? (trainTypeStationsMap.get(r.trainTypeId) ?? [])
-              : (lineStationsMap.get(r.lineId) ?? []);
-
-            // wantedDestinationId が設定されている場合、その駅までスライス
-            let stations = allStations;
-            if (r.wantedDestinationId != null) {
-              const destIdx = allStations.findIndex(
-                (s) => s.groupId === r.wantedDestinationId
-              );
-              if (destIdx !== -1) {
-                stations = allStations.slice(0, destIdx + 1);
-              }
-            }
-
-            return {
-              ...r,
-              __k: `${r.id}-${i}`,
-              stations,
-            };
-          })
+              : (lineStationsMap.get(r.lineId) ?? []),
+          }))
         );
         prevRoutesKeyRef.current = routesKey;
       } catch (err) {

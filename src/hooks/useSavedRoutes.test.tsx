@@ -65,7 +65,7 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(5));
+      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(7));
       expect(mockDb.execAsync).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
@@ -184,6 +184,8 @@ describe('useSavedRoutes', () => {
       lineId: 1,
       trainTypeId: 9,
       wantedDestinationId: null,
+      direction: null,
+      notifyStationIds: [],
       name: 'WithType',
       createdAt: new Date('2025-01-01T00:00:00.000Z'),
     };
@@ -192,6 +194,8 @@ describe('useSavedRoutes', () => {
       lineId: 2,
       trainTypeId: null,
       wantedDestinationId: null,
+      direction: null,
+      notifyStationIds: [],
       name: 'WithoutType',
       createdAt: new Date('2025-01-02T00:00:00.000Z'),
     };
@@ -230,6 +234,8 @@ describe('useSavedRoutes', () => {
           withType.lineId,
           withType.trainTypeId,
           withType.wantedDestinationId,
+          withType.direction,
+          null,
           1,
           saved1Defined.createdAt.toISOString(),
         ]
@@ -266,6 +272,128 @@ describe('useSavedRoutes', () => {
       expect(
         result.current.routes.map((route: SavedRoute) => route.id)
       ).toEqual([saved2Defined.id, saved1Defined.id]);
+    });
+
+    it('save: wantedDestinationId が non-null で正しく保存・復元される', async () => {
+      const withDest: SavedRouteWithTrainTypeInput = {
+        hasTrainType: true,
+        lineId: 10,
+        trainTypeId: 50,
+        wantedDestinationId: 999,
+        direction: 'INBOUND',
+        notifyStationIds: [1, 2, 3],
+        name: 'WithDest',
+        createdAt: new Date('2025-02-01T00:00:00.000Z'),
+      };
+
+      const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+      });
+      const { result } = renderHook(
+        () => require('./useSavedRoutes').useSavedRoutes(),
+        {
+          wrapper: withJotaiProvider(store),
+        }
+      );
+
+      let saved: SavedRoute | undefined;
+      await act(async () => {
+        saved = await result.current.save(withDest);
+      });
+
+      expect(saved).toBeDefined();
+      if (!saved) {
+        throw new Error('save should return route with wantedDestinationId');
+      }
+      expect(saved.wantedDestinationId).toBe(999);
+      expect(saved.direction).toBe('INBOUND');
+      expect(saved.notifyStationIds).toEqual([1, 2, 3]);
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO saved_routes'),
+        [
+          saved.id,
+          withDest.name,
+          withDest.lineId,
+          withDest.trainTypeId,
+          999,
+          'INBOUND',
+          '[1,2,3]',
+          1,
+          saved.createdAt.toISOString(),
+        ]
+      );
+
+      await waitFor(() => expect(result.current.routes.length).toBe(1));
+      expect(result.current.routes[0].wantedDestinationId).toBe(999);
+      expect(result.current.routes[0].direction).toBe('INBOUND');
+      expect(result.current.routes[0].notifyStationIds).toEqual([1, 2, 3]);
+    });
+
+    it('find: 同じ路線・種別でも wantedDestinationId が異なれば別プリセット', async () => {
+      const routeNoDest: SavedRoute = {
+        id: 'route-no-dest',
+        hasTrainType: true,
+        lineId: 100,
+        trainTypeId: 50,
+        wantedDestinationId: null,
+        direction: null,
+        notifyStationIds: [],
+        name: 'No Dest',
+        createdAt: new Date('2025-02-01T00:00:00.000Z'),
+      };
+      const routeWithDest: SavedRoute = {
+        id: 'route-with-dest',
+        hasTrainType: true,
+        lineId: 100,
+        trainTypeId: 50,
+        wantedDestinationId: 999,
+        direction: 'INBOUND',
+        notifyStationIds: [],
+        name: 'With Dest',
+        createdAt: new Date('2025-02-02T00:00:00.000Z'),
+      };
+
+      const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetRoutes: [routeNoDest, routeWithDest],
+      });
+      const { result } = renderHook(
+        () => require('./useSavedRoutes').useSavedRoutes(),
+        {
+          wrapper: withJotaiProvider(store),
+        }
+      );
+
+      await waitFor(() =>
+        expect(store.get(navigationState).presetsFetched).toBe(true)
+      );
+
+      expect(
+        result.current.find({
+          lineId: 100,
+          trainTypeId: 50,
+          wantedDestinationId: null,
+        })
+      ).toBe(routeNoDest);
+
+      expect(
+        result.current.find({
+          lineId: 100,
+          trainTypeId: 50,
+          wantedDestinationId: 999,
+        })
+      ).toBe(routeWithDest);
+
+      expect(
+        result.current.find({
+          lineId: 100,
+          trainTypeId: 50,
+          wantedDestinationId: 888,
+        })
+      ).toBeNull();
     });
 
     it('remove: 指定 ID を削除し routes からも取り除く', async () => {
@@ -310,6 +438,8 @@ describe('useSavedRoutes', () => {
       lineId: 100,
       trainTypeId: 7,
       wantedDestinationId: null,
+      direction: null,
+      notifyStationIds: [],
       name: 'With Train Type',
       createdAt: new Date('2025-01-03T00:00:00.000Z'),
     };
@@ -319,6 +449,8 @@ describe('useSavedRoutes', () => {
       lineId: 200,
       trainTypeId: null,
       wantedDestinationId: null,
+      direction: null,
+      notifyStationIds: [],
       name: 'Without Train Type',
       createdAt: new Date('2025-01-04T00:00:00.000Z'),
     };
@@ -347,6 +479,7 @@ describe('useSavedRoutes', () => {
         result.current.find({
           lineId: withTrainType.lineId,
           trainTypeId: withTrainType.trainTypeId,
+          wantedDestinationId: null,
         })
       ).toBe(withTrainType);
     });
@@ -361,6 +494,7 @@ describe('useSavedRoutes', () => {
         result.current.find({
           lineId: withoutTrainType.lineId,
           trainTypeId: 999,
+          wantedDestinationId: null,
         })
       ).toBeNull();
     });
@@ -374,6 +508,7 @@ describe('useSavedRoutes', () => {
         result.current.find({
           lineId: withoutTrainType.lineId,
           trainTypeId: null,
+          wantedDestinationId: null,
         })
       ).toBe(withoutTrainType);
     });
@@ -384,7 +519,11 @@ describe('useSavedRoutes', () => {
         expect(store.get(navigationState).presetsFetched).toBe(true)
       );
       expect(
-        result.current.find({ lineId: 9999, trainTypeId: 8888 })
+        result.current.find({
+          lineId: 9999,
+          trainTypeId: 8888,
+          wantedDestinationId: null,
+        })
       ).toBeNull();
     });
 
@@ -398,6 +537,7 @@ describe('useSavedRoutes', () => {
         result.current.find({
           lineId: withTrainType.lineId,
           trainTypeId: 999, // 実際の trainTypeId は 7
+          wantedDestinationId: null,
         })
       ).toBeNull();
     });
@@ -412,6 +552,7 @@ describe('useSavedRoutes', () => {
         result.current.find({
           lineId: withTrainType.lineId,
           trainTypeId: null,
+          wantedDestinationId: null,
         })
       ).toBeNull();
     });
@@ -423,6 +564,8 @@ describe('useSavedRoutes', () => {
         lineId: 300,
         trainTypeId: 10,
         wantedDestinationId: null,
+        direction: null,
+        notifyStationIds: [],
         name: 'Route 1',
         createdAt: new Date('2025-01-05T00:00:00.000Z'),
       };
@@ -432,6 +575,8 @@ describe('useSavedRoutes', () => {
         lineId: 300,
         trainTypeId: 20,
         wantedDestinationId: null,
+        direction: null,
+        notifyStationIds: [],
         name: 'Route 2',
         createdAt: new Date('2025-01-06T00:00:00.000Z'),
       };
@@ -441,6 +586,8 @@ describe('useSavedRoutes', () => {
         lineId: 300,
         trainTypeId: null,
         wantedDestinationId: null,
+        direction: null,
+        notifyStationIds: [],
         name: 'Route 3 (no train type)',
         createdAt: new Date('2025-01-07T00:00:00.000Z'),
       };
@@ -462,22 +609,40 @@ describe('useSavedRoutes', () => {
       );
 
       // trainTypeId: 10 で検索 → route1 を返す
-      expect(result.current.find({ lineId: 300, trainTypeId: 10 })).toBe(
-        route1
-      );
+      expect(
+        result.current.find({
+          lineId: 300,
+          trainTypeId: 10,
+          wantedDestinationId: null,
+        })
+      ).toBe(route1);
 
       // trainTypeId: 20 で検索 → route2 を返す
-      expect(result.current.find({ lineId: 300, trainTypeId: 20 })).toBe(
-        route2
-      );
+      expect(
+        result.current.find({
+          lineId: 300,
+          trainTypeId: 20,
+          wantedDestinationId: null,
+        })
+      ).toBe(route2);
 
       // trainTypeId: null で検索 → routeNoTrainType を返す
-      expect(result.current.find({ lineId: 300, trainTypeId: null })).toBe(
-        routeNoTrainType
-      );
+      expect(
+        result.current.find({
+          lineId: 300,
+          trainTypeId: null,
+          wantedDestinationId: null,
+        })
+      ).toBe(routeNoTrainType);
 
       // trainTypeId: 30 で検索 → 該当なし
-      expect(result.current.find({ lineId: 300, trainTypeId: 30 })).toBeNull();
+      expect(
+        result.current.find({
+          lineId: 300,
+          trainTypeId: 30,
+          wantedDestinationId: null,
+        })
+      ).toBeNull();
     });
 
     it('trainTypeId が指定されている場合、lineId が異なっても trainTypeId で経路を見つける', async () => {
@@ -489,6 +654,8 @@ describe('useSavedRoutes', () => {
         lineId: 500, // JR神戸線のID
         trainTypeId: 50, // サンライズ出雲のgroupId
         wantedDestinationId: null,
+        direction: null,
+        notifyStationIds: [],
         name: 'サンライズ出雲',
         createdAt: new Date('2025-01-08T00:00:00.000Z'),
       };
@@ -510,17 +677,31 @@ describe('useSavedRoutes', () => {
       );
 
       // 同じlineIdで検索 → 見つかる
-      expect(result.current.find({ lineId: 500, trainTypeId: 50 })).toBe(
-        sunriseLine
-      );
+      expect(
+        result.current.find({
+          lineId: 500,
+          trainTypeId: 50,
+          wantedDestinationId: null,
+        })
+      ).toBe(sunriseLine);
 
       // 異なるlineId（東海道線）で検索しても trainTypeId で見つかる
-      expect(result.current.find({ lineId: 600, trainTypeId: 50 })).toBe(
-        sunriseLine
-      );
+      expect(
+        result.current.find({
+          lineId: 600,
+          trainTypeId: 50,
+          wantedDestinationId: null,
+        })
+      ).toBe(sunriseLine);
 
       // 異なるtrainTypeIdでは見つからない
-      expect(result.current.find({ lineId: 500, trainTypeId: 99 })).toBeNull();
+      expect(
+        result.current.find({
+          lineId: 500,
+          trainTypeId: 99,
+          wantedDestinationId: null,
+        })
+      ).toBeNull();
     });
   });
 });

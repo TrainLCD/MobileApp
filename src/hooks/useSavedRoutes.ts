@@ -12,15 +12,36 @@ interface SavedRouteRow {
   lineId: number;
   trainTypeId: number | null;
   wantedDestinationId: number | null;
+  direction: string | null;
+  notifyStationIds: string | null; // JSON文字列として保存
   hasTrainType: number; // SQLiteではBOOLEANが数値として保存される
   createdAt: string; // SQLiteでは日時が文字列として保存される
 }
 
 const db = SQLite.openDatabaseSync('savedRoutes.db');
 
+const parseDirection = (
+  value: string | null
+): 'INBOUND' | 'OUTBOUND' | null => {
+  if (value === 'INBOUND' || value === 'OUTBOUND') return value;
+  return null;
+};
+
+const parseNotifyStationIds = (value: string | null): number[] => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(Number.isFinite) : [];
+  } catch {
+    return [];
+  }
+};
+
 // SQLiteの行データを SavedRoute に変換（不正データは null を返す）
 const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
   const hasTrainType = Boolean(row.hasTrainType);
+  const direction = parseDirection(row.direction);
+  const notifyStationIds = parseNotifyStationIds(row.notifyStationIds);
 
   if (hasTrainType) {
     if (row.trainTypeId === null) {
@@ -33,6 +54,8 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
       lineId: row.lineId,
       trainTypeId: row.trainTypeId,
       wantedDestinationId: row.wantedDestinationId ?? null,
+      direction,
+      notifyStationIds,
       hasTrainType: true,
       createdAt: new Date(row.createdAt),
     };
@@ -43,6 +66,8 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
     lineId: row.lineId,
     trainTypeId: null,
     wantedDestinationId: row.wantedDestinationId ?? null,
+    direction,
+    notifyStationIds,
     hasTrainType: false,
     createdAt: new Date(row.createdAt),
   };
@@ -63,6 +88,8 @@ export const useSavedRoutes = () => {
         lineId INTEGER NOT NULL,
         trainTypeId INTEGER,
         wantedDestinationId INTEGER,
+        direction TEXT,
+        notifyStationIds TEXT,
         hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
         createdAt TEXT NOT NULL,
         CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
@@ -78,16 +105,24 @@ export const useSavedRoutes = () => {
       await db.execAsync(
         'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
       );
-      // wantedDestinationId カラムを既存テーブルに追加（存在しない場合のみ）
+      // 既存テーブルにカラムを追加（存在しない場合のみ）
       const columns = (await db.getAllAsync(
         "PRAGMA table_info('saved_routes')"
       )) as { name: string }[];
-      const hasWantedDestCol = columns.some(
-        (c) => c.name === 'wantedDestinationId'
-      );
-      if (!hasWantedDestCol) {
+      const columnNames = new Set(columns.map((c) => c.name));
+      if (!columnNames.has('wantedDestinationId')) {
         await db.execAsync(
           'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
+        );
+      }
+      if (!columnNames.has('direction')) {
+        await db.execAsync(
+          'ALTER TABLE saved_routes ADD COLUMN direction TEXT;'
+        );
+      }
+      if (!columnNames.has('notifyStationIds')) {
+        await db.execAsync(
+          'ALTER TABLE saved_routes ADD COLUMN notifyStationIds TEXT;'
         );
       }
       setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
@@ -111,16 +146,22 @@ export const useSavedRoutes = () => {
     ({
       lineId,
       trainTypeId,
+      wantedDestinationId,
     }: {
       lineId: number | null;
       trainTypeId: number | null;
+      wantedDestinationId: number | null;
     }): SavedRoute | null => {
       if (trainTypeId !== null) {
         // 種別指定で検索する場合、trainTypeId（lineGroupId）のみで一意に識別できる
         // lineIdは経路の中間駅で異なる可能性があるため比較しない
         return (
-          routes.find((r) => r.hasTrainType && r.trainTypeId === trainTypeId) ??
-          null
+          routes.find(
+            (r) =>
+              r.hasTrainType &&
+              r.trainTypeId === trainTypeId &&
+              r.wantedDestinationId === wantedDestinationId
+          ) ?? null
         );
       }
       // trainTypeId === null の場合は lineId が必須
@@ -128,7 +169,14 @@ export const useSavedRoutes = () => {
         return null;
       }
       // lineId が一致し、hasTrainType: false の経路を検索
-      return routes.find((r) => r.lineId === lineId && !r.hasTrainType) ?? null;
+      return (
+        routes.find(
+          (r) =>
+            r.lineId === lineId &&
+            !r.hasTrainType &&
+            r.wantedDestinationId === wantedDestinationId
+        ) ?? null
+      );
     },
     [routes]
   );
@@ -147,14 +195,18 @@ export const useSavedRoutes = () => {
 
       await db.runAsync(
         `INSERT INTO saved_routes
-         (id, name, lineId, trainTypeId, wantedDestinationId, hasTrainType, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (id, name, lineId, trainTypeId, wantedDestinationId, direction, notifyStationIds, hasTrainType, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           newRoute.id,
           newRoute.name,
           newRoute.lineId,
           newRoute.trainTypeId ?? null,
           newRoute.wantedDestinationId ?? null,
+          newRoute.direction ?? null,
+          newRoute.notifyStationIds.length
+            ? JSON.stringify(newRoute.notifyStationIds)
+            : null,
           newRoute.hasTrainType ? 1 : 0,
           newRoute.createdAt.toISOString(),
         ]

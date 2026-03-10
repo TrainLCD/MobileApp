@@ -128,7 +128,7 @@ describe('getStationPrimaryCode', () => {
       });
       const from = createMockStation({ trainType });
       const to = createMockStation();
-      expect(getStationPrimaryCode(from, to)).toBe('JY01 快速');
+      expect(getStationPrimaryCode(from, to)).toBe('JY01');
     });
 
     it('should return station number with train type when to is not local', () => {
@@ -141,7 +141,7 @@ describe('getStationPrimaryCode', () => {
       });
       const from = createMockStation({ trainType });
       const to = createMockStation();
-      expect(getStationPrimaryCode(from, to)).toBe('JY01 快速');
+      expect(getStationPrimaryCode(from, to)).toBe('JY01');
     });
 
     it('should return station number with train type when both are not local', () => {
@@ -152,7 +152,7 @@ describe('getStationPrimaryCode', () => {
       });
       const from = createMockStation({ trainType });
       const to = createMockStation({ trainType });
-      expect(getStationPrimaryCode(from, to)).toBe('JY01 快速');
+      expect(getStationPrimaryCode(from, to)).toBe('JY01');
     });
 
     it('should return only station number when trainType is null', () => {
@@ -175,7 +175,7 @@ describe('getStationPrimaryCode', () => {
       const trainType = createMockTrainType({ name: '快速' });
       const from = createMockStation({ stationNumbers: [], trainType });
       const to = createMockStation({ trainType });
-      expect(getStationPrimaryCode(from, to)).toBe('快速');
+      expect(getStationPrimaryCode(from, to)).toBe('');
     });
   });
 });
@@ -198,7 +198,7 @@ describe('getStationPrimaryCode (English locale)', () => {
     const trainType = createMockTrainType({ name: '快速', nameRoman: 'Rapid' });
     const from = createMockStation({ trainType });
     const to = createMockStation({ trainType });
-    expect(getCode(from, to)).toBe('JY01 Rapid');
+    expect(getCode(from, to)).toBe('JY01');
   });
 
   afterEach(() => {

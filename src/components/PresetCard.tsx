@@ -10,6 +10,7 @@ import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getStationName, getStationPrimaryCode } from '~/utils/station';
+import { getIsLocal } from '~/utils/trainTypeString';
 import { NoPresetsCard } from './NoPresetsCard';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stationName: {
-    fontSize: RFValue(21),
+    fontSize: RFValue(17),
     fontWeight: 'bold',
     textAlignVertical: 'auto',
   },
@@ -90,6 +91,11 @@ const styles = StyleSheet.create({
     fontSize: RFValue(8),
     fontWeight: 'bold',
     textAlignVertical: 'auto',
+  },
+  trainTypeName: {
+    fontSize: RFValue(9),
+    fontWeight: 'bold',
+    paddingLeft: 24,
   },
   lineDot: {
     width: 16,
@@ -184,6 +190,17 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
       : (rightLine.nameRoman ?? rightLine.nameShort ?? null);
   })();
 
+  const leftTrainType = (() => {
+    const tt = from?.trainType;
+    if (!tt || getIsLocal(tt)) return null;
+    return isJapanese ? (tt.name ?? null) : (tt.nameRoman ?? null);
+  })();
+  const rightTrainType = (() => {
+    const tt = to?.trainType;
+    if (!tt || getIsLocal(tt)) return null;
+    return isJapanese ? (tt.name ?? null) : (tt.nameRoman ?? null);
+  })();
+
   const leftCodeRendered = useMemo(
     () =>
       renderTextWithSmallerParens(
@@ -252,6 +269,14 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                 </Typography>
               </View>
             ) : null}
+            {leftTrainType ? (
+              <Typography
+                style={[styles.trainTypeName, { color: metaFg }]}
+                numberOfLines={1}
+              >
+                {leftTrainType}
+              </Typography>
+            ) : null}
           </View>
           <View style={styles.colCenter} />
           <View style={styles.colRight}>
@@ -281,6 +306,14 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                   {rightLineName}
                 </Typography>
               </View>
+            ) : null}
+            {rightTrainType ? (
+              <Typography
+                style={[styles.trainTypeName, { color: metaFg }]}
+                numberOfLines={1}
+              >
+                {rightTrainType}
+              </Typography>
             ) : null}
           </View>
         </View>
