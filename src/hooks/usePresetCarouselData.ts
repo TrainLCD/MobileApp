@@ -50,6 +50,10 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
     if (!needsFetch && !needsDisplayUpdate) return;
 
     const requestId = ++currentRequestIdRef.current;
+    // 同じ fetchKey で重複 fetch しないよう即座にマーク
+    if (needsFetch) {
+      prevFetchKeyRef.current = fetchKey;
+    }
 
     const fetchAsync = async () => {
       try {
@@ -104,7 +108,6 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
           }
 
           if (requestId !== currentRequestIdRef.current) return;
-          prevFetchKeyRef.current = fetchKey;
         } else {
           // fetch不要の場合は既存のcarouselDataから駅データを再利用
           for (const item of carouselDataRef.current) {
@@ -129,6 +132,10 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
         setCarouselData(newData);
         prevDisplayKeyRef.current = displayKey;
       } catch (err) {
+        // fetch失敗時はキーをリセットしてリトライ可能にする
+        if (needsFetch && requestId === currentRequestIdRef.current) {
+          prevFetchKeyRef.current = '';
+        }
         console.error(err);
       }
     };

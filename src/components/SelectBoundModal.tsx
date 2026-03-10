@@ -182,6 +182,20 @@ export const SelectBoundModal: React.FC<Props> = ({
       ? station
       : (stations[0] ?? null);
 
+  const effectiveStations = useMemo(() => {
+    if (!wantedDestination || !effectiveStation) return stations;
+    const currentIdx = stations.findIndex(
+      (s) => s.groupId === effectiveStation.groupId
+    );
+    const destIdx = stations.findIndex(
+      (s) => s.groupId === wantedDestination.groupId
+    );
+    if (currentIdx === -1 || destIdx === -1) return stations;
+    return currentIdx <= destIdx
+      ? stations.slice(0, destIdx + 1)
+      : stations.slice(destIdx);
+  }, [stations, wantedDestination, effectiveStation]);
+
   const currentIndex = stations.findIndex(
     (s) => s.groupId === effectiveStation?.groupId
   );
@@ -542,7 +556,9 @@ export const SelectBoundModal: React.FC<Props> = ({
 
       // 有効な駅IDのみ保存する（wantedDestinationで区間を絞った場合に範囲外を除外）
       const validStationIds = new Set(
-        stations.map((s) => s.id).filter((id): id is number => id != null)
+        effectiveStations
+          .map((s) => s.id)
+          .filter((id): id is number => id != null)
       );
       const filteredNotifyStationIds = targetStationIds.filter((id) =>
         validStationIds.has(id)
@@ -585,7 +601,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       pendingTrainType,
       wantedDestination?.groupId,
       targetStationIds,
-      stations,
+      effectiveStations,
     ]
   );
 
@@ -642,8 +658,8 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [fetchedTrainTypes, pendingTrainType]);
 
   const stationsWithoutPass = useMemo(
-    () => stations.filter((s) => !getIsPass(s)),
-    [stations]
+    () => effectiveStations.filter((s) => !getIsPass(s)),
+    [effectiveStations]
   );
 
   const isBus = isBusLine(line);
