@@ -123,7 +123,10 @@ const initDb = async (): Promise<void> => {
 
 const ensureDbInitialized = (): Promise<void> => {
   if (!initPromise) {
-    initPromise = initDb();
+    initPromise = initDb().catch((err) => {
+      initPromise = null;
+      throw err;
+    });
   }
   return initPromise;
 };
@@ -135,9 +138,14 @@ export const useSavedRoutes = () => {
   ] = useAtom(navigationState);
 
   useEffect(() => {
-    ensureDbInitialized().then(() => {
-      setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
-    });
+    ensureDbInitialized()
+      .then(() => {
+        setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
+      })
+      .catch((err) => {
+        console.error('useSavedRoutes: DB初期化に失敗しました', err);
+        setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
+      });
   }, [setNavigationAtom]);
 
   const updateRoutes = useCallback(async (): Promise<void> => {
