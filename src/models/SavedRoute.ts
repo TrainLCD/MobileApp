@@ -5,6 +5,7 @@ export const SavedRouteWithTrainTypeSchema = z.object({
   hasTrainType: z.literal(true),
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.number().int().nonnegative(),
+  wantedDestinationId: z.number().int().nonnegative().nullable(),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
 });
@@ -18,6 +19,7 @@ export const SavedRouteWithoutTrainTypeSchema = z.object({
   hasTrainType: z.literal(false),
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.null(),
+  wantedDestinationId: z.number().int().nonnegative().nullable(),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
 });

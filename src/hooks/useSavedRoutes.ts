@@ -11,6 +11,7 @@ interface SavedRouteRow {
   name: string;
   lineId: number;
   trainTypeId: number | null;
+  wantedDestinationId: number | null;
   hasTrainType: number; // SQLiteではBOOLEANが数値として保存される
   createdAt: string; // SQLiteでは日時が文字列として保存される
 }
@@ -31,6 +32,7 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
       name: row.name,
       lineId: row.lineId,
       trainTypeId: row.trainTypeId,
+      wantedDestinationId: row.wantedDestinationId ?? null,
       hasTrainType: true,
       createdAt: new Date(row.createdAt),
     };
@@ -40,6 +42,7 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
     name: row.name,
     lineId: row.lineId,
     trainTypeId: null,
+    wantedDestinationId: row.wantedDestinationId ?? null,
     hasTrainType: false,
     createdAt: new Date(row.createdAt),
   };
@@ -74,6 +77,14 @@ export const useSavedRoutes = () => {
       await db.execAsync(
         'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
       );
+      // wantedDestinationId カラムを既存テーブルに追加（存在しない場合のみ）
+      try {
+        await db.execAsync(
+          'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
+        );
+      } catch {
+        // カラムが既に存在する場合は無視
+      }
       setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
     };
     initDb();
@@ -130,14 +141,15 @@ export const useSavedRoutes = () => {
       } as SavedRoute;
 
       await db.runAsync(
-        `INSERT INTO saved_routes 
-         (id, name, lineId, trainTypeId, hasTrainType, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO saved_routes
+         (id, name, lineId, trainTypeId, wantedDestinationId, hasTrainType, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           newRoute.id,
           newRoute.name,
           newRoute.lineId,
           newRoute.trainTypeId ?? null,
+          newRoute.wantedDestinationId ?? null,
           newRoute.hasTrainType ? 1 : 0,
           newRoute.createdAt.toISOString(),
         ]

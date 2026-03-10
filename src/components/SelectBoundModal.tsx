@@ -34,6 +34,7 @@ import stationState from '../store/atoms/station';
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { RouteInfoModal } from './RouteInfoModal';
+import { SavePresetNameModal } from './SavePresetNameModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
@@ -109,6 +110,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     setSelectBoundSettingListModalVisible,
   ] = useState(false);
   const [isStationSettingsModalVisible, setIsStationSettingsModalVisible] =
+    useState(false);
+  const [isPresetNameModalVisible, setIsPresetNameModalVisible] =
     useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
 
@@ -429,44 +432,44 @@ export const SelectBoundModal: React.FC<Props> = ({
       return;
     }
 
-    if (pendingTrainType?.groupId) {
-      const newRoute: SavedRouteWithTrainTypeInput = {
-        hasTrainType: true,
-        name: translate('preset'),
-        lineId: line.id ?? 0,
-        trainTypeId: pendingTrainType?.groupId,
-        createdAt: new Date(),
-      };
-      setSavedRoute(await saveCurrentRoute(newRoute));
+    setIsPresetNameModalVisible(true);
+  }, [savedRoute, removeCurrentRoute, line]);
+
+  const handlePresetNameSubmit = useCallback(
+    async (name: string) => {
+      if (!line) return;
+
+      setIsPresetNameModalVisible(false);
+
+      if (pendingTrainType?.groupId) {
+        const newRoute: SavedRouteWithTrainTypeInput = {
+          hasTrainType: true,
+          name,
+          lineId: line.id ?? 0,
+          trainTypeId: pendingTrainType?.groupId,
+          wantedDestinationId: wantedDestination?.groupId ?? null,
+          createdAt: new Date(),
+        };
+        setSavedRoute(await saveCurrentRoute(newRoute));
+      } else {
+        const newRoute: SavedRouteWithoutTrainTypeInput = {
+          hasTrainType: false,
+          name,
+          lineId: line.id ?? 0,
+          trainTypeId: null,
+          wantedDestinationId: wantedDestination?.groupId ?? null,
+          createdAt: new Date(),
+        };
+        setSavedRoute(await saveCurrentRoute(newRoute));
+      }
 
       showToast({
         type: 'success',
         text1: translate('routeSavedText'),
       });
-      return;
-    }
-
-    const newRoute: SavedRouteWithoutTrainTypeInput = {
-      hasTrainType: false,
-      name: translate('preset'),
-      lineId: line.id ?? 0,
-      trainTypeId: null,
-      createdAt: new Date(),
-    };
-
-    setSavedRoute(await saveCurrentRoute(newRoute));
-
-    showToast({
-      type: 'success',
-      text1: translate('routeSavedText'),
-    });
-  }, [
-    savedRoute,
-    removeCurrentRoute,
-    saveCurrentRoute,
-    line,
-    pendingTrainType,
-  ]);
+    },
+    [saveCurrentRoute, line, pendingTrainType, wantedDestination?.groupId]
+  );
 
   const toggleNotificationModeEnabled = useCallback(() => {
     if (!selectedStation) return;
@@ -662,6 +665,12 @@ export const SelectBoundModal: React.FC<Props> = ({
           setStationState((prev) => ({ ...prev, wantedDestination: null }));
           onTrainTypeSelect(trainType);
         }}
+      />
+      <SavePresetNameModal
+        visible={isPresetNameModalVisible}
+        onClose={() => setIsPresetNameModalVisible(false)}
+        onSubmit={handlePresetNameSubmit}
+        defaultName={translate('preset')}
       />
       <StationSettingsModal
         visible={isStationSettingsModalVisible}
