@@ -561,8 +561,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     async (name: string, direction: LineDirection | null) => {
       if (!line) return;
 
-      setIsPresetNameModalVisible(false);
-
       // 有効な駅IDのみ保存する（wantedDestinationで区間を絞った場合に範囲外を除外）
       const validStationIds = new Set(
         effectiveStations
@@ -573,36 +571,44 @@ export const SelectBoundModal: React.FC<Props> = ({
         validStationIds.has(id)
       );
 
-      if (pendingTrainType?.groupId) {
-        const newRoute: SavedRouteWithTrainTypeInput = {
-          hasTrainType: true,
-          name,
-          lineId: line.id ?? 0,
-          trainTypeId: pendingTrainType?.groupId,
-          wantedDestinationId: wantedDestination?.groupId ?? null,
-          direction,
-          notifyStationIds: filteredNotifyStationIds,
-          createdAt: new Date(),
-        };
-        setSavedRoute(await saveCurrentRoute(newRoute));
-      } else {
-        const newRoute: SavedRouteWithoutTrainTypeInput = {
-          hasTrainType: false,
-          name,
-          lineId: line.id ?? 0,
-          trainTypeId: null,
-          wantedDestinationId: wantedDestination?.groupId ?? null,
-          direction,
-          notifyStationIds: filteredNotifyStationIds,
-          createdAt: new Date(),
-        };
-        setSavedRoute(await saveCurrentRoute(newRoute));
-      }
+      try {
+        if (pendingTrainType?.groupId) {
+          const newRoute: SavedRouteWithTrainTypeInput = {
+            hasTrainType: true,
+            name,
+            lineId: line.id ?? 0,
+            trainTypeId: pendingTrainType?.groupId,
+            wantedDestinationId: wantedDestination?.groupId ?? null,
+            direction,
+            notifyStationIds: filteredNotifyStationIds,
+            createdAt: new Date(),
+          };
+          setSavedRoute(await saveCurrentRoute(newRoute));
+        } else {
+          const newRoute: SavedRouteWithoutTrainTypeInput = {
+            hasTrainType: false,
+            name,
+            lineId: line.id ?? 0,
+            trainTypeId: null,
+            wantedDestinationId: wantedDestination?.groupId ?? null,
+            direction,
+            notifyStationIds: filteredNotifyStationIds,
+            createdAt: new Date(),
+          };
+          setSavedRoute(await saveCurrentRoute(newRoute));
+        }
 
-      showToast({
-        type: 'success',
-        text1: translate('routeSavedText'),
-      });
+        setIsPresetNameModalVisible(false);
+        showToast({
+          type: 'success',
+          text1: translate('routeSavedText'),
+        });
+      } catch (_err) {
+        showToast({
+          type: 'error',
+          text1: translate('errorTitle'),
+        });
+      }
     },
     [
       saveCurrentRoute,
