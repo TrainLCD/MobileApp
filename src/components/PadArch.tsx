@@ -1,14 +1,12 @@
 import { darken } from 'polished';
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, LineNested, Station } from '~/@types/graphql';
 import { isBusLine } from '~/utils/line';
@@ -415,71 +413,81 @@ const PadArch: React.FC<Props> = ({
 }: Props) => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
-  // 共有値（Reanimated）
-  const bgScale = useSharedValue(0.95);
-  // シェブロンのアニメーションは 0..1 の単一タイムラインで駆動
-  const chevronTimeline = useSharedValue(0);
-  const fillHeight = useSharedValue(0);
+  // Animated.Value（RN Animated API — Reanimated 4.2 の mapper バグ回避）
+  const bgScale = useRef(new Animated.Value(0.95)).current;
+  const chevronTimeline = useRef(new Animated.Value(0)).current;
+  const fillHeight = useRef(new Animated.Value(0)).current;
 
   // エフェクト: シェブロンと背景のアニメーション制御
-  // biome-ignore lint/correctness/useExhaustiveDependencies: SharedValue は安定した参照のため依存配列に含めません
   useEffect(() => {
-    // 既存のアニメーションを停止してから新しいアニメーションを開始
-    cancelAnimation(bgScale);
-    cancelAnimation(chevronTimeline);
-
     if (arrived) {
-      // 背景スケールを鼓動させる
-      bgScale.value = withRepeat(
-        withSequence(
-          withTiming(0.8, { duration: YAMANOTE_CHEVRON_SCALE_DURATION }),
-          withTiming(0.95, { duration: YAMANOTE_CHEVRON_SCALE_DURATION })
-        ),
-        -1,
-        false
-      );
+      chevronTimeline.stopAnimation();
+      chevronTimeline.setValue(0);
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bgScale, {
+            toValue: 0.8,
+            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(bgScale, {
+            toValue: 0.95,
+            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
     } else {
-      // タイムラインは2フェーズ（移動→フェード）でループ（合計 2x の所要時間）
-      chevronTimeline.value = 0;
-      chevronTimeline.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2 }),
-          withTiming(0, { duration: 0 })
-        ),
-        -1,
-        false
-      );
+      bgScale.stopAnimation();
+      bgScale.setValue(0.95);
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(chevronTimeline, {
+            toValue: 1,
+            duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2,
+            easing: Easing.linear,
+            useNativeDriver: false,
+          }),
+          Animated.timing(chevronTimeline, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
     }
-  }, [arrived]);
+    return () => {
+      bgScale.stopAnimation();
+      chevronTimeline.stopAnimation();
+    };
+  }, [arrived, bgScale, chevronTimeline]);
 
-  // エフェクト: マウント時と到着/出発切替またはウィンドウサイズ変更ごとに塗りつぶしアニメーション
-  // biome-ignore lint/correctness/useExhaustiveDependencies: SharedValue は安定した参照のため依存配列に含めません
+  // エフェクト: 塗りつぶしアニメーション（arrived 切替時にもリセットしたいため依存に含める）
+  // biome-ignore lint/correctness/useExhaustiveDependencies: arrived は値変化時にアニメーションを再開するため必要
   useEffect(() => {
-    fillHeight.value = 0;
-    fillHeight.value = withTiming(windowHeight, {
+    fillHeight.setValue(0);
+    Animated.timing(fillHeight, {
+      toValue: windowHeight,
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
-    });
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+    return () => {
+      fillHeight.stopAnimation();
+    };
   }, [arrived, fillHeight, windowHeight]);
 
-  // アニメーション用スタイル
-  const fillStyle = useAnimatedStyle(() => ({ height: fillHeight.value }));
-  const chevronContainerStyle = useAnimatedStyle(() => {
-    if (arrived) return {};
-    const p = chevronTimeline.value; // サイクル全体で 0..1 の進行度
-    // 前半(0..0.5): 上方向に 24px 移動、後半は維持
-    const movePhase = Math.min(p / 0.5, 1); // 前半中は 0..1
-    // 後半(0.5..1): 不透明度 1 → 0.2、前半は 1 を維持
-    const fadePhase = Math.max((p - 0.5) / 0.5, 0); // 後半中は 0..1
-    const opacity = 0.2 + (1 - fadePhase) * 0.8; // 0.2..1 の範囲
-    const translateY = -movePhase * 24;
-    return {
-      // 既定の rotate(-20deg) を維持したまま並記（transform は配列全体が上書きされるためここで回転も指定）
-      transform: [{ rotate: '-20deg' }, { translateY }],
-      opacity,
-    };
+  // シェブロン用の補間スタイル（非到着時のみ使用）
+  const chevronOpacity = chevronTimeline.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1, 0.2],
   });
-
-  // AnimatedChevron不要。SharedValueを直接渡す
+  const chevronTranslateY = chevronTimeline.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, -24, -24],
+  });
 
   const paths = useMemo(
     () => ({
@@ -627,7 +635,11 @@ const PadArch: React.FC<Props> = ({
 
         {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
         <Animated.View
-          style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
+          style={[
+            styles.clipViewStyle,
+            dynamicStyles.clipViewStyle,
+            { height: fillHeight },
+          ]}
         >
           {colorSegments.map((seg) => (
             <View
@@ -660,7 +672,11 @@ const PadArch: React.FC<Props> = ({
         </Animated.View>
         {/* 主色層: 区間ごとにViewクリッピングで色分け */}
         <Animated.View
-          style={[styles.clipViewStyle, dynamicStyles.clipViewStyle, fillStyle]}
+          style={[
+            styles.clipViewStyle,
+            dynamicStyles.clipViewStyle,
+            { height: fillHeight },
+          ]}
         >
           {colorSegments.map((seg) => (
             <View
@@ -698,10 +714,16 @@ const PadArch: React.FC<Props> = ({
           dynamicStyles.chevron,
           arrived
             ? [styles.chevronArrived, dynamicStyles.chevronArrived]
-            : chevronContainerStyle,
+            : {
+                transform: [
+                  { rotate: '-20deg' },
+                  { translateY: chevronTranslateY },
+                ],
+                opacity: chevronOpacity,
+              },
         ]}
       >
-        <ChevronYamanote backgroundScaleSV={bgScale} arrived={arrived} />
+        <ChevronYamanote backgroundScaleAV={bgScale} arrived={arrived} />
       </Animated.View>
 
       <View style={styles.stationNames}>
