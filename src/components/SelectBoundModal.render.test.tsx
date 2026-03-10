@@ -3,6 +3,8 @@ import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
 import { SelectBoundModal } from './SelectBoundModal';
 
+const mockRouteInfoModal = jest.fn();
+
 jest.mock('@react-navigation/native', () => ({
   CommonActions: { navigate: jest.fn() },
   useNavigation: jest.fn(() => ({ navigate: jest.fn() })),
@@ -40,6 +42,10 @@ jest.mock('~/utils/line', () => ({
 }));
 jest.mock('~/utils/toast', () => ({
   showToast: jest.fn(),
+}));
+jest.mock('~/utils/isPass', () => ({
+  __esModule: true,
+  default: jest.fn(() => false),
 }));
 
 jest.mock('./Button', () => {
@@ -86,7 +92,10 @@ jest.mock('./CustomModal', () => ({
   },
 }));
 jest.mock('./RouteInfoModal', () => ({
-  RouteInfoModal: () => null,
+  RouteInfoModal: (props: unknown) => {
+    mockRouteInfoModal(props);
+    return null;
+  },
 }));
 jest.mock('./SelectBoundSettingListModal', () => ({
   SelectBoundSettingListModal: () => null,
@@ -189,5 +198,64 @@ describe('SelectBoundModal', () => {
         'save-preset-modal'
       )
     ).toBeNull();
+  });
+
+  it('終着駅設定中でも RouteInfoModal には全駅が渡される', () => {
+    (useAtom as jest.Mock).mockImplementation((atom: string) => {
+      if (atom === 'stationState') {
+        return [
+          {
+            pendingStation: { id: 2, groupId: 2, lines: [{ id: 10 }] },
+            pendingStations: [
+              { id: 1, groupId: 1, line: { id: 10 }, lines: [{ id: 10 }] },
+              { id: 2, groupId: 2, line: { id: 10 }, lines: [{ id: 10 }] },
+              { id: 3, groupId: 3, line: { id: 10 }, lines: [{ id: 10 }] },
+            ],
+            wantedDestination: { id: 3, groupId: 3 },
+          },
+          jest.fn(),
+        ];
+      }
+      if (atom === 'navigationState') {
+        return [
+          {
+            autoModeEnabled: false,
+            fetchedTrainTypes: [],
+            pendingTrainType: null,
+          },
+          jest.fn(),
+        ];
+      }
+      if (atom === 'lineState') {
+        return [
+          {
+            pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+            selectedLine: null,
+          },
+          jest.fn(),
+        ];
+      }
+      if (atom === 'notifyState') {
+        return [{ targetStationIds: [] }, jest.fn()];
+      }
+      return [{}, jest.fn()];
+    });
+
+    render(
+      <SelectBoundModal
+        visible={true}
+        onClose={jest.fn()}
+        loading={false}
+        error={null}
+        onTrainTypeSelect={jest.fn()}
+        onBoundSelect={jest.fn()}
+      />
+    );
+
+    const lastCall =
+      mockRouteInfoModal.mock.calls[mockRouteInfoModal.mock.calls.length - 1];
+    const props = lastCall?.[0] as { stations: Array<{ groupId: number }> };
+
+    expect(props.stations.map((station) => station.groupId)).toEqual([1, 2, 3]);
   });
 });

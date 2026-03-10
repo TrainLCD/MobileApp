@@ -673,8 +673,8 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [fetchedTrainTypes, pendingTrainType]);
 
   const stationsWithoutPass = useMemo(
-    () => effectiveStations.filter((s) => !getIsPass(s)),
-    [effectiveStations]
+    () => stations.filter((s) => !getIsPass(s)),
+    [stations]
   );
 
   const isBus = isBusLine(line);
