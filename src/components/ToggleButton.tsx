@@ -25,6 +25,7 @@ type Props = {
   state?: boolean;
   onText?: string;
   offText?: string;
+  activeOpacity?: number;
 };
 
 const styles = StyleSheet.create({
@@ -141,12 +142,14 @@ export const ToggleButton: React.FC<Props> = ({
   state,
   onText = 'ON',
   offText = 'OFF',
+  activeOpacity,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <TouchableOpacity
       onPress={onToggle}
+      activeOpacity={activeOpacity}
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {

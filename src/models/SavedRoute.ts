@@ -9,7 +9,7 @@ export const SavedRouteWithTrainTypeSchema = z.object({
   trainTypeId: z.number().int().nonnegative(),
   wantedDestinationId: z.number().int().nonnegative().nullable(),
   direction: DirectionSchema.nullable(),
-  notifyStationIds: z.array(z.number().int().nonnegative()),
+  notifyStationIds: z.array(z.number().int().nonnegative()).default([]),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
 });
@@ -25,7 +25,7 @@ export const SavedRouteWithoutTrainTypeSchema = z.object({
   trainTypeId: z.null(),
   wantedDestinationId: z.number().int().nonnegative().nullable(),
   direction: DirectionSchema.nullable(),
-  notifyStationIds: z.array(z.number().int().nonnegative()),
+  notifyStationIds: z.array(z.number().int().nonnegative()).default([]),
   name: z.string().min(1).max(100),
   createdAt: z.date(),
 });

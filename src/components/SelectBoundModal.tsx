@@ -40,7 +40,6 @@ import {
   SavePresetNameModal,
 } from './SavePresetNameModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
-import { StationSettingsModal } from './StationSettingsModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
 const styles = StyleSheet.create({
@@ -119,11 +118,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     selectBoundSettingListModalVisible,
     setSelectBoundSettingListModalVisible,
   ] = useState(false);
-  const [isStationSettingsModalVisible, setIsStationSettingsModalVisible] =
-    useState(false);
   const [isPresetNameModalVisible, setIsPresetNameModalVisible] =
     useState(false);
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
 
@@ -224,7 +220,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         );
         if (destIdx !== -1 && currentIdx !== -1) {
           stops =
-            currentIdx < destIdx
+            currentIdx <= destIdx
               ? stations.slice(0, destIdx + 1)
               : stations.slice(destIdx);
         }
@@ -268,11 +264,6 @@ export const SelectBoundModal: React.FC<Props> = ({
       onBoundSelect,
     ]
   );
-
-  const handleStationSelected = useCallback((station: Station) => {
-    setSelectedStation(station);
-    setIsStationSettingsModalVisible(true);
-  }, []);
 
   const normalLineDirectionText = useCallback(
     (boundStations: Station[]) => {
@@ -574,23 +565,32 @@ export const SelectBoundModal: React.FC<Props> = ({
     ]
   );
 
-  const toggleNotificationModeEnabled = useCallback(() => {
-    if (!selectedStation) return;
+  const handleToggleNotification = useCallback(
+    (station: Station) => {
+      setNotifyState((prev) => {
+        const stationId = station.id ?? -1;
+        const isEnabled = prev.targetStationIds.includes(stationId);
+        return {
+          ...prev,
+          targetStationIds: isEnabled
+            ? prev.targetStationIds.filter((id) => id !== stationId)
+            : [...prev.targetStationIds, stationId],
+        };
+      });
+    },
+    [setNotifyState]
+  );
 
-    setNotifyState((prev) => {
-      const isEnabled = prev.targetStationIds.includes(
-        selectedStation.id ?? -1
-      );
-      return {
+  const handleToggleDestination = useCallback(
+    (station: Station) => {
+      setStationState((prev) => ({
         ...prev,
-        targetStationIds: isEnabled
-          ? prev.targetStationIds.filter(
-              (id) => id !== (selectedStation.id ?? -1)
-            )
-          : [...prev.targetStationIds, selectedStation.id ?? -1],
-      };
-    });
-  }, [selectedStation, setNotifyState]);
+        wantedDestination:
+          prev.wantedDestination?.groupId === station.groupId ? null : station,
+      }));
+    },
+    [setStationState]
+  );
 
   useEffect(() => {
     if (error) {
@@ -757,8 +757,11 @@ export const SelectBoundModal: React.FC<Props> = ({
         trainType={pendingTrainType}
         stations={stationsWithoutPass}
         onClose={() => setRouteInfoModalVisible(false)}
-        onSelect={handleStationSelected}
         loading={loading}
+        targetStationIds={targetStationIds}
+        onToggleNotification={handleToggleNotification}
+        wantedDestinationGroupId={wantedDestination?.groupId ?? null}
+        onToggleDestination={handleToggleDestination}
       />
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}
@@ -785,29 +788,6 @@ export const SelectBoundModal: React.FC<Props> = ({
         onSubmit={handlePresetNameSubmit}
         defaultName={`${pendingTrainType ? `${isJapanese ? (pendingTrainType.name ?? '') : (pendingTrainType.nameRoman ?? '')} ` : ''}${line ? getLocalizedLineName(line, isJapanese) : ''}`.trim()}
         directionOptions={presetDirectionOptions}
-      />
-      <StationSettingsModal
-        visible={isStationSettingsModalVisible}
-        onClose={() => setIsStationSettingsModalVisible(false)}
-        station={selectedStation}
-        notificationModeEnabled={targetStationIds.includes(
-          selectedStation?.id ?? -1
-        )}
-        toggleNotificationModeEnabled={toggleNotificationModeEnabled}
-        isSetAsTerminus={
-          wantedDestination?.groupId === selectedStation?.groupId
-        }
-        onDestinationSelected={() => {
-          if (selectedStation) {
-            setStationState((prev) => ({
-              ...prev,
-              wantedDestination:
-                prev.wantedDestination?.groupId === selectedStation.groupId
-                  ? null
-                  : selectedStation,
-            }));
-          }
-        }}
       />
     </CustomModal>
   );

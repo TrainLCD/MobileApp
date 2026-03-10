@@ -30,7 +30,6 @@ type Props = {
 
 const ANIMATION_DURATION = 180;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const captureModalTouch = () => true;
 const stopModalTouchPropagation = (event: GestureResponderEvent) => {
   event.stopPropagation();
 };
@@ -132,8 +131,7 @@ export const CustomModal: React.FC<Props> = ({
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
-              pointerEvents="auto"
-              onStartShouldSetResponder={captureModalTouch}
+              pointerEvents="box-none"
               onTouchEnd={stopModalTouchPropagation}
             >
               {children}
@@ -153,8 +151,7 @@ export const CustomModal: React.FC<Props> = ({
                 contentContainerStyle,
                 animatedContentStyle,
               ]}
-              pointerEvents="auto"
-              onStartShouldSetResponder={captureModalTouch}
+              pointerEvents="box-none"
               onTouchEnd={stopModalTouchPropagation}
             >
               {children}

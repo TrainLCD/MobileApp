@@ -17,7 +17,8 @@ export type UsePresetCarouselDataResult = {
 
 export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
   const [carouselData, setCarouselData] = useState<LoopItem[]>([]);
-  const prevRoutesKeyRef = useRef('');
+  const prevFetchKeyRef = useRef('');
+  const prevDisplayKeyRef = useRef('');
 
   const {
     routes,
@@ -31,60 +32,81 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
   }, [isRoutesDBInitialized, updateRoutes]);
 
   useEffect(() => {
-    const routesKey = routes
+    const fetchKey = routes
+      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
+      .join(',');
+    const displayKey = routes
       .map(
         (r) =>
-          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.wantedDestinationId}`
+          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.name}:${r.direction}:${r.wantedDestinationId}`
       )
       .join(',');
-    if (routesKey === prevRoutesKeyRef.current) return;
+
+    const needsFetch = fetchKey !== prevFetchKeyRef.current;
+    const needsDisplayUpdate = displayKey !== prevDisplayKeyRef.current;
+
+    if (!needsFetch && !needsDisplayUpdate) return;
 
     const fetchAsync = async () => {
       try {
-        const lineRoutes = routes.filter((r) => !r.hasTrainType);
-        const trainTypeRoutes = routes.filter((r) => r.hasTrainType);
-
-        // !hasTrainType のルートを lineListStations で一括取得
         const lineStationsMap = new Map<number, Station[]>();
-        const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
-        if (validLineRoutes.length > 0) {
-          const lineIds = validLineRoutes.map((r) => r.lineId);
-          const result = await gqlClient.query<{
-            lineListStations: Station[];
-          }>({
-            query: GET_LINE_LIST_STATIONS_PRESET,
-            variables: { lineIds },
-          });
-          for (const s of result.data?.lineListStations ?? []) {
-            const lid = s.line?.id;
-            if (lid == null) continue;
-            const arr = lineStationsMap.get(lid);
-            if (arr) {
-              arr.push(s);
-            } else {
-              lineStationsMap.set(lid, [s]);
+        const trainTypeStationsMap = new Map<number, Station[]>();
+
+        if (needsFetch) {
+          const lineRoutes = routes.filter((r) => !r.hasTrainType);
+          const trainTypeRoutes = routes.filter((r) => r.hasTrainType);
+
+          // !hasTrainType のルートを lineListStations で一括取得
+          const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
+          if (validLineRoutes.length > 0) {
+            const lineIds = validLineRoutes.map((r) => r.lineId);
+            const result = await gqlClient.query<{
+              lineListStations: Station[];
+            }>({
+              query: GET_LINE_LIST_STATIONS_PRESET,
+              variables: { lineIds },
+            });
+            for (const s of result.data?.lineListStations ?? []) {
+              const lid = s.line?.id;
+              if (lid == null) continue;
+              const arr = lineStationsMap.get(lid);
+              if (arr) {
+                arr.push(s);
+              } else {
+                lineStationsMap.set(lid, [s]);
+              }
             }
           }
-        }
 
-        // hasTrainType のルートを lineGroupListStations で一括取得
-        const trainTypeStationsMap = new Map<number, Station[]>();
-        if (trainTypeRoutes.length > 0) {
-          const lineGroupIds = trainTypeRoutes.map((r) => r.trainTypeId);
-          const result = await gqlClient.query<{
-            lineGroupListStations: Station[];
-          }>({
-            query: GET_LINE_GROUP_LIST_STATIONS_PRESET,
-            variables: { lineGroupIds },
-          });
-          for (const s of result.data?.lineGroupListStations ?? []) {
-            const gid = s.trainType?.groupId;
-            if (gid == null) continue;
-            const arr = trainTypeStationsMap.get(gid);
-            if (arr) {
-              arr.push(s);
+          // hasTrainType のルートを lineGroupListStations で一括取得
+          if (trainTypeRoutes.length > 0) {
+            const lineGroupIds = trainTypeRoutes.map((r) => r.trainTypeId);
+            const result = await gqlClient.query<{
+              lineGroupListStations: Station[];
+            }>({
+              query: GET_LINE_GROUP_LIST_STATIONS_PRESET,
+              variables: { lineGroupIds },
+            });
+            for (const s of result.data?.lineGroupListStations ?? []) {
+              const gid = s.trainType?.groupId;
+              if (gid == null) continue;
+              const arr = trainTypeStationsMap.get(gid);
+              if (arr) {
+                arr.push(s);
+              } else {
+                trainTypeStationsMap.set(gid, [s]);
+              }
+            }
+          }
+
+          prevFetchKeyRef.current = fetchKey;
+        } else {
+          // fetch不要の場合は既存のcarouselDataから駅データを再利用
+          for (const item of carouselData) {
+            if (item.hasTrainType) {
+              trainTypeStationsMap.set(item.trainTypeId, item.stations);
             } else {
-              trainTypeStationsMap.set(gid, [s]);
+              lineStationsMap.set(item.lineId, item.stations);
             }
           }
         }
@@ -98,13 +120,13 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
               : (lineStationsMap.get(r.lineId) ?? []),
           }))
         );
-        prevRoutesKeyRef.current = routesKey;
+        prevDisplayKeyRef.current = displayKey;
       } catch (err) {
         console.error(err);
       }
     };
     fetchAsync();
-  }, [routes]);
+  }, [routes, carouselData]);
 
   return { carouselData, routes, isRoutesDBInitialized };
 };
