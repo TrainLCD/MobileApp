@@ -53,13 +53,19 @@ export const useQuickActions = () => {
 
   // プリセットが変わるたびにOSのクイックアクションを同期
   useEffect(() => {
-    QuickActions.setItems(
-      presetRoutes.slice(0, MAX_QUICK_ACTIONS).map((route) => ({
-        id: route.id,
-        title: route.name,
-        icon: Platform.OS === 'ios' ? 'symbol:tram.fill' : undefined,
-        params: { routeId: route.id },
-      }))
+    const syncItems = async () => {
+      if (!(await QuickActions.isSupported())) return;
+      await QuickActions.setItems(
+        presetRoutes.slice(0, MAX_QUICK_ACTIONS).map((route) => ({
+          id: route.id,
+          title: route.name,
+          icon: Platform.OS === 'ios' ? 'symbol:tram.fill' : undefined,
+          params: { routeId: route.id },
+        }))
+      );
+    };
+    syncItems().catch((err) =>
+      console.warn('useQuickActions: クイックアクション同期に失敗', err)
     );
   }, [presetRoutes]);
 
