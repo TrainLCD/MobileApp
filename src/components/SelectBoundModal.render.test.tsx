@@ -130,7 +130,6 @@ jest.mock('../store/atoms/theme', () => ({
 
 describe('SelectBoundModal', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     (useAtomValue as jest.Mock).mockReturnValue(false);
     (useAtom as jest.Mock).mockImplementation((atom: string) => {
       if (atom === 'stationState') {
@@ -176,6 +175,10 @@ describe('SelectBoundModal', () => {
       }
       return [{}, jest.fn()];
     });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('プリセット名モーダルは親モーダルの外側に描画される', () => {
