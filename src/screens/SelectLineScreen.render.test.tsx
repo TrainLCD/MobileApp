@@ -16,6 +16,7 @@ import SelectLineScreen from './SelectLineScreen';
 
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
+  useAtom: jest.fn(() => [{ pendingQuickActionRouteId: null }, jest.fn()]),
   atom: jest.fn(),
 }));
 
@@ -69,6 +70,7 @@ jest.mock('~/hooks/usePresetCarouselData');
 jest.mock('~/hooks/useLineSelection');
 jest.mock('~/hooks/useSelectLineWalkthrough');
 jest.mock('~/hooks/useDeviceOrientation');
+jest.mock('~/hooks/useQuickActions');
 
 // 子コンポーネント
 jest.mock('~/components/CommonCard', () => ({

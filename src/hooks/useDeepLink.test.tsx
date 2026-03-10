@@ -82,6 +82,7 @@ const createNavigationState = (
   presetsFetched: false,
   presetRoutes: [],
   pendingTrainType: null,
+  pendingQuickActionRouteId: null,
   ...overrides,
 });
 

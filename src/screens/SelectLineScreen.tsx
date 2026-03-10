@@ -1,6 +1,6 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -32,12 +32,14 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
 import { useLineSelection } from '~/hooks/useLineSelection';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
+import { useQuickActions } from '~/hooks/useQuickActions';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
+import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
@@ -83,7 +85,9 @@ const SelectLineScreen = () => {
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
   useStationsCache(station);
-  const { carouselData, isRoutesDBInitialized } = usePresetCarouselData();
+  const { carouselData, routes, isRoutesDBInitialized } =
+    usePresetCarouselData();
+  useQuickActions(routes);
   const {
     handleLineSelected,
     handleTrainTypeSelect,
@@ -116,9 +120,29 @@ const SelectLineScreen = () => {
 
   // --- atom 読み取り ---
   const { stationsCache } = useAtomValue(stationState);
+  const [{ pendingQuickActionRouteId }, setNavigationState] =
+    useAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new RNAnimated.Value(0)).current;
+
+  // --- クイックアクションからのプリセット選択 ---
+  useEffect(() => {
+    if (!pendingQuickActionRouteId || !routes.length) return;
+    const route = routes.find((r) => r.id === pendingQuickActionRouteId);
+    if (route) {
+      handlePresetPress(route);
+    }
+    setNavigationState((prev) => ({
+      ...prev,
+      pendingQuickActionRouteId: null,
+    }));
+  }, [
+    pendingQuickActionRouteId,
+    routes,
+    handlePresetPress,
+    setNavigationState,
+  ]);
 
   // --- 画面回転ロック解除 ---
   useEffect(() => {

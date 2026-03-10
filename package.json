@@ -52,6 +52,7 @@
     "expo-location": "~55.1.2",
     "expo-network": "~55.0.8",
     "expo-notifications": "~55.0.10",
+    "expo-quick-actions": "^6.0.1",
     "expo-screen-capture": "~55.0.8",
     "expo-screen-orientation": "~55.0.8",
     "expo-splash-screen": "~55.0.10",
