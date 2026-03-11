@@ -239,15 +239,28 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             devOverlayEnabled ? 'hideDevOverlay' : 'showDevOverlay'
           ),
           handler: async () => {
+            const prevValue = devOverlayEnabled;
             const nextValue = !devOverlayEnabled;
             setTuning((prev) => ({
               ...prev,
               devOverlayEnabled: nextValue,
             }));
-            await AsyncStorage.setItem(
-              ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED,
-              String(nextValue)
-            );
+            try {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED,
+                String(nextValue)
+              );
+            } catch (error) {
+              console.error(error);
+              setTuning((prev) => ({
+                ...prev,
+                devOverlayEnabled: prevValue,
+              }));
+              Alert.alert(
+                translate('errorTitle'),
+                translate('failedToSavePreference')
+              );
+            }
           },
         });
       }

@@ -520,9 +520,7 @@ const DevOverlay: React.FC = () => {
                     <Typography style={styles.chartLabel}>
                       ACCURACY HISTORY
                     </Typography>
-                    <Typography style={[styles.chartValue, chartValueStyle]}>
-                      {accuracyChartBlocks.length === 0 ? '---' : null}
-                    </Typography>
+                    <Typography style={[styles.chartValue, chartValueStyle]} />
                     <Typography
                       style={[styles.chartValue, chartValueStyle]}
                       testID="dev-overlay-accuracy-history"
@@ -592,9 +590,7 @@ const DevOverlay: React.FC = () => {
                 <Typography style={styles.chartLabel}>
                   ACCURACY HISTORY
                 </Typography>
-                <Typography style={[styles.chartValue, chartValueStyle]}>
-                  {accuracyChartBlocks.length === 0 ? '---' : null}
-                </Typography>
+                <Typography style={[styles.chartValue, chartValueStyle]} />
                 <Typography
                   style={[styles.chartValue, chartValueStyle]}
                   testID="dev-overlay-accuracy-history"

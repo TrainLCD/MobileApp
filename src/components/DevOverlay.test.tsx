@@ -7,6 +7,7 @@ import {
   backgroundLocationTrackingAtom,
   locationAtom,
 } from '~/store/atoms/location';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import DevOverlay from './DevOverlay';
 
 jest.mock('jotai', () => {
@@ -91,7 +92,10 @@ describe('DevOverlay', () => {
       if (atom === backgroundLocationTrackingAtom) {
         return backgroundLocationTracking as never;
       }
-      return undefined as never;
+      if (atom === isLEDThemeAtom) {
+        return false as never;
+      }
+      throw new Error(`Unexpected atom mock: ${String(atom)}`);
     });
   };
 
