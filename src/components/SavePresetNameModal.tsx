@@ -110,11 +110,11 @@ export const SavePresetNameModal: React.FC<Props> = ({
       inboundOpacity.setValue(1);
       outboundOpacity.setValue(1);
 
-      // モーダルアニメーション(180ms)とKeyboardAvoidingViewのレイアウト確定を待ってからフォーカスする
+      // モーダルアニメーション(180ms)の完了を待ってからフォーカスする
       if (Platform.OS === 'ios') {
         const timer = setTimeout(() => {
           textInputRef.current?.focus();
-        }, 300);
+        }, 180);
         return () => clearTimeout(timer);
       }
     }
