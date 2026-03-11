@@ -133,11 +133,13 @@ const styles = StyleSheet.create({
     minHeight: 82,
     borderRadius: 18,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
     borderWidth: 1,
     borderColor: PANEL_BORDER,
     backgroundColor: 'rgba(9, 14, 28, 0.7)',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 6,
   },
   metricLabel: {
     color: LABEL_COLOR,
@@ -160,6 +162,9 @@ const styles = StyleSheet.create({
     color: 'rgba(226, 232, 240, 0.72)',
     fontSize: 11,
     lineHeight: 14,
+  },
+  metricHeader: {
+    gap: 2,
   },
   footerText: {
     color: 'rgba(148, 163, 184, 0.92)',
@@ -243,7 +248,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   metaStyle,
 }) => (
   <View style={[styles.metricCard, style]}>
-    <View>
+    <View style={styles.metricHeader}>
       <Typography style={[styles.metricLabel, labelStyle]}>{label}</Typography>
       <Typography style={[styles.metricValue, valueStyle]} testID={valueTestID}>
         {value}
@@ -316,18 +321,20 @@ const DevOverlay: React.FC = () => {
   const chartShellStyle = isLandscape
     ? {
         paddingHorizontal: 10,
-        paddingVertical: 8,
+        paddingTop: 8,
+        paddingBottom: 6,
         borderRadius: 16,
-        minHeight: 76,
+        minHeight: 64,
       }
     : null;
   const chartValueStyle = isLandscape ? { fontSize: 12, lineHeight: 15 } : null;
   const metricCardStyle = isLandscape
     ? {
-        minHeight: 68,
+        minHeight: 56,
         borderRadius: 16,
         paddingHorizontal: 10,
-        paddingVertical: 8,
+        paddingTop: 6,
+        paddingBottom: 4,
       }
     : null;
   const metricLabelStyle = isLandscape
