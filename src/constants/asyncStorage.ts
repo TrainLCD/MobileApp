@@ -20,6 +20,10 @@ export const ASYNC_STORAGE_KEYS = {
   DEV_OVERLAY_ENABLED: '@TrainLCD:devOverlayEnabled',
   TTS_JA_VOICE_NAME: '@TrainLCD:ttsJaVoiceName',
   TTS_EN_VOICE_NAME: '@TrainLCD:ttsEnVoiceName',
+  HEADER_TRANSITION_INTERVAL: '@TrainLCD:headerTransitionInterval',
+  HEADER_TRANSITION_DELAY: '@TrainLCD:headerTransitionDelay',
+  BOTTOM_TRANSITION_INTERVAL: '@TrainLCD:bottomTransitionInterval',
+  UNTOUCHABLE_MODE_ENABLED: '@TrainLCD:untouchableModeEnabled',
   WALKTHROUGH_COMPLETED: '@TrainLCD:walkthroughCompleted',
   ROUTE_SEARCH_WALKTHROUGH_COMPLETED:
     '@TrainLCD:routeSearchWalkthroughCompleted',
