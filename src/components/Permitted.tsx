@@ -306,6 +306,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ttsEnabledLanguagesStr,
         telemetryEnabledStr,
         devOverlayEnabledStr,
+        headerTransitionIntervalStr,
+        headerTransitionDelayStr,
+        bottomTransitionIntervalStr,
+        untouchableModeEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
@@ -314,6 +318,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_INTERVAL),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
       ]);
 
       if (prevThemeKey) {
@@ -369,6 +377,39 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         setTuning((prev) => ({
           ...prev,
           devOverlayEnabled: devOverlayEnabledStr === 'true',
+        }));
+      }
+      if (headerTransitionIntervalStr) {
+        const parsed = Number(headerTransitionIntervalStr);
+        if (!Number.isNaN(parsed)) {
+          setTuning((prev) => ({
+            ...prev,
+            headerTransitionInterval: parsed,
+          }));
+        }
+      }
+      if (headerTransitionDelayStr) {
+        const parsed = Number(headerTransitionDelayStr);
+        if (!Number.isNaN(parsed)) {
+          setTuning((prev) => ({
+            ...prev,
+            headerTransitionDelay: parsed,
+          }));
+        }
+      }
+      if (bottomTransitionIntervalStr) {
+        const parsed = Number(bottomTransitionIntervalStr);
+        if (!Number.isNaN(parsed)) {
+          setTuning((prev) => ({
+            ...prev,
+            bottomTransitionInterval: parsed,
+          }));
+        }
+      }
+      if (untouchableModeEnabledStr) {
+        setTuning((prev) => ({
+          ...prev,
+          untouchableModeEnabled: untouchableModeEnabledStr === 'true',
         }));
       }
     };
