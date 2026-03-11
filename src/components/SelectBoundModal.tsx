@@ -11,6 +11,7 @@ import {
   useBounds,
   useGetStationsWithTermination,
   useLoopLine,
+  usePresetStops,
   useSavedRoutes,
 } from '~/hooks';
 import { directionToDirectionName, type LineDirection } from '~/models/Bound';
@@ -126,6 +127,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
   const {
+    station: confirmedStation,
     pendingStation: station,
     pendingStations: stations,
     wantedDestination,
@@ -214,18 +216,31 @@ export const SelectBoundModal: React.FC<Props> = ({
     navigation.navigate('Main' as never);
   }, [navigation]);
 
+  const {
+    presetOrigin,
+    presetStops,
+    nearestPresetStation,
+    resolvePresetDirection,
+  } = usePresetStops({
+    savedRouteDirection: savedRoute?.direction,
+    stations,
+    wantedDestination,
+    confirmedStation,
+  });
+
   const handleBoundSelected = useCallback(
     (
       selectedStation: Station,
       direction: LineDirection,
-      terminateBySelectedStation = false
+      terminateBySelectedStation = false,
+      stopsOverride?: Station[]
     ) => {
       if (isTransitioningRef.current) return;
       isTransitioningRef.current = true;
       setIsTransitioning(true);
 
-      let stops = stations;
-      if (terminateBySelectedStation && effectiveStation) {
+      let stops = stopsOverride ?? stations;
+      if (!stopsOverride && terminateBySelectedStation && effectiveStation) {
         const destIdx = stations.findIndex(
           (s) => s.groupId === selectedStation.groupId
         );
@@ -240,6 +255,16 @@ export const SelectBoundModal: React.FC<Props> = ({
         }
       }
 
+      const effectiveDirection = stopsOverride
+        ? resolvePresetDirection(selectedStation, stops)
+        : direction;
+
+      const departureFallback =
+        effectiveDirection === 'INBOUND' ? stops[0] : stops.at(-1);
+      const startStation = stopsOverride
+        ? (nearestPresetStation ?? departureFallback ?? effectiveStation)
+        : effectiveStation;
+
       setLineState((prev) => ({
         ...prev,
         selectedLine: line,
@@ -247,16 +272,17 @@ export const SelectBoundModal: React.FC<Props> = ({
       }));
       setStationState((prev) => ({
         ...prev,
-        station: effectiveStation,
+        station: startStation,
         stations: stops,
         selectedBound:
-          direction === 'INBOUND' ? stops[stops.length - 1] : stops[0],
-        selectedDirection: direction,
+          effectiveDirection === 'INBOUND' ? (stops.at(-1) ?? null) : stops[0],
+        selectedDirection: effectiveDirection,
         pendingStation: null,
         pendingStations: [],
-        wantedDestination: terminateBySelectedStation
-          ? prev.wantedDestination
-          : null,
+        wantedDestination:
+          terminateBySelectedStation || stopsOverride
+            ? prev.wantedDestination
+            : null,
       }));
       setNavigationState((prev) => ({
         ...prev,
@@ -269,6 +295,8 @@ export const SelectBoundModal: React.FC<Props> = ({
     [
       navigateToMain,
       effectiveStation,
+      nearestPresetStation,
+      resolvePresetDirection,
       stations,
       line,
       pendingTrainType,
@@ -362,9 +390,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       };
       const finalStop =
         wantedDestination ??
-        (direction === 'INBOUND'
-          ? boundStations[0]
-          : boundStations[boundStations.length - 1]);
+        (direction === 'INBOUND' ? boundStations[0] : boundStations.at(-1));
 
       const lineForCard = finalStop?.line;
       const trainTypeForCard = finalStop?.trainType;
@@ -403,33 +429,79 @@ export const SelectBoundModal: React.FC<Props> = ({
           (s) => s.groupId === wantedDestination.groupId
         );
 
-        if (
-          currentStationIndex === -1 ||
-          wantedStationIndex === -1 ||
-          currentStationIndex === wantedStationIndex
-        ) {
+        if (wantedStationIndex === -1) {
           return <></>;
         }
 
-        const dir: LineDirection =
-          currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
+        // 現在駅が経路内にない場合は savedRoute.direction から方向を決定
+        const canDetermineFromIndex =
+          currentStationIndex !== -1 &&
+          currentStationIndex !== wantedStationIndex;
+        let dir: LineDirection = savedRoute?.direction ?? 'INBOUND';
+        if (canDetermineFromIndex) {
+          dir =
+            currentStationIndex < wantedStationIndex ? 'INBOUND' : 'OUTBOUND';
+        }
 
+        // wantedDestination 方向のカード
         if (direction === dir && line) {
-          const title = isLoopLine
-            ? loopLineDirectionText(direction)
-            : normalLineDirectionText(boundStations);
+          const title = normalLineDirectionText(boundStations);
           const subtitle = buildSubtitle(lineForCard, trainTypeForCard) ?? '';
           return (
             <CommonCard
               line={lineForCard ?? line}
               onPress={() =>
-                handleBoundSelected(wantedDestination, dir, !!wantedDestination)
+                handleBoundSelected(
+                  wantedDestination,
+                  dir,
+                  !!wantedDestination,
+                  presetStops
+                )
               }
               disabled={isTransitioning}
               loading={isTransitioning}
               title={title}
               subtitle={subtitle}
               targetStation={finalStop}
+            />
+          );
+        }
+
+        // 逆方向カード: presetOrigin がない or GPS確定駅が起点と同じ場合は非表示
+        if (
+          !presetOrigin ||
+          confirmedStation?.groupId === presetOrigin.groupId
+        ) {
+          return <></>;
+        }
+
+        if (boundStations.length) {
+          const reverseLineForCard =
+            (presetOrigin.line as Line | undefined) ?? lineForCard;
+          const reverseSubtitle =
+            buildSubtitle(reverseLineForCard, presetOrigin.trainType) ?? '';
+          const reverseDirForNav: LineDirection =
+            savedRoute?.direction === 'INBOUND' ? 'OUTBOUND' : 'INBOUND';
+          return (
+            <CommonCard
+              onPress={() =>
+                handleBoundSelected(
+                  presetOrigin,
+                  reverseDirForNav,
+                  false,
+                  presetStops
+                )
+              }
+              disabled={isTransitioning}
+              loading={isTransitioning}
+              line={reverseLineForCard}
+              title={
+                isJapanese
+                  ? `${presetOrigin.name}方面`
+                  : `for ${presetOrigin.nameRoman ?? ''}`
+              }
+              subtitle={reverseSubtitle}
+              targetStation={presetOrigin}
             />
           );
         }
@@ -478,6 +550,10 @@ export const SelectBoundModal: React.FC<Props> = ({
       line,
       loopLineDirectionText,
       normalLineDirectionText,
+      savedRoute?.direction,
+      confirmedStation?.groupId,
+      presetOrigin,
+      presetStops,
     ]
   );
 

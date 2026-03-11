@@ -28,6 +28,12 @@ jest.mock('~/hooks', () => ({
     save: jest.fn(),
     remove: jest.fn(),
   })),
+  usePresetStops: jest.fn(() => ({
+    presetOrigin: null,
+    presetStops: undefined,
+    nearestPresetStation: undefined,
+    resolvePresetDirection: jest.fn(() => 'INBOUND'),
+  })),
 }));
 
 jest.mock('~/translation', () => ({
