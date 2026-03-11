@@ -102,6 +102,7 @@ describe('DevOverlay', () => {
       id: 1,
       name: 'テスト駅',
       nameRoman: 'Test Station',
+      stationNumbers: [{ stationNumber: 'JK-01' }],
     } as Station);
   });
 
@@ -174,7 +175,7 @@ describe('DevOverlay', () => {
       expect(getByText('NEXT TARGET')).toBeTruthy();
       expect(getByTestId('dev-overlay-next-value')).toHaveTextContent('500m');
       expect(getByTestId('dev-overlay-next-meta')).toHaveTextContent(
-        'テスト駅'
+        'テスト駅 / JK-01'
       );
     });
 

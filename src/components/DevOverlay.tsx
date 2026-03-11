@@ -291,7 +291,12 @@ const DevOverlay: React.FC = () => {
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
   const backgroundValue = isBackgroundLocationTracking ? 'ON' : 'OFF';
-  const nextStationMeta = nextStation?.name ?? undefined;
+  const nextStationNumber =
+    nextStation?.stationNumbers?.find((item) => !!item?.stationNumber)
+      ?.stationNumber ?? undefined;
+  const nextStationMeta = [nextStation?.name, nextStationNumber]
+    .filter(Boolean)
+    .join(' / ');
 
   const dim = useWindowDimensions();
   const [panelHeight, setPanelHeight] = useState(0);
