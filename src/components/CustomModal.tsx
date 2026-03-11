@@ -19,6 +19,8 @@ type Props = {
   onClose?: () => void;
   /** 閉じるアニメーションが完了した後に呼ばれるコールバック */
   onCloseAnimationEnd?: () => void;
+  /** 開くアニメーションが完了した後に呼ばれるコールバック */
+  onShow?: () => void;
   dismissOnBackdropPress?: boolean;
   backdropStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
@@ -39,6 +41,7 @@ export const CustomModal: React.FC<Props> = ({
   children,
   onClose,
   onCloseAnimationEnd,
+  onShow,
   dismissOnBackdropPress = true,
   backdropStyle,
   containerStyle,
@@ -49,6 +52,8 @@ export const CustomModal: React.FC<Props> = ({
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
   const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const onShowRef = useRef(onShow);
+  const onCloseAnimationEndRef = useRef(onCloseAnimationEnd);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const animatedBackdropStyle = {
     opacity,
@@ -66,13 +71,25 @@ export const CustomModal: React.FC<Props> = ({
   };
 
   useEffect(() => {
+    onShowRef.current = onShow;
+  }, [onShow]);
+
+  useEffect(() => {
+    onCloseAnimationEndRef.current = onCloseAnimationEnd;
+  }, [onCloseAnimationEnd]);
+
+  useEffect(() => {
     if (visible) {
       setIsMounted(true);
       Animated.timing(opacity, {
         toValue: 1,
         duration: animationDuration,
         useNativeDriver: true,
-      }).start();
+      }).start(({ finished }) => {
+        if (finished) {
+          onShowRef.current?.();
+        }
+      });
       return;
     }
 
@@ -83,10 +100,10 @@ export const CustomModal: React.FC<Props> = ({
     }).start(({ finished }) => {
       if (finished && !visible) {
         setIsMounted(false);
-        onCloseAnimationEnd?.();
+        onCloseAnimationEndRef.current?.();
       }
     });
-  }, [animationDuration, opacity, visible, onCloseAnimationEnd]);
+  }, [animationDuration, opacity, visible]);
 
   const handleBackdropPress = () => {
     Keyboard.dismiss();
