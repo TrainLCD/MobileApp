@@ -286,5 +286,7 @@
   "presetNamePlaceholder": "プリセット名",
   "save": "保存",
   "selectStartStationTitle": "始発駅を選択",
-  "departure": "始発"
+  "departure": "始発",
+  "randomTheme": "ランダムテーマ",
+  "randomThemeChanged": "テーマを「%{themeName}」に変更しました"
 }

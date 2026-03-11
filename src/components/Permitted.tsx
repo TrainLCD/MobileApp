@@ -31,14 +31,28 @@ import {
   useFeedback,
   useWarningInfo,
 } from '../hooks';
-import type { AppTheme } from '../models/Theme';
+import { APP_THEME, type AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
+import { showToast } from '../utils/toast';
 import NewReportModal from './NewReportModal';
 import WarningPanel from './WarningPanel';
+
+const THEME_LABEL_KEYS: Record<AppTheme, string> = {
+  [APP_THEME.TOKYO_METRO]: 'tokyoMetroLike',
+  [APP_THEME.YAMANOTE]: 'yamanoteLineLike',
+  [APP_THEME.JR_WEST]: 'jrWestLike',
+  [APP_THEME.TY]: 'tyLike',
+  [APP_THEME.SAIKYO]: 'saikyoLineLike',
+  [APP_THEME.TOEI]: 'toeiLike',
+  [APP_THEME.LED]: 'ledLike',
+  [APP_THEME.JO]: 'joLike',
+  [APP_THEME.JL]: 'jlLike',
+  [APP_THEME.JR_KYUSHU]: 'jrKyushuLike',
+};
 
 type Props = {
   children: React.ReactNode;
@@ -51,7 +65,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setTuning = useSetAtom(tuningState);
-  const setTheme = useSetAtom(themeAtom);
+  const [currentTheme, setTheme] = useAtom(themeAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
@@ -129,6 +143,33 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       captureError(err);
     }
   }, [isAppLatest, setReportModalShow]);
+
+  const handleRandomTheme = useCallback(async () => {
+    const allThemes = Object.values(APP_THEME);
+    const otherThemes = allThemes.filter((t) => t !== currentTheme);
+    const randomTheme =
+      otherThemes[Math.floor(Math.random() * otherThemes.length)];
+
+    if (!randomTheme) {
+      return;
+    }
+
+    setTheme(randomTheme);
+    try {
+      await AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.PREVIOUS_THEME,
+        randomTheme
+      );
+    } catch (error) {
+      console.error(error);
+    }
+
+    const themeName = translate(THEME_LABEL_KEYS[randomTheme]);
+    showToast({
+      type: 'success',
+      text1: translate('randomThemeChanged', { themeName }),
+    });
+  }, [currentTheme, setTheme]);
 
   const handleShare = useCallback(async () => {
     const captureError = (err: unknown) => {
@@ -217,6 +258,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               handler: handleShare,
             },
             {
+              label: translate('randomTheme'),
+              handler: handleRandomTheme,
+            },
+            {
               label: translate('report'),
               handler: handleReport,
             },
@@ -225,6 +270,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             {
               label: translate('share'),
               handler: handleShare,
+            },
+            {
+              label: translate('randomTheme'),
+              handler: handleRandomTheme,
             },
             {
               label: translate('report'),
@@ -286,6 +335,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     },
     [
       devOverlayEnabled,
+      handleRandomTheme,
       handleReport,
       handleShare,
       navigation,

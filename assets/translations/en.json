@@ -285,5 +285,7 @@
   "presetNamePlaceholder": "Preset name",
   "save": "Save",
   "selectStartStationTitle": "Select starting station",
-  "departure": "Dep."
+  "departure": "Dep.",
+  "randomTheme": "Random Theme",
+  "randomThemeChanged": "Theme changed to \"%{themeName}\""
 }
