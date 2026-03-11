@@ -17,6 +17,7 @@ export const ASYNC_STORAGE_KEYS = {
   WEEKDAY_ALERT_DISMISSED: '@TrainLCD:weekdayAlertDismissed',
   PARTIALLY_PASS_ALERT_DISMISSED: '@TrainLCD:partiallyPassAlertDismissed',
   TELEMETRY_ENABLED: '@TrainLCD:telemetryEnabled',
+  DEV_OVERLAY_ENABLED: '@TrainLCD:devOverlayEnabled',
   TTS_JA_VOICE_NAME: '@TrainLCD:ttsJaVoiceName',
   TTS_EN_VOICE_NAME: '@TrainLCD:ttsEnVoiceName',
   WALKTHROUGH_COMPLETED: '@TrainLCD:walkthroughCompleted',
