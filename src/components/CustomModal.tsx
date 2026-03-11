@@ -19,6 +19,8 @@ type Props = {
   onClose?: () => void;
   /** 閉じるアニメーションが完了した後に呼ばれるコールバック */
   onCloseAnimationEnd?: () => void;
+  /** 開くアニメーションが完了した後に呼ばれるコールバック */
+  onShow?: () => void;
   dismissOnBackdropPress?: boolean;
   backdropStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
@@ -39,6 +41,7 @@ export const CustomModal: React.FC<Props> = ({
   children,
   onClose,
   onCloseAnimationEnd,
+  onShow,
   dismissOnBackdropPress = true,
   backdropStyle,
   containerStyle,
@@ -72,7 +75,11 @@ export const CustomModal: React.FC<Props> = ({
         toValue: 1,
         duration: animationDuration,
         useNativeDriver: true,
-      }).start();
+      }).start(({ finished }) => {
+        if (finished) {
+          onShow?.();
+        }
+      });
       return;
     }
 
@@ -86,7 +93,7 @@ export const CustomModal: React.FC<Props> = ({
         onCloseAnimationEnd?.();
       }
     });
-  }, [animationDuration, opacity, visible, onCloseAnimationEnd]);
+  }, [animationDuration, opacity, visible, onCloseAnimationEnd, onShow]);
 
   const handleBackdropPress = () => {
     Keyboard.dismiss();

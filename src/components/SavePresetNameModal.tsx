@@ -109,14 +109,6 @@ export const SavePresetNameModal: React.FC<Props> = ({
       );
       inboundOpacity.setValue(1);
       outboundOpacity.setValue(1);
-
-      // モーダルアニメーション(180ms)の完了を待ってからフォーカスする
-      if (Platform.OS === 'ios') {
-        const timer = setTimeout(() => {
-          textInputRef.current?.focus();
-        }, 180);
-        return () => clearTimeout(timer);
-      }
     }
   }, [visible, defaultName, directionOptions, inboundOpacity, outboundOpacity]);
 
@@ -163,6 +155,12 @@ export const SavePresetNameModal: React.FC<Props> = ({
     onSubmit(name, selectedDirection);
   }, [onSubmit, selectedDirection, hasDirectionOptions]);
 
+  const handleShow = useCallback(() => {
+    if (Platform.OS === 'ios') {
+      textInputRef.current?.focus();
+    }
+  }, []);
+
   const canSubmit =
     !isEmpty && (!hasDirectionOptions || selectedDirection !== null);
   const textColor = isLEDTheme ? '#fff' : '#000';
@@ -171,6 +169,7 @@ export const SavePresetNameModal: React.FC<Props> = ({
     <CustomModal
       visible={visible}
       onClose={onClose}
+      onShow={handleShow}
       backdropStyle={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       contentContainerStyle={[
         styles.contentView,
