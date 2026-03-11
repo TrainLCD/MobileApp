@@ -284,6 +284,8 @@ const DevOverlay: React.FC = () => {
   );
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
+  const accuracyMeters =
+    accuracy != null ? Math.max(0, Math.floor(accuracy)) : null;
 
   const speedKMH = useMemo(
     () =>
@@ -577,7 +579,7 @@ const DevOverlay: React.FC = () => {
                 <View style={styles.landscapeSubGrid}>
                   <MetricCard
                     label="LOCATION ACCURACY"
-                    value={accuracy != null ? `${accuracy}` : '--'}
+                    value={accuracyMeters != null ? `${accuracyMeters}` : '--'}
                     suffix="m"
                     style={[{ width: leftMetricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-accuracy-value"
@@ -631,7 +633,7 @@ const DevOverlay: React.FC = () => {
                 <View style={[styles.metricsGrid, { gap: metricsGap }]}>
                   <MetricCard
                     label="LOCATION ACCURACY"
-                    value={accuracy != null ? `${accuracy}` : '--'}
+                    value={accuracyMeters != null ? `${accuracyMeters}` : '--'}
                     suffix="m"
                     style={[{ width: metricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-accuracy-value"
