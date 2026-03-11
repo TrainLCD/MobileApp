@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
+import { Dimensions } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import {
   accuracyHistoryAtom,
@@ -68,6 +69,8 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 >;
 
 describe('DevOverlay', () => {
+  const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
+
   const setupAtomValues = ({
     location = {
       coords: {
@@ -100,6 +103,12 @@ describe('DevOverlay', () => {
   };
 
   beforeEach(() => {
+    mockDimensionsGet.mockReturnValue({
+      width: 393,
+      height: 852,
+      scale: 3,
+      fontScale: 1,
+    } as ReturnType<typeof Dimensions.get>);
     setupAtomValues();
     mockUseDistanceToNextStation.mockReturnValue('500');
     mockUseNextStation.mockReturnValue({
@@ -112,6 +121,7 @@ describe('DevOverlay', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    mockDimensionsGet.mockReset();
   });
 
   describe('基本的なレンダリング', () => {
@@ -154,6 +164,18 @@ describe('DevOverlay', () => {
       const { getByText, getAllByText } = render(<DevOverlay />);
       expect(getByText('BG LOC')).toBeTruthy();
       expect(getAllByText('ON')).toHaveLength(2);
+    });
+
+    it('横画面レイアウトを表示する', () => {
+      mockDimensionsGet.mockReturnValue({
+        width: 852,
+        height: 393,
+        scale: 3,
+        fontScale: 1,
+      } as ReturnType<typeof Dimensions.get>);
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-landscape')).toBeTruthy();
     });
   });
 
