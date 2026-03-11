@@ -38,16 +38,18 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     zIndex: 9999,
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PANEL_BORDER,
-    backgroundColor: PANEL_BG,
     shadowColor: '#020617',
     shadowOpacity: 0.35,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 12 },
     elevation: 20,
+  },
+  panelFrame: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: PANEL_BORDER,
+    backgroundColor: PANEL_BG,
   },
   chrome: {
     ...StyleSheet.absoluteFillObject,
@@ -113,6 +115,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 4,
+  },
+  chartShellContent: {
+    flex: 1,
+    justifyContent: 'space-between',
   },
   chartLabel: {
     color: LABEL_COLOR,
@@ -446,6 +452,7 @@ const DevOverlay: React.FC = () => {
               panelWidth,
               panelHeight || 0
             );
+            hasDraggedRef.current = true;
             setBasePosition(clampedPosition);
             dragTranslation.setValue({ x: 0, y: 0 });
           });
@@ -464,66 +471,148 @@ const DevOverlay: React.FC = () => {
         styles.root,
         {
           width: panelWidth,
-          borderRadius: compactRadius,
           left: basePosition.x,
           top: basePosition.y,
         },
         { transform: dragTranslation.getTranslateTransform() },
       ]}
     >
-      <LinearGradient
-        colors={AURORA_COLORS}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.chrome}
-      />
       <View
         style={[
-          styles.content,
+          styles.panelFrame,
           {
-            paddingHorizontal: compactPaddingX,
-            paddingVertical: compactPaddingY,
-            gap: compactSpacing,
+            borderRadius: compactRadius,
           },
         ]}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Typography style={styles.eyebrow}>DEV OVERLAY</Typography>
-            <Typography style={[styles.title, headerTitleStyle]}>
-              TrainLCD Diagnostics
-            </Typography>
-            <Typography style={[styles.version, versionStyle]}>
-              {versionLabel}
-            </Typography>
+        <LinearGradient
+          colors={AURORA_COLORS}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.chrome}
+        />
+        <View
+          style={[
+            styles.content,
+            {
+              paddingHorizontal: compactPaddingX,
+              paddingVertical: compactPaddingY,
+              gap: compactSpacing,
+            },
+          ]}
+        >
+          <View style={styles.headerRow}>
+            <View style={styles.headerCopy}>
+              <Typography style={styles.eyebrow}>DEV OVERLAY</Typography>
+              <Typography style={[styles.title, headerTitleStyle]}>
+                TrainLCD Diagnostics
+              </Typography>
+              <Typography style={[styles.version, versionStyle]}>
+                {versionLabel}
+              </Typography>
+            </View>
+            <View style={[styles.statusRow, statusRowStyle]}>
+              <StatusPill
+                label="TELEMETRY"
+                value={telemetryValue}
+                style={statusPillStyle}
+              />
+              <StatusPill
+                label="BG LOC"
+                value={backgroundValue}
+                style={statusPillStyle}
+              />
+            </View>
           </View>
-          <View style={[styles.statusRow, statusRowStyle]}>
-            <StatusPill
-              label="TELEMETRY"
-              value={telemetryValue}
-              style={statusPillStyle}
-            />
-            <StatusPill
-              label="BG LOC"
-              value={backgroundValue}
-              style={statusPillStyle}
-            />
-          </View>
-        </View>
 
-        <View style={[styles.bodyRow, bodyRowStyle]}>
-          {isLandscape ? (
-            <View style={styles.chartColumn}>
-              <View style={styles.landscapeTopRow}>
-                <View style={{ width: chartColumnWidth }}>
-                  <View style={[styles.chartShell, chartShellStyle]}>
+          <View style={[styles.bodyRow, bodyRowStyle]}>
+            {isLandscape ? (
+              <View style={styles.chartColumn} testID="dev-overlay-landscape">
+                <View style={styles.landscapeTopRow}>
+                  <View style={{ width: chartColumnWidth }}>
+                    <View style={[styles.chartShell, chartShellStyle]}>
+                      <View style={styles.chartShellContent}>
+                        <Typography style={styles.chartLabel}>
+                          ACCURACY HISTORY
+                        </Typography>
+                        <Typography
+                          style={[styles.chartValue, chartValueStyle]}
+                          testID="dev-overlay-accuracy-history"
+                          numberOfLines={1}
+                          ellipsizeMode="clip"
+                        >
+                          {accuracyChartBlocks.length === 0
+                            ? '---'
+                            : accuracyChartBlocks.map((block, index) => (
+                                <Text
+                                  key={`${index}-${block.char}-${block.color}`}
+                                  style={{ color: block.color }}
+                                >
+                                  {block.char}
+                                </Text>
+                              ))}
+                        </Typography>
+                      </View>
+                    </View>
+                  </View>
+                  <MetricCard
+                    label="NEXT TARGET"
+                    value={
+                      distanceToNextStation ? `${distanceToNextStation}m` : '--'
+                    }
+                    meta={nextStationMeta}
+                    style={[
+                      { width: nextCardWidth },
+                      metricCardStyle,
+                      nextTargetCardStyle,
+                    ]}
+                    valueTestID="dev-overlay-next-value"
+                    metaTestID="dev-overlay-next-meta"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                </View>
+
+                <View style={styles.landscapeSubGrid}>
+                  <MetricCard
+                    label="LOCATION ACCURACY"
+                    value={accuracy != null ? `${accuracy}` : '--'}
+                    suffix="m"
+                    style={[{ width: leftMetricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-accuracy-value"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                  <MetricCard
+                    label="CURRENT SPEED"
+                    value={speedKMH}
+                    suffix="km/h"
+                    style={[{ width: leftMetricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-speed-value"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                </View>
+
+                <Typography style={[styles.footerText, footerTextStyle]}>
+                  LIVE SENSOR TRACE / INTERNAL BUILD
+                </Typography>
+              </View>
+            ) : (
+              <View style={styles.chartColumn}>
+                <View style={[styles.chartShell, chartShellStyle]}>
+                  <View style={styles.chartShellContent}>
                     <Typography style={styles.chartLabel}>
                       ACCURACY HISTORY
                     </Typography>
-                    <Typography style={[styles.chartValue, chartValueStyle]} />
                     <Typography
                       style={[styles.chartValue, chartValueStyle]}
                       testID="dev-overlay-accuracy-history"
+                      numberOfLines={1}
+                      ellipsizeMode="clip"
                     >
                       {accuracyChartBlocks.length === 0
                         ? '---'
@@ -538,124 +627,56 @@ const DevOverlay: React.FC = () => {
                     </Typography>
                   </View>
                 </View>
-                <MetricCard
-                  label="NEXT TARGET"
-                  value={
-                    distanceToNextStation ? `${distanceToNextStation}m` : '--'
-                  }
-                  meta={nextStationMeta}
-                  style={[
-                    { width: nextCardWidth },
-                    metricCardStyle,
-                    nextTargetCardStyle,
-                  ]}
-                  valueTestID="dev-overlay-next-value"
-                  metaTestID="dev-overlay-next-meta"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={metricValueStyle}
-                  metaStyle={metricMetaStyle}
-                />
-              </View>
 
-              <View style={styles.landscapeSubGrid}>
-                <MetricCard
-                  label="LOCATION ACCURACY"
-                  value={accuracy != null ? `${accuracy}` : '--'}
-                  suffix="m"
-                  style={[{ width: leftMetricWidth }, metricCardStyle]}
-                  valueTestID="dev-overlay-accuracy-value"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={metricValueStyle}
-                  metaStyle={metricMetaStyle}
-                />
-                <MetricCard
-                  label="CURRENT SPEED"
-                  value={speedKMH}
-                  suffix="km/h"
-                  style={[{ width: leftMetricWidth }, metricCardStyle]}
-                  valueTestID="dev-overlay-speed-value"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={metricValueStyle}
-                  metaStyle={metricMetaStyle}
-                />
+                <View style={[styles.metricsGrid, { gap: metricsGap }]}>
+                  <MetricCard
+                    label="LOCATION ACCURACY"
+                    value={accuracy != null ? `${accuracy}` : '--'}
+                    suffix="m"
+                    style={[{ width: metricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-accuracy-value"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                  <MetricCard
+                    label="CURRENT SPEED"
+                    value={speedKMH}
+                    suffix="km/h"
+                    style={[{ width: metricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-speed-value"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                  <MetricCard
+                    label="NEXT TARGET"
+                    value={
+                      distanceToNextStation ? `${distanceToNextStation}m` : '--'
+                    }
+                    meta={nextStationMeta}
+                    style={[
+                      { width: nextCardWidth },
+                      metricCardStyle,
+                      nextTargetCardStyle,
+                    ]}
+                    valueTestID="dev-overlay-next-value"
+                    metaTestID="dev-overlay-next-meta"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                </View>
               </View>
+            )}
+          </View>
 
-              <Typography style={[styles.footerText, footerTextStyle]}>
-                LIVE SENSOR TRACE / INTERNAL BUILD
-              </Typography>
-            </View>
-          ) : (
-            <View style={styles.chartColumn}>
-              <View style={[styles.chartShell, chartShellStyle]}>
-                <Typography style={styles.chartLabel}>
-                  ACCURACY HISTORY
-                </Typography>
-                <Typography style={[styles.chartValue, chartValueStyle]} />
-                <Typography
-                  style={[styles.chartValue, chartValueStyle]}
-                  testID="dev-overlay-accuracy-history"
-                >
-                  {accuracyChartBlocks.length === 0
-                    ? '---'
-                    : accuracyChartBlocks.map((block, index) => (
-                        <Text
-                          key={`${index}-${block.char}-${block.color}`}
-                          style={{ color: block.color }}
-                        >
-                          {block.char}
-                        </Text>
-                      ))}
-                </Typography>
-              </View>
-
-              <View style={[styles.metricsGrid, { gap: metricsGap }]}>
-                <MetricCard
-                  label="LOCATION ACCURACY"
-                  value={accuracy != null ? `${accuracy}` : '--'}
-                  suffix="m"
-                  style={[{ width: metricWidth }, metricCardStyle]}
-                  valueTestID="dev-overlay-accuracy-value"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={metricValueStyle}
-                  metaStyle={metricMetaStyle}
-                />
-                <MetricCard
-                  label="CURRENT SPEED"
-                  value={speedKMH}
-                  suffix="km/h"
-                  style={[{ width: metricWidth }, metricCardStyle]}
-                  valueTestID="dev-overlay-speed-value"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={metricValueStyle}
-                  metaStyle={metricMetaStyle}
-                />
-                <MetricCard
-                  label="NEXT TARGET"
-                  value={
-                    distanceToNextStation ? `${distanceToNextStation}m` : '--'
-                  }
-                  meta={nextStationMeta}
-                  style={[
-                    { width: nextCardWidth },
-                    metricCardStyle,
-                    nextTargetCardStyle,
-                  ]}
-                  valueTestID="dev-overlay-next-value"
-                  metaTestID="dev-overlay-next-meta"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={metricValueStyle}
-                  metaStyle={metricMetaStyle}
-                />
-              </View>
-            </View>
-          )}
+          {!isLandscape ? (
+            <Typography style={[styles.footerText, footerTextStyle]}>
+              LIVE SENSOR TRACE / INTERNAL BUILD
+            </Typography>
+          ) : null}
         </View>
-
-        {!isLandscape ? (
-          <Typography style={[styles.footerText, footerTextStyle]}>
-            LIVE SENSOR TRACE / INTERNAL BUILD
-          </Typography>
-        ) : null}
       </View>
     </Animated.View>
   );
