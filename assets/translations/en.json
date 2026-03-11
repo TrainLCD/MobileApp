@@ -205,6 +205,8 @@
   "canaryNotice": "This TrainLCD is a canary release.",
   "setAsTerminus": "Set as terminus",
   "optInTelemetryTitle": "Enable telemetry",
+  "showDevOverlay": "Show developer overlay",
+  "hideDevOverlay": "Hide developer overlay",
   "telemetrySettingWillPersist": "Enabling telemetry will be persisted.",
   "personalize": "Personalize",
   "forDevelopers": "Developers",

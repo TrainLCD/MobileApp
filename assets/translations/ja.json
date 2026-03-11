@@ -206,6 +206,8 @@
   "canaryNotice": "このTrainLCDはカナリアリリースです。",
   "setAsTerminus": "終着駅に設定する",
   "optInTelemetryTitle": "テレメトリを有効にする",
+  "showDevOverlay": "開発者オーバレイを表示",
+  "hideDevOverlay": "開発者オーバレイを非表示",
   "telemetrySettingWillPersist": "テレメトリ有効化は永続的に保持されます。",
   "personalize": "パーソナライズ",
   "forDevelopers": "開発者向け",
