@@ -188,6 +188,21 @@ describe('DevOverlay', () => {
       );
     });
 
+    it('精度情報の小数点を切り捨てて表示する', () => {
+      setupAtomValues({
+        location: {
+          coords: { speed: 10, accuracy: 15.9 },
+        },
+        accuracyHistory: [10, 15, 20],
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent(
+        '15m'
+      );
+    });
+
     it('速度情報をkm/hで表示する', () => {
       const { getByText, getByTestId } = render(<DevOverlay />);
       expect(getByText('CURRENT SPEED')).toBeTruthy();
