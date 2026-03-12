@@ -96,7 +96,7 @@ const fetchCache = new Map<
 >();
 
 const buildCacheKey = (opts: FetchSpeechOptions): string =>
-  `${opts.textJa}\0${opts.textEn}\0${opts.enVoiceName ?? ''}`;
+  `${opts.textJa}\0${opts.textEn}\0${opts.jaVoiceName ?? ''}\0${opts.enVoiceName ?? ''}`;
 
 export const clearFetchCache = (): void => {
   fetchCache.clear();
