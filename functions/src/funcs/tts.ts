@@ -1,11 +1,8 @@
 import { createHash } from 'node:crypto';
 import { PubSub } from '@google-cloud/pubsub';
-import { type GenerateContentResponse, VertexAI } from '@google-cloud/vertexai';
 import * as admin from 'firebase-admin';
-import { defineSecret } from 'firebase-functions/params';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
-import { encodePcmToMp3 } from '../utils/encodeMp3';
-import { applyLegacyIpaReplacements } from '../utils/legacyIpa';
+import { GoogleAuth } from 'google-auth-library';
 import { normalizeRomanText } from '../utils/normalize';
 
 process.env.TZ = 'Asia/Tokyo';
@@ -17,13 +14,12 @@ if (admin.apps.length === 0) {
 const firestore = admin.firestore();
 const storage = admin.storage();
 const pubsub = new PubSub();
-
-const googleTtsApiKey = defineSecret('GOOGLE_TTS_API_KEY');
+const googleAuth = new GoogleAuth({
+  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+});
 
 const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
-const VERTEX_AI_LOCATION = 'us-central1';
 const GOOGLE_TTS_API_VERSION = 'v1';
-const EN_GEMINI_VOLUME_BOOST_DB = 4;
 
 interface SynthesizedAudio {
   audioContent: string;
@@ -67,74 +63,16 @@ const sniffAudioMimeType = (audioBuffer: Buffer): string => {
   return 'audio/pcm';
 };
 
-/** 音声バッファが既にMP3であればそのまま返し、PCM/WAVならMP3にエンコードする */
-const ensureMp3 = async (
-  audioBuffer: Buffer,
-  mimeType: string,
-  volumeDb?: number
-): Promise<{ buffer: Buffer; mimeType: string }> => {
-  if (mimeType === 'audio/mpeg' && volumeDb == null) {
-    return { buffer: audioBuffer, mimeType };
-  }
-  return encodePcmToMp3(audioBuffer, undefined, volumeDb);
-};
-
-/** 0〜99 の整数を英単語に変換する */
-const numberToEnglishWord = (n: number): string => {
-  const ones = [
-    'zero',
-    'one',
-    'two',
-    'three',
-    'four',
-    'five',
-    'six',
-    'seven',
-    'eight',
-    'nine',
-    'ten',
-    'eleven',
-    'twelve',
-    'thirteen',
-    'fourteen',
-    'fifteen',
-    'sixteen',
-    'seventeen',
-    'eighteen',
-    'nineteen',
-  ];
-  const tens = [
-    '',
-    '',
-    'twenty',
-    'thirty',
-    'forty',
-    'fifty',
-    'sixty',
-    'seventy',
-    'eighty',
-    'ninety',
-  ];
-  if (n < 20) return ones[n] ?? String(n);
-  if (n < 100) {
-    const t = Math.floor(n / 10);
-    const o = n % 10;
-    return (tens[t] ?? '') + (o ? `-${ones[o]}` : '');
-  }
-  return String(n);
-};
-
-/** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → Y（X）） */
+/** SSMLタグを除去してプレーンテキストに変換する（<sub alias="X">Y</sub> → X） */
 const stripSsml = (text: string): string =>
   text
     .replace(
       /<sub\s+alias="([^"]*)">([^<]*)<\/sub>/gi,
-      (_match, alias, original) =>
-        original === alias ? alias : `${original}（${alias}）`
+      (_match, alias) => alias
     )
     .replace(
       /<say-as\s+interpret-as="cardinal">(\d+)<\/say-as>/gi,
-      (_match, num) => numberToEnglishWord(Number(num))
+      (_match, num) => String(num)
     )
     .replace(/<break\s*[^/]*\/>/gi, ' ')
     .replace(/<speak>|<\/speak>/gi, '')
@@ -142,114 +80,72 @@ const stripSsml = (text: string): string =>
     .replace(/\s{2,}/g, ' ')
     .trim();
 
-/**
- * Gemini TTS を使用してテキストを音声に変換する。
- *
- * @param projectId - GCP プロジェクト ID
- * @param text - 読み上げ対象テキスト（SSML タグは内部で除去される）
- * @param voiceName - 使用する音声名（例: "Aoede"）
- * @param prompt - 読み上げスタイルを指示するプロンプト（任意）
- * @returns Base64 エンコードされた音声データと MIME タイプ
- *
- * @remarks
- * `@google-cloud/vertexai` の型定義には `speechConfig` が含まれていないため、
- * `generationConfig` に対する型アサーションは意図的なものである。
- */
+/** Cloud Text-to-Speech の Gemini-TTS を使用してテキストを音声に変換する。 */
 const synthesizeWithGemini = async (
   projectId: string,
   text: string,
+  languageCode: string,
   voiceName: string,
-  prompt?: string
+  prompt?: string,
+  options?: {
+    volumeGainDb?: number;
+  }
 ): Promise<SynthesizedAudio> => {
-  const vertexAI = new VertexAI({
-    project: projectId,
-    location: VERTEX_AI_LOCATION,
-  });
-
-  const model = vertexAI.getGenerativeModel({
-    model: GEMINI_TTS_MODEL,
-    generationConfig: {
-      responseModalities: ['AUDIO'],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName },
-        },
-      },
-    } as Parameters<typeof vertexAI.getGenerativeModel>[0]['generationConfig'],
-  });
-
-  const response = await model.generateContent({
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          {
-            text: prompt ? `${prompt}\n${stripSsml(text)}` : stripSsml(text),
-          },
-        ],
-      },
-    ],
-  });
-
-  const result: GenerateContentResponse = response.response;
-  const inlineData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-  const audioData = inlineData?.data;
-
-  if (!audioData) {
-    const status = result.candidates?.[0]?.finishReason ?? 'UNKNOWN';
-    const usage = result.usageMetadata;
-    throw new Error(
-      `Gemini TTS (${GEMINI_TTS_MODEL}) returned no audio data — finishReason: ${status}, usage: ${JSON.stringify(usage)}`
-    );
+  const client = await googleAuth.getClient();
+  const accessTokenResponse = await client.getAccessToken();
+  const accessToken = accessTokenResponse.token;
+  if (!accessToken) {
+    throw new Error('Failed to acquire Google access token for Gemini TTS');
   }
 
-  return {
-    audioContent: audioData,
-    mimeType: inlineData?.mimeType,
-  };
-};
-
-/** Google Cloud Text-to-Speech API を使用して SSML を音声に変換する */
-const synthesizeWithGoogleTts = async (
-  ssml: string,
-  voiceName: string,
-  languageCode: string
-): Promise<string> => {
-  const apiKey = googleTtsApiKey.value();
-  if (!apiKey) {
-    throw new HttpsError(
-      'failed-precondition',
-      'GOOGLE_TTS_API_KEY is not set'
-    );
-  }
-
-  const ttsUrl = `https://texttospeech.googleapis.com/${GOOGLE_TTS_API_VERSION}/text:synthesize?key=${apiKey}`;
-
+  const ttsUrl = `https://texttospeech.googleapis.com/${GOOGLE_TTS_API_VERSION}/text:synthesize`;
   const res = await fetch(ttsUrl, {
-    headers: { 'content-type': 'application/json; charset=UTF-8' },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json; charset=UTF-8',
+      'x-goog-user-project': projectId,
+    },
     body: JSON.stringify({
-      input: { ssml },
-      voice: { languageCode, name: voiceName },
+      input: {
+        text: stripSsml(text),
+        ...(prompt ? { prompt } : {}),
+      },
+      voice: {
+        languageCode,
+        name: voiceName,
+        modelName: GEMINI_TTS_MODEL,
+      },
       audioConfig: {
         audioEncoding: 'MP3',
-        effectsProfileId: [],
+        ...(options?.volumeGainDb != null
+          ? { volumeGainDb: options.volumeGainDb }
+          : {}),
       },
     }),
     method: 'POST',
     signal: AbortSignal.timeout(30000),
   });
 
-  const json = await res.json();
-  if (!res.ok) {
+  const json = (await res.json()) as {
+    audioContent?: string;
+    error?: unknown;
+  };
+  if (!res.ok || !json.audioContent) {
     throw new Error(
-      `Google TTS API returned ${res.status}: ${JSON.stringify(json.error ?? json)}`
+      `Gemini TTS API returned ${res.status}: ${JSON.stringify(json.error ?? json)}`
     );
   }
-  return json.audioContent;
+
+  return {
+    audioContent: json.audioContent,
+    mimeType: 'audio/mpeg',
+  };
 };
 
 export const tts = onCall(
-  { region: 'asia-northeast1', cpu: 2, secrets: [googleTtsApiKey] },
+  {
+    region: 'asia-northeast1',
+  },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError(
@@ -273,12 +169,7 @@ export const tts = onCall(
       );
     }
 
-    let ssmlEn = normalizeRomanText(req.data.ssmlEn);
-
-    // <phoneme>タグが埋め込まれていない場合はレガシーIPA置換を適用
-    if (!ssmlEn.includes('<phoneme')) {
-      ssmlEn = applyLegacyIpaReplacements(ssmlEn);
-    }
+    const ssmlEn = normalizeRomanText(req.data.ssmlEn);
 
     if (ssmlEn.trim().length === 0) {
       throw new HttpsError(
@@ -286,8 +177,6 @@ export const tts = onCall(
         `The function must be called with one argument "ssmlEn" containing the message to add.`
       );
     }
-
-    const jaVoiceName = 'ja-JP-Standard-B';
 
     let ttsConfig: FirebaseFirestore.DocumentData | undefined;
     try {
@@ -302,8 +191,12 @@ export const tts = onCall(
         e
       );
     }
+    const defaultJaVoice = ttsConfig?.jaVoiceName || 'Aoede';
     const defaultEnVoice = ttsConfig?.enVoiceName || 'Aoede';
 
+    const jaVoiceName =
+      (typeof req.data.jaVoiceName === 'string' && req.data.jaVoiceName) ||
+      defaultJaVoice;
     const enVoiceName =
       (typeof req.data.enVoiceName === 'string' && req.data.enVoiceName) ||
       defaultEnVoice;
@@ -314,7 +207,7 @@ export const tts = onCall(
       .collection('voices');
 
     const hashAlgorithm = 'sha256';
-    const version = 7;
+    const version = 9;
     const hashPayloadObj = {
       enModel: GEMINI_TTS_MODEL,
       enVoiceName,
@@ -356,17 +249,12 @@ export const tts = onCall(
                 data.enAudioMimeType) ||
               (enBuffer ? sniffAudioMimeType(enBuffer) : 'audio/pcm');
 
-            const [jaMp3, enMp3] = await Promise.all([
-              ensureMp3(jaBuffer, jaRawMime),
-              ensureMp3(enBuffer, enRawMime),
-            ]);
-
             return {
               id,
-              jaAudioContent: jaMp3.buffer.toString('base64'),
-              enAudioContent: enMp3.buffer.toString('base64'),
-              jaAudioMimeType: jaMp3.mimeType,
-              enAudioMimeType: enMp3.mimeType,
+              jaAudioContent,
+              enAudioContent,
+              jaAudioMimeType: jaRawMime,
+              enAudioMimeType: enRawMime,
             };
           }
         } catch (e) {
@@ -388,25 +276,26 @@ export const tts = onCall(
     }
 
     try {
-      const [jaAudioContent, enAudio] = await Promise.all([
-        synthesizeWithGoogleTts(ssmlJa, jaVoiceName, 'ja-JP'),
+      const [jaAudio, enAudio] = await Promise.all([
+        synthesizeWithGemini(
+          projectId,
+          ssmlJa,
+          'ja-JP',
+          jaVoiceName,
+          '以下の日本語を、現代的な鉄道自動放送のように読み上げてください。全体的に平板なイントネーションを維持し、感情を込めず淡々と読んでください。文のイントネーションは文末に向かって自然に下降させてください。助詞（は、の、で、を等）で不自然にピッチを上げないでください。駅名や路線名は平板アクセントで読んでください（一般会話のアクセントとは異なります）。無駄な間を入れず、一定のテンポで読み進めてください。漢字の読みは一文字も省略せず正確に読んでください。特に路線名は正式な読みに従ってください（例：副都心線→ふくとしんせん、東海道線→とうかいどうせん、山手線→やまのてせん）。鉄道会社の略称も正確に読んでください（例：名鉄→めいてつ、京急→けいきゅう、京王→けいおう、阪急→はんきゅう、阪神→はんしん、南海→なんかい、近鉄→きんてつ、西鉄→にしてつ、東急→とうきゅう、小田急→おだきゅう、京成→けいせい、相鉄→そうてつ）。'
+        ),
         synthesizeWithGemini(
           projectId,
           ssmlEn,
+          'en-US',
           enVoiceName,
-          'Read the following in a calm, clear, and composed tone like a modern train announcement. Speak quickly and crisply with a swift, efficient delivery — do not linger on words or pause unnecessarily. Maintain a steady, relaxed intonation despite the fast pace. The text contains Japanese railway station names and line names in romanized form. Pronounce them accurately:'
+          'Read the following in a calm, clear, and composed tone like a modern train announcement. Speak quickly and crisply with a swift, efficient delivery. Do not linger on words or pause unnecessarily. Maintain a steady, relaxed intonation despite the fast pace. The text contains Japanese railway station names and line names in romanized form. Pronounce them using Japanese vowel rules, NOT English rules: a=ah, i=ee, u=oo, e=eh, o=oh. Every vowel is always pronounced the same way regardless of surrounding letters (e.g. "Inage" = ee-nah-geh, NOT "inn-idge"; "Meguro" = meh-goo-roh; "Ebisu" = eh-bee-soo; "Ome" = oh-meh, NOT "ohm"). Never apply English spelling conventions like silent e, soft g, or vowel shifts to these names.'
         ),
       ]);
-
-      const enAudioBuffer = Buffer.from(enAudio.audioContent, 'base64');
-      const enMp3 = await ensureMp3(
-        enAudioBuffer,
-        enAudio.mimeType || sniffAudioMimeType(enAudioBuffer),
-        EN_GEMINI_VOLUME_BOOST_DB
-      );
-
-      const enAudioContent = enMp3.buffer.toString('base64');
-      const enAudioMimeType = enMp3.mimeType;
+      const jaAudioContent = jaAudio.audioContent;
+      const jaAudioMimeType = jaAudio.mimeType || 'audio/mpeg';
+      const enAudioContent = enAudio.audioContent;
+      const enAudioMimeType = enAudio.mimeType || 'audio/mpeg';
 
       const cacheTopic = pubsub.topic('tts-cache');
       cacheTopic
@@ -415,7 +304,7 @@ export const tts = onCall(
             id,
             jaAudioContent,
             enAudioContent,
-            jaAudioMimeType: 'audio/mpeg',
+            jaAudioMimeType,
             enAudioMimeType,
             ssmlJa,
             ssmlEn,
@@ -433,7 +322,7 @@ export const tts = onCall(
         id,
         jaAudioContent,
         enAudioContent,
-        jaAudioMimeType: 'audio/mpeg',
+        jaAudioMimeType,
         enAudioMimeType,
       };
     } catch (error) {

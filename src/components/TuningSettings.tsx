@@ -100,12 +100,14 @@ const TuningSettings: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const enVoice = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME
-      );
+      const [enVoice, jaVoice] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
+      ]);
       setSettings((prev) => ({
         ...prev,
         ttsEnVoiceName: enVoice ?? '',
+        ttsJaVoiceName: jaVoice ?? '',
       }));
     })();
   }, [setSettings]);
@@ -206,6 +208,11 @@ const TuningSettings: React.FC = () => {
   const handleEnVoiceNameChange = (voice: string) => {
     setSettings((prev) => ({ ...prev, ttsEnVoiceName: voice }));
     AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME, voice);
+  };
+
+  const handleJaVoiceNameChange = (voice: string) => {
+    setSettings((prev) => ({ ...prev, ttsJaVoiceName: voice }));
+    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME, voice);
   };
 
   const toggleDevOverlayEnabled = () => {
@@ -326,6 +333,29 @@ const TuningSettings: React.FC = () => {
         <Typography style={styles.settingItemGroupTitle}>
           {translate('tuningItemTTSVoice')}
         </Typography>
+
+        <Typography style={styles.settingItemTitle}>
+          {translate('tuningItemTTSJaVoiceName')}
+        </Typography>
+        <Pressable
+          style={[styles.picker, { borderColor: isLEDTheme ? '#666' : '#aaa' }]}
+          onPress={() =>
+            showVoicePicker(settings.ttsJaVoiceName, handleJaVoiceNameChange)
+          }
+        >
+          <Typography
+            style={{
+              color: settings.ttsJaVoiceName
+                ? isLEDTheme
+                  ? '#fff'
+                  : 'black'
+                : '#999',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+            }}
+          >
+            {settings.ttsJaVoiceName || translate('notSpecified')}
+          </Typography>
+        </Pressable>
 
         <Typography style={styles.settingItemTitle}>
           {translate('tuningItemTTSEnVoiceName')}
