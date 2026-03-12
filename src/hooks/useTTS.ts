@@ -26,7 +26,9 @@ import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
 
 // 再生が完了しない場合のフォールバックタイムアウト（ミリ秒）
-const PLAYBACK_TIMEOUT_MS = 60_000;
+// 長い路線放送でも途切れないよう十分な余裕を持たせつつ、
+// didJustFinishが発火しないエッジケースでのデッドロックを防止する
+const PLAYBACK_TIMEOUT_MS = 300_000;
 
 // 日本語再生完了後に英語プレイヤーを生成するまでのディレイ（ミリ秒）
 // ネイティブ音声セッションが安定するまで待機し、英語再生の開始失敗を防ぐ

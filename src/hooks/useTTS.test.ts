@@ -312,8 +312,8 @@ describe('useTTS', () => {
       expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
     });
 
-    // 60秒のタイムアウトを発火
-    jest.advanceTimersByTime(60_000);
+    // 300秒のタイムアウトを発火
+    jest.advanceTimersByTime(300_000);
 
     expect(warnSpy).toHaveBeenCalledWith(
       '[useTTS] Playback safety timeout reached, force resetting'
