@@ -18,7 +18,7 @@ const googleAuth = new GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/cloud-platform'],
 });
 
-const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
+const GEMINI_TTS_MODEL = 'gemini-2.5-pro-tts';
 const GOOGLE_TTS_API_VERSION = 'v1';
 
 interface SynthesizedAudio {
@@ -123,7 +123,7 @@ const synthesizeWithGemini = async (
       },
     }),
     method: 'POST',
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(60000),
   });
 
   const json = (await res.json()) as {
