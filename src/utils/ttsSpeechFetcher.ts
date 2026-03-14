@@ -9,6 +9,8 @@ export interface FetchSpeechOptions {
   idToken: string;
   jaVoiceName?: string;
   enVoiceName?: string;
+  jaPrompt?: string;
+  enPrompt?: string;
 }
 
 const getSampleRateFromMimeType = (mimeType: string): number => {
@@ -96,7 +98,7 @@ const fetchCache = new Map<
 >();
 
 const buildCacheKey = (opts: FetchSpeechOptions): string =>
-  `${opts.textJa}\0${opts.textEn}\0${opts.jaVoiceName ?? ''}\0${opts.enVoiceName ?? ''}`;
+  `${opts.textJa}\0${opts.textEn}\0${opts.jaVoiceName ?? ''}\0${opts.enVoiceName ?? ''}\0${opts.jaPrompt ?? ''}\0${opts.enPrompt ?? ''}`;
 
 export const clearFetchCache = (): void => {
   fetchCache.clear();
@@ -105,7 +107,16 @@ export const clearFetchCache = (): void => {
 export const fetchSpeechAudio = async (
   options: FetchSpeechOptions
 ): Promise<{ id: string; pathJa: string; pathEn: string } | null> => {
-  const { textJa, textEn, apiUrl, idToken, jaVoiceName, enVoiceName } = options;
+  const {
+    textJa,
+    textEn,
+    apiUrl,
+    idToken,
+    jaVoiceName,
+    enVoiceName,
+    jaPrompt,
+    enPrompt,
+  } = options;
 
   if (!textJa.length || !textEn.length) {
     return null;
@@ -123,6 +134,8 @@ export const fetchSpeechAudio = async (
       ssmlEn: `<speak>${textEn.trim()}</speak>`,
       ...(jaVoiceName ? { jaVoiceName } : {}),
       ...(enVoiceName ? { enVoiceName } : {}),
+      ...(jaPrompt ? { jaPrompt } : {}),
+      ...(enPrompt ? { enPrompt } : {}),
     },
   };
 
