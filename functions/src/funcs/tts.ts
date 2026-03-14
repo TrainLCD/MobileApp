@@ -251,10 +251,26 @@ export const tts = onCall(
       (typeof req.data.enPrompt === 'string' && req.data.enPrompt.trim()) ||
       EN_TTS_PROMPT;
 
+    const strippedJa = stripSsml(ssmlJa);
+    const strippedEn = stripSsml(ssmlEn);
+
+    if (strippedJa.trim().length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        'ssmlJa contains no visible text after stripping SSML tags'
+      );
+    }
+    if (strippedEn.trim().length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        'ssmlEn contains no visible text after stripping SSML tags'
+      );
+    }
+
     const PROMPT_BYTE_LIMIT = 4000;
     const COMBINED_BYTE_LIMIT = 8000;
-    const jaTextBytes = Buffer.byteLength(stripSsml(ssmlJa), 'utf8');
-    const enTextBytes = Buffer.byteLength(stripSsml(ssmlEn), 'utf8');
+    const jaTextBytes = Buffer.byteLength(strippedJa, 'utf8');
+    const enTextBytes = Buffer.byteLength(strippedEn, 'utf8');
     const jaPromptBytes = Buffer.byteLength(jaPrompt, 'utf8');
     const enPromptBytes = Buffer.byteLength(enPrompt, 'utf8');
 
