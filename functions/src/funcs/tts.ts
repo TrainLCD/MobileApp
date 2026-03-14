@@ -258,6 +258,18 @@ export const tts = onCall(
     const jaPromptBytes = Buffer.byteLength(jaPrompt, 'utf8');
     const enPromptBytes = Buffer.byteLength(enPrompt, 'utf8');
 
+    if (jaTextBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `ssmlJa text exceeds ${PROMPT_BYTE_LIMIT} byte limit (${jaTextBytes} bytes)`
+      );
+    }
+    if (enTextBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `ssmlEn text exceeds ${PROMPT_BYTE_LIMIT} byte limit (${enTextBytes} bytes)`
+      );
+    }
     if (jaPromptBytes > PROMPT_BYTE_LIMIT) {
       throw new HttpsError(
         'invalid-argument',

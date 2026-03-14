@@ -133,22 +133,19 @@ export const fetchSpeechAudio = async (
     return cached;
   }
 
+  const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
+  const normalizedEnVoiceName = normalizeOptional(enVoiceName);
+  const normalizedJaPrompt = normalizeOptional(jaPrompt);
+  const normalizedEnPrompt = normalizeOptional(enPrompt);
+
   const reqBody = {
     data: {
       ssmlJa: `<speak>${textJa.trim()}</speak>`,
       ssmlEn: `<speak>${textEn.trim()}</speak>`,
-      ...(normalizeOptional(jaVoiceName)
-        ? { jaVoiceName: normalizeOptional(jaVoiceName) }
-        : {}),
-      ...(normalizeOptional(enVoiceName)
-        ? { enVoiceName: normalizeOptional(enVoiceName) }
-        : {}),
-      ...(normalizeOptional(jaPrompt)
-        ? { jaPrompt: normalizeOptional(jaPrompt) }
-        : {}),
-      ...(normalizeOptional(enPrompt)
-        ? { enPrompt: normalizeOptional(enPrompt) }
-        : {}),
+      ...(normalizedJaVoiceName ? { jaVoiceName: normalizedJaVoiceName } : {}),
+      ...(normalizedEnVoiceName ? { enVoiceName: normalizedEnVoiceName } : {}),
+      ...(normalizedJaPrompt ? { jaPrompt: normalizedJaPrompt } : {}),
+      ...(normalizedEnPrompt ? { enPrompt: normalizedEnPrompt } : {}),
     },
   };
 
