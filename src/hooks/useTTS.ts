@@ -38,8 +38,7 @@ export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
-  const { ttsJaVoiceName, ttsEnVoiceName, ttsJaPrompt, ttsEnPrompt } =
-    useAtomValue(tuningState);
+  const { ttsJaVoiceName, ttsEnVoiceName } = useAtomValue(tuningState);
   const setTuning = useSetAtom(tuningState);
   const currentLine = useCurrentLine();
   const stoppingState = useStoppingState();
@@ -90,18 +89,14 @@ export const useTTS = (): void => {
 
   useEffect(() => {
     (async () => {
-      const [jaVoice, enVoice, jaPrompt, enPrompt] = await Promise.all([
+      const [jaVoice, enVoice] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_PROMPT),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_PROMPT),
       ]);
       setTuning((prev) => ({
         ...prev,
         ttsJaVoiceName: jaVoice || prev.ttsJaVoiceName,
         ttsEnVoiceName: enVoice || prev.ttsEnVoiceName,
-        ttsJaPrompt: jaPrompt ?? '',
-        ttsEnPrompt: enPrompt ?? '',
       }));
     })();
   }, [setTuning]);
@@ -266,8 +261,6 @@ export const useTTS = (): void => {
           idToken,
           jaVoiceName: ttsJaVoiceName,
           enVoiceName: ttsEnVoiceName,
-          jaPrompt: ttsJaPrompt || undefined,
-          enPrompt: ttsEnPrompt || undefined,
         });
 
         if (!fetched) {
@@ -286,9 +279,7 @@ export const useTTS = (): void => {
       finishPlaying,
       speakFromPath,
       ttsApiUrl,
-      ttsEnPrompt,
       ttsEnVoiceName,
-      ttsJaPrompt,
       ttsJaVoiceName,
       user,
     ]
@@ -318,8 +309,6 @@ export const useTTS = (): void => {
           idToken,
           jaVoiceName: ttsJaVoiceName,
           enVoiceName: ttsEnVoiceName,
-          jaPrompt: ttsJaPrompt || undefined,
-          enPrompt: ttsEnPrompt || undefined,
         });
       } catch (e) {
         console.warn('[useTTS] Prefetch failed:', e);
@@ -334,9 +323,7 @@ export const useTTS = (): void => {
     textJa,
     textEn,
     ttsApiUrl,
-    ttsEnPrompt,
     ttsEnVoiceName,
-    ttsJaPrompt,
     ttsJaVoiceName,
     user,
   ]);
