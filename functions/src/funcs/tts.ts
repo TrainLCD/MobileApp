@@ -34,10 +34,17 @@ const getTtsConfig = async (): Promise<
   if (ttsConfigCache && Date.now() - ttsConfigCache.fetchedAt < TTS_CONFIG_CACHE_TTL_MS) {
     return ttsConfigCache.data;
   }
-  const doc = await firestore.collection('configs').doc('tts').get();
-  const data = doc.data();
-  ttsConfigCache = { data, fetchedAt: Date.now() };
-  return data;
+  try {
+    const doc = await firestore.collection('configs').doc('tts').get();
+    const data = doc.data();
+    ttsConfigCache = { data, fetchedAt: Date.now() };
+    return data;
+  } catch (e) {
+    if (ttsConfigCache) {
+      return ttsConfigCache.data;
+    }
+    throw e;
+  }
 };
 
 const JA_TTS_PROMPT = [
@@ -238,10 +245,12 @@ export const tts = onCall(
     const defaultEnVoice = ttsConfig?.enVoiceName || DEFAULT_TTS_VOICE_NAME;
 
     const jaVoiceName =
-      (typeof req.data.jaVoiceName === 'string' && req.data.jaVoiceName) ||
+      (typeof req.data.jaVoiceName === 'string' &&
+        req.data.jaVoiceName.trim()) ||
       defaultJaVoice;
     const enVoiceName =
-      (typeof req.data.enVoiceName === 'string' && req.data.enVoiceName) ||
+      (typeof req.data.enVoiceName === 'string' &&
+        req.data.enVoiceName.trim()) ||
       defaultEnVoice;
 
     const jaPrompt =
