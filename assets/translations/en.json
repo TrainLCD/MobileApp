@@ -143,6 +143,8 @@
   "tuningItemTTSVoice": "TTS Voice",
   "tuningItemTTSJaVoiceName": "Japanese voice name",
   "tuningItemTTSEnVoiceName": "English voice name",
+  "tuningItemTTSJaPrompt": "Japanese prompt",
+  "tuningItemTTSEnPrompt": "English prompt",
   "tuningItemLocationAccuracy": "location accuracy",
   "headerDelayTooShortErrorText": "Header animation delay must be greater than the Header animation duration.",
   "nanErrorText": "The value must be entered numerically.",

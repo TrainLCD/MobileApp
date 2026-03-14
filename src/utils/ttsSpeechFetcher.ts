@@ -9,6 +9,8 @@ export interface FetchSpeechOptions {
   idToken: string;
   jaVoiceName?: string;
   enVoiceName?: string;
+  jaPrompt?: string;
+  enPrompt?: string;
 }
 
 const getSampleRateFromMimeType = (mimeType: string): number => {
@@ -95,8 +97,13 @@ const fetchCache = new Map<
   { id: string; pathJa: string; pathEn: string }
 >();
 
+const normalizeOptional = (val: string | undefined): string => {
+  const trimmed = (val ?? '').trim();
+  return trimmed.length > 0 ? trimmed : '';
+};
+
 const buildCacheKey = (opts: FetchSpeechOptions): string =>
-  `${opts.textJa}\0${opts.textEn}\0${opts.jaVoiceName ?? ''}\0${opts.enVoiceName ?? ''}`;
+  `${opts.textJa}\0${opts.textEn}\0${normalizeOptional(opts.jaVoiceName)}\0${normalizeOptional(opts.enVoiceName)}\0${normalizeOptional(opts.jaPrompt)}\0${normalizeOptional(opts.enPrompt)}`;
 
 export const clearFetchCache = (): void => {
   fetchCache.clear();
@@ -105,7 +112,16 @@ export const clearFetchCache = (): void => {
 export const fetchSpeechAudio = async (
   options: FetchSpeechOptions
 ): Promise<{ id: string; pathJa: string; pathEn: string } | null> => {
-  const { textJa, textEn, apiUrl, idToken, jaVoiceName, enVoiceName } = options;
+  const {
+    textJa,
+    textEn,
+    apiUrl,
+    idToken,
+    jaVoiceName,
+    enVoiceName,
+    jaPrompt,
+    enPrompt,
+  } = options;
 
   if (!textJa.length || !textEn.length) {
     return null;
@@ -117,12 +133,19 @@ export const fetchSpeechAudio = async (
     return cached;
   }
 
+  const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
+  const normalizedEnVoiceName = normalizeOptional(enVoiceName);
+  const normalizedJaPrompt = normalizeOptional(jaPrompt);
+  const normalizedEnPrompt = normalizeOptional(enPrompt);
+
   const reqBody = {
     data: {
       ssmlJa: `<speak>${textJa.trim()}</speak>`,
       ssmlEn: `<speak>${textEn.trim()}</speak>`,
-      ...(jaVoiceName ? { jaVoiceName } : {}),
-      ...(enVoiceName ? { enVoiceName } : {}),
+      ...(normalizedJaVoiceName ? { jaVoiceName: normalizedJaVoiceName } : {}),
+      ...(normalizedEnVoiceName ? { enVoiceName: normalizedEnVoiceName } : {}),
+      ...(normalizedJaPrompt ? { jaPrompt: normalizedJaPrompt } : {}),
+      ...(normalizedEnPrompt ? { enPrompt: normalizedEnPrompt } : {}),
     },
   };
 

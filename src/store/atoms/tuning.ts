@@ -3,6 +3,7 @@ import {
   DEFAULT_BOTTOM_TRANSITION_INTERVAL,
   DEFAULT_HEADER_TRANSITION_DELAY,
   DEFAULT_HEADER_TRANSITION_INTERVAL,
+  DEFAULT_TTS_VOICE_NAME,
 } from '../../constants';
 
 export type TuningState = {
@@ -14,6 +15,8 @@ export type TuningState = {
   telemetryEnabled: boolean;
   ttsJaVoiceName: string;
   ttsEnVoiceName: string;
+  ttsJaPrompt: string;
+  ttsEnPrompt: string;
 };
 
 const tuningState = atom<TuningState>({
@@ -23,8 +26,10 @@ const tuningState = atom<TuningState>({
   devOverlayEnabled: true,
   untouchableModeEnabled: false,
   telemetryEnabled: false,
-  ttsJaVoiceName: '',
-  ttsEnVoiceName: '',
+  ttsJaVoiceName: DEFAULT_TTS_VOICE_NAME,
+  ttsEnVoiceName: DEFAULT_TTS_VOICE_NAME,
+  ttsJaPrompt: '',
+  ttsEnPrompt: '',
 });
 
 export default tuningState;

@@ -144,6 +144,8 @@
   "tuningItemTTSVoice": "TTS ボイス",
   "tuningItemTTSJaVoiceName": "日本語ボイス名",
   "tuningItemTTSEnVoiceName": "英語ボイス名",
+  "tuningItemTTSJaPrompt": "日本語プロンプト",
+  "tuningItemTTSEnPrompt": "英語プロンプト",
   "tuningItemLocationAccuracy": "位置情報の精度",
   "headerDelayTooShortErrorText": "ヘッダーアニメーション遅延はヘッダーアニメーション時間より大きい値である必要があります。",
   "nanErrorText": "値は数値で入力してください。",
