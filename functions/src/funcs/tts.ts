@@ -20,6 +20,56 @@ const googleAuth = new GoogleAuth({
 
 const GEMINI_TTS_MODEL = 'gemini-2.5-flash-tts';
 const GOOGLE_TTS_API_VERSION = 'v1';
+const DEFAULT_TTS_VOICE_NAME = 'Aoede';
+
+const TTS_CONFIG_CACHE_TTL_MS = 5 * 60 * 1000; // 5分
+let ttsConfigCache: {
+  data: FirebaseFirestore.DocumentData | undefined;
+  fetchedAt: number;
+} | null = null;
+
+const getTtsConfig = async (): Promise<
+  FirebaseFirestore.DocumentData | undefined
+> => {
+  if (ttsConfigCache && Date.now() - ttsConfigCache.fetchedAt < TTS_CONFIG_CACHE_TTL_MS) {
+    return ttsConfigCache.data;
+  }
+  try {
+    const doc = await firestore.collection('configs').doc('tts').get();
+    const data = doc.data();
+    ttsConfigCache = { data, fetchedAt: Date.now() };
+    return data;
+  } catch (e) {
+    if (ttsConfigCache) {
+      return ttsConfigCache.data;
+    }
+    throw e;
+  }
+};
+
+const JA_TTS_PROMPT = [
+  '以下の日本語を、現代的な鉄道自動放送のように読み上げてください。',
+  '全体的に平板なイントネーションを維持し、感情を込めず淡々と読んでください。',
+  '文のイントネーションは文末に向かって自然に下降させてください。',
+  '助詞（は、の、で、を等）で不自然にピッチを上げないでください。',
+  '駅名や路線名は平板アクセントで読んでください（一般会話のアクセントとは異なります）。',
+  '無駄な間を入れず、一定のテンポで読み進めてください。',
+  '漢字の読みは一文字も省略せず正確に読んでください。',
+  '特に路線名は正式な読みに従ってください（例：副都心線→ふくとしんせん、東海道線→とうかいどうせん、山手線→やまのてせん）。',
+  '鉄道会社の略称も正確に読んでください（例：名鉄→めいてつ、京急→けいきゅう、京王→けいおう、阪急→はんきゅう、阪神→はんしん、南海→なんかい、近鉄→きんてつ、西鉄→にしてつ、東急→とうきゅう、小田急→おだきゅう、京成→けいせい、相鉄→そうてつ）。',
+].join('');
+
+const EN_TTS_PROMPT = [
+  'Read the following in a calm, clear, and composed tone like a modern train announcement.',
+  ' Speak quickly and crisply with a swift, efficient delivery.',
+  ' Do not linger on words or pause unnecessarily.',
+  ' Maintain a steady, relaxed intonation despite the fast pace.',
+  ' The text contains Japanese railway station names and line names in romanized form.',
+  ' Pronounce them using Japanese vowel rules, NOT English rules: a=ah, i=ee, u=oo, e=eh, o=oh.',
+  ' Every vowel is always pronounced the same way regardless of surrounding letters',
+  ' (e.g. "Inage" = ee-nah-geh, NOT "inn-idge"; "Meguro" = meh-goo-roh; "Ebisu" = eh-bee-soo; "Ome" = oh-meh, NOT "ohm").',
+  ' Never apply English spelling conventions like silent e, soft g, or vowel shifts to these names.',
+].join('');
 
 interface SynthesizedAudio {
   audioContent: string;
@@ -80,9 +130,20 @@ const stripSsml = (text: string): string =>
     .replace(/\s{2,}/g, ' ')
     .trim();
 
+const getAccessToken = async (): Promise<string> => {
+  const client = await googleAuth.getClient();
+  const accessTokenResponse = await client.getAccessToken();
+  const token = accessTokenResponse.token;
+  if (!token) {
+    throw new Error('Failed to acquire Google access token for Gemini TTS');
+  }
+  return token;
+};
+
 /** Cloud Text-to-Speech の Gemini-TTS を使用してテキストを音声に変換する。 */
 const synthesizeWithGemini = async (
   projectId: string,
+  accessToken: string,
   text: string,
   languageCode: string,
   voiceName: string,
@@ -91,13 +152,6 @@ const synthesizeWithGemini = async (
     volumeGainDb?: number;
   }
 ): Promise<SynthesizedAudio> => {
-  const client = await googleAuth.getClient();
-  const accessTokenResponse = await client.getAccessToken();
-  const accessToken = accessTokenResponse.token;
-  if (!accessToken) {
-    throw new Error('Failed to acquire Google access token for Gemini TTS');
-  }
-
   const ttsUrl = `https://texttospeech.googleapis.com/${GOOGLE_TTS_API_VERSION}/text:synthesize`;
   const res = await fetch(ttsUrl, {
     headers: {
@@ -180,26 +234,91 @@ export const tts = onCall(
 
     let ttsConfig: FirebaseFirestore.DocumentData | undefined;
     try {
-      const ttsConfigDoc = await firestore
-        .collection('configs')
-        .doc('tts')
-        .get();
-      ttsConfig = ttsConfigDoc.data();
+      ttsConfig = await getTtsConfig();
     } catch (e) {
       console.warn(
         'Failed to read TTS config from Firestore, using defaults:',
         e
       );
     }
-    const defaultJaVoice = ttsConfig?.jaVoiceName || 'Aoede';
-    const defaultEnVoice = ttsConfig?.enVoiceName || 'Aoede';
+    const defaultJaVoice = ttsConfig?.jaVoiceName || DEFAULT_TTS_VOICE_NAME;
+    const defaultEnVoice = ttsConfig?.enVoiceName || DEFAULT_TTS_VOICE_NAME;
 
     const jaVoiceName =
-      (typeof req.data.jaVoiceName === 'string' && req.data.jaVoiceName) ||
+      (typeof req.data.jaVoiceName === 'string' &&
+        req.data.jaVoiceName.trim()) ||
       defaultJaVoice;
     const enVoiceName =
-      (typeof req.data.enVoiceName === 'string' && req.data.enVoiceName) ||
+      (typeof req.data.enVoiceName === 'string' &&
+        req.data.enVoiceName.trim()) ||
       defaultEnVoice;
+
+    const jaPrompt =
+      (typeof req.data.jaPrompt === 'string' && req.data.jaPrompt.trim()) ||
+      JA_TTS_PROMPT;
+    const enPrompt =
+      (typeof req.data.enPrompt === 'string' && req.data.enPrompt.trim()) ||
+      EN_TTS_PROMPT;
+
+    const strippedJa = stripSsml(ssmlJa);
+    const strippedEn = stripSsml(ssmlEn);
+
+    if (strippedJa.trim().length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        'ssmlJa contains no visible text after stripping SSML tags'
+      );
+    }
+    if (strippedEn.trim().length === 0) {
+      throw new HttpsError(
+        'invalid-argument',
+        'ssmlEn contains no visible text after stripping SSML tags'
+      );
+    }
+
+    const PROMPT_BYTE_LIMIT = 4000;
+    const COMBINED_BYTE_LIMIT = 8000;
+    const jaTextBytes = Buffer.byteLength(strippedJa, 'utf8');
+    const enTextBytes = Buffer.byteLength(strippedEn, 'utf8');
+    const jaPromptBytes = Buffer.byteLength(jaPrompt, 'utf8');
+    const enPromptBytes = Buffer.byteLength(enPrompt, 'utf8');
+
+    if (jaTextBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `ssmlJa text exceeds ${PROMPT_BYTE_LIMIT} byte limit (${jaTextBytes} bytes)`
+      );
+    }
+    if (enTextBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `ssmlEn text exceeds ${PROMPT_BYTE_LIMIT} byte limit (${enTextBytes} bytes)`
+      );
+    }
+    if (jaPromptBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `jaPrompt exceeds ${PROMPT_BYTE_LIMIT} byte limit (${jaPromptBytes} bytes)`
+      );
+    }
+    if (enPromptBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `enPrompt exceeds ${PROMPT_BYTE_LIMIT} byte limit (${enPromptBytes} bytes)`
+      );
+    }
+    if (jaTextBytes + jaPromptBytes > COMBINED_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `Japanese text + prompt exceeds ${COMBINED_BYTE_LIMIT} byte limit`
+      );
+    }
+    if (enTextBytes + enPromptBytes > COMBINED_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `English text + prompt exceeds ${COMBINED_BYTE_LIMIT} byte limit`
+      );
+    }
 
     const voicesCollection = firestore
       .collection('caches')
@@ -207,10 +326,12 @@ export const tts = onCall(
       .collection('voices');
 
     const hashAlgorithm = 'sha256';
-    const version = 9;
+    const version = 10;
     const hashPayloadObj = {
       enModel: GEMINI_TTS_MODEL,
+      enPrompt,
       enVoiceName,
+      jaPrompt,
       jaVoiceName,
       ssmlEn,
       ssmlJa,
@@ -276,21 +397,10 @@ export const tts = onCall(
     }
 
     try {
+      const accessToken = await getAccessToken();
       const [jaAudio, enAudio] = await Promise.all([
-        synthesizeWithGemini(
-          projectId,
-          ssmlJa,
-          'ja-JP',
-          jaVoiceName,
-          '以下の日本語を、現代的な鉄道自動放送のように読み上げてください。全体的に平板なイントネーションを維持し、感情を込めず淡々と読んでください。文のイントネーションは文末に向かって自然に下降させてください。助詞（は、の、で、を等）で不自然にピッチを上げないでください。駅名や路線名は平板アクセントで読んでください（一般会話のアクセントとは異なります）。無駄な間を入れず、一定のテンポで読み進めてください。漢字の読みは一文字も省略せず正確に読んでください。特に路線名は正式な読みに従ってください（例：副都心線→ふくとしんせん、東海道線→とうかいどうせん、山手線→やまのてせん）。鉄道会社の略称も正確に読んでください（例：名鉄→めいてつ、京急→けいきゅう、京王→けいおう、阪急→はんきゅう、阪神→はんしん、南海→なんかい、近鉄→きんてつ、西鉄→にしてつ、東急→とうきゅう、小田急→おだきゅう、京成→けいせい、相鉄→そうてつ）。'
-        ),
-        synthesizeWithGemini(
-          projectId,
-          ssmlEn,
-          'en-US',
-          enVoiceName,
-          'Read the following in a calm, clear, and composed tone like a modern train announcement. Speak quickly and crisply with a swift, efficient delivery. Do not linger on words or pause unnecessarily. Maintain a steady, relaxed intonation despite the fast pace. The text contains Japanese railway station names and line names in romanized form. Pronounce them using Japanese vowel rules, NOT English rules: a=ah, i=ee, u=oo, e=eh, o=oh. Every vowel is always pronounced the same way regardless of surrounding letters (e.g. "Inage" = ee-nah-geh, NOT "inn-idge"; "Meguro" = meh-goo-roh; "Ebisu" = eh-bee-soo; "Ome" = oh-meh, NOT "ohm"). Never apply English spelling conventions like silent e, soft g, or vowel shifts to these names.'
-        ),
+        synthesizeWithGemini(projectId, accessToken, ssmlJa, 'ja-JP', jaVoiceName, jaPrompt),
+        synthesizeWithGemini(projectId, accessToken, ssmlEn, 'en-US', enVoiceName, enPrompt),
       ]);
       const jaAudioContent = jaAudio.audioContent;
       const jaAudioMimeType = jaAudio.mimeType || 'audio/mpeg';

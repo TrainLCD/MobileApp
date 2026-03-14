@@ -17,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ASYNC_STORAGE_KEYS, FONTS } from '~/constants';
+import { ASYNC_STORAGE_KEYS, DEFAULT_TTS_VOICE_NAME, FONTS } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
@@ -72,7 +72,41 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     width: '50%',
   },
+  promptInput: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    maxHeight: 120,
+    textAlignVertical: 'top',
+    fontSize: RFValue(11),
+  },
 });
+
+const DEFAULT_JA_PROMPT = [
+  '以下の日本語を、現代的な鉄道自動放送のように読み上げてください。',
+  '全体的に平板なイントネーションを維持し、感情を込めず淡々と読んでください。',
+  '文のイントネーションは文末に向かって自然に下降させてください。',
+  '助詞（は、の、で、を等）で不自然にピッチを上げないでください。',
+  '駅名や路線名は平板アクセントで読んでください（一般会話のアクセントとは異なります）。',
+  '無駄な間を入れず、一定のテンポで読み進めてください。',
+  '漢字の読みは一文字も省略せず正確に読んでください。',
+  '特に路線名は正式な読みに従ってください（例：副都心線→ふくとしんせん、東海道線→とうかいどうせん、山手線→やまのてせん）。',
+  '鉄道会社の略称も正確に読んでください（例：名鉄→めいてつ、京急→けいきゅう、京王→けいおう、阪急→はんきゅう、阪神→はんしん、南海→なんかい、近鉄→きんてつ、西鉄→にしてつ、東急→とうきゅう、小田急→おだきゅう、京成→けいせい、相鉄→そうてつ）。',
+].join('');
+
+const DEFAULT_EN_PROMPT = [
+  'Read the following in a calm, clear, and composed tone like a modern train announcement.',
+  ' Speak quickly and crisply with a swift, efficient delivery.',
+  ' Do not linger on words or pause unnecessarily.',
+  ' Maintain a steady, relaxed intonation despite the fast pace.',
+  ' The text contains Japanese railway station names and line names in romanized form.',
+  ' Pronounce them using Japanese vowel rules, NOT English rules: a=ah, i=ee, u=oo, e=eh, o=oh.',
+  ' Every vowel is always pronounced the same way regardless of surrounding letters',
+  ' (e.g. "Inage" = ee-nah-geh, NOT "inn-idge"; "Meguro" = meh-goo-roh; "Ebisu" = eh-bee-soo; "Ome" = oh-meh, NOT "ohm").',
+  ' Never apply English spelling conventions like silent e, soft g, or vowel shifts to these names.',
+].join('');
 
 const TTS_VOICE_NAMES = [
   'Achernar',
@@ -100,14 +134,18 @@ const TuningSettings: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const [enVoice, jaVoice] = await Promise.all([
+      const [enVoice, jaVoice, jaPrompt, enPrompt] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_PROMPT),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_PROMPT),
       ]);
       setSettings((prev) => ({
         ...prev,
-        ttsEnVoiceName: enVoice ?? '',
-        ttsJaVoiceName: jaVoice ?? '',
+        ttsEnVoiceName: enVoice || DEFAULT_TTS_VOICE_NAME,
+        ttsJaVoiceName: jaVoice || DEFAULT_TTS_VOICE_NAME,
+        ttsJaPrompt: jaPrompt ?? '',
+        ttsEnPrompt: enPrompt ?? '',
       }));
     })();
   }, [setSettings]);
@@ -208,6 +246,16 @@ const TuningSettings: React.FC = () => {
   const handleEnVoiceNameChange = (voice: string) => {
     setSettings((prev) => ({ ...prev, ttsEnVoiceName: voice }));
     AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME, voice);
+  };
+
+  const handleJaPromptChange = (text: string) => {
+    setSettings((prev) => ({ ...prev, ttsJaPrompt: text }));
+    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_JA_PROMPT, text);
+  };
+
+  const handleEnPromptChange = (text: string) => {
+    setSettings((prev) => ({ ...prev, ttsEnPrompt: text }));
+    AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TTS_EN_PROMPT, text);
   };
 
   const handleJaVoiceNameChange = (voice: string) => {
@@ -345,15 +393,11 @@ const TuningSettings: React.FC = () => {
         >
           <Typography
             style={{
-              color: settings.ttsJaVoiceName
-                ? isLEDTheme
-                  ? '#fff'
-                  : 'black'
-                : '#999',
+              color: isLEDTheme ? '#fff' : 'black',
               fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
           >
-            {settings.ttsJaVoiceName || translate('notSpecified')}
+            {settings.ttsJaVoiceName}
           </Typography>
         </Pressable>
 
@@ -368,17 +412,51 @@ const TuningSettings: React.FC = () => {
         >
           <Typography
             style={{
-              color: settings.ttsEnVoiceName
-                ? isLEDTheme
-                  ? '#fff'
-                  : 'black'
-                : '#999',
+              color: isLEDTheme ? '#fff' : 'black',
               fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             }}
           >
-            {settings.ttsEnVoiceName || translate('notSpecified')}
+            {settings.ttsEnVoiceName}
           </Typography>
         </Pressable>
+
+        <Typography style={styles.settingItemTitle}>
+          {translate('tuningItemTTSJaPrompt')}
+        </Typography>
+        <TextInput
+          style={[
+            styles.promptInput,
+            {
+              color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              borderColor: isLEDTheme ? '#666' : '#aaa',
+            },
+          ]}
+          onChangeText={handleJaPromptChange}
+          value={settings.ttsJaPrompt || DEFAULT_JA_PROMPT}
+          placeholder={DEFAULT_JA_PROMPT}
+          placeholderTextColor="#999"
+          multiline
+        />
+
+        <Typography style={styles.settingItemTitle}>
+          {translate('tuningItemTTSEnPrompt')}
+        </Typography>
+        <TextInput
+          style={[
+            styles.promptInput,
+            {
+              color: isLEDTheme ? '#fff' : 'black',
+              fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+              borderColor: isLEDTheme ? '#666' : '#aaa',
+            },
+          ]}
+          onChangeText={handleEnPromptChange}
+          value={settings.ttsEnPrompt || DEFAULT_EN_PROMPT}
+          placeholder={DEFAULT_EN_PROMPT}
+          placeholderTextColor="#999"
+          multiline
+        />
 
         <View style={styles.switchSettingItem}>
           {isLEDTheme ? (

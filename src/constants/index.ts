@@ -18,4 +18,5 @@ export * from './station';
 export * from './storage';
 export * from './theme';
 export * from './threshold';
+export * from './tts';
 export * from './url';
