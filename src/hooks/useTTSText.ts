@@ -845,7 +845,7 @@ export const useTTSText = (
               ? `Thank you for using the ${ph(
                   currentLine.nameRoman,
                   currentLine.nameIpa
-                )}. This is the ${yamanoteTrainTypeEn ?? ph(currentTrainType?.nameRoman) ?? 'Local'} train ${
+                )}. This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} train ${
                   connectedLines[0]?.nameRoman
                     ? `on the ${ph(connectedLines[0]?.nameRoman, connectedLines[0]?.nameIpa)}`
                     : ''
@@ -983,7 +983,7 @@ export const useTTSText = (
         [APP_THEME.JR_WEST]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${yamanoteTrainTypeEn ?? ph(currentTrainType?.nameRoman) ?? 'Local'} Service bound for ${boundForEn} ${
+              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} Service bound for ${boundForEn} ${
                   viaStation
                     ? `via ${ph(viaStation.nameRoman, viaStation.nameIpa)}`
                     : ''
@@ -1058,7 +1058,7 @@ export const useTTSText = (
             firstSpeech
               ? `Thank you for using the ${ph(currentLine.nameRoman, currentLine.nameIpa)}. `
               : ''
-          }This is the ${yamanoteTrainTypeEn ?? ph(currentTrainType?.nameRoman) ?? 'Local'} train bound for ${boundForEn}. The next station is ${ph(
+          }This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} train bound for ${boundForEn}. The next station is ${ph(
             nextStation?.nameRoman,
             nextStation?.nameIpa
           )} ${nextStationNumberText} ${
@@ -1103,7 +1103,7 @@ export const useTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `${firstSpeech ? `This is a ${yamanoteTrainTypeEn ?? ph(currentTrainType?.nameRoman) ?? 'Local'} train bound for ${boundForEn}.` : ''} The next station is ${ph(
+          NEXT: `${firstSpeech ? `This is a ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} train bound for ${boundForEn}.` : ''} The next station is ${ph(
             nextStation?.nameRoman,
             nextStation?.nameIpa
           )} ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}. ${
