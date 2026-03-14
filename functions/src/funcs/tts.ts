@@ -245,11 +245,43 @@ export const tts = onCall(
       defaultEnVoice;
 
     const jaPrompt =
-      (typeof req.data.jaPrompt === 'string' && req.data.jaPrompt) ||
+      (typeof req.data.jaPrompt === 'string' && req.data.jaPrompt.trim()) ||
       JA_TTS_PROMPT;
     const enPrompt =
-      (typeof req.data.enPrompt === 'string' && req.data.enPrompt) ||
+      (typeof req.data.enPrompt === 'string' && req.data.enPrompt.trim()) ||
       EN_TTS_PROMPT;
+
+    const PROMPT_BYTE_LIMIT = 4000;
+    const COMBINED_BYTE_LIMIT = 8000;
+    const jaTextBytes = Buffer.byteLength(stripSsml(ssmlJa), 'utf8');
+    const enTextBytes = Buffer.byteLength(stripSsml(ssmlEn), 'utf8');
+    const jaPromptBytes = Buffer.byteLength(jaPrompt, 'utf8');
+    const enPromptBytes = Buffer.byteLength(enPrompt, 'utf8');
+
+    if (jaPromptBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `jaPrompt exceeds ${PROMPT_BYTE_LIMIT} byte limit (${jaPromptBytes} bytes)`
+      );
+    }
+    if (enPromptBytes > PROMPT_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `enPrompt exceeds ${PROMPT_BYTE_LIMIT} byte limit (${enPromptBytes} bytes)`
+      );
+    }
+    if (jaTextBytes + jaPromptBytes > COMBINED_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `Japanese text + prompt exceeds ${COMBINED_BYTE_LIMIT} byte limit`
+      );
+    }
+    if (enTextBytes + enPromptBytes > COMBINED_BYTE_LIMIT) {
+      throw new HttpsError(
+        'invalid-argument',
+        `English text + prompt exceeds ${COMBINED_BYTE_LIMIT} byte limit`
+      );
+    }
 
     const voicesCollection = firestore
       .collection('caches')

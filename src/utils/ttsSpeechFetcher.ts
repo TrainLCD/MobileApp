@@ -97,8 +97,13 @@ const fetchCache = new Map<
   { id: string; pathJa: string; pathEn: string }
 >();
 
+const normalizeOptional = (val: string | undefined): string => {
+  const trimmed = (val ?? '').trim();
+  return trimmed.length > 0 ? trimmed : '';
+};
+
 const buildCacheKey = (opts: FetchSpeechOptions): string =>
-  `${opts.textJa}\0${opts.textEn}\0${opts.jaVoiceName ?? ''}\0${opts.enVoiceName ?? ''}\0${opts.jaPrompt ?? ''}\0${opts.enPrompt ?? ''}`;
+  `${opts.textJa}\0${opts.textEn}\0${normalizeOptional(opts.jaVoiceName)}\0${normalizeOptional(opts.enVoiceName)}\0${normalizeOptional(opts.jaPrompt)}\0${normalizeOptional(opts.enPrompt)}`;
 
 export const clearFetchCache = (): void => {
   fetchCache.clear();
@@ -132,10 +137,18 @@ export const fetchSpeechAudio = async (
     data: {
       ssmlJa: `<speak>${textJa.trim()}</speak>`,
       ssmlEn: `<speak>${textEn.trim()}</speak>`,
-      ...(jaVoiceName ? { jaVoiceName } : {}),
-      ...(enVoiceName ? { enVoiceName } : {}),
-      ...(jaPrompt ? { jaPrompt } : {}),
-      ...(enPrompt ? { enPrompt } : {}),
+      ...(normalizeOptional(jaVoiceName)
+        ? { jaVoiceName: normalizeOptional(jaVoiceName) }
+        : {}),
+      ...(normalizeOptional(enVoiceName)
+        ? { enVoiceName: normalizeOptional(enVoiceName) }
+        : {}),
+      ...(normalizeOptional(jaPrompt)
+        ? { jaPrompt: normalizeOptional(jaPrompt) }
+        : {}),
+      ...(normalizeOptional(enPrompt)
+        ? { enPrompt: normalizeOptional(enPrompt) }
+        : {}),
     },
   };
 
