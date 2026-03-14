@@ -9,8 +9,6 @@ export interface FetchSpeechOptions {
   idToken: string;
   jaVoiceName?: string;
   enVoiceName?: string;
-  jaPrompt?: string;
-  enPrompt?: string;
 }
 
 const getSampleRateFromMimeType = (mimeType: string): number => {
@@ -103,7 +101,7 @@ const normalizeOptional = (val: string | undefined): string => {
 };
 
 const buildCacheKey = (opts: FetchSpeechOptions): string =>
-  `${opts.textJa}\0${opts.textEn}\0${normalizeOptional(opts.jaVoiceName)}\0${normalizeOptional(opts.enVoiceName)}\0${normalizeOptional(opts.jaPrompt)}\0${normalizeOptional(opts.enPrompt)}`;
+  `${opts.textJa}\0${opts.textEn}\0${normalizeOptional(opts.jaVoiceName)}\0${normalizeOptional(opts.enVoiceName)}`;
 
 export const clearFetchCache = (): void => {
   fetchCache.clear();
@@ -112,16 +110,7 @@ export const clearFetchCache = (): void => {
 export const fetchSpeechAudio = async (
   options: FetchSpeechOptions
 ): Promise<{ id: string; pathJa: string; pathEn: string } | null> => {
-  const {
-    textJa,
-    textEn,
-    apiUrl,
-    idToken,
-    jaVoiceName,
-    enVoiceName,
-    jaPrompt,
-    enPrompt,
-  } = options;
+  const { textJa, textEn, apiUrl, idToken, jaVoiceName, enVoiceName } = options;
 
   if (!textJa.length || !textEn.length) {
     return null;
@@ -135,8 +124,6 @@ export const fetchSpeechAudio = async (
 
   const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
   const normalizedEnVoiceName = normalizeOptional(enVoiceName);
-  const normalizedJaPrompt = normalizeOptional(jaPrompt);
-  const normalizedEnPrompt = normalizeOptional(enPrompt);
 
   const reqBody = {
     data: {
@@ -144,8 +131,6 @@ export const fetchSpeechAudio = async (
       ssmlEn: `<speak>${textEn.trim()}</speak>`,
       ...(normalizedJaVoiceName ? { jaVoiceName: normalizedJaVoiceName } : {}),
       ...(normalizedEnVoiceName ? { enVoiceName: normalizedEnVoiceName } : {}),
-      ...(normalizedJaPrompt ? { jaPrompt: normalizedJaPrompt } : {}),
-      ...(normalizedEnPrompt ? { enPrompt: normalizedEnPrompt } : {}),
     },
   };
 
