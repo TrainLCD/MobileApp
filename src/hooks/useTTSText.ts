@@ -169,7 +169,7 @@ export const useTTSText = (
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
         : (directionalStops
-            ?.map((s) => ph(s?.nameRoman, s?.nameIpa))
+            ?.map((s) => ph(s?.nameRoman, s?.nameRomanIpa))
             .join(' and ') ?? ''),
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
@@ -784,15 +784,15 @@ export const useTTSText = (
 
       const map = {
         [APP_THEME.TOKYO_METRO]: {
-          NEXT: `The next stop is ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}${
+          NEXT: `The next stop is ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}${
             nextStationNumberText.length ? ` ${nextStationNumberText}` : '.'
           }${
             transferLines.length
               ? ` Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -800,15 +800,20 @@ export const useTTSText = (
             firstSpeech
               ? ` This train is the ${
                   yamanoteTrainTypeEn ??
-                  (currentTrainType ? ph(currentTrainType.nameRoman) : 'Local')
+                  (currentTrainType
+                    ? ph(
+                        currentTrainType.nameRoman,
+                        currentTrainType.nameRomanIpa
+                      )
+                    : 'Local')
                 } Service on the ${ph(
                   currentLine.nameRoman,
-                  currentLine.nameIpa
+                  currentLine.nameRomanIpa
                 )} bound for ${boundForEn}. ${
                   currentTrainType && afterNextStation
-                    ? `The next stop after ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}${`, is ${ph(
+                    ? `The next stop after ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}${`, is ${ph(
                         afterNextStation?.nameRoman,
-                        afterNextStation?.nameIpa
+                        afterNextStation?.nameRomanIpa
                       )}${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
                     : ''
                 }${
@@ -820,7 +825,7 @@ export const useTTSText = (
           }`,
           ARRIVING: `Arriving at ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${
             isNextStopTerminus ? ', the last stop.' : ''
           } ${
@@ -828,14 +833,14 @@ export const useTTSText = (
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
           }. ${
             isNextStopTerminus
-              ? `Thank you for using the ${ph(currentLine?.nameRoman, currentLine?.nameIpa)}.`
+              ? `Thank you for using the ${ph(currentLine?.nameRoman, currentLine?.nameRomanIpa)}.`
               : ''
           }`,
         },
@@ -844,16 +849,16 @@ export const useTTSText = (
             firstSpeech
               ? `Thank you for using the ${ph(
                   currentLine.nameRoman,
-                  currentLine.nameIpa
-                )}. This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} train ${
+                  currentLine.nameRomanIpa
+                )}. This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman, currentTrainType?.nameRomanIpa) || 'Local')} train ${
                   connectedLines[0]?.nameRoman
-                    ? `on the ${ph(connectedLines[0]?.nameRoman, connectedLines[0]?.nameIpa)}`
+                    ? `on the ${ph(connectedLines[0]?.nameRoman, connectedLines[0]?.nameRomanIpa)}`
                     : ''
                 } to ${boundForEn}. `
               : ''
           }The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${
             isNextStopTerminus ? ', the last stop' : ''
           } ${
@@ -861,15 +866,15 @@ export const useTTSText = (
               ? `Passengers changing to ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}`
                   )
                   .join(', ')}, Please transfer at this station.`
               : ''
           }`,
           ARRIVING: `We will soon make a brief stop at ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${
             isNextStopTerminus ? ', the last stop' : ''
           }${
@@ -877,46 +882,46 @@ export const useTTSText = (
               ? ` Passengers changing to ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}`
                   )
                   .join(', ')}, Please transfer at this station.`
               : ''
           }${
             currentTrainType && afterNextStation
-              ? ` The stop after ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}, will be ${ph(
+              ? ` The stop after ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}, will be ${ph(
                   afterNextStation.nameRoman,
-                  afterNextStation.nameIpa
+                  afterNextStation.nameRomanIpa
                 )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
-              ? ` Thank you for using the ${ph(currentLine?.nameRoman, currentLine?.nameIpa)}.`
+              ? ` Thank you for using the ${ph(currentLine?.nameRoman, currentLine?.nameRomanIpa)}.`
               : ''
           }`,
         },
         [APP_THEME.YAMANOTE]: {
           NEXT: `${
             firstSpeech
-              ? `This is the ${ph(currentLine.nameRoman, currentLine.nameIpa)} train bound for ${boundForEn}. `
+              ? `This is the ${ph(currentLine.nameRoman, currentLine.nameRomanIpa)} train bound for ${boundForEn}. `
               : ''
           }The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText} ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
           }`,
           ARRIVING: `The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${
             isNextStopTerminus ? ', terminal.' : ''
           } ${
@@ -924,8 +929,8 @@ export const useTTSText = (
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -943,25 +948,25 @@ export const useTTSText = (
         [APP_THEME.SAIKYO]: {
           NEXT: `${
             firstSpeech
-              ? `This is the ${ph(currentLine.nameRoman, currentLine.nameIpa)} train bound for ${boundForEn}. `
+              ? `This is the ${ph(currentLine.nameRoman, currentLine.nameRomanIpa)} train bound for ${boundForEn}. `
               : ''
           }The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${isNextStopTerminus ? ', terminal' : ''} ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
           }`,
           ARRIVING: `The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${
             isNextStopTerminus ? ', terminal.' : ''
           } ${
@@ -969,8 +974,8 @@ export const useTTSText = (
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -983,16 +988,16 @@ export const useTTSText = (
         [APP_THEME.JR_WEST]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} Service bound for ${boundForEn} ${
+              ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman, currentTrainType?.nameRomanIpa) || 'Local')} Service bound for ${boundForEn} ${
                   viaStation
-                    ? `via ${ph(viaStation.nameRoman, viaStation.nameIpa)}`
+                    ? `via ${ph(viaStation.nameRoman, viaStation.nameRomanIpa)}`
                     : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
-                      ? `${ph(s.nameRoman, s.nameIpa)} terminal`
-                      : `${ph(s.nameRoman, s.nameIpa)}`
+                      ? `${ph(s.nameRoman, s.nameRomanIpa)} terminal`
+                      : `${ph(s.nameRoman, s.nameRomanIpa)}`
                   )
                   .join(', ')}. ${
                   allStops
@@ -1008,11 +1013,11 @@ export const useTTSText = (
                         allStops
                           .slice(0, 5)
                           .filter((s) => s)
-                          .reverse()[0]?.nameIpa
+                          .reverse()[0]?.nameRomanIpa
                       )} will be announced later. `
                 }`
               : ''
-          }The next stop is ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}${
+          }The next stop is ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}${
             nextStationNumber?.lineSymbol?.length
               ? ` station number ${nextStationNumberText.replace(/\.$/, '')}.`
               : '.'
@@ -1021,15 +1026,15 @@ export const useTTSText = (
               ? `Transfer here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
           }`,
           ARRIVING: `We will soon be making a brief stop at ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )}${
             nextStationNumber?.lineSymbol?.length
               ? ` station number ${nextStationNumberText.replace(/\.$/, '')}.`
@@ -1039,8 +1044,8 @@ export const useTTSText = (
               ? `Transfer here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
@@ -1048,53 +1053,53 @@ export const useTTSText = (
             afterNextStation
               ? `After leaving ${ph(
                   nextStation?.nameRoman,
-                  nextStation?.nameIpa
-                )}, We will be stopping at ${ph(afterNextStation.nameRoman, afterNextStation.nameIpa)}.`
+                  nextStation?.nameRomanIpa
+                )}, We will be stopping at ${ph(afterNextStation.nameRoman, afterNextStation.nameRomanIpa)}.`
               : ''
           }`,
         },
         [APP_THEME.TOEI]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using the ${ph(currentLine.nameRoman, currentLine.nameIpa)}. `
+              ? `Thank you for using the ${ph(currentLine.nameRoman, currentLine.nameRomanIpa)}. `
               : ''
-          }This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} train bound for ${boundForEn}. The next station is ${ph(
+          }This is the ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman, currentTrainType?.nameRomanIpa) || 'Local')} train bound for ${boundForEn}. The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText} ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
           }`,
           ARRIVING: `We will soon be arriving at ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText} ${
             transferLines.length
               ? `Please change here for ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '.' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '.' : ','}`
                   )
                   .join(' ')}`
               : ''
           }${
             currentTrainType && afterNextStation
-              ? ` The stop after ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}, will be ${ph(
+              ? ` The stop after ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}, will be ${ph(
                   afterNextStation.nameRoman,
-                  afterNextStation.nameIpa
+                  afterNextStation.nameRomanIpa
                 )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
-              ? ` Thank you for using the ${ph(currentLine?.nameRoman, currentLine?.nameIpa)}.`
+              ? ` Thank you for using the ${ph(currentLine?.nameRoman, currentLine?.nameRomanIpa)}.`
               : ''
           }`,
         },
@@ -1103,36 +1108,36 @@ export const useTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `${firstSpeech ? `This is a ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman) || 'Local')} train bound for ${boundForEn}.` : ''} The next station is ${ph(
+          NEXT: `${firstSpeech ? `This is a ${yamanoteTrainTypeEn ?? (ph(currentTrainType?.nameRoman, currentTrainType?.nameRomanIpa) || 'Local')} train bound for ${boundForEn}.` : ''} The next station is ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )} ${nextStationNumberText}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''}. ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(
                     ' '
-                  )} at ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}.`
+                  )} at ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}.`
               : ''
           }`,
           ARRIVING: `We will soon be arriving at ${ph(
             nextStation?.nameRoman,
-            nextStation?.nameIpa
+            nextStation?.nameRomanIpa
           )}${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? ' terminal' : ''} ${nextStationNumberText}. ${
             transferLines.length
               ? `You can transfer to ${transferLines
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
-                      ? `and the ${ph(l.nameRoman, l.nameIpa)}.`
-                      : `the ${ph(l.nameRoman, l.nameIpa)}${a.length === 1 ? '' : ','}`
+                      ? `and the ${ph(l.nameRoman, l.nameRomanIpa)}.`
+                      : `the ${ph(l.nameRoman, l.nameRomanIpa)}${a.length === 1 ? '' : ','}`
                   )
                   .join(
                     ' '
-                  )} at ${ph(nextStation?.nameRoman, nextStation?.nameIpa)}. ${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? `Thank you for using the ${ph(currentLine.nameRoman, currentLine.nameIpa)}.` : ''}`
+                  )} at ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa)}. ${nextStation?.groupId === selectedBound?.groupId && !isLoopLine ? `Thank you for using the ${ph(currentLine.nameRoman, currentLine.nameRomanIpa)}.` : ''}`
               : ''
           }`,
         },
@@ -1153,7 +1158,7 @@ export const useTTSText = (
       nextStation?.groupId,
       selectedBound?.groupId,
       nextStation?.nameRoman,
-      nextStation?.nameIpa,
+      nextStation?.nameRomanIpa,
       nextStationNumber?.lineSymbol?.length,
       nextStationNumberText,
       selectedBound,
