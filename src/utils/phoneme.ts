@@ -1,4 +1,4 @@
-import katakanaToHiragana from './kanaToHiragana';
+import { TtsAlphabet, type TtsSegment } from '~/@types/graphql';
 
 const escapeXml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -6,14 +6,19 @@ const escapeXml = (s: string): string =>
 const escapeXmlAttr = (s: string): string =>
   escapeXml(s).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
-/** nameRomanIpa が定義されていれば SSML phoneme タグで囲み、なければ nameRoman をそのまま返す */
+/** TtsSegment 配列を SSML 文字列に変換する。IPA セグメントは phoneme タグで囲む */
 export const wrapPhoneme = (
-  nameRoman: string | null | undefined,
-  nameRomanIpa?: string | null | undefined,
-  nameKatakana?: string | null | undefined
+  segments: TtsSegment[] | null | undefined
 ): string => {
-  if (!nameRoman) return '';
-  if (!nameRomanIpa) return escapeXml(nameRoman);
-  const innerText = nameKatakana ? katakanaToHiragana(nameKatakana) : nameRoman;
-  return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameRomanIpa)}">${escapeXml(innerText)}</phoneme>`;
+  if (!segments?.length) return '';
+  return segments
+    .map((seg) => {
+      const text = seg.surface ?? seg.fallbackText ?? '';
+      const rendered =
+        seg.alphabet === TtsAlphabet.Ipa && seg.pronunciation
+          ? `<phoneme alphabet="ipa" ph="${escapeXmlAttr(seg.pronunciation)}">${escapeXml(seg.fallbackText ?? text)}</phoneme>`
+          : escapeXml(text);
+      return rendered + (seg.separator ? escapeXml(seg.separator) : '');
+    })
+    .join('');
 };

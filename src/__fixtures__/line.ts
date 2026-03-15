@@ -5,6 +5,7 @@ import {
   OperationStatus,
   StopCondition,
   TransportType,
+  TtsAlphabet,
 } from '~/@types/graphql';
 
 export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
@@ -24,6 +25,17 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
   nameFull: '都営新宿線',
   nameIpa: null,
   nameRomanIpa: null,
+  nameTtsSegments: [
+    {
+      __typename: 'TtsSegment',
+      alphabet: TtsAlphabet.Plain,
+      fallbackText: null,
+      lang: null,
+      pronunciation: null,
+      separator: null,
+      surface: 'Toei Shinjuku Line',
+    },
+  ],
   nameRoman: 'Toei Shinjuku Line',
   nameChinese: '都营新宿线',
   nameKorean: '도에이 신주쿠선',
@@ -53,6 +65,17 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
     nameChinese: '新宿',
     nameIpa: null,
     nameRomanIpa: null,
+    nameTtsSegments: [
+      {
+        __typename: 'TtsSegment',
+        alphabet: TtsAlphabet.Plain,
+        fallbackText: null,
+        lang: null,
+        pronunciation: null,
+        separator: null,
+        surface: 'Shinjuku',
+      },
+    ],
     nameKorean: '신주쿠',
     threeLetterCode: undefined,
     prefectureId: 13,
@@ -95,6 +118,17 @@ export const RYOMO_LINE: Line = {
   nameFull: '両毛線',
   nameIpa: null,
   nameRomanIpa: null,
+  nameTtsSegments: [
+    {
+      __typename: 'TtsSegment',
+      alphabet: TtsAlphabet.Plain,
+      fallbackText: null,
+      lang: null,
+      pronunciation: null,
+      separator: null,
+      surface: 'Ryomo Line',
+    },
+  ],
   nameRoman: 'Ryomo Line',
   nameChinese: '两毛线',
   nameKorean: '료모선',
@@ -116,6 +150,17 @@ export const RYOMO_LINE: Line = {
     nameChinese: '高崎',
     nameIpa: null,
     nameRomanIpa: null,
+    nameTtsSegments: [
+      {
+        __typename: 'TtsSegment',
+        alphabet: TtsAlphabet.Plain,
+        fallbackText: null,
+        lang: null,
+        pronunciation: null,
+        separator: null,
+        surface: 'Takasaki',
+      },
+    ],
     nameKorean: '다카사키',
     threeLetterCode: undefined,
     prefectureId: 10,

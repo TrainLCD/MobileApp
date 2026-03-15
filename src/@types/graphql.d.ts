@@ -66,6 +66,7 @@ export type Line = {
   nameRoman: Maybe<Scalars['String']['output']>;
   nameRomanIpa: Maybe<Scalars['String']['output']>;
   nameShort: Maybe<Scalars['String']['output']>;
+  nameTtsSegments: Maybe<Array<TtsSegment>>;
   station: Maybe<StationNested>;
   status: Maybe<OperationStatus>;
   trainType: Maybe<TrainTypeNested>;
@@ -88,6 +89,7 @@ export type LineNested = {
   nameRoman: Maybe<Scalars['String']['output']>;
   nameRomanIpa: Maybe<Scalars['String']['output']>;
   nameShort: Maybe<Scalars['String']['output']>;
+  nameTtsSegments: Maybe<Array<TtsSegment>>;
   station: Maybe<StationNested>;
   status: Maybe<OperationStatus>;
   trainType: Maybe<TrainTypeNested>;
@@ -263,6 +265,7 @@ export type Station = {
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
   nameRomanIpa: Maybe<Scalars['String']['output']>;
+  nameTtsSegments: Maybe<Array<TtsSegment>>;
   openedAt: Maybe<Scalars['String']['output']>;
   postalCode: Maybe<Scalars['String']['output']>;
   prefectureId: Maybe<Scalars['Int']['output']>;
@@ -293,6 +296,7 @@ export type StationNested = {
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
   nameRomanIpa: Maybe<Scalars['String']['output']>;
+  nameTtsSegments: Maybe<Array<TtsSegment>>;
   openedAt: Maybe<Scalars['String']['output']>;
   postalCode: Maybe<Scalars['String']['output']>;
   prefectureId: Maybe<Scalars['Int']['output']>;
@@ -343,6 +347,7 @@ export type TrainType = {
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
   nameRomanIpa: Maybe<Scalars['String']['output']>;
+  nameTtsSegments: Maybe<Array<TtsSegment>>;
   typeId: Maybe<Scalars['Int']['output']>;
 };
 
@@ -371,6 +376,7 @@ export type TrainTypeNested = {
   nameKorean: Maybe<Scalars['String']['output']>;
   nameRoman: Maybe<Scalars['String']['output']>;
   nameRomanIpa: Maybe<Scalars['String']['output']>;
+  nameTtsSegments: Maybe<Array<TtsSegment>>;
   typeId: Maybe<Scalars['Int']['output']>;
 };
 
@@ -380,6 +386,23 @@ export enum TransportType {
   RailAndBus = 'RailAndBus',
   TransportTypeUnspecified = 'TransportTypeUnspecified',
 }
+
+export enum TtsAlphabet {
+  Ipa = 'Ipa',
+  Plain = 'Plain',
+  TtsAlphabetUnspecified = 'TtsAlphabetUnspecified',
+  Yomigana = 'Yomigana',
+}
+
+export type TtsSegment = {
+  __typename: 'TtsSegment';
+  alphabet: Maybe<TtsAlphabet>;
+  fallbackText: Maybe<Scalars['String']['output']>;
+  lang: Maybe<Scalars['String']['output']>;
+  pronunciation: Maybe<Scalars['String']['output']>;
+  separator: Maybe<Scalars['String']['output']>;
+  surface: Maybe<Scalars['String']['output']>;
+};
 
 export type CompanyFieldsFragment = {
   __typename: 'Company';
