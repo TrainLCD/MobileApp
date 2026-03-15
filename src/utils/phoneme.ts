@@ -55,11 +55,12 @@ const groupSegments = (segments: TtsSegment[]): SegmentGroup[] => {
   return groups;
 };
 
-/** TtsSegment 配列を SSML 文字列に変換する。連続する IPA セグメントは単一の phoneme タグに結合する */
+/** TtsSegment 配列を SSML 文字列に変換する。連続する IPA セグメントは単一の phoneme タグに結合する。segments が空の場合は fallback を返す */
 export const wrapPhoneme = (
-  segments: TtsSegment[] | null | undefined
+  segments: TtsSegment[] | null | undefined,
+  fallback?: string | null
 ): string => {
-  if (!segments?.length) return '';
+  if (!segments?.length) return fallback ?? '';
 
   return groupSegments(segments)
     .map((group) => {

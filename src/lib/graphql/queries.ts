@@ -34,7 +34,19 @@ export const STATION_NUMBER_FRAGMENT = gql`
   }
 `;
 
+export const TTS_SEGMENT_FRAGMENT = gql`
+  fragment TtsSegmentFields on TtsSegment {
+    alphabet
+    fallbackText
+    lang
+    pronunciation
+    separator
+    surface
+  }
+`;
+
 export const TINY_TRAIN_TYPE_FRAGMENT = gql`
+  ${TTS_SEGMENT_FRAGMENT}
   fragment TinyTrainTypeFields on TrainTypeNested {
     id
     typeId
@@ -46,12 +58,7 @@ export const TINY_TRAIN_TYPE_FRAGMENT = gql`
     nameChinese
     nameKorean
     nameTtsSegments {
-      alphabet
-      fallbackText
-      lang
-      pronunciation
-      separator
-      surface
+      ...TtsSegmentFields
     }
     color
     direction
@@ -107,12 +114,7 @@ export const LINE_NESTED_FRAGMENT = gql`
     nameChinese
     nameKorean
     nameTtsSegments {
-      alphabet
-      fallbackText
-      lang
-      pronunciation
-      separator
-      surface
+      ...TtsSegmentFields
     }
     status
     transportType
@@ -132,12 +134,7 @@ export const TRAIN_TYPE_NESTED_FRAGMENT = gql`
     nameChinese
     nameKorean
     nameTtsSegments {
-      alphabet
-      fallbackText
-      lang
-      pronunciation
-      separator
-      surface
+      ...TtsSegmentFields
     }
     color
     direction
@@ -165,12 +162,7 @@ export const STATION_FRAGMENT = gql`
     nameChinese
     nameKorean
     nameTtsSegments {
-      alphabet
-      fallbackText
-      lang
-      pronunciation
-      separator
-      surface
+      ...TtsSegmentFields
     }
     threeLetterCode
     latitude
