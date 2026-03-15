@@ -23,6 +23,7 @@ const mkStation = (groupId: number, id: number = groupId): StationType => ({
   nameKatakana: '',
   nameRoman: undefined,
   nameChinese: undefined,
+  nameIpa: null,
   nameKorean: undefined,
   threeLetterCode: undefined,
   lines: [],

@@ -70,6 +70,7 @@ export const LINE_NESTED_FRAGMENT = gql`
       groupId
       name
       nameRoman
+    nameIpa
       nameChinese
       nameKorean
       hasTrainTypes
@@ -84,6 +85,7 @@ export const LINE_NESTED_FRAGMENT = gql`
     nameFull
     nameKatakana
     nameRoman
+    nameIpa
     nameShort
     nameChinese
     nameKorean
@@ -125,6 +127,7 @@ export const STATION_FRAGMENT = gql`
     name
     nameKatakana
     nameRoman
+    nameIpa
     nameChinese
     nameKorean
     threeLetterCode
@@ -184,6 +187,7 @@ export const STATION_PRESET_FRAGMENT = gql`
     groupId
     name
     nameRoman
+    nameIpa
     stationNumbers {
       ...StationNumberFields
     }
@@ -200,6 +204,7 @@ export const STATION_PRESET_FRAGMENT = gql`
       nameShort
       nameFull
       nameRoman
+    nameIpa
       lineSymbols {
         ...LineSymbolFields
       }
@@ -244,6 +249,7 @@ export const STATION_LIGHT_FRAGMENT = gql`
     groupId
     name
     nameRoman
+    nameIpa
     nameChinese
     nameKorean
     line {
@@ -310,6 +316,7 @@ export const LINE_ROUTE_FRAGMENT = gql`
     lineType
     nameShort
     nameRoman
+    nameIpa
     lineSymbols {
       ...LineSymbolFields
     }
@@ -318,6 +325,7 @@ export const LINE_ROUTE_FRAGMENT = gql`
       groupId
       name
       nameRoman
+    nameIpa
       nameChinese
       nameKorean
       hasTrainTypes
