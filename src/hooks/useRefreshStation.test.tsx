@@ -35,6 +35,7 @@ const mockStation: Station = {
   nameRoman: 'Test Station',
   nameChinese: undefined,
   nameIpa: null,
+  nameRomanIpa: null,
   nameKorean: undefined,
   threeLetterCode: undefined,
   latitude: 35.0,

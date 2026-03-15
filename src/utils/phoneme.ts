@@ -4,12 +4,12 @@ const escapeXml = (s: string): string =>
 const escapeXmlAttr = (s: string): string =>
   escapeXml(s).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
-/** nameIpa が定義されていれば SSML phoneme タグで囲み、なければ nameRoman をそのまま返す */
+/** nameRomanIpa が定義されていれば SSML phoneme タグで囲み、なければ nameRoman をそのまま返す */
 export const wrapPhoneme = (
   nameRoman: string | null | undefined,
-  nameIpa?: string | null | undefined
+  nameRomanIpa?: string | null | undefined
 ): string => {
   if (!nameRoman) return '';
-  if (!nameIpa) return escapeXml(nameRoman);
-  return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameIpa)}">${escapeXml(nameRoman)}</phoneme>`;
+  if (!nameRomanIpa) return escapeXml(nameRoman);
+  return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameRomanIpa)}">${escapeXml(nameRoman)}</phoneme>`;
 };
