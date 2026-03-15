@@ -813,7 +813,8 @@ export const useTTSText = (
                   currentTrainType && afterNextStation
                     ? `The next stop after ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa, nextStation?.nameKatakana)}${`, is ${ph(
                         afterNextStation?.nameRoman,
-                        afterNextStation?.nameRomanIpa
+                        afterNextStation?.nameRomanIpa,
+                        afterNextStation?.nameKatakana
                       )}${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
                     : ''
                 }${
@@ -891,7 +892,8 @@ export const useTTSText = (
             currentTrainType && afterNextStation
               ? ` The stop after ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa, nextStation?.nameKatakana)}, will be ${ph(
                   afterNextStation.nameRoman,
-                  afterNextStation.nameRomanIpa
+                  afterNextStation.nameRomanIpa,
+                  afterNextStation.nameKatakana
                 )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
@@ -1094,7 +1096,8 @@ export const useTTSText = (
             currentTrainType && afterNextStation
               ? ` The stop after ${ph(nextStation?.nameRoman, nextStation?.nameRomanIpa, nextStation?.nameKatakana)}, will be ${ph(
                   afterNextStation.nameRoman,
-                  afterNextStation.nameRomanIpa
+                  afterNextStation.nameRomanIpa,
+                  afterNextStation.nameKatakana
                 )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
