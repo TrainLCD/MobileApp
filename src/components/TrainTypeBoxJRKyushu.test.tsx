@@ -52,6 +52,8 @@ describe('TrainTypeBoxJRKyushu', () => {
     name: 'Test',
     nameKatakana: 'テスト',
     nameRoman: 'Test',
+    nameIpa: null,
+    nameRomanIpa: null,
     nameChinese: '测试',
     nameKorean: '테스트',
     color: '#000000',

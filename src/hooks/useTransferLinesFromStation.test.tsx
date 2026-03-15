@@ -38,6 +38,7 @@ const createLineNested = (overrides: Partial<LineNested> = {}): LineNested => ({
   nameChinese: null,
   nameFull: 'Line',
   nameIpa: null,
+  nameRomanIpa: null,
   nameKatakana: 'ライン',
   nameKorean: '라인',
   nameRoman: 'Line',

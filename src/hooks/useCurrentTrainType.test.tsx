@@ -66,6 +66,8 @@ const createTrainType = (
   nameChinese: null,
   nameKatakana: 'ローカル',
   nameKorean: null,
+  nameIpa: null,
+  nameRomanIpa: null,
   nameRoman: 'Local',
   typeId: TRAIN_TYPE_IDS.LOCAL,
   ...overrides,
