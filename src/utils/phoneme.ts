@@ -60,7 +60,7 @@ export const wrapPhoneme = (
   segments: TtsSegment[] | null | undefined,
   fallback?: string | null
 ): string => {
-  if (!segments?.length) return fallback ?? '';
+  if (!segments?.length) return fallback ? escapeXml(fallback) : '';
 
   return groupSegments(segments)
     .map((group) => {

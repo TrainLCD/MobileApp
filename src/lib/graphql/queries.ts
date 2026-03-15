@@ -91,12 +91,7 @@ export const LINE_NESTED_FRAGMENT = gql`
       nameKorean
       hasTrainTypes
       nameTtsSegments {
-        alphabet
-        fallbackText
-        lang
-        pronunciation
-        separator
-        surface
+        ...TtsSegmentFields
       }
       stationNumbers {
         ...StationNumberFields
