@@ -19,8 +19,8 @@ const googleAuth = new GoogleAuth({
 });
 
 const GOOGLE_TTS_API_VERSION = 'v1';
-const DEFAULT_JA_VOICE_NAME = 'ja-JP-Neural2-B';
-const DEFAULT_EN_VOICE_NAME = 'en-US-Neural2-F';
+const DEFAULT_JA_VOICE_NAME = 'ja-JP-Standard-B';
+const DEFAULT_EN_VOICE_NAME = 'en-US-Standard-G';
 
 const TTS_CONFIG_CACHE_TTL_MS = 5 * 60 * 1000; // 5分
 let ttsConfigCache: {
@@ -31,7 +31,10 @@ let ttsConfigCache: {
 const getTtsConfig = async (): Promise<
   FirebaseFirestore.DocumentData | undefined
 > => {
-  if (ttsConfigCache && Date.now() - ttsConfigCache.fetchedAt < TTS_CONFIG_CACHE_TTL_MS) {
+  if (
+    ttsConfigCache &&
+    Date.now() - ttsConfigCache.fetchedAt < TTS_CONFIG_CACHE_TTL_MS
+  ) {
     return ttsConfigCache.data;
   }
   try {
@@ -335,8 +338,20 @@ export const tts = onCall(
     try {
       const accessToken = await getAccessToken();
       const [jaAudio, enAudio] = await Promise.all([
-        synthesizeWithNeural2(projectId, accessToken, ssmlJa, 'ja-JP', jaVoiceName),
-        synthesizeWithNeural2(projectId, accessToken, ssmlEn, 'en-US', enVoiceName),
+        synthesizeWithNeural2(
+          projectId,
+          accessToken,
+          ssmlJa,
+          'ja-JP',
+          jaVoiceName
+        ),
+        synthesizeWithNeural2(
+          projectId,
+          accessToken,
+          ssmlEn,
+          'en-US',
+          enVoiceName
+        ),
       ]);
       const jaAudioContent = jaAudio.audioContent;
       const jaAudioMimeType = jaAudio.mimeType || 'audio/mpeg';

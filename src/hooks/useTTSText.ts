@@ -800,21 +800,17 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
           }${
             firstSpeech
               ? ` This train is the ${
-                  yamanoteTrainTypeEn ??
-                  (currentTrainType
-                    ? ph(
-                        currentTrainType.nameTtsSegments,
-                        currentTrainType.nameRoman
-                      )
-                    : 'Local')
-                } Service on the ${ph(currentLine.nameTtsSegments, currentLine.nameRoman)} bound for ${boundForEn}. ${
+                  yamanoteTrainTypeEn
+                    ? `${yamanoteTrainTypeEn} train`
+                    : `${currentTrainType ? ph(currentTrainType.nameTtsSegments, currentTrainType.nameRoman) : 'Local'} Service on the ${ph(currentLine.nameTtsSegments, currentLine.nameRoman)}`
+                } bound for ${boundForEn}. ${
                   currentTrainType && afterNextStation
                     ? `The next stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${`, is ${ph(afterNextStation?.nameTtsSegments, afterNextStation?.nameRoman)}${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
                     : ''
@@ -833,7 +829,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -862,7 +858,9 @@ export const useTTSText = (
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}`
                       : `the ${ph(l.nameTtsSegments, l.nameRoman)}`
                   )
-                  .join(', ')}, Please transfer at this station.`
+                  .join(
+                    ',<break time="200ms"/> '
+                  )}, Please transfer at this station.`
               : ''
           }`,
           ARRIVING: `We will soon make a brief stop at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)} ${nextStationNumberText}${
@@ -875,7 +873,9 @@ export const useTTSText = (
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}`
                       : `the ${ph(l.nameTtsSegments, l.nameRoman)}`
                   )
-                  .join(', ')}, Please transfer at this station.`
+                  .join(
+                    ',<break time="200ms"/> '
+                  )}, Please transfer at this station.`
               : ''
           }${
             currentTrainType && afterNextStation
@@ -898,7 +898,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -911,7 +911,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -937,7 +937,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -950,7 +950,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -1002,7 +1002,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -1017,7 +1017,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -1038,7 +1038,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -1049,7 +1049,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '.' : ',<break time="200ms"/>'}`
                   )
                   .join(' ')}`
               : ''
@@ -1074,7 +1074,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(
                     ' '
@@ -1087,7 +1087,7 @@ export const useTTSText = (
                   .map((l, i, a) =>
                     a.length > 1 && a.length - 1 === i
                       ? `and the ${ph(l.nameTtsSegments, l.nameRoman)}.`
-                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ','}`
+                      : `the ${ph(l.nameTtsSegments, l.nameRoman)}${a.length === 1 ? '' : ',<break time="200ms"/>'}`
                   )
                   .join(
                     ' '
