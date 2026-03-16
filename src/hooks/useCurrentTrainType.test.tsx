@@ -69,6 +69,7 @@ const createTrainType = (
   nameIpa: null,
   nameRomanIpa: null,
   nameRoman: 'Local',
+  nameTtsSegments: null,
   typeId: TRAIN_TYPE_IDS.LOCAL,
   ...overrides,
 });

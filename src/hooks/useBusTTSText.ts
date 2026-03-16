@@ -7,6 +7,7 @@ import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
+import { wrapPhoneme as ph } from '../utils/phoneme';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -101,8 +102,9 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : (directionalStops?.map((s) => s?.nameRoman ?? '').join(' and ') ??
-          ''),
+        : (directionalStops
+            ?.map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
+            .join(' and ') ?? ''),
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
@@ -521,15 +523,16 @@ export const useBusTTSText = (
 
       const map = {
         [APP_THEME.TOKYO_METRO]: {
-          NEXT: `The next stop is ${nextStation?.nameRoman}.${
+          NEXT: `The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             firstSpeech
               ? ` This bus is on the ${
                   station?.line?.company?.nameEnglishShort ?? ''
                 } bound for ${boundForEn}. ${
                   afterNextStation
-                    ? `The next stop after ${nextStation?.nameRoman}${`, is ${
+                    ? `The next stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${`, is ${ph(
+                        afterNextStation?.nameTtsSegments,
                         afterNextStation?.nameRoman
-                      }${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
+                      )}${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
                     : ''
                 }${
                   betweenNextStation.length
@@ -538,7 +541,7 @@ export const useBusTTSText = (
                 }`
               : ''
           }`,
-          ARRIVING: `Arriving at ${nextStation?.nameRoman}${
+          ARRIVING: `Arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', the last stop.' : '.'
           }${
             isNextStopTerminus
@@ -553,16 +556,17 @@ export const useBusTTSText = (
                   station?.line?.company?.nameEnglishShort ?? ''
                 }. This bus is bound for ${boundForEn}. `
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', the last stop.' : '.'
           }`,
-          ARRIVING: `We will soon make a brief stop at ${nextStation?.nameRoman}${
+          ARRIVING: `We will soon make a brief stop at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', the last stop.' : '.'
           }${
             afterNextStation
-              ? ` The stop after ${nextStation?.nameRoman}, will be ${
+              ? ` The stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}, will be ${ph(
+                  afterNextStation.nameTtsSegments,
                   afterNextStation.nameRoman
-                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
+                )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -575,8 +579,8 @@ export const useBusTTSText = (
             firstSpeech
               ? `This is the ${station?.line?.company?.nameEnglishShort ?? ''} bus bound for ${boundForEn}. `
               : ''
-          }The next stop is ${nextStation?.nameRoman}.`,
-          ARRIVING: `The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.`,
+          ARRIVING: `The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', terminal.' : '.'
           }${
             isNextStopTerminus
@@ -594,10 +598,10 @@ export const useBusTTSText = (
             firstSpeech
               ? `This is the ${station?.line?.company?.nameEnglishShort ?? ''} bus bound for ${boundForEn}. `
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', terminal.' : '.'
           }`,
-          ARRIVING: `The next stop is ${nextStation?.nameRoman}${
+          ARRIVING: `The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', terminal.' : '.'
           }${
             isNextStopTerminus
@@ -609,13 +613,15 @@ export const useBusTTSText = (
           NEXT: `${
             firstSpeech
               ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This bus is bound for ${boundForEn} ${
-                  viaStation ? `via ${viaStation.nameRoman}` : ''
+                  viaStation
+                    ? `via ${ph(viaStation.nameTtsSegments, viaStation.nameRoman)}`
+                    : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
-                      ? `${s.nameRoman} terminal`
-                      : `${s.nameRoman}`
+                      ? `${ph(s.nameTtsSegments, s.nameRoman)} terminal`
+                      : `${ph(s.nameTtsSegments, s.nameRoman)}`
                   )
                   .join(', ')}. ${
                   allStops
@@ -623,24 +629,29 @@ export const useBusTTSText = (
                     .filter((s) => s)
                     .reverse()[0]?.id === selectedBound?.id
                     ? ''
-                    : `Stops after ${
+                    : `Stops after ${ph(
+                        allStops
+                          .slice(0, 5)
+                          .filter((s) => s)
+                          .reverse()[0]?.nameTtsSegments,
                         allStops
                           .slice(0, 5)
                           .filter((s) => s)
                           .reverse()[0]?.nameRoman
-                      } will be announced later. `
+                      )} will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
           }`,
-          ARRIVING: `We will soon be making a brief stop at ${nextStation?.nameRoman}.${
+          ARRIVING: `We will soon be making a brief stop at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             afterNextStation
-              ? `After leaving ${
+              ? `After leaving ${ph(
+                  nextStation?.nameTtsSegments,
                   nextStation?.nameRoman
-                }, We will be stopping at ${afterNextStation.nameRoman}.`
+                )}, We will be stopping at ${ph(afterNextStation.nameTtsSegments, afterNextStation.nameRoman)}.`
               : ''
           }`,
         },
@@ -649,12 +660,13 @@ export const useBusTTSText = (
             firstSpeech
               ? `Thank you for using the ${station?.line?.company?.nameEnglishShort ?? ''}. `
               : ''
-          }This bus is bound for ${boundForEn}. The next stop is ${nextStation?.nameRoman}.`,
-          ARRIVING: `We will soon be arriving at ${nextStation?.nameRoman}.${
+          }This bus is bound for ${boundForEn}. The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.`,
+          ARRIVING: `We will soon be arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             afterNextStation
-              ? ` The stop after ${nextStation?.nameRoman}, will be ${
+              ? ` The stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}, will be ${ph(
+                  afterNextStation.nameTtsSegments,
                   afterNextStation.nameRoman
-                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
+                )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -667,12 +679,12 @@ export const useBusTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `${firstSpeech ? `This bus is bound for ${boundForEn}.` : ''} The next stop is ${nextStation?.nameRoman}${
+          NEXT: `${firstSpeech ? `This bus is bound for ${boundForEn}.` : ''} The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
           }`,
-          ARRIVING: `We will soon be arriving at ${nextStation?.nameRoman}${
+          ARRIVING: `We will soon be arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
@@ -696,10 +708,11 @@ export const useBusTTSText = (
       isNextStopTerminus,
       nextStation?.groupId,
       selectedBound?.groupId,
-      nextStation?.nameRoman,
+      nextStation?.nameTtsSegments,
       selectedBound,
       viaStation,
       station?.line?.company?.nameEnglishShort,
+      nextStation?.nameRoman,
     ]);
 
   const resolved = resolveTemplateTheme(theme);

@@ -25,6 +25,7 @@ const createTrainType = (kind: TrainTypeKind | null): TrainType => ({
   nameKorean: null,
   nameIpa: null,
   nameRomanIpa: null,
+  nameTtsSegments: null,
   nameRoman: 'Test Type',
   typeId: 1,
 });
