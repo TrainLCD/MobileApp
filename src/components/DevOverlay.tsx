@@ -398,17 +398,17 @@ const DevOverlay: React.FC = () => {
   const hasDraggedRef = useRef(false);
   const isDraggingRef = useRef(false);
 
+  const resolvedExpandedHeight =
+    expandedHeight > 0 ? expandedHeight : collapsedHeight;
+
   const animatedWidth = animatedProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [collapsedPanelWidth, panelWidth],
   });
-  const animatedHeight =
-    expandedHeight > 0
-      ? animatedProgress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [collapsedHeight, expandedHeight],
-        })
-      : undefined;
+  const animatedHeight = animatedProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [collapsedHeight, resolvedExpandedHeight],
+  });
 
   // 縮小ラベルは展開開始ですぐフェードアウト
   const collapsedLabelOpacity = animatedProgress.interpolate({
@@ -457,14 +457,14 @@ const DevOverlay: React.FC = () => {
       y: margin,
     };
     const currentWidth = isExpanded ? panelWidth : collapsedPanelWidth;
-    const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
+    const currentHeight = isExpanded ? resolvedExpandedHeight : collapsedHeight;
 
     const nextPosition = hasDraggedRef.current
       ? clampPosition(
           basePositionRef.current.x,
           basePositionRef.current.y,
           currentWidth,
-          currentHeight || 0
+          currentHeight
         )
       : initialPosition;
 
@@ -473,10 +473,10 @@ const DevOverlay: React.FC = () => {
   }, [
     clampPosition,
     isLandscape,
-    expandedHeight,
     panelWidth,
     isExpanded,
     dragTranslation,
+    resolvedExpandedHeight,
   ]);
 
   const panResponder = useMemo(
@@ -509,13 +509,15 @@ const DevOverlay: React.FC = () => {
             return;
           }
           const currentWidth = isExpanded ? panelWidth : collapsedPanelWidth;
-          const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
+          const currentHeight = isExpanded
+            ? resolvedExpandedHeight
+            : collapsedHeight;
           dragTranslation.stopAnimation((value) => {
             const clampedPosition = clampPosition(
               basePositionRef.current.x + value.x,
               basePositionRef.current.y + value.y,
               currentWidth,
-              currentHeight || 0
+              currentHeight
             );
             hasDraggedRef.current = true;
             setBasePosition(clampedPosition);
@@ -524,13 +526,15 @@ const DevOverlay: React.FC = () => {
         },
         onPanResponderTerminate: () => {
           const currentWidth = isExpanded ? panelWidth : collapsedPanelWidth;
-          const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
+          const currentHeight = isExpanded
+            ? resolvedExpandedHeight
+            : collapsedHeight;
           dragTranslation.stopAnimation((value) => {
             const clampedPosition = clampPosition(
               basePositionRef.current.x + value.x,
               basePositionRef.current.y + value.y,
               currentWidth,
-              currentHeight || 0
+              currentHeight
             );
             hasDraggedRef.current = true;
             setBasePosition(clampedPosition);
@@ -538,7 +542,13 @@ const DevOverlay: React.FC = () => {
           });
         },
       }),
-    [clampPosition, dragTranslation, expandedHeight, panelWidth, isExpanded]
+    [
+      clampPosition,
+      dragTranslation,
+      panelWidth,
+      isExpanded,
+      resolvedExpandedHeight,
+    ]
   );
 
   return (
