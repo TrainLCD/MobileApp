@@ -4,6 +4,7 @@ import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  Easing,
   PanResponder,
   type StyleProp,
   StyleSheet,
@@ -23,6 +24,8 @@ import {
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
 
+const EXPAND_DURATION = 280;
+
 const PANEL_BORDER = 'rgba(255,255,255,0.18)';
 const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
 const LABEL_COLOR = 'rgba(199, 210, 254, 0.72)';
@@ -35,9 +38,10 @@ const AURORA_COLORS = [
 const styles = StyleSheet.create({
   root: {
     position: 'absolute',
-    left: 0,
+    right: 0,
     top: 0,
     zIndex: 9999,
+    overflow: 'hidden',
     shadowColor: '#020617',
     shadowOpacity: 0.35,
     shadowRadius: 20,
@@ -195,6 +199,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  collapsedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    backgroundColor: PANEL_BG,
+    overflow: 'hidden',
+  },
+  collapsedTitle: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });
 
 type StatusPillProps = {
@@ -272,6 +288,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
 );
 
 const DevOverlay: React.FC = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedHeight, setExpandedHeight] = useState(0);
   const location = useAtomValue(locationAtom);
   const speed = location?.coords?.speed;
   const accuracy = location?.coords?.accuracy;
@@ -312,12 +330,12 @@ const DevOverlay: React.FC = () => {
     .join(' / ');
 
   const dim = useWindowDimensions();
-  const [panelHeight, setPanelHeight] = useState(0);
   const [basePosition, setBasePosition] = useState({ x: 0, y: 0 });
   const isLandscape = dim.width > dim.height;
   const panelWidth = isLandscape
     ? Math.min(Math.max(dim.width * 0.29, 360), 520)
     : Math.min(Math.max(dim.width * 0.34, 280), 430);
+  const collapsedPanelWidth = 160;
   const compactSpacing = isLandscape ? 10 : 12;
   const compactPaddingX = isLandscape ? 12 : 16;
   const compactPaddingY = isLandscape ? 12 : 14;
@@ -371,22 +389,61 @@ const DevOverlay: React.FC = () => {
     justifyContent: 'flex-start',
     gap: 6,
   };
+
+  const collapsedHeight = 44;
+
+  const animatedProgress = useRef(new Animated.Value(0)).current;
   const dragTranslation = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const basePositionRef = useRef(basePosition);
   const hasDraggedRef = useRef(false);
+  const isDraggingRef = useRef(false);
+
+  const animatedWidth = animatedProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [collapsedPanelWidth, panelWidth],
+  });
+  const animatedHeight =
+    expandedHeight > 0
+      ? animatedProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [collapsedHeight, expandedHeight],
+        })
+      : undefined;
+
+  // 縮小ラベルは展開開始ですぐフェードアウト
+  const collapsedLabelOpacity = animatedProgress.interpolate({
+    inputRange: [0, 0.3],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  // フルコンテンツはオーバーレイが消えてからフェードイン
+  const contentOpacity = animatedProgress.interpolate({
+    inputRange: [0, 0.3],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
     basePositionRef.current = basePosition;
   }, [basePosition]);
 
+  useEffect(() => {
+    Animated.timing(animatedProgress, {
+      toValue: isExpanded ? 1 : 0,
+      duration: EXPAND_DURATION,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [isExpanded, animatedProgress]);
+
   const clampPosition = useMemo(
-    () => (x: number, y: number, width: number, height: number) => {
+    () => (rightOffset: number, y: number, width: number, height: number) => {
       const margin = isLandscape ? 8 : 12;
-      const maxX = Math.max(margin, dim.width - width - margin);
+      const maxRight = Math.max(margin, dim.width - width - margin);
       const maxY = Math.max(margin, dim.height - height - margin);
 
       return {
-        x: Math.min(Math.max(x, margin), maxX),
+        x: Math.min(Math.max(rightOffset, margin), maxRight),
         y: Math.min(Math.max(y, margin), maxY),
       };
     },
@@ -396,15 +453,18 @@ const DevOverlay: React.FC = () => {
   useEffect(() => {
     const margin = isLandscape ? 8 : 12;
     const initialPosition = {
-      x: Math.max(margin, dim.width - panelWidth - margin),
+      x: margin,
       y: margin,
     };
+    const currentWidth = isExpanded ? panelWidth : collapsedPanelWidth;
+    const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
+
     const nextPosition = hasDraggedRef.current
       ? clampPosition(
           basePositionRef.current.x,
           basePositionRef.current.y,
-          panelWidth,
-          panelHeight || 0
+          currentWidth,
+          currentHeight || 0
         )
       : initialPosition;
 
@@ -412,34 +472,50 @@ const DevOverlay: React.FC = () => {
     dragTranslation.setValue({ x: 0, y: 0 });
   }, [
     clampPosition,
-    dim.width,
     isLandscape,
-    panelHeight,
+    expandedHeight,
     panelWidth,
+    isExpanded,
     dragTranslation,
   ]);
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
+        onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: (_event, gestureState) =>
           Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4,
         onPanResponderGrant: () => {
+          isDraggingRef.current = false;
           dragTranslation.stopAnimation();
           dragTranslation.setValue({ x: 0, y: 0 });
         },
-        onPanResponderMove: Animated.event(
-          [null, { dx: dragTranslation.x, dy: dragTranslation.y }],
-          { useNativeDriver: false }
-        ),
+        onPanResponderMove: (_event, gestureState) => {
+          if (Math.abs(gestureState.dx) > 4 || Math.abs(gestureState.dy) > 4) {
+            isDraggingRef.current = true;
+          }
+          if (isDraggingRef.current) {
+            // right基準なのでdxを反転
+            dragTranslation.setValue({
+              x: -gestureState.dx,
+              y: gestureState.dy,
+            });
+          }
+        },
         onPanResponderRelease: () => {
+          if (!isDraggingRef.current) {
+            hasDraggedRef.current = true;
+            setIsExpanded((prev) => !prev);
+            return;
+          }
+          const currentWidth = isExpanded ? panelWidth : collapsedPanelWidth;
+          const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
           dragTranslation.stopAnimation((value) => {
             const clampedPosition = clampPosition(
               basePositionRef.current.x + value.x,
               basePositionRef.current.y + value.y,
-              panelWidth,
-              panelHeight || 0
+              currentWidth,
+              currentHeight || 0
             );
             hasDraggedRef.current = true;
             setBasePosition(clampedPosition);
@@ -447,12 +523,14 @@ const DevOverlay: React.FC = () => {
           });
         },
         onPanResponderTerminate: () => {
+          const currentWidth = isExpanded ? panelWidth : collapsedPanelWidth;
+          const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
           dragTranslation.stopAnimation((value) => {
             const clampedPosition = clampPosition(
               basePositionRef.current.x + value.x,
               basePositionRef.current.y + value.y,
-              panelWidth,
-              panelHeight || 0
+              currentWidth,
+              currentHeight || 0
             );
             hasDraggedRef.current = true;
             setBasePosition(clampedPosition);
@@ -460,30 +538,44 @@ const DevOverlay: React.FC = () => {
           });
         },
       }),
-    [clampPosition, dragTranslation, panelHeight, panelWidth]
+    [clampPosition, dragTranslation, expandedHeight, panelWidth, isExpanded]
   );
 
   return (
     <Animated.View
       {...panResponder.panHandlers}
-      onLayout={(event) => {
-        setPanelHeight(event.nativeEvent.layout.height);
-      }}
       style={[
         styles.root,
         {
-          width: panelWidth,
-          left: basePosition.x,
+          width: animatedWidth,
+          height: animatedHeight,
+          right: basePosition.x,
           top: basePosition.y,
+          borderRadius: compactRadius,
         },
-        { transform: dragTranslation.getTranslateTransform() },
+        {
+          transform: [
+            {
+              translateX: Animated.multiply(dragTranslation.x, -1),
+            },
+            { translateY: dragTranslation.y },
+          ],
+        },
       ]}
     >
-      <View
+      <Animated.View
+        onLayout={(event) => {
+          const h = event.nativeEvent.layout.height;
+          if (h > 0 && h !== expandedHeight) {
+            setExpandedHeight(h);
+          }
+        }}
         style={[
           styles.panelFrame,
           {
+            width: panelWidth,
             borderRadius: compactRadius,
+            opacity: contentOpacity,
           },
         ]}
       >
@@ -679,7 +771,29 @@ const DevOverlay: React.FC = () => {
             </Typography>
           ) : null}
         </View>
-      </View>
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          styles.collapsedOverlay,
+          {
+            opacity: collapsedLabelOpacity,
+            borderRadius: compactRadius,
+          },
+        ]}
+        pointerEvents={isExpanded ? 'none' : 'auto'}
+      >
+        <LinearGradient
+          colors={AURORA_COLORS}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            StyleSheet.absoluteFillObject,
+            { borderRadius: compactRadius },
+          ]}
+        />
+        <Typography style={styles.collapsedTitle}>TrainLCD DO</Typography>
+      </Animated.View>
     </Animated.View>
   );
 };
