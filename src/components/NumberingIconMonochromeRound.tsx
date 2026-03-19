@@ -15,6 +15,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: 'black',
   },
   mediumRoot: {
     width: isTablet ? 35 * 1.5 : 35,
@@ -22,6 +25,9 @@ const styles = StyleSheet.create({
     borderRadius: (isTablet ? 35 * 1.5 : 35) / 2,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'white',
+    borderWidth: isTablet ? 6 * 1.5 : 6,
+    borderColor: 'black',
   },
   root: {
     width: isTablet ? 72 * 1.5 : 72,
@@ -84,16 +90,16 @@ const NumberingIconMonochromeRound: React.FC<Props> = ({
   }, [size]);
 
   const typographyStyle = useMemo(() => {
-    const numOnly = !stationNumber.includes('-');
-    if (numOnly) {
-      return styles.numOnlyStationNumber;
-    }
-
     if (size === NUMBERING_ICON_SIZE.SMALL) {
       return styles.smallStationNumber;
     }
     if (size === NUMBERING_ICON_SIZE.MEDIUM) {
       return styles.mediumStationNumber;
+    }
+
+    const numOnly = !stationNumber.includes('-');
+    if (numOnly) {
+      return styles.numOnlyStationNumber;
     }
 
     return styles.stationNumber;
