@@ -13,7 +13,6 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
-  useGetLineMark: jest.fn(() => jest.fn(() => null)),
   useHasPassStationInRegion: jest.fn(() => false),
   useIsPassing: jest.fn(() => false),
   useNextStation: jest.fn(() => null),
@@ -218,7 +217,6 @@ describe('LineBoardWest', () => {
 
   it('PadLineMarksが正しく表示される', () => {
     const PadLineMarks = require('./PadLineMarks').default;
-    const { useGetLineMark } = require('~/hooks');
     render(
       <LineBoardWest
         stations={mockStations}
@@ -226,6 +224,5 @@ describe('LineBoardWest', () => {
       />
     );
     expect(PadLineMarks).toHaveBeenCalled();
-    expect(useGetLineMark).toHaveBeenCalled();
   });
 });
