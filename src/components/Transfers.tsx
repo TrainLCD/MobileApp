@@ -135,12 +135,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
 
   const renderTransferLine = useCallback(
     ({ item: line, index }: { item: Line; index: number }) => {
-      if (!station) {
-        return null;
-      }
       const lineMark = getLineMarkFunc({
         line,
-        stationNumbers: station.stationNumbers,
+        stationNumbers: line?.station?.stationNumbers,
       });
       const includesNumberedStation = stationNumbers.some(
         (sn) => !!sn?.stationNumber
@@ -276,7 +273,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         </View>
       );
     },
-    [getLineMarkFunc, onPress, station, stationNumbers, lines]
+    [getLineMarkFunc, onPress, stationNumbers, lines]
   );
 
   if (isLEDTheme) {
