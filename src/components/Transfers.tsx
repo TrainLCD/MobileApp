@@ -109,8 +109,9 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
             l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
               ?.lineSymbolColor ?? '#000000';
           const lineSymbolShapeWhenEmptySymbol =
-            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-              ?.lineSymbolShape ?? 'NOOP';
+            l.station?.stationNumbers?.find(
+              (sn) => !sn.lineSymbol?.length
+            )?.lineSymbolShape;
 
           return {
             __typename: 'StationNumber' as const,
@@ -139,6 +140,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       }
       const lineMark = getLineMarkFunc({
         line,
+        stationNumbers: station.stationNumbers,
       });
       const includesNumberedStation = stationNumbers.some(
         (sn) => !!sn?.stationNumber

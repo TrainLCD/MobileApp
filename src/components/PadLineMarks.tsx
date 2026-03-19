@@ -78,7 +78,13 @@ const PadLineMarks: React.FC<Props> = ({
 
   const lineMarks = useMemo(
     () =>
-      transferLines.map((line) => getLineMarkFunc({ line, shouldGrayscale })),
+      transferLines.map((line) =>
+        getLineMarkFunc({
+          line,
+          shouldGrayscale,
+          stationNumbers: line.station?.stationNumbers,
+        })
+      ),
     [getLineMarkFunc, shouldGrayscale, transferLines]
   );
 

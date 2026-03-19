@@ -274,6 +274,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconMonochromeRound
           stationNumber={stationNumber}
           withOutline={withOutline}
+          size={size}
         />
       );
     case MARK_SHAPE.NTL:

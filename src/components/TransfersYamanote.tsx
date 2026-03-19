@@ -75,7 +75,10 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
       if (!station) {
         return null;
       }
-      const lineMark = getLineMarkFunc({ line });
+      const lineMark = getLineMarkFunc({
+        line,
+        stationNumbers: station.stationNumbers,
+      });
 
       return (
         <SafeAreaView

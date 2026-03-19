@@ -151,6 +151,18 @@ const TransferLineMark: React.FC<Props> = ({
     [outlineRadiusValue]
   );
 
+  const stationNumberText = useMemo(() => {
+    if (isBus && busSymbol) {
+      return busSymbol;
+    }
+
+    if (!stationNumber && mark.signShape === MARK_SHAPE.JR_UNION) {
+      return 'JR';
+    }
+
+    return stationNumber ?? mark.sign ?? '';
+  }, [isBus, busSymbol, stationNumber, mark.sign, mark.signShape]);
+
   if (mark.btUnionSignPaths && !stationNumber) {
     return (
       <View style={[containerStyle, withOutline ? outlineStyle : null]}>
@@ -193,16 +205,7 @@ const TransferLineMark: React.FC<Props> = ({
           lineColor={
             shouldGrayscale ? fadedLineColor : color || (line?.color ?? '#000')
           }
-          stationNumber={
-            isBus
-              ? busSymbol
-              : (stationNumber ??
-                `${
-                  mark.signShape === MARK_SHAPE.JR_UNION
-                    ? 'JR'
-                    : mark.sign || ''
-                }-00`)
-          }
+          stationNumber={stationNumberText}
           threeLetterCode={threeLetterCode}
           size={size}
           withDarkTheme={withDarkTheme}

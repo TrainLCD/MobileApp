@@ -215,7 +215,10 @@ export const CommonCard: React.FC<Props> = ({
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
-  const mark = useMemo(() => getLineMark({ line }), [getLineMark, line]);
+  const mark = useMemo(
+    () => getLineMark({ line, stationNumbers: targetStation?.stationNumbers }),
+    [getLineMark, line, targetStation?.stationNumbers]
+  );
   const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
