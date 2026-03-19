@@ -460,8 +460,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
 
   const getLineMarkFunc = useGetLineMark();
   const mark = useMemo(
-    () => currentLine && getLineMarkFunc({ line: currentLine }),
-    [currentLine, getLineMarkFunc]
+    () =>
+      currentLine &&
+      getLineMarkFunc({
+        line: currentLine,
+        stationNumbers: currentStation.stationNumbers,
+      }),
+    [currentLine, currentStation.stationNumbers, getLineMarkFunc]
   );
 
   return (

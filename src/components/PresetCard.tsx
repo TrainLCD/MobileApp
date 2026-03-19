@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
-import { NUMBERING_ICON_SIZE } from '~/constants';
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '~/constants';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -169,12 +169,18 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const leftLine: Line | null = (from?.line as Line) ?? from?.line ?? null;
   const rightLine: Line | null = (to?.line as Line) ?? to?.line ?? null;
   const leftMark = useMemo(
-    () => (leftLine ? getLineMark({ line: leftLine }) : null),
-    [getLineMark, leftLine]
+    () =>
+      leftLine
+        ? getLineMark({ line: leftLine, stationNumbers: from?.stationNumbers })
+        : null,
+    [getLineMark, leftLine, from?.stationNumbers]
   );
   const rightMark = useMemo(
-    () => (rightLine ? getLineMark({ line: rightLine }) : null),
-    [getLineMark, rightLine]
+    () =>
+      rightLine
+        ? getLineMark({ line: rightLine, stationNumbers: to?.stationNumbers })
+        : null,
+    [getLineMark, rightLine, to?.stationNumbers]
   );
 
   const leftLineName = (() => {
@@ -250,6 +256,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                     mark={leftMark}
                     size={NUMBERING_ICON_SIZE.SMALL}
                     withDarkTheme={isLEDTheme}
+                    withOutline={
+                      leftMark.signShape === MARK_SHAPE.MONOCHROME_ROUND
+                    }
                   />
                 ) : (
                   <View
@@ -288,6 +297,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                     mark={rightMark}
                     size={NUMBERING_ICON_SIZE.SMALL}
                     withDarkTheme={isLEDTheme}
+                    withOutline={
+                      rightMark.signShape === MARK_SHAPE.MONOCHROME_ROUND
+                    }
                   />
                 ) : (
                   <View

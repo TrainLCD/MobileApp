@@ -336,7 +336,7 @@ const LINE_SYMBOL_IMAGE_WITH_COLOR: Record<number, LineSymbolImage> = {
   99613: { signPath: require('../assets/marks/keihuku/b.webp') }, // 北野線
   99203: { signPath: require('../assets/marks/konan/kw.webp') }, // 弘南鉄道大鰐線
   99501: { signPath: require('../assets/marks/izukyu/iz.webp') }, // 伊豆急行線
-};
+} as const satisfies Record<number, LineSymbolImageWithImage>;
 
 const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   // 新幹線
@@ -670,7 +670,7 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   99613: { signPath: require('../assets/marks/keihuku/b_g.webp') }, // 北野線
   99203: { signPath: require('../assets/marks/konan/kw_g.webp') }, // 弘南鉄道大鰐線
   99501: { signPath: require('../assets/marks/izukyu/iz_g.webp') }, // 伊豆急行線
-};
+} as const satisfies Record<number, LineSymbolImageWithImage>;
 
 /**
  * 直接使わず、getLineSymbolImageを使う

@@ -35,7 +35,7 @@ export const useCurrentStation = (
 
     const curIndex = reversedStations.findIndex((s) => s.id === station?.id);
     if (curIndex === -1) {
-      return undefined;
+      return;
     }
 
     const stationsFromRange = reversedStations
@@ -50,5 +50,5 @@ export const useCurrentStation = (
 
   // NOTE: 路線が選択されていない場合stationはnullishになる
   const result = station ?? stationFromState;
-  return result ? result : undefined;
+  return result ?? undefined;
 };
