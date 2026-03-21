@@ -119,8 +119,8 @@ const getAccessToken = async (): Promise<string> => {
   return token;
 };
 
-/** Cloud Text-to-Speech の Neural2 を使用してテキストを音声に変換する。 */
-const synthesizeWithNeural2 = async (
+/** Cloud Text-to-Speech を使用してテキストを音声に変換する。 */
+const synthesizeSpeech = async (
   projectId: string,
   accessToken: string,
   text: string,
@@ -162,7 +162,7 @@ const synthesizeWithNeural2 = async (
   };
   if (!res.ok || !json.audioContent) {
     throw new Error(
-      `Neural2 TTS API returned ${res.status}: ${JSON.stringify(json.error ?? json)}`
+      `TTS API returned ${res.status}: ${JSON.stringify(json.error ?? json)}`
     );
   }
 
@@ -338,14 +338,14 @@ export const tts = onCall(
     try {
       const accessToken = await getAccessToken();
       const [jaAudio, enAudio] = await Promise.all([
-        synthesizeWithNeural2(
+        synthesizeSpeech(
           projectId,
           accessToken,
           ssmlJa,
           'ja-JP',
           jaVoiceName
         ),
-        synthesizeWithNeural2(
+        synthesizeSpeech(
           projectId,
           accessToken,
           ssmlEn,
