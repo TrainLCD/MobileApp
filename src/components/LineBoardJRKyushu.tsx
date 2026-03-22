@@ -286,11 +286,13 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const nameCommonStyle = useMemo(() => {
     if (!station.stationNumbers?.length) {
-      return {};
+      return {
+        marginBottom: isTablet ? 0 : 65,
+      };
     }
 
     return {
-      marginBottom: isTablet ? 45 : 90,
+      marginBottom: isTablet ? 45 : 95,
     };
   }, [station.stationNumbers]);
 

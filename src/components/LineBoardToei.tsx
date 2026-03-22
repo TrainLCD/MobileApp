@@ -94,7 +94,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
     }
     return {
       ...commonStyle,
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+      width: isTablet ? dim.height / 3.5 : dim.height / 2,
     };
   }, [dim.height, station.stationNumbers]);
 
