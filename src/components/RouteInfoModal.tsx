@@ -61,7 +61,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 21,
   },
-  subtitle: { width: '100%', fontSize: 16 },
   title: {
     width: '100%',
     marginBottom: 24,
@@ -84,15 +83,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     paddingHorizontal: 12,
   },
-  expandableToggleStatePanel: {
-    minWidth: 56,
-    maxWidth: 56,
-  },
   expandableToggleTextLight: {
     color: '#333',
+    fontSize: isTablet ? RFValue(11) : RFValue(14),
   },
   expandableToggleTextLED: {
     color: '#fff',
+    fontSize: isTablet ? RFValue(11) : RFValue(14),
   },
 });
 
@@ -190,7 +187,6 @@ export const RouteInfoModal = ({
                     onToggle={() => onToggleNotification(item)}
                     state={isNotifyEnabled}
                     style={styles.expandableToggle}
-                    statePanelStyle={styles.expandableToggleStatePanel}
                     textStyle={
                       isLEDTheme
                         ? styles.expandableToggleTextLED
@@ -205,7 +201,6 @@ export const RouteInfoModal = ({
                   <ToggleButton
                     outline
                     style={styles.expandableToggle}
-                    statePanelStyle={styles.expandableToggleStatePanel}
                     textStyle={
                       isLEDTheme
                         ? styles.expandableToggleTextLED
