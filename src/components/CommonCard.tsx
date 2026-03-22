@@ -285,6 +285,17 @@ export const CommonCard: React.FC<Props> = ({
     targetStation?.stationNumbers?.[0]?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
 
+  const markScaleStyle = useMemo(() => {
+    const needsScale = !mark?.signPath || targetStationNumber;
+    if (!needsScale) {
+      return null;
+    }
+    if (targetStationThreeLetterCode) {
+      return null;
+    }
+    return { transform: [{ scale: 0.5 }] } as const;
+  }, [mark?.signPath, targetStationNumber, targetStationThreeLetterCode]);
+
   const titleParts = useMemo(
     () => titleOrLineName.split(/(\([^)]*\))/),
     [titleOrLineName]
@@ -361,16 +372,7 @@ export const CommonCard: React.FC<Props> = ({
         ]}
       >
         {mark ? (
-          <View
-            style={[
-              styles.mark,
-              !mark.signPath || targetStationNumber
-                ? targetStationThreeLetterCode
-                  ? null
-                  : { transform: [{ scale: 0.5 }] }
-                : null,
-            ]}
-          >
+          <View style={[styles.mark, markScaleStyle]}>
             <TransferLineMark
               line={line}
               mark={mark}
