@@ -51,6 +51,11 @@ const styles = StyleSheet.create({
   screenBg: {
     backgroundColor: '#FAFAFA',
   },
+  title: {
+    flex: 1,
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
+    fontWeight: 'bold',
+  },
 });
 
 const SettingsItem = ({
@@ -106,9 +111,7 @@ const SettingsItem = ({
           }}
         />
       </View>
-      <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
-        {item.title}
-      </Typography>
+      <Typography style={styles.title}>{item.title}</Typography>
 
       <StatePanel
         state={state}
