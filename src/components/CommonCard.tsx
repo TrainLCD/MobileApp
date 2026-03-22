@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     width: isTablet ? 52.5 : 35,
     height: isTablet ? 52.5 : 35,
     marginRight: 12,
+    overflow: 'visible',
   },
   withoutMark: {
     width: isTablet ? 52.5 : 35,
@@ -364,9 +365,9 @@ export const CommonCard: React.FC<Props> = ({
             style={[
               styles.mark,
               !mark.signPath || targetStationNumber
-                ? {
-                    transform: [{ scale: 0.5 }],
-                  }
+                ? targetStationThreeLetterCode
+                  ? null
+                  : { transform: [{ scale: 0.5 }] }
                 : null,
             ]}
           >
