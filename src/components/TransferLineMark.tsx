@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
   },
   signPathWrapper: {
     flexDirection: 'row',

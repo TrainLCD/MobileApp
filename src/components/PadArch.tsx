@@ -763,6 +763,7 @@ const PadArch: React.FC<Props> = ({
                       }
                       lineColor={numberingInfo[i]?.lineColor ?? '#000'}
                       stationNumber={numberingInfo[i]?.stationNumber ?? ''}
+                      threeLetterCode={s.threeLetterCode}
                       allowScaling={false}
                     />
                   </View>

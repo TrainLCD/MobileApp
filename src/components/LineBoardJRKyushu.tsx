@@ -39,12 +39,14 @@ type Props = {
 const localStyles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    bottom: isTablet ? 8 : 72,
+    width: isTablet ? 96 : 64,
+    height: isTablet ? 96 : 64,
+    bottom: isTablet ? -22 : 52,
+    left: isTablet ? -24 : -16,
     transform: [{ scale: 0.5 }],
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
   },
 });
 
