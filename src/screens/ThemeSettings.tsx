@@ -51,7 +51,11 @@ const styles = StyleSheet.create({
   screenBg: {
     backgroundColor: '#FAFAFA',
   },
-  title: { flex: 1, fontSize: RFValue(12), fontWeight: 'bold' },
+  title: {
+    flex: 1,
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
+    fontWeight: 'bold',
+  },
 });
 
 const SettingsItem = ({
