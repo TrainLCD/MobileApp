@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(12),
     color: '#fff',
   },
   textFill: {
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   stateIndicatorText: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(12),
     fontWeight: 'bold',
   },
 });

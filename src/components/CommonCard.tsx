@@ -141,9 +141,7 @@ const styles = StyleSheet.create({
   },
   expandableContent: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 8,
+    padding: 12,
   },
 });
 
