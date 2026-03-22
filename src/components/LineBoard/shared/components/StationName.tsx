@@ -27,7 +27,7 @@ export const StationName: React.FC<StationNameProps> = React.memo(
       () => ({
         width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
         marginBottom:
-          marginBottom ?? (isTablet ? dim.height / 10 : dim.height / 6),
+          marginBottom ?? (isTablet ? dim.height / 8 : dim.height / 6),
       }),
       [dim.height, marginBottom]
     );
