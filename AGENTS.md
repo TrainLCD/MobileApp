@@ -10,6 +10,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
 - **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
 - **Clarify uncertainty:** request guidance or leave TODO notes rather than guessing at intent.
+- **Prioritize quality and performance over speed:** prefer well-structured, performant implementations over quick solutions. Take extra time to consider edge cases, optimize hot paths, and ensure code correctness rather than rushing to deliver.
 
 ## Standard Workflow
 

@@ -9,14 +9,8 @@ import {
 } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import {
-  useCurrentStation,
-  useGetLineMark,
-  useNextStation,
-  useTransferLines,
-} from '../hooks';
+import { useGetLineMark, useTransferLines } from '../hooks';
 import type { AppTheme } from '../models/Theme';
-import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -76,18 +70,9 @@ const styles = StyleSheet.create({
 });
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
-  const { arrived } = useAtomValue(stationState);
-  const currentStation = useCurrentStation();
-
   const lines = useTransferLines();
-  const nextStation = useNextStation();
   const getLineMarkFunc = useGetLineMark();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-
-  const station = useMemo(
-    () => (arrived ? currentStation : nextStation),
-    [arrived, currentStation, nextStation]
-  );
 
   const stationNumbers = useMemo(
     () =>
