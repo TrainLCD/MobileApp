@@ -85,9 +85,11 @@ const styles = StyleSheet.create({
   },
   expandableToggleTextLight: {
     color: '#333',
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
   },
   expandableToggleTextLED: {
     color: '#fff',
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
   },
 });
 
