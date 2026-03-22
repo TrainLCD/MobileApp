@@ -304,4 +304,9 @@ export const commonLineBoardStyles = StyleSheet.create({
   padLineMarksContainerJO: {
     position: 'absolute',
   },
+  padLineMarksContainerWest: {
+    position: 'absolute',
+    top: 40,
+    left: -12,
+  },
 });

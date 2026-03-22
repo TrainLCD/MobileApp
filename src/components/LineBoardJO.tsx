@@ -129,6 +129,17 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
   const dim = useWindowDimensions();
 
+  const additionalPadLineMarksContainerStyle = useMemo(() => {
+    if (!stationInLoop.stationNumbers?.length) {
+      return {
+        top: dim.height - 130,
+      };
+    }
+    return {
+      top: dim.height - 90,
+    };
+  }, [stationInLoop.stationNumbers, dim.height]);
+
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -170,7 +181,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         ) : null}
       </View>
 
-      <View style={[styles.padLineMarksContainerJO, { top: dim.height - 80 }]}>
+      <View
+        style={[
+          styles.padLineMarksContainerJO,
+          additionalPadLineMarksContainerStyle,
+        ]}
+      >
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={transferLines}

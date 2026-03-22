@@ -293,12 +293,14 @@ const StationDotIndicators: React.FC<{
       ) : null}
 
       {passed ? null : (
-        <PadLineMarks
-          shouldGrayscale={passed}
-          transferLines={transferLines}
-          station={station}
-          theme={APP_THEME.JR_WEST}
-        />
+        <View style={styles.padLineMarksContainerWest}>
+          <PadLineMarks
+            shouldGrayscale={passed}
+            transferLines={transferLines}
+            station={station}
+            theme={APP_THEME.JR_WEST}
+          />
+        </View>
       )}
     </View>
   );

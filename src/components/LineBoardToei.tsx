@@ -81,13 +81,22 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
   const dim = useWindowDimensions();
 
-  const horizontalAdditionalStyle = useMemo(
-    () => ({
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+  const horizontalAdditionalStyle = useMemo(() => {
+    const commonStyle = {
       marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-    }),
-    [dim.height]
-  );
+    };
+
+    if (!station.stationNumbers?.length) {
+      return {
+        ...commonStyle,
+        width: isTablet ? dim.height / 3 : dim.height / 2.5,
+      };
+    }
+    return {
+      ...commonStyle,
+      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+    };
+  }, [dim.height, station.stationNumbers]);
 
   if (en) {
     return (

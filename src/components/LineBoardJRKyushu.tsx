@@ -46,9 +46,6 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  nameCommon: {
-    marginBottom: isTablet ? 45 : 90,
-  },
 });
 
 const styles = { ...commonLineBoardStyles, ...localStyles };
@@ -287,12 +284,22 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     true
   );
 
+  const nameCommonStyle = useMemo(() => {
+    if (!station.stationNumbers?.length) {
+      return {};
+    }
+
+    return {
+      marginBottom: isTablet ? 45 : 90,
+    };
+  }, [station.stationNumbers]);
+
   return (
     <>
       <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
         <View
           style={[
-            styles.nameCommon,
+            nameCommonStyle,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
