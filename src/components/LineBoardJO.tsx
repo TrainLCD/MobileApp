@@ -176,6 +176,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             shape={numberingObj.lineSymbolShape}
             lineColor={numberingColor}
             stationNumber={numberingObj.stationNumber}
+            threeLetterCode={stationInLoop.threeLetterCode}
             allowScaling={false}
           />
         ) : null}
