@@ -24,7 +24,9 @@ export const commonLineBoardStyles = StyleSheet.create({
   // Root variant for West/JO style
   rootWestJO: {
     flex: 1,
-    bottom: isTablet ? '40%' : undefined,
+    bottom: isTablet
+      ? Platform.select({ android: '30%', default: '40%' })
+      : undefined,
   },
   bar: {
     position: 'absolute',
