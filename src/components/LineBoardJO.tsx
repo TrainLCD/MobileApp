@@ -165,7 +165,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     const wrapperMarginLeft = barWidth / 2.5;
     const containerCenter =
       wrapperMarginLeft + index * containerWidth + containerWidth / 2;
-    return dotCenter - containerCenter + 12;
+    return dotCenter - containerCenter + 16;
   }, [barWidth, dim.width, index]);
 
   return (
