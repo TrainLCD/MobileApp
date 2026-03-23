@@ -4,6 +4,7 @@ import * as admin from 'firebase-admin';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { GoogleAuth } from 'google-auth-library';
 import { normalizeRomanText } from '../utils/normalize';
+import { resolveStandardVoiceName } from '../utils/ttsVoice';
 
 process.env.TZ = 'Asia/Tokyo';
 
@@ -217,17 +218,16 @@ export const tts = onCall(
         e
       );
     }
-    const defaultJaVoice = ttsConfig?.jaVoiceName || DEFAULT_JA_VOICE_NAME;
-    const defaultEnVoice = ttsConfig?.enVoiceName || DEFAULT_EN_VOICE_NAME;
-
-    const jaVoiceName =
-      (typeof req.data.jaVoiceName === 'string' &&
-        req.data.jaVoiceName.trim()) ||
-      defaultJaVoice;
-    const enVoiceName =
-      (typeof req.data.enVoiceName === 'string' &&
-        req.data.enVoiceName.trim()) ||
-      defaultEnVoice;
+    const jaVoiceName = resolveStandardVoiceName(
+      req.data.jaVoiceName,
+      ttsConfig?.jaVoiceName,
+      DEFAULT_JA_VOICE_NAME
+    );
+    const enVoiceName = resolveStandardVoiceName(
+      req.data.enVoiceName,
+      ttsConfig?.enVoiceName,
+      DEFAULT_EN_VOICE_NAME
+    );
 
     const strippedJa = stripSsml(ssmlJa);
     const strippedEn = stripSsml(ssmlEn);
