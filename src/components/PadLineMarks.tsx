@@ -5,7 +5,6 @@ import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
-import { useScale } from '~/hooks/useScale';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { isEnAtom } from '~/store/selectors/isEn';
 import isTablet from '~/utils/isTablet';
@@ -23,6 +22,7 @@ type Props = {
 
 const stylesNormal = StyleSheet.create({
   lineMarkWrapper: {
+    marginTop: 4,
     flexDirection: 'row',
   },
   lineNameWrapper: {
@@ -109,8 +109,6 @@ const PadLineMarks: React.FC<Props> = ({
     [transferLines, isEn, isDifferentStationName, station]
   );
 
-  const { heightScale } = useScale();
-
   if (!isTablet) {
     return <></>;
   }
@@ -118,9 +116,7 @@ const PadLineMarks: React.FC<Props> = ({
   return (
     <View
       style={{
-        marginTop: heightScale(
-          Platform.select({ ios: 8, android: 0, default: 0 })
-        ),
+        marginTop: Platform.select({ ios: 8, default: 0 }),
       }}
     >
       {!!lineMarks.length && theme === APP_THEME.JR_WEST && (
@@ -129,15 +125,7 @@ const PadLineMarks: React.FC<Props> = ({
 
       {lineMarks.map((lm, i) =>
         lm ? (
-          <View
-            style={[
-              styles.lineMarkWrapper,
-              {
-                marginTop: heightScale(4),
-              },
-            ]}
-            key={transferLines[i]?.id}
-          >
+          <View style={styles.lineMarkWrapper} key={transferLines[i]?.id}>
             <TransferLineMark
               line={transferLines[i]}
               mark={lm}
@@ -160,7 +148,6 @@ const PadLineMarks: React.FC<Props> = ({
         ) : (
           <View style={styles.lineMarkWrapper} key={transferLines[i]?.id}>
             <TransferLineDot
-              key={transferLines[i]?.id}
               line={transferLines[i]}
               small
               shouldGrayscale={shouldGrayscale}
