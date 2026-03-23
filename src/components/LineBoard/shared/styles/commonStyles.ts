@@ -121,7 +121,6 @@ export const commonLineBoardStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 5,
     marginBottom: Platform.select({ android: isTablet ? -8 : -6, ios: 0 }),
-    ...(Platform.OS === 'android' && isTablet && { includeFontPadding: false }),
   },
   // Station name variant for West style
   stationNameWest: {
@@ -130,7 +129,6 @@ export const commonLineBoardStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: Platform.select({ android: isTablet ? -8 : -6, ios: 0 }),
     marginLeft: 5,
-    ...(Platform.OS === 'android' && isTablet && { includeFontPadding: false }),
     bottom: isTablet ? 32 : 0,
   },
   // Station name variant for JO style
@@ -139,7 +137,6 @@ export const commonLineBoardStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 12,
     marginBottom: Platform.select({ android: isTablet ? -8 : -6, ios: 0 }),
-    ...(Platform.OS === 'android' && isTablet && { includeFontPadding: false }),
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),

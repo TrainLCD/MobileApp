@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
-    fontSize: RFValue(12),
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
     color: '#fff',
   },
   textFill: {
