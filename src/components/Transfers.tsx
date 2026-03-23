@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
     flexBasis: '50%',
   },
   lineNameContainer: {
+    flex: 1,
     marginLeft: isTablet ? 4 : 2,
   },
   lineName: {
