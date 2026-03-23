@@ -314,10 +314,7 @@ const NumberingIconSquare: React.FC<Props> = ({
     );
   }
 
-  if (
-    size === NUMBERING_ICON_SIZE.MEDIUM ||
-    size === NUMBERING_ICON_SIZE.LARGE
-  ) {
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootMedium, { borderColor: lineColor }]}>
         <Typography style={styles.lineSymbolMedium}>{lineSymbol}</Typography>
