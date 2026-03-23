@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -34,6 +34,11 @@ type Props = {
   stations: Station[];
   hasTerminus: boolean;
 };
+
+// JRKyushuはヘッダーが他のテーマより高いため、独自のbottomオフセットを使用
+const JR_KYUSHU_CONTAINER_BOTTOM: number | undefined = isTablet
+  ? Platform.select({ android: 32, default: 84 })
+  : undefined;
 
 // Local style overrides specific to JRKyushu
 const localStyles = StyleSheet.create({
@@ -300,7 +305,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <>
-      <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
+      <View
+        style={[
+          styles.stationNameContainer,
+          { width: dim.width / 9, bottom: JR_KYUSHU_CONTAINER_BOTTOM },
+        ]}
+      >
         <View
           style={[
             nameCommonStyle,
@@ -362,7 +372,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           styles.chevron,
           additionalChevronStyle,
           {
-            bottom: isTablet ? dim.height / 3.5 + 32 : 32,
+            bottom: isTablet
+              ? dim.height / 3.5 + (JR_KYUSHU_CONTAINER_BOTTOM ?? 0) - 52
+              : 32,
             marginLeft: widthScale(14),
           },
         ]}

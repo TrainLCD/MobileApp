@@ -18,6 +18,9 @@ import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
 const styles = StyleSheet.create({
+  root: {
+    zIndex: 9999,
+  },
   topBar: {
     backgroundColor: 'white',
     height: 2,
@@ -165,7 +168,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
   const lineColor = currentLine?.color ?? '#00ac9a';
 
   return (
-    <View>
+    <View style={styles.root}>
       <HeaderBar height={15} lineColor={lineColor} />
       <View style={styles.topBar} />
       <LinearGradient

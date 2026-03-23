@@ -8,6 +8,11 @@ export const BAR_BOTTOM_WEST = isTablet ? 32 : 48;
 export const BAR_BOTTOM_JO = isTablet ? 32 : 48;
 export const BAR_TERMINAL_BOTTOM_JO = isTablet ? 48 : 58;
 
+// Androidタブレットでは駅名がヘッダーに食い込むのを防ぐためbottomオフセットを縮小する
+export const STATION_NAME_CONTAINER_BOTTOM: number | undefined = isTablet
+  ? Platform.select({ android: 64, default: 84 })
+  : undefined;
+
 export const commonLineBoardStyles = StyleSheet.create({
   root: {
     height: '100%',
@@ -87,7 +92,7 @@ export const commonLineBoardStyles = StyleSheet.create({
   stationNameContainer: {
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    bottom: isTablet ? 84 : undefined,
+    bottom: STATION_NAME_CONTAINER_BOTTOM,
   },
   // Station name container variant for West/JO style
   stationNameContainerWestJO: {
@@ -113,7 +118,8 @@ export const commonLineBoardStyles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: 5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
+    marginBottom: Platform.select({ android: isTablet ? -10 : -6, ios: 0 }),
+    ...(Platform.OS === 'android' && isTablet && { includeFontPadding: false }),
   },
   // Station name variant for West style
   stationNameWest: {
