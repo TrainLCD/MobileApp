@@ -138,7 +138,8 @@ export const commonLineBoardStyles = StyleSheet.create({
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: 12,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
+    marginBottom: Platform.select({ android: isTablet ? -10 : -6, ios: 0 }),
+    ...(Platform.OS === 'android' && isTablet && { includeFontPadding: false }),
   },
   stationNameHorizontal: {
     fontSize: RFValue(18),
