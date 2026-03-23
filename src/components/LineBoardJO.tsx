@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -102,6 +102,7 @@ interface StationNameCellProps {
   stations: Station[];
   station: Station;
   hasNumberedStation: boolean;
+  index: number;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -109,6 +110,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   arrived,
   station: stationInLoop,
   hasNumberedStation,
+  index,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
 
@@ -130,13 +132,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const dim = useWindowDimensions();
 
   const additionalPadLineMarksContainerStyle = useMemo(() => {
+    const androidOffset = Platform.OS === 'android' && isTablet ? 60 : 0;
     if (!stationInLoop.stationNumbers?.length) {
       return {
-        top: dim.height - 130,
+        top: dim.height - 130 + androidOffset,
       };
     }
     return {
-      top: dim.height - 90,
+      top: dim.height - 90 + androidOffset,
     };
   }, [stationInLoop.stationNumbers, dim.height]);
 
@@ -150,6 +153,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       ),
     [arrived, numberingObj, stationInLoop]
   );
+
+  const barWidth = useBarWidth();
+  // ドット中央とstationNameContainer中央の水平位置差分を補正
+  const numberingLeftOffset = useMemo(() => {
+    if (!isTablet || Platform.OS !== 'android') {
+      return undefined;
+    }
+    const containerWidth = dim.width / 9;
+    const dotCenter = barWidth * (index + 1) - barWidth / 2;
+    const wrapperMarginLeft = barWidth / 2.5;
+    const containerCenter =
+      wrapperMarginLeft + index * containerWidth + containerWidth / 2;
+    return dotCenter - containerCenter + 16;
+  }, [barWidth, dim.width, index]);
+
   return (
     <View
       style={[
@@ -166,7 +184,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         passed={isPass}
       />
 
-      <View style={styles.numberingIconContainerJO}>
+      <View
+        style={[
+          styles.numberingIconContainerJO,
+          numberingLeftOffset != null && { left: numberingLeftOffset },
+        ]}
+      >
         {numberingObj &&
         isTablet &&
         hasNumberedStation &&
@@ -217,10 +240,11 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   );
 
   const stationNameCellForMap = useCallback(
-    (s: Station) => {
+    (s: Station, i: number) => {
       return (
         <StationNameCell
           key={s.id}
+          index={i}
           station={s}
           stations={stations}
           arrived={!isPassing}

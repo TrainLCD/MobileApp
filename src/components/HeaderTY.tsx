@@ -16,6 +16,9 @@ import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 
 const styles = StyleSheet.create({
+  root: {
+    zIndex: 9999,
+  },
   gradientRoot: {
     paddingTop: 14,
     paddingRight: 21,
@@ -146,7 +149,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
   const dim = useWindowDimensions();
 
   return (
-    <View>
+    <View style={styles.root}>
       <LinearGradient
         colors={['#333', '#212121', '#000']}
         locations={[0, 0.5, 0.5]}

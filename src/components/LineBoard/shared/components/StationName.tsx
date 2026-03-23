@@ -1,5 +1,10 @@
 import React, { useMemo } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import {
+  type StyleProp,
+  type TextStyle,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import type { Station } from '~/@types/graphql';
 import getStationNameR from '~/utils/getStationNameR';
 import isTablet from '~/utils/isTablet';
@@ -12,10 +17,19 @@ export interface StationNameProps {
   horizontal?: boolean;
   passed?: boolean;
   marginBottom?: number;
+  /** 縦書き時の各文字に適用する追加スタイル */
+  charStyle?: StyleProp<TextStyle>;
 }
 
 export const StationName: React.FC<StationNameProps> = React.memo(
-  ({ station, en, horizontal, passed, marginBottom }: StationNameProps) => {
+  ({
+    station,
+    en,
+    horizontal,
+    passed,
+    marginBottom,
+    charStyle,
+  }: StationNameProps) => {
     const stationNameR = useMemo(() => getStationNameR(station), [station]);
     const characters = useMemo(
       () => station.name?.split('') ?? [],
@@ -64,7 +78,11 @@ export const StationName: React.FC<StationNameProps> = React.memo(
       <View style={styles.stationNameMapContainer}>
         {characters.map((c, j) => (
           <Typography
-            style={[styles.stationName, passed ? styles.grayColor : null]}
+            style={[
+              styles.stationName,
+              passed ? styles.grayColor : null,
+              charStyle,
+            ]}
             key={`${j + 1}${c}`}
           >
             {c}

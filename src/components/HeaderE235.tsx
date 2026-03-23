@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     height: isTablet ? 200 : 128,
     flexDirection: 'row',
+    zIndex: 9999,
   },
   boundContainer: {
     width: '100%',
