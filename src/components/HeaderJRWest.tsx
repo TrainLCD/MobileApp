@@ -18,6 +18,9 @@ import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
+  root: {
+    zIndex: 9999,
+  },
   gradientRoot: {
     paddingRight: 21,
     paddingLeft: 21,
@@ -470,7 +473,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
   );
 
   return (
-    <View>
+    <View style={styles.root}>
       <LinearGradient
         colors={['#222222', '#212121']}
         style={styles.gradientRoot}

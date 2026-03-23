@@ -25,7 +25,10 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
-import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
+import {
+  commonLineBoardStyles,
+  STATION_NAME_CONTAINER_BOTTOM,
+} from './LineBoard/shared/styles/commonStyles';
 import Typography from './Typography';
 
 type Props = {
@@ -428,7 +431,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           styles.chevron,
           additionalChevronStyle,
           {
-            bottom: isTablet ? dim.height / 3.5 + 32 : 32,
+            bottom: isTablet
+              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              : 32,
             marginLeft: widthScale(15),
           },
         ]}
