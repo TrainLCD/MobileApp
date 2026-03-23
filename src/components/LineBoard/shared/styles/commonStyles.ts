@@ -128,8 +128,9 @@ export const commonLineBoardStyles = StyleSheet.create({
     width: isTablet ? 48 : 32,
     fontSize: RFValue(18),
     fontWeight: 'bold',
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
+    marginBottom: Platform.select({ android: isTablet ? -10 : -6, ios: 0 }),
     marginLeft: 5,
+    ...(Platform.OS === 'android' && isTablet && { includeFontPadding: false }),
     bottom: isTablet ? 32 : 0,
   },
   // Station name variant for JO style
