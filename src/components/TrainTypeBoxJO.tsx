@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { japaneseRegexp, parenthesisRegexp } from '../constants';
 import { useCurrentLine } from '../hooks';
@@ -30,40 +30,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     zIndex: 9999,
   },
-  charWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    transform: Platform.select({
-      // AndroidではskewXが効かないためmatrixで同等の変形を再現
-      // skewX(-5deg): tan(-5°) ≈ -0.0875
-      android: [
-        {
-          matrix: [1, 0, 0, 0, -0.0875, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-        },
-      ],
-      default: [{ skewX: '-5deg' }],
-    }),
-  },
   text: {
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: isTablet ? 36 : 24,
-  },
-  singleText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    transform: [{ skewX: '-5deg' }],
     fontSize: isTablet ? 36 : 24,
     flex: 1,
-    transform: Platform.select({
-      android: [
-        {
-          matrix: [1, 0, 0, 0, -0.0875, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-        },
-      ],
-      default: [{ skewX: '-5deg' }],
-    }),
   },
 });
 
@@ -152,33 +125,28 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
       trainTypeName &&
       japaneseRegexp.test(trainTypeName) ? (
         trainTypeName.split('').map((char, idx) => (
-          <View
-            collapsable={false}
-            style={styles.charWrapper}
+          <Typography
+            numberOfLines={numberOfLines}
+            adjustsFontSizeToFit
+            style={[
+              styles.text,
+              {
+                color: trainTypeColor,
+                fontFamily: undefined,
+                fontWeight: '800',
+              },
+            ]}
             key={`${char}${idx.toString()}`}
           >
-            <Typography
-              numberOfLines={numberOfLines}
-              adjustsFontSizeToFit
-              style={[
-                styles.text,
-                {
-                  color: trainTypeColor,
-                  fontFamily: undefined,
-                  fontWeight: '800',
-                },
-              ]}
-            >
-              {char}
-            </Typography>
-          </View>
+            {char}
+          </Typography>
         ))
       ) : (
         <Typography
           numberOfLines={1}
           adjustsFontSizeToFit
           style={[
-            styles.singleText,
+            styles.text,
             {
               color: trainTypeColor,
             },
