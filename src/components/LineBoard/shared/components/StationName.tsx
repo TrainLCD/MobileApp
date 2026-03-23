@@ -1,6 +1,10 @@
-import type React from 'react';
-import { useMemo } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  type StyleProp,
+  type TextStyle,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import type { Station } from '~/@types/graphql';
 import getStationNameR from '~/utils/getStationNameR';
 import isTablet from '~/utils/isTablet';
@@ -13,65 +17,78 @@ export interface StationNameProps {
   horizontal?: boolean;
   passed?: boolean;
   marginBottom?: number;
+  /** 縦書き時の各文字に適用する追加スタイル */
+  charStyle?: StyleProp<TextStyle>;
 }
 
-export const StationName: React.FC<StationNameProps> = ({
-  station,
-  en,
-  horizontal,
-  passed,
-  marginBottom,
-}: StationNameProps) => {
-  const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const dim = useWindowDimensions();
-
-  const horizontalAdditionalStyle = useMemo(
-    () => ({
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom:
-        marginBottom ?? (isTablet ? dim.height / 10 : dim.height / 6),
-    }),
-    [dim.height, marginBottom]
-  );
-
-  if (en) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAdditionalStyle,
-        ]}
-      >
-        {stationNameR}
-      </Typography>
+export const StationName: React.FC<StationNameProps> = React.memo(
+  ({
+    station,
+    en,
+    horizontal,
+    passed,
+    marginBottom,
+    charStyle,
+  }: StationNameProps) => {
+    const stationNameR = useMemo(() => getStationNameR(station), [station]);
+    const characters = useMemo(
+      () => station.name?.split('') ?? [],
+      [station.name]
     );
-  }
+    const dim = useWindowDimensions();
 
-  if (horizontal) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAdditionalStyle,
-        ]}
-      >
-        {station.name}
-      </Typography>
+    const horizontalAdditionalStyle = useMemo(
+      () => ({
+        width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+        marginBottom:
+          marginBottom ?? (isTablet ? dim.height / 8 : dim.height / 6),
+      }),
+      [dim.height, marginBottom]
     );
-  }
 
-  return (
-    <View style={styles.stationNameMapContainer}>
-      {station.name?.split('').map((c, j) => (
+    if (en) {
+      return (
         <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
+          style={[
+            styles.stationNameHorizontal,
+            passed ? styles.grayColor : null,
+            horizontalAdditionalStyle,
+          ]}
         >
-          {c}
+          {stationNameR}
         </Typography>
-      ))}
-    </View>
-  );
-};
+      );
+    }
+
+    if (horizontal) {
+      return (
+        <Typography
+          style={[
+            styles.stationNameHorizontal,
+            passed ? styles.grayColor : null,
+            horizontalAdditionalStyle,
+          ]}
+        >
+          {station.name}
+        </Typography>
+      );
+    }
+
+    return (
+      <View style={styles.stationNameMapContainer}>
+        {characters.map((c, j) => (
+          <Typography
+            style={[
+              styles.stationName,
+              passed ? styles.grayColor : null,
+              charStyle,
+            ]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+    );
+  }
+);

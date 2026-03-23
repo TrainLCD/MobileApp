@@ -5,7 +5,6 @@ import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import { useGetLineMark, useIsDifferentStationName } from '~/hooks';
-import { useScale } from '~/hooks/useScale';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { isEnAtom } from '~/store/selectors/isEn';
 import isTablet from '~/utils/isTablet';
@@ -23,6 +22,7 @@ type Props = {
 
 const stylesNormal = StyleSheet.create({
   lineMarkWrapper: {
+    marginTop: 4,
     flexDirection: 'row',
   },
   lineNameWrapper: {
@@ -46,7 +46,7 @@ const stylesWest = StyleSheet.create({
     height: 16,
     backgroundColor: '#212121',
     alignSelf: 'center',
-    marginTop: 6,
+    marginTop: Platform.select({ android: 16, default: 6 }),
   },
   lineMarkWrapper: {
     marginTop: 4,
@@ -78,13 +78,36 @@ const PadLineMarks: React.FC<Props> = ({
 
   const lineMarks = useMemo(
     () =>
-      transferLines.map((line) => getLineMarkFunc({ line, shouldGrayscale })),
+      transferLines.map((line) =>
+        getLineMarkFunc({
+          line,
+          shouldGrayscale,
+          stationNumbers: line.station?.stationNumbers,
+        })
+      ),
     [getLineMarkFunc, shouldGrayscale, transferLines]
   );
 
   const isDifferentStationName = useIsDifferentStationName();
 
-  const { heightScale } = useScale();
+  const lineLabels = useMemo(
+    () =>
+      transferLines.map((tl) => {
+        const name = isEn
+          ? tl.nameRoman?.replace(parenthesisRegexp, '')
+          : tl.nameShort?.replace(parenthesisRegexp, '');
+        const diff = isDifferentStationName(station, tl);
+        const suffix = diff
+          ? `\n[ ${
+              isEn
+                ? tl.station?.nameRoman?.replace(parenthesisRegexp, '')
+                : tl.station?.name?.replace(parenthesisRegexp, '')
+            } ]`
+          : '';
+        return `${name}${suffix}`;
+      }),
+    [transferLines, isEn, isDifferentStationName, station]
+  );
 
   if (!isTablet) {
     return <></>;
@@ -93,9 +116,7 @@ const PadLineMarks: React.FC<Props> = ({
   return (
     <View
       style={{
-        marginTop: heightScale(
-          Platform.select({ ios: 8, android: 0, default: 0 })
-        ),
+        marginTop: Platform.select({ ios: 8, default: 0 }),
       }}
     >
       {!!lineMarks.length && theme === APP_THEME.JR_WEST && (
@@ -104,15 +125,7 @@ const PadLineMarks: React.FC<Props> = ({
 
       {lineMarks.map((lm, i) =>
         lm ? (
-          <View
-            style={[
-              styles.lineMarkWrapper,
-              {
-                marginTop: heightScale(4),
-              },
-            ]}
-            key={transferLines[i]?.id}
-          >
+          <View style={styles.lineMarkWrapper} key={transferLines[i]?.id}>
             <TransferLineMark
               line={transferLines[i]}
               mark={lm}
@@ -128,38 +141,13 @@ const PadLineMarks: React.FC<Props> = ({
                   },
                 ]}
               >
-                {`${
-                  isEn
-                    ? transferLines[i]?.nameRoman?.replace(
-                        parenthesisRegexp,
-                        ''
-                      )
-                    : transferLines[i]?.nameShort?.replace(
-                        parenthesisRegexp,
-                        ''
-                      )
-                }${
-                  isDifferentStationName(station, transferLines[i])
-                    ? `\n[ ${
-                        isEn
-                          ? transferLines[i]?.station?.nameRoman?.replace(
-                              parenthesisRegexp,
-                              ''
-                            )
-                          : transferLines[i]?.station?.name?.replace(
-                              parenthesisRegexp,
-                              ''
-                            )
-                      } ]`
-                    : ''
-                }`}
+                {lineLabels[i]}
               </Typography>
             </View>
           </View>
         ) : (
           <View style={styles.lineMarkWrapper} key={transferLines[i]?.id}>
             <TransferLineDot
-              key={transferLines[i]?.id}
               line={transferLines[i]}
               small
               shouldGrayscale={shouldGrayscale}

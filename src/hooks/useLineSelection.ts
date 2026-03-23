@@ -181,7 +181,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
   );
 
   const openModalByLineId = useCallback(
-    async (lineId: number) => {
+    async (lineId: number, wantedDestinationId?: number | null) => {
       const result = await fetchStationsByLineId({
         variables: { lineId },
       });
@@ -210,12 +210,17 @@ export const useLineSelection = (): UseLineSelectionResult => {
 
       if (!station) return;
 
+      const wantedDestination =
+        wantedDestinationId != null
+          ? (stations.find((s) => s.groupId === wantedDestinationId) ?? null)
+          : null;
+
       setStationState((prev) => ({
         ...prev,
         selectedDirection: null,
         pendingStation: station,
         pendingStations: stations,
-        wantedDestination: null,
+        wantedDestination,
       }));
       setLineState((prev) => ({
         ...prev,
@@ -238,7 +243,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
   );
 
   const openModalByTrainTypeId = useCallback(
-    async (lineGroupId: number) => {
+    async (lineGroupId: number, wantedDestinationId?: number | null) => {
       const result = await fetchStationsByLineGroupId({
         variables: { lineGroupId },
       });
@@ -277,12 +282,17 @@ export const useLineSelection = (): UseLineSelectionResult => {
 
       if (!station) return;
 
+      const wantedDestination =
+        wantedDestinationId != null
+          ? (stations.find((s) => s.groupId === wantedDestinationId) ?? null)
+          : null;
+
       setStationState((prev) => ({
         ...prev,
         selectedDirection: null,
         pendingStation: station,
         pendingStations: stations,
-        wantedDestination: null,
+        wantedDestination,
       }));
       setLineState((prev) => ({
         ...prev,
@@ -317,9 +327,12 @@ export const useLineSelection = (): UseLineSelectionResult => {
     async (route: SavedRoute) => {
       setIsSelectBoundModalOpen(true);
       if (route.hasTrainType) {
-        await openModalByTrainTypeId(route.trainTypeId);
+        await openModalByTrainTypeId(
+          route.trainTypeId,
+          route.wantedDestinationId
+        );
       } else {
-        await openModalByLineId(route.lineId);
+        await openModalByLineId(route.lineId, route.wantedDestinationId);
       }
     },
     [openModalByLineId, openModalByTrainTypeId]

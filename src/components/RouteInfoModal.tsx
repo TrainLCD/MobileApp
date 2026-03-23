@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Platform, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -19,6 +19,7 @@ import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
+import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -60,7 +61,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 21,
   },
-  subtitle: { width: '100%', fontSize: 16 },
   title: {
     width: '100%',
     marginBottom: 24,
@@ -76,6 +76,19 @@ const styles = StyleSheet.create({
   noSearchResulText: {
     fontWeight: 'bold',
   },
+  expandableToggle: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+    paddingHorizontal: 12,
+  },
+  expandableToggleTextLight: {
+    color: '#333',
+  },
+  expandableToggleTextLED: {
+    color: '#fff',
+  },
 });
 
 type Props = {
@@ -85,6 +98,14 @@ type Props = {
   loading: boolean;
   onSelect?: (station: Station) => void;
   onClose: () => void;
+  /** 通知対象の駅IDリスト */
+  targetStationIds?: number[];
+  /** 通知モードのトグル */
+  onToggleNotification?: (station: Station) => void;
+  /** 終着駅として設定されている駅のgroupId */
+  wantedDestinationGroupId?: number | null;
+  /** 終着駅の設定トグル */
+  onToggleDestination?: (station: Station) => void;
 };
 
 export const RouteInfoModal = ({
@@ -94,6 +115,10 @@ export const RouteInfoModal = ({
   loading,
   onSelect,
   onClose,
+  targetStationIds,
+  onToggleNotification,
+  wantedDestinationGroupId,
+  onToggleDestination,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -103,20 +128,94 @@ export const RouteInfoModal = ({
     ? (trainType?.name ?? '普通/各駅停車')
     : (trainType?.nameRoman ?? 'Local');
 
+  const stationSubtitles = useMemo(
+    () =>
+      new Map(
+        stations.map((item) => {
+          const lines = filterBusLinesForNonBusStation(item.line, item.lines);
+          const subtitle = Array.from(
+            new Set(
+              (lines ?? [])
+                .map((l) => getLocalizedLineName(l, isJapanese))
+                .filter(Boolean)
+            )
+          ).join(isJapanese ? ' ' : ', ');
+          return [item.id, subtitle];
+        })
+      ),
+    [stations]
+  );
+
+  const hasStationSettings =
+    onToggleNotification != null || onToggleDestination != null;
+  const [expandedStationId, setExpandedStationId] = useState<number | null>(
+    null
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
-      const { line, lines: linesRaw } = item;
-      const lines = filterBusLinesForNonBusStation(line, linesRaw);
+      const { line } = item;
       if (!line) return null;
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
-      const subtitle = Array.from(
-        new Set(
-          (lines ?? [])
-            .map((l) => getLocalizedLineName(l, isJapanese))
-            .filter(Boolean)
-        )
-      ).join(isJapanese ? ' ' : ', ');
+      const subtitle = stationSubtitles.get(item.id) ?? '';
+      const isExpanded = expandedStationId === item.id;
+
+      if (hasStationSettings) {
+        const isNotifyEnabled =
+          targetStationIds?.includes(item.id ?? -1) ?? false;
+        const isSetAsTerminus = wantedDestinationGroupId === item.groupId;
+
+        return (
+          <CommonCard
+            targetStation={item}
+            line={line}
+            title={title}
+            subtitle={subtitle}
+            subtitleNumberOfLines={1}
+            expanded={isExpanded}
+            onExpandedChange={(exp) =>
+              setExpandedStationId(exp ? (item.id ?? null) : null)
+            }
+            expandableContent={
+              <>
+                {onToggleNotification && (
+                  <ToggleButton
+                    outline
+                    onToggle={() => onToggleNotification(item)}
+                    state={isNotifyEnabled}
+                    style={styles.expandableToggle}
+                    textStyle={
+                      isLEDTheme
+                        ? styles.expandableToggleTextLED
+                        : styles.expandableToggleTextLight
+                    }
+                    activeOpacity={1}
+                  >
+                    {translate('enableNotificationMode')}
+                  </ToggleButton>
+                )}
+                {onToggleDestination && (
+                  <ToggleButton
+                    outline
+                    style={styles.expandableToggle}
+                    textStyle={
+                      isLEDTheme
+                        ? styles.expandableToggleTextLED
+                        : styles.expandableToggleTextLight
+                    }
+                    activeOpacity={1}
+                    onToggle={() => onToggleDestination(item)}
+                    state={isSetAsTerminus}
+                  >
+                    {translate('setAsTerminus')}
+                  </ToggleButton>
+                )}
+              </>
+            }
+          />
+        );
+      }
 
       return (
         <CommonCard
@@ -129,7 +228,17 @@ export const RouteInfoModal = ({
         />
       );
     },
-    [onSelect]
+    [
+      onSelect,
+      stationSubtitles,
+      hasStationSettings,
+      expandedStationId,
+      targetStationIds,
+      wantedDestinationGroupId,
+      onToggleNotification,
+      onToggleDestination,
+      isLEDTheme,
+    ]
   );
 
   const keyExtractor = useCallback(

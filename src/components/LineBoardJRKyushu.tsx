@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -35,19 +35,23 @@ type Props = {
   hasTerminus: boolean;
 };
 
+// JRKyushuはヘッダーが他のテーマより高いため、独自のbottomオフセットを使用
+const JR_KYUSHU_CONTAINER_BOTTOM: number | undefined = isTablet
+  ? Platform.select({ android: 32, default: 84 })
+  : undefined;
+
 // Local style overrides specific to JRKyushu
 const localStyles = StyleSheet.create({
   numberingIconContainer: {
     position: 'absolute',
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    bottom: isTablet ? 8 : 72,
+    width: isTablet ? 96 : 64,
+    height: isTablet ? 96 : 64,
+    bottom: isTablet ? -22 : 52,
+    left: isTablet ? -24 : -16,
     transform: [{ scale: 0.5 }],
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  nameCommon: {
-    marginBottom: isTablet ? 45 : 90,
+    overflow: 'visible',
   },
 });
 
@@ -287,12 +291,29 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     true
   );
 
+  const nameCommonStyle = useMemo(() => {
+    if (!station.stationNumbers?.length) {
+      return {
+        marginBottom: isTablet ? 0 : 65,
+      };
+    }
+
+    return {
+      marginBottom: isTablet ? 45 : 95,
+    };
+  }, [station.stationNumbers]);
+
   return (
     <>
-      <View style={[styles.stationNameContainer, { width: dim.width / 9 }]}>
+      <View
+        style={[
+          styles.stationNameContainer,
+          { width: dim.width / 9, bottom: JR_KYUSHU_CONTAINER_BOTTOM },
+        ]}
+      >
         <View
           style={[
-            styles.nameCommon,
+            nameCommonStyle,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
@@ -351,7 +372,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           styles.chevron,
           additionalChevronStyle,
           {
-            bottom: isTablet ? dim.height / 3.5 + 32 : 32,
+            bottom: isTablet
+              ? dim.height / 3.5 + (JR_KYUSHU_CONTAINER_BOTTOM ?? 0) - 52
+              : 32,
             marginLeft: widthScale(14),
           },
         ]}

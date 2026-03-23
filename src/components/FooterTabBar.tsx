@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -23,6 +23,11 @@ export type ButtonLayout = {
   width: number;
   height: number;
 };
+
+const ICON_COLOR = {
+  active: '#0A84FF',
+  inactive: '#6B7280', // gray-500 相当
+} as const;
 
 const styles = StyleSheet.create({
   container: {
@@ -62,18 +67,32 @@ const styles = StyleSheet.create({
 type Props = {
   active?: FooterTab;
   visible?: boolean;
+  onSearchButtonLayout?: (layout: ButtonLayout) => void;
   onSettingsButtonLayout?: (layout: ButtonLayout) => void;
 };
 
 const FooterTabBar: React.FC<Props> = ({
   active = 'home',
   visible = true,
+  onSearchButtonLayout,
   onSettingsButtonLayout,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const searchButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
+
+  const handleSearchButtonLayout = useCallback(
+    (_event: LayoutChangeEvent) => {
+      if (onSearchButtonLayout && searchButtonRef.current) {
+        searchButtonRef.current.measureInWindow((x, y, width, height) => {
+          onSearchButtonLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onSearchButtonLayout]
+  );
 
   const handleSettingsButtonLayout = useCallback(
     (_event: LayoutChangeEvent) => {
@@ -84,14 +103,6 @@ const FooterTabBar: React.FC<Props> = ({
       }
     },
     [onSettingsButtonLayout]
-  );
-
-  const iconColor = useMemo(
-    () => ({
-      active: '#0A84FF',
-      inactive: '#6B7280', // gray-500 相当
-    }),
-    []
   );
 
   if (!visible) return null;
@@ -111,17 +122,19 @@ const FooterTabBar: React.FC<Props> = ({
       >
         <View style={styles.content}>
           <Pressable
+            ref={searchButtonRef}
             style={styles.button}
             accessibilityRole="button"
             onPress={() => {
               navigation.navigate('RouteSearch' as never);
             }}
+            onLayout={handleSearchButtonLayout}
           >
             <Ionicons
               name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
               size={26}
               color={
-                active === 'search' ? iconColor.active : iconColor.inactive
+                active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive
               }
             />
           </Pressable>
@@ -136,7 +149,9 @@ const FooterTabBar: React.FC<Props> = ({
             <Ionicons
               name={active === 'home' ? 'navigate' : 'navigate-outline'}
               size={28}
-              color={active === 'home' ? iconColor.active : iconColor.inactive}
+              color={
+                active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive
+              }
             />
           </Pressable>
 
@@ -153,7 +168,7 @@ const FooterTabBar: React.FC<Props> = ({
               name={active === 'settings' ? 'settings' : 'settings-outline'}
               size={26}
               color={
-                active === 'settings' ? iconColor.active : iconColor.inactive
+                active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
               }
             />
           </Pressable>

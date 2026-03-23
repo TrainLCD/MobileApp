@@ -1,18 +1,18 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import { useNavigation } from '@react-navigation/native';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Linking,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
+  Animated as RNAnimated,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -125,7 +125,7 @@ const getLicenseInfo = (
 const Licenses: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  const scrollY = useSharedValue(0);
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -241,11 +241,12 @@ const Licenses: React.FC = () => {
     []
   );
 
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
-  });
+    [scrollY]
+  );
 
   return (
     <>

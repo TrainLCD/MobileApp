@@ -1,16 +1,21 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import Animated, {
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
   Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+  Platform,
+  Animated as RNAnimated,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { TrainType } from '~/@types/graphql';
-import { parenthesisRegexp } from '../constants';
+import { FONTS, parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
   useLazyPrevious,
@@ -75,8 +80,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const AnimatedTypography = Animated.createAnimatedComponent(Typography);
-
 const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
@@ -85,7 +88,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
 
-  const textOpacityAnim = useSharedValue(0);
+  const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
   const nextTrainType = useNextTrainType();
   const nextLine = useNextLine();
@@ -171,6 +174,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
 
   const prevMarginLeft = usePrevious(marginLeft);
   const prevLetterSpacing = usePrevious(letterSpacing);
+  const animatedTextBaseStyle = useMemo(
+    () => ({
+      fontFamily:
+        theme === APP_THEME.LED ? FONTS.JFDotJiskan24h : FONTS.RobotoBold,
+    }),
+    [theme]
+  );
 
   const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
 
@@ -181,18 +191,18 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   }, []);
 
   const resetValue = useCallback(() => {
-    textOpacityAnim.value = 0;
+    textOpacityAnim.setValue(0);
   }, [textOpacityAnim]);
 
   const updateOpacity = useCallback(() => {
-    textOpacityAnim.value = withTiming(
-      1,
-      {
-        duration: headerTransitionDelay,
-        easing: Easing.ease,
-      },
-      (finished) => runOnJS(handleFinish)(finished)
-    );
+    RNAnimated.timing(textOpacityAnim, {
+      toValue: 1,
+      duration: headerTransitionDelay,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      handleFinish(finished);
+    });
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   // 電車種別が変更されたときのみfadeOutFinishedをリセット
@@ -209,12 +219,21 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     }
   }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity]);
 
-  const textTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: textOpacityAnim.value,
-  }));
-  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - textOpacityAnim.value,
-  }));
+  const textTopAnimatedStyles = useMemo(
+    () => ({
+      opacity: textOpacityAnim,
+    }),
+    [textOpacityAnim]
+  );
+  const textBottomAnimatedStyles = useMemo(
+    () => ({
+      opacity: textOpacityAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 0],
+      }),
+    }),
+    [textOpacityAnim]
+  );
 
   const showNextTrainType = useMemo(
     () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
@@ -246,11 +265,13 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         />
 
         <View style={styles.textWrapper}>
-          <AnimatedTypography
+          <RNAnimated.Text
             style={[
               textTopAnimatedStyles,
               [
                 styles.text,
+                animatedTextBaseStyle,
+                theme === APP_THEME.LED && { fontWeight: 'normal' as const },
                 {
                   letterSpacing,
                   marginLeft,
@@ -261,12 +282,14 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             numberOfLines={numberOfLines}
           >
             {trainTypeName}
-          </AnimatedTypography>
+          </RNAnimated.Text>
         </View>
 
-        <AnimatedTypography
+        <RNAnimated.Text
           style={[
             styles.text,
+            animatedTextBaseStyle,
+            theme === APP_THEME.LED && { fontWeight: 'normal' as const },
             textBottomAnimatedStyles,
             {
               letterSpacing: prevLetterSpacing,
@@ -277,7 +300,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           numberOfLines={prevNumberOfLines}
         >
           {prevTrainTypeName}
-        </AnimatedTypography>
+        </RNAnimated.Text>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <Typography

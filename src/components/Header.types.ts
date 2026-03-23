@@ -1,4 +1,4 @@
-import type { AnimatedStyle } from 'react-native-reanimated';
+import type { StyleProp, TextStyle } from 'react-native';
 import type { Line, Station, StationNumber, TrainType } from '~/@types/graphql';
 import type {
   HeaderLangState,
@@ -61,12 +61,14 @@ export type HeaderAnimationState = {
   prevIsJapaneseState: boolean;
 
   // アニメーションスタイル
-  stateTopAnimatedStyles: AnimatedStyle;
-  stateBottomAnimatedStyles: AnimatedStyle;
-  topNameAnimatedAnchorStyle: AnimatedStyle;
-  bottomNameAnimatedAnchorStyle: AnimatedStyle;
-  topNameAnimatedStyles: AnimatedStyle;
-  bottomNameAnimatedStyles: AnimatedStyle;
-  boundTopAnimatedStyles: AnimatedStyle;
-  boundBottomAnimatedStyles: AnimatedStyle;
+  stateTopAnimatedStyles: StyleProp<TextStyle>;
+  stateBottomAnimatedStyles: StyleProp<TextStyle>;
+  stateTopAnimatedStylesRight: StyleProp<TextStyle>;
+  stateBottomAnimatedStylesRight: StyleProp<TextStyle>;
+  topNameAnimatedAnchorStyle: StyleProp<TextStyle>;
+  bottomNameAnimatedAnchorStyle: StyleProp<TextStyle>;
+  topNameAnimatedStyles: StyleProp<TextStyle>;
+  bottomNameAnimatedStyles: StyleProp<TextStyle>;
+  boundTopAnimatedStyles: StyleProp<TextStyle>;
+  boundBottomAnimatedStyles: StyleProp<TextStyle>;
 };

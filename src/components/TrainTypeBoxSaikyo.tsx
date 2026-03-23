@@ -1,26 +1,31 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import Animated, {
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
   Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+  Platform,
+  Animated as RNAnimated,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { TrainType } from '~/@types/graphql';
-import { parenthesisRegexp } from '~/constants';
+import { FONTS, parenthesisRegexp } from '~/constants';
 import { useCurrentLine, useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
-import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
@@ -72,8 +77,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const AnimatedTypography = Animated.createAnimatedComponent(Typography);
-
 const TrainTypeBoxSaikyo: React.FC<Props> = ({
   trainType,
   lineColor,
@@ -83,8 +86,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const currentLine = useCurrentLine();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
-  const textOpacityAnim = useSharedValue(0);
+  const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
   const isBus = isBusLine(currentLine);
 
@@ -174,6 +178,12 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const prevPaddingLeft = usePrevious(paddingLeft);
   const prevTrainTypeText = usePrevious(trainTypeName);
   const prevLetterSpacing = usePrevious(letterSpacing);
+  const animatedTextBaseStyle = useMemo(
+    () => ({
+      fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : FONTS.RobotoBold,
+    }),
+    [isLEDTheme]
+  );
 
   const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
 
@@ -184,18 +194,18 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   }, []);
 
   const resetValue = useCallback(() => {
-    textOpacityAnim.value = 0;
+    textOpacityAnim.setValue(0);
   }, [textOpacityAnim]);
 
   const updateOpacity = useCallback(() => {
-    textOpacityAnim.value = withTiming(
-      1,
-      {
-        duration: headerTransitionDelay,
-        easing: Easing.ease,
-      },
-      (finished) => runOnJS(handleFinish)(finished)
-    );
+    RNAnimated.timing(textOpacityAnim, {
+      toValue: 1,
+      duration: headerTransitionDelay,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      handleFinish(finished);
+    });
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
   // 電車種別が変更されたときのみfadeOutFinishedをリセット
@@ -212,12 +222,21 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     }
   }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity]);
 
-  const textTopAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: textOpacityAnim.value,
-  }));
-  const textBottomAnimatedStyles = useAnimatedStyle(() => ({
-    opacity: 1 - textOpacityAnim.value,
-  }));
+  const textTopAnimatedStyles = useMemo(
+    () => ({
+      opacity: textOpacityAnim,
+    }),
+    [textOpacityAnim]
+  );
+  const textBottomAnimatedStyles = useMemo(
+    () => ({
+      opacity: textOpacityAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 0],
+      }),
+    }),
+    [textOpacityAnim]
+  );
 
   const numberOfLines = useMemo(
     // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
@@ -253,11 +272,13 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         />
 
         <View style={styles.textWrapper}>
-          <AnimatedTypography
+          <RNAnimated.Text
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
               styles.text,
+              animatedTextBaseStyle,
+              isLEDTheme && { fontWeight: 'normal' as const },
               textTopAnimatedStyles,
               {
                 paddingLeft,
@@ -266,14 +287,16 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {trainTypeName}
-          </AnimatedTypography>
+          </RNAnimated.Text>
         </View>
         <View style={styles.textWrapper}>
-          <AnimatedTypography
+          <RNAnimated.Text
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
               styles.text,
+              animatedTextBaseStyle,
+              isLEDTheme && { fontWeight: 'normal' as const },
               textBottomAnimatedStyles,
               {
                 paddingLeft: prevPaddingLeft,
@@ -282,7 +305,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {prevTrainTypeText}
-          </AnimatedTypography>
+          </RNAnimated.Text>
         </View>
       </View>
     </View>

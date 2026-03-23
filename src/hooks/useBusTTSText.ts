@@ -1,11 +1,13 @@
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import type { Maybe, Station } from '~/@types/graphql';
+import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
+import { wrapPhoneme as ph } from '../utils/phoneme';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -16,6 +18,7 @@ import { useLoopLineBound } from './useLoopLineBound';
 import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
 import { useStoppingState } from './useStoppingState';
+import type { TTSTextResult } from './useTTSText';
 
 const EMPTY_TTS_TEXT = {
   [APP_THEME.TOKYO_METRO]: { NEXT: '', ARRIVING: '' },
@@ -30,10 +33,17 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
 };
 
+const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
+  if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
+  if (theme === APP_THEME.JO || theme === APP_THEME.JL)
+    return APP_THEME.YAMANOTE;
+  return theme;
+};
+
 export const useBusTTSText = (
   firstSpeech = true,
   enabled = false
-): [string, string] | [] => {
+): TTSTextResult => {
   const theme = useAtomValue(themeAtom);
 
   const { selectedBound: selectedBoundOrigin, stations } =
@@ -92,19 +102,14 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : `${directionalStops?.map((s) => s?.nameRoman).join(' and ')}`,
+        : (directionalStops
+            ?.map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
+            .join(' and ') ?? ''),
 
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
-  const nextStation = useMemo(
-    () =>
-      nextStationOrigin && {
-        ...nextStationOrigin,
-        nameRoman: nextStationOrigin.nameRoman,
-      },
-    [nextStationOrigin]
-  );
+  const nextStation = nextStationOrigin ?? null;
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
   const slicedStations = Array.from(
@@ -114,23 +119,7 @@ export const useBusTTSText = (
     .filter((s) => !!s) as Station[];
 
   const afterNextStationOrigin = useAfterNextStation();
-  const afterNextStation = useMemo<Station | undefined>(() => {
-    if (!afterNextStationOrigin) {
-      return undefined;
-    }
-
-    return {
-      ...afterNextStationOrigin,
-      nameRoman: afterNextStationOrigin?.nameRoman ?? undefined,
-      lines:
-        afterNextStationOrigin.lines?.map(
-          (l: { nameRoman: string | null | undefined }) => ({
-            ...l,
-            nameRoman: l.nameRoman ?? undefined,
-          })
-        ) ?? [],
-    } as Station;
-  }, [afterNextStationOrigin]);
+  const afterNextStation = afterNextStationOrigin;
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
@@ -143,7 +132,12 @@ export const useBusTTSText = (
   );
 
   const betweenNextStation = useMemo(
-    () => slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
+    () =>
+      nextStationIndex === -1 ||
+      afterNextStationIndex === -1 ||
+      afterNextStationIndex <= nextStationIndex
+        ? []
+        : slicedStations.slice(nextStationIndex + 1, afterNextStationIndex),
     [afterNextStationIndex, nextStationIndex, slicedStations]
   );
 
@@ -152,7 +146,7 @@ export const useBusTTSText = (
   const allStops = useMemo(
     () =>
       slicedStations.filter((s) => {
-        if (s.id === station?.id) {
+        if (s.groupId === station?.groupId) {
           return false;
         }
         return !getIsPass(s);
@@ -529,15 +523,16 @@ export const useBusTTSText = (
 
       const map = {
         [APP_THEME.TOKYO_METRO]: {
-          NEXT: `The next stop is ${nextStation?.nameRoman}.${
+          NEXT: `The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             firstSpeech
               ? ` This bus is on the ${
                   station?.line?.company?.nameEnglishShort ?? ''
                 } bound for ${boundForEn}. ${
                   afterNextStation
-                    ? `The next stop after ${nextStation?.nameRoman}${`, is ${
+                    ? `The next stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${`, is ${ph(
+                        afterNextStation?.nameTtsSegments,
                         afterNextStation?.nameRoman
-                      }${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
+                      )}${isAfterNextStopTerminus ? ' terminal' : ''}`}.`
                     : ''
                 }${
                   betweenNextStation.length
@@ -546,7 +541,7 @@ export const useBusTTSText = (
                 }`
               : ''
           }`,
-          ARRIVING: `Arriving at ${nextStation?.nameRoman}${
+          ARRIVING: `Arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', the last stop.' : '.'
           }${
             isNextStopTerminus
@@ -561,16 +556,17 @@ export const useBusTTSText = (
                   station?.line?.company?.nameEnglishShort ?? ''
                 }. This bus is bound for ${boundForEn}. `
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', the last stop.' : '.'
           }`,
-          ARRIVING: `We will soon make a brief stop at ${nextStation?.nameRoman}${
+          ARRIVING: `We will soon make a brief stop at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', the last stop.' : '.'
           }${
             afterNextStation
-              ? ` The stop after ${nextStation?.nameRoman}, will be ${
+              ? ` The stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}, will be ${ph(
+                  afterNextStation.nameTtsSegments,
                   afterNextStation.nameRoman
-                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
+                )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -583,8 +579,8 @@ export const useBusTTSText = (
             firstSpeech
               ? `This is the ${station?.line?.company?.nameEnglishShort ?? ''} bus bound for ${boundForEn}. `
               : ''
-          }The next stop is ${nextStation?.nameRoman}.`,
-          ARRIVING: `The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.`,
+          ARRIVING: `The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', terminal.' : '.'
           }${
             isNextStopTerminus
@@ -602,10 +598,10 @@ export const useBusTTSText = (
             firstSpeech
               ? `This is the ${station?.line?.company?.nameEnglishShort ?? ''} bus bound for ${boundForEn}. `
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', terminal.' : '.'
           }`,
-          ARRIVING: `The next stop is ${nextStation?.nameRoman}${
+          ARRIVING: `The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             isNextStopTerminus ? ', terminal.' : '.'
           }${
             isNextStopTerminus
@@ -617,13 +613,15 @@ export const useBusTTSText = (
           NEXT: `${
             firstSpeech
               ? `Thank you for using ${currentLine?.company?.nameEnglishShort}. This bus is bound for ${boundForEn} ${
-                  viaStation ? `via ${viaStation.nameRoman}` : ''
+                  viaStation
+                    ? `via ${ph(viaStation.nameTtsSegments, viaStation.nameRoman)}`
+                    : ''
                 }. We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
-                      ? `${s.nameRoman} terminal`
-                      : `${s.nameRoman}`
+                      ? `${ph(s.nameTtsSegments, s.nameRoman)} terminal`
+                      : `${ph(s.nameTtsSegments, s.nameRoman)}`
                   )
                   .join(', ')}. ${
                   allStops
@@ -631,24 +629,29 @@ export const useBusTTSText = (
                     .filter((s) => s)
                     .reverse()[0]?.id === selectedBound?.id
                     ? ''
-                    : `Stops after ${
+                    : `Stops after ${ph(
+                        allStops
+                          .slice(0, 5)
+                          .filter((s) => s)
+                          .reverse()[0]?.nameTtsSegments,
                         allStops
                           .slice(0, 5)
                           .filter((s) => s)
                           .reverse()[0]?.nameRoman
-                      } will be announced later. `
+                      )} will be announced later. `
                 }`
               : ''
-          }The next stop is ${nextStation?.nameRoman}${
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
           }`,
-          ARRIVING: `We will soon be making a brief stop at ${nextStation?.nameRoman}.${
+          ARRIVING: `We will soon be making a brief stop at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             afterNextStation
-              ? `After leaving ${
+              ? `After leaving ${ph(
+                  nextStation?.nameTtsSegments,
                   nextStation?.nameRoman
-                }, We will be stopping at ${afterNextStation.nameRoman}.`
+                )}, We will be stopping at ${ph(afterNextStation.nameTtsSegments, afterNextStation.nameRoman)}.`
               : ''
           }`,
         },
@@ -657,12 +660,13 @@ export const useBusTTSText = (
             firstSpeech
               ? `Thank you for using the ${station?.line?.company?.nameEnglishShort ?? ''}. `
               : ''
-          }This bus is bound for ${boundForEn}. The next stop is ${nextStation?.nameRoman}.`,
-          ARRIVING: `We will soon be arriving at ${nextStation?.nameRoman}.${
+          }This bus is bound for ${boundForEn}. The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.`,
+          ARRIVING: `We will soon be arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             afterNextStation
-              ? ` The stop after ${nextStation?.nameRoman}, will be ${
+              ? ` The stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}, will be ${ph(
+                  afterNextStation.nameTtsSegments,
                   afterNextStation.nameRoman
-                }${isAfterNextStopTerminus ? ' the last stop' : ''}.`
+                )}${isAfterNextStopTerminus ? ' the last stop' : ''}.`
               : ''
           }${
             isNextStopTerminus
@@ -675,12 +679,12 @@ export const useBusTTSText = (
           ARRIVING: '',
         },
         [APP_THEME.JR_KYUSHU]: {
-          NEXT: `${firstSpeech ? `This bus is bound for ${boundForEn}.` : ''} The next stop is ${nextStation?.nameRoman}${
+          NEXT: `${firstSpeech ? `This bus is bound for ${boundForEn}.` : ''} The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
           }`,
-          ARRIVING: `We will soon be arriving at ${nextStation?.nameRoman}${
+          ARRIVING: `We will soon be arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}${
             nextStation?.groupId === selectedBound?.groupId && !isLoopLine
               ? ' terminal.'
               : '.'
@@ -704,64 +708,47 @@ export const useBusTTSText = (
       isNextStopTerminus,
       nextStation?.groupId,
       selectedBound?.groupId,
-      nextStation?.nameRoman,
+      nextStation?.nameTtsSegments,
       selectedBound,
       viaStation,
       station?.line?.company?.nameEnglishShort,
+      nextStation?.nameRoman,
     ]);
 
-  const jaText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = japaneseTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const resolved = resolveTemplateTheme(theme);
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = japaneseTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const jaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.[stoppingState] ?? '',
+    [japaneseTemplate, resolved, stoppingState]
+  );
 
-    const tmpl = japaneseTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-    return tmpl;
-  }, [japaneseTemplate, stoppingState, theme]);
+  const enText = useMemo(
+    () => englishTemplate?.[resolved]?.[stoppingState] ?? '',
+    [englishTemplate, resolved, stoppingState]
+  );
 
-  const enText = useMemo(() => {
-    if (theme === APP_THEME.LED) {
-      const tmpl = englishTemplate?.TOKYO_METRO?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
+  const nextJaText = useMemo(
+    () => japaneseTemplate?.[resolved]?.NEXT ?? '',
+    [japaneseTemplate, resolved]
+  );
 
-    if (theme === APP_THEME.JO || theme === APP_THEME.JL) {
-      const tmpl = englishTemplate?.YAMANOTE?.[stoppingState];
-      if (!tmpl) {
-        return '';
-      }
-      return tmpl;
-    }
-
-    const tmpl = englishTemplate?.[theme]?.[stoppingState];
-    if (!tmpl) {
-      return '';
-    }
-
-    return tmpl;
-  }, [englishTemplate, stoppingState, theme]);
+  const nextEnText = useMemo(
+    () => englishTemplate?.[resolved]?.NEXT ?? '',
+    [englishTemplate, resolved]
+  );
 
   if (!enabled) {
-    return [];
+    return { text: [], nextText: [] };
   }
 
-  return [jaText.trim(), enText.trim()];
+  return {
+    text: [
+      jaText.trim().replace(parenthesisRegexp, ''),
+      enText.trim().replace(parenthesisRegexp, ''),
+    ],
+    nextText: [
+      nextJaText.trim().replace(parenthesisRegexp, ''),
+      nextEnText.trim().replace(parenthesisRegexp, ''),
+    ],
+  };
 };

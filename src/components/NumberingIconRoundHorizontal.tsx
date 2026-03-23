@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
   },
   lineSymbolLong: {
     color: '#221714',
-    fontSize: isTablet ? 20 * 1.5 : 20,
-    lineHeight: isTablet ? 20 * 1.5 : 20,
+    fontSize: isTablet ? 16 * 1.5 : 16,
+    lineHeight: isTablet ? 16 * 1.5 : 16,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },

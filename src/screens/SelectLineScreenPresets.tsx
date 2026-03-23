@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import type { Station } from '~/@types/graphql';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { PresetCard } from '~/components/PresetCard';
 import isTablet from '~/utils/isTablet';
@@ -114,15 +115,30 @@ export const SelectLineScreenPresets = ({
   const keyExtractor = useCallback((item: LoopItem) => item.__k, []);
 
   const renderItem: ListRenderItem<LoopItem> = useCallback(
-    ({ item }) =>
-      isTablet ? (
+    ({ item }) => {
+      // wantedDestinationId と direction がある場合、始発駅と終着駅を差し替える
+      // 保存時の direction options と対応:
+      //   INBOUND:  fromStation = stations[0],             toStation = wantedDestination
+      //   OUTBOUND: fromStation = stations[stations.length-1], toStation = wantedDestination
+      let from: Station | undefined = item.stations[0];
+      let to: Station | undefined = item.stations.at(-1);
+      if (item.wantedDestinationId != null && item.direction) {
+        const destStation = item.stations.find(
+          (s) => s.groupId === item.wantedDestinationId
+        );
+        if (destStation) {
+          from =
+            item.direction === 'INBOUND'
+              ? item.stations[0]
+              : item.stations.at(-1);
+          to = destStation;
+        }
+      }
+
+      return isTablet ? (
         <View style={{ width: cardWidth }}>
           <Pressable onPress={() => item.stations.length > 0 && onPress(item)}>
-            <PresetCard
-              title={item.name}
-              from={item.stations[0]}
-              to={item.stations.at(-1)}
-            />
+            <PresetCard title={item.name} from={from} to={to} />
           </Pressable>
         </View>
       ) : (
@@ -131,15 +147,12 @@ export const SelectLineScreenPresets = ({
             <Pressable
               onPress={() => item.stations.length > 0 && onPress(item)}
             >
-              <PresetCard
-                title={item.name}
-                from={item.stations[0]}
-                to={item.stations.at(-1)}
-              />
+              <PresetCard title={item.name} from={from} to={to} />
             </Pressable>
           </View>
         </View>
-      ),
+      );
+    },
     [cardWidth, onPress]
   );
 

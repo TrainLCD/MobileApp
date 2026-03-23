@@ -8,13 +8,16 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Animated as RNAnimated,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
-import Animated, {
-  LinearTransition,
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station, TrainType } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
@@ -143,7 +146,7 @@ const RouteSearchScreen = () => {
   const [lineAtom, setLineState] = useAtom(lineState);
   const { pendingLine } = lineAtom;
 
-  const scrollY = useSharedValue(0);
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   // ウォークスルー関連
   const {
@@ -504,11 +507,12 @@ const RouteSearchScreen = () => {
     ]
   );
 
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
-  });
+    [scrollY]
+  );
 
   const currentStationInRoutes = useMemo<Station | null>(
     () =>

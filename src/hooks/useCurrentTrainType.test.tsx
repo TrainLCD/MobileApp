@@ -66,7 +66,10 @@ const createTrainType = (
   nameChinese: null,
   nameKatakana: 'ローカル',
   nameKorean: null,
+  nameIpa: null,
+  nameRomanIpa: null,
   nameRoman: 'Local',
+  nameTtsSegments: null,
   typeId: TRAIN_TYPE_IDS.LOCAL,
   ...overrides,
 });

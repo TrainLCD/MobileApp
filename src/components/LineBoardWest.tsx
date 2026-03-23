@@ -10,7 +10,6 @@ import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentStation,
-  useGetLineMark,
   useHasPassStationInRegion,
   useIsPassing,
   useNextStation,
@@ -122,23 +121,18 @@ interface StationNameCellProps {
   stations: Station[];
   station: Station;
   index: number;
-  line: Line | null;
 }
 
 // Extract station numbering logic into a separate hook
-const useStationNumberingData = (
-  stationInLoop: Station,
-  passed: boolean,
-  line: Line | null
-) => {
+const useStationNumberingData = (station: Station, passed: boolean) => {
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = useMemo(
-    () => getStationNumberIndex(stationInLoop, line),
-    [getStationNumberIndex, line, stationInLoop]
+    () => getStationNumberIndex(station),
+    [getStationNumberIndex, station]
   );
   const numberingObj = useMemo<StationNumber | undefined>(
-    () => stationInLoop.stationNumbers?.[stationNumberIndex],
-    [stationInLoop.stationNumbers, stationNumberIndex]
+    () => station.stationNumbers?.[stationNumberIndex],
+    [station.stationNumbers, stationNumberIndex]
   );
 
   const stationNumberString = useMemo(
@@ -244,7 +238,6 @@ const StationDotIndicators: React.FC<{
   arrived: boolean;
   currentStationIndex: number;
   index: number;
-  lineMarks: unknown[];
   hasPassStationInRegion: boolean;
   stations: Station[];
   transferLines: Line[];
@@ -254,14 +247,13 @@ const StationDotIndicators: React.FC<{
   arrived,
   currentStationIndex,
   index,
-  lineMarks,
   hasPassStationInRegion,
   stations,
   transferLines,
   station,
 }) => {
   const showChevron = useShowChevron(arrived, currentStationIndex, index);
-  const showTopBar = isTablet && lineMarks.length > 0 && !passed;
+  const showTopBar = isTablet && transferLines.length > 0 && !passed;
   const showArrivedDot = arrived && currentStationIndex === index;
   const showPassMark = shouldShowPassMark(
     hasPassStationInRegion,
@@ -288,7 +280,7 @@ const StationDotIndicators: React.FC<{
       <View
         style={[
           styles.chevronWest,
-          lineMarks.length ? undefined : { marginTop: isTablet ? 8 : 2 },
+          transferLines.length ? undefined : { marginTop: isTablet ? 8 : 2 },
         ]}
       >
         {showChevron ? <ChevronJRWest /> : null}
@@ -301,12 +293,14 @@ const StationDotIndicators: React.FC<{
       ) : null}
 
       {passed ? null : (
-        <PadLineMarks
-          shouldGrayscale={passed}
-          transferLines={transferLines}
-          station={station}
-          theme={APP_THEME.JR_WEST}
-        />
+        <View style={styles.padLineMarksContainerWest}>
+          <PadLineMarks
+            shouldGrayscale={passed}
+            transferLines={transferLines}
+            station={station}
+            theme={APP_THEME.JR_WEST}
+          />
+        </View>
       )}
     </View>
   );
@@ -315,24 +309,23 @@ const StationDotIndicators: React.FC<{
 const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
-  station: stationInLoop,
+  station,
   index,
-  line,
 }: StationNameCellProps) => {
   const { stations: allStations } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
   const { width: windowWidth } = useWindowDimensions();
 
-  const transferLines = useTransferLinesFromStation(stationInLoop, {
+  const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
     omitRepeatingLine: true,
   });
 
-  const nextStation = useNextStation(true, stationInLoop);
+  const nextStation = useNextStation(true, station);
   const { currentStationIndex, passed } = useStationProgress(
     arrived,
     index,
-    stationInLoop
+    station
   );
 
   const {
@@ -340,17 +333,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     stationNumberString,
     stationNumberBGColor,
     stationNumberTextColor,
-  } = useStationNumberingData(stationInLoop, passed, line);
-
-  const getLineMarks = useGetLineMark();
-  const lineMarks = useMemo(
-    () => transferLines.map((line) => getLineMarks({ line })),
-    [getLineMarks, transferLines]
-  );
+  } = useStationNumberingData(station, passed);
 
   const hasPassStationInRegion = useHasPassStationInRegion(
     allStations,
-    stationInLoop,
+    station,
     nextStation
   );
 
@@ -383,7 +370,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         }
       >
         <StationName
-          station={stationInLoop}
+          station={station}
           en={isEn}
           horizontal={includesLongStationName}
           passed={passed}
@@ -416,11 +403,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         arrived={arrived}
         currentStationIndex={currentStationIndex}
         index={index}
-        lineMarks={lineMarks}
         hasPassStationInRegion={hasPassStationInRegion}
         stations={stations}
         transferLines={transferLines}
-        station={stationInLoop}
+        station={station}
       />
     </View>
   );
@@ -448,20 +434,15 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
         stations={stations}
         arrived={!isPassing && !approaching && arrived}
         index={i}
-        line={line ?? null}
       />
     ),
-    [approaching, arrived, isPassing, line, stations]
+    [approaching, arrived, isPassing, stations]
   );
 
   const emptyArray = useMemo(() => {
     const gap = Math.max(0, 8 - lineColors.length);
     const last = lineColors.at(-1);
-    return Array.from({ length: gap }, () => last) as (
-      | string
-      | null
-      | undefined
-    )[];
+    return Array.from({ length: gap }, () => last);
   }, [lineColors]);
 
   const stationsWithEmpty = useMemo(

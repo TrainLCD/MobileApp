@@ -20,6 +20,7 @@ import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
 import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
+import QuickActionsProvider from './providers/QuickActionsProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { navigationRef } from './stacks/rootNavigation';
@@ -85,29 +86,31 @@ const App: React.FC = () => {
               <Provider store={store}>
                 <NavigationContainer ref={navigationRef}>
                   <DeepLinkProvider>
-                    <PortalProvider>
-                      <Stack.Navigator screenOptions={screenOptions}>
-                        {!permStatus?.granted ? (
+                    <QuickActionsProvider>
+                      <PortalProvider>
+                        <Stack.Navigator screenOptions={screenOptions}>
+                          {!permStatus?.granted ? (
+                            <Stack.Screen
+                              options={options}
+                              name="Privacy"
+                              component={PrivacyScreen}
+                            />
+                          ) : null}
+
                           <Stack.Screen
                             options={options}
-                            name="Privacy"
-                            component={PrivacyScreen}
+                            name="MainStack"
+                            component={MainStack}
                           />
-                        ) : null}
 
-                        <Stack.Screen
-                          options={options}
-                          name="MainStack"
-                          component={MainStack}
-                        />
-
-                        <Stack.Screen
-                          options={options}
-                          name="TuningSettings"
-                          component={TuningSettings}
-                        />
-                      </Stack.Navigator>
-                    </PortalProvider>
+                          <Stack.Screen
+                            options={options}
+                            name="TuningSettings"
+                            component={TuningSettings}
+                          />
+                        </Stack.Navigator>
+                      </PortalProvider>
+                    </QuickActionsProvider>
                     <GlobalToast />
                   </DeepLinkProvider>
                 </NavigationContainer>

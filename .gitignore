@@ -157,4 +157,3 @@ web-build/
 dist/
 
 # @end expo-cli
-package-lock.json

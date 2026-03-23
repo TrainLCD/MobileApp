@@ -3,13 +3,15 @@ import type { ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext) => ({
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.2.1',
+  version: '10.3.0',
   plugins: [
+    'expo-image',
     'expo-font',
     'expo-localization',
     'expo-web-browser',
     'expo-sqlite',
     'expo-asset',
+    'expo-quick-actions',
     [
       'expo-location',
       {
@@ -34,6 +36,14 @@ export default ({ config }: ConfigContext) => ({
         image: './assets/splash-icon.png',
       },
     ],
+    [
+      'expo-build-properties',
+      {
+        ios: {
+          buildReactNativeFromSource: true,
+        },
+      },
+    ],
   ],
   extra: {
     eas: {
@@ -43,7 +53,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2497',
+    buildNumber: '2552',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -60,18 +70,10 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000284,
+    versionCode: 100000339,
   },
   owner: 'trainlcd',
 });
-
-
-
-
-
-
-
-
 
 
 

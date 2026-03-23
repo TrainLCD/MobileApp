@@ -113,7 +113,7 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      const [jaSSML, enSSML] = result.current;
+      const [jaSSML, enSSML] = result.current.text;
       expect(jaSSML?.indexOf('undefined')).toBe(-1);
       expect(enSSML?.indexOf('undefined')).toBe(-1);
     }
@@ -127,9 +127,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next stop is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next stop is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -139,9 +139,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'Arriving at Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'Arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
   });
@@ -154,9 +154,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>をご利用のお客様はお乗り換えです。',
-        'The next station is Shinjuku-sanchome S 2. Passengers changing to the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
+        'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Passengers changing to the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -166,9 +166,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>をご利用のお客様はお乗り換えです。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
-        'We will soon make a brief stop at Shinjuku-sanchome S 2. Passengers changing to the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
+        'We will soon make a brief stop at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Passengers changing to the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line, Please transfer at this station.',
       ]);
     });
   });
@@ -181,9 +181,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next station is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -193,9 +193,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。',
-        'The next station is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
   });
@@ -208,9 +208,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next stop is Shinjuku-sanchome station number S 2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next stop is Shinjuku-sanchome station number S <say-as interpret-as="cardinal">2</say-as>. Transfer here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -220,9 +220,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>を出ますと、次は、<sub alias="あけぼのばし">曙橋</sub>に停まります。',
-        'We will soon be making a brief stop at Shinjuku-sanchome station number S 2. Transfer here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line. After leaving Shinjuku-sanchome, We will be stopping at Akebonobashi.',
+        'We will soon be making a brief stop at Shinjuku-sanchome station number S <say-as interpret-as="cardinal">2</say-as>. Transfer here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line. After leaving Shinjuku-sanchome, We will be stopping at Akebonobashi.',
       ]);
     });
   });
@@ -235,9 +235,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。',
-        'The next station is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -247,9 +247,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>は、お乗り換えです。',
-        'The next station is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
   });
@@ -262,9 +262,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。 <sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。この電車は、各駅停車、<sub alias="もとやわた">本八幡</sub>ゆきです。',
-        'This is the Local train bound for Motoyawata. The next station is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'This is the Local train bound for Motoyawata. The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -274,9 +274,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         'まもなく、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'We will soon be arriving at Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'We will soon be arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
   });
@@ -289,9 +289,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual([
+      expect(result.current.text).toEqual([
         '次は、<sub alias="しんじゅくさんちょうめ">新宿三丁目</sub>です。<sub alias="とうきょうめとろまるのうちせん">東京メトロ丸ノ内線</sub>、<sub alias="とうきょうめとろふくとしんせん">東京メトロ副都心線</sub>はお乗り換えです。',
-        'The next stop is Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.',
+        'The next stop is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
     test('should be ARRIVING', () => {
@@ -301,7 +301,7 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
-      const [jaSSML, enSSML] = result.current;
+      const [jaSSML, enSSML] = result.current.text;
       // 英語SSMLがundefinedの場合は空文字列にする
       const en = typeof enSSML === 'string' ? enSSML : '';
 
@@ -311,7 +311,7 @@ describe('Without trainType & With numbering', () => {
       );
       // 日本語: 期待される英語SSML出力を検証
       expect(en).toBe(
-        'Arriving at Shinjuku-sanchome S 2. Please change here for the Tokyo Metro Marunouchi Line, and the Tokyo Metro Fukutoshin Line.'
+        'Arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.'
       );
 
       // 日本語: 英語SSMLに日本語文字（ひらがな・カタカナ・漢字）が含まれていないことを厳密に検証
@@ -322,7 +322,8 @@ describe('Without trainType & With numbering', () => {
       expect(en).toHaveLength(en.length);
 
       // 日本語: 英語SSMLに駅番号（例: S 2 や station number S 2 など）が含まれていることを検証
-      const stationNumberRegex = /(S \d{1,2}|station number S ?\d{1,2})/;
+      const stationNumberRegex =
+        /(S <say-as interpret-as="cardinal">\d{1,2}<\/say-as>|station number S ?<say-as interpret-as="cardinal">\d{1,2}<\/say-as>)/;
       expect(en).toMatch(stationNumberRegex);
     });
   });

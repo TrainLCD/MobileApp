@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { ToggleButton } from './ToggleButton';
 
 // Mock jotai
@@ -116,5 +116,14 @@ describe('ToggleButton', () => {
     const button = getByText('テストボタン').parent?.parent;
     expect(button).toBeTruthy();
     // スタイルのアサーションは実際のスナップショットテストで確認されるべき
+  });
+
+  it('ラベルが横幅を埋めて状態パネルを右端に寄せる', () => {
+    const { getByText } = render(<ToggleButton {...defaultProps} />);
+
+    const label = getByText('テストボタン');
+    const style = StyleSheet.flatten(label.props.style);
+
+    expect(style.flex).toBe(1);
   });
 });

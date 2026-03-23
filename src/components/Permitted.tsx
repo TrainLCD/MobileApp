@@ -13,6 +13,7 @@ import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
+import { isDevApp } from '~/utils/isDevApp';
 import {
   ALL_AVAILABLE_LANGUAGES,
   APP_STORE_URL,
@@ -45,7 +46,8 @@ type Props = {
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
-  const { untouchableModeEnabled } = useAtomValue(tuningState);
+  const { untouchableModeEnabled, devOverlayEnabled } =
+    useAtomValue(tuningState);
   const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setTuning = useSetAtom(tuningState);
@@ -197,20 +199,76 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      const options =
+      const actions =
         Platform.select({
           ios: [
-            translate('back'),
-            translate('share'),
-            translate('report'),
-            translate('cancel'),
+            {
+              label: translate('back'),
+              handler: () => {
+                navigation.dispatch(
+                  StackActions.replace('MainStack', {
+                    screen: 'SelectLine',
+                  })
+                );
+              },
+            },
+            {
+              label: translate('share'),
+              handler: handleShare,
+            },
+            {
+              label: translate('report'),
+              handler: handleReport,
+            },
           ],
           android: [
-            translate('share'),
-            translate('report'),
-            translate('cancel'),
+            {
+              label: translate('share'),
+              handler: handleShare,
+            },
+            {
+              label: translate('report'),
+              handler: handleReport,
+            },
           ],
         }) ?? [];
+
+      if (isDevApp) {
+        actions.push({
+          label: translate(
+            devOverlayEnabled ? 'hideDevOverlay' : 'showDevOverlay'
+          ),
+          handler: async () => {
+            const prevValue = devOverlayEnabled;
+            const nextValue = !devOverlayEnabled;
+            setTuning((prev) => ({
+              ...prev,
+              devOverlayEnabled: nextValue,
+            }));
+            try {
+              await AsyncStorage.setItem(
+                ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED,
+                String(nextValue)
+              );
+            } catch (error) {
+              console.error(error);
+              setTuning((prev) => ({
+                ...prev,
+                devOverlayEnabled: prevValue,
+              }));
+              Alert.alert(
+                translate('errorTitle'),
+                translate('failedToSavePreference')
+              );
+            }
+          },
+        });
+      }
+
+      const options = [
+        ...actions.map((action) => action.label),
+        translate('cancel'),
+      ];
 
       showActionSheetWithOptions(
         {
@@ -219,53 +277,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           cancelButtonIndex: options.length - 1,
         },
         (buttonIndex) => {
-          switch (buttonIndex) {
-            // iOS: back, Android: share
-            case 0:
-              if (Platform.OS === 'ios') {
-                navigation.dispatch(
-                  StackActions.replace('MainStack', {
-                    screen: 'SelectLine',
-                  })
-                );
-                break;
-              }
-              handleShare();
-              break;
-            // iOS: share, Android: feedback
-            case 1:
-              if (Platform.OS === 'ios') {
-                handleShare();
-                break;
-              }
-              handleReport();
-              break;
-            // iOS: feedback, Android: cancel
-            case 2: {
-              if (Platform.OS === 'ios') {
-                handleReport();
-                break;
-              }
-              break;
-            }
-            // iOS: cancel, Android: will be not passed here
-            case 3: {
-              break;
-            }
-            // iOS, Android: will be not passed here
-            default:
-              break;
+          if (buttonIndex == null || buttonIndex >= actions.length) {
+            return;
           }
+          void actions[buttonIndex]?.handler();
         }
       );
     },
     [
+      devOverlayEnabled,
       handleReport,
       handleShare,
+      navigation,
       selectedBound,
+      setTuning,
       showActionSheetWithOptions,
       untouchableModeEnabled,
-      navigation.dispatch,
     ]
   );
 
@@ -278,6 +305,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         bgTTSEnabledStr,
         ttsEnabledLanguagesStr,
         telemetryEnabledStr,
+        devOverlayEnabledStr,
+        headerTransitionIntervalStr,
+        headerTransitionDelayStr,
+        bottomTransitionIntervalStr,
+        untouchableModeEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
@@ -285,6 +317,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_INTERVAL),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
       ]);
 
       if (prevThemeKey) {
@@ -334,6 +371,45 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         setTuning((prev) => ({
           ...prev,
           telemetryEnabled: telemetryEnabledStr === 'true',
+        }));
+      }
+      if (devOverlayEnabledStr) {
+        setTuning((prev) => ({
+          ...prev,
+          devOverlayEnabled: devOverlayEnabledStr === 'true',
+        }));
+      }
+      if (headerTransitionIntervalStr) {
+        const parsed = Number(headerTransitionIntervalStr);
+        if (!Number.isNaN(parsed)) {
+          setTuning((prev) => ({
+            ...prev,
+            headerTransitionInterval: parsed,
+          }));
+        }
+      }
+      if (headerTransitionDelayStr) {
+        const parsed = Number(headerTransitionDelayStr);
+        if (!Number.isNaN(parsed)) {
+          setTuning((prev) => ({
+            ...prev,
+            headerTransitionDelay: parsed,
+          }));
+        }
+      }
+      if (bottomTransitionIntervalStr) {
+        const parsed = Number(bottomTransitionIntervalStr);
+        if (!Number.isNaN(parsed)) {
+          setTuning((prev) => ({
+            ...prev,
+            bottomTransitionInterval: parsed,
+          }));
+        }
+      }
+      if (untouchableModeEnabledStr) {
+        setTuning((prev) => ({
+          ...prev,
+          untouchableModeEnabled: untouchableModeEnabledStr === 'true',
         }));
       }
     };

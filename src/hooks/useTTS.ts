@@ -1,11 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getIdToken } from '@react-native-firebase/auth';
 import { setAudioModeAsync } from 'expo-audio';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
+import { ASYNC_STORAGE_KEYS } from '../constants';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
+import tuningState from '../store/atoms/tuning';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
 import { isDevApp } from '../utils/isDevApp';
 import {
@@ -23,7 +26,9 @@ import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
 
 // 再生が完了しない場合のフォールバックタイムアウト（ミリ秒）
-const PLAYBACK_TIMEOUT_MS = 60_000;
+// 長い路線放送でも途切れないよう十分な余裕を持たせつつ、
+// didJustFinishが発火しないエッジケースでのデッドロックを防止する
+const PLAYBACK_TIMEOUT_MS = 300_000;
 
 // 日本語再生完了後に英語プレイヤーを生成するまでのディレイ（ミリ秒）
 // ネイティブ音声セッションが安定するまで待機し、英語再生の開始失敗を防ぐ
@@ -33,6 +38,8 @@ export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
   const { arrived, selectedBound } = useAtomValue(stationState);
+  const { ttsJaVoiceName, ttsEnVoiceName } = useAtomValue(tuningState);
+  const setTuning = useSetAtom(tuningState);
   const currentLine = useCurrentLine();
   const stoppingState = useStoppingState();
   const prevStoppingState = usePrevious(stoppingState);
@@ -49,14 +56,19 @@ export const useTTS = (): void => {
   const speechWithTextRef = useRef<
     ((ja: string, en: string) => Promise<void>) | null
   >(null);
-  const trainTTSText = useTTSText(firstSpeechRef.current, enabled);
-  const busTTSText = useBusTTSText(firstSpeechRef.current, enabled);
-  const ttsText =
+  const trainTTSResult = useTTSText(firstSpeechRef.current, enabled);
+  const busTTSResult = useBusTTSText(firstSpeechRef.current, enabled);
+  const ttsResult =
     currentLine?.transportType === TransportType.Bus
-      ? busTTSText
-      : trainTTSText;
+      ? busTTSResult
+      : trainTTSResult;
+  const ttsText = ttsResult.text;
+  const prefetchText = ttsResult.nextText;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
+  const [prefetchJa, prefetchEn] = prefetchText.length
+    ? prefetchText
+    : [undefined, undefined];
   const shouldSpeakJapanese = ttsEnabledLanguages.includes('JA');
   const shouldSpeakEnglish = ttsEnabledLanguages.includes('EN');
 
@@ -74,6 +86,20 @@ export const useTTS = (): void => {
     jaHandleRef.current = null;
     enHandleRef.current = null;
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const [jaVoice, enVoice] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
+      ]);
+      setTuning((prev) => ({
+        ...prev,
+        ttsJaVoiceName: jaVoice || prev.ttsJaVoiceName,
+        ttsEnVoiceName: enVoice || prev.ttsEnVoiceName,
+      }));
+    })();
+  }, [setTuning]);
 
   useEffect(() => {
     (async () => {
@@ -119,8 +145,10 @@ export const useTTS = (): void => {
         return;
       }
 
-      firstSpeechRef.current = false;
-      suppressPostFirstSpeechRef.current = true;
+      if (firstSpeechRef.current) {
+        firstSpeechRef.current = false;
+        suppressPostFirstSpeechRef.current = true;
+      }
 
       cleanupAllPlayers();
 
@@ -231,6 +259,8 @@ export const useTTS = (): void => {
           textEn: en,
           apiUrl: ttsApiUrl,
           idToken,
+          jaVoiceName: ttsJaVoiceName,
+          enVoiceName: ttsEnVoiceName,
         });
 
         if (!fetched) {
@@ -245,10 +275,58 @@ export const useTTS = (): void => {
         finishPlaying();
       }
     },
-    [finishPlaying, speakFromPath, ttsApiUrl, user]
+    [
+      finishPlaying,
+      speakFromPath,
+      ttsApiUrl,
+      ttsEnVoiceName,
+      ttsJaVoiceName,
+      user,
+    ]
   );
 
   speechWithTextRef.current = speechWithText;
+
+  // 停車中に次の NEXT アナウンス音声を先読みフェッチする
+  const prefetchingRef = useRef(false);
+  useEffect(() => {
+    if (!enabled || !prefetchJa || !prefetchEn || prefetchingRef.current) {
+      return;
+    }
+    // 現在のテキストと同じなら既にフェッチ済み or これからフェッチされるので不要
+    if (prefetchJa === textJa && prefetchEn === textEn) {
+      return;
+    }
+    prefetchingRef.current = true;
+    (async () => {
+      try {
+        const idToken = user && (await getIdToken(user));
+        if (!idToken) return;
+        await fetchSpeechAudio({
+          textJa: prefetchJa,
+          textEn: prefetchEn,
+          apiUrl: ttsApiUrl,
+          idToken,
+          jaVoiceName: ttsJaVoiceName,
+          enVoiceName: ttsEnVoiceName,
+        });
+      } catch (e) {
+        console.warn('[useTTS] Prefetch failed:', e);
+      } finally {
+        prefetchingRef.current = false;
+      }
+    })();
+  }, [
+    enabled,
+    prefetchJa,
+    prefetchEn,
+    textJa,
+    textEn,
+    ttsApiUrl,
+    ttsEnVoiceName,
+    ttsJaVoiceName,
+    user,
+  ]);
 
   useEffect(() => {
     const currentSelectedBoundId = selectedBound?.id ?? null;

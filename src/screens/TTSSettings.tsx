@@ -1,19 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
+  Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -102,7 +102,7 @@ const SettingsItem = ({
 const TTSSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  const scrollY = useSharedValue(0);
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const [
@@ -335,11 +335,12 @@ const TTSSettingsScreen: React.FC = () => {
     ]
   );
 
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
-  });
+    [scrollY]
+  );
 
   return (
     <>

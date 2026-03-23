@@ -21,10 +21,12 @@ type Props = {
   onToggle: (event: GestureResponderEvent) => void;
   outline?: boolean;
   style?: StyleProp<ViewStyle>;
+  statePanelStyle?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   state?: boolean;
   onText?: string;
   offText?: string;
+  activeOpacity?: number;
 };
 
 const styles = StyleSheet.create({
@@ -64,8 +66,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
-    fontSize: RFValue(14),
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
     color: '#fff',
+  },
+  textFill: {
+    flex: 1,
+    marginRight: 12,
   },
   outlinedButton: {
     borderColor: '#008ffe',
@@ -82,10 +88,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    flex: 1,
   },
   stateIndicatorText: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(12),
     fontWeight: 'bold',
   },
 });
@@ -95,11 +100,13 @@ export const StatePanel = ({
   onText = 'ON',
   offText = 'OFF',
   disabled,
+  style,
 }: {
   state: boolean;
   onText?: string;
   offText?: string;
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -122,7 +129,7 @@ export const StatePanel = ({
   );
 
   return (
-    <View style={[styles.stateIndicator, styleIndicatorStyle]}>
+    <View style={[styles.stateIndicator, styleIndicatorStyle, style]}>
       <Typography
         style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
       >
@@ -137,16 +144,19 @@ export const ToggleButton: React.FC<Props> = ({
   onToggle,
   outline,
   style,
+  statePanelStyle,
   textStyle,
   state,
   onText = 'ON',
   offText = 'OFF',
+  activeOpacity,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <TouchableOpacity
       onPress={onToggle}
+      activeOpacity={activeOpacity}
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {
@@ -163,12 +173,22 @@ export const ToggleButton: React.FC<Props> = ({
     >
       <Typography
         numberOfLines={1}
-        style={[styles.text, outline && styles.outlinedButtonText, textStyle]}
+        style={[
+          styles.text,
+          styles.textFill,
+          outline && styles.outlinedButtonText,
+          textStyle,
+        ]}
       >
         {children}
       </Typography>
 
-      <StatePanel state={!!state} onText={onText} offText={offText} />
+      <StatePanel
+        state={!!state}
+        onText={onText}
+        offText={offText}
+        style={statePanelStyle}
+      />
     </TouchableOpacity>
   );
 };

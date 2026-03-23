@@ -1,19 +1,11 @@
 import type { Line, Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
-import { getIsLocal } from './trainTypeString';
 
 export const getStationPrimaryCode = (
   from: Station | null,
-  to: Station | null
+  _to: Station | null
 ): string => {
-  if (
-    getIsLocal(from?.trainType ?? null) &&
-    getIsLocal(to?.trainType ?? null)
-  ) {
-    return from?.stationNumbers?.[0]?.stationNumber ?? '';
-  }
-
-  return `${from?.stationNumbers?.[0]?.stationNumber ?? ''} ${isJapanese ? (from?.trainType?.name ?? '') : (from?.trainType?.nameRoman ?? '')}`.trim();
+  return from?.stationNumbers?.[0]?.stationNumber ?? '';
 };
 export const getStationName = (s: Station | undefined): string =>
   (isJapanese ? s?.name : s?.nameRoman) ?? '';

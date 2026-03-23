@@ -13,7 +13,9 @@ function printUsage(): void {
   console.error('');
   console.error('Options:');
   console.error('  --bucket <name>          Cloud Storageバケット名（必須）');
-  console.error('  --project <project-id>   Firebaseプロジェクトを指定（必須）');
+  console.error(
+    '  --project <project-id>   Firebaseプロジェクトを指定（必須）'
+  );
   console.error('  --delete                 孤立ファイルを確認後に削除');
 }
 
@@ -54,11 +56,11 @@ function parseArgs(argv: string[]): CliArgs | null {
 
 const PAGE_SIZE = 1000;
 
-async function collectStorageIds(
+async function collectStorageFiles(
   bucket: Bucket,
   prefix: string
-): Promise<Set<string>> {
-  const ids = new Set<string>();
+): Promise<Map<string, string[]>> {
+  const filesById = new Map<string, string[]>();
   let pageToken: string | undefined;
 
   do {
@@ -70,23 +72,24 @@ async function collectStorageIds(
     });
 
     for (const file of files) {
-      const match = file.name.match(
-        /caches\/tts\/(?:ja|en)\/(.+)\.mp3$/
-      );
+      const match = file.name.match(/caches\/tts\/(?:ja|en)\/(.+)\.[^.]+$/);
       if (match?.[1]) {
-        ids.add(match[1]);
+        const id = match[1];
+        const existing = filesById.get(id) ?? [];
+        existing.push(file.name);
+        filesById.set(id, existing);
       }
     }
 
     pageToken = (apiResponse as { nextPageToken?: string } | undefined)
       ?.nextPageToken;
     if (pageToken) {
-      process.stdout.write(`\r  ${prefix} ... ${ids.size}件取得済み`);
+      process.stdout.write(`\r  ${prefix} ... ${filesById.size}件取得済み`);
     }
   } while (pageToken);
 
-  process.stdout.write(`\r  ${prefix} ... ${ids.size}件 完了\n`);
-  return ids;
+  process.stdout.write(`\r  ${prefix} ... ${filesById.size}件 完了\n`);
+  return filesById;
 }
 
 async function main(): Promise<void> {
@@ -118,12 +121,16 @@ async function main(): Promise<void> {
 
   // Storage のファイルIDをページネーションで取得（メモリ節約）
   console.log('Storageのファイル一覧を取得中...');
-  const [jaIds, enIds] = await Promise.all([
-    collectStorageIds(bucket, 'caches/tts/ja/'),
-    collectStorageIds(bucket, 'caches/tts/en/'),
+  const [jaFilesById, enFilesById] = await Promise.all([
+    collectStorageFiles(bucket, 'caches/tts/ja/'),
+    collectStorageFiles(bucket, 'caches/tts/en/'),
   ]);
+  const jaIds = new Set(jaFilesById.keys());
+  const enIds = new Set(enFilesById.keys());
   const storageIds = new Set([...jaIds, ...enIds]);
-  console.log(`  Storageファイル数: JA=${jaIds.size}, EN=${enIds.size} (ユニークID: ${storageIds.size})`);
+  console.log(
+    `  Storageファイル数: JA=${jaIds.size}, EN=${enIds.size} (ユニークID: ${storageIds.size})`
+  );
 
   // 孤立ID = Storage にあるが Firestore にない
   const orphanedIds = [...storageIds].filter((id) => !firestoreIds.has(id));
@@ -167,23 +174,31 @@ async function main(): Promise<void> {
     console.log(`削除中: ${id}...`);
 
     const promises: Promise<unknown>[] = [];
-    if (ja) promises.push(bucket.file(`caches/tts/ja/${id}.mp3`).delete());
-    if (en) promises.push(bucket.file(`caches/tts/en/${id}.mp3`).delete());
+    if (ja) {
+      for (const path of jaFilesById.get(id) ?? []) {
+        promises.push(bucket.file(path).delete());
+      }
+    }
+    if (en) {
+      for (const path of enFilesById.get(id) ?? []) {
+        promises.push(bucket.file(path).delete());
+      }
+    }
 
     const results = await Promise.allSettled(promises);
     const failed = results.filter((r) => r.status === 'rejected');
     if (failed.length > 0) {
       for (const f of failed) {
-        console.warn(
-          `  削除失敗: ${(f as PromiseRejectedResult).reason}`
-        );
+        console.warn(`  削除失敗: ${(f as PromiseRejectedResult).reason}`);
       }
     } else {
       deletedCount++;
     }
   }
 
-  console.log(`\n${deletedCount}/${orphanedFiles.length}件の削除が完了しました。`);
+  console.log(
+    `\n${deletedCount}/${orphanedFiles.length}件の削除が完了しました。`
+  );
 }
 
 function confirm(prompt: string): Promise<boolean> {

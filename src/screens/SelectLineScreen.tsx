@@ -1,13 +1,22 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
-import Animated, {
-  LinearTransition,
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import { useAtom, useAtomValue } from 'jotai';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  RefreshControl,
+  Animated as RNAnimated,
+  StyleSheet,
+  View,
+} from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -29,6 +38,7 @@ import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
+import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
@@ -74,7 +84,8 @@ const SelectLineScreen = () => {
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
   useStationsCache(station);
-  const { carouselData, isRoutesDBInitialized } = usePresetCarouselData();
+  const { carouselData, routes, isRoutesDBInitialized } =
+    usePresetCarouselData();
   const {
     handleLineSelected,
     handleTrainTypeSelect,
@@ -96,6 +107,7 @@ const SelectLineScreen = () => {
     nextStep,
     goToStep,
     skipWalkthrough,
+    setSearchButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,
@@ -106,9 +118,29 @@ const SelectLineScreen = () => {
 
   // --- atom 読み取り ---
   const { stationsCache } = useAtomValue(stationState);
+  const [{ pendingQuickActionRouteId }, setNavigationState] =
+    useAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
-  const scrollY = useSharedValue(0);
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
+
+  // --- クイックアクションからのプリセット選択 ---
+  useEffect(() => {
+    if (!pendingQuickActionRouteId || !routes.length) return;
+    const route = routes.find((r) => r.id === pendingQuickActionRouteId);
+    if (route) {
+      handlePresetPress(route);
+    }
+    setNavigationState((prev) => ({
+      ...prev,
+      pendingQuickActionRouteId: null,
+    }));
+  }, [
+    pendingQuickActionRouteId,
+    routes,
+    handlePresetPress,
+    setNavigationState,
+  ]);
 
   // --- 画面回転ロック解除 ---
   useEffect(() => {
@@ -184,11 +216,12 @@ const SelectLineScreen = () => {
   );
 
   // --- スクロールハンドラ ---
-  const handleScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
     },
-  });
+    [scrollY]
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -371,6 +404,7 @@ const SelectLineScreen = () => {
       {/* フッター */}
       <FooterTabBar
         active="home"
+        onSearchButtonLayout={setSearchButtonLayout}
         onSettingsButtonLayout={setSettingsButtonLayout}
       />
       {/* モーダル */}

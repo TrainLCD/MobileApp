@@ -9,14 +9,8 @@ import {
 } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import {
-  useCurrentStation,
-  useGetLineMark,
-  useNextStation,
-  useTransferLines,
-} from '../hooks';
+import { useGetLineMark, useTransferLines } from '../hooks';
 import type { AppTheme } from '../models/Theme';
-import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -55,6 +49,7 @@ const styles = StyleSheet.create({
     flexBasis: '50%',
   },
   lineNameContainer: {
+    flex: 1,
     marginLeft: isTablet ? 4 : 2,
   },
   lineName: {
@@ -76,71 +71,59 @@ const styles = StyleSheet.create({
 });
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
-  const { arrived } = useAtomValue(stationState);
-  const currentStation = useCurrentStation();
-
   const lines = useTransferLines();
-  const nextStation = useNextStation();
   const getLineMarkFunc = useGetLineMark();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
-  const station = useMemo(
-    () => (arrived ? currentStation : nextStation),
-    [arrived, currentStation, nextStation]
-  );
-
   const stationNumbers = useMemo(
     () =>
-      lines
-        ?.map((l) => l)
-        ?.map((l) => {
-          const stationNumberData = l.station?.stationNumbers?.find((sn) =>
-            l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
-          );
-          const lineSymbol = stationNumberData?.lineSymbol ?? '';
-          const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
-          const stationNumber = stationNumberData?.stationNumber ?? '';
-          const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
+      lines?.map((l) => {
+        const stationNumberData = l.station?.stationNumbers?.find((sn) =>
+          l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
+        );
+        const lineSymbol = stationNumberData?.lineSymbol ?? '';
+        const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
+        const stationNumber = stationNumberData?.stationNumber ?? '';
+        const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
 
-          if (!lineSymbol.length || !stationNumber.length) {
-            const stationNumberWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.stationNumber ?? '';
-            const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
-            const lineSymbolColorWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.lineSymbolColor ?? '#000000';
-            const lineSymbolShapeWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.lineSymbolShape ?? 'NOOP';
-
-            return {
-              __typename: 'StationNumber' as const,
-              lineSymbol: lineSymbolWhenEmptySymbol,
-              lineSymbolColor: lineSymbolColorWhenEmptySymbol,
-              stationNumber: stationNumberWhenEmptySymbol,
-              lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
-            };
-          }
+        if (!lineSymbol.length || !stationNumber.length) {
+          const stationNumberWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.stationNumber ?? '';
+          const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
+          const lineSymbolColorWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.lineSymbolColor ?? '#000000';
+          const lineSymbolShapeWhenEmptySymbol =
+            l.station?.stationNumbers?.find(
+              (sn) => !sn.lineSymbol?.length
+            )?.lineSymbolShape;
 
           return {
             __typename: 'StationNumber' as const,
-            lineSymbol,
-            lineSymbolColor,
-            stationNumber,
-            lineSymbolShape,
+            lineSymbol: lineSymbolWhenEmptySymbol,
+            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
+            stationNumber: stationNumberWhenEmptySymbol,
+            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
           };
-        }),
+        }
+
+        return {
+          __typename: 'StationNumber' as const,
+          lineSymbol,
+          lineSymbolColor,
+          stationNumber,
+          lineSymbolShape,
+        };
+      }),
     [lines]
   );
 
   const renderTransferLine = useCallback(
     ({ item: line, index }: { item: Line; index: number }) => {
-      if (!station) {
-        return null;
-      }
       const lineMark = getLineMarkFunc({
         line,
+        stationNumbers: line?.station?.stationNumbers,
       });
       const includesNumberedStation = stationNumbers.some(
         (sn) => !!sn?.stationNumber
@@ -276,7 +259,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         </View>
       );
     },
-    [getLineMarkFunc, onPress, station, stationNumbers, lines]
+    [getLineMarkFunc, onPress, stationNumbers, lines]
   );
 
   if (isLEDTheme) {

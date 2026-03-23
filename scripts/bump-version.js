@@ -113,7 +113,7 @@ const updateAppConfig = (filePath, version, versionCode, iosBuildNumber) => {
     let iosStartIndex = -1;
     let iosEndIndex = -1;
     for (let i = 0; i < lines.length; i += 1) {
-      if (lines[i].includes('ios: {')) {
+      if (/^  ios:\s*\{/.test(lines[i])) {
         iosStartIndex = i;
         break;
       }

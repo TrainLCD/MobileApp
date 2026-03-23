@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { useMemo } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
@@ -20,12 +20,24 @@ type Props = {
   targetStation?: Station;
   stations?: Station[];
   title?: string;
+  /** カッコ内の文字を小さく表示する際、カッコ自体を非表示にする */
+  hideParens?: boolean;
   subtitle?: string;
   subtitleNumberOfLines?: number;
+  /** 右端のシェブロンを非表示にする */
+  hideChevron?: boolean;
+  /** 右端にチェックマークを表示する */
+  checked?: boolean;
   disabled?: boolean;
   testID?: string;
   loading?: boolean;
   onPress?: () => void;
+  /** アコーディオンとして展開されるコンテンツ */
+  expandableContent?: React.ReactNode;
+  /** アコーディオンの展開状態（外部制御用） */
+  expanded?: boolean;
+  /** アコーディオンの展開状態が変わった時のコールバック */
+  onExpandedChange?: (expanded: boolean) => void;
 };
 
 const styles = StyleSheet.create({
@@ -35,18 +47,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  cardShadow: {
     shadowColor: '#333',
     shadowOpacity: 0.25,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 0 },
     elevation: 2,
   },
-  insetBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  cardBorder: {
     borderColor: '#fff',
     borderWidth: 1,
   },
@@ -54,6 +63,7 @@ const styles = StyleSheet.create({
     width: isTablet ? 52.5 : 35,
     height: isTablet ? 52.5 : 35,
     marginRight: 12,
+    overflow: 'visible',
   },
   withoutMark: {
     width: isTablet ? 52.5 : 35,
@@ -113,6 +123,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     alignSelf: 'center',
   },
+  expandableWrapper: {
+    overflow: 'hidden',
+  },
+  expandableMeasure: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  fullHeightColorBar: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 4,
+    zIndex: 1,
+  },
+  expandableContent: {
+    flex: 1,
+    padding: 12,
+  },
 });
 
 type SubtitleProps = {
@@ -122,66 +153,104 @@ type SubtitleProps = {
   loading?: boolean;
 };
 
-const Subtitle = ({
-  inboundText,
-  outboundText,
-  numberOfLines,
-  loading,
-}: SubtitleProps) => {
-  if (loading) {
+const Subtitle = memo(
+  ({ inboundText, outboundText, numberOfLines, loading }: SubtitleProps) => {
+    if (loading) {
+      return (
+        <View style={styles.subtitleContainer}>
+          <SkeletonPlaceholder borderRadius={1} speed={1500}>
+            <SkeletonPlaceholder.Item opacity={0.9} width={60} height={12} />
+          </SkeletonPlaceholder>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.subtitleContainer}>
-        <SkeletonPlaceholder borderRadius={1} speed={1500}>
-          <SkeletonPlaceholder.Item opacity={0.9} width={60} height={12} />
-        </SkeletonPlaceholder>
+        {inboundText ? (
+          <Typography style={styles.subtitle} numberOfLines={numberOfLines}>
+            {inboundText}
+          </Typography>
+        ) : null}
+        {inboundText && outboundText ? (
+          <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.arrow}>
+            <Path
+              d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
+              fill="none"
+              stroke="#fff"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        ) : null}
+        {outboundText ? (
+          <Typography style={styles.subtitle}>{outboundText}</Typography>
+        ) : null}
       </View>
     );
   }
+);
 
-  return (
-    <View style={styles.subtitleContainer}>
-      {inboundText ? (
-        <Typography style={styles.subtitle} numberOfLines={numberOfLines}>
-          {inboundText}
-        </Typography>
-      ) : null}
-      {inboundText && outboundText ? (
-        <Svg width={16} height={16} viewBox="0 0 24 24" style={styles.arrow}>
-          <Path
-            d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
-            fill="none"
-            stroke="#fff"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-      ) : null}
-      {outboundText ? (
-        <Typography style={styles.subtitle}>{outboundText}</Typography>
-      ) : null}
-    </View>
-  );
-};
+const AnimatedCardChevron = Animated.createAnimatedComponent(View);
 
 export const CommonCard: React.FC<Props> = ({
   line,
   targetStation,
   stations = [],
   title,
+  hideParens,
   subtitle,
   subtitleNumberOfLines,
+  hideChevron,
+  checked,
   disabled,
   testID,
   loading,
   onPress,
+  expandableContent,
+  expanded,
+  onExpandedChange,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
-  const mark = useMemo(() => getLineMark({ line }), [getLineMark, line]);
+  const mark = useMemo(
+    () => getLineMark({ line, stationNumbers: targetStation?.stationNumbers }),
+    [getLineMark, line, targetStation?.stationNumbers]
+  );
   const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
+
+  const hasAccordion = expandableContent != null;
+  const animValue = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    Animated.timing(animValue, {
+      toValue: expanded ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [expanded, animValue]);
+
+  const handlePress = useCallback(() => {
+    if (hasAccordion) {
+      onExpandedChange?.(!expanded);
+      return;
+    }
+    onPress?.();
+  }, [hasAccordion, expanded, onExpandedChange, onPress]);
+
+  const animatedHeight = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, contentHeight],
+  });
+
+  const chevronRotation = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '90deg'],
+  });
 
   const [inboundText, outboundText] = useMemo(() => {
     if (!stations?.length) {
@@ -216,113 +285,202 @@ export const CommonCard: React.FC<Props> = ({
     targetStation?.stationNumbers?.[0]?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
 
+  const markScaleStyle = useMemo(() => {
+    const needsScale = !mark?.signPath || targetStationNumber;
+    if (!needsScale) {
+      return null;
+    }
+    if (targetStationThreeLetterCode) {
+      return null;
+    }
+    return { transform: [{ scale: 0.5 }] } as const;
+  }, [mark?.signPath, targetStationNumber, targetStationThreeLetterCode]);
+
+  const titleParts = useMemo(
+    () => titleOrLineName.split(/(\([^)]*\))/),
+    [titleOrLineName]
+  );
+
   const additionalRootStyle = useMemo(
     () => ({
       backgroundColor: line.color ?? '#333',
       opacity: disabled ? 0.5 : 1,
-      borderWidth: 0,
     }),
     [disabled, line.color]
   );
 
+  const cardRadius = isLEDTheme ? 0 : 8;
+  const wrapperRadiusStyle = useMemo(
+    () => ({
+      borderRadius: cardRadius,
+      backgroundColor: line.color ?? '#333',
+      overflow: 'hidden' as const,
+    }),
+    [cardRadius, line.color]
+  );
+  const headerRadiusStyle = useMemo(() => {
+    if (!hasAccordion) {
+      return {
+        borderRadius: cardRadius,
+      };
+    }
+
+    if (!expanded) {
+      return undefined;
+    }
+
+    return {
+      borderTopLeftRadius: cardRadius,
+      borderTopRightRadius: cardRadius,
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
+    };
+  }, [cardRadius, expanded, hasAccordion]);
+  const colorBarRadiusStyle = useMemo(
+    () => ({
+      backgroundColor: line.color ?? '#333',
+      borderTopLeftRadius: cardRadius,
+      borderBottomLeftRadius: cardRadius,
+    }),
+    [cardRadius, line.color]
+  );
+  const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
+  const rootBorderStyle = hasAccordion ? undefined : styles.cardBorder;
+  const accordionWrapperStyle = hasAccordion
+    ? [styles.cardShadow, styles.cardBorder, wrapperRadiusStyle]
+    : undefined;
+
   return (
-    <TouchableOpacity
-      onPress={disabled ? undefined : onPress}
-      activeOpacity={1}
-      disabled={disabled}
-      testID={testID}
-      style={[
-        styles.root,
-        {
-          borderRadius: isLEDTheme ? 0 : 8,
-        },
-        additionalRootStyle,
-      ]}
-    >
-      <View
-        style={[
-          styles.insetBorder,
-          {
-            borderRadius: isLEDTheme ? 0 : 8,
-          },
-        ]}
-        pointerEvents="none"
-      />
-      {mark ? (
+    <View style={accordionWrapperStyle}>
+      {hasAccordion && (
         <View
+          style={[styles.fullHeightColorBar, colorBarRadiusStyle]}
+          pointerEvents="none"
+        />
+      )}
+      <TouchableOpacity
+        onPress={disabled ? undefined : handlePress}
+        activeOpacity={1}
+        disabled={disabled}
+        testID={testID}
+        style={[
+          styles.root,
+          rootShadowStyle,
+          rootBorderStyle,
+          headerRadiusStyle,
+          additionalRootStyle,
+        ]}
+      >
+        {mark ? (
+          <View style={[styles.mark, markScaleStyle]}>
+            <TransferLineMark
+              line={line}
+              mark={mark}
+              size={NUMBERING_ICON_SIZE.LARGE}
+              withOutline
+              withDarkTheme={isLEDTheme}
+              stationNumber={targetStationNumber ?? undefined}
+              color={targetStationColor ?? line.color ?? undefined}
+              threeLetterCode={targetStationThreeLetterCode}
+            />
+          </View>
+        ) : (
+          <View style={styles.withoutMark}>
+            <TransferLineMark
+              line={line}
+              mark={{
+                sign: '',
+                signShape: MARK_SHAPE.ROUND,
+              }}
+              size={NUMBERING_ICON_SIZE.LARGE}
+              withOutline
+              withDarkTheme={isLEDTheme}
+              stationNumber={
+                isBus ? (line.nameShort ?? '') : (targetStationNumber ?? '')
+              }
+              color={targetStationColor ?? line.color ?? undefined}
+              threeLetterCode={targetStationThreeLetterCode}
+            />
+          </View>
+        )}
+        <View style={styles.texts}>
+          <Typography style={styles.title} numberOfLines={1}>
+            {titleParts.map((part, index) =>
+              /^\(.*\)$/.test(part) ? (
+                <Typography key={`${index}-${part}`} style={styles.titleParens}>
+                  {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
+                    ? ' '
+                    : ''}
+                  {hideParens ? part.slice(1, -1) : part}
+                </Typography>
+              ) : (
+                part
+              )
+            )}
+          </Typography>
+          {subtitle && (
+            <Subtitle
+              inboundText={subtitle}
+              outboundText=""
+              numberOfLines={subtitleNumberOfLines}
+              loading={loading}
+            />
+          )}
+          {!subtitle && (!!inboundText || !!outboundText) && (
+            <Subtitle
+              inboundText={inboundText}
+              outboundText={outboundText}
+              numberOfLines={subtitleNumberOfLines}
+              loading={loading}
+            />
+          )}
+        </View>
+        <View style={styles.chevron}>
+          {!hideChevron && hasAccordion && (
+            <AnimatedCardChevron
+              style={{ transform: [{ rotate: chevronRotation }] }}
+            >
+              <CardChevron />
+            </AnimatedCardChevron>
+          )}
+          {!hideChevron && !hasAccordion && <CardChevron />}
+          {hideChevron && !checked && (
+            <Svg width={24} height={24} viewBox="0 0 24 24">
+              <Path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
+                fill="#fff"
+                opacity={0.5}
+              />
+            </Svg>
+          )}
+          {hideChevron && checked && (
+            <Svg width={24} height={24} viewBox="0 0 24 24">
+              <Path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                fill="#fff"
+              />
+            </Svg>
+          )}
+        </View>
+      </TouchableOpacity>
+      {hasAccordion && (
+        <Animated.View
           style={[
-            styles.mark,
-            !mark.signPath || targetStationNumber
-              ? {
-                  transform: [{ scale: 0.5 }],
-                }
-              : null,
+            styles.expandableWrapper,
+            {
+              height: animatedHeight,
+              backgroundColor: isLEDTheme ? '#212121' : '#f5f5f5',
+            },
           ]}
         >
-          <TransferLineMark
-            line={line}
-            mark={mark}
-            size={NUMBERING_ICON_SIZE.LARGE}
-            withOutline
-            withDarkTheme={isLEDTheme}
-            stationNumber={targetStationNumber ?? undefined}
-            color={targetStationColor ?? line.color ?? undefined}
-            threeLetterCode={targetStationThreeLetterCode}
-          />
-        </View>
-      ) : (
-        <View style={styles.withoutMark}>
-          <TransferLineMark
-            line={line}
-            mark={{
-              sign: '',
-              signShape: MARK_SHAPE.ROUND,
-            }}
-            size={NUMBERING_ICON_SIZE.LARGE}
-            withOutline
-            withDarkTheme={isLEDTheme}
-            stationNumber={
-              isBus ? (line.nameShort ?? '') : (targetStationNumber ?? '')
-            }
-            color={targetStationColor ?? line.color ?? undefined}
-            threeLetterCode={targetStationThreeLetterCode}
-          />
-        </View>
+          <View
+            style={[styles.expandableContent, styles.expandableMeasure]}
+            onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}
+          >
+            {expandableContent}
+          </View>
+        </Animated.View>
       )}
-      <View style={styles.texts}>
-        <Typography style={styles.title} numberOfLines={1}>
-          {titleOrLineName.split(/(\([^)]*\))/).map((part, index, parts) =>
-            /^\(.*\)$/.test(part) ? (
-              <Typography key={`${index}-${part}`} style={styles.titleParens}>
-                {index > 0 && !/\s$/.test(parts[index - 1] ?? '')
-                  ? ` ${part}`
-                  : part}
-              </Typography>
-            ) : (
-              part
-            )
-          )}
-        </Typography>
-        {subtitle && (
-          <Subtitle
-            inboundText={subtitle}
-            outboundText=""
-            numberOfLines={subtitleNumberOfLines}
-            loading={loading}
-          />
-        )}
-        {!subtitle && (!!inboundText || !!outboundText) && (
-          <Subtitle
-            inboundText={inboundText}
-            outboundText={outboundText}
-            numberOfLines={subtitleNumberOfLines}
-            loading={loading}
-          />
-        )}
-      </View>
-      <View style={styles.chevron}>
-        <CardChevron />
-      </View>
-    </TouchableOpacity>
+    </View>
   );
 };

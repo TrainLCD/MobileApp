@@ -1,7 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import {
+  Animated as RNAnimated,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
@@ -11,6 +16,9 @@ import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBox';
 
 const styles = StyleSheet.create({
+  root: {
+    zIndex: 9999,
+  },
   gradientRoot: {
     paddingTop: 14,
     paddingRight: 21,
@@ -141,7 +149,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
   const dim = useWindowDimensions();
 
   return (
-    <View>
+    <View style={styles.root}>
       <LinearGradient
         colors={['#333', '#212121', '#000']}
         locations={[0, 0.5, 0.5]}
@@ -151,7 +159,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
           <TrainTypeBox isTY trainType={trainType} />
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
-              <Animated.Text
+              <RNAnimated.Text
                 style={[
                   animation.boundTopAnimatedStyles,
                   styles.boundTextContainer,
@@ -167,8 +175,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
                     : null}
                 </Text>
                 <Text style={styles.boundText}>{boundText}</Text>
-              </Animated.Text>
-              <Animated.Text
+              </RNAnimated.Text>
+              <RNAnimated.Text
                 style={[
                   animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
@@ -184,13 +192,13 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
                     : null}
                 </Text>
                 <Text style={styles.boundText}>{animation.prevBoundText}</Text>
-              </Animated.Text>
+              </RNAnimated.Text>
             </View>
           ) : null}
         </View>
         <View style={styles.bottom}>
           <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
-            <Animated.Text
+            <RNAnimated.Text
               style={[
                 animation.stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
@@ -199,8 +207,8 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
               numberOfLines={2}
             >
               {stateText}
-            </Animated.Text>
-            <Animated.Text
+            </RNAnimated.Text>
+            <RNAnimated.Text
               style={[
                 animation.stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
@@ -209,7 +217,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
               numberOfLines={2}
             >
               {animation.prevStateText}
-            </Animated.Text>
+            </RNAnimated.Text>
           </View>
 
           {currentStationNumber ? (
@@ -226,7 +234,7 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
 
           <View style={[styles.stationNameWrapper]}>
             <View style={styles.stationNameContainer}>
-              <Animated.Text
+              <RNAnimated.Text
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
@@ -240,11 +248,11 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
                 ]}
               >
                 {stationText}
-              </Animated.Text>
+              </RNAnimated.Text>
             </View>
 
             <View style={styles.stationNameContainer}>
-              <Animated.Text
+              <RNAnimated.Text
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
@@ -258,23 +266,29 @@ const HeaderTY: React.FC<CommonHeaderProps> = (props) => {
                 ]}
               >
                 {animation.prevStationText}
-              </Animated.Text>
+              </RNAnimated.Text>
             </View>
           </View>
           {selectedBound && firstStop ? (
             <View
               style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
             >
-              <Animated.Text
-                style={[animation.stateTopAnimatedStyles, styles.firstText]}
+              <RNAnimated.Text
+                style={[
+                  animation.stateTopAnimatedStylesRight,
+                  styles.firstText,
+                ]}
               >
                 {stateTextRight}
-              </Animated.Text>
-              <Animated.Text
-                style={[animation.stateBottomAnimatedStyles, styles.firstText]}
+              </RNAnimated.Text>
+              <RNAnimated.Text
+                style={[
+                  animation.stateBottomAnimatedStylesRight,
+                  styles.firstText,
+                ]}
               >
                 {animation.prevStateTextRight}
-              </Animated.Text>
+              </RNAnimated.Text>
             </View>
           ) : null}
         </View>

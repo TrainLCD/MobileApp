@@ -6,7 +6,6 @@ import {
   useCurrentTrainType,
   useGetLineMark,
   useNextStation,
-  useStationNumberIndexFunc,
   useTransferLines,
 } from '~/hooks';
 import lineState from '~/store/atoms/line';
@@ -36,7 +35,6 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         : (nextStation ?? null),
     [arrived, nextStation, station]
   );
-  const getStationNumberIndex = useStationNumberIndexFunc();
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -52,6 +50,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
 
         return getLineMarkFunc({
           line: tl,
+          stationNumbers: switchedStation.stationNumbers,
         });
       }),
     [getLineMarkFunc, switchedStation, transferLines]
@@ -81,16 +80,14 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
         if (!s) {
           return null;
         }
-        const stationNumberIndex = getStationNumberIndex(s);
 
         const lineMarkShape = getLineMarkFunc({
           line: s.line ?? undefined,
+          stationNumbers: s.stationNumbers,
         });
-        const stationNumber =
-          s.stationNumbers?.[stationNumberIndex]?.stationNumber;
+        const stationNumber = s.stationNumbers?.[0]?.stationNumber;
         const lineColor =
-          s.stationNumbers?.[stationNumberIndex]?.lineSymbolColor ??
-          s.line?.color;
+          s.stationNumbers?.[0]?.lineSymbolColor ?? s.line?.color;
 
         return stationNumber && lineColor && lineMarkShape
           ? {
@@ -100,7 +97,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
             }
           : null;
       }),
-    [archStations, getStationNumberIndex, getLineMarkFunc]
+    [archStations, getLineMarkFunc]
   );
 
   if (!line) {
