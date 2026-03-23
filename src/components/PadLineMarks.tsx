@@ -111,6 +111,11 @@ const PadLineMarks: React.FC<Props> = ({
 
   const { heightScale } = useScale();
 
+  const lineMarkItemStyle = useMemo(
+    () => [styles.lineMarkWrapper, { marginTop: heightScale(4) }],
+    [heightScale, styles.lineMarkWrapper]
+  );
+
   if (!isTablet) {
     return <></>;
   }
@@ -129,15 +134,7 @@ const PadLineMarks: React.FC<Props> = ({
 
       {lineMarks.map((lm, i) =>
         lm ? (
-          <View
-            style={[
-              styles.lineMarkWrapper,
-              {
-                marginTop: heightScale(4),
-              },
-            ]}
-            key={transferLines[i]?.id}
-          >
+          <View style={lineMarkItemStyle} key={transferLines[i]?.id}>
             <TransferLineMark
               line={transferLines[i]}
               mark={lm}
@@ -158,7 +155,7 @@ const PadLineMarks: React.FC<Props> = ({
             </View>
           </View>
         ) : (
-          <View style={styles.lineMarkWrapper} key={transferLines[i]?.id}>
+          <View style={lineMarkItemStyle} key={transferLines[i]?.id}>
             <TransferLineDot
               key={transferLines[i]?.id}
               line={transferLines[i]}
