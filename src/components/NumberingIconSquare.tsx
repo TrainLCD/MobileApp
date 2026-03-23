@@ -152,6 +152,24 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FrutigerNeueLTProBold,
     color: '#231e1f',
   },
+  rootMedium: {
+    width: isTablet ? 35 * 1.5 : 35,
+    height: isTablet ? 35 * 1.5 : 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    borderRadius: isTablet ? 8 : 5,
+    borderWidth: isTablet ? 8 : 5,
+    backgroundColor: 'white',
+  },
+  lineSymbolMedium: {
+    lineHeight: isTablet ? 32 : 20,
+    fontSize: isTablet ? 32 : 20,
+    textAlign: 'center',
+    fontFamily: FONTS.FrutigerNeueLTProBold,
+    marginTop: Platform.OS === 'ios' ? 5 : 0,
+    color: '#231e1f',
+  },
   rootSmall: {
     width: 20,
     height: 20,
@@ -293,6 +311,14 @@ const NumberingIconSquare: React.FC<Props> = ({
         size={size}
         withOutline={withOutline}
       />
+    );
+  }
+
+  if (size === NUMBERING_ICON_SIZE.MEDIUM) {
+    return (
+      <View style={[styles.rootMedium, { borderColor: lineColor }]}>
+        <Typography style={styles.lineSymbolMedium}>{lineSymbol}</Typography>
+      </View>
     );
   }
 
