@@ -132,7 +132,10 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const dim = useWindowDimensions();
 
   const additionalPadLineMarksContainerStyle = useMemo(() => {
-    const androidOffset = Platform.OS === 'android' && isTablet ? 60 : 0;
+    // rootWestJOのbottomがAndroidでは'30%'、iPadでは'40%'のため、
+    // 差分の10%をdim.heightに基づいて動的に補正
+    const androidOffset =
+      Platform.OS === 'android' && isTablet ? Math.round(dim.height * 0.1) : 0;
     if (!stationInLoop.stationNumbers?.length) {
       return {
         top: dim.height - 130 + androidOffset,
