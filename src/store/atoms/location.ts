@@ -41,55 +41,52 @@ export const setLocation = (location: Location.LocationObject) => {
   const currentLineType = store.get(stationState).station?.line?.lineType;
   const skipSmoothing = currentLineType === LineType.Subway;
 
+  // 地下鉄ではGPS信号が不安定なため、フィルタ・スムージングを全てスキップする
+  if (skipSmoothing || prev == null) {
+    store.set(locationAtom, location);
+    store.set(accuracyHistoryAtom, updatedHistory);
+    return;
+  }
+
   // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用
-  if (prev != null) {
-    const dt = (location.timestamp - prev.timestamp) / 1000; // 秒
-    if (dt > 0) {
-      const dist = getDistance(
-        {
-          latitude: prev.coords.latitude,
-          longitude: prev.coords.longitude,
-        },
-        {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        }
-      );
-      const speed = dist / dt;
-
-      // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
-      if (speed > MAX_PLAUSIBLE_SPEED) {
-        store.set(accuracyHistoryAtom, updatedHistory);
-        return;
+  const dt = (location.timestamp - prev.timestamp) / 1000; // 秒
+  if (dt > 0) {
+    const dist = getDistance(
+      {
+        latitude: prev.coords.latitude,
+        longitude: prev.coords.longitude,
+      },
+      {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
       }
-    }
+    );
+    const speed = dist / dt;
 
-    // 地下鉄ではEMAをスキップし、測位値をそのまま使用する
-    if (!skipSmoothing) {
-      // EMA(指数移動平均)で座標をスムージングする
-      // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
-      const alpha = getSmoothingAlpha(newAccuracy);
-      const smoothedLat =
-        alpha * location.coords.latitude + (1 - alpha) * prev.coords.latitude;
-      const smoothedLon =
-        alpha * location.coords.longitude + (1 - alpha) * prev.coords.longitude;
-
-      const smoothedLocation: Location.LocationObject = {
-        ...location,
-        coords: {
-          ...location.coords,
-          latitude: smoothedLat,
-          longitude: smoothedLon,
-        },
-      };
-
-      store.set(locationAtom, smoothedLocation);
+    // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
+    if (speed > MAX_PLAUSIBLE_SPEED) {
       store.set(accuracyHistoryAtom, updatedHistory);
       return;
     }
   }
 
-  // 初回またはスムージングスキップ時はそのまま格納
-  store.set(locationAtom, location);
+  // EMA(指数移動平均)で座標をスムージングする
+  // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
+  const alpha = getSmoothingAlpha(newAccuracy);
+  const smoothedLat =
+    alpha * location.coords.latitude + (1 - alpha) * prev.coords.latitude;
+  const smoothedLon =
+    alpha * location.coords.longitude + (1 - alpha) * prev.coords.longitude;
+
+  const smoothedLocation: Location.LocationObject = {
+    ...location,
+    coords: {
+      ...location.coords,
+      latitude: smoothedLat,
+      longitude: smoothedLon,
+    },
+  };
+
+  store.set(locationAtom, smoothedLocation);
   store.set(accuracyHistoryAtom, updatedHistory);
 };
