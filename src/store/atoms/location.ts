@@ -3,7 +3,7 @@ import getDistance from 'geolib/es/getDistance';
 import { atom } from 'jotai';
 import { LineType } from '~/@types/graphql';
 import { store } from '..';
-import lineState from './line';
+import stationState from './station';
 
 const MAX_ACCURACY_HISTORY = 12;
 
@@ -38,7 +38,7 @@ export const setLocation = (location: Location.LocationObject) => {
       : currentHistory;
 
   // 地下鉄ではGPS信号が不安定なためEMAスムージングを無効化する
-  const currentLineType = store.get(lineState).selectedLine?.lineType;
+  const currentLineType = store.get(stationState).station?.line?.lineType;
   const skipSmoothing = currentLineType === LineType.Subway;
 
   // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用
@@ -72,8 +72,7 @@ export const setLocation = (location: Location.LocationObject) => {
       const smoothedLat =
         alpha * location.coords.latitude + (1 - alpha) * prev.coords.latitude;
       const smoothedLon =
-        alpha * location.coords.longitude +
-        (1 - alpha) * prev.coords.longitude;
+        alpha * location.coords.longitude + (1 - alpha) * prev.coords.longitude;
 
       const smoothedLocation: Location.LocationObject = {
         ...location,
