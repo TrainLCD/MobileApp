@@ -1,7 +1,9 @@
 import type * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
 import { atom } from 'jotai';
+import { LineType } from '~/@types/graphql';
 import { store } from '..';
+import stationState from './station';
 
 const MAX_ACCURACY_HISTORY = 12;
 
@@ -25,8 +27,12 @@ export const locationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
 export const backgroundLocationTrackingAtom = atom(false);
 
+// 速度フィルタ・EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
+// 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
+const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
+
 export const setLocation = (location: Location.LocationObject) => {
-  const prev = store.get(locationAtom);
+  const filteredPrev = store.get(lastFilteredLocationAtom);
   const currentHistory = store.get(accuracyHistoryAtom);
   const newAccuracy = location.coords.accuracy;
 
@@ -35,52 +41,68 @@ export const setLocation = (location: Location.LocationObject) => {
       ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
       : currentHistory;
 
-  // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用
-  if (prev != null) {
-    const dt = (location.timestamp - prev.timestamp) / 1000; // 秒
-    if (dt > 0) {
-      const dist = getDistance(
-        {
-          latitude: prev.coords.latitude,
-          longitude: prev.coords.longitude,
-        },
-        {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        }
-      );
-      const speed = dist / dt;
+  // 地下鉄ではGPS信号が不安定なため、速度フィルタとEMAスムージングを含む位置フィルタ処理をスキップする
+  const currentLineType = store.get(stationState).station?.line?.lineType;
+  const skipSmoothing = currentLineType === LineType.Subway;
 
-      // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
-      if (speed > MAX_PLAUSIBLE_SPEED) {
-        store.set(accuracyHistoryAtom, updatedHistory);
-        return;
-      }
-    }
-
-    // EMA(指数移動平均)で座標をスムージングする
-    // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
-    const alpha = getSmoothingAlpha(newAccuracy);
-    const smoothedLat =
-      alpha * location.coords.latitude + (1 - alpha) * prev.coords.latitude;
-    const smoothedLon =
-      alpha * location.coords.longitude + (1 - alpha) * prev.coords.longitude;
-
-    const smoothedLocation: Location.LocationObject = {
-      ...location,
-      coords: {
-        ...location.coords,
-        latitude: smoothedLat,
-        longitude: smoothedLon,
-      },
-    };
-
-    store.set(locationAtom, smoothedLocation);
+  // 地下鉄ではGPS信号が不安定なため、フィルタ・スムージングを全てスキップする
+  // UIには生の座標を反映するが、フィルタ基準(lastFilteredLocationAtom)は更新しない
+  if (skipSmoothing) {
+    store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
     return;
   }
 
-  // 初回はそのまま格納
-  store.set(locationAtom, location);
+  // フィルタ基準となるprevが無い場合（初回起動時や地下鉄→地上の復帰直後）
+  if (filteredPrev == null) {
+    store.set(locationAtom, location);
+    store.set(lastFilteredLocationAtom, location);
+    store.set(accuracyHistoryAtom, updatedHistory);
+    return;
+  }
+
+  // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用
+  const dt = (location.timestamp - filteredPrev.timestamp) / 1000; // 秒
+  if (dt > 0) {
+    const dist = getDistance(
+      {
+        latitude: filteredPrev.coords.latitude,
+        longitude: filteredPrev.coords.longitude,
+      },
+      {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      }
+    );
+    const speed = dist / dt;
+
+    // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
+    if (speed > MAX_PLAUSIBLE_SPEED) {
+      store.set(accuracyHistoryAtom, updatedHistory);
+      return;
+    }
+  }
+
+  // EMA(指数移動平均)で座標をスムージングする
+  // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
+  const alpha = getSmoothingAlpha(newAccuracy);
+  const smoothedLat =
+    alpha * location.coords.latitude +
+    (1 - alpha) * filteredPrev.coords.latitude;
+  const smoothedLon =
+    alpha * location.coords.longitude +
+    (1 - alpha) * filteredPrev.coords.longitude;
+
+  const smoothedLocation: Location.LocationObject = {
+    ...location,
+    coords: {
+      ...location.coords,
+      latitude: smoothedLat,
+      longitude: smoothedLon,
+    },
+  };
+
+  store.set(locationAtom, smoothedLocation);
+  store.set(lastFilteredLocationAtom, smoothedLocation);
   store.set(accuracyHistoryAtom, updatedHistory);
 };

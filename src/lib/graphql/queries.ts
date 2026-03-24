@@ -4,16 +4,9 @@ import { gql } from '@apollo/client';
 export const COMPANY_FRAGMENT = gql`
   fragment CompanyFields on Company {
     id
-    name
-    nameEnglishFull
     nameEnglishShort
-    nameFull
     nameKatakana
     nameShort
-    railroadId
-    status
-    type
-    url
   }
 `;
 
@@ -73,7 +66,6 @@ export const LINE_NESTED_FRAGMENT = gql`
   ${TINY_TRAIN_TYPE_FRAGMENT}
   fragment LineNestedFields on LineNested {
     id
-    averageDistance
     color
     company {
       ...CompanyFields
@@ -162,11 +154,7 @@ export const STATION_FRAGMENT = gql`
     threeLetterCode
     latitude
     longitude
-    address
-    postalCode
     prefectureId
-    openedAt
-    closedAt
     status
     distance
     hasTrainTypes
