@@ -37,7 +37,7 @@ export const setLocation = (location: Location.LocationObject) => {
       ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
       : currentHistory;
 
-  // 地下鉄ではGPS信号が不安定なためEMAスムージングを無効化する
+  // 地下鉄ではGPS信号が不安定なため、速度フィルタとEMAスムージングを含む位置フィルタ処理をスキップする
   const currentLineType = store.get(stationState).station?.line?.lineType;
   const skipSmoothing = currentLineType === LineType.Subway;
 
