@@ -50,6 +50,13 @@ export const backgroundLocationTrackingAtom = atom(false);
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
+// テスト用: モジュール内部の状態をリセットする
+export const resetLocationState = () => {
+  store.set(locationAtom, null);
+  store.set(accuracyHistoryAtom, []);
+  store.set(lastFilteredLocationAtom, null);
+};
+
 export const setLocation = (location: Location.LocationObject) => {
   const filteredPrev = store.get(lastFilteredLocationAtom);
   const currentHistory = store.get(accuracyHistoryAtom);

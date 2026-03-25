@@ -1,7 +1,12 @@
 import type * as Location from 'expo-location';
 import { LineType, type Station } from '~/@types/graphql';
 import { store } from '..';
-import { accuracyHistoryAtom, locationAtom, setLocation } from './location';
+import {
+  accuracyHistoryAtom,
+  locationAtom,
+  resetLocationState,
+  setLocation,
+} from './location';
 import stationState from './station';
 
 const makeLocation = (
@@ -39,8 +44,7 @@ const setStationLineType = (lineType: LineType | null) => {
 
 describe('setLocation', () => {
   beforeEach(() => {
-    store.set(locationAtom, null);
-    store.set(accuracyHistoryAtom, []);
+    resetLocationState();
     setStationLineType(null);
   });
 
@@ -112,6 +116,19 @@ describe('setLocation', () => {
       store.set(accuracyHistoryAtom, [240, 250, 260, 250]);
 
       const loc = makeLocation(35.0, 139.0, 250, 1000);
+      setLocation(loc);
+
+      const result = store.get(locationAtom);
+      expect(result?.coords.latitude).toBe(35.0);
+      expect(result?.coords.longitude).toBe(139.0);
+    });
+
+    it('平均精度がちょうど200mの境界値の場合はスムージングをスキップする', () => {
+      setStationLineType(LineType.Subway);
+      // 平均がちょうど200m（mean >= BAD_ACCURACY_THRESHOLD で不安定扱い）
+      store.set(accuracyHistoryAtom, [200, 200, 200, 200]);
+
+      const loc = makeLocation(35.0, 139.0, 200, 1000);
       setLocation(loc);
 
       const result = store.get(locationAtom);
