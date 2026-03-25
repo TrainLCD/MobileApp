@@ -2,6 +2,7 @@ import type * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
 import { atom } from 'jotai';
 import { LineType } from '~/@types/graphql';
+import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { store } from '..';
 import stationState from './station';
 
@@ -23,6 +24,24 @@ const getSmoothingAlpha = (accuracy: number | null): number => {
   return 0.3;
 };
 
+// 精度履歴の安定性を変動係数(CV)で判定する
+const MIN_STABILITY_SAMPLES = 4;
+const MAX_STABLE_CV = 0.5;
+
+const isAccuracyStable = (history: number[]): boolean => {
+  if (history.length < MIN_STABILITY_SAMPLES) {
+    return false;
+  }
+  const mean = history.reduce((sum, v) => sum + v, 0) / history.length;
+  if (mean <= 0 || mean >= BAD_ACCURACY_THRESHOLD) {
+    return false;
+  }
+  const variance =
+    history.reduce((sum, v) => sum + (v - mean) ** 2, 0) / history.length;
+  const stddev = Math.sqrt(variance);
+  return stddev / mean < MAX_STABLE_CV;
+};
+
 export const locationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
 export const backgroundLocationTrackingAtom = atom(false);
@@ -30,6 +49,13 @@ export const backgroundLocationTrackingAtom = atom(false);
 // 速度フィルタ・EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
+
+// テスト用: モジュール内部の状態をリセットする
+export const resetLocationState = () => {
+  store.set(locationAtom, null);
+  store.set(accuracyHistoryAtom, []);
+  store.set(lastFilteredLocationAtom, null);
+};
 
 export const setLocation = (location: Location.LocationObject) => {
   const filteredPrev = store.get(lastFilteredLocationAtom);
@@ -41,11 +67,13 @@ export const setLocation = (location: Location.LocationObject) => {
       ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
       : currentHistory;
 
-  // 地下鉄ではGPS信号が不安定なため、速度フィルタとEMAスムージングを含む位置フィルタ処理をスキップする
+  // 地下鉄ではGPS信号が不安定なため原則スムージングをスキップするが、
+  // 精度が安定している場合（地上区間など）はスムージングを適用する
   const currentLineType = store.get(stationState).station?.line?.lineType;
-  const skipSmoothing = currentLineType === LineType.Subway;
+  const skipSmoothing =
+    currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
 
-  // 地下鉄ではGPS信号が不安定なため、フィルタ・スムージングを全てスキップする
+  // スムージングスキップ時はフィルタ・スムージングを全てスキップする
   // UIには生の座標を反映するが、フィルタ基準(lastFilteredLocationAtom)は更新しない
   if (skipSmoothing) {
     store.set(locationAtom, location);
