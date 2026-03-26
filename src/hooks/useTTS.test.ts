@@ -1,7 +1,7 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import React from 'react';
-import speechState from '~/store/atoms/speech';
+import speechState, { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import { mockFetch } from '~/utils/test/ttsMocks';
 import { clearFetchCache } from '~/utils/ttsSpeechFetcher';
 import { useTTS } from './useTTS';
@@ -320,6 +320,38 @@ describe('useTTS', () => {
     );
 
     warnSpy.mockRestore();
+  });
+
+  it('resetFirstSpeechAtom変更時にuseTTSTextへfirstSpeech=trueが同期的に渡される', async () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    jest.runAllTimers();
+    useTTSText.mockClear();
+
+    // resetFirstSpeechAtomをインクリメントする
+    act(() => {
+      store.set(resetFirstSpeechAtom, 1);
+    });
+
+    await waitFor(() => {
+      expect(useTTSText).toHaveBeenCalled();
+    });
+
+    // atom変更直後の再レンダーでfirstSpeech=trueが渡されること
+    // （useEffectだと遅延してfalseが先に渡され通常TTSが再生されるデグレが起きる）
+    const firstCallAfterReset = useTTSText.mock.calls[0];
+    expect(firstCallAfterReset[0]).toBe(true);
   });
 
   it('アンマウント時にクリーンアップされる', async () => {

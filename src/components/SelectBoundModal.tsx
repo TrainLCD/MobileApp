@@ -123,6 +123,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
+  const pendingTrainTypeModalRef = useRef(false);
 
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
@@ -739,22 +740,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
   }, [error]);
 
-  const trainTypeText = useMemo(() => {
-    if (!fetchedTrainTypes.length) {
-      return translate('trainTypesNotExist');
-    }
-
-    if (!pendingTrainType) {
-      return translate('trainTypeSettings');
-    }
-
-    return translate('trainTypeIs', {
-      trainTypeName: isJapanese
-        ? (pendingTrainType.name ?? '')
-        : (pendingTrainType.nameRoman ?? ''),
-    });
-  }, [fetchedTrainTypes, pendingTrainType]);
-
   const stationsWithoutPass = useMemo(
     () => stations.filter((s) => !getIsPass(s)),
     [stations]
@@ -857,16 +842,6 @@ export const SelectBoundModal: React.FC<Props> = ({
 
               <Button
                 outline
-                onPress={() => setIsTrainTypeModalVisible(true)}
-                disabled={
-                  !fetchedTrainTypes.length || loading || isTransitioning
-                }
-              >
-                {trainTypeText}
-              </Button>
-
-              <Button
-                outline
                 style={savedRoute ? styles.redOutlinedButton : null}
                 textStyle={savedRoute ? styles.redOutlinedButtonText : null}
                 onPress={handleSaveRoutePress}
@@ -883,7 +858,9 @@ export const SelectBoundModal: React.FC<Props> = ({
                 onPress={() => setSelectBoundSettingListModalVisible(true)}
                 disabled={isTransitioning}
               >
-                {translate('settings')}
+                {translate(
+                  fetchedTrainTypes.length ? 'settingsAndTrainType' : 'settings'
+                )}
               </Button>
             </View>
 
@@ -915,6 +892,26 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setSelectBoundSettingListModalVisible(false)}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
+        trainTypeName={
+          pendingTrainType
+            ? isJapanese
+              ? (pendingTrainType.name ?? '')
+              : (pendingTrainType.nameRoman ?? '')
+            : undefined
+        }
+        trainTypeColor={pendingTrainType?.color ?? undefined}
+        trainTypeLoading={loading}
+        onTrainTypePress={() => {
+          pendingTrainTypeModalRef.current = true;
+          setSelectBoundSettingListModalVisible(false);
+        }}
+        onCloseAnimationEnd={() => {
+          if (pendingTrainTypeModalRef.current) {
+            pendingTrainTypeModalRef.current = false;
+            setIsTrainTypeModalVisible(true);
+          }
+        }}
+        trainTypeDisabled={!fetchedTrainTypes.length}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
