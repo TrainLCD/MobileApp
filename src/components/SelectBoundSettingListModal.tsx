@@ -22,7 +22,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 24,
     paddingHorizontal: 24,
-    borderRadius: 8,
     minHeight: 256,
   },
   buttonsContainer: {
@@ -49,7 +48,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     borderWidth: 1,
     borderColor: '#008ffe',
-    borderRadius: 8,
   },
   trainTypeLabel: {
     fontSize: isTablet ? RFValue(12) : RFValue(14),
@@ -64,7 +62,6 @@ const styles = StyleSheet.create({
     height: isTablet ? 40 : 32,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
     paddingHorizontal: 10,
   },
   trainTypeNameText: {
@@ -126,6 +123,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
         styles.contentView,
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          borderRadius: isLEDTheme ? 0 : 8,
         },
         isTablet && {
           width: '80%',
@@ -155,6 +153,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                 styles.trainTypeButton,
                 {
                   backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+                  borderRadius: isLEDTheme ? 0 : 8,
                   opacity: trainTypeDisabled ? 0.5 : 1,
                 },
               ]}
@@ -173,6 +172,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                       styles.trainTypeNamePanel,
                       {
                         backgroundColor: normalizedTrainTypeColor,
+                        borderRadius: isLEDTheme ? 0 : 8,
                         opacity: trainTypeLoading ? 0.5 : 1,
                       },
                     ]}

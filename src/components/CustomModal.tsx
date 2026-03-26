@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: isTablet ? 480 : 400,
     maxHeight: '90%',
+    overflow: 'hidden',
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,
