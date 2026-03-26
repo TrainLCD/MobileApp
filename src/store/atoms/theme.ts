@@ -33,8 +33,7 @@ export const themeAtom = atom<AppTheme>((get) => {
   );
 
   // selectedLineがnullの場合はcurrentLineもnull（useCurrentLineと同じ挙動）
-  const currentLine =
-    (selectedLine && actualCurrentStation?.line) ?? selectedLine;
+  const currentLine = (selectedLine && actualCurrentStation?.line) ?? null;
   return resolveThemeForLine(currentLine);
 });
 
