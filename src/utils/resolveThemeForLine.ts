@@ -8,6 +8,7 @@ const LINE_ID_TO_THEME: Record<number, AppTheme> = {
   11308: APP_THEME.JO,
   11314: APP_THEME.JO,
   11344: APP_THEME.JL,
+  99310: APP_THEME.TY, // みなとみらい線（東急東横線と直通）
 };
 
 const COMPANY_PREFIX_TO_THEME: [string, AppTheme][] = [
