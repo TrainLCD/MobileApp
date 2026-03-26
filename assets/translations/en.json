@@ -52,6 +52,8 @@
   "subwayAlertTitle": "Out of operation guarantee",
   "subwayAlertText": "Operation is not guaranteed because it is difficult for radio waves to enter the subway line. Please be careful.",
   "selectThemeTitle": "Themes",
+  "autoTheme": "Auto",
+  "themeDescriptionAuto": "Theme changes automatically based on the current line.",
   "tokyoMetroLike": "Tokyo Metro",
   "toeiLike": "Toei Subway",
   "yamanoteLineLike": "Yamanote Line",

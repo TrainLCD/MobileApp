@@ -32,11 +32,11 @@ import {
   useWarningInfo,
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
-import type { AppTheme } from '../models/Theme';
+import type { ThemePreference } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
-import { themeAtom } from '../store/atoms/theme';
+import { themePreferenceAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import NewReportModal from './NewReportModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
@@ -55,7 +55,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     useAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setTuning = useSetAtom(tuningState);
-  const setTheme = useSetAtom(themeAtom);
+  const setThemePreference = useSetAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
@@ -325,6 +325,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettings = async () => {
       const [
+        themePreferenceKey,
         prevThemeKey,
         enabledLanguagesStr,
         speechEnabledStr,
@@ -337,6 +338,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         bottomTransitionIntervalStr,
         untouchableModeEnabledStr,
       ] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
@@ -350,8 +352,15 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
       ]);
 
-      if (prevThemeKey) {
-        setTheme(prevThemeKey as AppTheme);
+      if (themePreferenceKey) {
+        setThemePreference(themePreferenceKey as ThemePreference);
+      } else if (prevThemeKey) {
+        // 既存ユーザーの移行: 明示的に選択していたテーマを維持
+        setThemePreference(prevThemeKey as ThemePreference);
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
+          prevThemeKey
+        );
       }
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -441,7 +450,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     };
 
     loadSettings();
-  }, [setNavigation, setSpeech, setTuning, setTheme]);
+  }, [setNavigation, setSpeech, setTuning, setThemePreference]);
 
   useEffect(() => {
     const { remove } = addScreenshotListener(() => {

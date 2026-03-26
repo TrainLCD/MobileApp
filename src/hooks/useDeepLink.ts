@@ -9,12 +9,12 @@ import {
   GET_LINE_STATIONS,
 } from '~/lib/graphql/queries';
 import type { LineDirection } from '../models/Bound';
-import { APP_THEME, type AppTheme } from '../models/Theme';
+import { APP_THEME, type ThemePreference } from '../models/Theme';
 import { navigationRef } from '../stacks/rootNavigation';
 import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
-import { themeAtom } from '../store/atoms/theme';
+import { themePreferenceAtom } from '../store/atoms/theme';
 
 const MAX_NAV_RETRIES = 5;
 const INITIAL_RETRY_DELAY_MS = 100;
@@ -63,7 +63,7 @@ export const useDeepLink = () => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
-  const setTheme = useSetAtom(themeAtom);
+  const setThemePreference = useSetAtom(themePreferenceAtom);
 
   const [
     fetchStationsByLineGroupId,
@@ -147,10 +147,10 @@ export const useDeepLink = () => {
       lineGroupId: number | undefined;
       lineId: number;
       autoMode: boolean;
-      theme: AppTheme | undefined;
+      theme: ThemePreference | undefined;
     }) => {
       if (theme) {
-        setTheme(theme);
+        setThemePreference(theme);
       }
       const lineDirection: LineDirection =
         direction === 0 ? 'INBOUND' : 'OUTBOUND';
@@ -196,7 +196,7 @@ export const useDeepLink = () => {
       fetchStationsByLineId,
       navigateToMain,
       setNavigationState,
-      setTheme,
+      setThemePreference,
     ]
   );
 
@@ -223,8 +223,9 @@ export const useDeepLink = () => {
       const autoMode = auto === '1';
       const parsedTheme =
         typeof theme === 'string' &&
-        Object.values(APP_THEME).includes(theme as AppTheme)
-          ? (theme as AppTheme)
+        (theme === 'AUTO' ||
+          (Object.values(APP_THEME) as string[]).includes(theme))
+          ? (theme as ThemePreference)
           : undefined;
 
       await openLink({
