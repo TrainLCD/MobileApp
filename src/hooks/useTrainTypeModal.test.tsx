@@ -200,7 +200,7 @@ describe('useTrainTypeModal', () => {
   };
 
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
   });
 
   it('handleTrainTypePress で停車駅のIDを使って列車種別を取得する', async () => {
@@ -228,7 +228,8 @@ describe('useTrainTypeModal', () => {
     expect(mockFetchTrainTypes).toHaveBeenCalledWith({
       variables: { stationId: 10 },
     });
-    expect(mockSetNavigation).toHaveBeenCalledWith(expect.any(Function));
+    // フェッチ開始時のクリア + 結果の上書き
+    expect(mockSetNavigation).toHaveBeenCalledTimes(2);
   });
 
   it('handleTrainTypePress で通過駅ではなく直近の停車駅を使う', async () => {
@@ -287,7 +288,7 @@ describe('useTrainTypeModal', () => {
     expect(mockFetchTrainTypes).not.toHaveBeenCalled();
   });
 
-  it('handleTrainTypePress でフェッチ結果が空の場合はfetchedTrainTypesを更新しない', async () => {
+  it('handleTrainTypePress でフェッチ開始時にfetchedTrainTypesをクリアし、結果で常に上書きする', async () => {
     setupMocks({ currentStoppingStation: createStation(10) });
 
     mockFetchTrainTypes.mockResolvedValue({
@@ -308,7 +309,16 @@ describe('useTrainTypeModal', () => {
     });
 
     expect(mockFetchTrainTypes).toHaveBeenCalled();
-    expect(mockSetNavigation).not.toHaveBeenCalled();
+    // フェッチ開始時のクリアと、結果の上書きで2回呼ばれる
+    expect(mockSetNavigation).toHaveBeenCalledTimes(2);
+    const clearCall = mockSetNavigation.mock.calls[0][0];
+    expect(clearCall({ fetchedTrainTypes: [createTrainType(1)] })).toEqual(
+      expect.objectContaining({ fetchedTrainTypes: [] })
+    );
+    const updateCall = mockSetNavigation.mock.calls[1][0];
+    expect(updateCall({ fetchedTrainTypes: [createTrainType(1)] })).toEqual(
+      expect.objectContaining({ fetchedTrainTypes: [] })
+    );
   });
 
   it('trainTypeModalLine は currentLine を selectedLine より優先する', () => {

@@ -76,6 +76,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     trainTypeName,
     trainTypeColor,
     trainTypeSelectLoading,
+    fetchTrainTypesLoading,
     trainTypeDisabled,
     trainTypeModalLine,
     openSettingListModal,
@@ -555,6 +556,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
         line={trainTypeModalLine}
+        loading={fetchTrainTypesLoading}
         onClose={closeTrainTypeModal}
         onSelect={handleTrainTypeModalSelect}
       />

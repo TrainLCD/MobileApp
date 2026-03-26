@@ -36,7 +36,7 @@ export const useTrainTypeModal = () => {
     useLazyQuery<{ lineGroupStations: Station[] }, { lineGroupId: number }>(
       GET_LINE_GROUP_STATIONS
     );
-  const [fetchTrainTypes] = useLazyQuery<
+  const [fetchTrainTypes, { loading: fetchTrainTypesLoading }] = useLazyQuery<
     { stationTrainTypes: TrainType[] },
     { stationId: number }
   >(GET_STATION_TRAIN_TYPES_LIGHT);
@@ -126,16 +126,17 @@ export const useTrainTypeModal = () => {
     pendingTrainTypeModalRef.current = true;
     setIsSettingListModalOpen(false);
     if (currentStoppingStation?.id) {
+      setNavigation((prev) => ({
+        ...prev,
+        fetchedTrainTypes: [],
+      }));
       fetchTrainTypes({
         variables: { stationId: currentStoppingStation.id as number },
       }).then((res) => {
-        const trainTypes = res.data?.stationTrainTypes ?? [];
-        if (trainTypes.length) {
-          setNavigation((prev) => ({
-            ...prev,
-            fetchedTrainTypes: trainTypes,
-          }));
-        }
+        setNavigation((prev) => ({
+          ...prev,
+          fetchedTrainTypes: res.data?.stationTrainTypes ?? [],
+        }));
       });
     }
   }, [currentStoppingStation?.id, fetchTrainTypes, setNavigation]);
@@ -165,6 +166,7 @@ export const useTrainTypeModal = () => {
     trainTypeName,
     trainTypeColor: activeTrainType?.color ?? undefined,
     trainTypeSelectLoading,
+    fetchTrainTypesLoading,
     trainTypeDisabled: fetchedTrainTypes.length <= 1,
     trainTypeModalLine,
     openSettingListModal,
