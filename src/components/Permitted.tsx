@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
@@ -7,22 +6,13 @@ import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
-import type { Station, TrainType } from '~/@types/graphql';
-import { GET_LINE_GROUP_STATIONS } from '~/lib/graphql/queries';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
-import { findNearestStation } from '~/utils/findNearestStation';
 import { isDevApp } from '~/utils/isDevApp';
 import {
   ALL_AVAILABLE_LANGUAGES,
@@ -41,10 +31,10 @@ import {
   useFeedback,
   useWarningInfo,
 } from '../hooks';
+import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import type { AppTheme } from '../models/Theme';
-import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
-import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
+import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
@@ -58,32 +48,17 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const [
-    { selectedBound, station: currentStation, selectedDirection },
-    setStationState,
-  ] = useAtom(stationState);
-  const { selectedLine } = useAtomValue(lineState);
+  const { selectedBound } = useAtomValue(stationState);
   const { untouchableModeEnabled, devOverlayEnabled } =
     useAtomValue(tuningState);
-  const [
-    {
-      autoModeEnabled,
-      isAppLatest,
-      fetchedTrainTypes,
-      trainType: activeTrainType,
-    },
-    setNavigation,
-  ] = useAtom(navigationState);
+  const [{ autoModeEnabled, isAppLatest }, setNavigation] =
+    useAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
-  const setResetFirstSpeech = useSetAtom(resetFirstSpeechAtom);
   const setTuning = useSetAtom(tuningState);
   const setTheme = useSetAtom(themeAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
-  const [isSettingListModalOpen, setIsSettingListModalOpen] = useState(false);
-  const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
-  const pendingTrainTypeModalRef = useRef(false);
 
   useCheckStoreVersion();
   useAppleWatch();
@@ -95,10 +70,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
-  const [fetchStationsByLineGroupId, { loading: trainTypeSelectLoading }] =
-    useLazyQuery<{ lineGroupStations: Station[] }, { lineGroupId: number }>(
-      GET_LINE_GROUP_STATIONS
-    );
+  const {
+    isSettingListModalOpen,
+    isTrainTypeModalVisible,
+    trainTypeName,
+    trainTypeColor,
+    trainTypeSelectLoading,
+    fetchTrainTypesLoading,
+    trainTypeDisabled,
+    trainTypeModalLine,
+    openSettingListModal,
+    closeSettingListModal,
+    handleTrainTypePress,
+    handleSettingListCloseAnimationEnd,
+    closeTrainTypeModal,
+    handleTrainTypeModalSelect,
+  } = useTrainTypeModal();
 
   const viewShotRef = useRef<ViewShot>(null);
 
@@ -268,9 +255,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
       actions.push({
         label: translate('settings'),
-        handler: () => {
-          setIsSettingListModalOpen(true);
-        },
+        handler: openSettingListModal,
       });
 
       if (isDevApp) {
@@ -329,6 +314,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       handleReport,
       handleShare,
       navigation,
+      openSettingListModal,
       selectedBound,
       setTuning,
       showActionSheetWithOptions,
@@ -474,79 +460,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     }));
   }, [setNavigation]);
 
-  const trainTypeName = useMemo(
-    () =>
-      activeTrainType
-        ? isJapanese
-          ? (activeTrainType.name ?? '')
-          : (activeTrainType.nameRoman ?? '')
-        : undefined,
-    [activeTrainType]
-  );
-
-  const handleTrainTypeSelect = useCallback(
-    async (trainType: TrainType) => {
-      if (trainType.groupId == null) return;
-      const res = await fetchStationsByLineGroupId({
-        variables: { lineGroupId: trainType.groupId },
-      });
-      if (!res.data?.lineGroupStations) return;
-      const newStations = res.data.lineGroupStations;
-
-      if (selectedBound) {
-        // Main画面で動作中: アクティブなstateを直接更新
-        const currentInNewList = newStations.some(
-          (s) => s.groupId === currentStation?.groupId
-        );
-
-        setStationState((prev) => {
-          if (currentInNewList) {
-            return { ...prev, stations: newStations };
-          }
-
-          const nearest = findNearestStation(
-            prev.stations,
-            newStations,
-            currentStation?.groupId,
-            selectedDirection
-          );
-
-          return {
-            ...prev,
-            stations: newStations,
-            ...(nearest ? { station: nearest } : {}),
-          };
-        });
-
-        setNavigation((prev) => ({
-          ...prev,
-          trainType,
-          leftStations: [],
-        }));
-        setResetFirstSpeech((prev) => prev + 1);
-      } else {
-        // 方面選択前: pendingに保持
-        setStationState((prev) => ({
-          ...prev,
-          pendingStations: newStations,
-        }));
-        setNavigation((prev) => ({
-          ...prev,
-          pendingTrainType: trainType,
-        }));
-      }
-    },
-    [
-      fetchStationsByLineGroupId,
-      setStationState,
-      setNavigation,
-      setResetFirstSpeech,
-      selectedBound,
-      currentStation?.groupId,
-      selectedDirection,
-    ]
-  );
-
   const handleNewReportModalClose = useCallback(() => {
     setScreenShotBase64('');
     setReportModalShow(false);
@@ -630,32 +543,22 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       </LongPressGestureHandler>
       <SelectBoundSettingListModal
         visible={isSettingListModalOpen}
-        onClose={() => setIsSettingListModalOpen(false)}
+        onClose={closeSettingListModal}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
         trainTypeName={trainTypeName}
-        trainTypeColor={activeTrainType?.color ?? undefined}
+        trainTypeColor={trainTypeColor}
         trainTypeLoading={trainTypeSelectLoading}
-        onTrainTypePress={() => {
-          pendingTrainTypeModalRef.current = true;
-          setIsSettingListModalOpen(false);
-        }}
-        onCloseAnimationEnd={() => {
-          if (pendingTrainTypeModalRef.current) {
-            pendingTrainTypeModalRef.current = false;
-            setIsTrainTypeModalVisible(true);
-          }
-        }}
-        trainTypeDisabled={!fetchedTrainTypes.length}
+        onTrainTypePress={handleTrainTypePress}
+        onCloseAnimationEnd={handleSettingListCloseAnimationEnd}
+        trainTypeDisabled={trainTypeDisabled}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
-        line={selectedLine ?? currentLine}
-        onClose={() => setIsTrainTypeModalVisible(false)}
-        onSelect={(trainType) => {
-          setIsTrainTypeModalVisible(false);
-          handleTrainTypeSelect(trainType);
-        }}
+        line={trainTypeModalLine}
+        loading={fetchTrainTypesLoading}
+        onClose={closeTrainTypeModal}
+        onSelect={handleTrainTypeModalSelect}
       />
       {/* NOTE: このViewを外すとフィードバックモーダルのレイアウトが崩御する */}
       <View>
