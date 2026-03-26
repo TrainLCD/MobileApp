@@ -1,8 +1,16 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
+import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
@@ -70,7 +78,6 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     borderRadius: 8,
-    minHeight: 512,
     overflow: 'hidden',
   },
   closeButtonContainer: {
@@ -100,6 +107,9 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
   },
+  headerText: {
+    color: '#111',
+  },
   flatListContentContainer: {
     paddingHorizontal: 24,
     paddingTop: 150,
@@ -117,6 +127,7 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
+  const { height: windowHeight } = useWindowDimensions();
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
   const wasVisibleRef = useRef(false);
   const location = useAtomValue(locationAtom);
@@ -250,6 +261,13 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     onClose();
   }, [onClose]);
 
+  // ヘッダー(150) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
+  const dynamicMinHeight = useMemo(() => {
+    const count = stations?.length ?? 0;
+    const content = 150 + count * 80 + Math.max(0, count - 1) * 8 + 72;
+    return Math.min(content, windowHeight * 0.9);
+  }, [stations?.length, windowHeight]);
+
   return (
     <CustomModal
       visible={visible}
@@ -259,6 +277,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       contentContainerStyle={[
         styles.contentView,
         {
+          minHeight: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           marginBottom: insets.bottom || 0,
         },
@@ -272,12 +291,24 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       <View
         style={[
           styles.headerContainer,
-          {
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
         ]}
       >
-        <Heading style={styles.title}>
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
+        <Heading style={[styles.title, !isLEDTheme && styles.headerText]}>
           {translate('searchByStationName')}
         </Heading>
         <SearchBar onSearch={handleSearchStations} nameSearch />
@@ -291,6 +322,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
+        scrollIndicatorInsets={{ top: 150, bottom: 72 }}
         removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           <EmptyResult
@@ -302,11 +334,23 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       <View
         style={[
           styles.closeButtonContainer,
-          {
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
         ]}
       >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}
