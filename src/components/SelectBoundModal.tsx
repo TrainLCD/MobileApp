@@ -123,6 +123,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
+  const pendingTrainTypeModalRef = useRef(false);
 
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
@@ -184,19 +185,30 @@ export const SelectBoundModal: React.FC<Props> = ({
       ? station
       : (stations[0] ?? null);
 
+  // wantedDestinationが現在のstationsに存在しない場合（乗換先の路線など）は
+  // 表示上無効として扱い、通常の方面表示にする
+  const applicableWantedDestination = useMemo(
+    () =>
+      wantedDestination &&
+      stations.some((s) => s.groupId === wantedDestination.groupId)
+        ? wantedDestination
+        : null,
+    [wantedDestination, stations]
+  );
+
   const effectiveStations = useMemo(() => {
-    if (!wantedDestination || !effectiveStation) return stations;
+    if (!applicableWantedDestination || !effectiveStation) return stations;
     const currentIdx = stations.findIndex(
       (s) => s.groupId === effectiveStation.groupId
     );
     const destIdx = stations.findIndex(
-      (s) => s.groupId === wantedDestination.groupId
+      (s) => s.groupId === applicableWantedDestination.groupId
     );
     if (currentIdx === -1 || destIdx === -1) return stations;
     return currentIdx <= destIdx
       ? stations.slice(0, destIdx + 1)
       : stations.slice(destIdx);
-  }, [stations, wantedDestination, effectiveStation]);
+  }, [stations, applicableWantedDestination, effectiveStation]);
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === effectiveStation?.groupId
@@ -224,7 +236,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   } = usePresetStops({
     savedRouteDirection: savedRoute?.direction,
     stations,
-    wantedDestination,
+    wantedDestination: applicableWantedDestination,
     confirmedStation,
   });
 
@@ -309,10 +321,10 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   const normalLineDirectionText = useCallback(
     (boundStations: Station[]) => {
-      if (wantedDestination) {
+      if (applicableWantedDestination) {
         return isJapanese
-          ? `${wantedDestination.name}方面`
-          : `for ${wantedDestination.nameRoman}`;
+          ? `${applicableWantedDestination.name}方面`
+          : `for ${applicableWantedDestination.nameRoman}`;
       }
 
       if (isJapanese) {
@@ -327,7 +339,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         .filter(Boolean);
       return names.length ? `for ${names.join(' and ')}` : '';
     },
-    [wantedDestination]
+    [applicableWantedDestination]
   );
 
   const inboundNames = useMemo(
@@ -389,7 +401,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         return trainTypeName ? `${lineName} ${trainTypeName}` : lineName;
       };
       const finalStop =
-        wantedDestination ??
+        applicableWantedDestination ??
         (direction === 'INBOUND' ? boundStations[0] : boundStations.at(-1));
 
       const lineForCard = finalStop?.line;
@@ -400,7 +412,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       }
 
       // targetDestination が設定されている場合、その方向のボタンのみ表示（終点としては扱わない）
-      if (targetDestination && !isLoopLine && !wantedDestination) {
+      if (targetDestination && !isLoopLine && !applicableWantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === effectiveStation?.groupId
         );
@@ -421,17 +433,13 @@ export const SelectBoundModal: React.FC<Props> = ({
         }
       }
 
-      if (wantedDestination && !isLoopLine) {
+      if (applicableWantedDestination && !isLoopLine) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === effectiveStation?.groupId
         );
         const wantedStationIndex = stations.findIndex(
-          (s) => s.groupId === wantedDestination.groupId
+          (s) => s.groupId === applicableWantedDestination.groupId
         );
-
-        if (wantedStationIndex === -1) {
-          return <></>;
-        }
 
         // 現在駅が経路内にない場合は savedRoute.direction から方向を決定
         const canDetermineFromIndex =
@@ -452,9 +460,9 @@ export const SelectBoundModal: React.FC<Props> = ({
               line={lineForCard ?? line}
               onPress={() =>
                 handleBoundSelected(
-                  wantedDestination,
+                  applicableWantedDestination,
                   dir,
-                  !!wantedDestination,
+                  true,
                   presetStops
                 )
               }
@@ -545,7 +553,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       isTransitioning,
       effectiveStation?.groupId,
       stations,
-      wantedDestination,
+      applicableWantedDestination,
       targetDestination,
       line,
       loopLineDirectionText,
@@ -732,22 +740,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
   }, [error]);
 
-  const trainTypeText = useMemo(() => {
-    if (!fetchedTrainTypes.length) {
-      return translate('trainTypesNotExist');
-    }
-
-    if (!pendingTrainType) {
-      return translate('trainTypeSettings');
-    }
-
-    return translate('trainTypeIs', {
-      trainTypeName: isJapanese
-        ? (pendingTrainType.name ?? '')
-        : (pendingTrainType.nameRoman ?? ''),
-    });
-  }, [fetchedTrainTypes, pendingTrainType]);
-
   const stationsWithoutPass = useMemo(
     () => stations.filter((s) => !getIsPass(s)),
     [stations]
@@ -850,16 +842,6 @@ export const SelectBoundModal: React.FC<Props> = ({
 
               <Button
                 outline
-                onPress={() => setIsTrainTypeModalVisible(true)}
-                disabled={
-                  !fetchedTrainTypes.length || loading || isTransitioning
-                }
-              >
-                {trainTypeText}
-              </Button>
-
-              <Button
-                outline
                 style={savedRoute ? styles.redOutlinedButton : null}
                 textStyle={savedRoute ? styles.redOutlinedButtonText : null}
                 onPress={handleSaveRoutePress}
@@ -876,7 +858,9 @@ export const SelectBoundModal: React.FC<Props> = ({
                 onPress={() => setSelectBoundSettingListModalVisible(true)}
                 disabled={isTransitioning}
               >
-                {translate('settings')}
+                {translate(
+                  fetchedTrainTypes.length ? 'settingsAndTrainType' : 'settings'
+                )}
               </Button>
             </View>
 
@@ -908,6 +892,26 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setSelectBoundSettingListModalVisible(false)}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
+        trainTypeName={
+          pendingTrainType
+            ? isJapanese
+              ? (pendingTrainType.name ?? '')
+              : (pendingTrainType.nameRoman ?? '')
+            : undefined
+        }
+        trainTypeColor={pendingTrainType?.color ?? undefined}
+        trainTypeLoading={loading}
+        onTrainTypePress={() => {
+          pendingTrainTypeModalRef.current = true;
+          setSelectBoundSettingListModalVisible(false);
+        }}
+        onCloseAnimationEnd={() => {
+          if (pendingTrainTypeModalRef.current) {
+            pendingTrainTypeModalRef.current = false;
+            setIsTrainTypeModalVisible(true);
+          }
+        }}
+        trainTypeDisabled={!fetchedTrainTypes.length}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}

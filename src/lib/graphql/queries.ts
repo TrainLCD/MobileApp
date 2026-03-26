@@ -371,6 +371,7 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
     groupId
     name
     nameRoman
+    color
     kind
     line {
       ...LineRouteFields
