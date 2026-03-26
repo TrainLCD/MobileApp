@@ -15,4 +15,6 @@ const speechState = atom<StationState>({
   monetizedPlanEnabled: isDevApp,
 });
 
+export const resetFirstSpeechAtom = atom(false);
+
 export default speechState;

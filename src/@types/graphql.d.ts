@@ -3086,6 +3086,7 @@ export type TrainTypeRouteFieldsFragment = {
   groupId: number | null | undefined;
   name: string | null | undefined;
   nameRoman: string | null | undefined;
+  color: string | null | undefined;
   kind: TrainTypeKind | null | undefined;
   line:
     | {

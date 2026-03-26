@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
 import { ASYNC_STORAGE_KEYS } from '../constants';
-import speechState from '../store/atoms/speech';
+import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
@@ -45,6 +45,12 @@ export const useTTS = (): void => {
   const prevStoppingState = usePrevious(stoppingState);
 
   const firstSpeechRef = useRef(true);
+  const resetFirstSpeech = useAtomValue(resetFirstSpeechAtom);
+  useEffect(() => {
+    if (resetFirstSpeech) {
+      firstSpeechRef.current = true;
+    }
+  }, [resetFirstSpeech]);
   // 行先選択直後の初回TTSを抑止し、発車後（arrived=false）でのみ解放する
   const suppressFirstSpeechUntilDepartureRef = useRef(false);
   const prevSelectedBoundIdRef = useRef<string | number | null>(null);
