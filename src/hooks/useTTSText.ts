@@ -266,7 +266,10 @@ export const useTTSText = (
     if (!station) return -1;
     const isInbound = selectedDirection === 'INBOUND';
     const ordered = isInbound ? stations : [...stations].reverse();
-    const stops = ordered.filter((s) => !getIsPass(s));
+    const deduped = Array.from(new Set(ordered.map((s) => s.groupId)))
+      .map((gid) => ordered.find((s) => s.groupId === gid))
+      .filter((s) => !!s) as Station[];
+    const stops = deduped.filter((s) => !getIsPass(s));
     return stops.findIndex((s) => s.groupId === station.groupId);
   }, [stations, station, selectedDirection]);
 
@@ -560,12 +563,12 @@ export const useTTSText = (
               ? `${allStops
                   .slice(0, 5)
                   .map((s) =>
-                    s.id === selectedBound?.id && !isLoopLine
+                    s.groupId === selectedBound?.groupId && !isLoopLine
                       ? `終点、${replaceJapaneseText(s.name, s.nameKatakana)}`
                       : replaceJapaneseText(s.name, s.nameKatakana)
                   )
                   .join('、')}の順に停まります。${
-                  lastAnnouncedStop?.id === selectedBound?.id
+                  lastAnnouncedStop?.groupId === selectedBound?.groupId
                     ? ''
                     : `${replaceJapaneseText(
                         lastAnnouncedStop?.name,
@@ -994,12 +997,12 @@ export const useTTSText = (
               ? `We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
-                    s.id === selectedBound?.id && !isLoopLine
+                    s.groupId === selectedBound?.groupId && !isLoopLine
                       ? `${ph(s.nameTtsSegments, s.nameRoman)} terminal`
                       : `${ph(s.nameTtsSegments, s.nameRoman)}`
                   )
                   .join(', ')}. ${
-                  lastAnnouncedStop?.id === selectedBound?.id
+                  lastAnnouncedStop?.groupId === selectedBound?.groupId
                     ? ''
                     : `Stops after ${ph(
                         lastAnnouncedStop?.nameTtsSegments,
