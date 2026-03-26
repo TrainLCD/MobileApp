@@ -8,8 +8,8 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
-![Test](https://github.com/TinyKitten/TrainLCD/workflows/Jest/badge.svg)
+![Code quality](https://github.com/TrainLCD/MobileApp/workflows/Code%20quality/badge.svg)
+![Test](https://github.com/TrainLCD/MobileApp/workflows/Jest/badge.svg)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 **TrainLCD is a mobile application that simulates Japanese railway company LCDs, providing real-time navigation and station information for train passengers.**
@@ -108,7 +108,7 @@ npm run start
 
 If you like this project, join our Discord community!  
 **NOTE: English is welcome, but in the community, we usually use Japanese for discussions, announcements, etc.**
-[https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
+[https://discord.gg/tsemdME9Nz](https://discord.gg/tsemdME9Nz)
 
 ## Development
 
@@ -119,7 +119,7 @@ src/
 ├── components/        # Reusable UI components
 ├── screens/           # Screen components
 ├── hooks/             # Custom React hooks
-├── store/             # Zustand stores and selectors
+├── store/             # Jotai atoms and selectors
 ├── stacks/            # React Navigation stack definitions
 ├── providers/         # Context providers and integration wrappers
 ├── lib/               # API clients and shared integrations
@@ -256,7 +256,7 @@ TrainLCD is built with:
 
 ### Community Support
 
-- Join our [Discord community](https://discord.gg/7sQhQhnvvw) for discussions and support
+- Join our [Discord community](https://discord.gg/tsemdME9Nz) for discussions and support
 - Check out existing [Issues](https://github.com/TrainLCD/MobileApp/issues) and [Discussions](https://github.com/TrainLCD/MobileApp/discussions)
 
 ### Professional Support
@@ -303,7 +303,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ## Related Projects
 
-- [StationAPI](https://github.com/TinyKitten/StationAPI) - Backend API for station data
+- [StationAPI](https://github.com/TrainLCD/StationAPI) - Backend API for station data
 
 
 ## License
