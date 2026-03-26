@@ -260,6 +260,23 @@ export const useTTSText = (
     [slicedStations, station]
   );
 
+  // JR西日本テーマ: 停車駅リストのバッチサイクル追跡
+  // 進行方向上で現在の駅が何番目の停車駅かを求め、5駅ごとの境界で案内を出す
+  const currentStopIndex = useMemo(() => {
+    if (!station) return -1;
+    const isInbound = selectedDirection === 'INBOUND';
+    const ordered = isInbound ? stations : [...stations].reverse();
+    const stops = ordered.filter((s) => !getIsPass(s));
+    return stops.findIndex((s) => s.groupId === station.groupId);
+  }, [stations, station, selectedDirection]);
+
+  const shouldAnnounceJrWestStopList = useMemo(
+    () =>
+      allStops.length > 1 &&
+      (firstSpeech || (currentStopIndex > 0 && currentStopIndex % 5 === 0)),
+    [allStops.length, firstSpeech, currentStopIndex]
+  );
+
   const viaStation = useMemo(() => {
     const sortedStops = allStops
       .slice()
@@ -530,7 +547,11 @@ export const useTTSText = (
                         viaStation.nameKatakana
                       )}方面、`
                     : ''
-                }${boundForJa}ゆきです。${allStops
+                }${boundForJa}ゆきです。`
+              : ''
+          }${
+            shouldAnnounceJrWestStopList
+              ? `${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
@@ -538,20 +559,13 @@ export const useTTSText = (
                       : replaceJapaneseText(s.name, s.nameKatakana)
                   )
                   .join('、')}の順に停まります。${
-                  allStops
-                    .slice(0, 5)
-                    .filter((s) => s)
-                    .reverse()[0]?.id === selectedBound?.id
+                  allStops.slice(0, 5).filter(Boolean).reverse()[0]?.id ===
+                  selectedBound?.id
                     ? ''
                     : `${replaceJapaneseText(
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.name,
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.nameKatakana
+                        allStops.slice(0, 5).filter(Boolean).reverse()[0]?.name,
+                        allStops.slice(0, 5).filter(Boolean).reverse()[0]
+                          ?.nameKatakana
                       )}から先は、後ほどご案内いたします。`
                 }`
               : ''
@@ -776,6 +790,7 @@ export const useTTSText = (
       nextStation?.name,
       replaceJapaneseText,
       selectedBound,
+      shouldAnnounceJrWestStopList,
       transferLines,
       viaStation,
       yamanoteTrainTypeJa,
@@ -967,7 +982,11 @@ export const useTTSText = (
                   viaStation
                     ? `via ${ph(viaStation.nameTtsSegments, viaStation.nameRoman)}`
                     : ''
-                }. We will be stopping at ${allStops
+                }. `
+              : ''
+          }${
+            shouldAnnounceJrWestStopList
+              ? `We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
                     s.id === selectedBound?.id && !isLoopLine
@@ -975,20 +994,14 @@ export const useTTSText = (
                       : `${ph(s.nameTtsSegments, s.nameRoman)}`
                   )
                   .join(', ')}. ${
-                  allStops
-                    .slice(0, 5)
-                    .filter((s) => s)
-                    .reverse()[0]?.id === selectedBound?.id
+                  allStops.slice(0, 5).filter(Boolean).reverse()[0]?.id ===
+                  selectedBound?.id
                     ? ''
                     : `Stops after ${ph(
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.nameTtsSegments,
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.nameRoman
+                        allStops.slice(0, 5).filter(Boolean).reverse()[0]
+                          ?.nameTtsSegments,
+                        allStops.slice(0, 5).filter(Boolean).reverse()[0]
+                          ?.nameRoman
                       )} will be announced later. `
                 }`
               : ''
@@ -1115,6 +1128,7 @@ export const useTTSText = (
       nextStationNumber?.lineSymbol?.length,
       nextStationNumberText,
       selectedBound,
+      shouldAnnounceJrWestStopList,
       transferLines,
       viaStation,
       yamanoteTrainTypeEn,

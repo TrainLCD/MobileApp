@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
@@ -326,5 +326,116 @@ describe('Without trainType & With numbering', () => {
         /(S <say-as interpret-as="cardinal">\d{1,2}<\/say-as>|station number S ?<say-as interpret-as="cardinal">\d{1,2}<\/say-as>)/;
       expect(en).toMatch(stationNumberRegex);
     });
+  });
+});
+
+describe('JR_WEST batch cycling', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: 'S-02',
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  const useCyclingHelper = ({
+    stationIndex,
+    firstSpeech,
+  }: {
+    stationIndex: number;
+    firstSpeech: boolean;
+  }) => {
+    const setLineState = useSetAtom(lineState);
+    const setStationState = useSetAtom(stationState);
+
+    useEffect(() => {
+      const station = TOEI_SHINJUKU_LINE_STATIONS[stationIndex];
+      const stations = TOEI_SHINJUKU_LINE_STATIONS;
+      const selectedDirection = 'INBOUND' as LineDirection;
+      const selectedLine = TOEI_SHINJUKU_LINE_LOCAL;
+      const selectedBound =
+        TOEI_SHINJUKU_LINE_STATIONS[TOEI_SHINJUKU_LINE_STATIONS.length - 1];
+
+      store.set(themePreferenceAtom, 'JR_WEST');
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        stations,
+        selectedDirection,
+        arrived: false,
+        selectedBound,
+        approaching: false,
+      }));
+      setLineState((prev) => ({ ...prev, selectedLine }));
+    }, [stationIndex, setLineState, setStationState]);
+
+    return useTTSText(firstSpeech, true);
+  };
+
+  test('should include stop list on firstSpeech', () => {
+    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
+    const { result } = renderHook(
+      () => useCyclingHelper({ stationIndex: 0, firstSpeech: true }),
+      { wrapper }
+    );
+
+    const [jaText] = result.current.text;
+    expect(jaText).toContain('の順に停まります');
+    expect(jaText).toContain('後ほどご案内いたします');
+  });
+
+  test('should NOT include stop list when within current batch', () => {
+    // stationIndex=2 (曙橋), firstSpeech=false, ref=null → no stop list
+    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[3]);
+    const { result } = renderHook(
+      () => useCyclingHelper({ stationIndex: 2, firstSpeech: false }),
+      { wrapper }
+    );
+
+    const [jaText] = result.current.text;
+    expect(jaText).not.toContain('の順に停まります');
+  });
+
+  test('should re-announce stop list after passing batch boundary', () => {
+    // Phase 1: firstSpeech=true at station 0 → sets batch boundary to 5th stop (神保町)
+    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
+
+    let stationIndex = 0;
+    let firstSpeech = true;
+
+    const { result, rerender } = renderHook(
+      () => useCyclingHelper({ stationIndex, firstSpeech }),
+      { wrapper }
+    );
+
+    expect(result.current.text[0]).toContain('の順に停まります');
+
+    // Phase 2: firstSpeech=false, still at station 0 → batch boundary set, station still within batch
+    act(() => {
+      firstSpeech = false;
+    });
+    rerender({});
+    expect(result.current.text[0]).not.toContain('の順に停まります');
+
+    // Phase 3: move to station 5 (神保町) → past batch boundary → re-announce
+    // Station index 5 = 神保町, nextStation = 小川町 (index 6)
+    setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[6]);
+    act(() => {
+      stationIndex = 5;
+    });
+    rerender({});
+
+    expect(result.current.text[0]).toContain('の順に停まります');
+    expect(result.current.text[1]).toContain('We will be stopping at');
   });
 });
