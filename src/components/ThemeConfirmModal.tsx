@@ -11,7 +11,11 @@ import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getThemeInfo } from '~/utils/themeInfo';
-import { IN_USE_COLOR_MAP, LED_THEME_BG_COLOR } from '../constants';
+import {
+  AUTO_THEME_GRADIENT_COLORS,
+  IN_USE_COLOR_MAP,
+  LED_THEME_BG_COLOR,
+} from '../constants';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
 import Typography from './Typography';
@@ -131,7 +135,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
               colors={
                 themeColor
                   ? [themeColor, lighten(0.1, themeColor)]
-                  : ['#5B9BD5', '#A78BCA']
+                  : AUTO_THEME_GRADIENT_COLORS
               }
               style={{ flex: 1 }}
             />

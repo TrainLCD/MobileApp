@@ -1,4 +1,5 @@
 import type { Line } from '~/@types/graphql';
+import { YAMANOTE_LINE_ID } from '~/constants/line';
 import { APP_THEME } from '~/models/Theme';
 import { resolveThemeForLine } from './resolveThemeForLine';
 
@@ -47,7 +48,7 @@ describe('resolveThemeForLine', () => {
   });
 
   it('山手線(11302)はYAMANOTEを返す', () => {
-    expect(resolveThemeForLine(makeLine({ id: 11302 }))).toBe(
+    expect(resolveThemeForLine(makeLine({ id: YAMANOTE_LINE_ID }))).toBe(
       APP_THEME.YAMANOTE
     );
   });
@@ -124,7 +125,7 @@ describe('resolveThemeForLine', () => {
     // 山手線はJR東日本だが、company matchではなくline ID matchでYAMANOTEになる
     expect(
       resolveThemeForLine(
-        makeLine({ id: 11302, company: makeCompany('JR東日本') })
+        makeLine({ id: YAMANOTE_LINE_ID, company: makeCompany('JR東日本') })
       )
     ).toBe(APP_THEME.YAMANOTE);
   });

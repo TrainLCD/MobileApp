@@ -25,8 +25,11 @@ export const resolveThemeForLine = (line: Line | null): AppTheme => {
     return DEFAULT_THEME;
   }
 
-  if (line.id != null && LINE_ID_TO_THEME[line.id]) {
-    return LINE_ID_TO_THEME[line.id];
+  if (line.id != null) {
+    const theme = LINE_ID_TO_THEME[line.id];
+    if (theme) {
+      return theme;
+    }
   }
 
   const companyName = line.company?.nameShort;

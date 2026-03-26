@@ -22,18 +22,18 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import { ThemeConfirmModal } from '~/components/ThemeConfirmModal';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import {
-  APP_THEME,
-  THEME_PREFERENCE,
-  type ThemePreference,
-} from '~/models/Theme';
+import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
 import { isLEDThemeAtom, themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getSettingsThemes } from '~/utils/theme';
-import { ASYNC_STORAGE_KEYS, IN_USE_COLOR_MAP } from '../constants';
+import {
+  ASYNC_STORAGE_KEYS,
+  AUTO_THEME_GRADIENT_COLORS,
+  IN_USE_COLOR_MAP,
+} from '../constants';
 
 type SettingItem = {
   id: ThemePreference;
@@ -56,8 +56,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const AUTO_THEME_COLORS: [string, string, ...string[]] = ['#5B9BD5', '#A78BCA'];
-
 const SettingsItem = ({
   item,
   isFirst,
@@ -74,7 +72,7 @@ const SettingsItem = ({
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const isAuto = item.id === THEME_PREFERENCE.AUTO;
   const themeColor = isAuto
-    ? AUTO_THEME_COLORS[0]
+    ? AUTO_THEME_GRADIENT_COLORS[0]
     : IN_USE_COLOR_MAP[item.id as keyof typeof IN_USE_COLOR_MAP];
 
   return (
@@ -107,7 +105,9 @@ const SettingsItem = ({
       >
         <LinearGradient
           colors={
-            isAuto ? AUTO_THEME_COLORS : [themeColor, lighten(0.1, themeColor)]
+            isAuto
+              ? AUTO_THEME_GRADIENT_COLORS
+              : [themeColor, lighten(0.1, themeColor)]
           }
           style={{
             flex: 1,
@@ -135,6 +135,7 @@ const ThemeSettingsScreen: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const currentPreference = useAtomValue(themePreferenceAtom);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const setThemePreference = useSetAtom(themePreferenceAtom);
 
   const navigation = useNavigation();
@@ -232,12 +233,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View
-        style={[
-          styles.root,
-          currentPreference !== APP_THEME.LED && styles.screenBg,
-        ]}
-      >
+      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.FlatList
           data={visibleItems}
           keyExtractor={keyExtractor}
