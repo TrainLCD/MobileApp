@@ -12,3 +12,11 @@ export const APP_THEME = {
 } as const;
 
 export type AppTheme = (typeof APP_THEME)[keyof typeof APP_THEME];
+
+export const THEME_PREFERENCE = {
+  AUTO: 'AUTO',
+  ...APP_THEME,
+} as const;
+
+export type ThemePreference =
+  (typeof THEME_PREFERENCE)[keyof typeof THEME_PREFERENCE];

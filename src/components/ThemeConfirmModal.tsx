@@ -5,13 +5,17 @@ import { lighten } from 'polished';
 import type React from 'react';
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import type { AppTheme } from '~/models/Theme';
+import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getThemeInfo } from '~/utils/themeInfo';
-import { IN_USE_COLOR_MAP, LED_THEME_BG_COLOR } from '../constants';
+import {
+  AUTO_THEME_GRADIENT_COLORS,
+  IN_USE_COLOR_MAP,
+  LED_THEME_BG_COLOR,
+} from '../constants';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
 import Typography from './Typography';
@@ -75,11 +79,15 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: 'bold',
   },
+  autoPreviewEmoji: {
+    fontSize: RFValue(64),
+    textAlign: 'center',
+  },
 });
 
 type Props = {
   visible: boolean;
-  themeId: AppTheme | null;
+  themeId: ThemePreference | null;
   themeTitle: string;
   onClose: () => void;
   onConfirm: () => void;
@@ -96,12 +104,16 @@ export const ThemeConfirmModal: React.FC<Props> = ({
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
-  const themeInfo = useMemo(() => themeId && getThemeInfo(themeId), [themeId]);
+  const isAuto = themeId === THEME_PREFERENCE.AUTO;
+  const themeInfo = useMemo(
+    () => (themeId && !isAuto ? getThemeInfo(themeId) : null),
+    [themeId, isAuto]
+  );
   const previewImage = useMemo(
     () => (isTablet ? themeInfo?.tabletImage : themeInfo?.spImage),
     [themeInfo]
   );
-  const themeColor = themeId ? IN_USE_COLOR_MAP[themeId] : '#ccc';
+  const themeColor = themeId && !isAuto ? IN_USE_COLOR_MAP[themeId] : null;
   const borderRadius = isLEDTheme ? 0 : 8;
 
   return (
@@ -120,14 +132,20 @@ export const ThemeConfirmModal: React.FC<Props> = ({
         <View style={styles.header}>
           <View style={[styles.colorSwatch, { borderRadius }]}>
             <LinearGradient
-              colors={[themeColor, lighten(0.1, themeColor)]}
+              colors={
+                themeColor
+                  ? [themeColor, lighten(0.1, themeColor)]
+                  : AUTO_THEME_GRADIENT_COLORS
+              }
               style={{ flex: 1 }}
             />
           </View>
           <Typography style={styles.title}>{themeTitle}</Typography>
         </View>
         <Typography style={styles.description}>
-          {themeInfo?.description ?? ''}
+          {isAuto
+            ? translate('themeDescriptionAuto')
+            : (themeInfo?.description ?? '')}
         </Typography>
         <View
           style={[
@@ -144,11 +162,15 @@ export const ThemeConfirmModal: React.FC<Props> = ({
               },
             ]}
           >
-            <Image
-              source={previewImage}
-              style={styles.previewImage}
-              contentFit="contain"
-            />
+            {isAuto ? (
+              <Typography style={styles.autoPreviewEmoji}>❓</Typography>
+            ) : (
+              <Image
+                source={previewImage}
+                style={styles.previewImage}
+                contentFit="contain"
+              />
+            )}
           </View>
         </View>
         <View style={styles.buttonsRow}>

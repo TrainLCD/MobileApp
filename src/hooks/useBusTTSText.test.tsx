@@ -13,7 +13,7 @@ import type { AppTheme } from '~/models/Theme';
 import { store } from '~/store';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
-import { themeAtom } from '~/store/atoms/theme';
+import { themePreferenceAtom } from '~/store/atoms/theme';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNextStation', () => ({
@@ -39,7 +39,7 @@ const useBusTTSTextWithJotai = (
     const arrived = headerState === 'CURRENT';
     const approaching = headerState === 'ARRIVING';
 
-    store.set(themeAtom, theme);
+    store.set(themePreferenceAtom, theme);
     setStationState((prev) => ({
       ...prev,
       station,
@@ -91,7 +91,7 @@ describe('useBusTTSText', () => {
                 TOEI_SHINJUKU_LINE_STATIONS.length - 1
               ];
 
-            store.set(themeAtom, 'TOKYO_METRO');
+            store.set(themePreferenceAtom, 'TOKYO_METRO');
             setStationState((prev) => ({
               ...prev,
               station,
