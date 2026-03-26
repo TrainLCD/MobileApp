@@ -22,7 +22,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 24,
     paddingHorizontal: 24,
-    borderRadius: 8,
     minHeight: 256,
   },
   buttonsContainer: {
@@ -126,6 +125,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
         styles.contentView,
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          borderRadius: isLEDTheme ? 0 : 8,
         },
         isTablet && {
           width: '80%',

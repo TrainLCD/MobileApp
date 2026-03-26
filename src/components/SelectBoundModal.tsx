@@ -1,8 +1,9 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
+import { BlurView } from 'expo-blur';
 import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
@@ -46,8 +47,6 @@ import { TrainTypeListModal } from './TrainTypeListModal';
 const styles = StyleSheet.create({
   contentView: {
     width: '100%',
-    paddingVertical: 24,
-    minHeight: 256,
   },
   boundCardsContainer: {
     gap: 8,
@@ -63,8 +62,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   container: {
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 80,
+  },
+  headerContainer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    zIndex: 1,
+    paddingTop: 24,
+    paddingBottom: 16,
+    paddingHorizontal: 24,
   },
   menuNotice: {
     fontWeight: 'bold',
@@ -78,9 +88,20 @@ const styles = StyleSheet.create({
   redOutlinedButtonText: {
     color: '#ff3b30',
   },
-  closeButton: { marginTop: 24 },
+  closeButtonContainer: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    width: '100%',
+    height: 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  closeButton: { width: '100%' },
   closeButtonText: { fontWeight: 'bold' },
-  heading: { width: '100%', marginLeft: 48 },
+  heading: { width: '100%' },
+  headerText: { color: '#111' },
 });
 
 type RenderButtonProps = {
@@ -800,11 +821,34 @@ export const SelectBoundModal: React.FC<Props> = ({
           },
         ]}
       >
-        <View style={styles.container}>
-          <Heading style={styles.heading}>
+        <View
+          style={[
+            styles.headerContainer,
+            { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+          ]}
+        >
+          {Platform.OS === 'ios' && !isLEDTheme ? (
+            <BlurView
+              intensity={80}
+              tint="light"
+              style={StyleSheet.absoluteFill}
+            />
+          ) : Platform.OS === 'android' && !isLEDTheme ? (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: 'rgba(255,255,255,0.92)' },
+              ]}
+            />
+          ) : null}
+          <Heading style={[styles.heading, !isLEDTheme && styles.headerText]}>
             {translate('selectBoundTitle')}
           </Heading>
-
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          scrollIndicatorInsets={{ top: 48, bottom: 72 }}
+        >
           <View style={styles.buttonsContainer}>
             <View
               pointerEvents={isTransitioning ? 'none' : 'auto'}
@@ -859,20 +903,42 @@ export const SelectBoundModal: React.FC<Props> = ({
                 disabled={isTransitioning}
               >
                 {translate(
-                  fetchedTrainTypes.length ? 'settingsAndTrainType' : 'settings'
+                  fetchedTrainTypes.length > 1
+                    ? 'settingsAndTrainType'
+                    : 'settings'
                 )}
               </Button>
             </View>
-
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={onClose}
-              disabled={loading || isTransitioning}
-            >
-              {translate('close')}
-            </Button>
           </View>
+        </ScrollView>
+        <View
+          style={[
+            styles.closeButtonContainer,
+            { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+          ]}
+        >
+          {Platform.OS === 'ios' && !isLEDTheme ? (
+            <BlurView
+              intensity={80}
+              tint="light"
+              style={StyleSheet.absoluteFill}
+            />
+          ) : Platform.OS === 'android' && !isLEDTheme ? (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: 'rgba(255,255,255,0.92)' },
+              ]}
+            />
+          ) : null}
+          <Button
+            style={styles.closeButton}
+            textStyle={styles.closeButtonText}
+            onPress={onClose}
+            disabled={loading || isTransitioning}
+          >
+            {translate('close')}
+          </Button>
         </View>
       </CustomModal>
 
@@ -911,7 +977,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             setIsTrainTypeModalVisible(true);
           }
         }}
-        trainTypeDisabled={!fetchedTrainTypes.length}
+        trainTypeDisabled={fetchedTrainTypes.length <= 1}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
