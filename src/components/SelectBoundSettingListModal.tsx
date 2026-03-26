@@ -4,7 +4,10 @@ import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
-import { getTrainTypeTextColor } from '~/utils/trainTypeTextColor';
+import {
+  getTrainTypeTextColor,
+  normalizeTrainTypeColor,
+} from '~/utils/trainTypeTextColor';
 import Button from '../components/Button';
 import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
@@ -103,6 +106,11 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
+  const normalizedTrainTypeColor = useMemo(
+    () => normalizeTrainTypeColor(trainTypeColor),
+    [trainTypeColor]
+  );
+
   const trainTypeTextColor = useMemo(
     () => getTrainTypeTextColor(trainTypeColor),
     [trainTypeColor]
@@ -164,7 +172,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                     style={[
                       styles.trainTypeNamePanel,
                       {
-                        backgroundColor: trainTypeColor || '#008ffe',
+                        backgroundColor: normalizedTrainTypeColor,
                         opacity: trainTypeLoading ? 0.5 : 1,
                       },
                     ]}

@@ -46,8 +46,10 @@ export const useTTS = (): void => {
 
   const firstSpeechRef = useRef(true);
   const resetFirstSpeech = useAtomValue(resetFirstSpeechAtom);
+  const prevResetFirstSpeechRef = useRef(resetFirstSpeech);
   useEffect(() => {
-    if (resetFirstSpeech) {
+    if (resetFirstSpeech !== prevResetFirstSpeechRef.current) {
+      prevResetFirstSpeechRef.current = resetFirstSpeech;
       firstSpeechRef.current = true;
     }
   }, [resetFirstSpeech]);

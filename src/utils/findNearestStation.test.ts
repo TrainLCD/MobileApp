@@ -145,5 +145,45 @@ describe('findNearestStation', () => {
       const result = findNearestStation(localStations, [], 2, 'INBOUND');
       expect(result).toBeNull();
     });
+
+    it('旧リストにgroupIdがnullの駅がある場合、その駅をスキップして探す', () => {
+      const stationsWithNull = [
+        createStation(1),
+        createStation(2),
+        createStation(3, { groupId: null }),
+        createStation(4),
+        createStation(5),
+      ];
+      const express = [createStation(1), createStation(5)];
+      // 駅2にいてINBOUND → 駅3はgroupId=nullなのでスキップ → 駅5にマッチ
+      const result = findNearestStation(
+        stationsWithNull,
+        express,
+        2,
+        'INBOUND'
+      );
+      expect(result?.groupId).toBe(5);
+    });
+
+    it('新リストにgroupIdがnullの駅がある場合、誤マッチしない', () => {
+      const stationsWithNull = [
+        createStation(1),
+        createStation(2),
+        createStation(3, { groupId: null }),
+        createStation(4),
+      ];
+      const expressWithNull = [
+        createStation(10, { groupId: null }),
+        createStation(5),
+      ];
+      // 駅2にいてINBOUND → 駅3はgroupId=nullなのでスキップ、駅4はexpressに無い → null
+      const result = findNearestStation(
+        stationsWithNull,
+        expressWithNull,
+        2,
+        'INBOUND'
+      );
+      expect(result).toBeNull();
+    });
   });
 });

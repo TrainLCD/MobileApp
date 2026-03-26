@@ -26,20 +26,24 @@ export const findNearestStation = (
     return null;
   }
 
+  const newStationsByGroupId = new Map(
+    newStations.filter((s) => s.groupId != null).map((s) => [s.groupId, s])
+  );
+
   if (direction === 'INBOUND') {
     for (let i = currentIdx + 1; i < oldStations.length; i++) {
-      const found = newStations.find(
-        (s) => s.groupId === oldStations[i]?.groupId
-      );
+      const candidateGroupId = oldStations[i]?.groupId;
+      if (candidateGroupId == null) continue;
+      const found = newStationsByGroupId.get(candidateGroupId);
       if (found) {
         return found;
       }
     }
   } else {
     for (let i = currentIdx - 1; i >= 0; i--) {
-      const found = newStations.find(
-        (s) => s.groupId === oldStations[i]?.groupId
-      );
+      const candidateGroupId = oldStations[i]?.groupId;
+      if (candidateGroupId == null) continue;
+      const found = newStationsByGroupId.get(candidateGroupId);
       if (found) {
         return found;
       }

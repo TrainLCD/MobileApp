@@ -24,7 +24,7 @@ const defaultProps = {
 };
 
 describe('SelectBoundSettingListModal', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

@@ -490,7 +490,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const res = await fetchStationsByLineGroupId({
         variables: { lineGroupId: trainType.groupId },
       });
-      const newStations = res.data?.lineGroupStations ?? [];
+      if (!res.data?.lineGroupStations) return;
+      const newStations = res.data.lineGroupStations;
 
       if (selectedBound) {
         // Main画面で動作中: アクティブなstateを直接更新
@@ -522,7 +523,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           trainType,
           leftStations: [],
         }));
-        setResetFirstSpeech((prev) => !prev);
+        setResetFirstSpeech((prev) => prev + 1);
       } else {
         // 方面選択前: pendingに保持
         setStationState((prev) => ({
