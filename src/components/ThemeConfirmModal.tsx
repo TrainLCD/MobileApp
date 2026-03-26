@@ -83,6 +83,7 @@ type Props = {
   themeTitle: string;
   onClose: () => void;
   onConfirm: () => void;
+  onCloseAnimationEnd?: () => void;
 };
 
 export const ThemeConfirmModal: React.FC<Props> = ({
@@ -91,6 +92,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
   themeTitle,
   onClose,
   onConfirm,
+  onCloseAnimationEnd,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -106,6 +108,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
     <CustomModal
       visible={visible}
       onClose={onClose}
+      onCloseAnimationEnd={onCloseAnimationEnd}
       contentContainerStyle={[
         styles.contentView,
         {

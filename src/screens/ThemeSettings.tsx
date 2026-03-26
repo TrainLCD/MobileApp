@@ -119,6 +119,7 @@ const SettingsItem = ({
 const ThemeSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [pendingTheme, setPendingTheme] = useState<SettingItem | null>(null);
+  const [isThemeModalVisible, setIsThemeModalVisible] = useState(false);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
@@ -160,11 +161,15 @@ const ThemeSettingsScreen: React.FC = () => {
   const handleConfirmThemeChange = useCallback(() => {
     if (pendingTheme) {
       handleApplyTheme(pendingTheme.id);
-      setPendingTheme(null);
     }
+    setIsThemeModalVisible(false);
   }, [pendingTheme, handleApplyTheme]);
 
   const handleCloseModal = useCallback(() => {
+    setIsThemeModalVisible(false);
+  }, []);
+
+  const handleCloseAnimationEnd = useCallback(() => {
     setPendingTheme(null);
   }, []);
 
@@ -177,6 +182,7 @@ const ThemeSettingsScreen: React.FC = () => {
           return;
         }
         setPendingTheme(item);
+        setIsThemeModalVisible(true);
       };
 
       return (
@@ -245,11 +251,12 @@ const ThemeSettingsScreen: React.FC = () => {
       />
       <FooterTabBar active="settings" />
       <ThemeConfirmModal
-        visible={pendingTheme !== null}
+        visible={isThemeModalVisible}
         themeId={pendingTheme?.id ?? null}
         themeTitle={pendingTheme?.title ?? ''}
         onClose={handleCloseModal}
         onConfirm={handleConfirmThemeChange}
+        onCloseAnimationEnd={handleCloseAnimationEnd}
       />
     </>
   );
