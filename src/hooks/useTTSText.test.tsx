@@ -13,7 +13,7 @@ import type { AppTheme } from '~/models/Theme';
 import { store } from '~/store';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
-import { themeAtom } from '~/store/atoms/theme';
+import { themePreferenceAtom } from '~/store/atoms/theme';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNumbering', () => ({
@@ -41,7 +41,7 @@ const useTTSTextWithJotaiAndNumbering = (
     const arrived = headerState === 'CURRENT';
     const approaching = headerState === 'ARRIVING';
 
-    store.set(themeAtom, theme);
+    store.set(themePreferenceAtom, theme);
     setStationState((prev) => ({
       ...prev,
       station,

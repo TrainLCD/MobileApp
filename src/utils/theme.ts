@@ -1,15 +1,24 @@
 import { isClip } from 'react-native-app-clip';
-import { APP_THEME, type AppTheme } from '~/models/Theme';
+import {
+  APP_THEME,
+  THEME_PREFERENCE,
+  type ThemePreference,
+} from '~/models/Theme';
 import { translate } from '~/translation';
 
 export interface SettingsTheme {
   label: string;
-  value: AppTheme;
+  value: ThemePreference;
   devOnly: boolean;
 }
 
 export const getSettingsThemes = (): SettingsTheme[] =>
   [
+    {
+      label: translate('autoTheme'),
+      value: THEME_PREFERENCE.AUTO,
+      devOnly: false,
+    },
     {
       label: translate('tokyoMetroLike'),
       value: APP_THEME.TOKYO_METRO,

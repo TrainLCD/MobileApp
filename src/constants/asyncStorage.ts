@@ -1,6 +1,7 @@
 export const ASYNC_STORAGE_KEYS = {
   FIRST_LAUNCH_PASSED: '@TrainLCD:firstLaunchPassed',
   PREVIOUS_THEME: '@TrainLCD:previousTheme',
+  THEME_PREFERENCE: '@TrainLCD:themePreference',
   ENABLED_LANGUAGES: '@TrainLCD:enabledLanguages',
   SPEECH_ENABLED: '@TrainLCD:speechEnabled',
   TTS_ENABLED_LANGUAGES: '@TrainLCD:ttsEnabledLanguages',
