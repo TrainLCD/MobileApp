@@ -113,6 +113,14 @@ describe('resolveThemeForLine', () => {
     ).toBe(APP_THEME.JR_KYUSHU);
   });
 
+  it('みなとみらい線(99310)はTYを返す', () => {
+    expect(
+      resolveThemeForLine(
+        makeLine({ id: 99310, company: makeCompany('横浜高速鉄道') })
+      )
+    ).toBe(APP_THEME.TY);
+  });
+
   it('不明な路線はTOKYO_METROにフォールバックする', () => {
     expect(
       resolveThemeForLine(
