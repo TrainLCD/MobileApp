@@ -47,12 +47,12 @@ export const useTTS = (): void => {
   const firstSpeechRef = useRef(true);
   const resetFirstSpeech = useAtomValue(resetFirstSpeechAtom);
   const prevResetFirstSpeechRef = useRef(resetFirstSpeech);
-  useEffect(() => {
-    if (resetFirstSpeech !== prevResetFirstSpeechRef.current) {
-      prevResetFirstSpeechRef.current = resetFirstSpeech;
-      firstSpeechRef.current = true;
-    }
-  }, [resetFirstSpeech]);
+  // useTTSTextがfirstSpeechRef.currentを読む前に同期的に更新する
+  // useEffectだとレンダー後に実行されるため、通常テキストが先に生成・再生されてしまう
+  if (resetFirstSpeech !== prevResetFirstSpeechRef.current) {
+    prevResetFirstSpeechRef.current = resetFirstSpeech;
+    firstSpeechRef.current = true;
+  }
   // 行先選択直後の初回TTSを抑止し、発車後（arrived=false）でのみ解放する
   const suppressFirstSpeechUntilDepartureRef = useRef(false);
   const prevSelectedBoundIdRef = useRef<string | number | null>(null);
