@@ -44,6 +44,9 @@ import {
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
+const HEADER_HEIGHT = 64;
+const FOOTER_HEIGHT = 72;
+
 const styles = StyleSheet.create({
   contentView: {
     width: '100%',
@@ -63,18 +66,19 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 80,
+    paddingTop: HEADER_HEIGHT,
+    paddingBottom: FOOTER_HEIGHT + 8,
   },
   headerContainer: {
     position: 'absolute',
     left: 0,
     top: 0,
     width: '100%',
+    height: HEADER_HEIGHT,
     zIndex: 1,
     paddingTop: 24,
-    paddingBottom: 16,
     paddingHorizontal: 24,
+    justifyContent: 'center',
   },
   menuNotice: {
     fontWeight: 'bold',
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     width: '100%',
-    height: 72,
+    height: FOOTER_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -847,7 +851,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         </View>
         <ScrollView
           contentContainerStyle={styles.container}
-          scrollIndicatorInsets={{ top: 48, bottom: 72 }}
+          scrollIndicatorInsets={{ top: HEADER_HEIGHT, bottom: FOOTER_HEIGHT }}
         >
           <View style={styles.buttonsContainer}>
             <View
