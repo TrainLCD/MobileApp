@@ -277,6 +277,12 @@ export const useTTSText = (
     [allStops.length, firstSpeech, currentStopIndex]
   );
 
+  // JR西日本テーマ: 停車駅案内バッチの末尾駅（5駅区切りの最後）
+  const lastAnnouncedStop = useMemo(
+    () => allStops.slice(0, 5).filter(Boolean).at(-1),
+    [allStops]
+  );
+
   const viaStation = useMemo(() => {
     const sortedStops = allStops
       .slice()
@@ -559,13 +565,11 @@ export const useTTSText = (
                       : replaceJapaneseText(s.name, s.nameKatakana)
                   )
                   .join('、')}の順に停まります。${
-                  allStops.slice(0, 5).filter(Boolean).reverse()[0]?.id ===
-                  selectedBound?.id
+                  lastAnnouncedStop?.id === selectedBound?.id
                     ? ''
                     : `${replaceJapaneseText(
-                        allStops.slice(0, 5).filter(Boolean).reverse()[0]?.name,
-                        allStops.slice(0, 5).filter(Boolean).reverse()[0]
-                          ?.nameKatakana
+                        lastAnnouncedStop?.name,
+                        lastAnnouncedStop?.nameKatakana
                       )}から先は、後ほどご案内いたします。`
                 }`
               : ''
@@ -787,6 +791,7 @@ export const useTTSText = (
       isAfterNextStopTerminus,
       isLoopLine,
       isNextStopTerminus,
+      lastAnnouncedStop,
       nextStation?.name,
       replaceJapaneseText,
       selectedBound,
@@ -994,14 +999,11 @@ export const useTTSText = (
                       : `${ph(s.nameTtsSegments, s.nameRoman)}`
                   )
                   .join(', ')}. ${
-                  allStops.slice(0, 5).filter(Boolean).reverse()[0]?.id ===
-                  selectedBound?.id
+                  lastAnnouncedStop?.id === selectedBound?.id
                     ? ''
                     : `Stops after ${ph(
-                        allStops.slice(0, 5).filter(Boolean).reverse()[0]
-                          ?.nameTtsSegments,
-                        allStops.slice(0, 5).filter(Boolean).reverse()[0]
-                          ?.nameRoman
+                        lastAnnouncedStop?.nameTtsSegments,
+                        lastAnnouncedStop?.nameRoman
                       )} will be announced later. `
                 }`
               : ''
@@ -1122,6 +1124,7 @@ export const useTTSText = (
       isAfterNextStopTerminus,
       isLoopLine,
       isNextStopTerminus,
+      lastAnnouncedStop,
       nextStation?.groupId,
       selectedBound?.groupId,
       nextStation?.nameTtsSegments,

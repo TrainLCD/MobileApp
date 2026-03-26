@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
@@ -421,18 +421,14 @@ describe('JR_WEST batch cycling', () => {
     expect(result.current.text[0]).toContain('の順に停まります');
 
     // Phase 2: firstSpeech=false, still at station 0 → batch boundary set, station still within batch
-    act(() => {
-      firstSpeech = false;
-    });
+    firstSpeech = false;
     rerender({});
     expect(result.current.text[0]).not.toContain('の順に停まります');
 
     // Phase 3: move to station 5 (神保町) → past batch boundary → re-announce
     // Station index 5 = 神保町, nextStation = 小川町 (index 6)
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[6]);
-    act(() => {
-      stationIndex = 5;
-    });
+    stationIndex = 5;
     rerender({});
 
     expect(result.current.text[0]).toContain('の順に停まります');
