@@ -29,6 +29,7 @@ export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
     case APP_THEME.TOKYO_METRO:
     case APP_THEME.TY:
     case APP_THEME.TOEI:
+    case APP_THEME.ODAKYU:
       return (
         <LinearGradient
           colors={['#fcfcfc', '#f5f5f5', '#ddd']}

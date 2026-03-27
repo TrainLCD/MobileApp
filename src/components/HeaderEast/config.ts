@@ -13,6 +13,11 @@ export type HeaderEastThemeConfig = {
     color: 'dynamic' | string;
     extraStyle?: ViewStyle;
   };
+  secondaryDivider?: {
+    height: number;
+    color: string;
+    extraStyle?: ViewStyle;
+  };
   numberingIcon: {
     wrapped: boolean;
     withDarkTheme: boolean;
@@ -21,6 +26,8 @@ export type HeaderEastThemeConfig = {
   trainTypeBox: {
     localTypePrefix: string;
     nextTrainTypeColor: string;
+    darkenColor?: boolean;
+    fontSizeScale?: number;
   };
   stationNameContainerAlignItems?: 'flex-end' | 'center';
 };
@@ -56,7 +63,8 @@ export const tokyoMetroConfig: HeaderEastThemeConfig = {
 export const tyConfig: HeaderEastThemeConfig = {
   gradientColors: ['#333', '#212121', '#000'] as const,
   gradientLocations: [0, 0.5, 0.5] as const,
-  rootStyle: {
+  rootStyle: {},
+  gradientRootExtraStyle: {
     shadowColor: '#333',
     shadowOpacity: 1,
     shadowRadius: 1,

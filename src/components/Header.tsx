@@ -8,6 +8,7 @@ import HeaderJL from './HeaderJL';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import HeaderJRWest from './HeaderJRWest';
 import HeaderLED from './HeaderLED';
+import HeaderOdakyu from './HeaderOdakyu';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
@@ -39,6 +40,8 @@ const Header = () => {
       return <HeaderJL {...commonData} />;
     case APP_THEME.JR_KYUSHU:
       return <HeaderJRKyushu {...commonData} />;
+    case APP_THEME.ODAKYU:
+      return <HeaderOdakyu {...commonData} />;
     default:
       return null;
   }

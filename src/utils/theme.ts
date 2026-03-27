@@ -69,4 +69,9 @@ export const getSettingsThemes = (): SettingsTheme[] =>
       value: APP_THEME.JR_KYUSHU,
       devOnly: false,
     },
+    {
+      label: translate('odakyuLike'),
+      value: APP_THEME.ODAKYU,
+      devOnly: false,
+    },
   ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示
