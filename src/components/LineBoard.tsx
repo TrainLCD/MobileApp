@@ -72,6 +72,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TY:
+      case APP_THEME.ODAKYU:
         return (
           <LineBoardEast
             stations={slicedLeftStations}

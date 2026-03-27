@@ -16,6 +16,7 @@ export const IN_USE_COLOR_MAP: Record<AppTheme, string> = {
   JO: '#0067C0',
   JL: '#808080',
   JR_KYUSHU: '#E50012',
+  ODAKYU: '#0D82C7',
 } as const;
 
 export const AUTO_THEME_GRADIENT_COLORS: [string, string] = [

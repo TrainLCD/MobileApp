@@ -64,6 +64,12 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
     spImage: require('../../assets/images/themes/jr-kyushu-sp.webp'),
     tabletImage: require('../../assets/images/themes/jr-kyushu-tablet.webp'),
   },
+  [APP_THEME.ODAKYU]: {
+    descriptionKey: 'themeDescriptionOdakyu',
+    // TODO: 小田急テーマ用のスクリーンショットに差し替える
+    spImage: require('../../assets/images/themes/tokyo-metro-sp.webp'),
+    tabletImage: require('../../assets/images/themes/tokyo-metro-tablet.webp'),
+  },
 } as const;
 
 export const getThemeInfo = (theme: AppTheme): ThemeInfo => {
