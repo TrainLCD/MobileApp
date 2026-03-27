@@ -1,15 +1,17 @@
 import { Portal } from '@gorhom/portal';
 import { useAtomValue } from 'jotai';
-import React, { useEffect, useRef, useState } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   type GestureResponderEvent,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
+  type StyleProp,
   StyleSheet,
+  useWindowDimensions,
   View,
+  type ViewStyle,
 } from 'react-native';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
@@ -57,6 +59,7 @@ export const CustomModal: React.FC<Props> = ({
   const onShowRef = useRef(onShow);
   const onCloseAnimationEndRef = useRef(onCloseAnimationEnd);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const { height: windowHeight } = useWindowDimensions();
   const animatedBackdropStyle = {
     opacity: backdropOpacity,
   };
@@ -71,6 +74,19 @@ export const CustomModal: React.FC<Props> = ({
       },
     ],
   };
+
+  const maxContentHeight = windowHeight * 0.75;
+
+  const resolvedContentContainerStyle = useMemo(() => {
+    const flat = StyleSheet.flatten(contentContainerStyle);
+    if (flat?.minHeight != null && typeof flat.minHeight === 'number') {
+      return [
+        contentContainerStyle,
+        { minHeight: Math.min(flat.minHeight, maxContentHeight) },
+      ];
+    }
+    return contentContainerStyle;
+  }, [contentContainerStyle, maxContentHeight]);
 
   useEffect(() => {
     onShowRef.current = onShow;
@@ -160,8 +176,9 @@ export const CustomModal: React.FC<Props> = ({
                 styles.content,
                 {
                   borderRadius: isLEDTheme ? 0 : 8,
+                  maxHeight: maxContentHeight,
                 },
-                contentContainerStyle,
+                resolvedContentContainerStyle,
                 animatedContentStyle,
               ]}
               pointerEvents="auto"
@@ -180,8 +197,9 @@ export const CustomModal: React.FC<Props> = ({
                 styles.content,
                 {
                   borderRadius: isLEDTheme ? 0 : 8,
+                  maxHeight: maxContentHeight,
                 },
-                contentContainerStyle,
+                resolvedContentContainerStyle,
                 animatedContentStyle,
               ]}
               pointerEvents="auto"
@@ -208,7 +226,6 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     maxWidth: isTablet ? 480 : 400,
-    maxHeight: '90%',
     overflow: 'hidden',
     backgroundColor: '#fff',
     shadowColor: '#000',
