@@ -121,6 +121,14 @@ describe('resolveThemeForLine', () => {
     ).toBe(APP_THEME.TY);
   });
 
+  it('小田急の路線はODAKYUを返す', () => {
+    expect(
+      resolveThemeForLine(
+        makeLine({ id: 25001, company: makeCompany('小田急') })
+      )
+    ).toBe(APP_THEME.ODAKYU);
+  });
+
   it('不明な路線はTOKYO_METROにフォールバックする', () => {
     expect(
       resolveThemeForLine(
