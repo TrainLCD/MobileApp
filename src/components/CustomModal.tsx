@@ -1,15 +1,16 @@
 import { Portal } from '@gorhom/portal';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Animated,
   type GestureResponderEvent,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
+  type StyleProp,
   StyleSheet,
   View,
+  type ViewStyle,
 } from 'react-native';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     maxWidth: isTablet ? 480 : 400,
-    maxHeight: '90%',
+    maxHeight: '75%',
     overflow: 'hidden',
     backgroundColor: '#fff',
     shadowColor: '#000',

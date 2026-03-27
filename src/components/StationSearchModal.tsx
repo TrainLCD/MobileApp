@@ -245,15 +245,20 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     [fetchStationsByName]
   );
 
+  const isLoading = fetchStationsByNameLoading || fetchStationsNearbyLoading;
+
   const stations = useMemo(
     () =>
-      fetchStationsByNameCalled
-        ? getUniqueStations(stationsByNameData?.stationsByName)
-        : getUniqueStations(stationsNearbyData?.stationsNearby),
+      isLoading
+        ? []
+        : fetchStationsByNameCalled
+          ? getUniqueStations(stationsByNameData?.stationsByName)
+          : getUniqueStations(stationsNearbyData?.stationsNearby),
     [
       stationsNearbyData?.stationsNearby,
       stationsByNameData?.stationsByName,
       fetchStationsByNameCalled,
+      isLoading,
     ]
   );
 
@@ -263,10 +268,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
   // ヘッダー(150) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
   const dynamicMinHeight = useMemo(() => {
-    const count = stations?.length ?? 0;
+    // ローディング中・エラー時はSkeleton2つ分の高さを最低限確保
+    const count = Math.max(isLoading ? 2 : 0, stations?.length ?? 0);
     const content = 150 + count * 80 + Math.max(0, count - 1) * 8 + 72;
-    return Math.min(content, windowHeight * 0.9);
-  }, [stations?.length, windowHeight]);
+    return Math.min(Math.max(content, 390), windowHeight * 0.75);
+  }, [stations?.length, windowHeight, isLoading]);
 
   return (
     <CustomModal
@@ -277,13 +283,13 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       contentContainerStyle={[
         styles.contentView,
         {
-          minHeight: dynamicMinHeight,
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           marginBottom: insets.bottom || 0,
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
