@@ -9,7 +9,7 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
-  bold: { fontWeight: 'bold' },
+  bold: { fontWeight: 'bold', fontSize: 16 },
 });
 
 export const EmptyResult = ({ loading, hasSearched }: Props) => {
@@ -17,6 +17,8 @@ export const EmptyResult = ({ loading, hasSearched }: Props) => {
     return (
       <SkeletonPlaceholder borderRadius={4} speed={1500}>
         <SkeletonPlaceholder.Item width="100%" height={72} />
+        <SkeletonPlaceholder.Item width="100%" height={72} marginTop={8} />
+        <SkeletonPlaceholder.Item width="100%" height={72} marginTop={8} />
       </SkeletonPlaceholder>
     );
   }
