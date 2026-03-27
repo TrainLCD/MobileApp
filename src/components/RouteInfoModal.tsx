@@ -270,10 +270,9 @@ export const RouteInfoModal = ({
 
   const dynamicMinHeight = useMemo(() => {
     const count = deduppedStations.length;
-    const content =
-      HEADER_HEIGHT + count * 80 + Math.max(0, count - 1) * 8 + 72;
+    const content = headerHeight + count * 80 + Math.max(0, count - 1) * 8 + 72;
     return Math.min(content, windowHeight * 0.75);
-  }, [deduppedStations.length, windowHeight]);
+  }, [deduppedStations.length, windowHeight, headerHeight]);
 
   return (
     <CustomModal

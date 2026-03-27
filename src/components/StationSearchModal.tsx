@@ -245,9 +245,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     [fetchStationsByName]
   );
 
+  const isLoading = fetchStationsByNameLoading || fetchStationsNearbyLoading;
+
   const stations = useMemo(
     () =>
-      fetchStationsByNameLoading || fetchStationsNearbyLoading
+      isLoading
         ? []
         : fetchStationsByNameCalled
           ? getUniqueStations(stationsByNameData?.stationsByName)
@@ -256,8 +258,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       stationsNearbyData?.stationsNearby,
       stationsByNameData?.stationsByName,
       fetchStationsByNameCalled,
-      fetchStationsByNameLoading,
-      fetchStationsNearbyLoading,
+      isLoading,
     ]
   );
 
@@ -265,14 +266,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     onClose();
   }, [onClose]);
 
-  const isLoading = fetchStationsByNameLoading || fetchStationsNearbyLoading;
-
   // ヘッダー(150) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
   const dynamicMinHeight = useMemo(() => {
-    // ローディング中・エラー時はSkeleton3つ分の高さを最低限確保
-    const count = Math.max(isLoading ? 3 : 0, stations?.length ?? 0);
+    // ローディング中・エラー時はSkeleton2つ分の高さを最低限確保
+    const count = Math.max(isLoading ? 2 : 0, stations?.length ?? 0);
     const content = 150 + count * 80 + Math.max(0, count - 1) * 8 + 72;
-    return Math.min(Math.max(content, 478), windowHeight * 0.75);
+    return Math.min(Math.max(content, 390), windowHeight * 0.75);
   }, [stations?.length, windowHeight, isLoading]);
 
   return (
