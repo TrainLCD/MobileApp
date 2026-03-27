@@ -311,14 +311,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const dim = useWindowDimensions();
 
+  const hasDrawableNumbering = useMemo(
+    () =>
+      station.stationNumbers?.some(
+        (sn) => sn?.lineSymbolShape && sn?.stationNumber
+      ) ?? false,
+    [station.stationNumbers]
+  );
+
   const nameCommonStyle = useMemo(() => {
-    if (!isOdakyu || !station.stationNumbers?.length) {
+    if (!isOdakyu || !hasDrawableNumbering) {
       return styles.nameCommon;
     }
     return {
+      ...styles.nameCommon,
       marginBottom: isTablet ? 45 : 95,
     };
-  }, [isOdakyu, station.stationNumbers]);
+  }, [isOdakyu, hasDrawableNumbering]);
 
   return (
     <>
