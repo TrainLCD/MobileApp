@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -31,6 +31,44 @@ import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
 } from './LineBoard/shared/styles/commonStyles';
+import NumberingIcon from './NumberingIcon';
+
+const localStyles = StyleSheet.create({
+  numberingIconContainer: {
+    position: 'absolute',
+    width: isTablet ? 96 : 64,
+    height: isTablet ? 96 : 64,
+    bottom: isTablet ? -22 : 52,
+    left: isTablet ? -24 : -16,
+    transform: [{ scale: 0.5 }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+  },
+});
+
+const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
+  const numberingObj = useMemo(
+    () => station.stationNumbers?.[0],
+    [station.stationNumbers]
+  );
+
+  if (!numberingObj?.lineSymbolShape || !numberingObj?.stationNumber) {
+    return null;
+  }
+
+  return (
+    <View style={localStyles.numberingIconContainer}>
+      <NumberingIcon
+        shape={numberingObj.lineSymbolShape}
+        lineColor={numberingObj.lineSymbolColor || '#000'}
+        stationNumber={numberingObj.stationNumber}
+        threeLetterCode={station.threeLetterCode}
+        transformOrigin="center"
+      />
+    </View>
+  );
+};
 
 type Props = {
   lineColors: (string | null | undefined)[];
@@ -273,6 +311,24 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const dim = useWindowDimensions();
 
+  const hasDrawableNumbering = useMemo(
+    () =>
+      station.stationNumbers?.some(
+        (sn) => sn?.lineSymbolShape && sn?.stationNumber
+      ) ?? false,
+    [station.stationNumbers]
+  );
+
+  const nameCommonStyle = useMemo(() => {
+    if (!isOdakyu || !hasDrawableNumbering) {
+      return styles.nameCommon;
+    }
+    return {
+      ...styles.nameCommon,
+      marginBottom: isTablet ? 45 : 95,
+    };
+  }, [isOdakyu, hasDrawableNumbering]);
+
   return (
     <>
       <View
@@ -285,7 +341,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         <View
           style={[
-            styles.nameCommon,
+            nameCommonStyle,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
@@ -298,6 +354,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             passed={getIsPass(station) || shouldGrayscale}
           />
         </View>
+        {isOdakyu ? <NumberingIconView station={station} /> : null}
         {renderBarGradients({
           barLeft,
           barWidth,
