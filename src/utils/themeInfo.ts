@@ -66,9 +66,8 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
   },
   [APP_THEME.ODAKYU]: {
     descriptionKey: 'themeDescriptionOdakyu',
-    // TODO: 小田急テーマ用のスクリーンショットに差し替える
-    spImage: require('../../assets/images/themes/tokyo-metro-sp.webp'),
-    tabletImage: require('../../assets/images/themes/tokyo-metro-tablet.webp'),
+    spImage: require('../../assets/images/themes/odakyu-sp.webp'),
+    tabletImage: require('../../assets/images/themes/odakyu-tablet.webp'),
   },
 } as const;
 
