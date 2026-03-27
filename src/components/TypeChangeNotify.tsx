@@ -177,16 +177,33 @@ const useBarWidth = () => {
   return Math.max(0, dim.width / 2 - edgeOffset);
 };
 
-const MetroBars = React.memo(function MetroBars({
+type ColorGradientFn = (
+  baseColor: string
+) => readonly [string, string, ...string[]];
+
+const defaultBarGradient: ColorGradientFn = (color) => [
+  `${color}ff`,
+  `${color}bb`,
+];
+const defaultBoxGradient: ColorGradientFn = (color) => [
+  `${color}ee`,
+  `${color}aa`,
+];
+
+const EastBars = React.memo(function EastBars({
   currentLine,
   nextLine,
   trainType,
   nextTrainType,
+  getBarGradient = defaultBarGradient,
+  getBoxGradient = defaultBoxGradient,
 }: {
   currentLine: Line;
   nextLine: Line;
   trainType: TrainType;
   nextTrainType: TrainType;
+  getBarGradient?: ColorGradientFn;
+  getBoxGradient?: ColorGradientFn;
 }) {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
@@ -211,7 +228,7 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
+        colors={getBarGradient('#aaaaaa')}
         style={[
           styles.bar,
           {
@@ -232,10 +249,9 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={[
-          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
-          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
-        ]}
+        colors={getBarGradient(
+          (nextLine ? currentLine : trainType)?.color ?? '#000000'
+        )}
         style={[
           styles.bar,
           {
@@ -260,7 +276,7 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
+        colors={getBarGradient('#aaaaaa')}
         style={[
           styles.bar,
           {
@@ -281,10 +297,7 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={[
-          `${(nextLine ?? nextTrainType)?.color ?? '#000000'}ff`,
-          `${(nextLine ?? nextTrainType)?.color ?? '#000000'}bb`,
-        ]}
+        colors={getBarGradient((nextLine ?? nextTrainType)?.color ?? '#000000')}
         style={[
           styles.bar,
           {
@@ -313,7 +326,7 @@ const MetroBars = React.memo(function MetroBars({
           style={styles.trainTypeBoxGradient}
         />
         <LinearGradient
-          colors={[`${trainType.color}ee`, `${trainType.color}aa`]}
+          colors={getBoxGradient(trainType.color ?? '#000000')}
           style={styles.trainTypeBoxGradient}
         />
 
@@ -361,7 +374,7 @@ const MetroBars = React.memo(function MetroBars({
           style={styles.trainTypeBoxGradient}
         />
         <LinearGradient
-          colors={[`${nextTrainType.color}ee`, `${nextTrainType.color}aa`]}
+          colors={getBoxGradient(nextTrainType.color ?? '#000000')}
           style={styles.trainTypeBoxGradient}
         />
 
@@ -1057,7 +1070,7 @@ const TypeChangeNotify: React.FC = () => {
         );
       default:
         return (
-          <MetroBars
+          <EastBars
             currentLine={currentLine}
             nextLine={nextLine}
             trainType={trainType}

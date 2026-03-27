@@ -154,7 +154,7 @@ describe('HeaderTY', () => {
       }).not.toThrow();
     });
 
-    it('should render TrainTypeBox with isTY prop', () => {
+    it('should render TrainTypeBox', () => {
       const { getByTestId } = render(<HeaderTY {...createMockHeaderProps()} />);
       expect(getByTestId('TrainTypeBox')).toBeTruthy();
     });
