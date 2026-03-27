@@ -88,8 +88,9 @@ const TrainTypeBox: React.FC<Props> = ({
   localTypePrefix = '',
   nextTrainTypeColor = '#444',
   darkenColor = false,
-  fontSizeScale = 1,
+  fontSizeScale: fontSizeScaleRaw = 1,
 }: Props) => {
+  const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { headerState } = useAtomValue(navigationState);

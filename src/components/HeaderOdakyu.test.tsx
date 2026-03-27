@@ -121,6 +121,8 @@ describe('HeaderOdakyu', () => {
       expect.objectContaining({
         localTypePrefix: '',
         nextTrainTypeColor: '#444',
+        darkenColor: true,
+        fontSizeScale: 1.2,
       }),
       undefined
     );

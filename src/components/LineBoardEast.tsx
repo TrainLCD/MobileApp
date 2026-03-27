@@ -70,6 +70,8 @@ const isSplitAtCurrentStation = (
   currentStationIndex === index &&
   currentStationIndex !== stations.length - 1;
 
+const ODAKYU_HIGHLIGHT_OFFSET = 0.35;
+
 const getMainBarColors = (line?: Line): readonly [string, string] =>
   line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb'];
 
@@ -139,7 +141,7 @@ const renderBarGradients = ({
     stations
   );
 
-  const barHighlightOffset = isOdakyu ? 0.35 : 0.5;
+  const barHighlightOffset = isOdakyu ? ODAKYU_HIGHLIGHT_OFFSET : 0.5;
 
   const gradients = [
     createBarGradient(
@@ -330,7 +332,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
               ]}
               lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
               hasTerminus={hasTerminus}
-              barHighlightOffset={0.35}
+              barHighlightOffset={ODAKYU_HIGHLIGHT_OFFSET}
             />
           ) : (
             <BarTerminalEast

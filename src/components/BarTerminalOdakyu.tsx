@@ -24,27 +24,20 @@ export const BarTerminalOdakyu: React.FC<Props> = (props: Props) => {
   const glossId = useId();
   const clipId = useId();
 
-  const { lineColor, barHighlightOffset = 0.35 } = props;
+  const { lineColor, hasTerminus, barHighlightOffset = 0.35 } = props;
+
+  const arrowPath = 'M0 24V0l12.003 12L24 24l-11.997 12L0 48V24z';
+  const terminusPath = 'M0,0H18c3.31,0,6,3.58,6,8V40c0,4.42-2.69,8-6,8H0V0Z';
+
+  const d = hasTerminus ? terminusPath : arrowPath;
 
   return (
     <Svg viewBox="0 0 24 48" {...props}>
       <G clipPath={`url(#${clipId})`}>
-        <Path
-          d="M0 24V0l12.003 12L24 24l-11.997 12L0 48V24z"
-          fill={`url(#${bgId})`}
-        />
-        <Path
-          d="M0 24V0l12.003 12L24 24l-11.997 12L0 48V24z"
-          fill={`url(#${colorId})`}
-        />
-        <Path
-          d="M0 24V0l12.003 12L24 24l-11.997 12L0 48V24z"
-          fill={`url(#${shadowId})`}
-        />
-        <Path
-          d="M0 24V0l12.003 12L24 24l-11.997 12L0 48V24z"
-          fill={`url(#${glossId})`}
-        />
+        <Path d={d} fill={`url(#${bgId})`} />
+        <Path d={d} fill={`url(#${colorId})`} />
+        <Path d={d} fill={`url(#${shadowId})`} />
+        <Path d={d} fill={`url(#${glossId})`} />
       </G>
       <Defs>
         <LinearGradient
