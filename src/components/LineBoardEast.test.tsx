@@ -214,7 +214,12 @@ describe('LineBoardEast', () => {
         chevronColorPair={['ORANGE', 'BLUE']}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
+    expect(ChevronTY).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: expect.stringMatching(/^(ORANGE|BLUE)$/),
+      }),
+      undefined
+    );
   });
 
   it('chevronColorPair未指定時はデフォルトのRED/BLUEが使われる', () => {

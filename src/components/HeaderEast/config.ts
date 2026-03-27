@@ -56,8 +56,7 @@ export const tokyoMetroConfig: HeaderEastThemeConfig = {
 export const tyConfig: HeaderEastThemeConfig = {
   gradientColors: ['#333', '#212121', '#000'] as const,
   gradientLocations: [0, 0.5, 0.5] as const,
-  rootStyle: {},
-  gradientRootExtraStyle: {
+  rootStyle: {
     shadowColor: '#333',
     shadowOpacity: 1,
     shadowRadius: 1,

@@ -897,7 +897,15 @@ const HeadingEn = React.memo(
   }
 );
 
-const TypeChangeNotify: React.FC = () => {
+type TypeChangeNotifyProps = {
+  getBarGradient?: ColorGradientFn;
+  getBoxGradient?: ColorGradientFn;
+};
+
+const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
+  getBarGradient,
+  getBoxGradient,
+}) => {
   const { selectedDirection, stations, selectedBound } =
     useAtomValue(stationState);
   const theme = useAtomValue(themeAtom);
@@ -1075,10 +1083,20 @@ const TypeChangeNotify: React.FC = () => {
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
+            getBarGradient={getBarGradient}
+            getBoxGradient={getBoxGradient}
           />
         );
     }
-  }, [currentLine, nextLine, trainType, nextTrainType, theme]);
+  }, [
+    currentLine,
+    nextLine,
+    trainType,
+    nextTrainType,
+    theme,
+    getBarGradient,
+    getBoxGradient,
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>

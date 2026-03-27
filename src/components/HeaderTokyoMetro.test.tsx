@@ -137,9 +137,8 @@ jest.mock('./NumberingIcon', () => {
 
 jest.mock('./TrainTypeBox', () => {
   const { View } = require('react-native');
-  return function MockTrainTypeBox() {
-    return <View testID="TrainTypeBox" />;
-  };
+  const mock = jest.fn(() => <View testID="TrainTypeBox" />);
+  return { __esModule: true, default: mock };
 });
 
 describe('HeaderTokyoMetro', () => {
@@ -154,11 +153,19 @@ describe('HeaderTokyoMetro', () => {
       }).not.toThrow();
     });
 
-    it('should render TrainTypeBox', () => {
+    it('should render TrainTypeBox with default props', () => {
+      const TrainTypeBox = require('./TrainTypeBox').default;
       const { getByTestId } = render(
         <HeaderTokyoMetro {...createMockHeaderProps()} />
       );
       expect(getByTestId('TrainTypeBox')).toBeTruthy();
+      expect(TrainTypeBox).toHaveBeenCalledWith(
+        expect.objectContaining({
+          localTypePrefix: '',
+          nextTrainTypeColor: '#444',
+        }),
+        undefined
+      );
     });
   });
 
