@@ -15,6 +15,7 @@ export type LineDotProps = {
   transferLines: Line[];
   arrived: boolean;
   passed: boolean;
+  round?: boolean;
 };
 
 export const LineDot: React.FC<LineDotProps> = ({
@@ -23,6 +24,7 @@ export const LineDot: React.FC<LineDotProps> = ({
   transferLines,
   arrived,
   passed,
+  round = false,
 }) => {
   const { widthScale } = useScale();
 
@@ -37,7 +39,7 @@ export const LineDot: React.FC<LineDotProps> = ({
             },
           ]}
         >
-          <PassChevronTY />
+          <PassChevronTY gradient={round} />
         </View>
         <View style={styles.marksContainer}>
           <PadLineMarks
@@ -54,10 +56,24 @@ export const LineDot: React.FC<LineDotProps> = ({
     <View style={styles.stationArea}>
       <View style={styles.chevronArea}>
         <LinearGradient
-          style={styles.chevronGradient}
+          style={[
+            styles.chevronGradient,
+            round && {
+              width: isTablet ? 36 : 24,
+              height: isTablet ? 36 : 24,
+              borderRadius: isTablet ? 18 : 12,
+              borderWidth: 1,
+              borderColor: '#fff',
+            },
+          ]}
           colors={
-            passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
+            passed && !arrived
+              ? ['#ccc', '#dadada']
+              : round
+                ? ['#fff', '#e0e0e0', '#aaa']
+                : ['#fdfbfb', '#ebedee']
           }
+          {...(round && { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } })}
         />
       </View>
       <View style={styles.marksContainer}>

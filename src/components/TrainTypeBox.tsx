@@ -38,6 +38,8 @@ type Props = {
   trainType: TrainType | null;
   localTypePrefix?: string;
   nextTrainTypeColor?: string;
+  darkenColor?: boolean;
+  fontSizeScale?: number;
 };
 
 const styles = StyleSheet.create({
@@ -85,6 +87,8 @@ const TrainTypeBox: React.FC<Props> = ({
   trainType,
   localTypePrefix = '',
   nextTrainTypeColor = '#444',
+  darkenColor = false,
+  fontSizeScale = 1,
 }: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
@@ -99,7 +103,8 @@ const TrainTypeBox: React.FC<Props> = ({
   const nextLine = useNextLine();
 
   const trainTypeColor = useMemo(() => {
-    return trainType?.color ?? '#1f63c6';
+    const base = trainType?.color ?? '#1f63c6';
+    return base;
   }, [trainType]);
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
@@ -258,13 +263,29 @@ const TrainTypeBox: React.FC<Props> = ({
       <View style={styles.box}>
         <LinearGradient
           colors={['#aaa', '#000', '#000', '#aaa']}
-          locations={[0.5, 0.5, 0.5, 0.9]}
+          locations={
+            darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
+          }
           style={styles.gradient}
         />
         <LinearGradient
           colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
           style={styles.gradient}
         />
+        {darkenColor ? (
+          <>
+            <LinearGradient
+              colors={['#00000000', '#00000033', '#00000000']}
+              locations={[0.35, 0.55, 0.85]}
+              style={styles.gradient}
+            />
+            <LinearGradient
+              colors={['#ffffff44', '#ffffff11', '#00000000']}
+              locations={[0, 0.35, 0.35]}
+              style={styles.gradient}
+            />
+          </>
+        ) : null}
 
         <View style={styles.textWrapper}>
           <RNAnimated.Text
@@ -277,6 +298,7 @@ const TrainTypeBox: React.FC<Props> = ({
                 {
                   letterSpacing,
                   marginLeft,
+                  fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
                 },
               ],
             ]}
@@ -296,6 +318,7 @@ const TrainTypeBox: React.FC<Props> = ({
             {
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
+              fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
             },
           ]}
           adjustsFontSizeToFit
