@@ -295,8 +295,7 @@ export const TrainTypeListModal = ({
   const dynamicMinHeight = useMemo(() => {
     const content =
       72 + trainTypes.length * 80 + Math.max(0, trainTypes.length - 1) * 8 + 72;
-    const maxHeight = windowHeight * 0.9;
-    return Math.min(content, maxHeight);
+    return Math.min(content, windowHeight * 0.75);
   }, [trainTypes.length, windowHeight]);
 
   return (
@@ -308,12 +307,12 @@ export const TrainTypeListModal = ({
       contentContainerStyle={[
         styles.contentView,
         {
-          minHeight: dynamicMinHeight,
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}

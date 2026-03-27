@@ -265,7 +265,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const dynamicMinHeight = useMemo(() => {
     const count = stations?.length ?? 0;
     const content = 150 + count * 80 + Math.max(0, count - 1) * 8 + 72;
-    return Math.min(content, windowHeight * 0.9);
+    return Math.min(content, windowHeight * 0.75);
   }, [stations?.length, windowHeight]);
 
   return (
@@ -277,13 +277,13 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       contentContainerStyle={[
         styles.contentView,
         {
-          minHeight: dynamicMinHeight,
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           marginBottom: insets.bottom || 0,
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
