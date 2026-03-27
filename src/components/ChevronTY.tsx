@@ -1,8 +1,10 @@
 import { useId, useMemo } from 'react';
 import { Defs, LinearGradient, Path, Stop, Svg } from 'react-native-svg';
 
+export type ChevronColor = 'RED' | 'BLUE' | 'ORANGE' | 'WHITE' | 'BLACK';
+
 type Props = {
-  color: 'RED' | 'BLUE' | 'WHITE' | 'BLACK';
+  color: ChevronColor;
 };
 
 export const ChevronTY: React.FC<Props> = ({ color }: Props) => {
@@ -14,6 +16,8 @@ export const ChevronTY: React.FC<Props> = ({ color }: Props) => {
         return ['#be3d03', '#c21705', '#333', '#be3d03'];
       case 'BLUE':
         return ['#3fa9f5', '#1d67e0', '#333', '#1765d4'];
+      case 'ORANGE':
+        return ['#f5a623', '#e8740a', '#333', '#e06d08'];
       case 'BLACK':
         return ['#333', '#333', '#666', '#333'];
       case 'WHITE':

@@ -15,7 +15,7 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChevronTY';
+import { type ChevronColor, ChevronTY } from './ChevronTY';
 import {
   EmptyStationNameCell,
   LineDot,
@@ -35,6 +35,7 @@ type Props = {
   lineColors: (string | null | undefined)[];
   stations: Station[];
   hasTerminus: boolean;
+  chevronColorPair?: readonly [ChevronColor, ChevronColor];
 };
 
 interface StationNameCellProps {
@@ -44,7 +45,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
+  chevronColor: ChevronColor;
 }
 
 // Helper for bar gradients
@@ -307,12 +308,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 };
 
+const DEFAULT_CHEVRON_PAIR: readonly [ChevronColor, ChevronColor] = [
+  'RED',
+  'BLUE',
+];
+
 const LineBoardEast: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  chevronColorPair = DEFAULT_CHEVRON_PAIR,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+  const [chevronColor, setChevronColor] = useState<ChevronColor>(
+    chevronColorPair[1]
+  );
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
@@ -324,8 +333,11 @@ const LineBoardEast: React.FC<Props> = ({
   );
 
   const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
-    []
+    () =>
+      setChevronColor((prev) =>
+        prev === chevronColorPair[0] ? chevronColorPair[1] : chevronColorPair[0]
+      ),
+    [chevronColorPair]
   );
 
   useInterval(intervalStep, 1000);

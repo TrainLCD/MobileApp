@@ -36,7 +36,8 @@ import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
-  isTY?: boolean;
+  localTypePrefix?: string;
+  nextTrainTypeColor?: string;
 };
 
 const styles = StyleSheet.create({
@@ -80,7 +81,11 @@ const styles = StyleSheet.create({
   },
 });
 
-const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
+const TrainTypeBox: React.FC<Props> = ({
+  trainType,
+  localTypePrefix = '',
+  nextTrainTypeColor = '#444',
+}: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { headerState } = useAtomValue(navigationState);
@@ -105,31 +110,28 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return isTY ? translate('tyLocalEn') : translate('localEn');
+        return translate(`${localTypePrefix}localEn`);
       case 'ZH':
-        return isTY ? translate('tyLocalZh') : translate('localZh');
+        return translate(`${localTypePrefix}localZh`);
       case 'KO':
-        return isTY ? translate('tyLocalKo') : translate('localKo');
+        return translate(`${localTypePrefix}localKo`);
       default:
-        return isTY ? translate('tyLocal') : translate('local');
+        return translate(`${localTypePrefix}local`);
     }
-  }, [headerLangState, isTY]);
+  }, [headerLangState, localTypePrefix]);
 
   const trainTypeNameJa = (trainType?.name || localTypeText)?.replace(
     parenthesisRegexp,
     ''
   );
   const trainTypeNameR = truncateTrainType(
-    trainType?.nameRoman ||
-      (isTY ? translate('tyLocalEn') : translate('localEn'))
+    trainType?.nameRoman || translate(`${localTypePrefix}localEn`)
   );
   const trainTypeNameZh = truncateTrainType(
-    trainType?.nameChinese ||
-      (isTY ? translate('tyLocalZh') : translate('localZh'))
+    trainType?.nameChinese || translate(`${localTypePrefix}localZh`)
   );
   const trainTypeNameKo = truncateTrainType(
-    trainType?.nameKorean ||
-      (isTY ? translate('tyLocalKo') : translate('localKo'))
+    trainType?.nameKorean || translate(`${localTypePrefix}localKo`)
   );
 
   const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
@@ -307,7 +309,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
           style={[
             styles.nextTrainType,
             {
-              color: theme === APP_THEME.TY ? '#fff' : '#444',
+              color: nextTrainTypeColor,
             },
           ]}
         >
