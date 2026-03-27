@@ -203,4 +203,34 @@ describe('LineBoardEast', () => {
     );
     expect(useCurrentLine).toHaveBeenCalled();
   });
+
+  it('カスタムchevronColorPairでレンダリングされる', () => {
+    const { ChevronTY } = require('./ChevronTY');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+        chevronColorPair={['ORANGE', 'BLUE']}
+      />
+    );
+    expect(ChevronTY).toHaveBeenCalled();
+  });
+
+  it('chevronColorPair未指定時はデフォルトのRED/BLUEが使われる', () => {
+    const { ChevronTY } = require('./ChevronTY');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(ChevronTY).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: expect.stringMatching(/^(RED|BLUE)$/),
+      }),
+      undefined
+    );
+  });
 });
