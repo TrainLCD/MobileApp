@@ -63,7 +63,7 @@ export const LineDot: React.FC<LineDotProps> = ({
               height: isTablet ? 36 : 24,
               borderRadius: isTablet ? 18 : 12,
               borderWidth: 1,
-              borderColor: '#fff',
+              borderColor: passed && !arrived ? '#bbb' : '#fff',
             },
           ]}
           colors={
