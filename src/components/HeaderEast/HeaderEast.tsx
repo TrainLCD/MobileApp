@@ -188,6 +188,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
           <TrainTypeBox
             localTypePrefix={config.trainTypeBox.localTypePrefix}
             nextTrainTypeColor={config.trainTypeBox.nextTrainTypeColor}
+            darkenColor={config.trainTypeBox.darkenColor}
+            fontSizeScale={config.trainTypeBox.fontSizeScale}
             trainType={trainType}
           />
           {selectedBound && !firstStop ? (
@@ -372,6 +374,18 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
           config.divider.extraStyle,
         ]}
       />
+      {config.secondaryDivider ? (
+        <View
+          style={[
+            styles.divider,
+            {
+              height: config.secondaryDivider.height,
+              backgroundColor: config.secondaryDivider.color,
+            },
+            config.secondaryDivider.extraStyle,
+          ]}
+        />
+      ) : null}
     </View>
   );
 };

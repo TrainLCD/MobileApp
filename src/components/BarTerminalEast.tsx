@@ -11,6 +11,7 @@ import Svg, {
 type Props = {
   lineColor: string;
   hasTerminus: boolean;
+  barHighlightOffset?: number;
 } & SvgProps;
 
 export const BarTerminalEast: React.FC<Props> = (props: Props) => {
@@ -19,7 +20,7 @@ export const BarTerminalEast: React.FC<Props> = (props: Props) => {
   const prefixAId = useId();
   const prefixBId = useId();
 
-  const { lineColor, hasTerminus } = props;
+  const { lineColor, hasTerminus, barHighlightOffset = 0.5 } = props;
   if (hasTerminus) {
     return (
       <Svg viewBox="0 0 41.57 48" {...props}>
@@ -32,9 +33,9 @@ export const BarTerminalEast: React.FC<Props> = (props: Props) => {
             gradientTransform="matrix(1, 0, 0, -1, 0, 48)"
             gradientUnits="userSpaceOnUse"
           >
-            <Stop offset={0.5} stopColor="#fff" />
-            <Stop offset={0.5} />
-            <Stop offset={0.5} />
+            <Stop offset={barHighlightOffset} stopColor="#fff" />
+            <Stop offset={barHighlightOffset} />
+            <Stop offset={barHighlightOffset} />
             <Stop offset={0.9} stopColor="#fff" />
           </LinearGradient>
           <LinearGradient
@@ -72,9 +73,9 @@ export const BarTerminalEast: React.FC<Props> = (props: Props) => {
           y2={48}
           gradientUnits="userSpaceOnUse"
         >
-          <Stop offset={0.5} stopColor="#fff" />
-          <Stop offset={0.5} />
-          <Stop offset={0.5} />
+          <Stop offset={barHighlightOffset} stopColor="#fff" />
+          <Stop offset={barHighlightOffset} />
+          <Stop offset={barHighlightOffset} />
           <Stop offset={0.9} stopColor="#fff" />
         </LinearGradient>
         <LinearGradient

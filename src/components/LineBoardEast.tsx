@@ -15,6 +15,7 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
+import { BarTerminalOdakyu } from './BarTerminalOdakyu';
 import { type ChevronColor, ChevronTY } from './ChevronTY';
 import {
   EmptyStationNameCell,
@@ -36,6 +37,7 @@ type Props = {
   stations: Station[];
   hasTerminus: boolean;
   chevronColorPair?: readonly [ChevronColor, ChevronColor];
+  isOdakyu?: boolean;
 };
 
 interface StationNameCellProps {
@@ -46,6 +48,7 @@ interface StationNameCellProps {
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   chevronColor: ChevronColor;
+  isOdakyu?: boolean;
 }
 
 // Helper for bar gradients
@@ -67,6 +70,8 @@ const isSplitAtCurrentStation = (
   currentStationIndex === index &&
   currentStationIndex !== stations.length - 1;
 
+const ODAKYU_HIGHLIGHT_OFFSET = 0.35;
+
 const getMainBarColors = (line?: Line): readonly [string, string] =>
   line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb'];
 
@@ -75,8 +80,8 @@ const getLineBarColors = (
   lineColors: (string | null | undefined)[],
   index: number
 ): readonly [string, string] => {
-  const base = lineColors[index] || line.color;
-  return base ? [`${base}ff`, `${base}bb`] : ['#000000ff', '#000000bb'];
+  const raw = lineColors[index] || line.color;
+  return raw ? [`${raw}ff`, `${raw}bb`] : ['#000000ff', '#000000bb'];
 };
 
 const createBarGradient = (
@@ -110,6 +115,7 @@ const renderBarGradients = ({
   currentStationIndex,
   stations,
   passed,
+  isOdakyu,
 }: {
   barLeft: number;
   barWidth: number;
@@ -120,6 +126,7 @@ const renderBarGradients = ({
   currentStationIndex: number;
   stations: Station[];
   passed: boolean;
+  isOdakyu?: boolean;
 }) => {
   const secondaryVisible = shouldShowSecondaryBar(
     arrived,
@@ -134,6 +141,8 @@ const renderBarGradients = ({
     stations
   );
 
+  const barHighlightOffset = isOdakyu ? ODAKYU_HIGHLIGHT_OFFSET : 0.5;
+
   const gradients = [
     createBarGradient(
       'bar-bg',
@@ -141,7 +150,12 @@ const renderBarGradients = ({
       barLeft,
       barWidth,
       {
-        locations: [0.5, 0.5, 0.5, 0.9],
+        locations: [
+          barHighlightOffset,
+          barHighlightOffset,
+          barHighlightOffset,
+          0.9,
+        ],
       }
     ),
     createBarGradient('bar-main', getMainBarColors(line), barLeft, barWidth),
@@ -155,7 +169,12 @@ const renderBarGradients = ({
         barLeft,
         barWidth,
         {
-          locations: [0.5, 0.5, 0.5, 0.9],
+          locations: [
+            barHighlightOffset,
+            barHighlightOffset,
+            barHighlightOffset,
+            0.9,
+          ],
         }
       )
     );
@@ -185,6 +204,31 @@ const renderBarGradients = ({
     );
   }
 
+  if (isOdakyu) {
+    gradients.push(
+      createBarGradient(
+        'bar-shadow',
+        ['#00000000', '#00000033', '#00000000'],
+        barLeft,
+        barWidth,
+        {
+          locations: [barHighlightOffset, 0.55, 0.85],
+        }
+      )
+    );
+    gradients.push(
+      createBarGradient(
+        'bar-gloss',
+        ['#ffffff44', '#ffffff11', '#00000000'],
+        barLeft,
+        barWidth,
+        {
+          locations: [0, barHighlightOffset, barHighlightOffset],
+        }
+      )
+    );
+  }
+
   return gradients;
 };
 
@@ -196,6 +240,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   chevronColor,
+  isOdakyu,
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
@@ -263,6 +308,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           currentStationIndex,
           stations,
           passed,
+          isOdakyu,
         })}
         <LineDot
           station={station}
@@ -270,21 +316,39 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
+          round={isOdakyu}
         />
         {stations.length - 1 === index ? (
-          <BarTerminalEast
-            width={isTablet ? 41 : 27}
-            height={isTablet ? 48 : 32}
-            style={[
-              styles.barTerminal,
-              {
-                left: barLeft + barWidth,
-                bottom: isTablet ? -52 : 32,
-              },
-            ]}
-            lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
-            hasTerminus={hasTerminus}
-          />
+          isOdakyu ? (
+            <BarTerminalOdakyu
+              width={isTablet ? 24 : 16}
+              height={isTablet ? 48 : 32}
+              style={[
+                styles.barTerminal,
+                {
+                  left: barLeft + barWidth,
+                  bottom: isTablet ? -52 : 32,
+                },
+              ]}
+              lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
+              hasTerminus={hasTerminus}
+              barHighlightOffset={ODAKYU_HIGHLIGHT_OFFSET}
+            />
+          ) : (
+            <BarTerminalEast
+              width={isTablet ? 41 : 27}
+              height={isTablet ? 48 : 32}
+              style={[
+                styles.barTerminal,
+                {
+                  left: barLeft + barWidth,
+                  bottom: isTablet ? -52 : 32,
+                },
+              ]}
+              lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
+              hasTerminus={hasTerminus}
+            />
+          )
         ) : null}
       </View>
       <View
@@ -318,6 +382,7 @@ const LineBoardEast: React.FC<Props> = ({
   hasTerminus,
   lineColors,
   chevronColorPair = DEFAULT_CHEVRON_PAIR,
+  isOdakyu,
 }: Props) => {
   const [chevronColor, setChevronColor] = useState<ChevronColor>(
     chevronColorPair[1]
@@ -374,11 +439,12 @@ const LineBoardEast: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             chevronColor={chevronColor}
+            isOdakyu={isOdakyu}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations]
+    [chevronColor, hasTerminus, line, lineColors, stations, isOdakyu]
   );
 
   const stationsWithEmpty = useMemo(

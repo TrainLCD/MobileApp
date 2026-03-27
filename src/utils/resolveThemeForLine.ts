@@ -17,6 +17,7 @@ const COMPANY_PREFIX_TO_THEME: [string, AppTheme][] = [
   ['JR西日本', APP_THEME.JR_WEST],
   ['JR九州', APP_THEME.JR_KYUSHU],
   ['東急', APP_THEME.TY],
+  ['小田急', APP_THEME.ODAKYU],
 ];
 
 const DEFAULT_THEME = APP_THEME.TOKYO_METRO;

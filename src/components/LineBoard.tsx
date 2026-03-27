@@ -79,6 +79,15 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             lineColors={lineColors}
           />
         );
+      case APP_THEME.ODAKYU:
+        return (
+          <LineBoardEast
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
+            isOdakyu
+          />
+        );
       case APP_THEME.TOEI:
         return (
           <LineBoardToei
