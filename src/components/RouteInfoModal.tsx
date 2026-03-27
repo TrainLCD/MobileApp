@@ -29,6 +29,10 @@ import { Heading } from './Heading';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
 
+const HEADER_HEIGHT = Math.ceil(
+  24 + RFValue(12) * 1.5 + RFValue(18) * 1.5 + 16
+);
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
   },
   flatListContentContainer: {
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 0,
     paddingBottom: 72,
   },
   noSearchResulText: {
@@ -129,6 +133,7 @@ export const RouteInfoModal = ({
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const { height: windowHeight } = useWindowDimensions();
+  const [headerHeight, setHeaderHeight] = useState(HEADER_HEIGHT);
 
   const { pendingLine } = useAtomValue(lineState);
   const lineName = getLocalizedLineName(pendingLine, isJapanese);
@@ -263,12 +268,11 @@ export const RouteInfoModal = ({
     [stations]
   );
 
-  // ヘッダー(80) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
   const dynamicMinHeight = useMemo(() => {
     const count = deduppedStations.length;
-    const content = 80 + count * 80 + Math.max(0, count - 1) * 8 + 72;
-    return Math.min(content, windowHeight * 0.9);
-  }, [deduppedStations.length, windowHeight]);
+    const content = headerHeight + count * 80 + Math.max(0, count - 1) * 8 + 72;
+    return Math.min(content, windowHeight * 0.75);
+  }, [deduppedStations.length, windowHeight, headerHeight]);
 
   return (
     <CustomModal
@@ -279,12 +283,12 @@ export const RouteInfoModal = ({
       contentContainerStyle={[
         styles.contentView,
         {
-          minHeight: dynamicMinHeight,
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
@@ -294,6 +298,7 @@ export const RouteInfoModal = ({
           styles.headerContainer,
           { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
         ]}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
       >
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
@@ -326,8 +331,11 @@ export const RouteInfoModal = ({
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         style={StyleSheet.absoluteFill}
-        contentContainerStyle={styles.flatListContentContainer}
-        scrollIndicatorInsets={{ top: 80, bottom: 72 }}
+        contentContainerStyle={[
+          styles.flatListContentContainer,
+          { paddingTop: headerHeight },
+        ]}
+        scrollIndicatorInsets={{ top: headerHeight, bottom: 72 }}
         removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
