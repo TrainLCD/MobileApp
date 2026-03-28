@@ -16,13 +16,7 @@ import {
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp } from '../constants';
-import {
-  useCurrentLine,
-  useLazyPrevious,
-  useNextLine,
-  useNextTrainType,
-  usePrevious,
-} from '../hooks';
+import { useCurrentLine, useLazyPrevious, usePrevious } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -103,8 +97,11 @@ const TrainTypeBox: React.FC<Props> = ({
 
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
-  const nextTrainType = useNextTrainType();
-  const nextLine = useNextLine();
+  // trainType.linesから現在路線以外の中間路線を取得し、路線名と種別を一元的に参照する
+  const intermediateLineEntry = useMemo(
+    () => trainType?.lines?.find((l) => l.id !== currentLine?.id) ?? null,
+    [trainType, currentLine]
+  );
 
   const trainTypeColor = useMemo(() => {
     const base = trainType?.color ?? '#1f63c6';
@@ -247,8 +244,12 @@ const TrainTypeBox: React.FC<Props> = ({
   );
 
   const showNextTrainType = useMemo(
-    () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
-    [currentLine, nextLine]
+    () =>
+      !!(
+        intermediateLineEntry &&
+        currentLine?.company?.id !== intermediateLineEntry.company?.id
+      ),
+    [currentLine, intermediateLineEntry]
   );
 
   const numberOfLines = useMemo(
@@ -331,7 +332,7 @@ const TrainTypeBox: React.FC<Props> = ({
           {prevTrainTypeName}
         </RNAnimated.Text>
       </View>
-      {showNextTrainType && nextTrainType?.nameRoman ? (
+      {showNextTrainType && intermediateLineEntry?.trainType?.nameRoman ? (
         <View style={styles.nextTrainTypeWrapper}>
           <Typography
             style={[
@@ -342,13 +343,16 @@ const TrainTypeBox: React.FC<Props> = ({
             ]}
           >
             {headerState.split('_')[1] === 'EN'
-              ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
-                  nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
+              ? `${intermediateLineEntry?.company?.nameEnglishShort} Line ${truncateTrainType(
+                  intermediateLineEntry?.trainType?.nameRoman?.replace(
+                    parenthesisRegexp,
+                    ''
+                  ),
                   true
                 )}`
               : `${
-                  nextLine?.company?.nameShort
-                }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
+                  intermediateLineEntry?.company?.nameShort
+                }線内 ${intermediateLineEntry?.trainType?.name?.replace(parenthesisRegexp, '')}`}
           </Typography>
         </View>
       ) : null}
