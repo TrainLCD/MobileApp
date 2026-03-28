@@ -13,6 +13,7 @@ import {
 } from '~/hooks';
 import { RFValue } from '~/utils/rfValue';
 import { getIsLocal } from '~/utils/trainTypeString';
+import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
@@ -1192,6 +1193,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
 }) => {
   const { selectedDirection, stations, selectedBound } =
     useAtomValue(stationState);
+  const { trainType: navTrainType } = useAtomValue(navigationState);
   const theme = useAtomValue(themeAtom);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
@@ -1273,17 +1275,20 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
-  // バー表示用: trainType.linesから選択路線(currentLine)でもnextLineでもない路線を探す
-  // 例: 小田急多摩線→千代田線→常磐線の場合、trainType.linesから千代田線を取得する
+  // バー表示用: navTrainType.linesから選択路線(currentLine)でもnextLineでもない路線を探す
+  // 例: 小田急多摩線→千代田線→常磐線の場合、navTrainType.linesから千代田線を取得する
+  // navTrainType（navigationState.trainType）はfetchedTrainTypesから選択されたもので
+  // .linesが確実に含まれている
   const displayCurrentLine = useMemo(() => {
     if (!nextLine) {
       return currentLine;
     }
-    const intermediate = trainType?.lines?.find(
+    const lines = navTrainType?.lines ?? trainType?.lines;
+    const intermediate = lines?.find(
       (l) => l.id !== nextLine.id && l.id !== currentLine?.id
     );
     return (intermediate as Line | undefined) ?? currentLine;
-  }, [trainType, nextLine, currentLine]);
+  }, [navTrainType, trainType, nextLine, currentLine]);
 
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {

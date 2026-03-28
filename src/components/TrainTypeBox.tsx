@@ -90,18 +90,21 @@ const TrainTypeBox: React.FC<Props> = ({
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { headerState } = useAtomValue(navigationState);
+  const { headerState, trainType: navTrainType } =
+    useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
 
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
-  // trainType.linesから現在路線以外の中間路線を取得し、路線名と種別を一元的に参照する
-  const intermediateLineEntry = useMemo(
-    () => trainType?.lines?.find((l) => l.id !== currentLine?.id) ?? null,
-    [trainType, currentLine]
-  );
+  // navTrainType.linesから現在路線以外の中間路線を取得し、路線名と種別を一元的に参照する
+  // navTrainType（navigationState.trainType）はfetchedTrainTypesから選択されたもので
+  // .linesが確実に含まれている
+  const intermediateLineEntry = useMemo(() => {
+    const lines = navTrainType?.lines ?? trainType?.lines;
+    return lines?.find((l) => l.id !== currentLine?.id) ?? null;
+  }, [navTrainType, trainType, currentLine]);
 
   const trainTypeColor = useMemo(() => {
     const base = trainType?.color ?? '#1f63c6';
