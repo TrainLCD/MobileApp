@@ -76,8 +76,7 @@ const styles = StyleSheet.create({
   nextTrainTypeWrapper: {
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
-    width: '100%',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     overflow: 'visible',
     marginTop: 4,
   },
