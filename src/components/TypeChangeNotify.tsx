@@ -1273,40 +1273,17 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
-  // バー表示用: 現在の種別の駅の.linesから、選択路線(currentLine)でもnextLineでもない路線を探す
-  // 例: 小田急多摩線→千代田線→常磐線の場合、.linesから千代田線を取得する
-  // 最頻出の路線を返すことで、経路外の路線(常磐快速線等)を除外する
+  // バー表示用: trainType.linesから選択路線(currentLine)でもnextLineでもない路線を探す
+  // 例: 小田急多摩線→千代田線→常磐線の場合、trainType.linesから千代田線を取得する
   const displayCurrentLine = useMemo(() => {
     if (!nextLine) {
       return currentLine;
     }
-    const counts = new Map<number, { line: Line; count: number }>();
-    for (const s of stations) {
-      if (s.trainType?.typeId !== trainType?.typeId) {
-        continue;
-      }
-      for (const l of s.lines ?? []) {
-        if (l.id == null || l.id === nextLine.id || l.id === currentLine?.id) {
-          continue;
-        }
-        const entry = counts.get(l.id);
-        if (entry) {
-          entry.count += 1;
-        } else {
-          counts.set(l.id, { line: l as Line, count: 1 });
-        }
-      }
-    }
-    let best: Line | null = null;
-    let bestCount = 0;
-    for (const { line, count } of counts.values()) {
-      if (count > bestCount) {
-        bestCount = count;
-        best = line;
-      }
-    }
-    return best ?? currentLine;
-  }, [stations, trainType, nextLine, currentLine]);
+    const intermediate = trainType?.lines?.find(
+      (l) => l.id !== nextLine.id && l.id !== currentLine?.id
+    );
+    return (intermediate as Line | undefined) ?? currentLine;
+  }, [trainType, nextLine, currentLine]);
 
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {

@@ -278,6 +278,7 @@ describe('TypeChangeNotify', () => {
       nameRoman: 'Semi Express',
       color: '#009944',
       line: odakyuTamaLine,
+      lines: [odakyuTamaLine, chiyodaLine],
     });
     useNextTrainType.mockReturnValue({
       typeId: 3,
