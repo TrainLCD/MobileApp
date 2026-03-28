@@ -50,7 +50,7 @@ const localStyles = StyleSheet.create({
   },
   nextStopBanner: {
     position: 'absolute',
-    bottom: 12,
+    bottom: 0,
     left: '12.5%',
     right: '12.5%',
   },
