@@ -73,13 +73,17 @@ const styles = StyleSheet.create({
     width: isTablet ? 175 : 96.25,
     height: isTablet ? 55 : 30.25,
   },
-  nextTrainType: {
-    fontWeight: 'bold',
-    fontSize: isTablet ? 18 : 12,
-    marginTop: 4,
+  nextTrainTypeWrapper: {
     position: 'absolute',
     top: isTablet ? 55 : 30.25,
     width: '100%',
+    alignItems: 'center',
+    overflow: 'visible',
+    marginTop: 4,
+  },
+  nextTrainType: {
+    fontWeight: 'bold',
+    fontSize: isTablet ? 18 : 12,
   },
 });
 
@@ -329,24 +333,25 @@ const TrainTypeBox: React.FC<Props> = ({
         </RNAnimated.Text>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
-        <Typography
-          style={[
-            styles.nextTrainType,
-            {
-              color: nextTrainTypeColor,
-            },
-          ]}
-          numberOfLines={1}
-        >
-          {headerState.split('_')[1] === 'EN'
-            ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
-                nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
-                true
-              )}`
-            : `${
-                nextLine?.company?.nameShort
-              }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
-        </Typography>
+        <View style={styles.nextTrainTypeWrapper}>
+          <Typography
+            style={[
+              styles.nextTrainType,
+              {
+                color: nextTrainTypeColor,
+              },
+            ]}
+          >
+            {headerState.split('_')[1] === 'EN'
+              ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
+                  nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
+                  true
+                )}`
+              : `${
+                  nextLine?.company?.nameShort
+                }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
+          </Typography>
+        </View>
       ) : null}
     </View>
   );
