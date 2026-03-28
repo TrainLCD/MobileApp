@@ -8,6 +8,8 @@ import {
   useInterval,
   useTransferLinesFromStation,
 } from '~/hooks';
+import { useAfterNextStation } from '~/hooks/useAfterNextStation';
+import { useNextStation } from '~/hooks/useNextStation';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
 import lineState from '../store/atoms/line';
@@ -17,6 +19,7 @@ import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
 import { BarTerminalOdakyu } from './BarTerminalOdakyu';
 import { type ChevronColor, ChevronTY } from './ChevronTY';
+import { Heading } from './Heading';
 import {
   EmptyStationNameCell,
   LineDot,
@@ -44,6 +47,17 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'visible',
+  },
+  nextStopBanner: {
+    position: 'absolute',
+    bottom: 0,
+    left: '12.5%',
+    right: '12.5%',
+  },
+  nextStopBannerText: {
+    color: '#212121',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
@@ -446,12 +460,29 @@ const LineBoardEast: React.FC<Props> = ({
   );
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
+  const nextStation = useNextStation();
+  const afterNextStation = useAfterNextStation();
 
   const dim = useWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
+  );
+
+  const hasPassStation = useMemo(
+    () => stations.some((s) => getIsPass(s)),
+    [stations]
+  );
+
+  const showNextStopBanner = useMemo(
+    () =>
+      isOdakyu &&
+      isTablet &&
+      hasPassStation &&
+      !!nextStation?.name &&
+      !!afterNextStation?.name,
+    [isOdakyu, hasPassStation, nextStation?.name, afterNextStation?.name]
   );
 
   const intervalStep = useCallback(
@@ -523,6 +554,19 @@ const LineBoardEast: React.FC<Props> = ({
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
+      {showNextStopBanner ? (
+        <LinearGradient
+          colors={['white', '#ccc', '#ccc', 'white']}
+          start={[0, 1]}
+          end={[1, 0]}
+          locations={[0, 0.1, 0.9, 1]}
+          style={localStyles.nextStopBanner}
+        >
+          <Heading style={localStyles.nextStopBannerText}>
+            {`${nextStation?.name}のつぎは${afterNextStation?.name}にとまります`}
+          </Heading>
+        </LinearGradient>
+      ) : null}
     </View>
   );
 };
