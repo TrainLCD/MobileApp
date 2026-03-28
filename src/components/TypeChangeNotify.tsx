@@ -1273,24 +1273,28 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
-  // バー表示用: 現在の種別の駅の.linesから、選択路線(currentLine)でもnextLineでもない路線を探す
-  // 例: 小田急多摩線→千代田線→常磐線の場合、.linesから千代田線を取得する
+  // バー表示用: 現在の種別の駅の.lineから、選択路線(currentLine)でもnextLineでもない路線を探す
+  // 例: 小田急多摩線→千代田線→常磐線の場合、千代田線を取得する
+  // s.lines(駅に紐づく全路線)ではなくs.line(経路上の路線)を参照し、
+  // 最後にマッチした路線を返すことで乗り換え地点に最も近い中間路線を取得する
   const displayCurrentLine = useMemo(() => {
     if (!nextLine) {
       return currentLine;
     }
+    let lastMatchedLine: Line | null = null;
     for (const s of stations) {
       if (s.trainType?.typeId !== trainType?.typeId) {
         continue;
       }
-      const found = s.lines?.find(
-        (l) => l.id !== nextLine.id && l.id !== currentLine?.id
-      );
-      if (found) {
-        return found as Line;
+      if (
+        s.line &&
+        s.line.id !== nextLine.id &&
+        s.line.id !== currentLine?.id
+      ) {
+        lastMatchedLine = s.line as Line;
       }
     }
-    return currentLine;
+    return lastMatchedLine ?? currentLine;
   }, [stations, trainType, nextLine, currentLine]);
 
   const aOrAn = useMemo(() => {
