@@ -1273,6 +1273,26 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
+  // バー表示用: 現在の種別の駅の.linesから、選択路線(currentLine)でもnextLineでもない路線を探す
+  // 例: 小田急多摩線→千代田線→常磐線の場合、.linesから千代田線を取得する
+  const displayCurrentLine = useMemo(() => {
+    if (!nextLine) {
+      return currentLine;
+    }
+    for (const s of stations) {
+      if (s.trainType?.typeId !== trainType?.typeId) {
+        continue;
+      }
+      const found = s.lines?.find(
+        (l) => l.id !== nextLine.id && l.id !== currentLine?.id
+      );
+      if (found) {
+        return found as Line;
+      }
+    }
+    return currentLine;
+  }, [stations, trainType, nextLine, currentLine]);
+
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {
       return '';
@@ -1335,7 +1355,13 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
   ]);
 
   const BarsComponent = useCallback(() => {
-    if (!currentLine || !nextLine || !trainType || !nextTrainType) {
+    if (
+      !currentLine ||
+      !displayCurrentLine ||
+      !nextLine ||
+      !trainType ||
+      !nextTrainType
+    ) {
       return null;
     }
 
@@ -1343,7 +1369,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       case 'SAIKYO':
         return (
           <SaikyoBars
-            currentLine={currentLine}
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
@@ -1354,7 +1380,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       case 'JL':
         return (
           <JOBars
-            currentLine={currentLine}
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
@@ -1363,7 +1389,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       case 'ODAKYU':
         return (
           <OdakyuBars
-            currentLine={currentLine}
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
@@ -1372,7 +1398,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       default:
         return (
           <EastBars
-            currentLine={currentLine}
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
@@ -1383,6 +1409,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     }
   }, [
     currentLine,
+    displayCurrentLine,
     nextLine,
     trainType,
     nextTrainType,
