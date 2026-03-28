@@ -16,6 +16,14 @@ jest.mock('~/hooks', () => ({
   useTransferLinesFromStation: jest.fn(() => []),
 }));
 
+jest.mock('~/hooks/useAfterNextStation', () => ({
+  useAfterNextStation: jest.fn(() => undefined),
+}));
+
+jest.mock('~/hooks/useNextStation', () => ({
+  useNextStation: jest.fn(() => undefined),
+}));
+
 jest.mock('~/hooks/useScale', () => ({
   useScale: jest.fn(() => ({ widthScale: jest.fn((val) => val) })),
 }));
