@@ -98,12 +98,13 @@ const TrainTypeBox: React.FC<Props> = ({
 
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
-  // navTrainType.linesから現在路線以外の中間路線を取得し、路線名と種別を一元的に参照する
-  // navTrainType（navigationState.trainType）はfetchedTrainTypesから選択されたもので
-  // .linesが確実に含まれている
+  // trainType.linesから現在路線の会社以外の中間路線を取得し、路線名と種別を一元的に参照する
+  // 会社IDで比較することで、小田急小田原線等の同一会社路線をスキップする
   const intermediateLineEntry = useMemo(() => {
     const lines = navTrainType?.lines ?? trainType?.lines;
-    return lines?.find((l) => l.id !== currentLine?.id) ?? null;
+    return (
+      lines?.find((l) => l.company?.id !== currentLine?.company?.id) ?? null
+    );
   }, [navTrainType, trainType, currentLine]);
 
   const trainTypeColor = useMemo(() => {

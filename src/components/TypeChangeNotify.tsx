@@ -1275,17 +1275,16 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
-  // バー表示用: navTrainType.linesから選択路線(currentLine)でもnextLineでもない路線を探す
-  // 例: 小田急多摩線→千代田線→常磐線の場合、navTrainType.linesから千代田線を取得する
-  // navTrainType（navigationState.trainType）はfetchedTrainTypesから選択されたもので
-  // .linesが確実に含まれている
+  // バー表示用: trainType.linesから現在路線の会社でもnextLineでもない中間路線を探す
+  // 例: 小田急多摩線→千代田線→常磐線の場合、千代田線を取得する
+  // 会社IDで比較することで、小田急小田原線等の同一会社路線をスキップする
   const displayCurrentLine = useMemo(() => {
     if (!nextLine) {
       return currentLine;
     }
     const lines = navTrainType?.lines ?? trainType?.lines;
     const intermediate = lines?.find(
-      (l) => l.id !== nextLine.id && l.id !== currentLine?.id
+      (l) => l.id !== nextLine.id && l.company?.id !== currentLine?.company?.id
     );
     return (intermediate as Line | undefined) ?? currentLine;
   }, [navTrainType, trainType, nextLine, currentLine]);
