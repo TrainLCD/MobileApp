@@ -337,7 +337,6 @@ const TrainTypeBox: React.FC<Props> = ({
             },
           ]}
           numberOfLines={1}
-          adjustsFontSizeToFit
         >
           {headerState.split('_')[1] === 'EN'
             ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
