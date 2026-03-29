@@ -406,6 +406,18 @@ const MainScreen: React.FC = () => {
         };
       }
 
+      if (
+        prev.bottomState === 'LINE' &&
+        !transferLines.length &&
+        isTypeWillChange &&
+        !shouldHideTypeChange
+      ) {
+        return {
+          ...prev,
+          bottomState: 'TYPE_CHANGE',
+        };
+      }
+
       if (prev.bottomState === 'TRANSFER') {
         if (isTypeWillChange && !shouldHideTypeChange) {
           return {

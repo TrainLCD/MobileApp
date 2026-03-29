@@ -184,11 +184,16 @@ describe('TypeChangeNotify', () => {
       useNextTrainType,
     } = require('~/hooks');
 
+    const odakyuCompany = { id: 1, nameShort: '小田急' };
+    const metroCompany = { id: 2, nameShort: '東京メトロ' };
+    const jrEastCompany = { id: 3, nameShort: 'JR東日本' };
+
     const odakyuTamaLine = {
       id: 100,
       nameShort: '小田急多摩線',
       nameRoman: 'Odakyu Tama Line',
       color: '#0D82C7',
+      company: odakyuCompany,
     };
 
     const chiyodaLine = {
@@ -196,6 +201,7 @@ describe('TypeChangeNotify', () => {
       nameShort: '千代田線',
       nameRoman: 'Chiyoda Line',
       color: '#009944',
+      company: metroCompany,
     };
 
     const jobanLine = {
@@ -203,10 +209,10 @@ describe('TypeChangeNotify', () => {
       nameShort: '常磐線',
       nameRoman: 'Joban Line',
       color: '#00B264',
+      company: jrEastCompany,
     };
 
-    // 直通運転時、station.lineは全て選択路線(小田急多摩線)になるが、
-    // station.linesには実際の路線が含まれる
+    // 直通運転時、station.lineは各駅の所属路線が設定される
     const stations = [
       {
         id: 1,
@@ -243,7 +249,7 @@ describe('TypeChangeNotify', () => {
         groupId: 4,
         name: '綾瀬',
         nameRoman: 'Ayase',
-        line: odakyuTamaLine,
+        line: chiyodaLine,
         lines: [chiyodaLine, jobanLine],
         trainType: { typeId: 2, name: '準急', nameRoman: 'Semi Express' },
         stopCondition: 'STOP',
@@ -271,13 +277,14 @@ describe('TypeChangeNotify', () => {
     ];
 
     useCurrentLine.mockReturnValue(odakyuTamaLine);
-    useCurrentStation.mockReturnValue(stations[3]);
+    useCurrentStation.mockReturnValue(stations[0]);
     useCurrentTrainType.mockReturnValue({
       typeId: 2,
       name: '準急',
       nameRoman: 'Semi Express',
       color: '#009944',
       line: odakyuTamaLine,
+      lines: [odakyuTamaLine, chiyodaLine],
     });
     useNextTrainType.mockReturnValue({
       typeId: 3,
