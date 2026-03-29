@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useId } from 'react';
 import Svg, { Defs, LinearGradient, Polygon, Stop } from 'react-native-svg';
 
