@@ -266,7 +266,7 @@ const TrainTypeBox: React.FC<Props> = ({
   );
 
   const nextTrainTypeWrapperStyle = useMemo(
-    () => [styles.nextTrainTypeWrapper, { width: windowWidth }] as const,
+    () => [styles.nextTrainTypeWrapper, { width: windowWidth }],
     [windowWidth]
   );
 
