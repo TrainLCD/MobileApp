@@ -7,6 +7,7 @@ export type HeaderEastThemeConfig = {
   rootStyle: ViewStyle;
   gradientRootExtraStyle?: ViewStyle;
   textColor: string;
+  stationNameColor?: string;
   bottomPaddingBottom: number;
   divider: {
     height: number;
@@ -43,6 +44,7 @@ export const tokyoMetroConfig: HeaderEastThemeConfig = {
     paddingBottom: 4,
   },
   textColor: '#555',
+  stationNameColor: '#000',
   bottomPaddingBottom: 0,
   divider: {
     height: isTablet ? 6 : 4,
