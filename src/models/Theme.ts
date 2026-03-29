@@ -10,6 +10,7 @@ export const APP_THEME = {
   JL: 'JL',
   JR_KYUSHU: 'JR_KYUSHU',
   ODAKYU: 'ODAKYU',
+  E231: 'E231',
 } as const;
 
 export type AppTheme = (typeof APP_THEME)[keyof typeof APP_THEME];
