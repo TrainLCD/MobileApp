@@ -16,7 +16,12 @@ import {
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp } from '../constants';
-import { useCurrentLine, useLazyPrevious, usePrevious } from '../hooks';
+import {
+  useCurrentLine,
+  useLazyPrevious,
+  useNextTrainType,
+  usePrevious,
+} from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
@@ -90,22 +95,13 @@ const TrainTypeBox: React.FC<Props> = ({
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { headerState, trainType: navTrainType } =
-    useAtomValue(navigationState);
+  const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
+  const nextTrainType = useNextTrainType();
 
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
-
-  // trainType.linesから現在路線の会社以外の中間路線を取得し、路線名と種別を一元的に参照する
-  // 会社IDで比較することで、小田急小田原線等の同一会社路線をスキップする
-  const intermediateLineEntry = useMemo(() => {
-    const lines = navTrainType?.lines ?? trainType?.lines;
-    return (
-      lines?.find((l) => l.company?.id !== currentLine?.company?.id) ?? null
-    );
-  }, [navTrainType, trainType, currentLine]);
 
   const trainTypeColor = useMemo(() => {
     const base = trainType?.color ?? '#1f63c6';
@@ -250,10 +246,10 @@ const TrainTypeBox: React.FC<Props> = ({
   const showNextTrainType = useMemo(
     () =>
       !!(
-        intermediateLineEntry &&
-        currentLine?.company?.id !== intermediateLineEntry.company?.id
+        nextTrainType?.line &&
+        currentLine?.company?.id !== nextTrainType.line.company?.id
       ),
-    [currentLine, intermediateLineEntry]
+    [currentLine, nextTrainType]
   );
 
   const numberOfLines = useMemo(
@@ -336,7 +332,7 @@ const TrainTypeBox: React.FC<Props> = ({
           {prevTrainTypeName}
         </RNAnimated.Text>
       </View>
-      {showNextTrainType && intermediateLineEntry?.trainType?.nameRoman ? (
+      {showNextTrainType && nextTrainType?.nameRoman ? (
         <View style={styles.nextTrainTypeWrapper}>
           <Typography
             style={[
@@ -347,16 +343,13 @@ const TrainTypeBox: React.FC<Props> = ({
             ]}
           >
             {headerState.split('_')[1] === 'EN'
-              ? `${intermediateLineEntry?.company?.nameEnglishShort} Line ${truncateTrainType(
-                  intermediateLineEntry?.trainType?.nameRoman?.replace(
-                    parenthesisRegexp,
-                    ''
-                  ),
+              ? `${nextTrainType.line?.company?.nameEnglishShort} Line ${truncateTrainType(
+                  nextTrainType.nameRoman?.replace(parenthesisRegexp, ''),
                   true
                 )}`
               : `${
-                  intermediateLineEntry?.company?.nameShort
-                }線内 ${intermediateLineEntry?.trainType?.name?.replace(parenthesisRegexp, '')}`}
+                  nextTrainType.line?.company?.nameShort
+                }線内 ${nextTrainType.name?.replace(parenthesisRegexp, '')}`}
           </Typography>
         </View>
       ) : null}
