@@ -212,8 +212,7 @@ describe('TypeChangeNotify', () => {
       company: jrEastCompany,
     };
 
-    // 直通運転時、station.lineは全て選択路線(小田急多摩線)になるが、
-    // station.linesには実際の路線が含まれる
+    // 直通運転時、station.lineは各駅の所属路線が設定される
     const stations = [
       {
         id: 1,
@@ -250,7 +249,7 @@ describe('TypeChangeNotify', () => {
         groupId: 4,
         name: '綾瀬',
         nameRoman: 'Ayase',
-        line: odakyuTamaLine,
+        line: chiyodaLine,
         lines: [chiyodaLine, jobanLine],
         trainType: { typeId: 2, name: '準急', nameRoman: 'Semi Express' },
         stopCondition: 'STOP',
@@ -278,7 +277,7 @@ describe('TypeChangeNotify', () => {
     ];
 
     useCurrentLine.mockReturnValue(odakyuTamaLine);
-    useCurrentStation.mockReturnValue(stations[3]);
+    useCurrentStation.mockReturnValue(stations[0]);
     useCurrentTrainType.mockReturnValue({
       typeId: 2,
       name: '準急',

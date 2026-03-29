@@ -13,7 +13,6 @@ import {
 } from '~/hooks';
 import { RFValue } from '~/utils/rfValue';
 import { getIsLocal } from '~/utils/trainTypeString';
-import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
@@ -1193,7 +1192,6 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
 }) => {
   const { selectedDirection, stations, selectedBound } =
     useAtomValue(stationState);
-  const { trainType: navTrainType } = useAtomValue(navigationState);
   const theme = useAtomValue(themeAtom);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
@@ -1275,19 +1273,29 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
-  // バー表示用: trainType.linesから現在路線の会社でもnextLineでもない中間路線を探す
-  // 例: 小田急多摩線→千代田線→常磐線の場合、千代田線を取得する
-  // 会社IDで比較することで、小田急小田原線等の同一会社路線をスキップする
+  // バー表示用: 種別が変わる直前の駅のlineを中間路線として使用する
+  // 例: 小田急多摩線→千代田線→常磐線の場合、綾瀬駅(千代田線)のlineを取得する
   const displayCurrentLine = useMemo(() => {
     if (!nextLine) {
       return currentLine;
     }
-    const lines = navTrainType?.lines ?? trainType?.lines;
-    const intermediate = lines?.find(
-      (l) => l.id !== nextLine.id && l.company?.id !== currentLine?.company?.id
+    const currentIdx = stations.findIndex(
+      (s) => s.groupId === station?.groupId
     );
-    return (intermediate as Line | undefined) ?? currentLine;
-  }, [navTrainType, trainType, nextLine, currentLine]);
+    const sliced =
+      selectedDirection === 'INBOUND'
+        ? stations.slice(currentIdx + 1)
+        : stations
+            .slice()
+            .reverse()
+            .slice(stations.length - currentIdx);
+    const nextTypeIdx = sliced.findIndex(
+      (s) => s.trainType && s.trainType.typeId !== trainType?.typeId
+    );
+    const lastCurrentTypeStation =
+      nextTypeIdx > 0 ? sliced[nextTypeIdx - 1] : null;
+    return (lastCurrentTypeStation?.line as Line | undefined) ?? currentLine;
+  }, [nextLine, currentLine, stations, station, selectedDirection, trainType]);
 
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {
