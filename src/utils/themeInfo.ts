@@ -69,11 +69,10 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
     spImage: require('../../assets/images/themes/odakyu-sp.webp'),
     tabletImage: require('../../assets/images/themes/odakyu-tablet.webp'),
   },
-  // TODO: E231用のプレビュー画像を作成して差し替える
   [APP_THEME.E231]: {
     descriptionKey: 'themeDescriptionE231',
-    spImage: require('../../assets/images/themes/saikyo-sp.webp'),
-    tabletImage: require('../../assets/images/themes/saikyo-tablet.webp'),
+    spImage: require('../../assets/images/themes/e231-sp.webp'),
+    tabletImage: require('../../assets/images/themes/e231-tablet.webp'),
   },
 } as const;
 
