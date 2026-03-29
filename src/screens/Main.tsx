@@ -676,7 +676,13 @@ const MainScreen: React.FC = () => {
 
   return (
     <>
-      <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
+      <Pressable
+        style={[
+          StyleSheet.absoluteFill,
+          theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
+        ]}
+        onPress={updateBottomState}
+      >
         <Header />
         {inner}
       </Pressable>

@@ -9,6 +9,7 @@ import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import { RFValue } from '../utils/rfValue';
+import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
@@ -106,6 +107,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
       case APP_THEME.SAIKYO:
         return (
           <LineBoardSaikyo
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
+          />
+        );
+      case APP_THEME.E231:
+        return (
+          <LineBoardE231
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}

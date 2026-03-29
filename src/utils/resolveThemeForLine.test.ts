@@ -137,6 +137,22 @@ describe('resolveThemeForLine', () => {
     ).toBe(APP_THEME.ODAKYU);
   });
 
+  it('りんかい線(99337)はSAIKYOを返す', () => {
+    expect(resolveThemeForLine(makeLine({ id: 99337 }))).toBe(APP_THEME.SAIKYO);
+  });
+
+  it('中央・総武線(11313)はE231を返す', () => {
+    expect(resolveThemeForLine(makeLine({ id: 11313 }))).toBe(APP_THEME.E231);
+  });
+
+  it('中央快速線(11312)はE231を返す', () => {
+    expect(resolveThemeForLine(makeLine({ id: 11312 }))).toBe(APP_THEME.E231);
+  });
+
+  it('京浜東北線(11332)はE231を返す', () => {
+    expect(resolveThemeForLine(makeLine({ id: 11332 }))).toBe(APP_THEME.E231);
+  });
+
   it('不明な路線はTOKYO_METROにフォールバックする', () => {
     expect(
       resolveThemeForLine(
