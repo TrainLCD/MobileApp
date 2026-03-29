@@ -105,10 +105,13 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
     return trainType?.color ?? '#FFD400';
   }, [trainType]);
 
-  const strokeColor = useMemo(
-    () => (getLuminance(trainTypeColor) > 0.4 ? '#555' : '#fff'),
-    [trainTypeColor]
-  );
+  const strokeColor = useMemo(() => {
+    try {
+      return getLuminance(trainTypeColor) > 0.4 ? '#555' : '#fff';
+    } catch {
+      return '#fff';
+    }
+  }, [trainTypeColor]);
 
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
