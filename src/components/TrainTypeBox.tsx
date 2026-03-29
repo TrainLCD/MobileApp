@@ -243,13 +243,19 @@ const TrainTypeBox: React.FC<Props> = ({
     [textOpacityAnim]
   );
 
+  const nextTrainTypeCompanyName = useMemo(() => {
+    const company = nextTrainType?.line?.company;
+    return company?.nameEnglishShort ?? company?.nameShort ?? null;
+  }, [nextTrainType]);
+
   const showNextTrainType = useMemo(
     () =>
       !!(
+        nextTrainTypeCompanyName &&
         nextTrainType?.line &&
         currentLine?.company?.id !== nextTrainType.line.company?.id
       ),
-    [currentLine, nextTrainType]
+    [currentLine, nextTrainType, nextTrainTypeCompanyName]
   );
 
   const numberOfLines = useMemo(
