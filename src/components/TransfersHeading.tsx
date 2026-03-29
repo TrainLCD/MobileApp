@@ -22,6 +22,22 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headingSaikyo: { color: '#212121', fontWeight: '600', textAlign: 'center' },
+  headingContainerE231: {
+    marginTop: 24,
+    alignSelf: 'center',
+    zIndex: 1,
+    paddingHorizontal: RFValue(32),
+    paddingVertical: 8,
+    borderRadius: RFValue(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headingE231: {
+    color: '#000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: RFValue(14),
+  },
 });
 
 export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
@@ -51,6 +67,18 @@ export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
           <Heading style={styles.headingSaikyo}>
             {translate('transfer')}
           </Heading>
+        </LinearGradient>
+      );
+    case APP_THEME.E231:
+      return (
+        <LinearGradient
+          colors={['#7388D2', '#B8C4E8', '#B8C4E8', '#7388D2']}
+          locations={[0, 0.3, 0.7, 1]}
+          start={[0.5, 0]}
+          end={[0.5, 1]}
+          style={styles.headingContainerE231}
+        >
+          <Heading style={styles.headingE231}>のりかえのご案内</Heading>
         </LinearGradient>
       );
     default:

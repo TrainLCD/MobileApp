@@ -3,6 +3,7 @@ import React from 'react';
 import { useHeaderCommonData } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { themeAtom } from '~/store/atoms/theme';
+import HeaderE231 from './HeaderE231';
 import HeaderE235 from './HeaderE235';
 import HeaderJL from './HeaderJL';
 import HeaderJRKyushu from './HeaderJRKyushu';
@@ -42,6 +43,8 @@ const Header = () => {
       return <HeaderJRKyushu {...commonData} />;
     case APP_THEME.ODAKYU:
       return <HeaderOdakyu {...commonData} />;
+    case APP_THEME.E231:
+      return <HeaderE231 {...commonData} />;
     default:
       return null;
   }

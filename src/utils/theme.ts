@@ -74,4 +74,9 @@ export const getSettingsThemes = (): SettingsTheme[] =>
       value: APP_THEME.ODAKYU,
       devOnly: false,
     },
+    {
+      label: translate('e231Like'),
+      value: APP_THEME.E231,
+      devOnly: false,
+    },
   ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示

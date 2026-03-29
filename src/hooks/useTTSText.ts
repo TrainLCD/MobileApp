@@ -33,6 +33,7 @@ const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
     return APP_THEME.TOKYO_METRO;
   if (theme === APP_THEME.JO || theme === APP_THEME.JL)
     return APP_THEME.YAMANOTE;
+  if (theme === APP_THEME.E231) return APP_THEME.SAIKYO;
   return theme;
 };
 
@@ -48,6 +49,7 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.ODAKYU]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.E231]: { NEXT: '', ARRIVING: '' },
 };
 
 export const useTTSText = (
@@ -783,6 +785,7 @@ export const useTTSText = (
           }`,
         },
         [APP_THEME.ODAKYU]: { NEXT: '', ARRIVING: '' },
+        [APP_THEME.E231]: { NEXT: '', ARRIVING: '' },
       };
       return map;
     }, [
@@ -1117,6 +1120,7 @@ export const useTTSText = (
           }`,
         },
         [APP_THEME.ODAKYU]: { NEXT: '', ARRIVING: '' },
+        [APP_THEME.E231]: { NEXT: '', ARRIVING: '' },
       };
       return map;
     }, [

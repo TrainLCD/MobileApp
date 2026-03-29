@@ -69,6 +69,11 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
     spImage: require('../../assets/images/themes/odakyu-sp.webp'),
     tabletImage: require('../../assets/images/themes/odakyu-tablet.webp'),
   },
+  [APP_THEME.E231]: {
+    descriptionKey: 'themeDescriptionE231',
+    spImage: require('../../assets/images/themes/e231-sp.webp'),
+    tabletImage: require('../../assets/images/themes/e231-tablet.webp'),
+  },
 } as const;
 
 export const getThemeInfo = (theme: AppTheme): ThemeInfo => {
