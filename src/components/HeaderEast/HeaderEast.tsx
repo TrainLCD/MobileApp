@@ -126,6 +126,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
 
   const dim = useWindowDimensions();
 
+  const stationNameColor = config.stationNameColor ?? config.textColor;
+
   const dividerBackgroundColor =
     config.divider.color === 'dynamic'
       ? (currentLine?.color ?? '#b5b5ac')
@@ -263,7 +265,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
               style={[
                 animation.stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
-                { color: config.textColor },
+                { color: stationNameColor },
               ]}
               adjustsFontSizeToFit
               numberOfLines={2}
@@ -274,7 +276,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
               style={[
                 animation.stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
-                { color: config.textColor },
+                { color: stationNameColor },
               ]}
               adjustsFontSizeToFit
               numberOfLines={2}
@@ -304,7 +306,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
                     transformOrigin: 'top',
-                    color: config.textColor,
+                    color: stationNameColor,
                   },
                 ]}
               >
@@ -329,7 +331,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
                     transformOrigin: 'bottom',
-                    color: config.textColor,
+                    color: stationNameColor,
                   },
                 ]}
               >
@@ -346,7 +348,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 style={[
                   animation.stateTopAnimatedStylesRight,
                   styles.firstText,
-                  { color: config.textColor },
+                  { color: stationNameColor },
                 ]}
               >
                 {stateTextRight}
@@ -355,7 +357,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 style={[
                   animation.stateBottomAnimatedStylesRight,
                   styles.firstText,
-                  { color: config.textColor },
+                  { color: stationNameColor },
                 ]}
               >
                 {animation.prevStateTextRight}

@@ -19,7 +19,6 @@ import { FONTS, parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
   useLazyPrevious,
-  useNextLine,
   useNextTrainType,
   usePrevious,
 } from '../hooks';
@@ -100,11 +99,9 @@ const TrainTypeBox: React.FC<Props> = ({
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
+  const nextTrainType = useNextTrainType();
 
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
-
-  const nextTrainType = useNextTrainType();
-  const nextLine = useNextLine();
 
   const trainTypeColor = useMemo(() => {
     const base = trainType?.color ?? '#1f63c6';
@@ -246,9 +243,24 @@ const TrainTypeBox: React.FC<Props> = ({
     [textOpacityAnim]
   );
 
+  const nextTrainTypeCompanyName = useMemo(() => {
+    const company = nextTrainType?.line?.company;
+    if (!company) {
+      return null;
+    }
+    return headerLangState === 'EN'
+      ? (company.nameEnglishShort ?? company.nameShort ?? null)
+      : (company.nameShort ?? company.nameEnglishShort ?? null);
+  }, [nextTrainType, headerLangState]);
+
   const showNextTrainType = useMemo(
-    () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
-    [currentLine, nextLine]
+    () =>
+      !!(
+        nextTrainTypeCompanyName &&
+        nextTrainType?.line &&
+        currentLine?.company?.id !== nextTrainType.line.company?.id
+      ),
+    [currentLine, nextTrainType, nextTrainTypeCompanyName]
   );
 
   const numberOfLines = useMemo(
@@ -341,14 +353,12 @@ const TrainTypeBox: React.FC<Props> = ({
               },
             ]}
           >
-            {headerState.split('_')[1] === 'EN'
-              ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
-                  nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
+            {headerLangState === 'EN'
+              ? `${nextTrainTypeCompanyName} Line ${truncateTrainType(
+                  nextTrainType.nameRoman?.replace(parenthesisRegexp, ''),
                   true
                 )}`
-              : `${
-                  nextLine?.company?.nameShort
-                }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
+              : `${nextTrainTypeCompanyName}線内 ${nextTrainType.name?.replace(parenthesisRegexp, '')}`}
           </Typography>
         </View>
       ) : null}

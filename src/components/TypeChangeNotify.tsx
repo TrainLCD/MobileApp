@@ -1273,25 +1273,29 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     stations,
   ]);
 
-  // バー表示用: 現在の種別の駅の.linesから、選択路線(currentLine)でもnextLineでもない路線を探す
-  // 例: 小田急多摩線→千代田線→常磐線の場合、.linesから千代田線を取得する
+  // バー表示用: 種別が変わる直前の駅のlineを中間路線として使用する
+  // 例: 小田急多摩線→千代田線→常磐線の場合、綾瀬駅(千代田線)のlineを取得する
   const displayCurrentLine = useMemo(() => {
     if (!nextLine) {
       return currentLine;
     }
-    for (const s of stations) {
-      if (s.trainType?.typeId !== trainType?.typeId) {
-        continue;
-      }
-      const found = s.lines?.find(
-        (l) => l.id !== nextLine.id && l.id !== currentLine?.id
-      );
-      if (found) {
-        return found as Line;
-      }
-    }
-    return currentLine;
-  }, [stations, trainType, nextLine, currentLine]);
+    const currentIdx = stations.findIndex(
+      (s) => s.groupId === station?.groupId
+    );
+    const sliced =
+      selectedDirection === 'INBOUND'
+        ? stations.slice(currentIdx + 1)
+        : stations
+            .slice()
+            .reverse()
+            .slice(stations.length - currentIdx);
+    const nextTypeIdx = sliced.findIndex(
+      (s) => s.trainType && s.trainType.typeId !== trainType?.typeId
+    );
+    const lastCurrentTypeStation =
+      nextTypeIdx > 0 ? sliced[nextTypeIdx - 1] : null;
+    return (lastCurrentTypeStation?.line as Line | undefined) ?? currentLine;
+  }, [nextLine, currentLine, stations, station, selectedDirection, trainType]);
 
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {
