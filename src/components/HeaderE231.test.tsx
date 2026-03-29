@@ -50,23 +50,22 @@ describe('HeaderE231', () => {
     }).not.toThrow();
   });
 
-  it('stateTextが空の場合にフォールバックテキストが表示される', () => {
-    const { getByText } = render(
-      <HeaderE231
-        {...createMockHeaderProps({ stateText: '', headerLangState: 'JA' })}
-      />
-    );
-    expect(getByText('translated:nowStoppingAt')).toBeTruthy();
-  });
-
-  it('英語のフォールバックステートが表示される', () => {
-    const { getByText } = render(
-      <HeaderE231
-        {...createMockHeaderProps({ stateText: '', headerLangState: 'EN' })}
-      />
-    );
-    expect(getByText('translated:nowStoppingAtEn')).toBeTruthy();
-  });
+  it.each([
+    ['JA', 'nowStoppingAt'],
+    ['EN', 'nowStoppingAtEn'],
+    ['ZH', 'nowStoppingAtZh'],
+    ['KO', 'nowStoppingAtKo'],
+  ] as const)(
+    'stateTextが空の場合に%sのフォールバックテキストが表示される',
+    (lang, expectedKey) => {
+      const { getByText } = render(
+        <HeaderE231
+          {...createMockHeaderProps({ stateText: '', headerLangState: lang })}
+        />
+      );
+      expect(getByText(`translated:${expectedKey}`)).toBeTruthy();
+    }
+  );
 
   it('始発表示で行先テキストが空になる', () => {
     const { queryByText } = render(
