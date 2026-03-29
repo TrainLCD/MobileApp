@@ -12,6 +12,7 @@ import {
   Platform,
   Animated as RNAnimated,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
@@ -95,6 +96,7 @@ const TrainTypeBox: React.FC<Props> = ({
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
+  const { width: windowWidth } = useWindowDimensions();
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
@@ -263,6 +265,11 @@ const TrainTypeBox: React.FC<Props> = ({
     [currentLine, nextTrainType, nextTrainTypeCompanyName]
   );
 
+  const nextTrainTypeWrapperStyle = useMemo(
+    () => [styles.nextTrainTypeWrapper, { width: windowWidth }],
+    [windowWidth]
+  );
+
   const numberOfLines = useMemo(
     // trainTypeNameがundefined/nullの場合のクラッシュを防ぐためのオプショナルチェーニング
     () => (trainTypeName?.split('\n').length === 1 ? 1 : 2),
@@ -344,7 +351,7 @@ const TrainTypeBox: React.FC<Props> = ({
         </RNAnimated.Text>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
-        <View style={styles.nextTrainTypeWrapper}>
+        <View style={nextTrainTypeWrapperStyle}>
           <Typography
             style={[
               styles.nextTrainType,
