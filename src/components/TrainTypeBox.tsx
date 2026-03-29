@@ -245,8 +245,13 @@ const TrainTypeBox: React.FC<Props> = ({
 
   const nextTrainTypeCompanyName = useMemo(() => {
     const company = nextTrainType?.line?.company;
-    return company?.nameEnglishShort ?? company?.nameShort ?? null;
-  }, [nextTrainType]);
+    if (!company) {
+      return null;
+    }
+    return headerLangState === 'EN'
+      ? (company.nameEnglishShort ?? company.nameShort ?? null)
+      : (company.nameShort ?? company.nameEnglishShort ?? null);
+  }, [nextTrainType, headerLangState]);
 
   const showNextTrainType = useMemo(
     () =>
@@ -348,14 +353,12 @@ const TrainTypeBox: React.FC<Props> = ({
               },
             ]}
           >
-            {headerState.split('_')[1] === 'EN'
-              ? `${nextTrainType.line?.company?.nameEnglishShort} Line ${truncateTrainType(
+            {headerLangState === 'EN'
+              ? `${nextTrainTypeCompanyName} Line ${truncateTrainType(
                   nextTrainType.nameRoman?.replace(parenthesisRegexp, ''),
                   true
                 )}`
-              : `${
-                  nextTrainType.line?.company?.nameShort
-                }線内 ${nextTrainType.name?.replace(parenthesisRegexp, '')}`}
+              : `${nextTrainTypeCompanyName}線内 ${nextTrainType.name?.replace(parenthesisRegexp, '')}`}
           </Typography>
         </View>
       ) : null}
