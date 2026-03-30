@@ -3,6 +3,7 @@ import { APP_THEME, type AppTheme } from '../models/Theme';
 export const TYPE_CHANGE_HIDE_THEMES: AppTheme[] = [
   APP_THEME.JR_WEST,
   APP_THEME.YAMANOTE,
+  APP_THEME.E231,
 ] as const;
 
 export const IN_USE_COLOR_MAP: Record<AppTheme, string> = {
