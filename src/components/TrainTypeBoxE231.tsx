@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { getLuminance } from 'polished';
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
@@ -12,8 +12,9 @@ import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
-import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
+import { getIsLocal } from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
+import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
@@ -22,11 +23,21 @@ type Props = {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
+    overflow: 'visible',
+  },
+  outerContainer: {
+    height: Math.round(RFValue(28) * 1.1) * 2,
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  enOverrideContainer: {
+    alignItems: 'center',
   },
   textBase: {
     textAlign: 'left',
     fontWeight: 'bold',
     fontSize: RFValue(36),
+    letterSpacing: 0,
   },
   strokeBase: {
     position: 'absolute',
@@ -64,6 +75,30 @@ const SHORT_NAME_KO: Record<string, string> = {
   [TrainTypeKind.LimitedExpress]: '특급',
 };
 
+type EnOverride = {
+  heading: string;
+  body: string;
+  headingFontSize?: number;
+  bodyFontSize?: number;
+};
+
+const SHORT_NAME_EN: Record<string, EnOverride> = {
+  中央特快: { heading: 'Chūō', body: 'Special Rapid' },
+  青梅特快: { heading: 'Ōme', body: 'Special Rapid' },
+  通勤特快: {
+    heading: 'Commuter',
+    body: 'Special Rapid',
+    headingFontSize: 21,
+    bodyFontSize: 16,
+  },
+  通勤快速: {
+    heading: 'Commuter',
+    body: 'Rapid',
+    headingFontSize: 21,
+    bodyFontSize: 21,
+  },
+};
+
 const formatCjk = (
   name: string | undefined | null,
   kind: TrainTypeKind | null | undefined,
@@ -98,9 +133,6 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
   const trainTypeColor = useMemo(() => {
     if (getIsLocal(trainType)) {
       return '#FFD400';
-    }
-    if (getIsRapid(trainType)) {
-      return '#f15a22';
     }
     return trainType?.color ?? '#FFD400';
   }, [trainType]);
@@ -152,7 +184,13 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
       return lineNameJa;
     }
     switch (headerLangState) {
-      case 'EN':
+      case 'EN': {
+        const enOverride = trainTypeNameJa
+          ? SHORT_NAME_EN[trainTypeNameJa]
+          : null;
+        if (enOverride) {
+          return `${enOverride.heading}\n${enOverride.body}`;
+        }
         if (
           trainType?.kind === TrainTypeKind.Express ||
           trainType?.kind === TrainTypeKind.LimitedExpress
@@ -166,6 +204,7 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
           return 'Rapid';
         }
         return trainTypeNameR;
+      }
       case 'ZH':
         return formatCjk(trainTypeNameZh, trainType?.kind, 'ZH');
       case 'KO':
@@ -184,19 +223,28 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
     trainType?.kind,
   ]);
 
+  const isEn = headerLangState === 'EN';
+
+  const enOverride = useMemo(() => {
+    if (!isEn || !trainTypeNameJa) {
+      return null;
+    }
+    return SHORT_NAME_EN[trainTypeNameJa] ?? null;
+  }, [isEn, trainTypeNameJa]);
+
   const letterSpacing = useMemo(() => {
-    if (trainTypeName?.length === 2) {
+    if (trainTypeName?.length === 2 && isEn) {
       return 8;
     }
     return 0;
-  }, [trainTypeName?.length]);
+  }, [trainTypeName?.length, isEn]);
 
   const paddingLeft = useMemo(() => {
-    if (trainTypeName?.length === 2 && Platform.OS === 'ios') {
+    if (trainTypeName?.length === 2 && isEn && Platform.OS === 'ios') {
       return 8;
     }
     return 0;
-  }, [trainTypeName?.length]);
+  }, [trainTypeName?.length, isEn]);
 
   if (!trainTypeName) {
     return null;
@@ -205,7 +253,6 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
   const rawLength = trainTypeName.replace('\n', '').length;
   const fontSize =
     headerLangState === 'EN' || rawLength <= 2 ? RFValue(36) : RFValue(28);
-  const lineHeight = Math.round(fontSize * 1.05);
   const numberOfLines = trainTypeName.includes('\n') ? 2 : 1;
   const strokeWidth = isTablet ? 3 : 2;
   const strokeOffsets = [
@@ -219,45 +266,91 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
     { width: -strokeWidth, height: strokeWidth },
   ];
 
-  return (
-    <View style={styles.container}>
-      {strokeOffsets.map((offset) => (
-        <Text
-          key={`${offset.width}_${offset.height}`}
-          numberOfLines={numberOfLines}
+  const renderStrokedText = (
+    text: string,
+    size: number,
+    color: string,
+    lines: number,
+    align: 'left' | 'center' = 'left'
+  ) => {
+    const lh = Math.round(size * 1.1);
+    const skew = isEn ? [{ skewX: '-7.5deg' }] : [];
+    return (
+      <View style={styles.container}>
+        {strokeOffsets.map((offset) => (
+          <Typography
+            key={`${offset.width}_${offset.height}`}
+            numberOfLines={lines}
+            style={[
+              styles.strokeBase,
+              {
+                fontSize: size,
+                lineHeight: lh,
+                color: strokeColor,
+                paddingLeft: align === 'left' ? paddingLeft : 0,
+                letterSpacing: align === 'left' ? letterSpacing : 0,
+                textAlign: align,
+                transform: [
+                  { translateX: offset.width },
+                  { translateY: offset.height },
+                  ...skew,
+                ],
+              },
+            ]}
+          >
+            {text}
+          </Typography>
+        ))}
+        <Typography
+          numberOfLines={lines}
           style={[
-            styles.strokeBase,
+            styles.textBase,
             {
-              fontSize,
-              lineHeight,
-              color: strokeColor,
-              paddingLeft,
-              letterSpacing,
-              transform: [
-                { translateX: offset.width },
-                { translateY: offset.height },
-              ],
+              fontSize: size,
+              lineHeight: lh,
+              paddingLeft: align === 'left' ? paddingLeft : 0,
+              letterSpacing: align === 'left' ? letterSpacing : 0,
+              color,
+              textAlign: align,
+              transform: skew,
             },
           ]}
         >
-          {trainTypeName}
-        </Text>
-      ))}
-      <Text
-        numberOfLines={numberOfLines}
-        style={[
-          styles.textBase,
-          {
-            fontSize,
-            lineHeight,
-            paddingLeft,
-            letterSpacing,
-            color: trainTypeColor,
-          },
-        ]}
-      >
-        {trainTypeName}
-      </Text>
+          {text}
+        </Typography>
+      </View>
+    );
+  };
+
+  if (enOverride) {
+    return (
+      <View style={styles.outerContainer}>
+        <View style={styles.enOverrideContainer}>
+          {renderStrokedText(
+            enOverride.heading,
+            RFValue(enOverride.headingFontSize ?? 24),
+            trainTypeColor,
+            1
+          )}
+          {renderStrokedText(
+            enOverride.body,
+            RFValue(enOverride.bodyFontSize ?? 16),
+            trainTypeColor,
+            1
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.outerContainer}>
+      {renderStrokedText(
+        trainTypeName,
+        fontSize,
+        trainTypeColor,
+        numberOfLines
+      )}
     </View>
   );
 };
