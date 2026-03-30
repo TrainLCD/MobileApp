@@ -1,50 +1,56 @@
 import { useAtomValue } from 'jotai';
 import { getLuminance } from 'polished';
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Svg, { G, Text as SvgText } from 'react-native-svg';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
-import { parenthesisRegexp } from '~/constants';
+import { FONTS, parenthesisRegexp } from '~/constants';
 import { useCurrentLine } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import navigationState from '~/store/atoms/navigation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
 import { getIsLocal } from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
-import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
 };
 
+const CONTAINER_HEIGHT = Math.round(RFValue(28) * 1.1) * 2;
+const SVG_STROKE_WIDTH = (isTablet ? 3 : 2) * 2;
+const STROKE_PAD = SVG_STROKE_WIDTH;
+// skewX(-7.5)はSVG原点基準で適用されるため、y座標に比例して左にズレる。その分translateで補正する
+const SKEW_SHIFT = Math.ceil(
+  (CONTAINER_HEIGHT + STROKE_PAD * 2) * Math.tan((7.5 * Math.PI) / 180)
+);
+
+// CJK文字はほぼ正方形、Latin文字は約0.62倍幅で推定
+const estimateLineWidth = (
+  text: string,
+  size: number,
+  spacing: number
+): number => {
+  let w = 0;
+  for (const ch of text) {
+    w += ch.charCodeAt(0) > 0x2e80 ? size : size * 0.62;
+  }
+  const charCount = [...text].length;
+  return w + spacing * Math.max(0, charCount - 1) + SVG_STROKE_WIDTH;
+};
+
 const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    overflow: 'visible',
-  },
   outerContainer: {
-    height: Math.round(RFValue(28) * 1.1) * 2,
+    height: CONTAINER_HEIGHT,
     justifyContent: 'center',
-    overflow: 'visible',
   },
-  enOverrideContainer: {
-    alignItems: 'center',
-  },
-  textBase: {
-    textAlign: 'left',
-    fontWeight: 'bold',
-    fontSize: RFValue(36),
-    letterSpacing: 0,
-  },
-  strokeBase: {
-    position: 'absolute',
-    textAlign: 'left',
-    fontWeight: 'bold',
-    fontSize: RFValue(36),
-    color: '#fff',
+  svg: {
+    marginTop: -STROKE_PAD,
+    marginLeft: -STROKE_PAD,
   },
 });
 
@@ -127,6 +133,7 @@ const formatCjk = (
 const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
   const { headerState } = useAtomValue(navigationState);
   const currentLine = useCurrentLine();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const isBus = isBusLine(currentLine);
 
@@ -239,12 +246,14 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
     return 0;
   }, [trainTypeName?.length, isEn]);
 
-  const paddingLeft = useMemo(() => {
-    if (trainTypeName?.length === 2 && isEn && Platform.OS === 'ios') {
-      return 8;
+  const fontFamily = useMemo(() => {
+    if (isLEDTheme) {
+      return FONTS.JFDotJiskan24h;
     }
-    return 0;
-  }, [trainTypeName?.length, isEn]);
+    return FONTS.RobotoBold;
+  }, [isLEDTheme]);
+
+  const fontWeight = isLEDTheme ? ('normal' as const) : ('bold' as const);
 
   if (!trainTypeName) {
     return null;
@@ -253,104 +262,124 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
   const rawLength = trainTypeName.replace('\n', '').length;
   const fontSize =
     headerLangState === 'EN' || rawLength <= 2 ? RFValue(36) : RFValue(28);
-  const numberOfLines = trainTypeName.includes('\n') ? 2 : 1;
-  const strokeWidth = isTablet ? 3 : 2;
-  const strokeOffsets = [
-    { width: strokeWidth, height: 0 },
-    { width: -strokeWidth, height: 0 },
-    { width: 0, height: strokeWidth },
-    { width: 0, height: -strokeWidth },
-    { width: strokeWidth, height: strokeWidth },
-    { width: -strokeWidth, height: -strokeWidth },
-    { width: strokeWidth, height: -strokeWidth },
-    { width: -strokeWidth, height: strokeWidth },
-  ];
 
-  const renderStrokedText = (
-    text: string,
-    size: number,
-    color: string,
-    lines: number,
-    align: 'left' | 'center' = 'left'
+  const SKEW_TRANSFORM = `translate(${SKEW_SHIFT}, 0) skewX(-7.5)`;
+
+  const renderLines = (
+    lines: { text: string; size: number }[],
+    fillColor: string,
+    textAnchor: 'start' | 'middle' = 'start',
+    x: number | string = STROKE_PAD
   ) => {
-    const lh = Math.round(size * 1.1);
-    const skew = isEn ? [{ skewX: '-7.5deg' }] : [];
+    const lineHeights = lines.map(({ size }) => Math.round(size * 1.1));
+    const totalH = lineHeights.reduce((sum, lh) => sum + lh, 0);
+    const topY = (CONTAINER_HEIGHT - totalH) / 2 + STROKE_PAD;
+
+    let accY = topY;
+    const positions = lines.map(({ size }, i) => {
+      // dominantBaselineが型にないため、baselineからの補正で垂直中央を再現
+      const baselineY = accY + size * 0.78;
+      accY += lineHeights[i];
+      return baselineY;
+    });
+
     return (
-      <View style={styles.container}>
-        {strokeOffsets.map((offset) => (
-          <Typography
-            key={`${offset.width}_${offset.height}`}
-            numberOfLines={lines}
-            style={[
-              styles.strokeBase,
-              {
-                fontSize: size,
-                lineHeight: lh,
-                color: strokeColor,
-                paddingLeft: align === 'left' ? paddingLeft : 0,
-                letterSpacing: align === 'left' ? letterSpacing : 0,
-                textAlign: align,
-                transform: [
-                  { translateX: offset.width },
-                  { translateY: offset.height },
-                  ...skew,
-                ],
-              },
-            ]}
+      <>
+        {lines.map(({ text, size }, i) => (
+          <SvgText
+            key={`s_${text}`}
+            x={x}
+            y={positions[i]}
+            fontSize={size}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            textAnchor={textAnchor}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={SVG_STROKE_WIDTH}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            letterSpacing={textAnchor === 'start' ? letterSpacing : 0}
           >
             {text}
-          </Typography>
+          </SvgText>
         ))}
-        <Typography
-          numberOfLines={lines}
-          style={[
-            styles.textBase,
-            {
-              fontSize: size,
-              lineHeight: lh,
-              paddingLeft: align === 'left' ? paddingLeft : 0,
-              letterSpacing: align === 'left' ? letterSpacing : 0,
-              color,
-              textAlign: align,
-              transform: skew,
-            },
-          ]}
-        >
-          {text}
-        </Typography>
-      </View>
+        {lines.map(({ text, size }, i) => (
+          <SvgText
+            key={`f_${text}`}
+            x={x}
+            y={positions[i]}
+            fontSize={size}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            textAnchor={textAnchor}
+            fill={fillColor}
+            letterSpacing={textAnchor === 'start' ? letterSpacing : 0}
+          >
+            {text}
+          </SvgText>
+        ))}
+      </>
     );
   };
 
   if (enOverride) {
+    const headingSize = RFValue(enOverride.headingFontSize ?? 24);
+    const bodySize = RFValue(enOverride.bodyFontSize ?? 16);
+    const svgWidth = Math.max(
+      estimateLineWidth(enOverride.heading, headingSize, 0),
+      estimateLineWidth(enOverride.body, bodySize, 0)
+    );
+
     return (
       <View style={styles.outerContainer}>
-        <View style={styles.enOverrideContainer}>
-          {renderStrokedText(
-            enOverride.heading,
-            RFValue(enOverride.headingFontSize ?? 24),
-            trainTypeColor,
-            1
-          )}
-          {renderStrokedText(
-            enOverride.body,
-            RFValue(enOverride.bodyFontSize ?? 16),
-            trainTypeColor,
-            1
-          )}
-        </View>
+        <Svg
+          width={svgWidth + STROKE_PAD * 2 + SKEW_SHIFT}
+          height={CONTAINER_HEIGHT + STROKE_PAD * 2}
+          style={styles.svg}
+        >
+          <G transform={SKEW_TRANSFORM}>
+            {renderLines(
+              [
+                { text: enOverride.heading, size: headingSize },
+                { text: enOverride.body, size: bodySize },
+              ],
+              trainTypeColor,
+              'middle',
+              svgWidth / 2
+            )}
+          </G>
+        </Svg>
       </View>
     );
   }
 
+  const textLines = trainTypeName.split('\n');
+  const svgWidth = Math.max(
+    ...textLines.map((text) => estimateLineWidth(text, fontSize, letterSpacing))
+  );
+
   return (
     <View style={styles.outerContainer}>
-      {renderStrokedText(
-        trainTypeName,
-        fontSize,
-        trainTypeColor,
-        numberOfLines
-      )}
+      <Svg
+        width={svgWidth + STROKE_PAD * 2 + (isEn ? SKEW_SHIFT : 0)}
+        height={CONTAINER_HEIGHT + STROKE_PAD * 2}
+        style={styles.svg}
+      >
+        {isEn ? (
+          <G transform={SKEW_TRANSFORM}>
+            {renderLines(
+              textLines.map((text) => ({ text, size: fontSize })),
+              trainTypeColor
+            )}
+          </G>
+        ) : (
+          renderLines(
+            textLines.map((text) => ({ text, size: fontSize })),
+            trainTypeColor
+          )
+        )}
+      </Svg>
     </View>
   );
 };
