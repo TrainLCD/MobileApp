@@ -195,7 +195,7 @@ export const useRefreshStation = (): void => {
       sendNotificationAsync({
         title: translate('wrongDirectionNotificationTitle'),
         body: translate(bodyKey),
-      });
+      }).catch(() => {});
       wrongDirectionNotifiedRef.current = true;
     }
     if (!isWrongDirection && !isLoopLineWrongDirection) {

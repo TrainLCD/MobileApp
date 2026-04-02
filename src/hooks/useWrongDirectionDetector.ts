@@ -64,20 +64,21 @@ export const useWrongDirectionDetector = (): {
 
   // 位置更新ごとに距離変化を計算し、逆方向判定を行う
   useEffect(() => {
-    if (!selectedBound || autoModeEnabled) {
-      return;
-    }
-    if (latitude == null || longitude == null) {
-      return;
-    }
+    // 前提条件を満たさない場合は検知状態をリセットして終了
     if (
+      !selectedBound ||
+      autoModeEnabled ||
+      latitude == null ||
+      longitude == null ||
       !nextStation ||
       nextStation.latitude == null ||
-      nextStation.longitude == null
+      nextStation.longitude == null ||
+      (accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD)
     ) {
-      return;
-    }
-    if (accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD) {
+      consecutiveIncreaseCountRef.current = 0;
+      cumulativeIncreaseRef.current = 0;
+      prevDistanceRef.current = null;
+      setWrongDirectionDetected(false);
       return;
     }
 
