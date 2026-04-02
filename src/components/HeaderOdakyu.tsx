@@ -1,8 +1,8 @@
 import React from 'react';
+import isTablet from '~/utils/isTablet';
 import type { CommonHeaderProps } from './Header.types';
 import type { HeaderEastThemeConfig } from './HeaderEast';
 import { HeaderEast, tokyoMetroConfig } from './HeaderEast';
-import isTablet from '~/utils/isTablet';
 
 const odakyuConfig: HeaderEastThemeConfig = {
   ...tokyoMetroConfig,
