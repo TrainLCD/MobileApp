@@ -98,7 +98,11 @@ export const useRouteEstimation = (): EstimationResult => {
   useEffect(() => {
     if (!state.isEstimating) return;
 
-    const logs = preprocessLogs(bufferRef.current);
+    const buffer = bufferRef.current;
+    // ポイントが少なすぎる段階では乗り換え判定を行わない（偽陽性を防止）
+    if (buffer.length < MIN_POINTS_FOR_ESTIMATION) return;
+
+    const logs = preprocessLogs(buffer);
     if (logs.length > 0 && isTransferStop(logs)) {
       bufferRef.current = [];
       setState((prev) => ({
