@@ -1,6 +1,6 @@
 import getDistance from 'geolib/es/getDistance';
 import { useAtomValue } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
@@ -46,27 +46,28 @@ export const useWrongDirectionDetector = (): {
 
   const [wrongDirectionDetected, setWrongDirectionDetected] = useState(false);
 
+  // 検知状態を全てリセットするヘルパー
+  const resetDetectionState = useCallback(() => {
+    prevDistanceRef.current = null;
+    consecutiveIncreaseCountRef.current = 0;
+    cumulativeIncreaseRef.current = 0;
+    notifiedForStationIdRef.current = undefined;
+    setWrongDirectionDetected(false);
+  }, []);
+
   // 到着時にリセット
   useEffect(() => {
     if (arrived) {
-      prevDistanceRef.current = null;
-      consecutiveIncreaseCountRef.current = 0;
-      cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = undefined;
-      setWrongDirectionDetected(false);
+      resetDetectionState();
     }
-  }, [arrived]);
+  }, [arrived, resetDetectionState]);
 
   // selectedBound変更時にリセット
   useEffect(() => {
     if (selectedBoundId != null) {
-      prevDistanceRef.current = null;
-      consecutiveIncreaseCountRef.current = 0;
-      cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = undefined;
-      setWrongDirectionDetected(false);
+      resetDetectionState();
     }
-  }, [selectedBoundId]);
+  }, [selectedBoundId, resetDetectionState]);
 
   // 位置更新ごとに距離変化を計算し、逆方向判定を行う
   useEffect(() => {
@@ -81,22 +82,14 @@ export const useWrongDirectionDetector = (): {
       nextStationLon == null ||
       (accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD)
     ) {
-      consecutiveIncreaseCountRef.current = 0;
-      cumulativeIncreaseRef.current = 0;
-      prevDistanceRef.current = null;
-      notifiedForStationIdRef.current = undefined;
-      setWrongDirectionDetected(false);
+      resetDetectionState();
       return;
     }
 
     // nextStationが変わった場合は前回距離をリセットし、初回測定として扱う
     if (prevNextStationIdRef.current !== nextStationId) {
       prevNextStationIdRef.current = nextStationId;
-      prevDistanceRef.current = null;
-      consecutiveIncreaseCountRef.current = 0;
-      cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = undefined;
-      setWrongDirectionDetected(false);
+      resetDetectionState();
     }
 
     const currentDistance = getDistance(
@@ -121,10 +114,7 @@ export const useWrongDirectionDetector = (): {
       consecutiveIncreaseCountRef.current += 1;
       cumulativeIncreaseRef.current += increase;
     } else {
-      consecutiveIncreaseCountRef.current = 0;
-      cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = undefined;
-      setWrongDirectionDetected(false);
+      resetDetectionState();
     }
 
     if (
@@ -150,6 +140,7 @@ export const useWrongDirectionDetector = (): {
     nextStationId,
     nextStationLat,
     nextStationLon,
+    resetDetectionState,
     selectedBoundId,
   ]);
 
