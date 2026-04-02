@@ -95,6 +95,8 @@ export const useWrongDirectionDetector = (): {
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
+      notifiedForStationIdRef.current = undefined;
+      setWrongDirectionDetected(false);
     }
 
     const currentDistance = getDistance(
