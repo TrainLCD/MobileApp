@@ -12,6 +12,7 @@ import { isJapanese, translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 const WARNING_PANEL_LEVEL = {
   URGENT: 'URGENT',
@@ -34,6 +35,8 @@ export const useWarningInfo = () => {
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const badAccuracy = useBadAccuracy();
+  const { isWrongDirection, isLoopLineWrongDirection } =
+    useWrongDirectionDetector();
   const [fgPermStatus] = useForegroundPermissions();
   const bgPermGranted = useLocationPermissionsGranted();
 
@@ -125,6 +128,18 @@ export const useWarningInfo = () => {
       };
     }
 
+    if (isWrongDirection) {
+      return {
+        level: WARNING_PANEL_LEVEL.URGENT,
+        text: translate('wrongDirectionWarning'),
+      };
+    }
+    if (isLoopLineWrongDirection) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('wrongDirectionLoopLineWarning'),
+      };
+    }
     if (badAccuracy) {
       return {
         level: WARNING_PANEL_LEVEL.URGENT,
@@ -160,6 +175,8 @@ export const useWarningInfo = () => {
     autoModeEnabled,
     badAccuracy,
     bgPermGranted,
+    isLoopLineWrongDirection,
+    isWrongDirection,
     fgPermStatus?.granted,
     isAlwaysPermissionNotGrantedDismissed,
     isInternetAvailable,
