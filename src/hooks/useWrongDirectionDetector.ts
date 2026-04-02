@@ -1,6 +1,6 @@
 import getDistance from 'geolib/es/getDistance';
 import { useAtomValue } from 'jotai';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
@@ -35,50 +35,58 @@ export const useWrongDirectionDetector = (): {
   const cumulativeIncreaseRef = useRef(0);
   // 通知済みのnextStation ID（同一駅で再通知しない）
   const notifiedForStationIdRef = useRef<number | null>(null);
-  // 逆方向検知フラグ（状態としてレンダーに反映するため）
-  const wrongDirectionDetectedRef = useRef(false);
+  // 前回のnextStation ID（駅変更検知用）
+  const prevNextStationIdRef = useRef<number | null | undefined>(null);
 
-  // 到着時や行き先変更時にリセット
+  const [wrongDirectionDetected, setWrongDirectionDetected] = useState(false);
+
+  // 到着時にリセット
   useEffect(() => {
     if (arrived) {
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
-      wrongDirectionDetectedRef.current = false;
+      setWrongDirectionDetected(false);
     }
   }, [arrived]);
 
   // selectedBound変更時にリセット
   const selectedBoundId = selectedBound?.id;
   useEffect(() => {
-    // selectedBoundIdの変化をトリガーにリセットする
     if (selectedBoundId != null) {
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
       notifiedForStationIdRef.current = null;
-      wrongDirectionDetectedRef.current = false;
+      setWrongDirectionDetected(false);
     }
   }, [selectedBoundId]);
 
-  const isWrongDirectionRaw = useMemo(() => {
-    // 前提条件チェック
+  // 位置更新ごとに距離変化を計算し、逆方向判定を行う
+  useEffect(() => {
     if (!selectedBound || autoModeEnabled) {
-      return false;
+      return;
     }
     if (latitude == null || longitude == null) {
-      return false;
+      return;
     }
     if (
       !nextStation ||
       nextStation.latitude == null ||
       nextStation.longitude == null
     ) {
-      return false;
+      return;
     }
-    // GPS精度が悪い場合はスキップ
     if (accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD) {
-      return false;
+      return;
+    }
+
+    // nextStationが変わった場合は前回距離をリセットし、初回測定として扱う
+    if (prevNextStationIdRef.current !== nextStation.id) {
+      prevNextStationIdRef.current = nextStation.id;
+      prevDistanceRef.current = null;
+      consecutiveIncreaseCountRef.current = 0;
+      cumulativeIncreaseRef.current = 0;
     }
 
     const currentDistance = getDistance(
@@ -92,8 +100,9 @@ export const useWrongDirectionDetector = (): {
     const prevDistance = prevDistanceRef.current;
     prevDistanceRef.current = currentDistance;
 
+    // 初回測定は比較対象がないのでスキップ
     if (prevDistance == null) {
-      return wrongDirectionDetectedRef.current;
+      return;
     }
 
     const increase = currentDistance - prevDistance;
@@ -102,10 +111,9 @@ export const useWrongDirectionDetector = (): {
       consecutiveIncreaseCountRef.current += 1;
       cumulativeIncreaseRef.current += increase;
     } else {
-      // 距離が減少した場合はカウンターをリセット
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
-      wrongDirectionDetectedRef.current = false;
+      setWrongDirectionDetected(false);
     }
 
     if (
@@ -115,14 +123,11 @@ export const useWrongDirectionDetector = (): {
     ) {
       // 同一のnextStationに対して既に通知済みならスキップ
       if (notifiedForStationIdRef.current === nextStation.id) {
-        return wrongDirectionDetectedRef.current;
+        return;
       }
       notifiedForStationIdRef.current = nextStation.id ?? null;
-      wrongDirectionDetectedRef.current = true;
-      return true;
+      setWrongDirectionDetected(true);
     }
-
-    return wrongDirectionDetectedRef.current;
   }, [
     accuracy,
     autoModeEnabled,
@@ -133,7 +138,7 @@ export const useWrongDirectionDetector = (): {
   ]);
 
   return {
-    isWrongDirection: !isLoopLine && isWrongDirectionRaw,
-    isLoopLineWrongDirection: isLoopLine && isWrongDirectionRaw,
+    isWrongDirection: !isLoopLine && wrongDirectionDetected,
+    isLoopLineWrongDirection: isLoopLine && wrongDirectionDetected,
   };
 };

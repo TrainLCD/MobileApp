@@ -8,7 +8,7 @@ import { locationAtom } from '~/store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
+import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useCanGoForward } from './useCanGoForward';
@@ -189,11 +189,12 @@ export const useRefreshStation = (): void => {
       (isWrongDirection || isLoopLineWrongDirection) &&
       !wrongDirectionNotifiedRef.current
     ) {
+      const bodyKey = isLoopLineWrongDirection
+        ? 'wrongDirectionLoopLineWarning'
+        : 'wrongDirectionWarning';
       sendNotificationAsync({
-        title: isJapanese ? '方向のお知らせ' : 'Direction Alert',
-        body: isJapanese
-          ? '選択した行き先と逆方向に進んでいる可能性があります。'
-          : 'You may be traveling in the opposite direction from your destination.',
+        title: translate('wrongDirectionNotificationTitle'),
+        body: translate(bodyKey),
       });
       wrongDirectionNotifiedRef.current = true;
     }

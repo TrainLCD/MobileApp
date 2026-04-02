@@ -299,5 +299,6 @@
   "selectStartStationTitle": "始発駅を選択",
   "departure": "始発",
   "wrongDirectionWarning": "選択した行き先と逆方向に進んでいる可能性があります。電車をお確かめください。",
-  "wrongDirectionLoopLineWarning": "選択した行き先と逆方向に進んでいる可能性があります。環状線のため到着は可能ですが、遠回りになります。"
+  "wrongDirectionLoopLineWarning": "選択した行き先と逆方向に進んでいる可能性があります。環状線のため到着は可能ですが、遠回りになります。",
+  "wrongDirectionNotificationTitle": "方向のお知らせ"
 }
