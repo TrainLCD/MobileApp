@@ -61,7 +61,10 @@ const localStyles = StyleSheet.create({
   },
 });
 
-const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
+const NumberingIconView: React.FC<{
+  station: Station;
+  shouldGrayscale: boolean;
+}> = ({ station, shouldGrayscale }) => {
   const numberingObj = useMemo(
     () => station.stationNumbers?.[0],
     [station.stationNumbers]
@@ -79,6 +82,7 @@ const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
         stationNumber={numberingObj.stationNumber}
         threeLetterCode={station.threeLetterCode}
         transformOrigin="center"
+        shouldGrayscale={shouldGrayscale}
       />
     </View>
   );
@@ -118,7 +122,6 @@ const isSplitAtCurrentStation = (
   stations: Station[]
 ) =>
   arrived &&
-  currentStationIndex !== 0 &&
   currentStationIndex === index &&
   currentStationIndex !== stations.length - 1;
 
@@ -233,19 +236,26 @@ const renderBarGradients = ({
   }
 
   if (splitHere) {
+    // index 0ではバー左端からドット中心までの距離を灰色幅に使う
+    const dotCenterOffset = isTablet ? 24 : 16;
+    const splitWidth =
+      index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
     gradients.push(
       createBarGradient(
         'bar-main-half',
         getMainBarColors(line),
         barLeft,
-        barWidth / 2.5
+        splitWidth
       )
     );
   }
 
   if (secondaryVisible) {
-    const left = splitHere ? barLeft + barWidth / 2.5 : barLeft;
-    const width = splitHere ? barWidth / 2.5 : barWidth;
+    const dotCenterOffset = isTablet ? 24 : 16;
+    const splitWidth =
+      index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
+    const left = splitHere ? barLeft + splitWidth : barLeft;
+    const width = splitHere ? barWidth - splitWidth : barWidth;
     gradients.push(
       createBarGradient(
         'bar-color',
@@ -368,7 +378,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             passed={getIsPass(station) || shouldGrayscale}
           />
         </View>
-        {isOdakyu ? <NumberingIconView station={station} /> : null}
+        {isOdakyu ? (
+          <NumberingIconView
+            station={station}
+            shouldGrayscale={shouldGrayscale}
+          />
+        ) : null}
         {renderBarGradients({
           barLeft,
           barWidth,
