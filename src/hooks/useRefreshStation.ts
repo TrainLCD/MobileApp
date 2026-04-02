@@ -8,7 +8,7 @@ import { locationAtom } from '~/store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
+import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useCanGoForward } from './useCanGoForward';
@@ -16,6 +16,7 @@ import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
+import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
 
@@ -51,6 +52,9 @@ export const useRefreshStation = (): void => {
   const canGoForward = useCanGoForward();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const { arrivedThreshold, approachingThreshold } = useThreshold();
+  const { isWrongDirection, isLoopLineWrongDirection } =
+    useWrongDirectionDetector();
+  const wrongDirectionNotifiedRef = useRef(false);
 
   // GPS精度に応じた実効閾値を算出する
   // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
@@ -179,6 +183,25 @@ export const useRefreshStation = (): void => {
     sendApproachingNotification,
     targetStationIds,
   ]);
+
+  useEffect(() => {
+    if (
+      (isWrongDirection || isLoopLineWrongDirection) &&
+      !wrongDirectionNotifiedRef.current
+    ) {
+      const bodyKey = isLoopLineWrongDirection
+        ? 'wrongDirectionLoopLineWarning'
+        : 'wrongDirectionWarning';
+      sendNotificationAsync({
+        title: translate('wrongDirectionNotificationTitle'),
+        body: translate(bodyKey),
+      }).catch(() => {});
+      wrongDirectionNotifiedRef.current = true;
+    }
+    if (!isWrongDirection && !isLoopLineWrongDirection) {
+      wrongDirectionNotifiedRef.current = false;
+    }
+  }, [isWrongDirection, isLoopLineWrongDirection]);
 
   useEffect(() => {
     if (!nearestStation) {
