@@ -129,7 +129,7 @@ export const useWrongDirectionDetector = (): {
       ) {
         return;
       }
-      notifiedForStationIdRef.current = nextStationId ?? null;
+      notifiedForStationIdRef.current = nextStationId;
       setWrongDirectionDetected(true);
     }
   }, [
