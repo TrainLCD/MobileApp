@@ -146,4 +146,23 @@ describe('isTransferStop', () => {
     ];
     expect(isTransferStop(logs)).toBe(false);
   });
+
+  it('2点で先頭エントリのspeed=0による偽陽性を起こさない', () => {
+    // 先頭エントリはdistFromPrev=0,dtFromPrev=0のためspeed=0になるが、
+    // これは前処理の仕様であり実際の停車ではない
+    const logs: FilteredLocationLog[] = [
+      { ...mkLog(35.68, 139.76, 0), distFromPrev: 0, dtFromPrev: 0 },
+      { ...mkLog(35.68, 139.76, 15_000), distFromPrev: 0, dtFromPrev: 15 },
+    ];
+    expect(isTransferStop(logs)).toBe(false);
+  });
+
+  it('先頭以降のエントリが停車状態なら検知する', () => {
+    const logs: FilteredLocationLog[] = [
+      { ...mkLog(35.68, 139.76, 0), distFromPrev: 0, dtFromPrev: 0 },
+      { ...mkLog(35.68, 139.76, 1000), distFromPrev: 0, dtFromPrev: 1 },
+      { ...mkLog(35.68, 139.76, 12_000), distFromPrev: 0, dtFromPrev: 11 },
+    ];
+    expect(isTransferStop(logs)).toBe(true);
+  });
 });

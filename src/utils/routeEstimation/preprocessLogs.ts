@@ -127,7 +127,10 @@ export const isTransferStop = (logs: FilteredLocationLog[]): boolean => {
 
   let stopStart: number | null = null;
 
-  for (const log of logs) {
+  // index=0はdistFromPrev=0,dtFromPrev=0のため常にspeed=0になる（前処理の仕様）。
+  // これを含めると停車タイマーが常に即座に開始され、低速移動時に偽陽性が発生するためスキップする。
+  for (let i = 1; i < logs.length; i++) {
+    const log = logs[i];
     const speed = log.dtFromPrev > 0 ? log.distFromPrev / log.dtFromPrev : 0;
     if (speed < STOP_SPEED_THRESHOLD) {
       if (stopStart == null) {
