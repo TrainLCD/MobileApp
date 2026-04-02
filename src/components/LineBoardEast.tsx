@@ -61,7 +61,10 @@ const localStyles = StyleSheet.create({
   },
 });
 
-const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
+const NumberingIconView: React.FC<{
+  station: Station;
+  shouldGrayscale: boolean;
+}> = ({ station, shouldGrayscale }) => {
   const numberingObj = useMemo(
     () => station.stationNumbers?.[0],
     [station.stationNumbers]
@@ -79,6 +82,7 @@ const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
         stationNumber={numberingObj.stationNumber}
         threeLetterCode={station.threeLetterCode}
         transformOrigin="center"
+        shouldGrayscale={shouldGrayscale}
       />
     </View>
   );
@@ -374,7 +378,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             passed={getIsPass(station) || shouldGrayscale}
           />
         </View>
-        {isOdakyu ? <NumberingIconView station={station} /> : null}
+        {isOdakyu ? (
+          <NumberingIconView
+            station={station}
+            shouldGrayscale={shouldGrayscale}
+          />
+        ) : null}
         {renderBarGradients({
           barLeft,
           barWidth,
