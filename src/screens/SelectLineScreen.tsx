@@ -34,13 +34,10 @@ import { useLineSelection } from '~/hooks/useLineSelection';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
-import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
-import RouteEstimationDebugButton from '../components/RouteEstimationDebugButton';
-import RouteEstimationDebugModal from '../components/RouteEstimationDebugModal';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -83,7 +80,6 @@ const NearbyStationLoader = () => (
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [estimationModalVisible, setEstimationModalVisible] = useState(false);
 
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
@@ -411,18 +407,6 @@ const SelectLineScreen = () => {
         onSearchButtonLayout={setSearchButtonLayout}
         onSettingsButtonLayout={setSettingsButtonLayout}
       />
-      {/* 路線推定デバッグUI（dev版のみ） */}
-      {isDevApp && (
-        <RouteEstimationDebugButton
-          onPress={() => setEstimationModalVisible(true)}
-        />
-      )}
-      {isDevApp && (
-        <RouteEstimationDebugModal
-          visible={estimationModalVisible}
-          onClose={() => setEstimationModalVisible(false)}
-        />
-      )}
       {/* モーダル */}
       <SelectBoundModal
         visible={isSelectBoundModalOpen}

@@ -75,22 +75,6 @@ jest.mock('~/hooks/useLineSelection');
 jest.mock('~/hooks/useSelectLineWalkthrough');
 jest.mock('~/hooks/useDeviceOrientation');
 
-// 路線推定デバッグUI（isDevApp限定のため単純モックで十分）
-jest.mock('~/components/RouteEstimationDebugButton', () => {
-  const { View } = require('react-native');
-  return {
-    __esModule: true,
-    default: () => <View testID="route-estimation-debug-button" />,
-  };
-});
-jest.mock('~/components/RouteEstimationDebugModal', () => {
-  const { View } = require('react-native');
-  return {
-    __esModule: true,
-    default: () => <View testID="route-estimation-debug-modal" />,
-  };
-});
-
 // 子コンポーネント
 jest.mock('~/components/CommonCard', () => ({
   CommonCard: ({
