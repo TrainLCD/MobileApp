@@ -1,3 +1,5 @@
+import { LineType } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import {
   calcConfidence,
   deduplicate,
@@ -8,17 +10,7 @@ import {
 import type { CandidateLine, FilteredLocationLog, ScoredLine } from '../types';
 
 const mkStation = (id: number, lat: number, lng: number, name: string) =>
-  ({
-    __typename: 'Station' as const,
-    id,
-    latitude: lat,
-    longitude: lng,
-    name,
-    nameRoman: name,
-    line: null,
-    lines: null,
-    stopCondition: null,
-  }) as never;
+  createStation(id, { latitude: lat, longitude: lng, name, nameRoman: name });
 
 const mkLog = (
   lat: number,
@@ -95,12 +87,7 @@ describe('scoreLine', () => {
       mkStation(3, 35.7, 139.78, 'C'),
     ];
     const candidate: CandidateLine = {
-      line: {
-        __typename: 'LineNested',
-        id: 100,
-        lineType: 'Normal',
-        color: '#FF0000',
-      } as never,
+      line: createLine(100, { lineType: LineType.Normal, color: '#FF0000' }),
       stations,
     };
     const logs = [
@@ -121,11 +108,7 @@ describe('scoreLine', () => {
 describe('calcConfidence', () => {
   it('信頼度を計算する', () => {
     const scoredLine: ScoredLine = {
-      line: {
-        __typename: 'LineNested',
-        id: 100,
-        lineType: 'Normal',
-      } as never,
+      line: createLine(100, { lineType: LineType.Normal }),
       stations: [
         mkStation(1, 35.68, 139.76, 'A'),
         mkStation(2, 35.69, 139.77, 'B'),

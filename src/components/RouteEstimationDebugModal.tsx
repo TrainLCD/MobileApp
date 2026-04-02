@@ -101,10 +101,6 @@ const RouteEstimationDebugModal: React.FC<Props> = ({ visible, onClose }) => {
     [selectCandidate, onClose]
   );
 
-  const handleReset = useCallback(() => {
-    reset();
-  }, [reset]);
-
   return (
     <CustomModal
       visible={visible}
@@ -149,7 +145,7 @@ const RouteEstimationDebugModal: React.FC<Props> = ({ visible, onClose }) => {
           )}
           <Pressable
             style={[styles.button, styles.resetButton]}
-            onPress={handleReset}
+            onPress={reset}
           >
             <Text style={styles.buttonText}>リセット</Text>
           </Pressable>

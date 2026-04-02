@@ -57,6 +57,11 @@ export const useRouteEstimation = (): EstimationResult => {
   const bufferRef = useRef<LocationLog[]>(state.locationBuffer);
   const estimatingRef = useRef(false);
 
+  // bufferRefをatomの値と同期する（外部からの変更に追従）
+  useEffect(() => {
+    bufferRef.current = state.locationBuffer;
+  }, [state.locationBuffer]);
+
   // GraphQL queries
   const [fetchNearbyStart] = useLazyQuery<
     GetStationsNearbyData,
@@ -193,7 +198,8 @@ export const useRouteEstimation = (): EstimationResult => {
           candidates: results,
           status: results.length > 0 ? 'ready' : 'collecting',
         }));
-      } catch {
+      } catch (err) {
+        console.error('useRouteEstimation: estimation failed', err);
         setState((prev) => ({ ...prev, status: 'collecting' }));
       } finally {
         estimatingRef.current = false;

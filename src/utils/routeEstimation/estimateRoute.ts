@@ -40,8 +40,11 @@ export const filterBySpeed = (
     return slowLines.length > 0 ? slowLines : candidates;
   }
 
-  // 通常速度域: 新幹線を除外
-  return candidates.filter((c) => c.line.lineType !== LineType.BulletTrain);
+  // 通常速度域: 新幹線を除外（全候補が新幹線の場合はフォールバック）
+  const nonBullet = candidates.filter(
+    (c) => c.line.lineType !== LineType.BulletTrain
+  );
+  return nonBullet.length > 0 ? nonBullet : candidates;
 };
 
 /**

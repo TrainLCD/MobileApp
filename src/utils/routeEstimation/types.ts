@@ -45,7 +45,8 @@ export type RouteCandidate = {
   line: Line;
   direction: LineDirection;
   currentStation: Station;
-  nextStation: Station;
+  /** 次の停車駅。全後続駅が通過の場合は null */
+  nextStation: Station | null;
   boundStation: Station;
   stations: Station[];
   score: number;

@@ -82,7 +82,8 @@ const estimateLinearDirection = (visitedIndices: number[]): LineDirection => {
 export type DirectionEstimate = {
   direction: LineDirection;
   currentStation: Station;
-  nextStation: Station;
+  /** 次の停車駅。全後続駅が通過の場合は null（終端付近） */
+  nextStation: Station | null;
   boundStation: Station;
   /** 方向に沿って並べた駅リスト */
   orderedStations: Station[];
@@ -122,7 +123,7 @@ export const estimateDirection = (
     (s) => s.id === currentStation.id
   );
 
-  let nextStation = currentStation;
+  let nextStation: Station | null = null;
   for (let i = currentOrderedIdx + 1; i < orderedStations.length; i++) {
     if (!getIsPass(orderedStations[i])) {
       nextStation = orderedStations[i];
