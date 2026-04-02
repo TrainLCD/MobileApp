@@ -78,6 +78,7 @@ export const useWrongDirectionDetector = (): {
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
       prevDistanceRef.current = null;
+      notifiedForStationIdRef.current = null;
       setWrongDirectionDetected(false);
       return;
     }
@@ -114,6 +115,7 @@ export const useWrongDirectionDetector = (): {
     } else {
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
+      notifiedForStationIdRef.current = null;
       setWrongDirectionDetected(false);
     }
 
