@@ -14,6 +14,10 @@ import SelectLineScreen from './SelectLineScreen';
 
 // --- モジュールモック ---
 
+jest.mock('react-native-device-info', () => ({
+  getBundleId: jest.fn(() => 'me.tinykitten.trainlcd.dev'),
+}));
+
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
   useAtom: jest.fn(() => [{ pendingQuickActionRouteId: null }, jest.fn()]),
@@ -70,6 +74,22 @@ jest.mock('~/hooks/usePresetCarouselData');
 jest.mock('~/hooks/useLineSelection');
 jest.mock('~/hooks/useSelectLineWalkthrough');
 jest.mock('~/hooks/useDeviceOrientation');
+
+// 路線推定デバッグUI（isDevApp限定のため単純モックで十分）
+jest.mock('~/components/RouteEstimationDebugButton', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: () => <View testID="route-estimation-debug-button" />,
+  };
+});
+jest.mock('~/components/RouteEstimationDebugModal', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: () => <View testID="route-estimation-debug-modal" />,
+  };
+});
 
 // 子コンポーネント
 jest.mock('~/components/CommonCard', () => ({
