@@ -27,16 +27,22 @@ export const useWrongDirectionDetector = (): {
   const longitude = location?.coords.longitude;
   const accuracy = location?.coords.accuracy;
 
+  // 依存配列用のプリミティブ値（オブジェクト参照の変化による不要な再実行を防ぐ）
+  const selectedBoundId = selectedBound?.id;
+  const nextStationId = nextStation?.id;
+  const nextStationLat = nextStation?.latitude;
+  const nextStationLon = nextStation?.longitude;
+
   // 前回のnextStationまでの距離を保持
   const prevDistanceRef = useRef<number | null>(null);
   // 連続で距離が増加した回数
   const consecutiveIncreaseCountRef = useRef(0);
   // 連続増加中の累積距離(m)
   const cumulativeIncreaseRef = useRef(0);
-  // 通知済みのnextStation ID（同一駅で再通知しない）
-  const notifiedForStationIdRef = useRef<number | null>(null);
+  // 通知済みのnextStation ID（undefinedは未設定、null/numberは通知済み駅ID）
+  const notifiedForStationIdRef = useRef<number | null | undefined>(undefined);
   // 前回のnextStation ID（駅変更検知用）
-  const prevNextStationIdRef = useRef<number | null | undefined>(null);
+  const prevNextStationIdRef = useRef<number | null | undefined>(undefined);
 
   const [wrongDirectionDetected, setWrongDirectionDetected] = useState(false);
 
@@ -46,19 +52,18 @@ export const useWrongDirectionDetector = (): {
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = null;
+      notifiedForStationIdRef.current = undefined;
       setWrongDirectionDetected(false);
     }
   }, [arrived]);
 
   // selectedBound変更時にリセット
-  const selectedBoundId = selectedBound?.id;
   useEffect(() => {
     if (selectedBoundId != null) {
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = null;
+      notifiedForStationIdRef.current = undefined;
       setWrongDirectionDetected(false);
     }
   }, [selectedBoundId]);
@@ -67,26 +72,26 @@ export const useWrongDirectionDetector = (): {
   useEffect(() => {
     // 前提条件を満たさない場合は検知状態をリセットして終了
     if (
-      !selectedBound ||
+      selectedBoundId == null ||
       autoModeEnabled ||
       latitude == null ||
       longitude == null ||
-      !nextStation ||
-      nextStation.latitude == null ||
-      nextStation.longitude == null ||
+      nextStationId === undefined ||
+      nextStationLat == null ||
+      nextStationLon == null ||
       (accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD)
     ) {
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
       prevDistanceRef.current = null;
-      notifiedForStationIdRef.current = null;
+      notifiedForStationIdRef.current = undefined;
       setWrongDirectionDetected(false);
       return;
     }
 
     // nextStationが変わった場合は前回距離をリセットし、初回測定として扱う
-    if (prevNextStationIdRef.current !== nextStation.id) {
-      prevNextStationIdRef.current = nextStation.id;
+    if (prevNextStationIdRef.current !== nextStationId) {
+      prevNextStationIdRef.current = nextStationId;
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
@@ -95,8 +100,8 @@ export const useWrongDirectionDetector = (): {
     const currentDistance = getDistance(
       { latitude, longitude },
       {
-        latitude: nextStation.latitude as number,
-        longitude: nextStation.longitude as number,
+        latitude: nextStationLat as number,
+        longitude: nextStationLon as number,
       }
     );
 
@@ -116,7 +121,7 @@ export const useWrongDirectionDetector = (): {
     } else {
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
-      notifiedForStationIdRef.current = null;
+      notifiedForStationIdRef.current = undefined;
       setWrongDirectionDetected(false);
     }
 
@@ -126,10 +131,13 @@ export const useWrongDirectionDetector = (): {
       cumulativeIncreaseRef.current >= WRONG_DIRECTION_MIN_DISTANCE
     ) {
       // 同一のnextStationに対して既に通知済みならスキップ
-      if (notifiedForStationIdRef.current === nextStation.id) {
+      if (
+        notifiedForStationIdRef.current !== undefined &&
+        notifiedForStationIdRef.current === nextStationId
+      ) {
         return;
       }
-      notifiedForStationIdRef.current = nextStation.id ?? null;
+      notifiedForStationIdRef.current = nextStationId ?? null;
       setWrongDirectionDetected(true);
     }
   }, [
@@ -137,8 +145,10 @@ export const useWrongDirectionDetector = (): {
     autoModeEnabled,
     latitude,
     longitude,
-    nextStation,
-    selectedBound,
+    nextStationId,
+    nextStationLat,
+    nextStationLon,
+    selectedBoundId,
   ]);
 
   return {
