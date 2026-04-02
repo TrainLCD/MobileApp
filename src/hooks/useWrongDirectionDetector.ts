@@ -46,6 +46,7 @@ export const useWrongDirectionDetector = (): {
       prevDistanceRef.current = null;
       consecutiveIncreaseCountRef.current = 0;
       cumulativeIncreaseRef.current = 0;
+      notifiedForStationIdRef.current = null;
       setWrongDirectionDetected(false);
     }
   }, [arrived]);
