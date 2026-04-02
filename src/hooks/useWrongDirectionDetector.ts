@@ -49,13 +49,17 @@ export const useWrongDirectionDetector = (): {
   }, [arrived]);
 
   // selectedBound変更時にリセット
+  const selectedBoundId = selectedBound?.id;
   useEffect(() => {
-    prevDistanceRef.current = null;
-    consecutiveIncreaseCountRef.current = 0;
-    cumulativeIncreaseRef.current = 0;
-    notifiedForStationIdRef.current = null;
-    wrongDirectionDetectedRef.current = false;
-  }, [selectedBound?.id]);
+    // selectedBoundIdの変化をトリガーにリセットする
+    if (selectedBoundId != null) {
+      prevDistanceRef.current = null;
+      consecutiveIncreaseCountRef.current = 0;
+      cumulativeIncreaseRef.current = 0;
+      notifiedForStationIdRef.current = null;
+      wrongDirectionDetectedRef.current = false;
+    }
+  }, [selectedBoundId]);
 
   const isWrongDirectionRaw = useMemo(() => {
     // 前提条件チェック
@@ -105,7 +109,8 @@ export const useWrongDirectionDetector = (): {
     }
 
     if (
-      consecutiveIncreaseCountRef.current >= WRONG_DIRECTION_CONSECUTIVE_COUNT &&
+      consecutiveIncreaseCountRef.current >=
+        WRONG_DIRECTION_CONSECUTIVE_COUNT &&
       cumulativeIncreaseRef.current >= WRONG_DIRECTION_MIN_DISTANCE
     ) {
       // 同一のnextStationに対して既に通知済みならスキップ
