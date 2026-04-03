@@ -219,17 +219,27 @@ export const useRouteEstimation = (): EstimationResult => {
         // 推定実行
         const results = estimateRoutes(candidates, logs);
 
-        setState((prev) => ({
-          ...prev,
-          candidates: results,
-          status: results.length > 0 ? 'ready' : 'collecting',
-        }));
+        // この実行がまだアクティブな場合のみ状態を更新
+        if (abortControllerRef.current === controller) {
+          setState((prev) => ({
+            ...prev,
+            candidates: results,
+            status: results.length > 0 ? 'ready' : 'collecting',
+          }));
+        }
       } catch (err) {
         if (signal.aborted) return;
         console.error('useRouteEstimation: estimation failed', err);
-        setState((prev) => ({ ...prev, status: 'collecting' }));
+        // この実行がまだアクティブな場合のみ状態を更新
+        if (abortControllerRef.current === controller) {
+          setState((prev) => ({ ...prev, status: 'collecting' }));
+        }
       } finally {
-        estimatingRef.current = false;
+        // この実行がまだアクティブな場合のみクリーンアップ
+        if (abortControllerRef.current === controller) {
+          estimatingRef.current = false;
+          abortControllerRef.current = null;
+        }
       }
     };
 
