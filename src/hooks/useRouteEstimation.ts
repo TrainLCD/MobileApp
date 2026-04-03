@@ -10,6 +10,7 @@ import lineState from '~/store/atoms/line';
 import { locationAtom } from '~/store/atoms/location';
 import routeEstimationState from '~/store/atoms/routeEstimation';
 import stationState from '~/store/atoms/station';
+import { isDevApp } from '~/utils/isDevApp';
 import { estimateRoutes } from '~/utils/routeEstimation/estimateRoute';
 import {
   appendToBuffer,
@@ -46,11 +47,7 @@ type GetLineListStationsVariables = {
   lineIds: number[];
 };
 
-/**
- * 路線推定のメインフック
- * isDevApp限定のデバッグモーダルから呼び出される
- */
-export const useRouteEstimation = (): EstimationResult => {
+const useRouteEstimationImpl = (): EstimationResult => {
   const location = useAtomValue(locationAtom);
   const [state, setState] = useAtom(routeEstimationState);
   const setLineState = useSetAtom(lineState);
@@ -288,10 +285,32 @@ export const useRouteEstimation = (): EstimationResult => {
   };
 };
 
+const NOOP_ESTIMATION_RESULT: EstimationResult = {
+  status: 'idle',
+  candidates: [],
+  selectCandidate: () => {},
+  reset: () => {},
+  bufferInfo: {
+    pointCount: 0,
+    totalDistance: 0,
+    avgSpeed: 0,
+    isMoving: false,
+  },
+};
+
+const useRouteEstimationNoop = (): EstimationResult => NOOP_ESTIMATION_RESULT;
+
+/**
+ * 路線推定のメインフック
+ */
+export const useRouteEstimation = isDevApp
+  ? useRouteEstimationImpl
+  : useRouteEstimationNoop;
+
 /**
  * 推定の開始/停止を制御するフック
  */
-export const useRouteEstimationControl = () => {
+const useRouteEstimationControlImpl = () => {
   const [state, setState] = useAtom(routeEstimationState);
 
   const startEstimation = useCallback(() => {
@@ -316,3 +335,15 @@ export const useRouteEstimationControl = () => {
     stopEstimation,
   };
 };
+
+const NOOP_ESTIMATION_CONTROL = {
+  isEstimating: false as const,
+  startEstimation: () => {},
+  stopEstimation: () => {},
+};
+
+const useRouteEstimationControlNoop = () => NOOP_ESTIMATION_CONTROL;
+
+export const useRouteEstimationControl = isDevApp
+  ? useRouteEstimationControlImpl
+  : useRouteEstimationControlNoop;
