@@ -84,7 +84,12 @@ const setupAtoms = (stateOverrides: Partial<RouteEstimationState> = {}) => {
   const setters = [mockSetLineState, mockSetStationState];
   let setterIndex = 0;
   mockUseSetAtom.mockImplementation(() => {
-    const setter = setters[setterIndex % setters.length];
+    if (setterIndex >= setters.length) {
+      throw new Error(
+        `useSetAtom called more times than expected: ${setterIndex + 1}`
+      );
+    }
+    const setter = setters[setterIndex];
     setterIndex++;
     return setter;
   });
@@ -104,7 +109,12 @@ const setupQueries = () => {
   ];
   let queryIndex = 0;
   mockUseLazyQuery.mockImplementation(() => {
-    const result = queryResults[queryIndex % queryResults.length];
+    if (queryIndex >= queryResults.length) {
+      throw new Error(
+        `useLazyQuery called more times than expected: ${queryIndex + 1}`
+      );
+    }
+    const result = queryResults[queryIndex];
     queryIndex++;
     return result;
   });
