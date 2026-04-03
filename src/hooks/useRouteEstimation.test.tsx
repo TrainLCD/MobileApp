@@ -22,6 +22,9 @@ jest.mock('jotai', () => ({
   useSetAtom: jest.fn(),
   atom: jest.fn(),
 }));
+jest.mock('~/utils/isDevApp', () => ({
+  isDevApp: true,
+}));
 jest.mock('~/utils/routeEstimation/estimateRoute', () => ({
   estimateRoutes: jest.fn(() => []),
 }));
