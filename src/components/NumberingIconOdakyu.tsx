@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const GRAYSCALE_COLOR = '#aaa';
+const BLACK_COLOR = '#000';
 
 const NumberingIconOdakyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
@@ -59,12 +59,12 @@ const NumberingIconOdakyu: React.FC<Props> = ({
   const stationNumber = stationNumberRest.join('');
 
   const borderColor = shouldGrayscale
-    ? GRAYSCALE_COLOR
+    ? BLACK_COLOR
     : hakone
       ? '#EA4D15'
       : '#0D82C7';
   const textColor = shouldGrayscale
-    ? GRAYSCALE_COLOR
+    ? BLACK_COLOR
     : hakone
       ? '#6A3906'
       : '#0D82C7';
