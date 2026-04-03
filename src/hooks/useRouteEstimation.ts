@@ -64,12 +64,16 @@ export const useRouteEstimation = (): EstimationResult => {
     bufferRef.current = state.locationBuffer;
   }, [state.locationBuffer]);
 
-  // アンマウント時に進行中のリクエストをキャンセル
+  // 推定停止時・アンマウント時に進行中のリクエストをキャンセル
   useEffect(() => {
+    if (!state.isEstimating) {
+      abortControllerRef.current?.abort();
+      estimatingRef.current = false;
+    }
     return () => {
       abortControllerRef.current?.abort();
     };
-  }, []);
+  }, [state.isEstimating]);
 
   // GraphQL queries
   const [fetchNearbyStart] = useLazyQuery<
