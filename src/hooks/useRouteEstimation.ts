@@ -285,7 +285,7 @@ const useRouteEstimationImpl = (): EstimationResult => {
   };
 };
 
-const useRouteEstimationNoop = (): EstimationResult => ({
+const NOOP_ESTIMATION_RESULT: EstimationResult = {
   status: 'idle',
   candidates: [],
   selectCandidate: () => {},
@@ -296,7 +296,9 @@ const useRouteEstimationNoop = (): EstimationResult => ({
     avgSpeed: 0,
     isMoving: false,
   },
-});
+};
+
+const useRouteEstimationNoop = (): EstimationResult => NOOP_ESTIMATION_RESULT;
 
 /**
  * 路線推定のメインフック
@@ -334,11 +336,13 @@ const useRouteEstimationControlImpl = () => {
   };
 };
 
-const useRouteEstimationControlNoop = () => ({
+const NOOP_ESTIMATION_CONTROL = {
   isEstimating: false as const,
   startEstimation: () => {},
   stopEstimation: () => {},
-});
+};
+
+const useRouteEstimationControlNoop = () => NOOP_ESTIMATION_CONTROL;
 
 export const useRouteEstimationControl = isDevApp
   ? useRouteEstimationControlImpl
