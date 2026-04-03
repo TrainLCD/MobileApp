@@ -12,6 +12,7 @@ import { isJapanese, translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+import { useTrainTypeMismatchDetector } from './useTrainTypeMismatchDetector';
 import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 const WARNING_PANEL_LEVEL = {
@@ -37,6 +38,7 @@ export const useWarningInfo = () => {
   const badAccuracy = useBadAccuracy();
   const { isWrongDirection, isLoopLineWrongDirection } =
     useWrongDirectionDetector();
+  const isTrainTypeMismatch = useTrainTypeMismatchDetector();
   const [fgPermStatus] = useForegroundPermissions();
   const bgPermGranted = useLocationPermissionsGranted();
 
@@ -146,6 +148,12 @@ export const useWarningInfo = () => {
         text: translate('badAccuracy'),
       };
     }
+    if (isTrainTypeMismatch) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('trainTypeMismatchWarning'),
+      };
+    }
     if (passStations.length > 0 && selectedBound) {
       return {
         level: WARNING_PANEL_LEVEL.INFO,
@@ -176,6 +184,7 @@ export const useWarningInfo = () => {
     badAccuracy,
     bgPermGranted,
     isLoopLineWrongDirection,
+    isTrainTypeMismatch,
     isWrongDirection,
     fgPermStatus?.granted,
     isAlwaysPermissionNotGrantedDismissed,
