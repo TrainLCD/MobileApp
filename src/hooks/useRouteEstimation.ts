@@ -2,11 +2,15 @@ import { useLazyQuery } from '@apollo/client/react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Line, Station } from '~/@types/graphql';
-import { GET_LINE_STATIONS, GET_STATIONS_NEARBY } from '~/lib/graphql/queries';
+import {
+  GET_LINE_LIST_STATIONS,
+  GET_STATIONS_NEARBY,
+} from '~/lib/graphql/queries';
 import lineState from '~/store/atoms/line';
 import { locationAtom } from '~/store/atoms/location';
 import routeEstimationState from '~/store/atoms/routeEstimation';
 import stationState from '~/store/atoms/station';
+import { isDevApp } from '~/utils/isDevApp';
 import { estimateRoutes } from '~/utils/routeEstimation/estimateRoute';
 import {
   appendToBuffer,
@@ -35,20 +39,15 @@ type GetStationsNearbyVariables = {
   limit?: number;
 };
 
-type GetLineStationsData = {
-  lineStations: Station[];
+type GetLineListStationsData = {
+  lineListStations: Station[];
 };
 
-type GetLineStationsVariables = {
-  lineId: number;
-  stationId?: number;
+type GetLineListStationsVariables = {
+  lineIds: number[];
 };
 
-/**
- * 路線推定のメインフック
- * isDevApp限定のデバッグモーダルから呼び出される
- */
-export const useRouteEstimation = (): EstimationResult => {
+const useRouteEstimationImpl = (): EstimationResult => {
   const location = useAtomValue(locationAtom);
   const [state, setState] = useAtom(routeEstimationState);
   const setLineState = useSetAtom(lineState);
@@ -73,10 +72,10 @@ export const useRouteEstimation = (): EstimationResult => {
     GetStationsNearbyVariables
   >(GET_STATIONS_NEARBY);
 
-  const [fetchLineStations] = useLazyQuery<
-    GetLineStationsData,
-    GetLineStationsVariables
-  >(GET_LINE_STATIONS);
+  const [fetchLineListStations] = useLazyQuery<
+    GetLineListStationsData,
+    GetLineListStationsVariables
+  >(GET_LINE_LIST_STATIONS);
 
   // 新しいGPSポイントをバッファに追加
   useEffect(() => {
@@ -173,23 +172,30 @@ export const useRouteEstimation = (): EstimationResult => {
           }
         }
 
-        // 各候補路線の駅リストを取得
-        const candidates: CandidateLine[] = [];
-        const lineStationResults = await Promise.all(
-          Array.from(lineIdSet).map(async (lineId) => {
-            const result = await fetchLineStations({
-              variables: { lineId },
-            });
-            return {
-              lineId,
-              stations: result.data?.lineStations ?? [],
-            };
-          })
-        );
+        // 全候補路線の駅リストを一括取得
+        const lineIds = Array.from(lineIdSet);
+        const lineListResult = await fetchLineListStations({
+          variables: { lineIds },
+        });
+        const allStations = lineListResult.data?.lineListStations ?? [];
 
-        for (const { lineId, stations } of lineStationResults) {
+        // 路線IDごとに駅を振り分け
+        const stationsByLineId = new Map<number, Station[]>();
+        for (const station of allStations) {
+          for (const line of station.lines ?? []) {
+            if (line?.id != null && lineIdSet.has(line.id)) {
+              const list = stationsByLineId.get(line.id) ?? [];
+              list.push(station);
+              stationsByLineId.set(line.id, list);
+            }
+          }
+        }
+
+        const candidates: CandidateLine[] = [];
+        for (const lineId of lineIds) {
           const line = lineMap.get(lineId);
-          if (line && stations.length > 0) {
+          const stations = stationsByLineId.get(lineId);
+          if (line && stations && stations.length > 0) {
             candidates.push({ line, stations });
           }
         }
@@ -217,7 +223,7 @@ export const useRouteEstimation = (): EstimationResult => {
     setState,
     fetchNearbyStart,
     fetchNearbyEnd,
-    fetchLineStations,
+    fetchLineListStations,
   ]);
 
   // 候補選択: 既存のstationState / lineStateに反映
@@ -279,10 +285,32 @@ export const useRouteEstimation = (): EstimationResult => {
   };
 };
 
+const NOOP_ESTIMATION_RESULT: EstimationResult = {
+  status: 'idle',
+  candidates: [],
+  selectCandidate: () => {},
+  reset: () => {},
+  bufferInfo: {
+    pointCount: 0,
+    totalDistance: 0,
+    avgSpeed: 0,
+    isMoving: false,
+  },
+};
+
+const useRouteEstimationNoop = (): EstimationResult => NOOP_ESTIMATION_RESULT;
+
+/**
+ * 路線推定のメインフック
+ */
+export const useRouteEstimation = isDevApp
+  ? useRouteEstimationImpl
+  : useRouteEstimationNoop;
+
 /**
  * 推定の開始/停止を制御するフック
  */
-export const useRouteEstimationControl = () => {
+const useRouteEstimationControlImpl = () => {
   const [state, setState] = useAtom(routeEstimationState);
 
   const startEstimation = useCallback(() => {
@@ -307,3 +335,15 @@ export const useRouteEstimationControl = () => {
     stopEstimation,
   };
 };
+
+const NOOP_ESTIMATION_CONTROL = {
+  isEstimating: false as const,
+  startEstimation: () => {},
+  stopEstimation: () => {},
+};
+
+const useRouteEstimationControlNoop = () => NOOP_ESTIMATION_CONTROL;
+
+export const useRouteEstimationControl = isDevApp
+  ? useRouteEstimationControlImpl
+  : useRouteEstimationControlNoop;
