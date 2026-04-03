@@ -1,4 +1,4 @@
-import { useLazyQuery } from '@apollo/client/react';
+import { useApolloClient, useLazyQuery } from '@apollo/client/react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Line, Station } from '~/@types/graphql';
@@ -49,6 +49,7 @@ type GetLineStationsVariables = {
  * isDevApp限定のデバッグモーダルから呼び出される
  */
 export const useRouteEstimation = (): EstimationResult => {
+  const client = useApolloClient();
   const location = useAtomValue(locationAtom);
   const [state, setState] = useAtom(routeEstimationState);
   const setLineState = useSetAtom(lineState);
@@ -56,11 +57,19 @@ export const useRouteEstimation = (): EstimationResult => {
 
   const bufferRef = useRef<LocationLog[]>(state.locationBuffer);
   const estimatingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // bufferRefをatomの値と同期する（外部からの変更に追従）
   useEffect(() => {
     bufferRef.current = state.locationBuffer;
   }, [state.locationBuffer]);
+
+  // アンマウント時に進行中のリクエストをキャンセル
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // GraphQL queries
   const [fetchNearbyStart] = useLazyQuery<
@@ -72,11 +81,6 @@ export const useRouteEstimation = (): EstimationResult => {
     GetStationsNearbyData,
     GetStationsNearbyVariables
   >(GET_STATIONS_NEARBY);
-
-  const [fetchLineStations] = useLazyQuery<
-    GetLineStationsData,
-    GetLineStationsVariables
-  >(GET_LINE_STATIONS);
 
   // 新しいGPSポイントをバッファに追加
   useEffect(() => {
@@ -131,6 +135,12 @@ export const useRouteEstimation = (): EstimationResult => {
     }
 
     const runEstimation = async () => {
+      // 前回の推定リクエストが残っていればキャンセル
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const { signal } = controller;
+
       estimatingRef.current = true;
       setState((prev) => ({ ...prev, status: 'estimating' }));
 
@@ -139,6 +149,7 @@ export const useRouteEstimation = (): EstimationResult => {
         const startPoint = buffer[0];
         const endPoint = buffer[buffer.length - 1];
 
+        const fetchOptions = { signal };
         const [startResult, endResult] = await Promise.all([
           fetchNearbyStart({
             variables: {
@@ -146,6 +157,7 @@ export const useRouteEstimation = (): EstimationResult => {
               longitude: startPoint.longitude,
               limit: 10,
             },
+            context: { fetchOptions },
           }),
           fetchNearbyEnd({
             variables: {
@@ -153,6 +165,7 @@ export const useRouteEstimation = (): EstimationResult => {
               longitude: endPoint.longitude,
               limit: 10,
             },
+            context: { fetchOptions },
           }),
         ]);
 
@@ -177,8 +190,13 @@ export const useRouteEstimation = (): EstimationResult => {
         const candidates: CandidateLine[] = [];
         const lineStationResults = await Promise.all(
           Array.from(lineIdSet).map(async (lineId) => {
-            const result = await fetchLineStations({
+            const result = await client.query<
+              GetLineStationsData,
+              GetLineStationsVariables
+            >({
+              query: GET_LINE_STATIONS,
               variables: { lineId },
+              context: { fetchOptions },
             });
             return {
               lineId,
@@ -203,6 +221,7 @@ export const useRouteEstimation = (): EstimationResult => {
           status: results.length > 0 ? 'ready' : 'collecting',
         }));
       } catch (err) {
+        if (signal.aborted) return;
         console.error('useRouteEstimation: estimation failed', err);
         setState((prev) => ({ ...prev, status: 'collecting' }));
       } finally {
@@ -217,7 +236,7 @@ export const useRouteEstimation = (): EstimationResult => {
     setState,
     fetchNearbyStart,
     fetchNearbyEnd,
-    fetchLineStations,
+    client,
   ]);
 
   // 候補選択: 既存のstationState / lineStateに反映
@@ -235,7 +254,8 @@ export const useRouteEstimation = (): EstimationResult => {
         selectedBound: candidate.boundStation,
       }));
 
-      // 推定を停止
+      // 推定を停止（進行中のリクエストもキャンセル）
+      abortControllerRef.current?.abort();
       bufferRef.current = [];
       setState((prev) => ({
         ...prev,
@@ -250,6 +270,7 @@ export const useRouteEstimation = (): EstimationResult => {
 
   // リセット
   const reset = useCallback(() => {
+    abortControllerRef.current?.abort();
     bufferRef.current = [];
     setState({
       status: 'idle',
