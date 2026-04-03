@@ -282,6 +282,46 @@ describe('useTrainTypeMismatchDetector', () => {
     });
   });
 
+  it('returns false when confidence is just below MIN_MISMATCH_CONFIDENCE', async () => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === require('../store/atoms/navigation').default) {
+        return { trainType: createTrainType(100) };
+      }
+      if (atom === require('../store/atoms/station').default) {
+        return { selectedBound: { id: 1 } };
+      }
+      return {};
+    });
+
+    mockCandidates = [createCandidate(200, 0.69)];
+    mockStatus = 'ready';
+
+    const { getByTestId } = render(<TestComponent />);
+    await waitFor(() => {
+      expect(getByTestId('result').props.children).toBe('ok');
+    });
+  });
+
+  it('detects mismatch when confidence is exactly MIN_MISMATCH_CONFIDENCE', async () => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === require('../store/atoms/navigation').default) {
+        return { trainType: createTrainType(100) };
+      }
+      if (atom === require('../store/atoms/station').default) {
+        return { selectedBound: { id: 1 } };
+      }
+      return {};
+    });
+
+    mockCandidates = [createCandidate(200, 0.7)];
+    mockStatus = 'ready';
+
+    const { getByTestId } = render(<TestComponent />);
+    await waitFor(() => {
+      expect(getByTestId('result').props.children).toBe('mismatch');
+    });
+  });
+
   it('returns false when confidence is too low', async () => {
     mockUseAtomValue.mockImplementation((atom: unknown) => {
       if (atom === require('../store/atoms/navigation').default) {

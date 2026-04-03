@@ -142,16 +142,16 @@ export const useWarningInfo = () => {
         text: translate('wrongDirectionLoopLineWarning'),
       };
     }
-    if (isTrainTypeMismatch) {
-      return {
-        level: WARNING_PANEL_LEVEL.WARNING,
-        text: translate('trainTypeMismatchWarning'),
-      };
-    }
     if (badAccuracy) {
       return {
         level: WARNING_PANEL_LEVEL.URGENT,
         text: translate('badAccuracy'),
+      };
+    }
+    if (isTrainTypeMismatch) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('trainTypeMismatchWarning'),
       };
     }
     if (passStations.length > 0 && selectedBound) {

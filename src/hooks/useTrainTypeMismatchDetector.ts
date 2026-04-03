@@ -20,7 +20,7 @@ export const useTrainTypeMismatchDetector = (): boolean => {
   const { trainType } = useAtomValue(navigationState);
   const { selectedBound } = useAtomValue(stationState);
 
-  const { candidates, status } = useRouteEstimation();
+  const { candidates, status, reset } = useRouteEstimation();
   const { startEstimation, stopEstimation, isEstimating } =
     useRouteEstimationControl();
 
@@ -38,13 +38,13 @@ export const useTrainTypeMismatchDetector = (): boolean => {
       stopEstimation();
     }
 
-    // 方面が変わったら一旦停止して再開（バッファリセットのため）
+    // 方面が変わったらバッファをリセットして再開
     if (
       prevSelectedBoundId.current !== undefined &&
       prevSelectedBoundId.current !== boundId &&
       boundId != null
     ) {
-      stopEstimation();
+      reset();
       startEstimation();
     }
 
@@ -55,6 +55,7 @@ export const useTrainTypeMismatchDetector = (): boolean => {
     isEstimating,
     startEstimation,
     stopEstimation,
+    reset,
   ]);
 
   const isMismatch = useMemo(() => {
