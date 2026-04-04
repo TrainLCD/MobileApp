@@ -18,6 +18,7 @@ import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import truncateTrainType from '../utils/truncateTrainType';
 import { BarTerminalEast } from './BarTerminalEast';
+import { BarTerminalOdakyu } from './BarTerminalOdakyu';
 import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import Typography from './Typography';
 
@@ -177,16 +178,33 @@ const useBarWidth = () => {
   return Math.max(0, dim.width / 2 - edgeOffset);
 };
 
-const MetroBars = React.memo(function MetroBars({
+type ColorGradientFn = (
+  baseColor: string
+) => readonly [string, string, ...string[]];
+
+const defaultBarGradient: ColorGradientFn = (color) => [
+  `${color}ff`,
+  `${color}bb`,
+];
+const defaultBoxGradient: ColorGradientFn = (color) => [
+  `${color}ee`,
+  `${color}aa`,
+];
+
+const EastBars = React.memo(function EastBars({
   currentLine,
   nextLine,
   trainType,
   nextTrainType,
+  getBarGradient = defaultBarGradient,
+  getBoxGradient = defaultBoxGradient,
 }: {
   currentLine: Line;
   nextLine: Line;
   trainType: TrainType;
   nextTrainType: TrainType;
+  getBarGradient?: ColorGradientFn;
+  getBoxGradient?: ColorGradientFn;
 }) {
   const dim = useWindowDimensions();
   const barWidth = useBarWidth();
@@ -211,7 +229,7 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
+        colors={getBarGradient('#aaaaaa')}
         style={[
           styles.bar,
           {
@@ -232,10 +250,9 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={[
-          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}ff`,
-          `${(nextLine ? currentLine : trainType)?.color ?? '#000000'}bb`,
-        ]}
+        colors={getBarGradient(
+          (nextLine ? currentLine : trainType)?.color ?? '#000000'
+        )}
         style={[
           styles.bar,
           {
@@ -260,7 +277,7 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={['#aaaaaaff', '#aaaaaabb']}
+        colors={getBarGradient('#aaaaaa')}
         style={[
           styles.bar,
           {
@@ -281,10 +298,7 @@ const MetroBars = React.memo(function MetroBars({
         ]}
       />
       <LinearGradient
-        colors={[
-          `${(nextLine ?? nextTrainType)?.color ?? '#000000'}ff`,
-          `${(nextLine ?? nextTrainType)?.color ?? '#000000'}bb`,
-        ]}
+        colors={getBarGradient((nextLine ?? nextTrainType)?.color ?? '#000000')}
         style={[
           styles.bar,
           {
@@ -313,7 +327,7 @@ const MetroBars = React.memo(function MetroBars({
           style={styles.trainTypeBoxGradient}
         />
         <LinearGradient
-          colors={[`${trainType.color}ee`, `${trainType.color}aa`]}
+          colors={getBoxGradient(trainType.color ?? '#000000')}
           style={styles.trainTypeBoxGradient}
         />
 
@@ -361,7 +375,7 @@ const MetroBars = React.memo(function MetroBars({
           style={styles.trainTypeBoxGradient}
         />
         <LinearGradient
-          colors={[`${nextTrainType.color}ee`, `${nextTrainType.color}aa`]}
+          colors={getBoxGradient(nextTrainType.color ?? '#000000')}
           style={styles.trainTypeBoxGradient}
         />
 
@@ -395,6 +409,289 @@ const MetroBars = React.memo(function MetroBars({
                 color: nextLine.color ?? '#000000',
               },
             ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {(nextLine.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+            {(nextLine.nameRoman ?? '').replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
+      </View>
+    </View>
+  );
+});
+
+const ODAKYU_HIGHLIGHT_OFFSET = 0.35;
+
+const odakyuBarGradient: ColorGradientFn = (color) => [
+  `${color}ff`,
+  `${color}bb`,
+];
+const odakyuBoxGradient: ColorGradientFn = (color) => [
+  `${color}ee`,
+  `${color}aa`,
+];
+
+// BarTerminalOdakyu の viewBox(24x48) に合わせたアスペクト比
+const odakyuTerminalWidth = barHeight / 2;
+
+const OdakyuBars = React.memo(function OdakyuBars({
+  currentLine,
+  nextLine,
+  trainType,
+  nextTrainType,
+}: {
+  currentLine: Line;
+  nextLine: Line;
+  trainType: TrainType;
+  nextTrainType: TrainType;
+}) {
+  const dim = useWindowDimensions();
+  const barWidth = useBarWidth();
+  const rightBarWidth = Math.max(0, barWidth - odakyuTerminalWidth);
+
+  if (!trainType || !nextTrainType) {
+    return null;
+  }
+
+  const leftColor = (nextLine ? currentLine : trainType)?.color ?? '#000000';
+  const rightColor = (nextLine ?? nextTrainType)?.color ?? '#000000';
+
+  return (
+    <View style={[styles.linesContainer, { width: dim.width }]}>
+      {/* Current line - background */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          0.9,
+        ]}
+        style={[styles.bar, { left: edgeOffset, width: barWidth }]}
+      />
+      <LinearGradient
+        colors={odakyuBarGradient('#aaaaaa')}
+        style={[styles.bar, { left: edgeOffset, width: barWidth }]}
+      />
+      {/* Current line - color overlay */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          0.9,
+        ]}
+        style={[styles.bar, { left: edgeOffset, width: barWidth }]}
+      />
+      <LinearGradient
+        colors={odakyuBarGradient(leftColor)}
+        style={[styles.bar, { left: edgeOffset, width: barWidth }]}
+      />
+      {/* Current line - shadow */}
+      <LinearGradient
+        colors={['#00000000', '#00000033', '#00000000']}
+        locations={[ODAKYU_HIGHLIGHT_OFFSET, 0.55, 0.85]}
+        style={[styles.bar, { left: edgeOffset, width: barWidth }]}
+      />
+      {/* Current line - gloss */}
+      <LinearGradient
+        colors={['#ffffff44', '#ffffff11', '#00000000']}
+        locations={[0, ODAKYU_HIGHLIGHT_OFFSET, ODAKYU_HIGHLIGHT_OFFSET]}
+        style={[styles.bar, { left: edgeOffset, width: barWidth }]}
+      />
+
+      <View style={styles.centerCircle} />
+
+      {/* Next line - background */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          0.9,
+        ]}
+        style={[
+          styles.bar,
+          { right: edgeOffset + odakyuTerminalWidth, width: rightBarWidth },
+        ]}
+      />
+      <LinearGradient
+        colors={odakyuBarGradient('#aaaaaa')}
+        style={[
+          styles.bar,
+          { right: edgeOffset + odakyuTerminalWidth, width: rightBarWidth },
+        ]}
+      />
+      {/* Next line - color overlay */}
+      <LinearGradient
+        colors={['#fff', '#000', '#000', '#fff']}
+        locations={[
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          ODAKYU_HIGHLIGHT_OFFSET,
+          0.9,
+        ]}
+        style={[
+          styles.bar,
+          { right: edgeOffset + odakyuTerminalWidth, width: rightBarWidth },
+        ]}
+      />
+      <LinearGradient
+        colors={odakyuBarGradient(rightColor)}
+        style={[
+          styles.bar,
+          { right: edgeOffset + odakyuTerminalWidth, width: rightBarWidth },
+        ]}
+      />
+      {/* Next line - shadow */}
+      <LinearGradient
+        colors={['#00000000', '#00000033', '#00000000']}
+        locations={[ODAKYU_HIGHLIGHT_OFFSET, 0.55, 0.85]}
+        style={[
+          styles.bar,
+          { right: edgeOffset + odakyuTerminalWidth, width: rightBarWidth },
+        ]}
+      />
+      {/* Next line - gloss */}
+      <LinearGradient
+        colors={['#ffffff44', '#ffffff11', '#00000000']}
+        locations={[0, ODAKYU_HIGHLIGHT_OFFSET, ODAKYU_HIGHLIGHT_OFFSET]}
+        style={[
+          styles.bar,
+          { right: edgeOffset + odakyuTerminalWidth, width: rightBarWidth },
+        ]}
+      />
+      <BarTerminalOdakyu
+        width={odakyuTerminalWidth}
+        height={barHeight}
+        style={[
+          styles.barTerminal,
+          { left: edgeOffset + barWidth + rightBarWidth },
+        ]}
+        lineColor={rightColor}
+        hasTerminus={false}
+        barHighlightOffset={ODAKYU_HIGHLIGHT_OFFSET}
+      />
+
+      {/* Train type boxes */}
+      <View style={styles.trainTypeLeft}>
+        <LinearGradient
+          colors={['#aaa', '#000', '#000', '#aaa']}
+          locations={[
+            ODAKYU_HIGHLIGHT_OFFSET,
+            ODAKYU_HIGHLIGHT_OFFSET,
+            ODAKYU_HIGHLIGHT_OFFSET,
+            0.9,
+          ]}
+          style={styles.trainTypeBoxGradient}
+        />
+        <LinearGradient
+          colors={odakyuBoxGradient(trainType.color ?? '#000000')}
+          style={styles.trainTypeBoxGradient}
+        />
+        {/* Box shadow */}
+        <LinearGradient
+          colors={['#00000000', '#00000033', '#00000000']}
+          locations={[ODAKYU_HIGHLIGHT_OFFSET, 0.55, 0.85]}
+          style={styles.trainTypeBoxGradient}
+        />
+        {/* Box gloss */}
+        <LinearGradient
+          colors={['#ffffff44', '#ffffff11', '#00000000']}
+          locations={[0, ODAKYU_HIGHLIGHT_OFFSET, ODAKYU_HIGHLIGHT_OFFSET]}
+          style={styles.trainTypeBoxGradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Typography
+            style={styles.text}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+          >
+            {(trainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
+          </Typography>
+          <Typography
+            adjustsFontSizeToFit
+            style={styles.textEn}
+            numberOfLines={1}
+          >
+            {truncateTrainType(
+              (trainType.nameRoman ?? '')
+                .replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
+          </Typography>
+        </View>
+        {nextLine && (
+          <Typography
+            style={[
+              styles.lineText,
+              { color: currentLine?.color ?? '#000000' },
+            ]}
+          >
+            {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
+            {(currentLine?.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
+            {(currentLine?.nameRoman ?? '').replace(parenthesisRegexp, '')}
+          </Typography>
+        )}
+      </View>
+      <View style={styles.trainTypeRight}>
+        <LinearGradient
+          colors={['#aaa', '#000', '#000', '#aaa']}
+          locations={[
+            ODAKYU_HIGHLIGHT_OFFSET,
+            ODAKYU_HIGHLIGHT_OFFSET,
+            ODAKYU_HIGHLIGHT_OFFSET,
+            0.9,
+          ]}
+          style={styles.trainTypeBoxGradient}
+        />
+        <LinearGradient
+          colors={odakyuBoxGradient(nextTrainType.color ?? '#000000')}
+          style={styles.trainTypeBoxGradient}
+        />
+        {/* Box shadow */}
+        <LinearGradient
+          colors={['#00000000', '#00000033', '#00000000']}
+          locations={[ODAKYU_HIGHLIGHT_OFFSET, 0.55, 0.85]}
+          style={styles.trainTypeBoxGradient}
+        />
+        {/* Box gloss */}
+        <LinearGradient
+          colors={['#ffffff44', '#ffffff11', '#00000000']}
+          locations={[0, ODAKYU_HIGHLIGHT_OFFSET, ODAKYU_HIGHLIGHT_OFFSET]}
+          style={styles.trainTypeBoxGradient}
+        />
+
+        <View style={styles.textWrapper}>
+          <Typography
+            style={styles.text}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+          >
+            {(nextTrainType.name ?? '')
+              .replace('\n', '')
+              .replace(parenthesisRegexp, '')}
+          </Typography>
+          <Typography
+            adjustsFontSizeToFit
+            style={styles.textEn}
+            numberOfLines={1}
+          >
+            {truncateTrainType(
+              (nextTrainType.nameRoman ?? '')
+                .replace('\n', '')
+                .replace(parenthesisRegexp, '')
+            )}
+          </Typography>
+        </View>
+        {nextLine && (
+          <Typography
+            style={[styles.lineText, { color: nextLine.color ?? '#000000' }]}
           >
             {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
             {(nextLine.nameShort ?? '').replace(parenthesisRegexp, '')}{' '}
@@ -884,7 +1181,15 @@ const HeadingEn = React.memo(
   }
 );
 
-const TypeChangeNotify: React.FC = () => {
+type TypeChangeNotifyProps = {
+  getBarGradient?: ColorGradientFn;
+  getBoxGradient?: ColorGradientFn;
+};
+
+const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
+  getBarGradient,
+  getBoxGradient,
+}) => {
   const { selectedDirection, stations, selectedBound } =
     useAtomValue(stationState);
   const theme = useAtomValue(themeAtom);
@@ -968,6 +1273,30 @@ const TypeChangeNotify: React.FC = () => {
     stations,
   ]);
 
+  // バー表示用: 種別が変わる直前の駅のlineを中間路線として使用する
+  // 例: 小田急多摩線→千代田線→常磐線の場合、綾瀬駅(千代田線)のlineを取得する
+  const displayCurrentLine = useMemo(() => {
+    if (!nextLine) {
+      return currentLine;
+    }
+    const currentIdx = stations.findIndex(
+      (s) => s.groupId === station?.groupId
+    );
+    const sliced =
+      selectedDirection === 'INBOUND'
+        ? stations.slice(currentIdx + 1)
+        : stations
+            .slice()
+            .reverse()
+            .slice(stations.length - currentIdx);
+    const nextTypeIdx = sliced.findIndex(
+      (s) => s.trainType && s.trainType.typeId !== trainType?.typeId
+    );
+    const lastCurrentTypeStation =
+      nextTypeIdx > 0 ? sliced[nextTypeIdx - 1] : null;
+    return (lastCurrentTypeStation?.line as Line | undefined) ?? currentLine;
+  }, [nextLine, currentLine, stations, station, selectedDirection, trainType]);
+
   const aOrAn = useMemo(() => {
     if (!nextTrainType || !trainType) {
       return '';
@@ -1030,7 +1359,13 @@ const TypeChangeNotify: React.FC = () => {
   ]);
 
   const BarsComponent = useCallback(() => {
-    if (!currentLine || !nextLine || !trainType || !nextTrainType) {
+    if (
+      !currentLine ||
+      !displayCurrentLine ||
+      !nextLine ||
+      !trainType ||
+      !nextTrainType
+    ) {
       return null;
     }
 
@@ -1038,7 +1373,7 @@ const TypeChangeNotify: React.FC = () => {
       case 'SAIKYO':
         return (
           <SaikyoBars
-            currentLine={currentLine}
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
@@ -1049,7 +1384,16 @@ const TypeChangeNotify: React.FC = () => {
       case 'JL':
         return (
           <JOBars
-            currentLine={currentLine}
+            currentLine={displayCurrentLine}
+            nextLine={nextLine}
+            trainType={trainType}
+            nextTrainType={nextTrainType}
+          />
+        );
+      case 'ODAKYU':
+        return (
+          <OdakyuBars
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
@@ -1057,15 +1401,26 @@ const TypeChangeNotify: React.FC = () => {
         );
       default:
         return (
-          <MetroBars
-            currentLine={currentLine}
+          <EastBars
+            currentLine={displayCurrentLine}
             nextLine={nextLine}
             trainType={trainType}
             nextTrainType={nextTrainType}
+            getBarGradient={getBarGradient}
+            getBoxGradient={getBoxGradient}
           />
         );
     }
-  }, [currentLine, nextLine, trainType, nextTrainType, theme]);
+  }, [
+    currentLine,
+    displayCurrentLine,
+    nextLine,
+    trainType,
+    nextTrainType,
+    theme,
+    getBarGradient,
+    getBoxGradient,
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>

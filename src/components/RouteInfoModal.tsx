@@ -1,6 +1,13 @@
+import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Platform, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -22,6 +29,10 @@ import { Heading } from './Heading';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
 
+const HEADER_HEIGHT = Math.ceil(
+  24 + RFValue(12) * 1.5 + RFValue(18) * 1.5 + 16
+);
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -32,12 +43,14 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     borderRadius: 8,
-    minHeight: 512,
     overflow: 'hidden',
   },
   boldTypography: {
     fontSize: RFValue(12),
     fontWeight: 'bold',
+  },
+  headerText: {
+    color: '#111',
   },
   closeButtonContainer: {
     position: 'absolute',
@@ -59,19 +72,17 @@ const styles = StyleSheet.create({
     zIndex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 21,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   title: {
     width: '100%',
     marginBottom: 24,
   },
-  flatList: {
-    marginTop: 96,
-    marginBottom: 72,
-    maxHeight: 480,
-  },
   flatListContentContainer: {
     paddingHorizontal: 24,
+    paddingTop: 0,
+    paddingBottom: 72,
   },
   noSearchResulText: {
     fontWeight: 'bold',
@@ -121,6 +132,8 @@ export const RouteInfoModal = ({
   onToggleDestination,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const { height: windowHeight } = useWindowDimensions();
+  const [headerHeight, setHeaderHeight] = useState(HEADER_HEIGHT);
 
   const { pendingLine } = useAtomValue(lineState);
   const lineName = getLocalizedLineName(pendingLine, isJapanese);
@@ -255,6 +268,12 @@ export const RouteInfoModal = ({
     [stations]
   );
 
+  const dynamicMinHeight = useMemo(() => {
+    const count = deduppedStations.length;
+    const content = headerHeight + count * 80 + Math.max(0, count - 1) * 8 + 72;
+    return Math.min(content, windowHeight * 0.75);
+  }, [deduppedStations.length, windowHeight, headerHeight]);
+
   return (
     <CustomModal
       visible={visible}
@@ -264,11 +283,12 @@ export const RouteInfoModal = ({
       contentContainerStyle={[
         styles.contentView,
         {
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
@@ -276,13 +296,32 @@ export const RouteInfoModal = ({
       <View
         style={[
           styles.headerContainer,
-          {
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
         ]}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
       >
-        <Typography style={styles.boldTypography}>{lineName}</Typography>
-        <Heading>{trainTypeName}</Heading>
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
+        <Typography
+          style={[styles.boldTypography, !isLEDTheme && styles.headerText]}
+        >
+          {lineName}
+        </Typography>
+        <Heading style={!isLEDTheme ? styles.headerText : undefined}>
+          {trainTypeName}
+        </Heading>
       </View>
 
       <FlatList<Station>
@@ -291,8 +330,12 @@ export const RouteInfoModal = ({
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
-        contentContainerStyle={styles.flatListContentContainer}
-        style={styles.flatList}
+        style={StyleSheet.absoluteFill}
+        contentContainerStyle={[
+          styles.flatListContentContainer,
+          { paddingTop: headerHeight },
+        ]}
+        scrollIndicatorInsets={{ top: headerHeight, bottom: 72 }}
         removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
@@ -305,11 +348,23 @@ export const RouteInfoModal = ({
       <View
         style={[
           styles.closeButtonContainer,
-          {
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
         ]}
       >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}

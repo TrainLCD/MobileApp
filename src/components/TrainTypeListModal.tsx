@@ -1,7 +1,14 @@
+import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import { FlatList, Platform, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -26,7 +33,6 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     borderRadius: 8,
-    minHeight: 512,
     overflow: 'hidden',
   },
   closeButtonContainer: {
@@ -57,6 +63,9 @@ const styles = StyleSheet.create({
   },
   title: {
     width: '100%',
+  },
+  headerText: {
+    color: '#111',
   },
   flatListContentContainer: {
     paddingHorizontal: 24,
@@ -163,7 +172,7 @@ export const TrainTypeListModal = ({
   onSelect,
 }: Props) => {
   const { fetchedTrainTypes } = useAtomValue(navigationState);
-
+  const { height: windowHeight } = useWindowDimensions();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const title = useMemo(() => {
@@ -282,6 +291,13 @@ export const TrainTypeListModal = ({
     return trainTypesWithDestination;
   }, [fetchedTrainTypes, line, destination]);
 
+  // ヘッダー(72) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
+  const dynamicMinHeight = useMemo(() => {
+    const content =
+      72 + trainTypes.length * 80 + Math.max(0, trainTypes.length - 1) * 8 + 72;
+    return Math.min(content, windowHeight * 0.75);
+  }, [trainTypes.length, windowHeight]);
+
   return (
     <CustomModal
       visible={visible}
@@ -291,11 +307,12 @@ export const TrainTypeListModal = ({
       contentContainerStyle={[
         styles.contentView,
         {
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
@@ -303,19 +320,36 @@ export const TrainTypeListModal = ({
       <View
         style={[
           styles.headerContainer,
-          {
-            backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? '#212121' : undefined },
         ]}
       >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
         <Heading
           singleLine
-          style={destination ? styles.subtitle : styles.title}
+          style={[
+            destination ? styles.subtitle : styles.title,
+            !isLEDTheme && styles.headerText,
+          ]}
         >
           {title}
         </Heading>
         {destination ? (
-          <Heading style={styles.title}>{subtitle}</Heading>
+          <Heading style={[styles.title, !isLEDTheme && styles.headerText]}>
+            {subtitle}
+          </Heading>
         ) : null}
       </View>
 
@@ -327,6 +361,7 @@ export const TrainTypeListModal = ({
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
+        scrollIndicatorInsets={{ top: 72, bottom: 72 }}
         removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
@@ -339,11 +374,23 @@ export const TrainTypeListModal = ({
       <View
         style={[
           styles.closeButtonContainer,
-          {
-            backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? '#212121' : undefined },
         ]}
       >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}

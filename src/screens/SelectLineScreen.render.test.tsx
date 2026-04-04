@@ -14,6 +14,10 @@ import SelectLineScreen from './SelectLineScreen';
 
 // --- モジュールモック ---
 
+jest.mock('react-native-device-info', () => ({
+  getBundleId: jest.fn(() => 'me.tinykitten.trainlcd.dev'),
+}));
+
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
   useAtom: jest.fn(() => [{ pendingQuickActionRouteId: null }, jest.fn()]),

@@ -1,8 +1,9 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
+import { BlurView } from 'expo-blur';
 import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
@@ -43,11 +44,12 @@ import {
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
+const HEADER_HEIGHT = 64;
+const FOOTER_HEIGHT = 72;
+
 const styles = StyleSheet.create({
   contentView: {
     width: '100%',
-    paddingVertical: 24,
-    minHeight: 256,
   },
   boundCardsContainer: {
     gap: 8,
@@ -63,8 +65,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   container: {
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: HEADER_HEIGHT,
+    paddingBottom: FOOTER_HEIGHT + 8,
+  },
+  headerContainer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    height: HEADER_HEIGHT,
+    zIndex: 1,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
   },
   menuNotice: {
     fontWeight: 'bold',
@@ -78,9 +92,20 @@ const styles = StyleSheet.create({
   redOutlinedButtonText: {
     color: '#ff3b30',
   },
-  closeButton: { marginTop: 24 },
+  closeButtonContainer: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    width: '100%',
+    height: FOOTER_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  closeButton: { width: '100%' },
   closeButtonText: { fontWeight: 'bold' },
-  heading: { width: '100%', marginLeft: 48 },
+  heading: { width: '100%' },
+  headerText: { color: '#111' },
 });
 
 type RenderButtonProps = {
@@ -123,6 +148,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
+  const pendingTrainTypeModalRef = useRef(false);
 
   const navigation = useNavigation();
   const [stationAtom, setStationState] = useAtom(stationState);
@@ -184,19 +210,30 @@ export const SelectBoundModal: React.FC<Props> = ({
       ? station
       : (stations[0] ?? null);
 
+  // wantedDestinationが現在のstationsに存在しない場合（乗換先の路線など）は
+  // 表示上無効として扱い、通常の方面表示にする
+  const applicableWantedDestination = useMemo(
+    () =>
+      wantedDestination &&
+      stations.some((s) => s.groupId === wantedDestination.groupId)
+        ? wantedDestination
+        : null,
+    [wantedDestination, stations]
+  );
+
   const effectiveStations = useMemo(() => {
-    if (!wantedDestination || !effectiveStation) return stations;
+    if (!applicableWantedDestination || !effectiveStation) return stations;
     const currentIdx = stations.findIndex(
       (s) => s.groupId === effectiveStation.groupId
     );
     const destIdx = stations.findIndex(
-      (s) => s.groupId === wantedDestination.groupId
+      (s) => s.groupId === applicableWantedDestination.groupId
     );
     if (currentIdx === -1 || destIdx === -1) return stations;
     return currentIdx <= destIdx
       ? stations.slice(0, destIdx + 1)
       : stations.slice(destIdx);
-  }, [stations, wantedDestination, effectiveStation]);
+  }, [stations, applicableWantedDestination, effectiveStation]);
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === effectiveStation?.groupId
@@ -224,7 +261,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   } = usePresetStops({
     savedRouteDirection: savedRoute?.direction,
     stations,
-    wantedDestination,
+    wantedDestination: applicableWantedDestination,
     confirmedStation,
   });
 
@@ -309,10 +346,10 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   const normalLineDirectionText = useCallback(
     (boundStations: Station[]) => {
-      if (wantedDestination) {
+      if (applicableWantedDestination) {
         return isJapanese
-          ? `${wantedDestination.name}方面`
-          : `for ${wantedDestination.nameRoman}`;
+          ? `${applicableWantedDestination.name}方面`
+          : `for ${applicableWantedDestination.nameRoman}`;
       }
 
       if (isJapanese) {
@@ -327,7 +364,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         .filter(Boolean);
       return names.length ? `for ${names.join(' and ')}` : '';
     },
-    [wantedDestination]
+    [applicableWantedDestination]
   );
 
   const inboundNames = useMemo(
@@ -389,7 +426,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         return trainTypeName ? `${lineName} ${trainTypeName}` : lineName;
       };
       const finalStop =
-        wantedDestination ??
+        applicableWantedDestination ??
         (direction === 'INBOUND' ? boundStations[0] : boundStations.at(-1));
 
       const lineForCard = finalStop?.line;
@@ -400,7 +437,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       }
 
       // targetDestination が設定されている場合、その方向のボタンのみ表示（終点としては扱わない）
-      if (targetDestination && !isLoopLine && !wantedDestination) {
+      if (targetDestination && !isLoopLine && !applicableWantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === effectiveStation?.groupId
         );
@@ -421,17 +458,13 @@ export const SelectBoundModal: React.FC<Props> = ({
         }
       }
 
-      if (wantedDestination && !isLoopLine) {
+      if (applicableWantedDestination && !isLoopLine) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === effectiveStation?.groupId
         );
         const wantedStationIndex = stations.findIndex(
-          (s) => s.groupId === wantedDestination.groupId
+          (s) => s.groupId === applicableWantedDestination.groupId
         );
-
-        if (wantedStationIndex === -1) {
-          return <></>;
-        }
 
         // 現在駅が経路内にない場合は savedRoute.direction から方向を決定
         const canDetermineFromIndex =
@@ -452,9 +485,9 @@ export const SelectBoundModal: React.FC<Props> = ({
               line={lineForCard ?? line}
               onPress={() =>
                 handleBoundSelected(
-                  wantedDestination,
+                  applicableWantedDestination,
                   dir,
-                  !!wantedDestination,
+                  true,
                   presetStops
                 )
               }
@@ -545,7 +578,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       isTransitioning,
       effectiveStation?.groupId,
       stations,
-      wantedDestination,
+      applicableWantedDestination,
       targetDestination,
       line,
       loopLineDirectionText,
@@ -732,22 +765,6 @@ export const SelectBoundModal: React.FC<Props> = ({
     }
   }, [error]);
 
-  const trainTypeText = useMemo(() => {
-    if (!fetchedTrainTypes.length) {
-      return translate('trainTypesNotExist');
-    }
-
-    if (!pendingTrainType) {
-      return translate('trainTypeSettings');
-    }
-
-    return translate('trainTypeIs', {
-      trainTypeName: isJapanese
-        ? (pendingTrainType.name ?? '')
-        : (pendingTrainType.nameRoman ?? ''),
-    });
-  }, [fetchedTrainTypes, pendingTrainType]);
-
   const stationsWithoutPass = useMemo(
     () => stations.filter((s) => !getIsPass(s)),
     [stations]
@@ -808,11 +825,34 @@ export const SelectBoundModal: React.FC<Props> = ({
           },
         ]}
       >
-        <View style={styles.container}>
-          <Heading style={styles.heading}>
+        <View
+          style={[
+            styles.headerContainer,
+            { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+          ]}
+        >
+          {Platform.OS === 'ios' && !isLEDTheme ? (
+            <BlurView
+              intensity={80}
+              tint="light"
+              style={StyleSheet.absoluteFill}
+            />
+          ) : Platform.OS === 'android' && !isLEDTheme ? (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: 'rgba(255,255,255,0.92)' },
+              ]}
+            />
+          ) : null}
+          <Heading style={[styles.heading, !isLEDTheme && styles.headerText]}>
             {translate('selectBoundTitle')}
           </Heading>
-
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          scrollIndicatorInsets={{ top: HEADER_HEIGHT, bottom: FOOTER_HEIGHT }}
+        >
           <View style={styles.buttonsContainer}>
             <View
               pointerEvents={isTransitioning ? 'none' : 'auto'}
@@ -850,16 +890,6 @@ export const SelectBoundModal: React.FC<Props> = ({
 
               <Button
                 outline
-                onPress={() => setIsTrainTypeModalVisible(true)}
-                disabled={
-                  !fetchedTrainTypes.length || loading || isTransitioning
-                }
-              >
-                {trainTypeText}
-              </Button>
-
-              <Button
-                outline
                 style={savedRoute ? styles.redOutlinedButton : null}
                 textStyle={savedRoute ? styles.redOutlinedButtonText : null}
                 onPress={handleSaveRoutePress}
@@ -876,19 +906,43 @@ export const SelectBoundModal: React.FC<Props> = ({
                 onPress={() => setSelectBoundSettingListModalVisible(true)}
                 disabled={isTransitioning}
               >
-                {translate('settings')}
+                {translate(
+                  fetchedTrainTypes.length > 1
+                    ? 'settingsAndTrainType'
+                    : 'settings'
+                )}
               </Button>
             </View>
-
-            <Button
-              style={styles.closeButton}
-              textStyle={styles.closeButtonText}
-              onPress={onClose}
-              disabled={loading || isTransitioning}
-            >
-              {translate('close')}
-            </Button>
           </View>
+        </ScrollView>
+        <View
+          style={[
+            styles.closeButtonContainer,
+            { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+          ]}
+        >
+          {Platform.OS === 'ios' && !isLEDTheme ? (
+            <BlurView
+              intensity={80}
+              tint="light"
+              style={StyleSheet.absoluteFill}
+            />
+          ) : Platform.OS === 'android' && !isLEDTheme ? (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: 'rgba(255,255,255,0.92)' },
+              ]}
+            />
+          ) : null}
+          <Button
+            style={styles.closeButton}
+            textStyle={styles.closeButtonText}
+            onPress={onClose}
+            disabled={loading || isTransitioning}
+          >
+            {translate('close')}
+          </Button>
         </View>
       </CustomModal>
 
@@ -908,6 +962,26 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setSelectBoundSettingListModalVisible(false)}
         autoModeEnabled={autoModeEnabled}
         toggleAutoModeEnabled={toggleAutoModeEnabled}
+        trainTypeName={
+          pendingTrainType
+            ? isJapanese
+              ? (pendingTrainType.name ?? '')
+              : (pendingTrainType.nameRoman ?? '')
+            : undefined
+        }
+        trainTypeColor={pendingTrainType?.color ?? undefined}
+        trainTypeLoading={loading}
+        onTrainTypePress={() => {
+          pendingTrainTypeModalRef.current = true;
+          setSelectBoundSettingListModalVisible(false);
+        }}
+        onCloseAnimationEnd={() => {
+          if (pendingTrainTypeModalRef.current) {
+            pendingTrainTypeModalRef.current = false;
+            setIsTrainTypeModalVisible(true);
+          }
+        }}
+        trainTypeDisabled={fetchedTrainTypes.length <= 1}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}

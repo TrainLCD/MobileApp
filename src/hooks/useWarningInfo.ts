@@ -12,6 +12,8 @@ import { isJapanese, translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+import { useTrainTypeMismatchDetector } from './useTrainTypeMismatchDetector';
+import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 const WARNING_PANEL_LEVEL = {
   URGENT: 'URGENT',
@@ -34,6 +36,9 @@ export const useWarningInfo = () => {
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const badAccuracy = useBadAccuracy();
+  const { isWrongDirection, isLoopLineWrongDirection } =
+    useWrongDirectionDetector();
+  const isTrainTypeMismatch = useTrainTypeMismatchDetector();
   const [fgPermStatus] = useForegroundPermissions();
   const bgPermGranted = useLocationPermissionsGranted();
 
@@ -125,10 +130,28 @@ export const useWarningInfo = () => {
       };
     }
 
+    if (isWrongDirection) {
+      return {
+        level: WARNING_PANEL_LEVEL.URGENT,
+        text: translate('wrongDirectionWarning'),
+      };
+    }
+    if (isLoopLineWrongDirection) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('wrongDirectionLoopLineWarning'),
+      };
+    }
     if (badAccuracy) {
       return {
         level: WARNING_PANEL_LEVEL.URGENT,
         text: translate('badAccuracy'),
+      };
+    }
+    if (isTrainTypeMismatch) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('trainTypeMismatchWarning'),
       };
     }
     if (passStations.length > 0 && selectedBound) {
@@ -160,6 +183,9 @@ export const useWarningInfo = () => {
     autoModeEnabled,
     badAccuracy,
     bgPermGranted,
+    isLoopLineWrongDirection,
+    isTrainTypeMismatch,
+    isWrongDirection,
     fgPermStatus?.granted,
     isAlwaysPermissionNotGrantedDismissed,
     isInternetAvailable,

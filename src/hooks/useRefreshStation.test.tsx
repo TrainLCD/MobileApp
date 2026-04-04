@@ -7,6 +7,7 @@ import * as useNearestStationModule from '~/hooks/useNearestStation';
 import * as useNextStationModule from '~/hooks/useNextStation';
 import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
+import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetector';
 
 jest.mock('jotai', () => {
   const actual = jest.requireActual('jotai');
@@ -90,6 +91,12 @@ describe('useRefreshStation', () => {
       arrivedThreshold: 100,
       approachingThreshold: 300,
     });
+    jest
+      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+      .mockReturnValue({
+        isWrongDirection: false,
+        isLoopLineWrongDirection: false,
+      });
 
     const { result } = renderHook(() => useRefreshStation(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,

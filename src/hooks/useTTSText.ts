@@ -29,9 +29,11 @@ export interface TTSTextResult {
 }
 
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
-  if (theme === APP_THEME.LED) return APP_THEME.TOKYO_METRO;
+  if (theme === APP_THEME.LED || theme === APP_THEME.ODAKYU)
+    return APP_THEME.TOKYO_METRO;
   if (theme === APP_THEME.JO || theme === APP_THEME.JL)
     return APP_THEME.YAMANOTE;
+  if (theme === APP_THEME.E231) return APP_THEME.SAIKYO;
   return theme;
 };
 
@@ -46,6 +48,8 @@ const EMPTY_TTS_TEXT = {
   [APP_THEME.JO]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JL]: { NEXT: '', ARRIVING: '' },
   [APP_THEME.JR_KYUSHU]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.ODAKYU]: { NEXT: '', ARRIVING: '' },
+  [APP_THEME.E231]: { NEXT: '', ARRIVING: '' },
 };
 
 export const useTTSText = (
@@ -258,6 +262,32 @@ export const useTTSText = (
         return !getIsPass(s);
       }),
     [slicedStations, station]
+  );
+
+  // JR西日本テーマ: 停車駅リストのバッチサイクル追跡
+  // 進行方向上で現在の駅が何番目の停車駅かを求め、5駅ごとの境界で案内を出す
+  const currentStopIndex = useMemo(() => {
+    if (!station) return -1;
+    const isInbound = selectedDirection === 'INBOUND';
+    const ordered = isInbound ? stations : [...stations].reverse();
+    const deduped = Array.from(new Set(ordered.map((s) => s.groupId)))
+      .map((gid) => ordered.find((s) => s.groupId === gid))
+      .filter((s) => !!s) as Station[];
+    const stops = deduped.filter((s) => !getIsPass(s));
+    return stops.findIndex((s) => s.groupId === station.groupId);
+  }, [stations, station, selectedDirection]);
+
+  const shouldAnnounceJrWestStopList = useMemo(
+    () =>
+      allStops.length > 1 &&
+      (firstSpeech || (currentStopIndex > 0 && currentStopIndex % 5 === 0)),
+    [allStops.length, firstSpeech, currentStopIndex]
+  );
+
+  // JR西日本テーマ: 停車駅案内バッチの末尾駅（5駅区切りの最後）
+  const lastAnnouncedStop = useMemo(
+    () => allStops.slice(0, 5).filter(Boolean).at(-1),
+    [allStops]
   );
 
   const viaStation = useMemo(() => {
@@ -530,28 +560,23 @@ export const useTTSText = (
                         viaStation.nameKatakana
                       )}方面、`
                     : ''
-                }${boundForJa}ゆきです。${allStops
+                }${boundForJa}ゆきです。`
+              : ''
+          }${
+            shouldAnnounceJrWestStopList
+              ? `${allStops
                   .slice(0, 5)
                   .map((s) =>
-                    s.id === selectedBound?.id && !isLoopLine
+                    s.groupId === selectedBound?.groupId && !isLoopLine
                       ? `終点、${replaceJapaneseText(s.name, s.nameKatakana)}`
                       : replaceJapaneseText(s.name, s.nameKatakana)
                   )
                   .join('、')}の順に停まります。${
-                  allStops
-                    .slice(0, 5)
-                    .filter((s) => s)
-                    .reverse()[0]?.id === selectedBound?.id
+                  lastAnnouncedStop?.groupId === selectedBound?.groupId
                     ? ''
                     : `${replaceJapaneseText(
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.name,
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.nameKatakana
+                        lastAnnouncedStop?.name,
+                        lastAnnouncedStop?.nameKatakana
                       )}から先は、後ほどご案内いたします。`
                 }`
               : ''
@@ -759,6 +784,8 @@ export const useTTSText = (
               : ''
           }`,
         },
+        [APP_THEME.ODAKYU]: { NEXT: '', ARRIVING: '' },
+        [APP_THEME.E231]: { NEXT: '', ARRIVING: '' },
       };
       return map;
     }, [
@@ -773,9 +800,11 @@ export const useTTSText = (
       isAfterNextStopTerminus,
       isLoopLine,
       isNextStopTerminus,
+      lastAnnouncedStop,
       nextStation?.name,
       replaceJapaneseText,
       selectedBound,
+      shouldAnnounceJrWestStopList,
       transferLines,
       viaStation,
       yamanoteTrainTypeJa,
@@ -967,28 +996,23 @@ export const useTTSText = (
                   viaStation
                     ? `via ${ph(viaStation.nameTtsSegments, viaStation.nameRoman)}`
                     : ''
-                }. We will be stopping at ${allStops
+                }. `
+              : ''
+          }${
+            shouldAnnounceJrWestStopList
+              ? `We will be stopping at ${allStops
                   .slice(0, 5)
                   .map((s) =>
-                    s.id === selectedBound?.id && !isLoopLine
+                    s.groupId === selectedBound?.groupId && !isLoopLine
                       ? `${ph(s.nameTtsSegments, s.nameRoman)} terminal`
                       : `${ph(s.nameTtsSegments, s.nameRoman)}`
                   )
                   .join(', ')}. ${
-                  allStops
-                    .slice(0, 5)
-                    .filter((s) => s)
-                    .reverse()[0]?.id === selectedBound?.id
+                  lastAnnouncedStop?.groupId === selectedBound?.groupId
                     ? ''
                     : `Stops after ${ph(
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.nameTtsSegments,
-                        allStops
-                          .slice(0, 5)
-                          .filter((s) => s)
-                          .reverse()[0]?.nameRoman
+                        lastAnnouncedStop?.nameTtsSegments,
+                        lastAnnouncedStop?.nameRoman
                       )} will be announced later. `
                 }`
               : ''
@@ -1095,6 +1119,8 @@ export const useTTSText = (
               : ''
           }`,
         },
+        [APP_THEME.ODAKYU]: { NEXT: '', ARRIVING: '' },
+        [APP_THEME.E231]: { NEXT: '', ARRIVING: '' },
       };
       return map;
     }, [
@@ -1109,12 +1135,14 @@ export const useTTSText = (
       isAfterNextStopTerminus,
       isLoopLine,
       isNextStopTerminus,
+      lastAnnouncedStop,
       nextStation?.groupId,
       selectedBound?.groupId,
       nextStation?.nameTtsSegments,
       nextStationNumber?.lineSymbol?.length,
       nextStationNumberText,
       selectedBound,
+      shouldAnnounceJrWestStopList,
       transferLines,
       viaStation,
       yamanoteTrainTypeEn,

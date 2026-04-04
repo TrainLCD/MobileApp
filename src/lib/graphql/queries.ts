@@ -285,6 +285,16 @@ export const GET_LINE_LIST_STATIONS_LIGHT = gql`
   }
 `;
 
+// Query for getting stations by multiple line IDs
+export const GET_LINE_LIST_STATIONS = gql`
+  ${STATION_FRAGMENT}
+  query GetLineListStations($lineIds: [Int!]!) {
+    lineListStations(lineIds: $lineIds) {
+      ...StationFields
+    }
+  }
+`;
+
 // Query for getting stations by line ID
 export const GET_LINE_STATIONS = gql`
   ${STATION_FRAGMENT}
@@ -371,6 +381,7 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
     groupId
     name
     nameRoman
+    color
     kind
     line {
       ...LineRouteFields
