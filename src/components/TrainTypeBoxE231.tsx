@@ -108,26 +108,26 @@ const SHORT_NAME_EN: Record<string, EnOverride> = {
 const formatCjk = (
   name: string | undefined | null,
   kind: TrainTypeKind | null | undefined,
-  lang: 'JA' | 'ZH' | 'KO'
+  lang: 'JA' | 'ZH' | 'KO',
+  forceShort = false
 ): string | null => {
   if (!name) {
     return null;
   }
-  if (name.length <= 4) {
-    if (name.length === 4) {
-      return `${name.slice(0, 2)}\n${name.slice(2)}`;
-    }
-    return name;
-  }
-  // 4文字超の場合、kindから短縮名にフォールバック
   const map =
     lang === 'KO'
       ? SHORT_NAME_KO
       : lang === 'ZH'
         ? SHORT_NAME_ZH
         : SHORT_NAME_JA;
-  const shortName = kind ? map[kind] : null;
-  return shortName ?? null;
+  if (forceShort || name.length > 4) {
+    const shortName = kind ? map[kind] : null;
+    return shortName ?? null;
+  }
+  if (name.length === 4) {
+    return `${name.slice(0, 2)}\n${name.slice(2)}`;
+  }
+  return name;
 };
 
 const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
@@ -186,12 +186,32 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
 
   const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
 
+  // 日本語名が4文字超で省略された場合、他言語でもkindベースの短縮名を使う
+  const jaAbbreviated = useMemo(
+    () => (trainTypeNameJa?.length ?? 0) > 4,
+    [trainTypeNameJa]
+  );
+
   const trainTypeName = useMemo(() => {
     if (isBus) {
       return lineNameJa;
     }
     switch (headerLangState) {
       case 'EN': {
+        if (jaAbbreviated) {
+          if (
+            trainType?.kind === TrainTypeKind.Express ||
+            trainType?.kind === TrainTypeKind.LimitedExpress
+          ) {
+            return 'Exp.';
+          }
+          if (
+            trainType?.kind === TrainTypeKind.Rapid ||
+            trainType?.kind === TrainTypeKind.HighSpeedRapid
+          ) {
+            return 'Rapid';
+          }
+        }
         const enOverride = trainTypeNameJa
           ? SHORT_NAME_EN[trainTypeNameJa]
           : null;
@@ -213,14 +233,15 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
         return trainTypeNameR;
       }
       case 'ZH':
-        return formatCjk(trainTypeNameZh, trainType?.kind, 'ZH');
+        return formatCjk(trainTypeNameZh, trainType?.kind, 'ZH', jaAbbreviated);
       case 'KO':
-        return formatCjk(trainTypeNameKo, trainType?.kind, 'KO');
+        return formatCjk(trainTypeNameKo, trainType?.kind, 'KO', jaAbbreviated);
       default:
         return formatCjk(trainTypeNameJa, trainType?.kind, 'JA');
     }
   }, [
     isBus,
+    jaAbbreviated,
     headerLangState,
     lineNameJa,
     trainTypeNameJa,
@@ -260,8 +281,7 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
   }
 
   const rawLength = trainTypeName.replace('\n', '').length;
-  const fontSize =
-    headerLangState === 'EN' || rawLength <= 2 ? RFValue(36) : RFValue(28);
+  const fontSize = isEn || rawLength > 2 ? RFValue(28) : RFValue(36);
 
   const SKEW_TRANSFORM = `translate(${SKEW_SHIFT}, 0) skewX(-7.5)`;
 
@@ -324,7 +344,7 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
   };
 
   if (enOverride) {
-    const headingSize = RFValue(enOverride.headingFontSize ?? 24);
+    const headingSize = RFValue(enOverride.headingFontSize ?? 21);
     const bodySize = RFValue(enOverride.bodyFontSize ?? 16);
     const svgWidth = Math.max(
       estimateLineWidth(enOverride.heading, headingSize, 0),
