@@ -8,9 +8,15 @@ import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxE231';
 
+const BOUND_AREA_HEIGHT = isTablet ? 64 : 48;
+const BOTTOM_HEIGHT = isTablet ? 128 : 84;
+const DIVIDER_HEIGHT = isTablet ? 4 : 2;
+const ROOT_HEIGHT = BOUND_AREA_HEIGHT + BOTTOM_HEIGHT + DIVIDER_HEIGHT;
+
 const styles = StyleSheet.create({
   root: {
     zIndex: 9999,
+    height: ROOT_HEIGHT,
     backgroundColor: '#A6A4A5',
   },
   contentRoot: {
@@ -18,7 +24,7 @@ const styles = StyleSheet.create({
     paddingLeft: 21,
   },
   bottom: {
-    height: isTablet ? 128 : 84,
+    height: BOTTOM_HEIGHT,
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingBottom: isTablet ? 4 : 2,
@@ -29,13 +35,14 @@ const styles = StyleSheet.create({
     fontSize: RFValue(24),
   },
   boundWrapper: {
+    height: BOUND_AREA_HEIGHT,
     flexDirection: 'row',
-    marginTop: 8,
-    marginBottom: 8,
+    justifyContent: 'center',
   },
   boundInner: {
     width: '60%',
     alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   stateWrapper: {
     flex: 1,
@@ -123,7 +130,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: '100%',
-    height: isTablet ? 4 : 2,
+    height: DIVIDER_HEIGHT,
     backgroundColor: '#999',
   },
 });
@@ -180,6 +187,19 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
     }
   }, [firstStop, stateText, headerLangState]);
 
+  const clockLabelText = useMemo(() => {
+    switch (headerLangState) {
+      case 'EN':
+        return 'Time';
+      case 'ZH':
+        return '时间';
+      case 'KO':
+        return '시각';
+      default:
+        return '現在時刻';
+    }
+  }, [headerLangState]);
+
   return (
     <View style={styles.root}>
       <View style={styles.contentRoot}>
@@ -191,7 +211,13 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
         <View style={styles.boundWrapper}>
           <View style={styles.spacer} />
           <View style={styles.boundInner}>
-            <Text style={styles.boundText}>{firstStop ? '' : boundText}</Text>
+            <Text
+              style={styles.boundText}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
+              {firstStop ? '' : boundText}
+            </Text>
           </View>
           <View style={styles.spacer} />
         </View>
@@ -230,7 +256,7 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
           </View>
         </View>
         <View style={styles.clockContainer}>
-          <Text style={styles.clockLabel}>現在時刻</Text>
+          <Text style={styles.clockLabel}>{clockLabelText}</Text>
           <View style={styles.clockBox}>
             <Text style={styles.clockText}>{hours}</Text>
             <Text style={[styles.clockText, { opacity: colonOpacity }]}>:</Text>
