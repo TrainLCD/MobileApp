@@ -7,7 +7,7 @@ export interface NotifyState {
 
 const notifyState = atom<NotifyState>({
   targetStationIds: [],
-  wrongDirectionNotifyEnabled: false,
+  wrongDirectionNotifyEnabled: true,
 });
 
 export default notifyState;
