@@ -301,5 +301,8 @@
   "wrongDirectionLoopLineWarning": "You may be traveling in the wrong direction. As this is a loop line, you will still arrive, but it will take longer.",
   "wrongDirectionNotificationTitle": "Direction Alert",
   "trainTypeMismatchWarning": "The selected train type may not match your actual service. Please check your settings.",
-  "toeiBusBadge": "Toei Bus"
+  "toeiBusBadge": "Toei Bus",
+  "notificationSettings": "Notifications",
+  "wrongDirectionNotifyToggle": "Notify when traveling in wrong direction",
+  "wrongDirectionNotifyDescription": "Get notified when you are traveling in the opposite direction from the one set in the app."
 }

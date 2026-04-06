@@ -34,6 +34,7 @@ import {
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import type { ThemePreference } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
+import notifyState from '../store/atoms/notify';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
@@ -54,6 +55,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [{ autoModeEnabled, isAppLatest }, setNavigation] =
     useAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
+  const setNotify = useSetAtom(notifyState);
   const setTuning = useSetAtom(tuningState);
   const setThemePreference = useSetAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
@@ -337,6 +339,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         headerTransitionDelayStr,
         bottomTransitionIntervalStr,
         untouchableModeEnabledStr,
+        wrongDirectionNotifyEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
@@ -350,6 +353,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
+        AsyncStorage.getItem(
+          ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED
+        ),
       ]);
 
       if (themePreferenceKey) {
@@ -447,10 +453,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           untouchableModeEnabled: untouchableModeEnabledStr === 'true',
         }));
       }
+      if (wrongDirectionNotifyEnabledStr) {
+        setNotify((prev) => ({
+          ...prev,
+          wrongDirectionNotifyEnabled:
+            wrongDirectionNotifyEnabledStr === 'true',
+        }));
+      }
     };
 
     loadSettings();
-  }, [setNavigation, setSpeech, setTuning, setThemePreference]);
+  }, [setNavigation, setSpeech, setTuning, setThemePreference, setNotify]);
 
   useEffect(() => {
     const { remove } = addScreenshotListener(() => {

@@ -41,6 +41,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_theme: 'personalize_theme',
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
+  personalize_notifications: 'personalize_notifications',
   about_app_licenses: 'about_app_licenses',
   developer_tuning: 'developer_tuning',
 } as const;
@@ -107,6 +108,8 @@ const SettingsItem = ({
         return 'volume-high';
       case 'personalize_languages':
         return 'globe';
+      case 'personalize_notifications':
+        return 'notifications';
       case 'about_app_licenses':
         return 'key';
       case 'developer_tuning':
@@ -299,6 +302,13 @@ const AppSettingsScreen: React.FC = () => {
           onPress: () =>
             navigation.navigate('EnabledLanguagesSettings' as never),
         },
+        {
+          id: SETTING_ITEM_ID_MAP.personalize_notifications,
+          title: translate('notificationSettings'),
+          color: '#FF3B30',
+          onPress: () =>
+            navigation.navigate('NotificationSettings' as never),
+        },
       ].filter((dat) =>
         isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
       ) as SettingsSectionData[],
@@ -381,10 +391,16 @@ const AppSettingsScreen: React.FC = () => {
               <SettingsItem
                 item={personalizeItems[showTtsItem ? 2 : 1]}
                 isFirst={false}
-                isLast={true}
+                isLast={false}
                 onPress={personalizeItems[showTtsItem ? 2 : 1].onPress}
               />
             </View>
+            <SettingsItem
+              item={personalizeItems[showTtsItem ? 3 : 2]}
+              isFirst={false}
+              isLast={true}
+              onPress={personalizeItems[showTtsItem ? 3 : 2].onPress}
+            />
           </View>
 
           {/* アプリについてセクション */}
