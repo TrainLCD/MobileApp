@@ -5,8 +5,8 @@ import {
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import Licenses from '~/screens/Licenses';
-import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import NotificationSettings from '~/screens/NotificationSettings';
+import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';

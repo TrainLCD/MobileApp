@@ -353,9 +353,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
-        AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED
-        ),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED),
       ]);
 
       if (themePreferenceKey) {
