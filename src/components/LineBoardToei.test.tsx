@@ -121,10 +121,7 @@ describe('LineBoardToei', () => {
       stationOverrides = {} as Record<string, unknown>,
     } = {}) =>
     (atomVal: unknown) => {
-      if (
-        atomVal &&
-        (atomVal as { __brand?: string }).__brand === 'isEnAtom'
-      ) {
+      if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
         return isEn;
       }
       if (
