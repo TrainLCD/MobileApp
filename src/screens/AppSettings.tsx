@@ -306,8 +306,7 @@ const AppSettingsScreen: React.FC = () => {
           id: SETTING_ITEM_ID_MAP.personalize_notifications,
           title: translate('notificationSettings'),
           color: '#FF3B30',
-          onPress: () =>
-            navigation.navigate('NotificationSettings' as never),
+          onPress: () => navigation.navigate('NotificationSettings' as never),
         },
       ].filter((dat) =>
         isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true

@@ -55,10 +55,7 @@ const NotificationSettingsScreen: React.FC = () => {
       }));
     } catch (error) {
       console.error('Failed to toggle wrong direction notify setting', error);
-      Alert.alert(
-        translate('errorTitle'),
-        translate('failedToSavePreference')
-      );
+      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [wrongDirectionNotifyEnabled, setNotifyState]);
 
