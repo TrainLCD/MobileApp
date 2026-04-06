@@ -22,7 +22,12 @@ jest.mock('~/hooks/useScale', () => ({
 }));
 
 jest.mock('~/store/selectors/isEn', () => ({
-  isEnAtom: {},
+  isEnAtom: { __brand: 'isEnAtom' },
+}));
+
+jest.mock('~/store/atoms/navigation', () => ({
+  __esModule: true,
+  default: { __brand: 'navigationState' },
 }));
 
 jest.mock('~/utils/getStationNameR', () => ({
@@ -109,11 +114,24 @@ describe('LineBoardToei', () => {
     } as unknown as Station,
   ];
 
-  beforeEach(() => {
-    useAtomValue.mockReturnValue({
+  const mockUseAtomValue = (atomVal: unknown) => {
+    if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
+      return false;
+    }
+    if (
+      atomVal &&
+      (atomVal as { __brand?: string }).__brand === 'navigationState'
+    ) {
+      return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+    }
+    return {
       station: mockStations[0],
       arrived: true,
-    });
+    };
+  };
+
+  beforeEach(() => {
+    useAtomValue.mockImplementation(mockUseAtomValue);
     useCurrentLine.mockReturnValue(mockLine);
   });
 
@@ -221,10 +239,21 @@ describe('LineBoardToei', () => {
 
   it('lineがnullの場合、駅セルがレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
-      selectedLine: null,
+    useAtomValue.mockImplementation((atomVal: unknown) => {
+      if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
+        return false;
+      }
+      if (
+        atomVal &&
+        (atomVal as { __brand?: string }).__brand === 'navigationState'
+      ) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+      }
+      return {
+        station: mockStations[0],
+        arrived: true,
+        selectedLine: null,
+      };
     });
     const { LineDot } = require('./LineBoard/shared/components');
     LineDot.mockClear();
