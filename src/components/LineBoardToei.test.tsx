@@ -114,24 +114,34 @@ describe('LineBoardToei', () => {
     } as unknown as Station,
   ];
 
-  const mockUseAtomValue = (atomVal: unknown) => {
-    if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
-      return false;
-    }
-    if (
-      atomVal &&
-      (atomVal as { __brand?: string }).__brand === 'navigationState'
-    ) {
-      return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-    }
-    return {
-      station: mockStations[0],
-      arrived: true,
+  const createUseAtomValueMock =
+    ({
+      isEn = false,
+      enabledLanguages = ['JA', 'EN', 'ZH', 'KO'] as string[],
+      stationOverrides = {} as Record<string, unknown>,
+    } = {}) =>
+    (atomVal: unknown) => {
+      if (
+        atomVal &&
+        (atomVal as { __brand?: string }).__brand === 'isEnAtom'
+      ) {
+        return isEn;
+      }
+      if (
+        atomVal &&
+        (atomVal as { __brand?: string }).__brand === 'navigationState'
+      ) {
+        return { enabledLanguages };
+      }
+      return {
+        station: mockStations[0],
+        arrived: true,
+        ...stationOverrides,
+      };
     };
-  };
 
   beforeEach(() => {
-    useAtomValue.mockImplementation(mockUseAtomValue);
+    useAtomValue.mockImplementation(createUseAtomValueMock());
     useCurrentLine.mockReturnValue(mockLine);
   });
 
@@ -239,22 +249,9 @@ describe('LineBoardToei', () => {
 
   it('lineがnullの場合、駅セルがレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockImplementation((atomVal: unknown) => {
-      if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
-        return false;
-      }
-      if (
-        atomVal &&
-        (atomVal as { __brand?: string }).__brand === 'navigationState'
-      ) {
-        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-      }
-      return {
-        station: mockStations[0],
-        arrived: true,
-        selectedLine: null,
-      };
-    });
+    useAtomValue.mockImplementation(
+      createUseAtomValueMock({ stationOverrides: { selectedLine: null } })
+    );
     const { LineDot } = require('./LineBoard/shared/components');
     LineDot.mockClear();
     render(
@@ -276,5 +273,66 @@ describe('LineBoardToei', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
+  });
+
+  it('韓国語が無効の場合、韓国語の併記が表示されない', () => {
+    useAtomValue.mockImplementation(
+      createUseAtomValueMock({ enabledLanguages: ['JA', 'EN'] })
+    );
+    const { queryByText } = render(
+      <LineBoardToei
+        stations={mockStations}
+        lineColors={['#ed6d00', '#ed6d00']}
+        hasTerminus={false}
+      />
+    );
+    expect(queryByText('신바시')).toBeNull();
+    expect(queryByText('히가시긴자')).toBeNull();
+  });
+
+  it('中国語が無効の場合、英語モードで中国語の併記が表示されない', () => {
+    useAtomValue.mockImplementation(
+      createUseAtomValueMock({ isEn: true, enabledLanguages: ['JA', 'EN'] })
+    );
+    const { queryByText } = render(
+      <LineBoardToei
+        stations={mockStations}
+        lineColors={['#ed6d00', '#ed6d00']}
+        hasTerminus={false}
+      />
+    );
+    expect(queryByText('新桥')).toBeNull();
+    expect(queryByText('东银座')).toBeNull();
+  });
+
+  it('韓国語が有効の場合、韓国語の併記が表示される', () => {
+    useAtomValue.mockImplementation(
+      createUseAtomValueMock({ enabledLanguages: ['JA', 'EN', 'KO'] })
+    );
+    const { getByText } = render(
+      <LineBoardToei
+        stations={mockStations}
+        lineColors={['#ed6d00', '#ed6d00']}
+        hasTerminus={false}
+      />
+    );
+    expect(getByText('신')).toBeTruthy();
+  });
+
+  it('中国語が有効の場合、英語モードで中国語の併記が表示される', () => {
+    useAtomValue.mockImplementation(
+      createUseAtomValueMock({
+        isEn: true,
+        enabledLanguages: ['JA', 'EN', 'ZH'],
+      })
+    );
+    const { getByText } = render(
+      <LineBoardToei
+        stations={mockStations}
+        lineColors={['#ed6d00', '#ed6d00']}
+        hasTerminus={false}
+      />
+    );
+    expect(getByText('新桥')).toBeTruthy();
   });
 });
