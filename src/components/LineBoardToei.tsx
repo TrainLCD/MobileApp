@@ -10,6 +10,7 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
+import navigationState from '~/store/atoms/navigation';
 import { isEnAtom } from '~/store/selectors/isEn';
 import getStationNameR from '~/utils/getStationNameR';
 import { RFValue } from '~/utils/rfValue';
@@ -73,6 +74,8 @@ interface StationNameToeiProps {
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
+  isKoEnabled?: boolean;
+  isZhEnabled?: boolean;
 }
 
 const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
@@ -80,6 +83,8 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
   en,
   horizontal,
   passed,
+  isKoEnabled,
+  isZhEnabled,
 }) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
   const dim = useWindowDimensions();
@@ -111,12 +116,19 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
         ]}
       >
         {stationNameR}
-        {'\n'}
-        <Typography
-          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
-        >
-          {station.nameChinese ?? ''}
-        </Typography>
+        {isZhEnabled ? (
+          <>
+            {'\n'}
+            <Typography
+              style={[
+                styles.stationNameExtra,
+                passed ? styles.grayColor : null,
+              ]}
+            >
+              {station.nameChinese ?? ''}
+            </Typography>
+          </>
+        ) : null}
       </Typography>
     );
   }
@@ -131,12 +143,19 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
         ]}
       >
         {station.name}
-        {'\n'}
-        <Typography
-          style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
-        >
-          {station.nameKorean ?? ''}
-        </Typography>
+        {isKoEnabled ? (
+          <>
+            {'\n'}
+            <Typography
+              style={[
+                styles.stationNameExtra,
+                passed ? styles.grayColor : null,
+              ]}
+            >
+              {station.nameKorean ?? ''}
+            </Typography>
+          </>
+        ) : null}
       </Typography>
     );
   }
@@ -153,16 +172,21 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
           </Typography>
         ))}
       </View>
-      <View style={styles.splittedStationName}>
-        {(station.nameKorean ?? '').split('').map((c, j) => (
-          <Typography
-            style={[styles.stationNameExtra, passed ? styles.grayColor : null]}
-            key={`${station.id}-ko-${j}`}
-          >
-            {c}
-          </Typography>
-        ))}
-      </View>
+      {isKoEnabled ? (
+        <View style={styles.splittedStationName}>
+          {(station.nameKorean ?? '').split('').map((c, j) => (
+            <Typography
+              style={[
+                styles.stationNameExtra,
+                passed ? styles.grayColor : null,
+              ]}
+              key={`${station.id}-ko-${j}`}
+            >
+              {c}
+            </Typography>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -312,6 +336,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
+  const { enabledLanguages } = useAtomValue(navigationState);
+  const isKoEnabled = enabledLanguages.includes('KO');
+  const isZhEnabled = enabledLanguages.includes('ZH');
 
   const currentStationIndex = useMemo(
     () => stations.findIndex((s) => s.groupId === currentStation?.groupId),
@@ -370,6 +397,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             en={isEn}
             horizontal={includesLongStationName}
             passed={getIsPass(station) || shouldGrayscale}
+            isKoEnabled={isKoEnabled}
+            isZhEnabled={isZhEnabled}
           />
         </View>
         <Typography
