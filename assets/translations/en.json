@@ -303,6 +303,6 @@
   "trainTypeMismatchWarning": "The selected train type may not match your actual service. Please check your settings.",
   "toeiBusBadge": "Toei Bus",
   "notificationSettings": "Notifications",
-  "wrongDirectionNotifyToggle": "Notify when traveling in wrong direction",
+  "wrongDirectionNotifyToggle": "Reverse direction alert",
   "wrongDirectionNotifyDescription": "Get notified when you are traveling in the opposite direction from the one set in the app."
 }

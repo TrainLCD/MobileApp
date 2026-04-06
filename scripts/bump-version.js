@@ -141,7 +141,7 @@ const updateAppConfig = (filePath, version, versionCode, iosBuildNumber) => {
     if (!replaced) {
       lines.splice(iosStartIndex + 1, 0, buildNumberLine);
     }
-    content = `${lines.join('\n')}\n`;
+    content = lines.join('\n');
   }
 
   fs.writeFileSync(filePath, content);

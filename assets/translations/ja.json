@@ -304,6 +304,6 @@
   "trainTypeMismatchWarning": "選択した列車種別と実際の運行種別が異なる可能性があります。設定をご確認ください。",
   "toeiBusBadge": "都営バス",
   "notificationSettings": "通知",
-  "wrongDirectionNotifyToggle": "逆方向走行時に通知する",
+  "wrongDirectionNotifyToggle": "逆走通知",
   "wrongDirectionNotifyDescription": "アプリで設定した方向と逆方向に進行している場合に通知でお知らせします。"
 }
