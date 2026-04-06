@@ -46,7 +46,8 @@ export const useRefreshStation = (): void => {
   const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
   const lastArrivedStationIdRef = useRef<number | null>(null);
-  const { targetStationIds } = useAtomValue(notifyState);
+  const { targetStationIds, wrongDirectionNotifyEnabled } =
+    useAtomValue(notifyState);
 
   const nearestStation = useNearestStation();
   const canGoForward = useCanGoForward();
@@ -186,6 +187,7 @@ export const useRefreshStation = (): void => {
 
   useEffect(() => {
     if (
+      wrongDirectionNotifyEnabled &&
       (isWrongDirection || isLoopLineWrongDirection) &&
       !wrongDirectionNotifiedRef.current
     ) {
@@ -201,7 +203,7 @@ export const useRefreshStation = (): void => {
     if (!isWrongDirection && !isLoopLineWrongDirection) {
       wrongDirectionNotifiedRef.current = false;
     }
-  }, [isWrongDirection, isLoopLineWrongDirection]);
+  }, [isWrongDirection, isLoopLineWrongDirection, wrongDirectionNotifyEnabled]);
 
   useEffect(() => {
     if (!nearestStation) {
