@@ -31,7 +31,7 @@ jest.mock('../../../PadLineMarks', () => {
   };
 });
 
-jest.mock('../../../PassChevronTY', () => {
+jest.mock('../../../PassChevronEast', () => {
   const _React = require('react');
   const { View } = require('react-native');
   return {
@@ -54,7 +54,7 @@ describe('LineDot', () => {
     jest.clearAllMocks();
   });
 
-  it('通過駅（getIsPass=true）の場合、PassChevronTYを表示する', () => {
+  it('通過駅（getIsPass=true）の場合、PassChevronEastを表示する', () => {
     const passStation = {
       ...mockStation,
       stopCondition: 'NOT',
