@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { StopCondition } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp, STATION_NAME_FONT_SIZE } from '../constants';
 import {
@@ -17,6 +17,7 @@ import type { HeaderStoppingState } from '../models/HeaderTransitionState';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import Marquee from './Marquee';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   container: {
@@ -34,19 +35,19 @@ const styles = StyleSheet.create({
 });
 
 const GreenText = ({ children }: { children: React.ReactNode }) => (
-  <Text numberOfLines={1} style={[styles.text, styles.green]}>
+  <Typography numberOfLines={1} style={[styles.text, styles.green]}>
     {children}
-  </Text>
+  </Typography>
 );
 const OrangeText = ({ children }: { children: React.ReactNode }) => (
-  <Text numberOfLines={1} style={[styles.text, styles.orange]}>
+  <Typography numberOfLines={1} style={[styles.text, styles.orange]}>
     {children}
-  </Text>
+  </Typography>
 );
 const CrimsonText = ({ children }: { children: React.ReactNode }) => (
-  <Text numberOfLines={1} style={[styles.text, styles.crimson]}>
+  <Typography numberOfLines={1} style={[styles.text, styles.crimson]}>
     {children}
-  </Text>
+  </Typography>
 );
 
 // Helper component for arriving state content
@@ -93,28 +94,28 @@ const ArrivingContent = ({
     ) : null}
 
     <GreenText>The next stop is</GreenText>
-    <Text numberOfLines={1}>
+    <Typography numberOfLines={1}>
       <OrangeText>
         {nextStation?.nameRoman}
         {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
       </OrangeText>
       <GreenText>.</GreenText>
-    </Text>
+    </Typography>
 
     {afterNextStation ? (
       <>
         <GreenText>The stop after</GreenText>
-        <Text numberOfLines={1}>
+        <Typography numberOfLines={1}>
           <OrangeText>
             {nextStation?.nameRoman}
             {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
           </OrangeText>
           <GreenText>,</GreenText>
-        </Text>
+        </Typography>
 
         <GreenText>will be</GreenText>
 
-        <Text numberOfLines={1}>
+        <Typography numberOfLines={1}>
           <OrangeText>
             {afterNextStation?.nameRoman}
             {afterNextStation?.stationNumbers?.[0]
@@ -122,14 +123,14 @@ const ArrivingContent = ({
               : ''}
           </OrangeText>
           <GreenText>.</GreenText>
-        </Text>
+        </Typography>
       </>
     ) : null}
     {transferLines.length > 0 ? (
       <>
         <GreenText>Please change here for</GreenText>
 
-        <Text numberOfLines={1}>
+        <Typography numberOfLines={1}>
           <OrangeText>
             {transferLines
               .map((l) => l.nameRoman)
@@ -144,7 +145,7 @@ const ArrivingContent = ({
               .join('')}
           </OrangeText>
           <GreenText>.</GreenText>
-        </Text>
+        </Typography>
       </>
     ) : null}
   </>
@@ -173,10 +174,10 @@ const CurrentContent = ({
     </GreenText>
     <OrangeText>{trainTypeTexts[1]}</OrangeText>
     <GreenText>train for</GreenText>
-    <Text numberOfLines={1}>
+    <Typography numberOfLines={1}>
       <OrangeText>{boundTexts[1]}</OrangeText>
       <GreenText>.</GreenText>
-    </Text>
+    </Typography>
   </>
 );
 
@@ -222,26 +223,26 @@ const NextStopContent = ({
       </>
     ) : null}
     <GreenText>The next stop is</GreenText>
-    <Text numberOfLines={1}>
+    <Typography numberOfLines={1}>
       <OrangeText>
         {nextStation?.nameRoman}
         {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
       </OrangeText>
       <GreenText>.</GreenText>
-    </Text>
+    </Typography>
     {afterNextStation ? (
       <>
         <GreenText>The stop after</GreenText>
-        <Text numberOfLines={1}>
+        <Typography numberOfLines={1}>
           <OrangeText>
             {nextStation?.nameRoman}
             {nextStationNumber ? `(${nextStationNumber.stationNumber})` : ''}
           </OrangeText>
           <GreenText>,</GreenText>
-        </Text>
+        </Typography>
 
         <GreenText>will be</GreenText>
-        <Text numberOfLines={1}>
+        <Typography numberOfLines={1}>
           <OrangeText>
             {afterNextStation?.nameRoman}
             {afterNextStation?.stationNumbers?.[0]
@@ -249,13 +250,13 @@ const NextStopContent = ({
               : ''}
           </OrangeText>
           <GreenText>.</GreenText>
-        </Text>
+        </Typography>
       </>
     ) : null}
     {transferLines.length > 0 ? (
       <>
         <GreenText>Please change here for</GreenText>
-        <Text numberOfLines={1}>
+        <Typography numberOfLines={1}>
           <OrangeText>
             {transferLines
               .map((l) => l.nameRoman)
@@ -270,7 +271,7 @@ const NextStopContent = ({
               .join('')}
           </OrangeText>
           <GreenText>.</GreenText>
-        </Text>
+        </Typography>
       </>
     ) : null}
   </>
