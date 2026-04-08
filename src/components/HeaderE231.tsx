@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import { useClock, useInterval } from '../hooks';
+import { useClock } from '../hooks';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -149,11 +149,6 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
   } = props;
 
   const [hours, minutes] = useClock();
-  const [colonOpacity, setColonOpacity] = useState(0);
-  useInterval(
-    useCallback(() => setColonOpacity((prev) => (prev === 0 ? 1 : 0)), []),
-    500
-  );
 
   const boundSuffixText = useMemo(() => {
     switch (headerLangState) {
@@ -259,7 +254,7 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
           <Text style={styles.clockLabel}>{clockLabelText}</Text>
           <View style={styles.clockBox}>
             <Text style={styles.clockText}>{hours}</Text>
-            <Text style={[styles.clockText, { opacity: colonOpacity }]}>:</Text>
+            <Text style={styles.clockText}>:</Text>
             <Text style={styles.clockText}>{minutes}</Text>
           </View>
         </View>
