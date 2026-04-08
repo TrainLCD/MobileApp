@@ -36,7 +36,7 @@ jest.mock('../../../PassChevronEast', () => {
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: () => <View testID="pass-chevron-ty" />,
+    default: () => <View testID="pass-chevron-east" />,
   };
 });
 
@@ -72,7 +72,7 @@ describe('LineDot', () => {
       />
     );
 
-    expect(getByTestId('pass-chevron-ty')).toBeTruthy();
+    expect(getByTestId('pass-chevron-east')).toBeTruthy();
     expect(getByTestId('pad-line-marks')).toBeTruthy();
   });
 
@@ -90,7 +90,7 @@ describe('LineDot', () => {
       />
     );
 
-    expect(queryByTestId('pass-chevron-ty')).toBeNull();
+    expect(queryByTestId('pass-chevron-east')).toBeNull();
     expect(getByTestId('pad-line-marks')).toBeTruthy();
   });
 
