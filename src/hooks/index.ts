@@ -67,7 +67,6 @@ export { useStationsCache } from './useStationsCache';
 export { useStoppingState } from './useStoppingState';
 export { useTelemetrySender } from './useTelemetrySender';
 export { useThreshold } from './useThreshold';
-export { useTrainTypeMismatchDetector } from './useTrainTypeMismatchDetector';
 export { useTrainTypeStations } from './useTrainTypeStations';
 export { useTransferLines } from './useTransferLines';
 export { useTransferLinesFromStation } from './useTransferLinesFromStation';
