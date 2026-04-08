@@ -5,6 +5,7 @@ import {
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import Licenses from '~/screens/Licenses';
+import NotificationSettings from '~/screens/NotificationSettings';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
@@ -98,6 +99,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="EnabledLanguagesSettings"
           component={EnabledLanguagesSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="NotificationSettings"
+          component={NotificationSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}

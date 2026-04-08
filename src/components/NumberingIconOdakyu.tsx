@@ -8,6 +8,7 @@ type Props = {
   stationNumber: string;
   hakone: boolean;
   withOutline?: boolean;
+  shouldGrayscale?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -46,30 +47,35 @@ const styles = StyleSheet.create({
   },
 });
 
+const BLACK_COLOR = '#000';
+
 const NumberingIconOdakyu: React.FC<Props> = ({
   stationNumber: stationNumberRaw,
   hakone,
   withOutline,
+  shouldGrayscale,
 }: Props) => {
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('');
 
+  const borderColor = shouldGrayscale
+    ? BLACK_COLOR
+    : hakone
+      ? '#EA4D15'
+      : '#0D82C7';
+  const textColor = shouldGrayscale
+    ? BLACK_COLOR
+    : hakone
+      ? '#6A3906'
+      : '#0D82C7';
+
   return (
     <View style={withOutline ? styles.optionalBorder : undefined}>
-      <View
-        style={[styles.root, { borderColor: hakone ? '#EA4D15' : '#0D82C7' }]}
-      >
-        <Typography
-          style={[styles.lineSymbol, { color: hakone ? '#6A3906' : '#0D82C7' }]}
-        >
+      <View style={[styles.root, { borderColor }]}>
+        <Typography style={[styles.lineSymbol, { color: textColor }]}>
           {lineSymbol}
         </Typography>
-        <Typography
-          style={[
-            styles.stationNumber,
-            { color: hakone ? '#6A3906' : '#0D82C7' },
-          ]}
-        >
+        <Typography style={[styles.stationNumber, { color: textColor }]}>
           {stationNumber}
         </Typography>
       </View>

@@ -406,6 +406,18 @@ const MainScreen: React.FC = () => {
         };
       }
 
+      if (
+        prev.bottomState === 'LINE' &&
+        !transferLines.length &&
+        isTypeWillChange &&
+        !shouldHideTypeChange
+      ) {
+        return {
+          ...prev,
+          bottomState: 'TYPE_CHANGE',
+        };
+      }
+
       if (prev.bottomState === 'TRANSFER') {
         if (isTypeWillChange && !shouldHideTypeChange) {
           return {
@@ -664,7 +676,13 @@ const MainScreen: React.FC = () => {
 
   return (
     <>
-      <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
+      <Pressable
+        style={[
+          StyleSheet.absoluteFill,
+          theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
+        ]}
+        onPress={updateBottomState}
+      >
         <Header />
         {inner}
       </Pressable>

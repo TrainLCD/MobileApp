@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
@@ -18,27 +17,26 @@ import {
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
-import { CustomModal } from '~/components/CustomModal';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
+import { ThemeConfirmModal } from '~/components/ThemeConfirmModal';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { APP_THEME, type AppTheme } from '~/models/Theme';
-import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
+import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
+import { isLEDThemeAtom, themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getSettingsThemes } from '~/utils/theme';
-import { getThemeInfo } from '~/utils/themeInfo';
 import {
   ASYNC_STORAGE_KEYS,
+  AUTO_THEME_GRADIENT_COLORS,
   IN_USE_COLOR_MAP,
-  LED_THEME_BG_COLOR,
 } from '../constants';
 
 type SettingItem = {
-  id: AppTheme;
+  id: ThemePreference;
   title: string;
   hidden: boolean;
 };
@@ -72,7 +70,10 @@ const SettingsItem = ({
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const themeColor = IN_USE_COLOR_MAP[item.id];
+  const isAuto = item.id === THEME_PREFERENCE.AUTO;
+  const themeColor = isAuto
+    ? AUTO_THEME_GRADIENT_COLORS[0]
+    : IN_USE_COLOR_MAP[item.id as keyof typeof IN_USE_COLOR_MAP];
 
   return (
     <Pressable
@@ -103,7 +104,11 @@ const SettingsItem = ({
         }}
       >
         <LinearGradient
-          colors={[themeColor, lighten(0.1, themeColor)]}
+          colors={
+            isAuto
+              ? AUTO_THEME_GRADIENT_COLORS
+              : [themeColor, lighten(0.1, themeColor)]
+          }
           style={{
             flex: 1,
             justifyContent: 'center',
@@ -125,23 +130,15 @@ const SettingsItem = ({
 const ThemeSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [pendingTheme, setPendingTheme] = useState<SettingItem | null>(null);
+  const [isThemeModalVisible, setIsThemeModalVisible] = useState(false);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
-  const currentTheme = useAtomValue(themeAtom);
-  const setTheme = useSetAtom(themeAtom);
+  const currentPreference = useAtomValue(themePreferenceAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const setThemePreference = useSetAtom(themePreferenceAtom);
 
   const navigation = useNavigation();
-
-  const themeInfo = useMemo(
-    () => pendingTheme && getThemeInfo(pendingTheme.id),
-    [pendingTheme]
-  );
-  const previewImage = useMemo(
-    () => (isTablet ? themeInfo?.tabletImage : themeInfo?.spImage),
-    [themeInfo]
-  );
 
   const SETTING_ITEMS: SettingItem[] = useMemo(() => {
     const themes = getSettingsThemes();
@@ -158,10 +155,13 @@ const ThemeSettingsScreen: React.FC = () => {
   );
 
   const handleApplyTheme = useCallback(
-    async (theme: AppTheme) => {
+    async (preference: ThemePreference) => {
       try {
-        await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
-        setTheme(theme);
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
+          preference
+        );
+        setThemePreference(preference);
       } catch (error) {
         console.error('Failed to toggle theme setting', error);
         Alert.alert(
@@ -170,29 +170,34 @@ const ThemeSettingsScreen: React.FC = () => {
         );
       }
     },
-    [setTheme]
+    [setThemePreference]
   );
 
   const handleConfirmThemeChange = useCallback(() => {
     if (pendingTheme) {
       handleApplyTheme(pendingTheme.id);
-      setPendingTheme(null);
     }
+    setIsThemeModalVisible(false);
   }, [pendingTheme, handleApplyTheme]);
 
   const handleCloseModal = useCallback(() => {
+    setIsThemeModalVisible(false);
+  }, []);
+
+  const handleCloseAnimationEnd = useCallback(() => {
     setPendingTheme(null);
   }, []);
 
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
-      const state = currentTheme === item.id;
+      const state = currentPreference === item.id;
 
       const onToggle = () => {
         if (state) {
           return;
         }
         setPendingTheme(item);
+        setIsThemeModalVisible(true);
       };
 
       return (
@@ -205,7 +210,7 @@ const ThemeSettingsScreen: React.FC = () => {
         />
       );
     },
-    [visibleItems.length, currentTheme]
+    [visibleItems.length, currentPreference]
   );
 
   const keyExtractor = useCallback((item: SettingItem) => item.id, []);
@@ -228,9 +233,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View
-        style={[styles.root, currentTheme !== APP_THEME.LED && styles.screenBg]}
-      >
+      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.FlatList
           data={visibleItems}
           keyExtractor={keyExtractor}
@@ -260,118 +263,14 @@ const ThemeSettingsScreen: React.FC = () => {
         scrollY={scrollY}
       />
       <FooterTabBar active="settings" />
-      <CustomModal
-        visible={pendingTheme !== null}
+      <ThemeConfirmModal
+        visible={isThemeModalVisible}
+        themeId={pendingTheme?.id ?? null}
+        themeTitle={pendingTheme?.title ?? ''}
         onClose={handleCloseModal}
-        contentContainerStyle={{
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          padding: 24,
-        }}
-      >
-        {pendingTheme && (
-          <View>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 16,
-              }}
-            >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: isLEDTheme ? 0 : 8,
-                  overflow: 'hidden',
-                  marginRight: 12,
-                }}
-              >
-                <LinearGradient
-                  colors={[
-                    IN_USE_COLOR_MAP[pendingTheme.id],
-                    lighten(0.1, IN_USE_COLOR_MAP[pendingTheme.id]),
-                  ]}
-                  style={{ flex: 1 }}
-                />
-              </View>
-              <Typography
-                style={{
-                  fontSize: RFValue(16),
-                  fontWeight: 'bold',
-                  flex: 1,
-                }}
-              >
-                {pendingTheme.title}
-              </Typography>
-            </View>
-            <Typography
-              style={{
-                fontSize: RFValue(12),
-                lineHeight: RFValue(16),
-                marginBottom: 16,
-              }}
-            >
-              {themeInfo?.description ?? ''}
-            </Typography>
-            <View
-              style={{
-                shadowColor: '#333',
-                shadowOpacity: 0.25,
-                shadowOffset: {
-                  width: 0,
-                  height: 0,
-                },
-                shadowRadius: 4,
-                borderRadius: isLEDTheme ? 0 : 16,
-              }}
-            >
-              <View
-                style={{
-                  width: '100%',
-                  aspectRatio: 16 / 9,
-                  backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
-                  borderRadius: isLEDTheme ? 0 : 16,
-                  marginBottom: 24,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  overflow: 'hidden',
-                  borderWidth: 1,
-                  borderColor: '#fff',
-                }}
-              >
-                <Image
-                  source={previewImage}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="contain"
-                />
-              </View>
-            </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'flex-end',
-                gap: 16,
-              }}
-            >
-              <Button
-                style={{ minWidth: 100 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={handleCloseModal}
-                outline
-              >
-                {translate('cancel')}
-              </Button>
-              <Button
-                style={{ minWidth: 100 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={handleConfirmThemeChange}
-              >
-                {translate('themeConfirmApply')}
-              </Button>
-            </View>
-          </View>
-        )}
-      </CustomModal>
+        onConfirm={handleConfirmThemeChange}
+        onCloseAnimationEnd={handleCloseAnimationEnd}
+      />
     </>
   );
 };

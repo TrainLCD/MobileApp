@@ -31,13 +31,17 @@ import {
   useFeedback,
   useWarningInfo,
 } from '../hooks';
-import type { AppTheme } from '../models/Theme';
+import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
+import type { ThemePreference } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
+import notifyState from '../store/atoms/notify';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
-import { themeAtom } from '../store/atoms/theme';
+import { themePreferenceAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import NewReportModal from './NewReportModal';
+import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
+import { TrainTypeListModal } from './TrainTypeListModal';
 import WarningPanel from './WarningPanel';
 
 type Props = {
@@ -48,10 +52,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { selectedBound } = useAtomValue(stationState);
   const { untouchableModeEnabled, devOverlayEnabled } =
     useAtomValue(tuningState);
-  const setNavigation = useSetAtom(navigationState);
+  const [{ autoModeEnabled, isAppLatest }, setNavigation] =
+    useAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
+  const setNotify = useSetAtom(notifyState);
   const setTuning = useSetAtom(tuningState);
-  const setTheme = useSetAtom(themeAtom);
+  const setThemePreference = useSetAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
@@ -66,7 +72,23 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const { showActionSheetWithOptions } = useActionSheet();
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
-  const { isAppLatest } = useAtomValue(navigationState);
+  const {
+    isSettingListModalOpen,
+    isTrainTypeModalVisible,
+    trainTypeName,
+    trainTypeColor,
+    trainTypeSelectLoading,
+    fetchTrainTypesLoading,
+    trainTypeDisabled,
+    trainTypeModalLine,
+    openSettingListModal,
+    closeSettingListModal,
+    handleTrainTypePress,
+    handleSettingListCloseAnimationEnd,
+    closeTrainTypeModal,
+    handleTrainTypeModalSelect,
+  } = useTrainTypeModal();
+
   const viewShotRef = useRef<ViewShot>(null);
 
   const styles = StyleSheet.create({
@@ -233,6 +255,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           ],
         }) ?? [];
 
+      actions.push({
+        label: translate('settings'),
+        handler: openSettingListModal,
+      });
+
       if (isDevApp) {
         actions.push({
           label: translate(
@@ -289,6 +316,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       handleReport,
       handleShare,
       navigation,
+      openSettingListModal,
       selectedBound,
       setTuning,
       showActionSheetWithOptions,
@@ -299,6 +327,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useEffect(() => {
     const loadSettings = async () => {
       const [
+        themePreferenceKey,
         prevThemeKey,
         enabledLanguagesStr,
         speechEnabledStr,
@@ -310,7 +339,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         headerTransitionDelayStr,
         bottomTransitionIntervalStr,
         untouchableModeEnabledStr,
+        wrongDirectionNotifyEnabledStr,
       ] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
@@ -322,10 +353,18 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED),
       ]);
 
-      if (prevThemeKey) {
-        setTheme(prevThemeKey as AppTheme);
+      if (themePreferenceKey) {
+        setThemePreference(themePreferenceKey as ThemePreference);
+      } else if (prevThemeKey) {
+        // 既存ユーザーの移行: 明示的に選択していたテーマを維持
+        setThemePreference(prevThemeKey as ThemePreference);
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
+          prevThemeKey
+        );
       }
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -412,10 +451,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           untouchableModeEnabled: untouchableModeEnabledStr === 'true',
         }));
       }
+      if (wrongDirectionNotifyEnabledStr) {
+        setNotify((prev) => ({
+          ...prev,
+          wrongDirectionNotifyEnabled:
+            wrongDirectionNotifyEnabledStr === 'true',
+        }));
+      }
     };
 
     loadSettings();
-  }, [setNavigation, setSpeech, setTuning, setTheme]);
+  }, [setNavigation, setSpeech, setTuning, setThemePreference, setNotify]);
 
   useEffect(() => {
     const { remove } = addScreenshotListener(() => {
@@ -426,6 +472,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
     return remove;
   }, [clearWarningInfo, selectedBound]);
+
+  const toggleAutoModeEnabled = useCallback(() => {
+    setNavigation((prev) => ({
+      ...prev,
+      autoModeEnabled: !prev.autoModeEnabled,
+    }));
+  }, [setNavigation]);
 
   const handleNewReportModalClose = useCallback(() => {
     setScreenShotBase64('');
@@ -508,6 +561,25 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           )}
         </View>
       </LongPressGestureHandler>
+      <SelectBoundSettingListModal
+        visible={isSettingListModalOpen}
+        onClose={closeSettingListModal}
+        autoModeEnabled={autoModeEnabled}
+        toggleAutoModeEnabled={toggleAutoModeEnabled}
+        trainTypeName={trainTypeName}
+        trainTypeColor={trainTypeColor}
+        trainTypeLoading={trainTypeSelectLoading}
+        onTrainTypePress={handleTrainTypePress}
+        onCloseAnimationEnd={handleSettingListCloseAnimationEnd}
+        trainTypeDisabled={trainTypeDisabled}
+      />
+      <TrainTypeListModal
+        visible={isTrainTypeModalVisible}
+        line={trainTypeModalLine}
+        loading={fetchTrainTypesLoading}
+        onClose={closeTrainTypeModal}
+        onSelect={handleTrainTypeModalSelect}
+      />
       {/* NOTE: このViewを外すとフィードバックモーダルのレイアウトが崩御する */}
       <View>
         <NewReportModal

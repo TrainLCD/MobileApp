@@ -3,11 +3,13 @@ import React from 'react';
 import { useHeaderCommonData } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import { themeAtom } from '~/store/atoms/theme';
+import HeaderE231 from './HeaderE231';
 import HeaderE235 from './HeaderE235';
 import HeaderJL from './HeaderJL';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import HeaderJRWest from './HeaderJRWest';
 import HeaderLED from './HeaderLED';
+import HeaderOdakyu from './HeaderOdakyu';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
@@ -39,6 +41,10 @@ const Header = () => {
       return <HeaderJL {...commonData} />;
     case APP_THEME.JR_KYUSHU:
       return <HeaderJRKyushu {...commonData} />;
+    case APP_THEME.ODAKYU:
+      return <HeaderOdakyu {...commonData} />;
+    case APP_THEME.E231:
+      return <HeaderE231 {...commonData} />;
     default:
       return null;
   }

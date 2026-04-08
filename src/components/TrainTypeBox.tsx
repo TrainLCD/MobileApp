@@ -12,6 +12,7 @@ import {
   Platform,
   Animated as RNAnimated,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
@@ -19,7 +20,6 @@ import { FONTS, parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
   useLazyPrevious,
-  useNextLine,
   useNextTrainType,
   usePrevious,
 } from '../hooks';
@@ -36,7 +36,10 @@ import Typography from './Typography';
 
 type Props = {
   trainType: TrainType | null;
-  isTY?: boolean;
+  localTypePrefix?: string;
+  nextTrainTypeColor?: string;
+  darkenColor?: boolean;
+  fontSizeScale?: number;
 };
 
 const styles = StyleSheet.create({
@@ -70,31 +73,41 @@ const styles = StyleSheet.create({
     width: isTablet ? 175 : 96.25,
     height: isTablet ? 55 : 30.25,
   },
+  nextTrainTypeWrapper: {
+    position: 'absolute',
+    top: isTablet ? 55 : 30.25,
+    alignItems: 'flex-start',
+    overflow: 'visible',
+    marginTop: 4,
+  },
   nextTrainType: {
     fontWeight: 'bold',
     fontSize: isTablet ? 18 : 12,
-    marginTop: 4,
-    position: 'absolute',
-    top: isTablet ? 55 : 30.25,
-    width: '100%',
   },
 });
 
-const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
+const TrainTypeBox: React.FC<Props> = ({
+  trainType,
+  localTypePrefix = '',
+  nextTrainTypeColor = '#444',
+  darkenColor = false,
+  fontSizeScale: fontSizeScaleRaw = 1,
+}: Props) => {
+  const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
+  const { width: windowWidth } = useWindowDimensions();
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
+  const nextTrainType = useNextTrainType();
 
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
-  const nextTrainType = useNextTrainType();
-  const nextLine = useNextLine();
-
   const trainTypeColor = useMemo(() => {
-    return trainType?.color ?? '#1f63c6';
+    const base = trainType?.color ?? '#1f63c6';
+    return base;
   }, [trainType]);
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
@@ -105,31 +118,28 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return isTY ? translate('tyLocalEn') : translate('localEn');
+        return translate(`${localTypePrefix}localEn`);
       case 'ZH':
-        return isTY ? translate('tyLocalZh') : translate('localZh');
+        return translate(`${localTypePrefix}localZh`);
       case 'KO':
-        return isTY ? translate('tyLocalKo') : translate('localKo');
+        return translate(`${localTypePrefix}localKo`);
       default:
-        return isTY ? translate('tyLocal') : translate('local');
+        return translate(`${localTypePrefix}local`);
     }
-  }, [headerLangState, isTY]);
+  }, [headerLangState, localTypePrefix]);
 
   const trainTypeNameJa = (trainType?.name || localTypeText)?.replace(
     parenthesisRegexp,
     ''
   );
   const trainTypeNameR = truncateTrainType(
-    trainType?.nameRoman ||
-      (isTY ? translate('tyLocalEn') : translate('localEn'))
+    trainType?.nameRoman || translate(`${localTypePrefix}localEn`)
   );
   const trainTypeNameZh = truncateTrainType(
-    trainType?.nameChinese ||
-      (isTY ? translate('tyLocalZh') : translate('localZh'))
+    trainType?.nameChinese || translate(`${localTypePrefix}localZh`)
   );
   const trainTypeNameKo = truncateTrainType(
-    trainType?.nameKorean ||
-      (isTY ? translate('tyLocalKo') : translate('localKo'))
+    trainType?.nameKorean || translate(`${localTypePrefix}localKo`)
   );
 
   const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
@@ -235,9 +245,29 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
     [textOpacityAnim]
   );
 
+  const nextTrainTypeCompanyName = useMemo(() => {
+    const company = nextTrainType?.line?.company;
+    if (!company) {
+      return null;
+    }
+    return headerLangState === 'EN'
+      ? (company.nameEnglishShort ?? company.nameShort ?? null)
+      : (company.nameShort ?? company.nameEnglishShort ?? null);
+  }, [nextTrainType, headerLangState]);
+
   const showNextTrainType = useMemo(
-    () => !!(nextLine && currentLine?.company?.id !== nextLine?.company?.id),
-    [currentLine, nextLine]
+    () =>
+      !!(
+        nextTrainTypeCompanyName &&
+        nextTrainType?.line &&
+        currentLine?.company?.id !== nextTrainType.line.company?.id
+      ),
+    [currentLine, nextTrainType, nextTrainTypeCompanyName]
+  );
+
+  const nextTrainTypeWrapperStyle = useMemo(
+    () => [styles.nextTrainTypeWrapper, { width: windowWidth }],
+    [windowWidth]
   );
 
   const numberOfLines = useMemo(
@@ -256,13 +286,29 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
       <View style={styles.box}>
         <LinearGradient
           colors={['#aaa', '#000', '#000', '#aaa']}
-          locations={[0.5, 0.5, 0.5, 0.9]}
+          locations={
+            darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
+          }
           style={styles.gradient}
         />
         <LinearGradient
           colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
           style={styles.gradient}
         />
+        {darkenColor ? (
+          <>
+            <LinearGradient
+              colors={['#00000000', '#00000033', '#00000000']}
+              locations={[0.35, 0.55, 0.85]}
+              style={styles.gradient}
+            />
+            <LinearGradient
+              colors={['#ffffff44', '#ffffff11', '#00000000']}
+              locations={[0, 0.35, 0.35]}
+              style={styles.gradient}
+            />
+          </>
+        ) : null}
 
         <View style={styles.textWrapper}>
           <RNAnimated.Text
@@ -275,6 +321,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
                 {
                   letterSpacing,
                   marginLeft,
+                  fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
                 },
               ],
             ]}
@@ -294,6 +341,7 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
             {
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
+              fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
             },
           ]}
           adjustsFontSizeToFit
@@ -303,23 +351,23 @@ const TrainTypeBox: React.FC<Props> = ({ trainType, isTY }: Props) => {
         </RNAnimated.Text>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
-        <Typography
-          style={[
-            styles.nextTrainType,
-            {
-              color: theme === APP_THEME.TY ? '#fff' : '#444',
-            },
-          ]}
-        >
-          {headerState.split('_')[1] === 'EN'
-            ? `${nextLine?.company?.nameEnglishShort} Line ${truncateTrainType(
-                nextTrainType?.nameRoman?.replace(parenthesisRegexp, ''),
-                true
-              )}`
-            : `${
-                nextLine?.company?.nameShort
-              }線内 ${nextTrainType?.name?.replace(parenthesisRegexp, '')}`}
-        </Typography>
+        <View style={nextTrainTypeWrapperStyle}>
+          <Typography
+            style={[
+              styles.nextTrainType,
+              {
+                color: nextTrainTypeColor,
+              },
+            ]}
+          >
+            {headerLangState === 'EN'
+              ? `${nextTrainTypeCompanyName} Line ${truncateTrainType(
+                  nextTrainType.nameRoman?.replace(parenthesisRegexp, ''),
+                  true
+                )}`
+              : `${nextTrainTypeCompanyName}線内 ${nextTrainType.name?.replace(parenthesisRegexp, '')}`}
+          </Typography>
+        </View>
       ) : null}
     </View>
   );

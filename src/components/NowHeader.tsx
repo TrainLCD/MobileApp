@@ -21,6 +21,7 @@ import stationState from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
 
@@ -74,6 +75,22 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     transformOrigin: 'left bottom',
   },
+  busStationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  busBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  busBadgeText: {
+    fontSize: isTablet ? 16 : 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
 });
 
 export type HeaderLayout = {
@@ -111,13 +128,22 @@ export const NowHeader = ({
     const label = locationPermissionsGranted
       ? translate('nowAtLabel')
       : translate('welcomeLabel');
-    if (!station) return { label, name: '' };
+    if (!station) return { label, name: '', isBus: false };
     const re = /\([^()]*\)/g;
     const name = isJapanese
       ? (station.name ?? '').replaceAll(re, '')
       : (station.nameRoman ?? station.name ?? '').replaceAll(re, '');
-    return { label, name };
+    const isBus = isBusLine(station.line);
+    return { label, name, isBus };
   }, [station, locationPermissionsGranted]);
+
+  const busBadgeStyle: ViewStyle = useMemo(
+    () => ({
+      backgroundColor: isLEDTheme ? '#2E7D32' : '#388E3C',
+      borderColor: isLEDTheme ? '#43A047' : '#2E7D32',
+    }),
+    [isLEDTheme]
+  );
 
   const COLLAPSE_RANGE = 64;
   const stackedOpacity = scrollY.interpolate({
@@ -226,13 +252,22 @@ export const NowHeader = ({
                     { transform: [{ scale: stationScale }] },
                   ]}
                 >
-                  <Typography
-                    style={styles.nowStation}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                  >
-                    {nowHeader.name ?? ''}
-                  </Typography>
+                  <View style={styles.busStationRow}>
+                    <Typography
+                      style={styles.nowStation}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      {nowHeader.name ?? ''}
+                    </Typography>
+                    {nowHeader.isBus ? (
+                      <View style={[styles.busBadge, busBadgeStyle]}>
+                        <Typography style={styles.busBadgeText}>
+                          {translate('toeiBusBadge')}
+                        </Typography>
+                      </View>
+                    ) : null}
+                  </View>
                 </RNAnimated.View>
               ) : locationPermissionsGranted ? (
                 <SkeletonPlaceholder borderRadius={4} speed={1500}>
@@ -260,6 +295,13 @@ export const NowHeader = ({
                   ? (nowHeader.name ?? '')
                   : translate('searchByStationName')}
               </Typography>
+              {nowHeader.isBus ? (
+                <View style={[styles.busBadge, busBadgeStyle]}>
+                  <Typography style={styles.busBadgeText}>
+                    {translate('toeiBusBadge')}
+                  </Typography>
+                </View>
+              ) : null}
             </RNAnimated.View>
           </View>
         </View>

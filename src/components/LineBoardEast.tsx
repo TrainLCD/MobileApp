@@ -1,13 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
   useTransferLinesFromStation,
 } from '~/hooks';
+import { useAfterNextStation } from '~/hooks/useAfterNextStation';
+import { useNextStation } from '~/hooks/useNextStation';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
 import lineState from '../store/atoms/line';
@@ -15,7 +17,9 @@ import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChevronTY';
+import { BarTerminalOdakyu } from './BarTerminalOdakyu';
+import { type ChevronColor, ChevronTY } from './ChevronTY';
+import { Heading } from './Heading';
 import {
   EmptyStationNameCell,
   LineDot,
@@ -30,11 +34,66 @@ import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
 } from './LineBoard/shared/styles/commonStyles';
+import NumberingIcon from './NumberingIcon';
+
+const localStyles = StyleSheet.create({
+  numberingIconContainer: {
+    position: 'absolute',
+    width: isTablet ? 96 : 64,
+    height: isTablet ? 96 : 64,
+    bottom: isTablet ? -22 : 52,
+    left: isTablet ? -24 : -16,
+    transform: [{ scale: 0.5 }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+  },
+  nextStopBanner: {
+    position: 'absolute',
+    bottom: 0,
+    left: '12.5%',
+    right: '12.5%',
+  },
+  nextStopBannerText: {
+    color: '#212121',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+});
+
+const NumberingIconView: React.FC<{
+  station: Station;
+  shouldGrayscale: boolean;
+}> = ({ station, shouldGrayscale }) => {
+  const numberingObj = useMemo(
+    () => station.stationNumbers?.[0],
+    [station.stationNumbers]
+  );
+
+  if (!numberingObj?.lineSymbolShape || !numberingObj?.stationNumber) {
+    return null;
+  }
+
+  return (
+    <View style={localStyles.numberingIconContainer}>
+      <NumberingIcon
+        shape={numberingObj.lineSymbolShape}
+        lineColor={numberingObj.lineSymbolColor || '#000'}
+        stationNumber={numberingObj.stationNumber}
+        threeLetterCode={station.threeLetterCode}
+        transformOrigin="center"
+        shouldGrayscale={shouldGrayscale}
+      />
+    </View>
+  );
+};
 
 type Props = {
   lineColors: (string | null | undefined)[];
   stations: Station[];
   hasTerminus: boolean;
+  chevronColorPair?: readonly [ChevronColor, ChevronColor];
+  isOdakyu?: boolean;
 };
 
 interface StationNameCellProps {
@@ -44,7 +103,8 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
+  chevronColor: ChevronColor;
+  isOdakyu?: boolean;
 }
 
 // Helper for bar gradients
@@ -62,9 +122,10 @@ const isSplitAtCurrentStation = (
   stations: Station[]
 ) =>
   arrived &&
-  currentStationIndex !== 0 &&
   currentStationIndex === index &&
   currentStationIndex !== stations.length - 1;
+
+const ODAKYU_HIGHLIGHT_OFFSET = 0.35;
 
 const getMainBarColors = (line?: Line): readonly [string, string] =>
   line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb'];
@@ -74,8 +135,8 @@ const getLineBarColors = (
   lineColors: (string | null | undefined)[],
   index: number
 ): readonly [string, string] => {
-  const base = lineColors[index] || line.color;
-  return base ? [`${base}ff`, `${base}bb`] : ['#000000ff', '#000000bb'];
+  const raw = lineColors[index] || line.color;
+  return raw ? [`${raw}ff`, `${raw}bb`] : ['#000000ff', '#000000bb'];
 };
 
 const createBarGradient = (
@@ -109,6 +170,7 @@ const renderBarGradients = ({
   currentStationIndex,
   stations,
   passed,
+  isOdakyu,
 }: {
   barLeft: number;
   barWidth: number;
@@ -119,6 +181,7 @@ const renderBarGradients = ({
   currentStationIndex: number;
   stations: Station[];
   passed: boolean;
+  isOdakyu?: boolean;
 }) => {
   const secondaryVisible = shouldShowSecondaryBar(
     arrived,
@@ -133,6 +196,8 @@ const renderBarGradients = ({
     stations
   );
 
+  const barHighlightOffset = isOdakyu ? ODAKYU_HIGHLIGHT_OFFSET : 0.5;
+
   const gradients = [
     createBarGradient(
       'bar-bg',
@@ -140,7 +205,12 @@ const renderBarGradients = ({
       barLeft,
       barWidth,
       {
-        locations: [0.5, 0.5, 0.5, 0.9],
+        locations: [
+          barHighlightOffset,
+          barHighlightOffset,
+          barHighlightOffset,
+          0.9,
+        ],
       }
     ),
     createBarGradient('bar-main', getMainBarColors(line), barLeft, barWidth),
@@ -154,32 +224,69 @@ const renderBarGradients = ({
         barLeft,
         barWidth,
         {
-          locations: [0.5, 0.5, 0.5, 0.9],
+          locations: [
+            barHighlightOffset,
+            barHighlightOffset,
+            barHighlightOffset,
+            0.9,
+          ],
         }
       )
     );
   }
 
   if (splitHere) {
+    // index 0ではバー左端からドット中心までの距離を灰色幅に使う
+    const dotCenterOffset = isTablet ? 24 : 16;
+    const splitWidth =
+      index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
     gradients.push(
       createBarGradient(
         'bar-main-half',
         getMainBarColors(line),
         barLeft,
-        barWidth / 2.5
+        splitWidth
       )
     );
   }
 
   if (secondaryVisible) {
-    const left = splitHere ? barLeft + barWidth / 2.5 : barLeft;
-    const width = splitHere ? barWidth / 2.5 : barWidth;
+    const dotCenterOffset = isTablet ? 24 : 16;
+    const splitWidth =
+      index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
+    const left = splitHere ? barLeft + splitWidth : barLeft;
+    const width = splitHere ? barWidth - splitWidth : barWidth;
     gradients.push(
       createBarGradient(
         'bar-color',
         getLineBarColors(line, lineColors, index),
         left,
         width
+      )
+    );
+  }
+
+  if (isOdakyu) {
+    gradients.push(
+      createBarGradient(
+        'bar-shadow',
+        ['#00000000', '#00000033', '#00000000'],
+        barLeft,
+        barWidth,
+        {
+          locations: [barHighlightOffset, 0.55, 0.85],
+        }
+      )
+    );
+    gradients.push(
+      createBarGradient(
+        'bar-gloss',
+        ['#ffffff44', '#ffffff11', '#00000000'],
+        barLeft,
+        barWidth,
+        {
+          locations: [0, barHighlightOffset, barHighlightOffset],
+        }
       )
     );
   }
@@ -195,6 +302,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   chevronColor,
+  isOdakyu,
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
@@ -227,6 +335,24 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const dim = useWindowDimensions();
 
+  const hasDrawableNumbering = useMemo(
+    () =>
+      station.stationNumbers?.some(
+        (sn) => sn?.lineSymbolShape && sn?.stationNumber
+      ) ?? false,
+    [station.stationNumbers]
+  );
+
+  const nameCommonStyle = useMemo(() => {
+    if (!isOdakyu || !hasDrawableNumbering) {
+      return styles.nameCommon;
+    }
+    return {
+      ...styles.nameCommon,
+      marginBottom: isTablet ? 45 : 95,
+    };
+  }, [isOdakyu, hasDrawableNumbering]);
+
   return (
     <>
       <View
@@ -239,7 +365,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         <View
           style={[
-            styles.nameCommon,
+            nameCommonStyle,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
@@ -252,6 +378,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             passed={getIsPass(station) || shouldGrayscale}
           />
         </View>
+        {isOdakyu ? (
+          <NumberingIconView
+            station={station}
+            shouldGrayscale={shouldGrayscale}
+          />
+        ) : null}
         {renderBarGradients({
           barLeft,
           barWidth,
@@ -262,6 +394,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           currentStationIndex,
           stations,
           passed,
+          isOdakyu,
         })}
         <LineDot
           station={station}
@@ -269,21 +402,39 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
+          isOdakyu={isOdakyu}
         />
         {stations.length - 1 === index ? (
-          <BarTerminalEast
-            width={isTablet ? 41 : 27}
-            height={isTablet ? 48 : 32}
-            style={[
-              styles.barTerminal,
-              {
-                left: barLeft + barWidth,
-                bottom: isTablet ? -52 : 32,
-              },
-            ]}
-            lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
-            hasTerminus={hasTerminus}
-          />
+          isOdakyu ? (
+            <BarTerminalOdakyu
+              width={isTablet ? 24 : 16}
+              height={isTablet ? 48 : 32}
+              style={[
+                styles.barTerminal,
+                {
+                  left: barLeft + barWidth,
+                  bottom: isTablet ? -52 : 32,
+                },
+              ]}
+              lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
+              hasTerminus={hasTerminus}
+              barHighlightOffset={ODAKYU_HIGHLIGHT_OFFSET}
+            />
+          ) : (
+            <BarTerminalEast
+              width={isTablet ? 41 : 27}
+              height={isTablet ? 48 : 32}
+              style={[
+                styles.barTerminal,
+                {
+                  left: barLeft + barWidth,
+                  bottom: isTablet ? -52 : 32,
+                },
+              ]}
+              lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
+              hasTerminus={hasTerminus}
+            />
+          )
         ) : null}
       </View>
       <View
@@ -307,14 +458,25 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 };
 
+const DEFAULT_CHEVRON_PAIR: readonly [ChevronColor, ChevronColor] = [
+  'RED',
+  'BLUE',
+];
+
 const LineBoardEast: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  chevronColorPair = DEFAULT_CHEVRON_PAIR,
+  isOdakyu,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+  const [chevronColor, setChevronColor] = useState<ChevronColor>(
+    chevronColorPair[1]
+  );
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
+  const nextStation = useNextStation();
+  const afterNextStation = useAfterNextStation();
 
   const dim = useWindowDimensions();
 
@@ -323,9 +485,27 @@ const LineBoardEast: React.FC<Props> = ({
     [currentLine, selectedLine]
   );
 
+  const hasPassStation = useMemo(
+    () => stations.some((s) => getIsPass(s)),
+    [stations]
+  );
+
+  const showNextStopBanner = useMemo(
+    () =>
+      isOdakyu &&
+      isTablet &&
+      hasPassStation &&
+      !!nextStation?.name &&
+      !!afterNextStation?.name,
+    [isOdakyu, hasPassStation, nextStation?.name, afterNextStation?.name]
+  );
+
   const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
-    []
+    () =>
+      setChevronColor((prev) =>
+        prev === chevronColorPair[0] ? chevronColorPair[1] : chevronColorPair[0]
+      ),
+    [chevronColorPair]
   );
 
   useInterval(intervalStep, 1000);
@@ -362,11 +542,12 @@ const LineBoardEast: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             chevronColor={chevronColor}
+            isOdakyu={isOdakyu}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations]
+    [chevronColor, hasTerminus, line, lineColors, stations, isOdakyu]
   );
 
   const stationsWithEmpty = useMemo(
@@ -388,6 +569,19 @@ const LineBoardEast: React.FC<Props> = ({
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
+      {showNextStopBanner ? (
+        <LinearGradient
+          colors={['white', '#ccc', '#ccc', 'white']}
+          start={[0, 1]}
+          end={[1, 0]}
+          locations={[0, 0.1, 0.9, 1]}
+          style={localStyles.nextStopBanner}
+        >
+          <Heading style={localStyles.nextStopBannerText}>
+            {`${nextStation?.name}のつぎは${afterNextStation?.name}にとまります`}
+          </Heading>
+        </LinearGradient>
+      ) : null}
     </View>
   );
 };

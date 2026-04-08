@@ -1,17 +1,19 @@
 import { Portal } from '@gorhom/portal';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useRef, useState } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Animated,
   type GestureResponderEvent,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
+  type StyleProp,
   StyleSheet,
   View,
+  type ViewStyle,
 } from 'react-native';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import isTablet from '~/utils/isTablet';
 
 type Props = {
   visible: boolean;
@@ -51,18 +53,19 @@ export const CustomModal: React.FC<Props> = ({
   avoidKeyboard = false,
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
-  const opacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const contentOpacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const backdropOpacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
   const onShowRef = useRef(onShow);
   const onCloseAnimationEndRef = useRef(onCloseAnimationEnd);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const animatedBackdropStyle = {
-    opacity,
+    opacity: backdropOpacity,
   };
   const animatedContentStyle = {
-    opacity,
+    opacity: contentOpacity,
     transform: [
       {
-        scale: opacity.interpolate({
+        scale: contentOpacity.interpolate({
           inputRange: [0, 1],
           outputRange: [0.96, 1],
         }),
@@ -81,11 +84,18 @@ export const CustomModal: React.FC<Props> = ({
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: animationDuration,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
+      Animated.parallel([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: animationDuration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: animationDuration,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
         if (finished) {
           onShowRef.current?.();
         }
@@ -93,17 +103,24 @@ export const CustomModal: React.FC<Props> = ({
       return;
     }
 
-    Animated.timing(opacity, {
-      toValue: 0,
-      duration: animationDuration,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
+    Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: animationDuration,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentOpacity, {
+        toValue: 0,
+        duration: animationDuration,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
       if (finished && !visible) {
         setIsMounted(false);
         onCloseAnimationEndRef.current?.();
       }
     });
-  }, [animationDuration, opacity, visible]);
+  }, [animationDuration, backdropOpacity, contentOpacity, visible]);
 
   const handleBackdropPress = () => {
     Keyboard.dismiss();
@@ -191,7 +208,9 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
-    maxWidth: 640,
+    maxWidth: isTablet ? 480 : 400,
+    maxHeight: '75%',
+    overflow: 'hidden',
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,
