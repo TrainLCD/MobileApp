@@ -4,6 +4,9 @@ import HeaderE231 from './HeaderE231';
 
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => ({})),
+  atom: jest.fn((initialValue) => initialValue),
+  useAtom: jest.fn((val) => [val, jest.fn()]),
+  useSetAtom: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('~/hooks', () => ({
