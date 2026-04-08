@@ -402,7 +402,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
-          round={isOdakyu}
+          isOdakyu={isOdakyu}
         />
         {stations.length - 1 === index ? (
           isOdakyu ? (

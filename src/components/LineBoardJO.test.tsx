@@ -59,7 +59,7 @@ jest.mock('./PadLineMarks', () => ({
   default: jest.fn(() => null),
 }));
 
-jest.mock('./PassChevronTY', () => ({
+jest.mock('./PassChevronEast', () => ({
   __esModule: true,
   default: jest.fn(() => null),
 }));
@@ -228,16 +228,16 @@ describe('LineBoardJO', () => {
     expect(result.toJSON()).toBeTruthy();
   });
 
-  it('通過駅の場合、PassChevronTYが表示される', () => {
+  it('通過駅の場合、PassChevronEastが表示される', () => {
     const getIsPass = require('~/utils/isPass').default;
     getIsPass.mockReturnValue(true);
-    const PassChevronTY = require('./PassChevronTY').default;
+    const PassChevronEast = require('./PassChevronEast').default;
     render(
       <LineBoardJO
         stations={mockStations}
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(PassChevronTY).toHaveBeenCalled();
+    expect(PassChevronEast).toHaveBeenCalled();
   });
 });

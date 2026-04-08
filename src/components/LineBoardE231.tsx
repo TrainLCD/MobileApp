@@ -22,7 +22,7 @@ import {
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
 import PadLineMarks from './PadLineMarks';
-import PassChevronTY from './PassChevronTY';
+import PassChevronEast from './PassChevronEast';
 
 interface Props {
   lineColors: (string | null | undefined)[];
@@ -221,7 +221,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                 { marginLeft: isTablet ? 0 : widthScale(5) },
               ]}
             >
-              <PassChevronTY gradient={false} />
+              <PassChevronEast gradient={false} />
             </View>
             <View style={localStyles.marksContainer}>
               <PadLineMarks

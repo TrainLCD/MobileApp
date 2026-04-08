@@ -31,12 +31,12 @@ jest.mock('../../../PadLineMarks', () => {
   };
 });
 
-jest.mock('../../../PassChevronTY', () => {
+jest.mock('../../../PassChevronEast', () => {
   const _React = require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: () => <View testID="pass-chevron-ty" />,
+    default: () => <View testID="pass-chevron-east" />,
   };
 });
 
@@ -54,7 +54,7 @@ describe('LineDot', () => {
     jest.clearAllMocks();
   });
 
-  it('通過駅（getIsPass=true）の場合、PassChevronTYを表示する', () => {
+  it('通過駅（getIsPass=true）の場合、PassChevronEastを表示する', () => {
     const passStation = {
       ...mockStation,
       stopCondition: 'NOT',
@@ -72,7 +72,7 @@ describe('LineDot', () => {
       />
     );
 
-    expect(getByTestId('pass-chevron-ty')).toBeTruthy();
+    expect(getByTestId('pass-chevron-east')).toBeTruthy();
     expect(getByTestId('pad-line-marks')).toBeTruthy();
   });
 
@@ -90,7 +90,7 @@ describe('LineDot', () => {
       />
     );
 
-    expect(queryByTestId('pass-chevron-ty')).toBeNull();
+    expect(queryByTestId('pass-chevron-east')).toBeNull();
     expect(getByTestId('pad-line-marks')).toBeTruthy();
   });
 
