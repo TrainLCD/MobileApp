@@ -301,7 +301,6 @@
   "wrongDirectionWarning": "選択した行き先と逆方向に進んでいる可能性があります。アプリの設定をご確認ください。",
   "wrongDirectionLoopLineWarning": "選択した行き先と逆方向に進んでいる可能性があります。環状線のため到着は可能ですが、遠回りになります。",
   "wrongDirectionNotificationTitle": "方向のお知らせ",
-  "trainTypeMismatchWarning": "選択した列車種別と実際の運行種別が異なる可能性があります。設定をご確認ください。",
   "toeiBusBadge": "都営バス",
   "notificationSettings": "通知",
   "wrongDirectionNotifyToggle": "逆走通知",

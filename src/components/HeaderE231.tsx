@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useClock } from '../hooks';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
@@ -7,6 +7,7 @@ import { RFValue } from '../utils/rfValue';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxE231';
+import Typography from './Typography';
 
 const BOUND_AREA_HEIGHT = isTablet ? 64 : 48;
 const BOTTOM_HEIGHT = isTablet ? 128 : 84;
@@ -206,21 +207,25 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
         <View style={styles.boundWrapper}>
           <View style={styles.spacer} />
           <View style={styles.boundInner}>
-            <Text
+            <Typography
               style={styles.boundText}
               numberOfLines={2}
               adjustsFontSizeToFit
             >
               {firstStop ? '' : boundText}
-            </Text>
+            </Typography>
           </View>
           <View style={styles.spacer} />
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <Text style={styles.state} adjustsFontSizeToFit numberOfLines={2}>
+            <Typography
+              style={styles.state}
+              adjustsFontSizeToFit
+              numberOfLines={2}
+            >
               {resolvedStateText}
-            </Text>
+            </Typography>
           </View>
 
           <View style={styles.stationArea}>
@@ -235,27 +240,29 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
               />
             ) : null}
             <View style={styles.stationNameWrapper}>
-              <Text
+              <Typography
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={styles.stationName}
               >
                 {stationText}
-              </Text>
+              </Typography>
             </View>
           </View>
           <View style={styles.spacer}>
             {boundSuffixText ? (
-              <Text style={styles.boundSuffix}>{boundSuffixText}</Text>
+              <Typography style={styles.boundSuffix}>
+                {boundSuffixText}
+              </Typography>
             ) : null}
           </View>
         </View>
         <View style={styles.clockContainer}>
-          <Text style={styles.clockLabel}>{clockLabelText}</Text>
+          <Typography style={styles.clockLabel}>{clockLabelText}</Typography>
           <View style={styles.clockBox}>
-            <Text style={styles.clockText}>{hours}</Text>
-            <Text style={styles.clockText}>:</Text>
-            <Text style={styles.clockText}>{minutes}</Text>
+            <Typography style={styles.clockText}>{hours}</Typography>
+            <Typography style={styles.clockText}>:</Typography>
+            <Typography style={styles.clockText}>{minutes}</Typography>
           </View>
         </View>
       </View>

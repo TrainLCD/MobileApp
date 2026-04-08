@@ -25,7 +25,7 @@ import {
 } from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
-import PassChevronTY from './PassChevronTY';
+import PassChevronEast from './PassChevronEast';
 import Typography from './Typography';
 
 interface Props {
@@ -356,7 +356,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
                 },
               ]}
             >
-              <PassChevronTY />
+              <PassChevronEast />
             </View>
           ) : (
             <View

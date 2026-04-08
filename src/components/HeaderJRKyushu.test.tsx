@@ -17,6 +17,9 @@ jest.mock('jotai', () => ({
     }
     return {};
   }),
+  atom: jest.fn((initialValue) => initialValue),
+  useAtom: jest.fn((val) => [val, jest.fn()]),
+  useSetAtom: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('react-native-reanimated', () => {

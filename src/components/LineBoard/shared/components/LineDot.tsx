@@ -6,7 +6,7 @@ import { useScale } from '~/hooks/useScale';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import PadLineMarks from '../../../PadLineMarks';
-import PassChevronTY from '../../../PassChevronTY';
+import PassChevronEast from '../../../PassChevronEast';
 import { commonLineBoardStyles as styles } from '../styles/commonStyles';
 
 export type LineDotProps = {
@@ -15,7 +15,7 @@ export type LineDotProps = {
   transferLines: Line[];
   arrived: boolean;
   passed: boolean;
-  round?: boolean;
+  isOdakyu?: boolean;
 };
 
 export const LineDot: React.FC<LineDotProps> = ({
@@ -24,7 +24,7 @@ export const LineDot: React.FC<LineDotProps> = ({
   transferLines,
   arrived,
   passed,
-  round = false,
+  isOdakyu = false,
 }) => {
   const { widthScale } = useScale();
 
@@ -39,7 +39,7 @@ export const LineDot: React.FC<LineDotProps> = ({
             },
           ]}
         >
-          <PassChevronTY gradient={round} />
+          <PassChevronEast gradient={isOdakyu} />
         </View>
         <View style={styles.marksContainer}>
           <PadLineMarks
@@ -58,7 +58,7 @@ export const LineDot: React.FC<LineDotProps> = ({
         <LinearGradient
           style={[
             styles.chevronGradient,
-            round && {
+            isOdakyu && {
               width: isTablet ? 36 : 24,
               height: isTablet ? 36 : 24,
               borderRadius: isTablet ? 18 : 12,
@@ -69,11 +69,11 @@ export const LineDot: React.FC<LineDotProps> = ({
           colors={
             passed && !arrived
               ? ['#ccc', '#dadada']
-              : round
+              : isOdakyu
                 ? ['#fff', '#e0e0e0', '#aaa']
                 : ['#fdfbfb', '#ebedee']
           }
-          {...(round && { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } })}
+          {...(isOdakyu && { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } })}
         />
       </View>
       <View style={styles.marksContainer}>

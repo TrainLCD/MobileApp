@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Animated as RNAnimated, StyleSheet, Text, View } from 'react-native';
+import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
@@ -8,6 +8,7 @@ import { RFValue } from '../utils/rfValue';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
+import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
@@ -159,7 +160,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                   styles.boundTextContainer,
                 ]}
               >
-                <Text
+                <Typography
                   adjustsFontSizeToFit
                   numberOfLines={1}
                   style={styles.connectedLines}
@@ -167,8 +168,8 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                   {connectedLines?.length && isJapaneseState
                     ? `${connectionText}直通 `
                     : null}
-                </Text>
-                <Text style={styles.boundText}>{boundText}</Text>
+                </Typography>
+                <Typography style={styles.boundText}>{boundText}</Typography>
               </RNAnimated.Text>
               <RNAnimated.Text
                 style={[
@@ -176,7 +177,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                   styles.boundTextContainer,
                 ]}
               >
-                <Text
+                <Typography
                   adjustsFontSizeToFit
                   numberOfLines={1}
                   style={styles.connectedLines}
@@ -184,8 +185,10 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                   {connectedLines?.length && animation.prevIsJapaneseState
                     ? `${animation.prevConnectionText}直通 `
                     : null}
-                </Text>
-                <Text style={styles.boundText}>{animation.prevBoundText}</Text>
+                </Typography>
+                <Typography style={styles.boundText}>
+                  {animation.prevBoundText}
+                </Typography>
               </RNAnimated.Text>
             </View>
           ) : null}

@@ -6,7 +6,7 @@ type Props = {
   gradient?: boolean;
 };
 
-const PassChevronTY: React.FC<Props> = ({ gradient = false }) => {
+const PassChevronEast: React.FC<Props> = ({ gradient = false }) => {
   const id = useId();
 
   return (
@@ -35,4 +35,4 @@ const PassChevronTY: React.FC<Props> = ({ gradient = false }) => {
   );
 };
 
-export default PassChevronTY;
+export default PassChevronEast;
