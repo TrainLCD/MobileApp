@@ -407,16 +407,9 @@ export type TtsSegment = {
 export type CompanyFieldsFragment = {
   __typename: 'Company';
   id: number | null | undefined;
-  name: string | null | undefined;
-  nameEnglishFull: string | null | undefined;
   nameEnglishShort: string | null | undefined;
-  nameFull: string | null | undefined;
   nameKatakana: string | null | undefined;
   nameShort: string | null | undefined;
-  railroadId: number | null | undefined;
-  status: OperationStatus | null | undefined;
-  type: CompanyType | null | undefined;
-  url: string | null | undefined;
 };
 
 export type LineSymbolFieldsFragment = {
@@ -434,6 +427,16 @@ export type StationNumberFieldsFragment = {
   stationNumber: string | null | undefined;
 };
 
+export type TtsSegmentFieldsFragment = {
+  __typename: 'TtsSegment';
+  alphabet: TtsAlphabet | null | undefined;
+  fallbackText: string | null | undefined;
+  lang: string | null | undefined;
+  pronunciation: string | null | undefined;
+  separator: string | null | undefined;
+  surface: string | null | undefined;
+};
+
 export type TinyTrainTypeFieldsFragment = {
   __typename: 'TrainTypeNested';
   id: number | null | undefined;
@@ -448,12 +451,23 @@ export type TinyTrainTypeFieldsFragment = {
   color: string | null | undefined;
   direction: TrainDirection | null | undefined;
   kind: TrainTypeKind | null | undefined;
+  nameTtsSegments:
+    | Array<{
+        __typename: 'TtsSegment';
+        alphabet: TtsAlphabet | null | undefined;
+        fallbackText: string | null | undefined;
+        lang: string | null | undefined;
+        pronunciation: string | null | undefined;
+        separator: string | null | undefined;
+        surface: string | null | undefined;
+      }>
+    | null
+    | undefined;
 };
 
 export type LineNestedFieldsFragment = {
   __typename: 'LineNested';
   id: number | null | undefined;
-  averageDistance: number | null | undefined;
   color: string | null | undefined;
   lineType: LineType | null | undefined;
   nameFull: string | null | undefined;
@@ -469,16 +483,9 @@ export type LineNestedFieldsFragment = {
     | {
         __typename: 'Company';
         id: number | null | undefined;
-        name: string | null | undefined;
-        nameEnglishFull: string | null | undefined;
         nameEnglishShort: string | null | undefined;
-        nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameShort: string | null | undefined;
-        railroadId: number | null | undefined;
-        status: OperationStatus | null | undefined;
-        type: CompanyType | null | undefined;
-        url: string | null | undefined;
       }
     | null
     | undefined;
@@ -502,6 +509,18 @@ export type LineNestedFieldsFragment = {
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
         hasTrainTypes: boolean | null | undefined;
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
+          | null
+          | undefined;
         stationNumbers:
           | Array<{
               __typename: 'StationNumber';
@@ -530,7 +549,98 @@ export type LineNestedFieldsFragment = {
         color: string | null | undefined;
         direction: TrainDirection | null | undefined;
         kind: TrainTypeKind | null | undefined;
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
+          | null
+          | undefined;
       }
+    | null
+    | undefined;
+  nameTtsSegments:
+    | Array<{
+        __typename: 'TtsSegment';
+        alphabet: TtsAlphabet | null | undefined;
+        fallbackText: string | null | undefined;
+        lang: string | null | undefined;
+        pronunciation: string | null | undefined;
+        separator: string | null | undefined;
+        surface: string | null | undefined;
+      }>
+    | null
+    | undefined;
+};
+
+export type LineInStationFieldsFragment = {
+  __typename: 'LineNested';
+  id: number | null | undefined;
+  color: string | null | undefined;
+  lineType: LineType | null | undefined;
+  nameKatakana: string | null | undefined;
+  nameRoman: string | null | undefined;
+  nameShort: string | null | undefined;
+  nameChinese: string | null | undefined;
+  nameKorean: string | null | undefined;
+  transportType: TransportType | null | undefined;
+  company:
+    | {
+        __typename: 'Company';
+        id: number | null | undefined;
+        nameEnglishShort: string | null | undefined;
+        nameKatakana: string | null | undefined;
+        nameShort: string | null | undefined;
+      }
+    | null
+    | undefined;
+  lineSymbols:
+    | Array<{
+        __typename: 'LineSymbol';
+        color: string | null | undefined;
+        shape: string | null | undefined;
+        symbol: string | null | undefined;
+      }>
+    | null
+    | undefined;
+  station:
+    | {
+        __typename: 'StationNested';
+        id: number | null | undefined;
+        groupId: number | null | undefined;
+        name: string | null | undefined;
+        nameRoman: string | null | undefined;
+        nameChinese: string | null | undefined;
+        nameKorean: string | null | undefined;
+        hasTrainTypes: boolean | null | undefined;
+        stationNumbers:
+          | Array<{
+              __typename: 'StationNumber';
+              lineSymbol: string | null | undefined;
+              lineSymbolColor: string | null | undefined;
+              lineSymbolShape: string | null | undefined;
+              stationNumber: string | null | undefined;
+            }>
+          | null
+          | undefined;
+      }
+    | null
+    | undefined;
+  nameTtsSegments:
+    | Array<{
+        __typename: 'TtsSegment';
+        alphabet: TtsAlphabet | null | undefined;
+        fallbackText: string | null | undefined;
+        lang: string | null | undefined;
+        pronunciation: string | null | undefined;
+        separator: string | null | undefined;
+        surface: string | null | undefined;
+      }>
     | null
     | undefined;
 };
@@ -549,11 +659,22 @@ export type TrainTypeNestedFieldsFragment = {
   color: string | null | undefined;
   direction: TrainDirection | null | undefined;
   kind: TrainTypeKind | null | undefined;
+  nameTtsSegments:
+    | Array<{
+        __typename: 'TtsSegment';
+        alphabet: TtsAlphabet | null | undefined;
+        fallbackText: string | null | undefined;
+        lang: string | null | undefined;
+        pronunciation: string | null | undefined;
+        separator: string | null | undefined;
+        surface: string | null | undefined;
+      }>
+    | null
+    | undefined;
   line:
     | {
         __typename: 'LineNested';
         id: number | null | undefined;
-        averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
         nameFull: string | null | undefined;
@@ -569,16 +690,9 @@ export type TrainTypeNestedFieldsFragment = {
           | {
               __typename: 'Company';
               id: number | null | undefined;
-              name: string | null | undefined;
-              nameEnglishFull: string | null | undefined;
               nameEnglishShort: string | null | undefined;
-              nameFull: string | null | undefined;
               nameKatakana: string | null | undefined;
               nameShort: string | null | undefined;
-              railroadId: number | null | undefined;
-              status: OperationStatus | null | undefined;
-              type: CompanyType | null | undefined;
-              url: string | null | undefined;
             }
           | null
           | undefined;
@@ -602,6 +716,18 @@ export type TrainTypeNestedFieldsFragment = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               hasTrainTypes: boolean | null | undefined;
+              nameTtsSegments:
+                | Array<{
+                    __typename: 'TtsSegment';
+                    alphabet: TtsAlphabet | null | undefined;
+                    fallbackText: string | null | undefined;
+                    lang: string | null | undefined;
+                    pronunciation: string | null | undefined;
+                    separator: string | null | undefined;
+                    surface: string | null | undefined;
+                  }>
+                | null
+                | undefined;
               stationNumbers:
                 | Array<{
                     __typename: 'StationNumber';
@@ -630,7 +756,31 @@ export type TrainTypeNestedFieldsFragment = {
               color: string | null | undefined;
               direction: TrainDirection | null | undefined;
               kind: TrainTypeKind | null | undefined;
+              nameTtsSegments:
+                | Array<{
+                    __typename: 'TtsSegment';
+                    alphabet: TtsAlphabet | null | undefined;
+                    fallbackText: string | null | undefined;
+                    lang: string | null | undefined;
+                    pronunciation: string | null | undefined;
+                    separator: string | null | undefined;
+                    surface: string | null | undefined;
+                  }>
+                | null
+                | undefined;
             }
+          | null
+          | undefined;
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
           | null
           | undefined;
       }
@@ -640,7 +790,6 @@ export type TrainTypeNestedFieldsFragment = {
     | Array<{
         __typename: 'LineNested';
         id: number | null | undefined;
-        averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
         nameFull: string | null | undefined;
@@ -656,16 +805,9 @@ export type TrainTypeNestedFieldsFragment = {
           | {
               __typename: 'Company';
               id: number | null | undefined;
-              name: string | null | undefined;
-              nameEnglishFull: string | null | undefined;
               nameEnglishShort: string | null | undefined;
-              nameFull: string | null | undefined;
               nameKatakana: string | null | undefined;
               nameShort: string | null | undefined;
-              railroadId: number | null | undefined;
-              status: OperationStatus | null | undefined;
-              type: CompanyType | null | undefined;
-              url: string | null | undefined;
             }
           | null
           | undefined;
@@ -689,6 +831,18 @@ export type TrainTypeNestedFieldsFragment = {
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               hasTrainTypes: boolean | null | undefined;
+              nameTtsSegments:
+                | Array<{
+                    __typename: 'TtsSegment';
+                    alphabet: TtsAlphabet | null | undefined;
+                    fallbackText: string | null | undefined;
+                    lang: string | null | undefined;
+                    pronunciation: string | null | undefined;
+                    separator: string | null | undefined;
+                    surface: string | null | undefined;
+                  }>
+                | null
+                | undefined;
               stationNumbers:
                 | Array<{
                     __typename: 'StationNumber';
@@ -717,7 +871,31 @@ export type TrainTypeNestedFieldsFragment = {
               color: string | null | undefined;
               direction: TrainDirection | null | undefined;
               kind: TrainTypeKind | null | undefined;
+              nameTtsSegments:
+                | Array<{
+                    __typename: 'TtsSegment';
+                    alphabet: TtsAlphabet | null | undefined;
+                    fallbackText: string | null | undefined;
+                    lang: string | null | undefined;
+                    pronunciation: string | null | undefined;
+                    separator: string | null | undefined;
+                    surface: string | null | undefined;
+                  }>
+                | null
+                | undefined;
             }
+          | null
+          | undefined;
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
           | null
           | undefined;
       }>
@@ -732,22 +910,26 @@ export type StationFieldsFragment = {
   name: string | null | undefined;
   nameKatakana: string | null | undefined;
   nameRoman: string | null | undefined;
-  nameRomanIpa: string | null | undefined;
   nameChinese: string | null | undefined;
   nameKorean: string | null | undefined;
   threeLetterCode: string | null | undefined;
   latitude: number | null | undefined;
   longitude: number | null | undefined;
-  address: string | null | undefined;
-  postalCode: string | null | undefined;
   prefectureId: number | null | undefined;
-  openedAt: string | null | undefined;
-  closedAt: string | null | undefined;
-  status: OperationStatus | null | undefined;
-  distance: number | null | undefined;
   hasTrainTypes: boolean | null | undefined;
   stopCondition: StopCondition | null | undefined;
-  transportType: TransportType | null | undefined;
+  nameTtsSegments:
+    | Array<{
+        __typename: 'TtsSegment';
+        alphabet: TtsAlphabet | null | undefined;
+        fallbackText: string | null | undefined;
+        lang: string | null | undefined;
+        pronunciation: string | null | undefined;
+        separator: string | null | undefined;
+        surface: string | null | undefined;
+      }>
+    | null
+    | undefined;
   stationNumbers:
     | Array<{
         __typename: 'StationNumber';
@@ -762,32 +944,21 @@ export type StationFieldsFragment = {
     | {
         __typename: 'LineNested';
         id: number | null | undefined;
-        averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
-        nameRomanIpa: string | null | undefined;
         nameShort: string | null | undefined;
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
-        status: OperationStatus | null | undefined;
         transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
               id: number | null | undefined;
-              name: string | null | undefined;
-              nameEnglishFull: string | null | undefined;
               nameEnglishShort: string | null | undefined;
-              nameFull: string | null | undefined;
               nameKatakana: string | null | undefined;
               nameShort: string | null | undefined;
-              railroadId: number | null | undefined;
-              status: OperationStatus | null | undefined;
-              type: CompanyType | null | undefined;
-              url: string | null | undefined;
             }
           | null
           | undefined;
@@ -807,7 +978,6 @@ export type StationFieldsFragment = {
               groupId: number | null | undefined;
               name: string | null | undefined;
               nameRoman: string | null | undefined;
-              nameRomanIpa: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               hasTrainTypes: boolean | null | undefined;
@@ -824,22 +994,16 @@ export type StationFieldsFragment = {
             }
           | null
           | undefined;
-        trainType:
-          | {
-              __typename: 'TrainTypeNested';
-              id: number | null | undefined;
-              typeId: number | null | undefined;
-              groupId: number | null | undefined;
-              name: string | null | undefined;
-              nameKatakana: string | null | undefined;
-              nameRoman: string | null | undefined;
-              nameRomanIpa: string | null | undefined;
-              nameChinese: string | null | undefined;
-              nameKorean: string | null | undefined;
-              color: string | null | undefined;
-              direction: TrainDirection | null | undefined;
-              kind: TrainTypeKind | null | undefined;
-            }
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
           | null
           | undefined;
       }
@@ -849,32 +1013,21 @@ export type StationFieldsFragment = {
     | Array<{
         __typename: 'LineNested';
         id: number | null | undefined;
-        averageDistance: number | null | undefined;
         color: string | null | undefined;
         lineType: LineType | null | undefined;
-        nameFull: string | null | undefined;
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
-        nameRomanIpa: string | null | undefined;
         nameShort: string | null | undefined;
         nameChinese: string | null | undefined;
         nameKorean: string | null | undefined;
-        status: OperationStatus | null | undefined;
         transportType: TransportType | null | undefined;
         company:
           | {
               __typename: 'Company';
               id: number | null | undefined;
-              name: string | null | undefined;
-              nameEnglishFull: string | null | undefined;
               nameEnglishShort: string | null | undefined;
-              nameFull: string | null | undefined;
               nameKatakana: string | null | undefined;
               nameShort: string | null | undefined;
-              railroadId: number | null | undefined;
-              status: OperationStatus | null | undefined;
-              type: CompanyType | null | undefined;
-              url: string | null | undefined;
             }
           | null
           | undefined;
@@ -894,7 +1047,6 @@ export type StationFieldsFragment = {
               groupId: number | null | undefined;
               name: string | null | undefined;
               nameRoman: string | null | undefined;
-              nameRomanIpa: string | null | undefined;
               nameChinese: string | null | undefined;
               nameKorean: string | null | undefined;
               hasTrainTypes: boolean | null | undefined;
@@ -911,22 +1063,16 @@ export type StationFieldsFragment = {
             }
           | null
           | undefined;
-        trainType:
-          | {
-              __typename: 'TrainTypeNested';
-              id: number | null | undefined;
-              typeId: number | null | undefined;
-              groupId: number | null | undefined;
-              name: string | null | undefined;
-              nameKatakana: string | null | undefined;
-              nameRoman: string | null | undefined;
-              nameRomanIpa: string | null | undefined;
-              nameChinese: string | null | undefined;
-              nameKorean: string | null | undefined;
-              color: string | null | undefined;
-              direction: TrainDirection | null | undefined;
-              kind: TrainTypeKind | null | undefined;
-            }
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
           | null
           | undefined;
       }>
@@ -947,11 +1093,22 @@ export type StationFieldsFragment = {
         color: string | null | undefined;
         direction: TrainDirection | null | undefined;
         kind: TrainTypeKind | null | undefined;
+        nameTtsSegments:
+          | Array<{
+              __typename: 'TtsSegment';
+              alphabet: TtsAlphabet | null | undefined;
+              fallbackText: string | null | undefined;
+              lang: string | null | undefined;
+              pronunciation: string | null | undefined;
+              separator: string | null | undefined;
+              surface: string | null | undefined;
+            }>
+          | null
+          | undefined;
         line:
           | {
               __typename: 'LineNested';
               id: number | null | undefined;
-              averageDistance: number | null | undefined;
               color: string | null | undefined;
               lineType: LineType | null | undefined;
               nameFull: string | null | undefined;
@@ -967,16 +1124,9 @@ export type StationFieldsFragment = {
                 | {
                     __typename: 'Company';
                     id: number | null | undefined;
-                    name: string | null | undefined;
-                    nameEnglishFull: string | null | undefined;
                     nameEnglishShort: string | null | undefined;
-                    nameFull: string | null | undefined;
                     nameKatakana: string | null | undefined;
                     nameShort: string | null | undefined;
-                    railroadId: number | null | undefined;
-                    status: OperationStatus | null | undefined;
-                    type: CompanyType | null | undefined;
-                    url: string | null | undefined;
                   }
                 | null
                 | undefined;
@@ -1000,6 +1150,18 @@ export type StationFieldsFragment = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     hasTrainTypes: boolean | null | undefined;
+                    nameTtsSegments:
+                      | Array<{
+                          __typename: 'TtsSegment';
+                          alphabet: TtsAlphabet | null | undefined;
+                          fallbackText: string | null | undefined;
+                          lang: string | null | undefined;
+                          pronunciation: string | null | undefined;
+                          separator: string | null | undefined;
+                          surface: string | null | undefined;
+                        }>
+                      | null
+                      | undefined;
                     stationNumbers:
                       | Array<{
                           __typename: 'StationNumber';
@@ -1028,7 +1190,31 @@ export type StationFieldsFragment = {
                     color: string | null | undefined;
                     direction: TrainDirection | null | undefined;
                     kind: TrainTypeKind | null | undefined;
+                    nameTtsSegments:
+                      | Array<{
+                          __typename: 'TtsSegment';
+                          alphabet: TtsAlphabet | null | undefined;
+                          fallbackText: string | null | undefined;
+                          lang: string | null | undefined;
+                          pronunciation: string | null | undefined;
+                          separator: string | null | undefined;
+                          surface: string | null | undefined;
+                        }>
+                      | null
+                      | undefined;
                   }
+                | null
+                | undefined;
+              nameTtsSegments:
+                | Array<{
+                    __typename: 'TtsSegment';
+                    alphabet: TtsAlphabet | null | undefined;
+                    fallbackText: string | null | undefined;
+                    lang: string | null | undefined;
+                    pronunciation: string | null | undefined;
+                    separator: string | null | undefined;
+                    surface: string | null | undefined;
+                  }>
                 | null
                 | undefined;
             }
@@ -1038,7 +1224,6 @@ export type StationFieldsFragment = {
           | Array<{
               __typename: 'LineNested';
               id: number | null | undefined;
-              averageDistance: number | null | undefined;
               color: string | null | undefined;
               lineType: LineType | null | undefined;
               nameFull: string | null | undefined;
@@ -1054,16 +1239,9 @@ export type StationFieldsFragment = {
                 | {
                     __typename: 'Company';
                     id: number | null | undefined;
-                    name: string | null | undefined;
-                    nameEnglishFull: string | null | undefined;
                     nameEnglishShort: string | null | undefined;
-                    nameFull: string | null | undefined;
                     nameKatakana: string | null | undefined;
                     nameShort: string | null | undefined;
-                    railroadId: number | null | undefined;
-                    status: OperationStatus | null | undefined;
-                    type: CompanyType | null | undefined;
-                    url: string | null | undefined;
                   }
                 | null
                 | undefined;
@@ -1087,6 +1265,18 @@ export type StationFieldsFragment = {
                     nameChinese: string | null | undefined;
                     nameKorean: string | null | undefined;
                     hasTrainTypes: boolean | null | undefined;
+                    nameTtsSegments:
+                      | Array<{
+                          __typename: 'TtsSegment';
+                          alphabet: TtsAlphabet | null | undefined;
+                          fallbackText: string | null | undefined;
+                          lang: string | null | undefined;
+                          pronunciation: string | null | undefined;
+                          separator: string | null | undefined;
+                          surface: string | null | undefined;
+                        }>
+                      | null
+                      | undefined;
                     stationNumbers:
                       | Array<{
                           __typename: 'StationNumber';
@@ -1115,7 +1305,31 @@ export type StationFieldsFragment = {
                     color: string | null | undefined;
                     direction: TrainDirection | null | undefined;
                     kind: TrainTypeKind | null | undefined;
+                    nameTtsSegments:
+                      | Array<{
+                          __typename: 'TtsSegment';
+                          alphabet: TtsAlphabet | null | undefined;
+                          fallbackText: string | null | undefined;
+                          lang: string | null | undefined;
+                          pronunciation: string | null | undefined;
+                          separator: string | null | undefined;
+                          surface: string | null | undefined;
+                        }>
+                      | null
+                      | undefined;
                   }
+                | null
+                | undefined;
+              nameTtsSegments:
+                | Array<{
+                    __typename: 'TtsSegment';
+                    alphabet: TtsAlphabet | null | undefined;
+                    fallbackText: string | null | undefined;
+                    lang: string | null | undefined;
+                    pronunciation: string | null | undefined;
+                    separator: string | null | undefined;
+                    surface: string | null | undefined;
+                  }>
                 | null
                 | undefined;
             }>
@@ -1141,22 +1355,26 @@ export type GetStationsNearbyQuery = {
     name: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
-    nameRomanIpa: string | null | undefined;
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
-    address: string | null | undefined;
-    postalCode: string | null | undefined;
     prefectureId: number | null | undefined;
-    openedAt: string | null | undefined;
-    closedAt: string | null | undefined;
-    status: OperationStatus | null | undefined;
-    distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
+    nameTtsSegments:
+      | Array<{
+          __typename: 'TtsSegment';
+          alphabet: TtsAlphabet | null | undefined;
+          fallbackText: string | null | undefined;
+          lang: string | null | undefined;
+          pronunciation: string | null | undefined;
+          separator: string | null | undefined;
+          surface: string | null | undefined;
+        }>
+      | null
+      | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -1171,32 +1389,21 @@ export type GetStationsNearbyQuery = {
       | {
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -1216,7 +1423,6 @@ export type GetStationsNearbyQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -1233,22 +1439,16 @@ export type GetStationsNearbyQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }
@@ -1258,32 +1458,21 @@ export type GetStationsNearbyQuery = {
       | Array<{
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -1303,7 +1492,6 @@ export type GetStationsNearbyQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -1320,22 +1508,16 @@ export type GetStationsNearbyQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }>
@@ -1356,11 +1538,22 @@ export type GetStationsNearbyQuery = {
           color: string | null | undefined;
           direction: TrainDirection | null | undefined;
           kind: TrainTypeKind | null | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
           line:
             | {
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -1376,16 +1569,9 @@ export type GetStationsNearbyQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -1409,6 +1595,18 @@ export type GetStationsNearbyQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -1437,7 +1635,31 @@ export type GetStationsNearbyQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }
@@ -1447,7 +1669,6 @@ export type GetStationsNearbyQuery = {
             | Array<{
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -1463,16 +1684,9 @@ export type GetStationsNearbyQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -1496,6 +1710,18 @@ export type GetStationsNearbyQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -1524,7 +1750,31 @@ export type GetStationsNearbyQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }>
@@ -1794,35 +2044,38 @@ export type GetLineListStationsLightQuery = {
   }>;
 };
 
-export type GetLineStationsQueryVariables = Exact<{
-  lineId: Scalars['Int']['input'];
-  stationId: InputMaybe<Scalars['Int']['input']>;
+export type GetLineListStationsQueryVariables = Exact<{
+  lineIds: Array<Scalars['Int']['input']> | Scalars['Int']['input'];
 }>;
 
-export type GetLineStationsQuery = {
-  lineStations: Array<{
+export type GetLineListStationsQuery = {
+  lineListStations: Array<{
     __typename: 'Station';
     id: number | null | undefined;
     groupId: number | null | undefined;
     name: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
-    nameRomanIpa: string | null | undefined;
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
-    address: string | null | undefined;
-    postalCode: string | null | undefined;
     prefectureId: number | null | undefined;
-    openedAt: string | null | undefined;
-    closedAt: string | null | undefined;
-    status: OperationStatus | null | undefined;
-    distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
+    nameTtsSegments:
+      | Array<{
+          __typename: 'TtsSegment';
+          alphabet: TtsAlphabet | null | undefined;
+          fallbackText: string | null | undefined;
+          lang: string | null | undefined;
+          pronunciation: string | null | undefined;
+          separator: string | null | undefined;
+          surface: string | null | undefined;
+        }>
+      | null
+      | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -1837,32 +2090,21 @@ export type GetLineStationsQuery = {
       | {
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -1882,7 +2124,6 @@ export type GetLineStationsQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -1899,22 +2140,16 @@ export type GetLineStationsQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }
@@ -1924,32 +2159,21 @@ export type GetLineStationsQuery = {
       | Array<{
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -1969,7 +2193,6 @@ export type GetLineStationsQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -1986,22 +2209,16 @@ export type GetLineStationsQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }>
@@ -2022,11 +2239,22 @@ export type GetLineStationsQuery = {
           color: string | null | undefined;
           direction: TrainDirection | null | undefined;
           kind: TrainTypeKind | null | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
           line:
             | {
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -2042,16 +2270,9 @@ export type GetLineStationsQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2075,6 +2296,18 @@ export type GetLineStationsQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -2103,7 +2336,31 @@ export type GetLineStationsQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }
@@ -2113,7 +2370,6 @@ export type GetLineStationsQuery = {
             | Array<{
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -2129,16 +2385,9 @@ export type GetLineStationsQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2162,6 +2411,18 @@ export type GetLineStationsQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -2190,7 +2451,475 @@ export type GetLineStationsQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }>
+            | null
+            | undefined;
+        }
+      | null
+      | undefined;
+  }>;
+};
+
+export type GetLineStationsQueryVariables = Exact<{
+  lineId: Scalars['Int']['input'];
+  stationId: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type GetLineStationsQuery = {
+  lineStations: Array<{
+    __typename: 'Station';
+    id: number | null | undefined;
+    groupId: number | null | undefined;
+    name: string | null | undefined;
+    nameKatakana: string | null | undefined;
+    nameRoman: string | null | undefined;
+    nameChinese: string | null | undefined;
+    nameKorean: string | null | undefined;
+    threeLetterCode: string | null | undefined;
+    latitude: number | null | undefined;
+    longitude: number | null | undefined;
+    prefectureId: number | null | undefined;
+    hasTrainTypes: boolean | null | undefined;
+    stopCondition: StopCondition | null | undefined;
+    nameTtsSegments:
+      | Array<{
+          __typename: 'TtsSegment';
+          alphabet: TtsAlphabet | null | undefined;
+          fallbackText: string | null | undefined;
+          lang: string | null | undefined;
+          pronunciation: string | null | undefined;
+          separator: string | null | undefined;
+          surface: string | null | undefined;
+        }>
+      | null
+      | undefined;
+    stationNumbers:
+      | Array<{
+          __typename: 'StationNumber';
+          lineSymbol: string | null | undefined;
+          lineSymbolColor: string | null | undefined;
+          lineSymbolShape: string | null | undefined;
+          stationNumber: string | null | undefined;
+        }>
+      | null
+      | undefined;
+    line:
+      | {
+          __typename: 'LineNested';
+          id: number | null | undefined;
+          color: string | null | undefined;
+          lineType: LineType | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          transportType: TransportType | null | undefined;
+          company:
+            | {
+                __typename: 'Company';
+                id: number | null | undefined;
+                nameEnglishShort: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameShort: string | null | undefined;
+              }
+            | null
+            | undefined;
+          lineSymbols:
+            | Array<{
+                __typename: 'LineSymbol';
+                color: string | null | undefined;
+                shape: string | null | undefined;
+                symbol: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                id: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                hasTrainTypes: boolean | null | undefined;
+                stationNumbers:
+                  | Array<{
+                      __typename: 'StationNumber';
+                      lineSymbol: string | null | undefined;
+                      lineSymbolColor: string | null | undefined;
+                      lineSymbolShape: string | null | undefined;
+                      stationNumber: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
+        }
+      | null
+      | undefined;
+    lines:
+      | Array<{
+          __typename: 'LineNested';
+          id: number | null | undefined;
+          color: string | null | undefined;
+          lineType: LineType | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          transportType: TransportType | null | undefined;
+          company:
+            | {
+                __typename: 'Company';
+                id: number | null | undefined;
+                nameEnglishShort: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameShort: string | null | undefined;
+              }
+            | null
+            | undefined;
+          lineSymbols:
+            | Array<{
+                __typename: 'LineSymbol';
+                color: string | null | undefined;
+                shape: string | null | undefined;
+                symbol: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                id: number | null | undefined;
+                groupId: number | null | undefined;
+                name: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                hasTrainTypes: boolean | null | undefined;
+                stationNumbers:
+                  | Array<{
+                      __typename: 'StationNumber';
+                      lineSymbol: string | null | undefined;
+                      lineSymbolColor: string | null | undefined;
+                      lineSymbolShape: string | null | undefined;
+                      stationNumber: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
+        }>
+      | null
+      | undefined;
+    trainType:
+      | {
+          __typename: 'TrainTypeNested';
+          id: number | null | undefined;
+          typeId: number | null | undefined;
+          groupId: number | null | undefined;
+          name: string | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameRomanIpa: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          color: string | null | undefined;
+          direction: TrainDirection | null | undefined;
+          kind: TrainTypeKind | null | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          line:
+            | {
+                __typename: 'LineNested';
+                id: number | null | undefined;
+                color: string | null | undefined;
+                lineType: LineType | null | undefined;
+                nameFull: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameRomanIpa: string | null | undefined;
+                nameShort: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                status: OperationStatus | null | undefined;
+                transportType: TransportType | null | undefined;
+                company:
+                  | {
+                      __typename: 'Company';
+                      id: number | null | undefined;
+                      nameEnglishShort: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameShort: string | null | undefined;
+                    }
+                  | null
+                  | undefined;
+                lineSymbols:
+                  | Array<{
+                      __typename: 'LineSymbol';
+                      color: string | null | undefined;
+                      shape: string | null | undefined;
+                      symbol: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+                station:
+                  | {
+                      __typename: 'StationNested';
+                      id: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameRomanIpa: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                      stationNumbers:
+                        | Array<{
+                            __typename: 'StationNumber';
+                            lineSymbol: string | null | undefined;
+                            lineSymbolColor: string | null | undefined;
+                            lineSymbolShape: string | null | undefined;
+                            stationNumber: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameRomanIpa: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                    }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          lines:
+            | Array<{
+                __typename: 'LineNested';
+                id: number | null | undefined;
+                color: string | null | undefined;
+                lineType: LineType | null | undefined;
+                nameFull: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameRomanIpa: string | null | undefined;
+                nameShort: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                status: OperationStatus | null | undefined;
+                transportType: TransportType | null | undefined;
+                company:
+                  | {
+                      __typename: 'Company';
+                      id: number | null | undefined;
+                      nameEnglishShort: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameShort: string | null | undefined;
+                    }
+                  | null
+                  | undefined;
+                lineSymbols:
+                  | Array<{
+                      __typename: 'LineSymbol';
+                      color: string | null | undefined;
+                      shape: string | null | undefined;
+                      symbol: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+                station:
+                  | {
+                      __typename: 'StationNested';
+                      id: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameRomanIpa: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                      stationNumbers:
+                        | Array<{
+                            __typename: 'StationNumber';
+                            lineSymbol: string | null | undefined;
+                            lineSymbolColor: string | null | undefined;
+                            lineSymbolShape: string | null | undefined;
+                            stationNumber: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                    }
+                  | null
+                  | undefined;
+                trainType:
+                  | {
+                      __typename: 'TrainTypeNested';
+                      id: number | null | undefined;
+                      typeId: number | null | undefined;
+                      groupId: number | null | undefined;
+                      name: string | null | undefined;
+                      nameKatakana: string | null | undefined;
+                      nameRoman: string | null | undefined;
+                      nameRomanIpa: string | null | undefined;
+                      nameChinese: string | null | undefined;
+                      nameKorean: string | null | undefined;
+                      color: string | null | undefined;
+                      direction: TrainDirection | null | undefined;
+                      kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
+                    }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }>
@@ -2216,22 +2945,26 @@ export type GetStationsByNameQuery = {
     name: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
-    nameRomanIpa: string | null | undefined;
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
-    address: string | null | undefined;
-    postalCode: string | null | undefined;
     prefectureId: number | null | undefined;
-    openedAt: string | null | undefined;
-    closedAt: string | null | undefined;
-    status: OperationStatus | null | undefined;
-    distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
+    nameTtsSegments:
+      | Array<{
+          __typename: 'TtsSegment';
+          alphabet: TtsAlphabet | null | undefined;
+          fallbackText: string | null | undefined;
+          lang: string | null | undefined;
+          pronunciation: string | null | undefined;
+          separator: string | null | undefined;
+          surface: string | null | undefined;
+        }>
+      | null
+      | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -2246,32 +2979,21 @@ export type GetStationsByNameQuery = {
       | {
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -2291,7 +3013,6 @@ export type GetStationsByNameQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -2308,22 +3029,16 @@ export type GetStationsByNameQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }
@@ -2333,32 +3048,21 @@ export type GetStationsByNameQuery = {
       | Array<{
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -2378,7 +3082,6 @@ export type GetStationsByNameQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -2395,22 +3098,16 @@ export type GetStationsByNameQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }>
@@ -2431,11 +3128,22 @@ export type GetStationsByNameQuery = {
           color: string | null | undefined;
           direction: TrainDirection | null | undefined;
           kind: TrainTypeKind | null | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
           line:
             | {
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -2451,16 +3159,9 @@ export type GetStationsByNameQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2484,6 +3185,18 @@ export type GetStationsByNameQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -2512,7 +3225,31 @@ export type GetStationsByNameQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }
@@ -2522,7 +3259,6 @@ export type GetStationsByNameQuery = {
             | Array<{
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -2538,16 +3274,9 @@ export type GetStationsByNameQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2571,6 +3300,18 @@ export type GetStationsByNameQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -2599,7 +3340,31 @@ export type GetStationsByNameQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }>
@@ -2623,22 +3388,26 @@ export type GetLineGroupStationsQuery = {
     name: string | null | undefined;
     nameKatakana: string | null | undefined;
     nameRoman: string | null | undefined;
-    nameRomanIpa: string | null | undefined;
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
-    address: string | null | undefined;
-    postalCode: string | null | undefined;
     prefectureId: number | null | undefined;
-    openedAt: string | null | undefined;
-    closedAt: string | null | undefined;
-    status: OperationStatus | null | undefined;
-    distance: number | null | undefined;
     hasTrainTypes: boolean | null | undefined;
     stopCondition: StopCondition | null | undefined;
-    transportType: TransportType | null | undefined;
+    nameTtsSegments:
+      | Array<{
+          __typename: 'TtsSegment';
+          alphabet: TtsAlphabet | null | undefined;
+          fallbackText: string | null | undefined;
+          lang: string | null | undefined;
+          pronunciation: string | null | undefined;
+          separator: string | null | undefined;
+          surface: string | null | undefined;
+        }>
+      | null
+      | undefined;
     stationNumbers:
       | Array<{
           __typename: 'StationNumber';
@@ -2653,32 +3422,21 @@ export type GetLineGroupStationsQuery = {
       | {
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -2698,7 +3456,6 @@ export type GetLineGroupStationsQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -2715,22 +3472,16 @@ export type GetLineGroupStationsQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }
@@ -2740,32 +3491,21 @@ export type GetLineGroupStationsQuery = {
       | Array<{
           __typename: 'LineNested';
           id: number | null | undefined;
-          averageDistance: number | null | undefined;
           color: string | null | undefined;
           lineType: LineType | null | undefined;
-          nameFull: string | null | undefined;
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
-          nameRomanIpa: string | null | undefined;
           nameShort: string | null | undefined;
           nameChinese: string | null | undefined;
           nameKorean: string | null | undefined;
-          status: OperationStatus | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
                 __typename: 'Company';
                 id: number | null | undefined;
-                name: string | null | undefined;
-                nameEnglishFull: string | null | undefined;
                 nameEnglishShort: string | null | undefined;
-                nameFull: string | null | undefined;
                 nameKatakana: string | null | undefined;
                 nameShort: string | null | undefined;
-                railroadId: number | null | undefined;
-                status: OperationStatus | null | undefined;
-                type: CompanyType | null | undefined;
-                url: string | null | undefined;
               }
             | null
             | undefined;
@@ -2785,7 +3525,6 @@ export type GetLineGroupStationsQuery = {
                 groupId: number | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 hasTrainTypes: boolean | null | undefined;
@@ -2802,22 +3541,16 @@ export type GetLineGroupStationsQuery = {
               }
             | null
             | undefined;
-          trainType:
-            | {
-                __typename: 'TrainTypeNested';
-                id: number | null | undefined;
-                typeId: number | null | undefined;
-                groupId: number | null | undefined;
-                name: string | null | undefined;
-                nameKatakana: string | null | undefined;
-                nameRoman: string | null | undefined;
-                nameRomanIpa: string | null | undefined;
-                nameChinese: string | null | undefined;
-                nameKorean: string | null | undefined;
-                color: string | null | undefined;
-                direction: TrainDirection | null | undefined;
-                kind: TrainTypeKind | null | undefined;
-              }
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
             | null
             | undefined;
         }>
@@ -2838,11 +3571,22 @@ export type GetLineGroupStationsQuery = {
           color: string | null | undefined;
           direction: TrainDirection | null | undefined;
           kind: TrainTypeKind | null | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
           line:
             | {
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -2858,16 +3602,9 @@ export type GetLineGroupStationsQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2891,6 +3628,18 @@ export type GetLineGroupStationsQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -2919,7 +3668,31 @@ export type GetLineGroupStationsQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }
@@ -2929,7 +3702,6 @@ export type GetLineGroupStationsQuery = {
             | Array<{
                 __typename: 'LineNested';
                 id: number | null | undefined;
-                averageDistance: number | null | undefined;
                 color: string | null | undefined;
                 lineType: LineType | null | undefined;
                 nameFull: string | null | undefined;
@@ -2945,16 +3717,9 @@ export type GetLineGroupStationsQuery = {
                   | {
                       __typename: 'Company';
                       id: number | null | undefined;
-                      name: string | null | undefined;
-                      nameEnglishFull: string | null | undefined;
                       nameEnglishShort: string | null | undefined;
-                      nameFull: string | null | undefined;
                       nameKatakana: string | null | undefined;
                       nameShort: string | null | undefined;
-                      railroadId: number | null | undefined;
-                      status: OperationStatus | null | undefined;
-                      type: CompanyType | null | undefined;
-                      url: string | null | undefined;
                     }
                   | null
                   | undefined;
@@ -2978,6 +3743,18 @@ export type GetLineGroupStationsQuery = {
                       nameChinese: string | null | undefined;
                       nameKorean: string | null | undefined;
                       hasTrainTypes: boolean | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                       stationNumbers:
                         | Array<{
                             __typename: 'StationNumber';
@@ -3006,7 +3783,31 @@ export type GetLineGroupStationsQuery = {
                       color: string | null | undefined;
                       direction: TrainDirection | null | undefined;
                       kind: TrainTypeKind | null | undefined;
+                      nameTtsSegments:
+                        | Array<{
+                            __typename: 'TtsSegment';
+                            alphabet: TtsAlphabet | null | undefined;
+                            fallbackText: string | null | undefined;
+                            lang: string | null | undefined;
+                            pronunciation: string | null | undefined;
+                            separator: string | null | undefined;
+                            surface: string | null | undefined;
+                          }>
+                        | null
+                        | undefined;
                     }
+                  | null
+                  | undefined;
+                nameTtsSegments:
+                  | Array<{
+                      __typename: 'TtsSegment';
+                      alphabet: TtsAlphabet | null | undefined;
+                      fallbackText: string | null | undefined;
+                      lang: string | null | undefined;
+                      pronunciation: string | null | undefined;
+                      separator: string | null | undefined;
+                      surface: string | null | undefined;
+                    }>
                   | null
                   | undefined;
               }>
@@ -3236,6 +4037,7 @@ export type GetRouteTypesLightQuery = {
           groupId: number | null | undefined;
           name: string | null | undefined;
           nameRoman: string | null | undefined;
+          color: string | null | undefined;
           kind: TrainTypeKind | null | undefined;
           line:
             | {
@@ -3381,6 +4183,7 @@ export type GetStationTrainTypesLightQuery = {
     groupId: number | null | undefined;
     name: string | null | undefined;
     nameRoman: string | null | undefined;
+    color: string | null | undefined;
     kind: TrainTypeKind | null | undefined;
     line:
       | {
