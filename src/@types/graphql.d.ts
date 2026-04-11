@@ -586,6 +586,8 @@ export type LineInStationFieldsFragment = {
   nameKatakana: string | null | undefined;
   nameRoman: string | null | undefined;
   nameShort: string | null | undefined;
+  nameChinese: string | null | undefined;
+  nameKorean: string | null | undefined;
   transportType: TransportType | null | undefined;
   company:
     | {
@@ -947,6 +949,8 @@ export type StationFieldsFragment = {
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
         nameShort: string | null | undefined;
+        nameChinese: string | null | undefined;
+        nameKorean: string | null | undefined;
         transportType: TransportType | null | undefined;
         company:
           | {
@@ -1014,6 +1018,8 @@ export type StationFieldsFragment = {
         nameKatakana: string | null | undefined;
         nameRoman: string | null | undefined;
         nameShort: string | null | undefined;
+        nameChinese: string | null | undefined;
+        nameKorean: string | null | undefined;
         transportType: TransportType | null | undefined;
         company:
           | {
@@ -1388,6 +1394,8 @@ export type GetStationsNearbyQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -1455,6 +1463,8 @@ export type GetStationsNearbyQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -2085,6 +2095,8 @@ export type GetLineListStationsQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -2152,6 +2164,8 @@ export type GetLineListStationsQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -2525,6 +2539,8 @@ export type GetLineStationsQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -2592,6 +2608,8 @@ export type GetLineStationsQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -2966,6 +2984,8 @@ export type GetStationsByNameQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -3033,6 +3053,8 @@ export type GetStationsByNameQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -3405,6 +3427,8 @@ export type GetLineGroupStationsQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
@@ -3472,6 +3496,8 @@ export type GetLineGroupStationsQuery = {
           nameKatakana: string | null | undefined;
           nameRoman: string | null | undefined;
           nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
           transportType: TransportType | null | undefined;
           company:
             | {
