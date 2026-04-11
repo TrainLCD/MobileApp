@@ -117,10 +117,7 @@ export const LINE_IN_STATION_FRAGMENT = gql`
     id
     color
     company {
-      id
-      nameEnglishShort
-      nameKatakana
-      nameShort
+      ...CompanyFields
     }
     lineSymbols {
       ...LineSymbolFields
