@@ -38,9 +38,12 @@ const EMPTY_TTS_TEXT = {
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
   if (theme === APP_THEME.LED || theme === APP_THEME.ODAKYU)
     return APP_THEME.TOKYO_METRO;
-  if (theme === APP_THEME.JO || theme === APP_THEME.JL)
+  if (
+    theme === APP_THEME.JO ||
+    theme === APP_THEME.JL ||
+    theme === APP_THEME.E231
+  )
     return APP_THEME.YAMANOTE;
-  if (theme === APP_THEME.E231) return APP_THEME.SAIKYO;
   return theme;
 };
 
