@@ -165,8 +165,23 @@ const TransferLineMark: React.FC<Props> = ({
   }, [isBus, busSymbol, stationNumber, mark.sign, mark.signShape]);
 
   const fallbackImageSrc = mark.btUnionSignPaths?.[0] ?? mark.signPath;
+  const imageSourceKey = useMemo(() => {
+    if (mark.btUnionSignPaths?.length) {
+      return mark.btUnionSignPaths.join(',');
+    }
+
+    return fallbackImageSrc != null ? String(fallbackImageSrc) : 'no-image';
+  }, [fallbackImageSrc, mark.btUnionSignPaths]);
   const recyclingKey = String(
-    line?.id ?? mark.sign ?? fallbackImageSrc ?? 'unknown-mark'
+    [
+      line?.id ?? 'unknown-line',
+      imageSourceKey,
+      stationNumber ?? '',
+      threeLetterCode ?? '',
+      mark.sign ?? '',
+      mark.signShape ?? '',
+      shouldGrayscale ? 'grayscale' : 'color',
+    ].join(':')
   );
 
   if (mark.btUnionSignPaths && !stationNumber) {
@@ -177,6 +192,7 @@ const TransferLineMark: React.FC<Props> = ({
         ) : null}
 
         <Image
+          key={recyclingKey}
           style={imageStyle}
           source={mark.btUnionSignPaths[0]}
           cachePolicy="memory-disk"
@@ -195,6 +211,7 @@ const TransferLineMark: React.FC<Props> = ({
         ) : null}
 
         <Image
+          key={recyclingKey}
           style={imageStyle}
           source={mark.signPath}
           cachePolicy="memory-disk"
