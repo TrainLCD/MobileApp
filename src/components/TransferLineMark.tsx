@@ -164,6 +164,11 @@ const TransferLineMark: React.FC<Props> = ({
     return stationNumber ?? mark.sign ?? '';
   }, [isBus, busSymbol, stationNumber, mark.sign, mark.signShape]);
 
+  const fallbackImageSrc = mark.btUnionSignPaths?.[0] ?? mark.signPath;
+  const recyclingKey = String(
+    line?.id ?? mark.sign ?? fallbackImageSrc ?? 'unknown-mark'
+  );
+
   if (mark.btUnionSignPaths && !stationNumber) {
     return (
       <View style={[containerStyle, withOutline ? outlineStyle : null]}>
@@ -176,6 +181,7 @@ const TransferLineMark: React.FC<Props> = ({
           source={mark.btUnionSignPaths[0]}
           cachePolicy="memory-disk"
           contentFit="cover"
+          recyclingKey={recyclingKey}
         />
       </View>
     );
@@ -193,6 +199,7 @@ const TransferLineMark: React.FC<Props> = ({
           source={mark.signPath}
           cachePolicy="memory-disk"
           contentFit="cover"
+          recyclingKey={recyclingKey}
         />
       </View>
     );
