@@ -127,6 +127,8 @@ export const LINE_IN_STATION_FRAGMENT = gql`
       groupId
       name
       nameRoman
+      nameChinese
+      nameKorean
       hasTrainTypes
       stationNumbers {
         ...StationNumberFields
@@ -136,6 +138,8 @@ export const LINE_IN_STATION_FRAGMENT = gql`
     nameKatakana
     nameRoman
     nameShort
+    nameChinese
+    nameKorean
     nameTtsSegments {
       ...TtsSegmentFields
     }
