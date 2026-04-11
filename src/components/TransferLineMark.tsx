@@ -164,7 +164,10 @@ const TransferLineMark: React.FC<Props> = ({
     return stationNumber ?? mark.sign ?? '';
   }, [isBus, busSymbol, stationNumber, mark.sign, mark.signShape]);
 
-  const recyclingKey = line?.id == null ? (mark.sign ?? null) : String(line.id);
+  const fallbackImageSrc = mark.btUnionSignPaths?.[0] ?? mark.signPath;
+  const recyclingKey = String(
+    line?.id ?? mark.sign ?? fallbackImageSrc ?? 'unknown-mark'
+  );
 
   if (mark.btUnionSignPaths && !stationNumber) {
     return (
