@@ -108,6 +108,41 @@ export const LINE_NESTED_FRAGMENT = gql`
   }
 `;
 
+export const LINE_IN_STATION_FRAGMENT = gql`
+  ${COMPANY_FRAGMENT}
+  ${LINE_SYMBOL_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
+  ${TTS_SEGMENT_FRAGMENT}
+  fragment LineInStationFields on LineNested {
+    id
+    color
+    company {
+      ...CompanyFields
+    }
+    lineSymbols {
+      ...LineSymbolFields
+    }
+    station {
+      id
+      groupId
+      name
+      nameRoman
+      hasTrainTypes
+      stationNumbers {
+        ...StationNumberFields
+      }
+    }
+    lineType
+    nameKatakana
+    nameRoman
+    nameShort
+    nameTtsSegments {
+      ...TtsSegmentFields
+    }
+    transportType
+  }
+`;
+
 export const TRAIN_TYPE_NESTED_FRAGMENT = gql`
   ${LINE_NESTED_FRAGMENT}
   fragment TrainTypeNestedFields on TrainTypeNested {
@@ -136,7 +171,7 @@ export const TRAIN_TYPE_NESTED_FRAGMENT = gql`
 `;
 
 export const STATION_FRAGMENT = gql`
-  ${LINE_NESTED_FRAGMENT}
+  ${LINE_IN_STATION_FRAGMENT}
   ${STATION_NUMBER_FRAGMENT}
   ${TRAIN_TYPE_NESTED_FRAGMENT}
   fragment StationFields on Station {
@@ -145,7 +180,6 @@ export const STATION_FRAGMENT = gql`
     name
     nameKatakana
     nameRoman
-    nameRomanIpa
     nameChinese
     nameKorean
     nameTtsSegments {
@@ -155,19 +189,16 @@ export const STATION_FRAGMENT = gql`
     latitude
     longitude
     prefectureId
-    status
-    distance
     hasTrainTypes
     stopCondition
-    transportType
     stationNumbers {
       ...StationNumberFields
     }
     line {
-      ...LineNestedFields
+      ...LineInStationFields
     }
     lines {
-      ...LineNestedFields
+      ...LineInStationFields
     }
     trainType {
       ...TrainTypeNestedFields
