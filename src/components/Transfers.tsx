@@ -1,12 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useGetLineMark, useTransferLines } from '../hooks';
@@ -278,7 +272,6 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         data={lines}
         keyExtractor={(l) => (l.id ?? 0).toString()}
         renderItem={renderTransferLine}
-        removeClippedSubviews={Platform.OS === 'android'}
       />
     </TouchableOpacity>
   );
