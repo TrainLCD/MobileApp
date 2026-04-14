@@ -85,6 +85,14 @@ describe('resolveThemeForLine', () => {
     ).toBe(APP_THEME.TOEI);
   });
 
+  it('東京都交通局地下鉄の路線もTOEIを返す', () => {
+    expect(
+      resolveThemeForLine(
+        makeLine({ id: 99302, company: makeCompany('東京都交通局地下鉄') })
+      )
+    ).toBe(APP_THEME.TOEI);
+  });
+
   it('JR西日本の路線はJR_WESTを返す', () => {
     expect(
       resolveThemeForLine(
