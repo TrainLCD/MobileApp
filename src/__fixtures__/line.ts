@@ -96,7 +96,7 @@ export const TOEI_SHINJUKU_LINE_LOCAL: Line = {
     __typename: 'Company',
     id: 119,
     railroadId: 99,
-    nameShort: '都営',
+    nameShort: '東京都交通局',
     nameKatakana: 'トウキョウトコウツウキョク',
     nameFull: '東京都交通局',
     nameEnglishShort: 'Toei',

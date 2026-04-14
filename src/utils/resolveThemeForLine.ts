@@ -17,7 +17,7 @@ const LINE_ID_TO_THEME: Record<number, AppTheme> = {
 
 const COMPANY_PREFIX_TO_THEME: [string, AppTheme][] = [
   ['東京メトロ', APP_THEME.TOKYO_METRO],
-  ['都営', APP_THEME.TOEI],
+  ['東京都交通局', APP_THEME.TOEI],
   ['JR西日本', APP_THEME.JR_WEST],
   ['JR九州', APP_THEME.JR_KYUSHU],
   ['東急', APP_THEME.TY],
