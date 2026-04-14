@@ -77,16 +77,18 @@ describe('resolveThemeForLine', () => {
     ).toBe(APP_THEME.TOKYO_METRO);
   });
 
-  it('都営の路線はTOEIを返す', () => {
+  it('東京都交通局の路線はTOEIを返す', () => {
     expect(
-      resolveThemeForLine(makeLine({ id: 99301, company: makeCompany('都営') }))
+      resolveThemeForLine(
+        makeLine({ id: 99301, company: makeCompany('東京都交通局') })
+      )
     ).toBe(APP_THEME.TOEI);
   });
 
-  it('都営地下鉄の路線もTOEIを返す', () => {
+  it('東京都交通局地下鉄の路線もTOEIを返す', () => {
     expect(
       resolveThemeForLine(
-        makeLine({ id: 99302, company: makeCompany('都営地下鉄') })
+        makeLine({ id: 99302, company: makeCompany('東京都交通局地下鉄') })
       )
     ).toBe(APP_THEME.TOEI);
   });

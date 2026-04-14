@@ -705,7 +705,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
         __typename: 'Company',
         id: 19,
         railroadId: 29,
-        nameShort: '都営地下鉄',
+        nameShort: '東京都交通局',
         nameKatakana: 'トエイチカテツ',
         nameFull: '東京都交通局',
         nameEnglishShort: 'Toei',
