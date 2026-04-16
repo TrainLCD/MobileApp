@@ -50,10 +50,10 @@ description: Cut a production release branch, bump the app version, run quality 
 
 4. **コード品質チェック**
 
-   以下を順番に実行し、すべて緑であることを確認する。途中で失敗したら中断してユーザーに原因を共有する（勝手に修正しない）。
+   以下を順番に実行し、すべて緑であることを確認する。`biome --fix` による自動修正のみ許可し、それ以外の追加修正は失敗時に中断してユーザーに原因を共有する。
 
    ```bash
-   npx biome check --unsafe --fix ./src   # メモのルール: コミット前に必ず
+   npx biome check --unsafe --fix ./src   # メモのルール: コミット前に必ず（自動修正を許可）
    npm run lint
    npm run typecheck
    npm test
@@ -64,16 +64,18 @@ description: Cut a production release branch, bump the app version, run quality 
 5. **コミット & push**
 
    - コミットメッセージは日本語単文（AGENTS.md）:
-     ```
+     ```text
      v<version> をリリース
      ```
    - push 前に、含まれるファイル・コミットメッセージ・ブランチ名を要約し、ユーザーに承認を取る。
    - 承認後:
      ```bash
-     git add <bump で変更されたファイル>
+     git status --short
+     git add <version:bump と品質チェックで変更されたファイル>
      git commit -m "v<version> をリリース"
      git push -u origin release/v<version>
      ```
+   - `git status --short` で実際の差分を目視確認してからステージすること。`version:bump` に加えて `biome --fix` の整形差分が含まれる可能性があるため、取りこぼしを避ける。
 
 6. **PR 作成（`create-pr` スキルへ委譲）**
 
