@@ -85,6 +85,9 @@ This handbook defines how automation agents collaborate safely and effectively o
   - Linked issues or tickets.
   - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
+- **Keep PR metadata in sync with the branch state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
+  - **Title**: re-evaluate whether the current title still describes the full scope of the branch. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
+  - **Body**: update the `変更の種類` checkboxes, the `変更内容` summary, and the test-result section so they reflect the updated diff. Preserve human-authored prose sections (`概要`, narrative added under `変更内容`, `関連Issue`, `スクリーンショット`) unless the changes invalidate them.
 
 ## Security & Configuration Guardrails
 

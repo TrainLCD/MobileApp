@@ -156,4 +156,7 @@ buck-out/
 web-build/
 dist/
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # @end expo-cli
