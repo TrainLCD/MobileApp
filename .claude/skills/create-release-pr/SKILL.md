@@ -50,10 +50,10 @@ description: Cut a production release branch, bump the app version, run quality 
 
 4. **コード品質チェック**
 
-   以下を順番に実行し、すべて緑であることを確認する。`biome --fix` による自動修正のみ許可し、それ以外の追加修正は失敗時に中断してユーザーに原因を共有する。
+   以下を順番に実行し、すべて緑であることを確認する。**本番リリース時は自動修正を一切許可しない**（静かに差分が混入するリスクを避けるため）。失敗したら中断してユーザーに原因を共有する。整形が必要な差分が残っている場合は、リリースブランチを作り直す前に dev 側で修正・マージしておくこと。
 
    ```bash
-   npx biome check --unsafe --fix ./src   # メモのルール: コミット前に必ず（自動修正を許可）
+   npx biome check ./src   # 本番リリース検証は check-only（--fix を付けない）
    npm run lint
    npm run typecheck
    npm test
@@ -75,7 +75,7 @@ description: Cut a production release branch, bump the app version, run quality 
      git commit -m "v<version> をリリース"
      git push -u origin release/v<version>
      ```
-   - `git status --short` で実際の差分を目視確認してからステージすること。`version:bump` に加えて `biome --fix` の整形差分が含まれる可能性があるため、取りこぼしを避ける。
+   - `git status --short` で実際の差分を目視確認してからステージすること。`version:bump` が予期しないファイル（ネイティブ側バージョン等）にも波及することがあるため、取りこぼしを避ける。
 
 6. **PR 作成（`create-pr` スキルへ委譲）**
 
