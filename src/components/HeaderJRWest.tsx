@@ -481,6 +481,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
         <View style={[styles.top, { left: mark ? 64 : 32 }]}>
           {mark ? (
             <TransferLineMark
+              key={`transfer-line-mark-${currentLine?.id ?? 'unknown'}`}
               line={currentLine}
               mark={mark}
               color={numberingColor}
@@ -492,9 +493,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
           )}
           <View style={styles.trainTypeImageContainer}>
             <Image
+              key={`train-type-${trainTypeImage}`}
               style={styles.trainTypeImage}
               source={trainTypeImage}
               cachePolicy="memory-disk"
+              recyclingKey={`train-type-${trainTypeImage}`}
             />
           </View>
         </View>

@@ -166,6 +166,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
               <Typography style={styles.autoPreviewEmoji}>❓</Typography>
             ) : (
               <Image
+                key={`theme-preview-${themeId ?? 'unknown'}`}
                 recyclingKey={themeId}
                 source={previewImage}
                 style={styles.previewImage}
