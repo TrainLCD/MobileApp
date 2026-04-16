@@ -76,6 +76,8 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 - Commit messages must be single-sentence statements in Japanese (e.g., `テレメトリー送信機をリファクタリングしてnull状態を回避`); prefix production hot fixes with `Hotfix:`.
 - Keep commits logically scoped (implementation, tests, docs) and mention generated artifacts in the description.
+- Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
+- Pull requests must be assigned to `@TinyKitten`.
 - Pull requests must include:
   - Purpose and summary of key changes.
   - Regression risk assessment and mitigation.
