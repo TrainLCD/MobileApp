@@ -59,7 +59,15 @@ export const useGetLineMark = () => {
         getNumberingIndex(line.station ?? undefined, line) ?? 0;
 
       if (numberingIndex === -1) {
-        return lineMarkMap;
+        // 駅の stationNumbers に当該路線のシンボルが含まれていない場合
+        // （例: 泉岳寺は都営浅草線所属で京急本線の KK01 が返ってこない）、
+        // 路線自身の lineSymbols にフォールバックしてアイコンが消えないようにする
+        const fallbackSymbol = line.lineSymbols?.[0];
+        return {
+          ...lineMarkMap,
+          sign: fallbackSymbol?.symbol ?? lineMarkMap.sign,
+          signShape: fallbackSymbol?.shape ?? lineMarkMap.signShape,
+        };
       }
 
       const lineMark = [
