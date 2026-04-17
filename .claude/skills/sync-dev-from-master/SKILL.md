@@ -60,7 +60,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - **ケース A: どこにも存在しない** → そのまま手順 4 へ。
    - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、`git push origin --delete chore/dev-from-master` と `git branch -D chore/dev-from-master`（ローカルに有る場合）の実行可否を承認取り。承認後に削除。
    - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
-   - **ケース D: ローカルに未 push コミットが有る**: `git cherry origin/chore/dev-from-master` で検知。削除せず中断しユーザーに確認。
+   - **ケース D: ケース B または C（＝リモート `origin/chore/dev-from-master` が存在する）で、かつローカルに未 push コミットが有る**: リモート存在を `git rev-parse --verify origin/chore/dev-from-master` で確認したうえで `git cherry origin/chore/dev-from-master` を実行。出力が空でなければ削除せず中断しユーザーに確認。ケース A（どこにも存在しない）からは分岐しない（リモート非存在時の `git cherry` は fatal になるため実行しない）。
 
 4. **ブランチを origin/master から切り出して push**
 
@@ -117,7 +117,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    ```
 
    **置換ルール**:
-   - `<release_version>`: 入力 `release_version` があればそれ（先頭 `v` は剥がす）。未指定なら `git show origin/master:package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"` の値。取得失敗時は「概要」節から `**v<release_version>** ` の部分を丸ごと外す（偽情報を書かない）。
+   - `<release_version>`: 入力 `release_version` があればそれ（先頭 `v` は剥がす）。未指定なら `git show origin/master:package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"` の値。取得失敗時は「概要」節から `**v<release_version>**` の部分を丸ごと外す（偽情報を書かない）。
    - `<N>`: 手順 1 で数えたコミット件数。
    - `<コミット件名の箇条書き>`: `git log --pretty='- %s' origin/dev..origin/master` の出力をそのまま貼る。**50 件を超える場合**は先頭 50 件 + `- ...他 <M> 件` を付けて省略し、省略した旨を「変更内容」節末尾に 1 行書く。
 

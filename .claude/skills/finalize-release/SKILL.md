@@ -48,7 +48,8 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
    **この段階では何も書き換え・push しない**。以下を全部先に確認し、実行計画を 1 本にまとめる。失敗条件（重複タグ・version 不一致・既存枝に未マージコミット等）はここで検知し、承認ゲート前に中断する。
 
    **publish-release 側の先読み**:
-   - 既存タグ・Release 重複: `git tag --list "v<version>"`, `git ls-remote --tags origin "refs/tags/v<version>"`, `gh release view "v<version>" --json tagName 2>/dev/null` → いずれかヒットで中断。
+   - 既存タグ重複: `git tag --list "v<version>"` と `git ls-remote --tags origin "refs/tags/v<version>"` のいずれかに出力があれば中断。
+   - 既存 Release 重複: `gh release view "v<version>" --json tagName` を実行し、exit 0（=存在）なら中断。exit 1 かつ stderr に `release not found` を含む場合のみ「重複なし」として続行。それ以外の非 0 終了（認証エラー・レート制限・通信障害等）は判定不能なので中断し、stderr を報告する。
    - master HEAD SHA: `git rev-parse origin/master`
    - master HEAD 件名: `git log -1 --format='%s' origin/master`
    - package.json version 一致確認 → 不一致で中断。
@@ -68,7 +69,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
    以下フォーマットで実行計画を要約し、**1 回だけ** ユーザー承認を取る。承認が出たら手順 4〜5 を連続実行し、途中で止めない。
 
-   ```
+   ```text
    finalize-release 実行計画 (version=v<version>)
 
    [publish-release]
