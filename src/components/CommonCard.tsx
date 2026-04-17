@@ -280,9 +280,15 @@ export const CommonCard: React.FC<Props> = ({
     return title ?? getLocalizedLineName(line, isJapanese);
   }, [title, line]);
 
-  const targetStationNumber = targetStation?.stationNumbers?.[0]?.stationNumber;
-  const targetStationColor =
-    targetStation?.stationNumbers?.[0]?.lineSymbolColor;
+  const matchingStationNumber = useMemo(
+    () =>
+      targetStation?.stationNumbers?.find((sn) =>
+        line.lineSymbols?.some((sym) => sym?.symbol === sn?.lineSymbol)
+      ),
+    [targetStation?.stationNumbers, line.lineSymbols]
+  );
+  const targetStationNumber = matchingStationNumber?.stationNumber;
+  const targetStationColor = matchingStationNumber?.lineSymbolColor;
   const targetStationThreeLetterCode = targetStation?.threeLetterCode;
 
   const markScaleStyle = useMemo(() => {
