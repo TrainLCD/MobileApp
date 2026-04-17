@@ -5,6 +5,7 @@ const path = require('path');
 const rootDir = path.resolve(__dirname, '..');
 const appConfigPath = path.join(rootDir, 'app.config.ts');
 const packageJsonPath = path.join(rootDir, 'package.json');
+const packageLockJsonPath = path.join(rootDir, 'package-lock.json');
 const pbxprojPath = path.join(rootDir, 'ios', 'TrainLCD.xcodeproj', 'project.pbxproj');
 const androidBuildGradlePath = path.join(rootDir, 'android', 'app', 'build.gradle');
 
@@ -350,6 +351,15 @@ if (versionChanged || androidVersionCodeChanged || iosBuildNumberChanged) {
 if (versionChanged) {
   packageJson.version = nextVersion;
   writeJson(packageJsonPath, packageJson);
+
+  if (fs.existsSync(packageLockJsonPath)) {
+    const packageLockJson = readJson(packageLockJsonPath);
+    packageLockJson.version = nextVersion;
+    if (packageLockJson.packages?.['']) {
+      packageLockJson.packages[''].version = nextVersion;
+    }
+    writeJson(packageLockJsonPath, packageLockJson);
+  }
 }
 
 // MARKETING_VERSIONはバージョンが変更された場合のみ更新
