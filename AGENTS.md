@@ -63,6 +63,16 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Co-locate style modules or constants near their consumers; share cross-cutting utilities through `src/utils/`.
 - Keep comments purposeful: explain intent or non-obvious constraints, not obvious mechanics.
 
+### Markdown documentation (docs/, README, .claude/skills/\*\*/SKILL.md)
+
+`markdownlint-cli2` 準拠。CodeRabbit も同ルールで指摘するため、執筆時点で以下を守る:
+
+- **MD040 (fenced code language)**: フェンスコードブロックには必ず言語指定を付ける。用途別の既定: 平文の図示・実行計画サマリは `text`、シェル例は `bash`、差分は `diff`、埋め込みテンプレ本文は `markdown`、構造化データは `json` / `yaml`。
+- **MD038 (no spaces in code spans)**: インラインコード（バッククォート）の内側先頭・末尾に空白を入れない。`` `**v<release_version>**` `` は OK、`` `**v<release_version>** ` `` は NG。
+- **MD031 / MD032 (blanks around fences / lists)**: フェンスコードブロック・リストブロックの前後に空行を 1 行入れる。
+- **MD029 (ordered list numbering)**: 順序リストの番号付けは単一ファイル内で統一する（全て `1.` で書くか、`1.` `2.` `3.` と逐次番号を振るか）。
+- **MD033 (inline HTML)**: Markdown で表現できる構造は HTML タグに落とさない。例外として `<details><summary>…</summary>` と表セル内の `<br>` は許可。
+
 ## Testing Strategy
 
 - Jest global setup lives in `jest.setup.js` and `src/setupTests.ts`.
