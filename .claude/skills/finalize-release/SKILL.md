@@ -26,7 +26,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
 - 本番リリース PR が **既に master にマージ済み**。未マージなら中断。
 - `gh` CLI 認証済み、`git` が使える。
-- 作業ツリーがクリーン（未コミット変更なし）。残っていればユーザーに確認。
+- 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
 - リモート `origin/master` / `origin/dev` が存在する。
 
 ## 手順
@@ -60,8 +60,9 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - 既に open なら **新規作成はスキップし既存 URL を流用** としてプランに記録。
    - 既存 `chore/dev-from-master` の状態（open PR が無い前提で）:
      - `git ls-remote --heads origin chore/dev-from-master` と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
+     - ローカル未 push コミット有無: `git show-ref --verify --quiet refs/heads/chore/dev-from-master` でローカル枝の存在を確認し、有るなら `git cherry origin/chore/dev-from-master` を実行。出力が空でなければ **中断** してユーザーに確認（自動では削除しない）。
      - 直近 PR が `MERGED` → 承認後に削除・再作成予定としてプランに記録。
-     - それ以外（`CLOSED` のみ、PR 無し、ローカル未 push コミット有り等）→ 中断してユーザーに確認（自動では削除しない）。
+     - それ以外（`CLOSED` のみ、PR 無し等）→ 中断してユーザーに確認（自動では削除しない）。
 
 3. **承認ゲート（一括）**
 
@@ -99,7 +100,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
    gh release create "v<version>" --target master --title "v<version>" --generate-notes --latest
    ```
 
-   プレフライトで確認済みの項目（重複・version 一致・SHA）は **再確認しない**（ユーザーへの問い合わせも追加で発生させない）。
+   プレフライトで確認済みの項目（タグ・Release 重複、version 一致、SHA）は、破壊操作直前に **非対話で再検証** する（追加承認は取らない）。再検証で不一致が出た場合（並行リリース等で状態が変わっている）は安全のため中断し、検知内容のみ報告する。
 
 5. **sync-dev-from-master の実体を実行（プレフライト判定に従う）**
 

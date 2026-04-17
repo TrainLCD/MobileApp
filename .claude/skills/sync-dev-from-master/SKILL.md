@@ -21,7 +21,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
 - カレントディレクトリがリポジトリルート。
 - `gh` CLI 認証済み、`git` が使える。
-- 作業ツリーがクリーン（未コミット変更なし）。残っていればユーザーに確認。
+- 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
 - リモートブランチ `origin/dev` / `origin/master` が存在する。
 
 ## 手順

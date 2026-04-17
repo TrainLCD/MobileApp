@@ -20,7 +20,7 @@ description: Create a git tag on origin/master HEAD and publish a GitHub Release
 - カレントディレクトリがリポジトリルート。
 - `gh` CLI 認証済み、`git` が使える。
 - リリースPR（`release/v<version>` → `master`）は既に **master にマージ済み**。未マージなら中断し、ユーザーに確認する。
-- 作業ツリーがクリーン（未コミット変更なし）。残っている場合はユーザーに確認してから退避する。
+- 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
 
 ## 手順
 
