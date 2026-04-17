@@ -58,7 +58,10 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    ```
 
    - **ケース A: どこにも存在しない** → そのまま手順 4 へ。
-   - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、`git push origin --delete chore/dev-from-master` と `git branch -D chore/dev-from-master`（ローカルに有る場合）の実行可否を承認取り。承認後に削除。
+   - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
+     1. 現在ブランチを `git rev-parse --abbrev-ref HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。
+     2. `git push origin --delete chore/dev-from-master` でリモートを削除。
+     3. ローカルにも存在する場合は `git branch -D chore/dev-from-master` で削除。
    - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
    - **ケース D: ケース B または C（＝リモート `origin/chore/dev-from-master` が存在する）で、かつローカルに未 push コミットが有る**: リモート存在を `git rev-parse --verify origin/chore/dev-from-master` で確認したうえで `git cherry origin/chore/dev-from-master` を実行。出力が空でなければ削除せず中断しユーザーに確認。ケース A（どこにも存在しない）からは分岐しない（リモート非存在時の `git cherry` は fatal になるため実行しない）。
 
