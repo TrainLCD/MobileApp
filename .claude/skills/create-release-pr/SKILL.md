@@ -20,7 +20,7 @@ description: Cut a production release branch, bump the app version, run quality 
 - カレントディレクトリがリポジトリルート。
 - `gh` CLI 認証済み、`git` と `npm` が使える。
 - 作業ツリーがクリーン（未コミット変更なし）。残っている場合はユーザーに確認してから退避する。
-- `dev` ブランチが origin と同期済み。差分があれば pull 可否をユーザーに確認する。
+- `master` ブランチが origin と同期済み。差分があれば pull 可否をユーザーに確認する。
 
 ## 手順
 
@@ -29,16 +29,16 @@ description: Cut a production release branch, bump the app version, run quality 
    - 入力の先頭 `v` / `V` を取り除き、`MAJOR.MINOR.PATCH` 形式かを検証。
    - 同名のブランチ（ローカル or origin）がすでに存在する場合は中断し、既存ブランチでの進行可否をユーザーに確認する。
 
-2. **dev から切り出し**
+2. **master から切り出し**
 
    ```bash
-   git fetch origin dev master
-   git switch dev
-   git pull --ff-only origin dev
+   git fetch origin master
+   git switch master
+   git pull --ff-only origin master
    git switch -c release/v<version>
    ```
 
-   - `dev` の head が CI 的に緑であることは呼び出し側で担保する前提（このスキルでは確認しない）。
+   - `master` の head が CI 的に緑であることは呼び出し側で担保する前提（このスキルでは確認しない）。
 
 3. **バージョンバンプ**
 
