@@ -24,6 +24,10 @@ jest.mock('firebase-functions/v2/pubsub', () => ({
 
 import { coerceReport } from '../feedback';
 
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('coerceReport', () => {
   it('returns defaults when category and triageLevel are missing', () => {
     const r = coerceReport({ title: 'タイトル', summary: 'サマリ' });

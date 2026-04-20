@@ -565,14 +565,12 @@ ${reporterUid}
                   name: 'Geminiによる要約',
                   value: aiReport.summary,
                 },
-                {
-                  name: 'カテゴリ',
-                  value: categoryLabel ?? '—',
-                },
-                {
-                  name: 'トリアージ',
-                  value: triageLabel ?? '—',
-                },
+                ...(shouldTagTriage && categoryLabel && triageLabel
+                  ? [
+                      { name: 'カテゴリ', value: categoryLabel },
+                      { name: 'トリアージ', value: triageLabel },
+                    ]
+                  : []),
                 {
                   name: '端末モデル名',
                   value: `${deviceInfo.brand} ${deviceInfo.modelName}(${deviceInfo.modelId})`,
@@ -629,14 +627,12 @@ ${reporterUid}
                   name: 'Geminiによる要約',
                   value: aiReport.summary,
                 },
-                {
-                  name: 'カテゴリ',
-                  value: categoryLabel ?? '—',
-                },
-                {
-                  name: 'トリアージ',
-                  value: triageLabel ?? '—',
-                },
+                ...(shouldTagTriage && categoryLabel && triageLabel
+                  ? [
+                      { name: 'カテゴリ', value: categoryLabel },
+                      { name: 'トリアージ', value: triageLabel },
+                    ]
+                  : []),
                 {
                   name: 'アプリの設定言語',
                   value: language,
