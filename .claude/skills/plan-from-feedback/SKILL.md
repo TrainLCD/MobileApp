@@ -85,7 +85,7 @@ Issues リポジトリには difficulty ラベルが無いため、Claude が is
 
 5. **難易度推定**
 
-   残存 issue のうち **先頭から `count * 4` 件を上限** に本文を読み、`easy` / `medium` / `hard` を推定する。
+   残存 issue を triage（`P0` > `P1` > `P2` > `P3` > `untriaged`）、同 triage 内では `updatedAt`（新しい順）で一次ソートした上で、**先頭から `count * 4` 件を上限** に本文を読み、`easy` / `medium` / `hard` を推定する。先に母集団を正しく並べておかないと、`count * 4` の切り出しで P0/P1 を取りこぼす恐れがあるので必ずソートを先に行うこと。
 
    - 本文にある Gemini 要約（`## Geminiによる要約` 節）があればそれを優先的に読み、一次情報として扱う。
    - 本文だけで判定に迷ったら、該当しそうなファイルを `Grep` / `Glob` で 1 - 2 回だけ軽く確認。深追いはしない。
@@ -106,7 +106,7 @@ Issues リポジトリには difficulty ラベルが無いため、Claude が is
    ```markdown
    ### #<番号> <タイトル>
 
-   - URL: <html_url>
+   - URL: <url>
    - ラベル: triage=<P*|untriaged> / platform=<iOS|Android|iPadOS|...> / category=<Bug|Improvement|Crash|Feedback|...>
    - 推定難易度: <easy|medium|hard>（根拠: <1 行>）
 
