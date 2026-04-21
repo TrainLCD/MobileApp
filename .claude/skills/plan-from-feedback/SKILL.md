@@ -96,7 +96,7 @@ Issues リポジトリには difficulty ラベルが無いため、Claude が is
    - `difficulty` 指定時は一致する推定値のみ残す（`unknown` は除外）。
    - 残存から `count` 件を選ぶ。並び順は:
      1. triage（`P0` > `P1` > `P2` > `P3` > `untriaged`）
-     2. difficulty（`easy` > `medium` > `hard`）
+     2. difficulty（`easy` > `medium` > `hard` > `unknown`。ただし `difficulty` 指定時は Line 96 の通り `unknown` を除外するため、このキーが効くのは未指定時のみ）
      3. `updatedAt` の新しい順
 
 7. **簡易実装プラン生成**
