@@ -11,9 +11,7 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"],
-      "expo-modules-core": ["./node_modules/expo/node_modules/expo-modules-core"],
-      "expo-modules-core/*": ["./node_modules/expo/node_modules/expo-modules-core/*"]
+      "~/*": ["./src/*"]
     },
     "typeRoots": ["./src/@types", "./node_modules/@types"]
   },
