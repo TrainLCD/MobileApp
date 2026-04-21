@@ -19,6 +19,7 @@ description: Cut a dev→canary release pull request for TrainLCD MobileApp. Thi
 | `summary` | 省略（テンプレのコメントのみ） |
 | `related_issue` | 省略 |
 | `skip_checks` | `false`（テスト 3 項目は全て ON） |
+| `labels` | `["skip-version-bump"]` |
 
 ## リリース特有の注意
 
@@ -26,3 +27,4 @@ description: Cut a dev→canary release pull request for TrainLCD MobileApp. Thi
 - `dev` / `canary` 両ブランチとも origin 前提。ローカル `dev` が未 push ならユーザーに push 可否を確認（`create-pr` 側でも同じガードあり）。
 - 変更の種類の自動判定・Assignee・テンプレ節構成の遵守は `create-pr` の手順に従う。このスキルで独自に本文を組み立て直さない。
 - 既に open な dev→canary PR がある場合は新規作成せず、既存 URL を返す（`create-pr` 側のガードに任せる）。
+- スキル経由で作る canary PR には `skip-version-bump` ラベルを常時付与する。これにより `.github/workflows/bump_version_on_canary_pr.yml` の `bump-version` ジョブがスキップされる（スキル内で独自にバージョンを管理・反映する想定のため、Actions 側の自動バンプを二重起動させない）。手動で開いた canary PR はラベルを付けないので従来どおりバンプ PR が自動作成される。

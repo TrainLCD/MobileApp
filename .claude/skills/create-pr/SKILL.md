@@ -19,6 +19,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | `summary` | 空なら「概要」「変更内容」本文はテンプレのコメントのみ残す |
 | `related_issue` | 空なら節のコメントのみ。コミット件名に `Closes #N` / `Fixes #N` / `Refs #N` があれば拾う |
 | `skip_checks` | `false`（テスト 3 項目を ON）。`true` なら全 OFF |
+| `labels` | 文字列配列、または未指定。未指定なら付与しない。指定した場合は `gh pr create --label <name>` でアトミックに付与する（作成後に `gh pr edit --add-label` すると `pull_request: opened` トリガのワークフローに間に合わないため、必ず `gh pr create` 時に渡す） |
 
 ### タイトル推論ルール
 
@@ -153,12 +154,14 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 5. **PR 作成 / 更新**
 
    **新規作成モード**
+
    ```bash
    gh pr create \
      --base "<base>" \
      --head "<head>" \
      --title "<title>" \
      --assignee TinyKitten \
+     [--label "<label1>" --label "<label2>" ...] \
      --body "$(cat <<'EOF'
    <本文>
    EOF
@@ -166,7 +169,8 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    ```
 
    - Assignee は常に `TinyKitten`（CLAUDE.md ルール）。
-   - 作成後の URL と、ON にしたチェック項目・判定根拠（例: コミット `fix: ...` により「バグ修正」を ON）を報告する。
+   - `labels` 入力があれば、その要素数だけ `--label` を繰り返して渡す。未指定なら `--label` 自体を書かない。
+   - 作成後の URL と、ON にしたチェック項目・判定根拠（例: コミット `fix: ...` により「バグ修正」を ON）、付与したラベルがあればその名前を報告する。
 
    **更新モード**
    ```bash
