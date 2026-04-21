@@ -158,19 +158,23 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    実装手順:
 
    1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<pr-or-branch>.md`）。バッククォートは **素のまま** 書く。escape しない。
-   2. 下の `gh` コマンドを実行する。
-   3. 完了後、一時ファイルを削除する。
+   2. 下の `gh` コマンドをサブシェル内で `trap` と一緒に実行する。`gh` の成功・失敗に関わらず `EXIT` / `INT` / `TERM` のどれでも一時ファイルを確実に削除されるようにする（`&&` で `rm` を繋ぐだけだと失敗時に `/tmp` にゴミが残る）。
+   3. `gh` 呼び出しと `rm`（を含む `trap`）は Bash tool の 1 呼び出し内で完結させる。別呼び出しで後片付けすると、前段の呼び出しがエラー／中断で終わった場合にクリーンアップが実行されない。
 
    **新規作成モード**
 
    ```bash
-   gh pr create \
-     --base "<base>" \
-     --head "<head>" \
-     --title "<title>" \
-     --assignee TinyKitten \
-     [--label "<label1>" --label "<label2>" ...] \
-     --body-file "<tmp-body-path>"
+   BODY_FILE=/tmp/pr-body-<pr-or-branch>.md
+   (
+     trap 'rm -f "$BODY_FILE"' EXIT INT TERM
+     gh pr create \
+       --base "<base>" \
+       --head "<head>" \
+       --title "<title>" \
+       --assignee TinyKitten \
+       [--label "<label1>" --label "<label2>" ...] \
+       --body-file "$BODY_FILE"
+   )
    ```
 
    - Assignee は常に `TinyKitten`（CLAUDE.md ルール）。
@@ -180,9 +184,13 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    **更新モード**
 
    ```bash
-   gh pr edit <pr-number> \
-     [--title "<更新後タイトル>"] \
-     --body-file "<tmp-body-path>"
+   BODY_FILE=/tmp/pr-body-<pr-number>.md
+   (
+     trap 'rm -f "$BODY_FILE"' EXIT INT TERM
+     gh pr edit <pr-number> \
+       [--title "<更新後タイトル>"] \
+       --body-file "$BODY_FILE"
+   )
    ```
 
    - **タイトルは毎回スコープ整合性を再評価する**（AGENTS.md「Keep PR metadata in sync with the branch state」より）。手順 1 のタイトル推論ルールと最新のコミット群を照合し、現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていなければ更新案を提示してユーザー承認を取り、`--title` に含めて反映する。タイトルが最新差分と整合している場合は `--title` を付けない。
