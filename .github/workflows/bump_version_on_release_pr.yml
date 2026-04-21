@@ -143,3 +143,4 @@ jobs:
           labels: |
             automated
             version-bump
+          assignees: TinyKitten
