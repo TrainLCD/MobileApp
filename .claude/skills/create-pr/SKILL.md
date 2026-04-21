@@ -153,19 +153,28 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
 5. **PR 作成 / 更新**
 
+   本文は **必ず一時ファイル経由で渡す**（`gh pr create --body-file` / `gh pr edit --body-file`）。理由: `--body "$(cat <<'EOF' ... EOF)"` のようにヒアドキュメントをシェル経由で渡すと、エディタ側の癖や Claude Code 側の生成で本文中のバッククォートが `\`` のように誤って escape されてしまい、PR 画面でコードスパン／フェンスがレンダリングされない事故が起きる（実例: PR #5857 の初稿で Markdown が崩れた）。`--body-file` ならシェルの引用符を一切介さないので構造的に起きない。
+
+   実装手順:
+
+   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<pr-or-branch>.md`）。バッククォートは **素のまま** 書く。escape しない。
+   2. 下の `gh` コマンドをサブシェル内で `trap` と一緒に実行する。`gh` の成功・失敗に関わらず `EXIT` / `INT` / `TERM` のどれでも一時ファイルを確実に削除されるようにする（`&&` で `rm` を繋ぐだけだと失敗時に `/tmp` にゴミが残る）。
+   3. `gh` 呼び出しと `rm`（を含む `trap`）は Bash tool の 1 呼び出し内で完結させる。別呼び出しで後片付けすると、前段の呼び出しがエラー／中断で終わった場合にクリーンアップが実行されない。
+
    **新規作成モード**
 
    ```bash
-   gh pr create \
-     --base "<base>" \
-     --head "<head>" \
-     --title "<title>" \
-     --assignee TinyKitten \
-     [--label "<label1>" --label "<label2>" ...] \
-     --body "$(cat <<'EOF'
-   <本文>
-   EOF
-   )"
+   BODY_FILE=/tmp/pr-body-<pr-or-branch>.md
+   (
+     trap 'rm -f "$BODY_FILE"' EXIT INT TERM
+     gh pr create \
+       --base "<base>" \
+       --head "<head>" \
+       --title "<title>" \
+       --assignee TinyKitten \
+       [--label "<label1>" --label "<label2>" ...] \
+       --body-file "$BODY_FILE"
+   )
    ```
 
    - Assignee は常に `TinyKitten`（CLAUDE.md ルール）。
@@ -173,13 +182,15 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - 作成後の URL と、ON にしたチェック項目・判定根拠（例: コミット `fix: ...` により「バグ修正」を ON）、付与したラベルがあればその名前を報告する。
 
    **更新モード**
+
    ```bash
-   gh pr edit <pr-number> \
-     [--title "<更新後タイトル>"] \
-     --body "$(cat <<'EOF'
-   <再生成した本文>
-   EOF
-   )"
+   BODY_FILE=/tmp/pr-body-<pr-number>.md
+   (
+     trap 'rm -f "$BODY_FILE"' EXIT INT TERM
+     gh pr edit <pr-number> \
+       [--title "<更新後タイトル>"] \
+       --body-file "$BODY_FILE"
+   )
    ```
 
    - **タイトルは毎回スコープ整合性を再評価する**（AGENTS.md「Keep PR metadata in sync with the branch state」より）。手順 1 のタイトル推論ルールと最新のコミット群を照合し、現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていなければ更新案を提示してユーザー承認を取り、`--title` に含めて反映する。タイトルが最新差分と整合している場合は `--title` を付けない。
@@ -192,3 +203,4 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 - `git push --no-verify` や force push はしない。push が必要ならユーザーに確認。
 - 既存 open PR を上書きしない（重複作成禁止）。
 - Hot fix の場合はタイトルに `Hotfix:` プレフィックスを付けるようユーザーに確認する（CLAUDE.md）。
+- 本文は `gh pr create --body` / `gh pr edit --body` のようにインラインで渡さない。必ず `--body-file` で一時ファイル経由で渡す（バッククォートなど特殊文字の escape 事故を構造的に防ぐため）。
