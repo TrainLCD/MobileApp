@@ -5,6 +5,16 @@ on:
     types: opened
     branches:
       - canary
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Target PR number"
+        required: true
+        type: string
+      head_ref:
+        description: "Source branch name of target PR"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -17,12 +27,15 @@ jobs:
   bump-version:
     runs-on: ubuntu-22.04
     if: |
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      !contains(github.event.pull_request.labels.*.name, 'skip-version-bump')
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        !contains(github.event.pull_request.labels.*.name, 'skip-version-bump')
+      ) || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.ref || inputs.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
@@ -43,17 +56,17 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Bump version for canary release"
-          title: "chore: Bump version for PR #${{ github.event.pull_request.number }}"
+          title: "chore: Bump version for PR #${{ github.event.pull_request.number || inputs.pr_number }}"
           body: |
             This PR was automatically created by the bump version workflow.
 
             It bumps the version number for the canary release.
 
-            **Related PR:** #${{ github.event.pull_request.number }}
+            **Related PR:** #${{ github.event.pull_request.number || inputs.pr_number }}
 
-            Please merge this PR into the source branch of PR #${{ github.event.pull_request.number }} to update its version numbers.
-          branch: "auto-version-bump-${{ github.event.pull_request.number }}"
-          base: ${{ github.event.pull_request.head.ref }}
+            Please merge this PR into the source branch of PR #${{ github.event.pull_request.number || inputs.pr_number }} to update its version numbers.
+          branch: "auto-version-bump-${{ github.event.pull_request.number || inputs.pr_number }}"
+          base: ${{ github.event.pull_request.head.ref || inputs.head_ref }}
           delete-branch: true
           labels: |
             automated
