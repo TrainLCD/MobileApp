@@ -40,9 +40,9 @@
         </scene>
     </scenes>
     <resources>
-        <image name="SplashScreenDev" width="1254" height="1254"/>
+        <image name="SplashScreenDev" width="2436" height="1242"/>
         <namedColor name="CommonSplashScreenBackground">
-            <color red="0.00784313725490196" green="0.23137254901960785" blue="0.6196078431372549" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.93333333333333335" green="0.93333333333333335" blue="0.93333333333333335" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
     </resources>
 </document>
