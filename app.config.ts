@@ -32,8 +32,12 @@ export default ({ config }: ConfigContext) => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#fff',
-        image: './assets/splash-icon.png',
+        backgroundColor:
+          process.env.EAS_BUILD_PROFILE === 'production' ? '#fff' : '#023b9e',
+        image:
+          process.env.EAS_BUILD_PROFILE === 'production'
+            ? './assets/splash-icon.png'
+            : './assets/splash-icon-canary.png',
       },
     ],
     [
@@ -53,7 +57,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2601',
+    buildNumber: '2602',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -70,7 +74,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000388,
+    versionCode: 100000389,
   },
   owner: 'trainlcd',
 });
