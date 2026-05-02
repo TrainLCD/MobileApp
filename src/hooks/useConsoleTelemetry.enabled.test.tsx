@@ -56,7 +56,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.log('test message');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -80,7 +80,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.error('something failed');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -102,7 +102,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.warn('a warning');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -123,7 +123,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.debug('debug info');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -144,7 +144,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.log('data:', { key: 'value' }, 42);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -165,7 +165,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.error(new TypeError('invalid type'));
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -186,7 +186,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.error('Authorization: Bearer my-super-secret-token');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -208,7 +208,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.log('auth test');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -231,7 +231,7 @@ describe('useConsoleTelemetry (enabled)', () => {
       console.log(`message-${i}`);
     }
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -275,7 +275,7 @@ describe('useConsoleTelemetry (enabled)', () => {
 
     console.log('will fail to send');
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(5000);
     await Promise.resolve();
     await Promise.resolve();
 

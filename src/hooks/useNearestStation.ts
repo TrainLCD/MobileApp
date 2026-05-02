@@ -21,41 +21,63 @@ export const useNearestStation = (): Station | undefined => {
     [stations]
   );
 
+  // findNearestへ毎回渡す座標タプルは駅リスト変更時にだけ作り直す
+  const stationCoordinates = useMemo(
+    () =>
+      validStations.map((sta) => ({
+        latitude: sta.latitude as number,
+        longitude: sta.longitude as number,
+      })),
+    [validStations]
+  );
+
   const nearestStation = useMemo<Station | undefined>(() => {
-    if (latitude == null || longitude == null) {
+    if (
+      latitude == null ||
+      longitude == null ||
+      stationCoordinates.length === 0
+    ) {
       return undefined;
     }
 
-    const nearestCoordinates = validStations.length
-      ? (findNearest(
-          {
-            latitude,
-            longitude,
-          },
-          validStations.map((sta) => ({
-            latitude: sta.latitude as number,
-            longitude: sta.longitude as number,
-          }))
-        ) as { latitude: number; longitude: number })
-      : undefined;
+    const nearestCoordinates = findNearest(
+      { latitude, longitude },
+      stationCoordinates
+    ) as { latitude: number; longitude: number } | undefined;
 
     if (!nearestCoordinates) {
       return undefined;
     }
 
-    const nearestStations = validStations.filter(
+    // currentStation / nextStation は到着判定で頻繁に最寄りになるため
+    // validStations全体の走査前にショートサーキットして O(1) で返す
+    if (
+      currentStation?.latitude === nearestCoordinates.latitude &&
+      currentStation?.longitude === nearestCoordinates.longitude
+    ) {
+      return currentStation;
+    }
+    if (
+      nextStation?.latitude === nearestCoordinates.latitude &&
+      nextStation?.longitude === nearestCoordinates.longitude
+    ) {
+      return nextStation;
+    }
+
+    // 同座標の駅が複数あるケースに備えて先頭一致を返す
+    return validStations.find(
       (sta) =>
         sta.latitude === nearestCoordinates.latitude &&
         sta.longitude === nearestCoordinates.longitude
     );
-
-    // currentStationを優先して返すことで、到着直後にnextStationへ誤って進むのを防ぐ
-    return (
-      nearestStations.find((s) => s.id === currentStation?.id) ??
-      nearestStations.find((s) => s.id === nextStation?.id) ??
-      nearestStations[0]
-    );
-  }, [latitude, longitude, validStations, currentStation, nextStation]);
+  }, [
+    latitude,
+    longitude,
+    validStations,
+    stationCoordinates,
+    currentStation,
+    nextStation,
+  ]);
 
   return nearestStation;
 };
