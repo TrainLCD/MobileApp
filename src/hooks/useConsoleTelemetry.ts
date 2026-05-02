@@ -138,7 +138,8 @@ export const useConsoleTelemetry = (
       isFlushingRef.current = false;
     };
 
-    const intervalId = setInterval(flush, 1000);
+    // 毎秒fetchするとログ量が少ない通常時に無線通信を起こしすぎるため5秒間隔に伸ばす
+    const intervalId = setInterval(flush, 5000);
 
     return () => {
       console.log = originalConsole.log;
