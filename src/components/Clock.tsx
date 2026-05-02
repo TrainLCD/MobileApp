@@ -1,9 +1,18 @@
-import React, { useCallback, useState } from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, type TextStyle, View, type ViewStyle } from 'react-native';
-import { useClock, useInterval } from '~/hooks';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+import { useClock } from '~/hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
+
+const AnimatedTypography = Animated.createAnimatedComponent(Typography);
 
 const styles = StyleSheet.create({
   clockContainer: {
@@ -25,14 +34,22 @@ type Props = {
 
 const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   const [hours, minutes] = useClock();
-  const [colonOpacity, setColonOpacity] = useState(0);
+  // コロン点滅は LCD らしさを保つため必須。
+  // JS スレッドで毎 500ms に setState すると Header 配下を再レンダリングしてしまうため、
+  // Reanimated で UI スレッドだけで完結させる。
+  const colonOpacity = useSharedValue(0);
 
-  useInterval(
-    useCallback(() => {
-      setColonOpacity((prev) => (prev === 0 ? 1 : 0));
-    }, []),
-    500
-  );
+  useEffect(() => {
+    colonOpacity.value = withRepeat(
+      withTiming(1, { duration: 500, easing: Easing.linear }),
+      -1,
+      true
+    );
+  }, [colonOpacity]);
+
+  const colonAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: colonOpacity.value,
+  }));
 
   const textCustomStyle: TextStyle = {
     color: white ? 'white' : '#3a3a3a',
@@ -44,11 +61,11 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
       <Typography style={[styles.clockItem, textCustomStyle]}>
         {hours}
       </Typography>
-      <Typography
-        style={[styles.clockItem, textCustomStyle, { opacity: colonOpacity }]}
+      <AnimatedTypography
+        style={[styles.clockItem, textCustomStyle, colonAnimatedStyle]}
       >
         :
-      </Typography>
+      </AnimatedTypography>
       <Typography style={[styles.clockItem, textCustomStyle]}>
         {minutes}
       </Typography>
