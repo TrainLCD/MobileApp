@@ -22,8 +22,14 @@ export const useTransferLinesFromStation = (
 
   const { stations } = useAtomValue(stationState);
 
-  const transferLines = useMemo(
-    () =>
+  const transferLines = useMemo(() => {
+    // 乗車中の列車が直通運転で通る路線一覧
+    // 同じ列車に乗ったままで到達するため乗り換え対象から外す
+    const throughServiceLineIds = new Set(
+      stations.map((s) => s.line?.id).filter((id): id is number => id != null)
+    );
+
+    return (
       station?.lines
         ?.filter((line) => !isBusLine(line))
         ?.filter((line) => line.id !== station.line?.id)
@@ -65,16 +71,24 @@ export const useTransferLinesFromStation = (
             return false;
           }
           return true;
-        }),
-    [
-      omitRepeatingLine,
-      station?.id,
-      station?.line?.id,
-      station?.line?.nameShort,
-      station?.lines,
-      stations,
-    ]
-  );
+        })
+        // 乗車中の列車が直通運転で通る路線は同じ列車のまま到達できるので
+        // 乗り換え路線として表示しない
+        .filter((line) => {
+          if (line.id == null) {
+            return true;
+          }
+          return !throughServiceLineIds.has(line.id);
+        })
+    );
+  }, [
+    omitRepeatingLine,
+    station?.id,
+    station?.line?.id,
+    station?.line?.nameShort,
+    station?.lines,
+    stations,
+  ]);
 
   if (omitJR) {
     return omitJRLinesIfThresholdExceeded(transferLines ?? [])
