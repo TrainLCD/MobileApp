@@ -72,8 +72,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   nowStationScaleWrap: {
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
     transformOrigin: 'left bottom',
+  },
+  nowStationFlexible: {
+    flexShrink: 1,
+    minWidth: 0,
   },
   busStationRow: {
     flexDirection: 'row',
@@ -86,6 +90,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
+    flexShrink: 0,
   },
   busBadgeText: {
     fontSize: isTablet ? 16 : 12,
@@ -255,9 +260,9 @@ export const NowHeader = ({
                 >
                   <View style={styles.busStationRow}>
                     <Typography
-                      style={styles.nowStation}
+                      style={[styles.nowStation, styles.nowStationFlexible]}
                       numberOfLines={1}
-                      adjustsFontSizeToFit
+                      ellipsizeMode="tail"
                     >
                       {nowHeader.name ?? ''}
                     </Typography>
@@ -288,9 +293,9 @@ export const NowHeader = ({
                 {nowHeader.label ?? ''}
               </Typography>
               <Typography
-                style={styles.nowStation}
+                style={[styles.nowStation, styles.nowStationFlexible]}
                 numberOfLines={1}
-                adjustsFontSizeToFit
+                ellipsizeMode="tail"
               >
                 {station
                   ? (nowHeader.name ?? '')
