@@ -9,24 +9,22 @@ import omitJRLinesIfThresholdExceeded from '../utils/jr';
 type Option = {
   omitRepeatingLine?: boolean;
   omitJR?: boolean;
-  omitThroughService?: boolean;
 };
 
 export const useTransferLinesFromStation = (
   station: Station | undefined,
   option?: Option
 ): Line[] => {
-  const { omitRepeatingLine, omitJR, omitThroughService } = option ?? {
+  const { omitRepeatingLine, omitJR } = option ?? {
     omitRepeatingLine: false,
     omitJR: false,
-    omitThroughService: false,
   };
 
   const { stations } = useAtomValue(stationState);
 
   const transferLines = useMemo(() => {
     // 乗車中の列車が直通運転で通る路線一覧
-    // 同じ列車に乗ったままで到達するため乗り換え対象から外す用途で使う
+    // 同じ列車に乗ったままで到達するため乗り換え対象から外す
     const throughServiceLineIds = new Set(
       stations.map((s) => s.line?.id).filter((id): id is number => id != null)
     );
@@ -77,7 +75,7 @@ export const useTransferLinesFromStation = (
         // 乗車中の列車が直通運転で通る路線は同じ列車のまま到達できるので
         // 乗り換え路線として表示しない
         .filter((line) => {
-          if (!omitThroughService || line.id == null) {
+          if (line.id == null) {
             return true;
           }
           return !throughServiceLineIds.has(line.id);
@@ -85,7 +83,6 @@ export const useTransferLinesFromStation = (
     );
   }, [
     omitRepeatingLine,
-    omitThroughService,
     station?.id,
     station?.line?.id,
     station?.line?.nameShort,

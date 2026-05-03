@@ -31,7 +31,7 @@ jest.mock('../utils/isPass', () => ({
 }));
 
 const TestComponent: React.FC<{
-  options?: { omitJR?: boolean; omitThroughService?: boolean };
+  options?: { omitJR?: boolean };
 }> = ({ options }) => {
   const lines = useTransferLines(options);
   return <Text testID="transferLines">{JSON.stringify(lines)}</Text>;
@@ -95,7 +95,6 @@ describe('useTransferLines', () => {
       {
         omitRepeatingLine: false,
         omitJR: false,
-        omitThroughService: false,
       }
     );
     expect(getByTestId('transferLines').props.children).toContain('metro');
@@ -116,7 +115,6 @@ describe('useTransferLines', () => {
       {
         omitRepeatingLine: undefined,
         omitJR: true,
-        omitThroughService: undefined,
       }
     );
   });
@@ -131,21 +129,6 @@ describe('useTransferLines', () => {
     expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(nextStation, {
       omitRepeatingLine: false,
       omitJR: false,
-      omitThroughService: false,
-    });
-  });
-
-  it('omitThroughService オプションを useTransferLinesFromStation に伝搬する', () => {
-    const nextStation = createStation(30);
-    stationAtomValue.arrived = false;
-    nextStationValue = nextStation;
-
-    render(<TestComponent options={{ omitThroughService: true }} />);
-
-    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(nextStation, {
-      omitRepeatingLine: undefined,
-      omitJR: undefined,
-      omitThroughService: true,
     });
   });
 });

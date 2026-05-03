@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
 
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   const getLineMarkFunc = useGetLineMark();
-  const lines = useTransferLines({ omitThroughService: true });
+  const lines = useTransferLines();
   const dim = useWindowDimensions();
 
   const flexBasis = useMemo(() => dim.width / 3, [dim.width]);

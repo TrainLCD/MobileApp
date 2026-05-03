@@ -17,9 +17,7 @@ export const useUpdateBottomState = () => {
 
   const isTypeWillChange = useTypeWillChange();
   const isTypeWillChangeRef = useValueRef(isTypeWillChange);
-  // Transfers 画面と同じ条件で件数を見る必要があるため
-  // 直通運転で到達できる路線は除外する
-  const transferLines = useTransferLines({ omitThroughService: true });
+  const transferLines = useTransferLines();
   const isLEDThemeRef = useValueRef(isLEDTheme);
   const shouldHideTypeChange = useShouldHideTypeChange();
   const shouldHideTypeChangeRef = useValueRef(shouldHideTypeChange);
