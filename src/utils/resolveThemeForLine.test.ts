@@ -1,4 +1,4 @@
-import type { Line } from '~/@types/graphql';
+import { type Line, TransportType } from '~/@types/graphql';
 import { YAMANOTE_LINE_ID } from '~/constants/line';
 import { APP_THEME } from '~/models/Theme';
 import { resolveThemeForLine } from './resolveThemeForLine';
@@ -91,6 +91,18 @@ describe('resolveThemeForLine', () => {
         makeLine({ id: 99302, company: makeCompany('東京都交通局地下鉄') })
       )
     ).toBe(APP_THEME.TOEI);
+  });
+
+  it('都営バス（東京都交通局のバス路線）はTOKYO_METROにフォールバックする', () => {
+    expect(
+      resolveThemeForLine(
+        makeLine({
+          id: 99303,
+          company: makeCompany('東京都交通局'),
+          transportType: TransportType.Bus,
+        })
+      )
+    ).toBe(APP_THEME.TOKYO_METRO);
   });
 
   it('JR西日本の路線はJR_WESTを返す', () => {
