@@ -7,6 +7,7 @@ import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
+import { RFValue } from '~/utils/rfValue';
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '../constants';
 import { useBounds, useGetLineMark } from '../hooks';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -22,6 +23,8 @@ type Props = {
   title?: string;
   /** カッコ内の文字を小さく表示する際、カッコ自体を非表示にする */
   hideParens?: boolean;
+  /** 方面を表す接辞（日本語の末尾「方面」/英語の先頭「for 」）を小さいフォントで表示する */
+  shrinkBoundAffix?: boolean;
   subtitle?: string;
   subtitleNumberOfLines?: number;
   /** 右端のシェブロンを非表示にする */
@@ -95,7 +98,12 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   titleParens: {
-    fontSize: 14,
+    fontSize: RFValue(13),
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  titleAffix: {
+    fontSize: RFValue(13),
     fontWeight: 'bold',
     color: '#fff',
   },
@@ -200,6 +208,7 @@ export const CommonCard: React.FC<Props> = ({
   stations = [],
   title,
   hideParens,
+  shrinkBoundAffix,
   subtitle,
   subtitleNumberOfLines,
   hideChevron,
@@ -302,10 +311,33 @@ export const CommonCard: React.FC<Props> = ({
     return { transform: [{ scale: 0.5 }] } as const;
   }, [mark?.signPath, targetStationNumber, targetStationThreeLetterCode]);
 
-  const titleParts = useMemo(
-    () => titleOrLineName.split(/(\([^)]*\))/),
-    [titleOrLineName]
-  );
+  const { titlePrefix, titleParts, titleSuffix } = useMemo(() => {
+    let main = titleOrLineName;
+    let prefix: string | null = null;
+    let suffix: string | null = null;
+    if (shrinkBoundAffix) {
+      if (isJapanese) {
+        // 「○○方面」末尾の「方面」を分離（カッコ内の「方面」は対象外）
+        const match = /^(.+?)方面$/.exec(main);
+        if (match && !match[1].endsWith(')')) {
+          main = match[1];
+          suffix = '方面';
+        }
+      } else {
+        // 「for ○○」先頭の「for 」を分離
+        const match = /^(for )(.+)$/.exec(main);
+        if (match) {
+          prefix = match[1];
+          main = match[2];
+        }
+      }
+    }
+    return {
+      titlePrefix: prefix,
+      titleParts: main.split(/(\([^)]*\))/),
+      titleSuffix: suffix,
+    };
+  }, [titleOrLineName, shrinkBoundAffix]);
 
   const additionalRootStyle = useMemo(
     () => ({
@@ -411,6 +443,9 @@ export const CommonCard: React.FC<Props> = ({
         )}
         <View style={styles.texts}>
           <Typography style={styles.title} numberOfLines={1}>
+            {titlePrefix ? (
+              <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
+            ) : null}
             {titleParts.map((part, index) =>
               /^\(.*\)$/.test(part) ? (
                 <Typography key={`${index}-${part}`} style={styles.titleParens}>
@@ -423,6 +458,9 @@ export const CommonCard: React.FC<Props> = ({
                 part
               )
             )}
+            {titleSuffix ? (
+              <Typography style={styles.titleAffix}>{titleSuffix}</Typography>
+            ) : null}
           </Typography>
           {subtitle && (
             <Subtitle

@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   busBadge: {
+    alignSelf: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
