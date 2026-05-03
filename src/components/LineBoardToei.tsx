@@ -170,9 +170,9 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
           </Typography>
         ))}
       </View>
-      {isKoEnabled ? (
+      {isKoEnabled && station.nameKorean ? (
         <View style={styles.splittedStationName}>
-          {(station.nameKorean ?? '').split('').map((c, j) => (
+          {station.nameKorean.split('').map((c, j) => (
             <Typography
               style={[
                 styles.stationNameExtra,
