@@ -70,7 +70,8 @@ export const useTTSText = (
   const currentLineOrigin = useCurrentLine();
 
   const connectedLinesOrigin = useConnectedLines();
-  const transferLinesOrigin = useTransferLines();
+  // 直通運転で同じ列車が通る路線は乗り換え案内に含めない
+  const transferLinesOrigin = useTransferLines({ omitThroughService: true });
 
   const connectedLines = connectedLinesOrigin;
   const transferLines = transferLinesOrigin;

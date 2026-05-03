@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
 });
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
-  const lines = useTransferLines();
+  const lines = useTransferLines({ omitThroughService: true });
   const getLineMarkFunc = useGetLineMark();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 

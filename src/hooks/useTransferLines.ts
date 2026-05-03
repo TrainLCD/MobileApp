@@ -10,6 +10,7 @@ import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 type Option = {
   omitRepeatingLine?: boolean;
   omitJR?: boolean;
+  omitThroughService?: boolean;
 };
 
 export const useTransferLines = (options?: Option): Line[] => {
@@ -24,14 +25,16 @@ export const useTransferLines = (options?: Option): Line[] => {
     [arrived, currentStation, nextStation]
   );
 
-  const { omitRepeatingLine, omitJR } = options ?? {
+  const { omitRepeatingLine, omitJR, omitThroughService } = options ?? {
     omitRepeatingLine: false,
     omitJR: false,
+    omitThroughService: false,
   };
 
   const transferLines = useTransferLinesFromStation(targetStation, {
     omitRepeatingLine,
     omitJR,
+    omitThroughService,
   });
 
   return transferLines;

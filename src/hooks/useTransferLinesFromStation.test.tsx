@@ -19,6 +19,7 @@ type TestComponentProps = {
   options?: {
     omitRepeatingLine?: boolean;
     omitJR?: boolean;
+    omitThroughService?: boolean;
   };
 };
 
@@ -212,6 +213,73 @@ describe('useTransferLinesFromStation', () => {
     );
 
     expect(lines.map((l: Line) => l.id)).toContain(2);
+  });
+
+  it('omitThroughService が true の場合、列車が直通運転で通る路線を除外する', () => {
+    const currentLine = createLineNested({ id: 1, nameShort: '東急東横線' });
+    const throughServiceLine = createLineNested({
+      id: 2,
+      nameShort: '東京メトロ副都心線',
+    });
+    const independentLine = createLineNested({ id: 3, nameShort: '銀座線' });
+
+    const currentStation = createStation(100, {
+      line: currentLine,
+      lines: [currentLine, throughServiceLine, independentLine],
+    });
+    const transitionStation = createStation(101, {
+      line: throughServiceLine,
+      lines: [currentLine, throughServiceLine],
+    });
+    const futureStation = createStation(102, {
+      line: throughServiceLine,
+      lines: [throughServiceLine],
+    });
+
+    stationAtomValue.stations = [
+      currentStation,
+      transitionStation,
+      futureStation,
+    ];
+
+    const { getByTestId } = render(
+      <TestComponent
+        station={currentStation}
+        options={{ omitThroughService: true }}
+      />
+    );
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines.find((l: Line) => l.id === 2)).toBeUndefined();
+    expect(lines.find((l: Line) => l.id === 3)).toBeDefined();
+  });
+
+  it('omitThroughService が false の場合、直通運転で通る路線も乗り換え路線として残る', () => {
+    const currentLine = createLineNested({ id: 1, nameShort: '東急東横線' });
+    const throughServiceLine = createLineNested({
+      id: 2,
+      nameShort: '東京メトロ副都心線',
+    });
+
+    const currentStation = createStation(100, {
+      line: currentLine,
+      lines: [currentLine, throughServiceLine],
+    });
+    const transitionStation = createStation(101, {
+      line: throughServiceLine,
+      lines: [currentLine, throughServiceLine],
+    });
+
+    stationAtomValue.stations = [currentStation, transitionStation];
+
+    const { getByTestId } = render(<TestComponent station={currentStation} />);
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines.find((l: Line) => l.id === 2)).toBeDefined();
   });
 
   it('omitJR が true で JR路線が閾値以上の場合、JR線として集約される', () => {
