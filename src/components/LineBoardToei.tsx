@@ -76,6 +76,7 @@ interface StationNameToeiProps {
   passed?: boolean;
   isKoEnabled?: boolean;
   isZhEnabled?: boolean;
+  hasNumbering?: boolean;
 }
 
 const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
@@ -85,26 +86,23 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
   passed,
   isKoEnabled,
   isZhEnabled,
+  hasNumbering,
 }) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
   const dim = useWindowDimensions();
 
   const horizontalAdditionalStyle = useMemo(() => {
-    const commonStyle = {
-      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-    };
-
-    if (!station.stationNumbers?.length) {
+    if (!hasNumbering) {
       return {
-        ...commonStyle,
+        marginBottom: isTablet ? dim.height / 14 : dim.height / 10,
         width: isTablet ? dim.height / 3 : dim.height / 2.5,
       };
     }
     return {
-      ...commonStyle,
+      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
       width: isTablet ? dim.height / 3.5 : dim.height / 2,
     };
-  }, [dim.height, station.stationNumbers]);
+  }, [dim.height, hasNumbering]);
 
   if (en) {
     return (
@@ -116,7 +114,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
         ]}
       >
         {stationNameR}
-        {isZhEnabled ? (
+        {isZhEnabled && station.nameChinese ? (
           <>
             {'\n'}
             <Typography
@@ -125,7 +123,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
                 passed ? styles.grayColor : null,
               ]}
             >
-              {station.nameChinese ?? ''}
+              {station.nameChinese}
             </Typography>
           </>
         ) : null}
@@ -143,7 +141,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
         ]}
       >
         {station.name}
-        {isKoEnabled ? (
+        {isKoEnabled && station.nameKorean ? (
           <>
             {'\n'}
             <Typography
@@ -152,7 +150,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
                 passed ? styles.grayColor : null,
               ]}
             >
-              {station.nameKorean ?? ''}
+              {station.nameKorean}
             </Typography>
           </>
         ) : null}
@@ -399,18 +397,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             passed={getIsPass(station) || shouldGrayscale}
             isKoEnabled={isKoEnabled}
             isZhEnabled={isZhEnabled}
+            hasNumbering={!!numberingObj?.stationNumber}
           />
         </View>
-        <Typography
-          style={[
-            styles.stationNumber,
-            getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
-          ]}
-          adjustsFontSizeToFit
-          numberOfLines={1}
-        >
-          {numberingObj?.stationNumber ?? ''}
-        </Typography>
+        {numberingObj?.stationNumber ? (
+          <Typography
+            style={[
+              styles.stationNumber,
+              getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
+            ]}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+          >
+            {numberingObj.stationNumber}
+          </Typography>
+        ) : null}
         <BackgroundBars line={line} barLeft={barLeft} barWidth={barWidth} />
         <FutureBars
           arrived={arrived}
