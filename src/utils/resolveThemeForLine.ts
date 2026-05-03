@@ -1,4 +1,4 @@
-import { type Line, TransportType } from '~/@types/graphql';
+import type { Line } from '~/@types/graphql';
 import { YAMANOTE_LINE_ID } from '~/constants/line';
 import { APP_THEME, type AppTheme } from '~/models/Theme';
 
@@ -28,11 +28,6 @@ const DEFAULT_THEME = APP_THEME.TOKYO_METRO;
 
 export const resolveThemeForLine = (line: Line | null): AppTheme => {
   if (!line) {
-    return DEFAULT_THEME;
-  }
-
-  // バス路線は鉄道向けの社別テーマ（都営地下鉄風など）を流用しない
-  if (line.transportType === TransportType.Bus) {
     return DEFAULT_THEME;
   }
 
