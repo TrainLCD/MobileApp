@@ -53,7 +53,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2608',
+    buildNumber: '2609',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -70,7 +70,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000395,
+    versionCode: 100000396,
   },
   owner: 'trainlcd',
 });
