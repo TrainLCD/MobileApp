@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
-  Easing,
   StyleSheet,
   type TextStyle,
   View,
@@ -37,21 +36,21 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   // コロン点滅は LCD らしさを保つため必須。
   // JS スレッドで毎 500ms に setState すると Header 配下を再レンダリングしてしまうため、
   // useNativeDriver でネイティブスレッドだけで完結させる。
-  const colonOpacity = useRef(new Animated.Value(0)).current;
+  const colonOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(colonOpacity, {
-          toValue: 1,
-          duration: 500,
-          easing: Easing.linear,
+          toValue: 0,
+          duration: 0,
+          delay: 500,
           useNativeDriver: true,
         }),
         Animated.timing(colonOpacity, {
-          toValue: 0,
-          duration: 500,
-          easing: Easing.linear,
+          toValue: 1,
+          duration: 0,
+          delay: 500,
           useNativeDriver: true,
         }),
       ])
