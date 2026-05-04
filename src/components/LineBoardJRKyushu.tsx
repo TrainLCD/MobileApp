@@ -323,7 +323,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             station={station}
             en={isEn}
             horizontal={includesLongStationName}
-            passed={getIsPass(station) || shouldGrayscale}
+            passed={shouldGrayscale}
           />
         </View>
 

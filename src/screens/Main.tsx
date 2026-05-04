@@ -187,17 +187,24 @@ const MainScreen: React.FC = () => {
     ) {
       return false;
     }
-    if (selectedDirection === 'INBOUND') {
-      return leftStations
-        .slice(0, 8)
-        .some((ls) => ls.id === stations[stations.length - 1]?.id);
+    // INBOUND は最終駅、OUTBOUND は始発駅が終点。
+    // 以前は OUTBOUND 側で stations.slice().reverse()[length-1] と書いていたが、
+    // これは単に stations[0] と等価なので reverse 全配列コピーは丸ごと無駄だった。
+    const terminusId =
+      selectedDirection === 'INBOUND'
+        ? stations[stations.length - 1]?.id
+        : stations[0]?.id;
+    if (terminusId == null) {
+      return false;
     }
 
-    return leftStations
-      .slice(0, 8)
-      .some(
-        (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
-      );
+    const limit = Math.min(8, leftStations.length);
+    for (let i = 0; i < limit; i++) {
+      if (leftStations[i]?.id === terminusId) {
+        return true;
+      }
+    }
+    return false;
   }, [
     currentLine,
     isYamanoteLine,
