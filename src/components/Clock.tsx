@@ -1,12 +1,12 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, type TextStyle, View, type ViewStyle } from 'react-native';
-import Animated, {
+import React, { useEffect, useRef } from 'react';
+import {
+  Animated,
   Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+  StyleSheet,
+  type TextStyle,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { useClock } from '~/hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -36,20 +36,29 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
   const [hours, minutes] = useClock();
   // コロン点滅は LCD らしさを保つため必須。
   // JS スレッドで毎 500ms に setState すると Header 配下を再レンダリングしてしまうため、
-  // Reanimated で UI スレッドだけで完結させる。
-  const colonOpacity = useSharedValue(0);
+  // useNativeDriver でネイティブスレッドだけで完結させる。
+  const colonOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    colonOpacity.value = withRepeat(
-      withTiming(1, { duration: 500, easing: Easing.linear }),
-      -1,
-      true
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(colonOpacity, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(colonOpacity, {
+          toValue: 0,
+          duration: 500,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ])
     );
+    loop.start();
+    return () => loop.stop();
   }, [colonOpacity]);
-
-  const colonAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: colonOpacity.value,
-  }));
 
   const textCustomStyle: TextStyle = {
     color: white ? 'white' : '#3a3a3a',
@@ -62,7 +71,7 @@ const Clock = ({ style, white, bold }: Props): React.ReactElement => {
         {hours}
       </Typography>
       <AnimatedTypography
-        style={[styles.clockItem, textCustomStyle, colonAnimatedStyle]}
+        style={[styles.clockItem, textCustomStyle, { opacity: colonOpacity }]}
       >
         :
       </AnimatedTypography>
