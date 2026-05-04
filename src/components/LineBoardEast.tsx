@@ -375,7 +375,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             station={station}
             en={isEn}
             horizontal={includesLongStationName}
-            passed={getIsPass(station) || shouldGrayscale}
+            passed={shouldGrayscale}
           />
         </View>
         {isOdakyu ? (
@@ -510,12 +510,19 @@ const LineBoardEast: React.FC<Props> = ({
 
   useInterval(intervalStep, 1000);
 
+  const stationsWithEmpty = useMemo(() => {
+    const filled = stations.length >= 8 ? stations : [...stations];
+    while (filled.length < 8) {
+      // 残りスロットは undefined のまま埋め切る (型上は Station[] にキャスト)
+      filled.push(undefined as unknown as Station);
+    }
+    return filled;
+  }, [stations]);
+
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): React.ReactNode | null => {
-      const isLast =
-        [...stations, ...Array.from({ length: 8 - stations.length })].length -
-          1 ===
-        i;
+      // padded 後の長さは常に 8 なので最後尾は i === 7
+      const isLast = i === 7;
 
       if (!s) {
         return (
@@ -548,15 +555,6 @@ const LineBoardEast: React.FC<Props> = ({
       );
     },
     [chevronColor, hasTerminus, line, lineColors, stations, isOdakyu]
-  );
-
-  const stationsWithEmpty = useMemo(
-    () =>
-      [
-        ...stations,
-        ...Array.from({ length: 8 - stations.length }),
-      ] as Station[],
-    [stations]
   );
 
   return (

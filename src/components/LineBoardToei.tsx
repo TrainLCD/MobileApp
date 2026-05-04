@@ -394,7 +394,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             station={station}
             en={isEn}
             horizontal={includesLongStationName}
-            passed={getIsPass(station) || shouldGrayscale}
+            passed={shouldGrayscale}
             isKoEnabled={isKoEnabled}
             isZhEnabled={isZhEnabled}
             hasNumbering={!!numberingObj?.stationNumber}
@@ -404,7 +404,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           <Typography
             style={[
               styles.stationNumber,
-              getIsPass(station) || shouldGrayscale ? styles.grayColor : null,
+              shouldGrayscale ? styles.grayColor : null,
             ]}
             adjustsFontSizeToFit
             numberOfLines={1}

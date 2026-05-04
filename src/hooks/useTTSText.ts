@@ -225,11 +225,19 @@ export const useTTSText = (
   const nextStation = nextStationOrigin ?? null;
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
-  const slicedStations = Array.from(
-    new Set(slicedStationsOrigin.map((s) => s.groupId))
-  )
-    .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as Station[];
+  // 以前は new Set + find のチェーンで毎レンダー O(n²) だった。
+  // useTTSText 自体が StationState 全部の依存で頻繁に再評価されるため特に痛い。
+  const slicedStations = useMemo<Station[]>(() => {
+    const seen = new Set<number>();
+    const result: Station[] = [];
+    for (const s of slicedStationsOrigin) {
+      if (s.groupId == null) continue;
+      if (seen.has(s.groupId)) continue;
+      seen.add(s.groupId);
+      result.push(s);
+    }
+    return result;
+  }, [slicedStationsOrigin]);
 
   const afterNextStationOrigin = useAfterNextStation();
   const afterNextStation = afterNextStationOrigin;
@@ -269,15 +277,25 @@ export const useTTSText = (
 
   // JR西日本テーマ: 停車駅リストのバッチサイクル追跡
   // 進行方向上で現在の駅が何番目の停車駅かを求め、5駅ごとの境界で案内を出す
+  // O(n²) だった重複除去 (Set→find ループ) を O(n) に短縮し、停車駅探索もインライン化。
   const currentStopIndex = useMemo(() => {
     if (!station) return -1;
     const isInbound = selectedDirection === 'INBOUND';
-    const ordered = isInbound ? stations : [...stations].reverse();
-    const deduped = Array.from(new Set(ordered.map((s) => s.groupId)))
-      .map((gid) => ordered.find((s) => s.groupId === gid))
-      .filter((s) => !!s) as Station[];
-    const stops = deduped.filter((s) => !getIsPass(s));
-    return stops.findIndex((s) => s.groupId === station.groupId);
+    const total = stations.length;
+    const seen = new Set<number>();
+    let stopCount = 0;
+    for (let i = 0; i < total; i++) {
+      const s = isInbound ? stations[i] : stations[total - 1 - i];
+      if (!s || s.groupId == null) continue;
+      if (seen.has(s.groupId)) continue;
+      seen.add(s.groupId);
+      if (getIsPass(s)) continue;
+      if (s.groupId === station.groupId) {
+        return stopCount;
+      }
+      stopCount++;
+    }
+    return -1;
   }, [stations, station, selectedDirection]);
 
   const shouldAnnounceJrWestStopList = useMemo(
