@@ -11,76 +11,76 @@ type Option = {
   omitJR?: boolean;
 };
 
+const stripParen = (
+  text: string | null | undefined
+): string | null | undefined =>
+  text == null ? text : text.replace(parenthesisRegexp, '');
+
 export const useTransferLinesFromStation = (
   station: Station | undefined,
   option?: Option
 ): Line[] => {
-  const { omitRepeatingLine, omitJR } = option ?? {
-    omitRepeatingLine: false,
-    omitJR: false,
-  };
+  const omitRepeatingLine = option?.omitRepeatingLine ?? false;
+  const omitJR = option?.omitJR ?? false;
 
   const { stations } = useAtomValue(stationState);
 
   const transferLines = useMemo(() => {
+    if (!station?.lines?.length) {
+      return [];
+    }
+
     // 乗車中の列車が直通運転で通る路線一覧
     // 同じ列車に乗ったままで到達するため乗り換え対象から外す
-    const throughServiceLineIds = new Set(
-      stations.map((s) => s.line?.id).filter((id): id is number => id != null)
-    );
+    const throughServiceLineIds = new Set<number>();
+    for (const s of stations) {
+      const id = s.line?.id;
+      if (id != null) {
+        throughServiceLineIds.add(id);
+      }
+    }
 
-    return (
-      station?.lines
-        ?.filter((line) => !isBusLine(line))
-        ?.filter((line) => line.id !== station.line?.id)
-        // カッコを除いて路線名が同じということは、
-        // データ上の都合で路線が分かれているだけなので除外する
-        // ex. JR神戸線(大阪～神戸) と JR神戸線(神戸～姫路) は実質同じ路線
-        .filter(
-          (line) =>
-            line.nameShort?.replace(parenthesisRegexp, '') !==
-            station.line?.nameShort?.replace(parenthesisRegexp, '')
-        )
-        .filter((line) => {
-          const currentStationIndex = stations.findIndex(
-            (s) => s.id === station.id
-          );
-          const prevStation = stations[currentStationIndex - 1];
-          const nextStation = stations[currentStationIndex + 1];
-          if (!prevStation || !nextStation) {
-            return true;
-          }
-          const hasSameLineInPrevStationLine = prevStation.lines?.some(
-            (pl) => pl.id === line.id
-          );
-          const hasSameLineInNextStationLine = nextStation.lines?.some(
-            (nl) => nl.id === line.id
-          );
+    // 隣接駅判定で何度も使うため一度だけ findIndex する
+    const currentStationIndex = stations.findIndex((s) => s.id === station.id);
+    const prevStation = stations[currentStationIndex - 1];
+    const nextStation = stations[currentStationIndex + 1];
+    const stationLineId = station.line?.id;
+    const stationLineNameNorm = stripParen(station.line?.nameShort);
 
-          if (
-            // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
-            nextStation.line?.id !== station.line?.id
-          ) {
-            return true;
-          }
-          if (
-            omitRepeatingLine &&
-            hasSameLineInPrevStationLine &&
-            hasSameLineInNextStationLine
-          ) {
-            return false;
-          }
-          return true;
-        })
-        // 乗車中の列車が直通運転で通る路線は同じ列車のまま到達できるので
-        // 乗り換え路線として表示しない
-        .filter((line) => {
-          if (line.id == null) {
-            return true;
-          }
-          return !throughServiceLineIds.has(line.id);
-        })
-    );
+    const filtered: Line[] = [];
+    for (const line of station.lines) {
+      if (!line || isBusLine(line)) continue;
+      if (line.id === stationLineId) continue;
+      if (stripParen(line.nameShort) === stationLineNameNorm) continue;
+
+      // データ上の都合で路線が分かれているだけなので除外する
+      // ex. JR神戸線(大阪～神戸) と JR神戸線(神戸～姫路) は実質同じ路線
+
+      // 並走路線の判定
+      if (prevStation && nextStation) {
+        const inPrev = prevStation.lines?.some((pl) => pl.id === line.id);
+        const inNext = nextStation.lines?.some((nl) => nl.id === line.id);
+        if (
+          // 次の駅から違う路線に直通している場合並走路線を乗り換え路線として出す
+          nextStation.line?.id === stationLineId &&
+          omitRepeatingLine &&
+          inPrev &&
+          inNext
+        ) {
+          continue;
+        }
+      }
+
+      // 乗車中の列車が直通運転で通る路線は同じ列車のまま到達できるので
+      // 乗り換え路線として表示しない
+      if (line.id != null && throughServiceLineIds.has(line.id)) {
+        continue;
+      }
+
+      filtered.push(line);
+    }
+
+    return filtered;
   }, [
     omitRepeatingLine,
     station?.id,
@@ -90,21 +90,22 @@ export const useTransferLinesFromStation = (
     stations,
   ]);
 
-  if (omitJR) {
-    return omitJRLinesIfThresholdExceeded(transferLines ?? [])
-      .map((l) => ({
+  // 乗り換え路線名から括弧を除去した形に正規化する。
+  // 以前は無意味な `.map((l) => l)` チェーンが含まれていたため整理した。
+  return useMemo(() => {
+    const base = omitJR
+      ? omitJRLinesIfThresholdExceeded(transferLines)
+      : transferLines;
+    if (base.length === 0) return base;
+    const result = new Array<Line>(base.length);
+    for (let i = 0; i < base.length; i++) {
+      const l = base[i];
+      result[i] = {
         ...l,
-        nameShort: l.nameShort?.replace(parenthesisRegexp, ''),
-        nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-      }))
-      .map((l) => l);
-  }
-
-  return (transferLines ?? [])
-    .map((l) => ({
-      ...l,
-      nameShort: l.nameShort?.replace(parenthesisRegexp, ''),
-      nameRoman: l.nameRoman?.replace(parenthesisRegexp, ''),
-    }))
-    .map((l) => l);
+        nameShort: stripParen(l.nameShort) ?? l.nameShort,
+        nameRoman: stripParen(l.nameRoman) ?? l.nameRoman,
+      };
+    }
+    return result;
+  }, [transferLines, omitJR]);
 };

@@ -1,7 +1,5 @@
 import * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
-import getPathLength from 'geolib/es/getPathLength';
-import type { GeolibInputCoordinates } from 'geolib/es/types';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { LineType } from '~/@types/graphql';
@@ -47,6 +45,15 @@ export const useSimulationMode = (): void => {
   const speedProfilesRef = useRef<number[][]>([]);
   const segmentProgressDistanceRef = useRef(0);
   const dwellPendingRef = useRef(false);
+  // 区間ごとの (waypoints, cumulativeDistances) キャッシュ。
+  // step() は毎秒呼ばれる。区間が変わらない限り cumulativeDistances は同じなので、
+  // waypoints 毎の getDistance / reduce を毎ティック走らせる必要は無い。
+  type SegmentGeometry = {
+    waypoints: { latitude: number; longitude: number }[];
+    cumulativeDistances: number[];
+    totalDistance: number;
+  };
+  const segmentGeometryCacheRef = useRef<SegmentGeometry[]>([]);
 
   const stations = useMemo(
     () => dropEitherJunctionStation(rawStations, selectedDirection),
@@ -152,83 +159,132 @@ export const useSimulationMode = (): void => {
   }, [enabled]);
 
   useEffect(() => {
-    const speedProfiles = maybeRevsersedStations.map(
-      (cur, curMapIndex, arr) => {
-        if (getIsPass(cur)) {
-          // 通過駅は速度プロファイル生成対象外
-          return [];
-        }
-
-        const nextStationIndex = arr.findIndex(
-          (station, idx) => idx > curMapIndex && !getIsPass(station)
-        );
-        if (nextStationIndex === -1) {
-          return [];
-        }
-        const next = arr[nextStationIndex];
-        if (!next) {
-          return [];
-        }
-
-        const betweenNextStation = arr.slice(curMapIndex + 1, nextStationIndex);
-
-        if (
-          cur.latitude == null ||
-          cur.longitude == null ||
-          next.latitude == null ||
-          next.longitude == null
-        ) {
-          return [];
-        }
-
-        const points: GeolibInputCoordinates[] = [
-          {
-            latitude: cur.latitude as number,
-            longitude: cur.longitude as number,
-          },
-          ...betweenNextStation
-            .filter((s) => s.latitude != null && s.longitude != null)
-            .map((s) => ({
-              latitude: s.latitude as number,
-              longitude: s.longitude as number,
-            })),
-          {
-            latitude: next.latitude as number,
-            longitude: next.longitude as number,
-          },
-        ];
-
-        const distanceForNextStation = getPathLength(points);
-
-        const accel = isBus
-          ? BUS_MAX_ACCEL_IN_M_S
-          : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
-        const decel = isBus
-          ? BUS_MAX_DECEL_IN_M_S
-          : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
-
-        const speedProfile = generateTrainSpeedProfile({
-          distance: distanceForNextStation,
-          maxSpeed,
-          accel,
-          decel,
-          interval: 1,
-        });
-
-        const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
-        const correctedProfile =
-          profileDistance === 0
-            ? speedProfile.map(() => 0)
-            : speedProfile.map(
-                (v) => v * (distanceForNextStation / profileDistance)
-              );
-
-        return correctedProfile;
-      }
+    const speedProfiles: number[][] = new Array(maybeRevsersedStations.length);
+    const segmentGeometry: SegmentGeometry[] = new Array(
+      maybeRevsersedStations.length
     );
+
+    const accel = isBus
+      ? BUS_MAX_ACCEL_IN_M_S
+      : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
+    const decel = isBus
+      ? BUS_MAX_DECEL_IN_M_S
+      : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
+    const emptyGeometry: SegmentGeometry = {
+      waypoints: [],
+      cumulativeDistances: [],
+      totalDistance: 0,
+    };
+
+    for (
+      let curMapIndex = 0;
+      curMapIndex < maybeRevsersedStations.length;
+      curMapIndex++
+    ) {
+      const cur = maybeRevsersedStations[curMapIndex];
+      if (!cur || getIsPass(cur)) {
+        // 通過駅は速度プロファイル生成対象外
+        speedProfiles[curMapIndex] = [];
+        segmentGeometry[curMapIndex] = emptyGeometry;
+        continue;
+      }
+
+      // 次の停車駅インデックスを線形探索
+      let nextStationIndex = -1;
+      for (let i = curMapIndex + 1; i < maybeRevsersedStations.length; i++) {
+        const s = maybeRevsersedStations[i];
+        if (s && !getIsPass(s)) {
+          nextStationIndex = i;
+          break;
+        }
+      }
+      if (nextStationIndex === -1) {
+        speedProfiles[curMapIndex] = [];
+        segmentGeometry[curMapIndex] = emptyGeometry;
+        continue;
+      }
+      const next = maybeRevsersedStations[nextStationIndex];
+      if (
+        !next ||
+        cur.latitude == null ||
+        cur.longitude == null ||
+        next.latitude == null ||
+        next.longitude == null
+      ) {
+        speedProfiles[curMapIndex] = [];
+        segmentGeometry[curMapIndex] = emptyGeometry;
+        continue;
+      }
+
+      // step() で参照する waypoints と累積距離を一度だけ計算してキャッシュする。
+      // step() は毎秒呼ばれるため、ここで先払いすればその分のCPU負荷が減る。
+      const waypoints: { latitude: number; longitude: number }[] = [
+        {
+          latitude: cur.latitude as number,
+          longitude: cur.longitude as number,
+        },
+      ];
+      for (let idx = curMapIndex + 1; idx < nextStationIndex; idx++) {
+        const wp = maybeRevsersedStations[idx];
+        if (!wp || wp.latitude == null || wp.longitude == null) {
+          continue;
+        }
+        waypoints.push({
+          latitude: wp.latitude as number,
+          longitude: wp.longitude as number,
+        });
+      }
+      waypoints.push({
+        latitude: next.latitude as number,
+        longitude: next.longitude as number,
+      });
+
+      const cumulative = new Array<number>(waypoints.length);
+      cumulative[0] = 0;
+      for (let i = 1; i < waypoints.length; i++) {
+        const prev = waypoints[i - 1];
+        const cur = waypoints[i];
+        const d = getDistance(
+          { latitude: prev.latitude, longitude: prev.longitude },
+          { latitude: cur.latitude, longitude: cur.longitude }
+        );
+        cumulative[i] = (cumulative[i - 1] ?? 0) + d;
+      }
+      const distanceForNextStation = cumulative[cumulative.length - 1] ?? 0;
+
+      segmentGeometry[curMapIndex] = {
+        waypoints,
+        cumulativeDistances: cumulative,
+        totalDistance: distanceForNextStation,
+      };
+
+      const speedProfile = generateTrainSpeedProfile({
+        distance: distanceForNextStation,
+        maxSpeed,
+        accel,
+        decel,
+        interval: 1,
+      });
+
+      let profileDistance = 0;
+      for (let i = 0; i < speedProfile.length; i++) {
+        profileDistance += speedProfile[i] ?? 0;
+      }
+      if (profileDistance === 0) {
+        speedProfiles[curMapIndex] = speedProfile.map(() => 0);
+      } else {
+        const ratio = distanceForNextStation / profileDistance;
+        const corrected = new Array<number>(speedProfile.length);
+        for (let i = 0; i < speedProfile.length; i++) {
+          corrected[i] = (speedProfile[i] ?? 0) * ratio;
+        }
+        speedProfiles[curMapIndex] = corrected;
+      }
+    }
 
     segmentIndexRef.current = resolveStartIndex();
     speedProfilesRef.current = speedProfiles;
+    segmentGeometryCacheRef.current = segmentGeometry;
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
     dwellPendingRef.current = false;
@@ -257,11 +313,9 @@ export const useSimulationMode = (): void => {
         segmentProgressDistanceRef.current = 0;
       }
 
-      // segmentIndexRefに基づいて目的地を決定（nextStationフックに依存しない）
-      const nextStopStationIndex = maybeRevsersedStations.findIndex(
-        (station, idx) => idx > normalizedSegmentIndex && !getIsPass(station)
-      );
-      if (nextStopStationIndex === -1) {
+      const geometry = segmentGeometryCacheRef.current[normalizedSegmentIndex];
+      // geometry が空 (= 当該駅から先に停車駅が無い / 通過駅) の場合は終端扱い
+      if (!geometry || geometry.waypoints.length === 0) {
         segmentIndexRef.current = 0;
         childIndexRef.current = 0;
         segmentProgressDistanceRef.current = 0;
@@ -283,103 +337,35 @@ export const useSimulationMode = (): void => {
         return;
       }
 
-      const currentSegmentStation =
-        maybeRevsersedStations[normalizedSegmentIndex];
-      if (!currentSegmentStation) {
-        return;
-      }
-      const currentSegmentStationIndex = normalizedSegmentIndex;
-
-      const nextStopStation = maybeRevsersedStations[nextStopStationIndex];
-      if (!nextStopStation) {
-        return;
-      }
-
-      if (
-        nextStopStation.latitude == null ||
-        nextStopStation.longitude == null
-      ) {
-        return;
-      }
-
-      if (
-        nextStopStationIndex < 0 ||
-        nextStopStationIndex < currentSegmentStationIndex
-      ) {
-        segmentIndexRef.current = 0;
-        childIndexRef.current = 0;
-        segmentProgressDistanceRef.current = 0;
-        return;
-      }
-
-      const waypoints = maybeRevsersedStations
-        .slice(currentSegmentStationIndex, nextStopStationIndex + 1)
-        .filter((s) => s.latitude != null && s.longitude != null);
-
-      if (waypoints.length === 0) {
-        return;
-      }
-
+      const { waypoints, cumulativeDistances, totalDistance } = geometry;
       const progressedDistance = segmentProgressDistanceRef.current + speed;
-      const cumulativeDistances = waypoints.reduce<number[]>(
-        (acc, waypoint, index, arr) => {
-          if (index === 0) {
-            acc.push(0);
-            return acc;
-          }
-
-          const prevWaypoint = arr[index - 1];
-          if (!prevWaypoint) {
-            return acc;
-          }
-
-          const prevDistance = acc[index - 1] ?? 0;
-          const distance = getDistance(
-            {
-              latitude: prevWaypoint.latitude as number,
-              longitude: prevWaypoint.longitude as number,
-            },
-            {
-              latitude: waypoint.latitude as number,
-              longitude: waypoint.longitude as number,
-            }
-          );
-
-          acc.push(prevDistance + distance);
-          return acc;
-        },
-        []
-      );
-
-      const segmentDistance =
-        cumulativeDistances[cumulativeDistances.length - 1];
-      if (segmentDistance == null) {
-        return;
-      }
-
-      const nextProgressDistance = Math.min(
-        progressedDistance,
-        segmentDistance
-      );
+      const nextProgressDistance = Math.min(progressedDistance, totalDistance);
       const moveDistance = Math.max(
         0,
         nextProgressDistance - segmentProgressDistanceRef.current
       );
 
-      const targetWaypointIndex = cumulativeDistances.findIndex(
-        (distance) => distance >= nextProgressDistance
-      );
-      if (targetWaypointIndex < 0) {
-        return;
+      // 累積距離は単調増加なので二分探索で targetWaypointIndex を求める。
+      // findIndex の線形走査より小さい区間でも O(log n) で済む。
+      let lo = 0;
+      let hi = cumulativeDistances.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if ((cumulativeDistances[mid] ?? 0) >= nextProgressDistance) {
+          hi = mid;
+        } else {
+          lo = mid + 1;
+        }
       }
+      const targetWaypointIndex = lo;
 
       const targetWaypoint = waypoints[targetWaypointIndex];
       if (!targetWaypoint) {
         return;
       }
 
-      let targetLatitude = targetWaypoint.latitude as number;
-      let targetLongitude = targetWaypoint.longitude as number;
+      let targetLatitude = targetWaypoint.latitude;
+      let targetLongitude = targetWaypoint.longitude;
 
       if (targetWaypointIndex > 0) {
         const prevWaypoint = waypoints[targetWaypointIndex - 1];
@@ -387,25 +373,14 @@ export const useSimulationMode = (): void => {
         const targetDistance = cumulativeDistances[targetWaypointIndex] ?? 0;
         const distanceDelta = targetDistance - prevDistance;
 
-        if (
-          prevWaypoint &&
-          prevWaypoint.latitude != null &&
-          prevWaypoint.longitude != null &&
-          targetWaypoint.latitude != null &&
-          targetWaypoint.longitude != null &&
-          distanceDelta > 0
-        ) {
+        if (prevWaypoint && distanceDelta > 0) {
           const ratio = (nextProgressDistance - prevDistance) / distanceDelta;
           targetLatitude =
-            (prevWaypoint.latitude as number) +
-            ((targetWaypoint.latitude as number) -
-              (prevWaypoint.latitude as number)) *
-              ratio;
+            prevWaypoint.latitude +
+            (targetWaypoint.latitude - prevWaypoint.latitude) * ratio;
           targetLongitude =
-            (prevWaypoint.longitude as number) +
-            ((targetWaypoint.longitude as number) -
-              (prevWaypoint.longitude as number)) *
-              ratio;
+            prevWaypoint.longitude +
+            (targetWaypoint.longitude - prevWaypoint.longitude) * ratio;
         }
       }
 
