@@ -40,10 +40,14 @@ export const useTransferLinesFromStation = (
       }
     }
 
-    // 隣接駅判定で何度も使うため一度だけ findIndex する
+    // 隣接駅判定で何度も使うため一度だけ findIndex する。
+    // findIndex が -1 (= ルート外駅を渡された) の場合 stations[-1+1]=stations[0] が
+    // 「次駅」として誤って拾われるので、明示的に未検出時は undefined にする。
     const currentStationIndex = stations.findIndex((s) => s.id === station.id);
-    const prevStation = stations[currentStationIndex - 1];
-    const nextStation = stations[currentStationIndex + 1];
+    const prevStation =
+      currentStationIndex > 0 ? stations[currentStationIndex - 1] : undefined;
+    const nextStation =
+      currentStationIndex >= 0 ? stations[currentStationIndex + 1] : undefined;
     const stationLineId = station.line?.id;
     const stationLineNameNorm = stripParen(station.line?.nameShort);
 

@@ -110,6 +110,11 @@ export const useLoopLine = (
     const currentStationIndex = reversedStations.findIndex(
       (s) => s.groupId === station.groupId
     );
+    // findIndex が -1 の場合、(-1 + step) % total は負値起点になり末尾要素を取りこぼす。
+    // overrideStations 等で current station が配列に居ないケースを安全に扱うため早期 return。
+    if (currentStationIndex === -1) {
+      return [];
+    }
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
     const seenGroupIds = new Set<number>();
@@ -138,6 +143,9 @@ export const useLoopLine = (
     const currentStationIndex = stations.findIndex(
       (s) => s.groupId === station.groupId
     );
+    if (currentStationIndex === -1) {
+      return [];
+    }
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
     const seenGroupIds = new Set<number>();
