@@ -21,6 +21,7 @@ import navigationState from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
+import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
@@ -218,16 +219,17 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
     [prevTrainTypeName]
   );
 
-  // 2行になる場合は箱の高さに収まるようフォントサイズを縮め、行間も詰める
-  const baseFontSize = isTablet ? 21 * 1.5 : 21;
-  const computedFontSize =
-    numberOfLines === 2 ? baseFontSize * 0.7 : baseFontSize;
-  const computedLineHeight =
-    numberOfLines === 2 ? computedFontSize * 1.05 : undefined;
-  const prevComputedFontSize =
-    prevNumberOfLines === 2 ? baseFontSize * 0.7 : baseFontSize;
-  const prevComputedLineHeight =
-    prevNumberOfLines === 2 ? prevComputedFontSize * 1.05 : undefined;
+  const {
+    fontSize: computedFontSize,
+    lineHeight: computedLineHeight,
+    prevFontSize: prevComputedFontSize,
+    prevLineHeight: prevComputedLineHeight,
+  } = computeTwoLineTypography({
+    baseFontSize: 21,
+    isTablet,
+    numberOfLines,
+    prevNumberOfLines,
+  });
 
   return (
     <View>
