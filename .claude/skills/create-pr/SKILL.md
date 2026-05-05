@@ -17,8 +17,8 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | `head` | カレントブランチ（`git rev-parse --abbrev-ref HEAD`） |
 | `title` | 下の「タイトル推論ルール」参照 |
 | `summary` | 空なら「概要」「変更内容」本文はテンプレのコメントのみ残す |
-| `related_issue` | 空なら節のコメントのみ。コミット件名に `Closes #N` / `Fixes #N` / `Refs #N` があれば拾う |
-| `skip_checks` | `false`（テスト 3 項目を ON）。`true` なら全 OFF |
+| `related_issue` | **ユーザー入力を最優先**。指定が `#N`（数値のみ）なら `Closes #N`、`Closes #N` / `Fixes #N` / `Refs #N` 形式ならその接頭語を保って出力。`related_issue` が空のときに限り、コミット件名から `Closes #N` / `Fixes #N` / `Refs #N` を抽出（接頭語を維持。`#N` 単体表記なら `Closes` を補う）。両方とも見つからなければ節のコメントのみ |
+| `skip_checks` | `false`（PR本文「テスト」節のチェック欄 3 項目を ON）。`true` なら全 OFF。**本文表示のみを制御するフラグで、`npm run lint` / `npm test` / `npm run typecheck` の実際の実行は保証しない**。**手順 3 で定義する「コード本体パス」に変更が無い（=テストを実行する意味が無い）ケースでは、`skip_checks` の値に関わらず 3 項目すべて OFF にする** |
 | `labels` | 文字列配列、または未指定。未指定なら付与しない。指定した場合は `gh pr create --label <name>` でアトミックに付与する（作成後に `gh pr edit --add-label` すると `pull_request: opened` トリガのワークフローに間に合わないため、必ず `gh pr create` 時に渡す） |
 
 ### タイトル推論ルール
@@ -65,12 +65,13 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    ```bash
    git switch -c <inferred-branch>
    # 未コミットなら:
-   git add -p   # または指定パスで git add <files>
-   git commit   # コミットメッセージは日本語単文（CLAUDE.md）
+   git add -u                       # 追跡済みの staged/unstaged をまとめてステージ
+   # 未追跡ファイルも退避対象なら明示的にパス指定で追加（`git add -A` / `.` は使わない）:
+   #   git add path/to/untracked-file ...
+   git commit                       # コミットメッセージは日本語単文（CLAUDE.md）
    git push -u origin <inferred-branch>
    ```
    - コミット前に `npx biome check --unsafe --fix ./src` を実行（メモのルール）。
-   - 対話的ステージ（`git add -p`）を避けたい場合は、変更対象パスを明示して `git add` する。
    - push は新規ブランチなので安全だが、実行前にユーザーへ要約（ブランチ名・含めるファイル・コミットメッセージ案）を提示して承認を取る。
 
    以降の手順では推論後の head を使う。
@@ -80,7 +81,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - `git log --oneline origin/<base>..origin/<head>` で差分があることを確認。無ければ中断して報告。
    - `gh pr list --base <base> --head <head> --state open --json number,url,body` で既存 open PR を確認。
      - **存在しない場合**: 新規作成モード。以降、手順 5 で `gh pr create`。
-     - **存在する場合**: 更新モード。AGENTS.md の「Keep PR bodies in sync with the branch state」に従い、既存本文を最新差分で再生成する。以降、手順 5 で `gh pr edit`。タイトルは既存のものを尊重（ユーザー推論より優先）。
+     - **存在する場合**: 更新モード。AGENTS.md の「Keep PR bodies in sync with the branch state」に従い、既存本文を最新差分で再生成する。以降、手順 5 で `gh pr edit`。タイトルは既存を**原則尊重**（ユーザー推論より優先）。ただし手順 5 の整合性チェックで主題が大きくズレていると判断した場合のみ更新案を提示する。
 
 3. **変更の種類を判定**
 
@@ -90,11 +91,19 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    git diff --name-only origin/<base>..origin/<head>
    ```
 
-   **大原則: 判定はアプリの挙動に対する変更かどうかで決める**。`src/`・`android/`・`ios/`・`assets/`・`functions/` などの**アプリ本体が一切変わっていない場合、「バグ修正」「新機能」「リファクタリング」は OFF**（コミット件名に `fix` / `feat` / `追加` 等の語があっても）。スキル・設定・ドキュメントのメタ変更を「新機能」と誤分類しないための安全弁。
+   **大原則: 判定はアプリの挙動に対する変更かどうかで決める**。下の「コード本体パス」が一切変わっていない場合、「バグ修正」「新機能」「リファクタリング」は OFF（コミット件名に `fix` / `feat` / `追加` 等の語があっても）。スキル・設定・ドキュメントのメタ変更を「新機能」と誤分類しないための安全弁。
 
-   この大原則のもとで、各項目を独立に評価（複数該当可、大文字小文字無視・部分一致）:
+   この大原則のもとで、各項目を独立に評価（複数該当可、大文字小文字無視・部分一致）。
 
-   **アプリ本体変更ありの場合 — コミット件名ベース**
+   **コード本体パス**（バグ修正 / 新機能 / リファクタリングのゲート、および「テスト」節 ON/OFF 判定にも使う）
+
+   - `src/**`
+   - `android/**`
+   - `ios/**`
+   - `assets/**`
+   - `functions/**`
+
+   **コード本体変更ありの場合 — コミット件名ベース**
 
    | 項目 | トリガ語句 |
    | ---- | ---- |
@@ -117,7 +126,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    | CI/CD | `ci`, `cd`, `workflow`, `release`, `Bump version`, `canary release` |
 
    判定ロジック:
-   - 上の「大原則」のゲートをまず適用。アプリ本体変更が無ければバグ修正・新機能・リファクタリングは強制 OFF。
+   - 上の「大原則」のゲートをまず適用。コード本体パスに変更が無ければバグ修正・新機能・リファクタリングは強制 OFF。
    - 残りの項目は、コミット件名またはファイルパスのトリガに 1 つでも当てはまれば `- [x]`、それ以外は `- [ ]`。
    - `.claude/` や `.gitignore` など、リポジトリ運用のためのメタ変更のみの場合は基本的に「ドキュメント」を ON にする（アプリ挙動には影響しないため）。
    - 全項目が OFF のときのみ `その他` を `- [x]` にする。他項目が ON のときは `その他` は必ず `- [ ]`。
@@ -132,8 +141,10 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - 「概要」節: `summary` があれば挿入。無ければテンプレのコメントだけ残す。
    - 「変更の種類」節: 手順 3 の結果で各 `- [ ]` / `- [x]` を決定。
    - 「変更内容」節: コミット件名と変更ファイルから短い箇条書きを生成。`summary` があればそれを優先。
-   - 「テスト」節: `skip_checks` が真なら 3 項目すべて OFF、偽なら 3 項目すべて ON。
-   - 「関連Issue」節: `related_issue` があれば `Closes #N` を書く。無ければコメントのみ。
+   - 「テスト」節:
+     - **判定基準: 手順 3 の「コード本体パス」（`src/**` ほか）に変更が無い場合は `npm run lint` / `npm test` / `npm run typecheck` を実行する意味が無いとみなし、3 項目すべて OFF**（`skip_checks` より優先）。本文末尾に「省略: コード変更なし」等の短い注記を残す。
+     - 上記に該当しない場合は `skip_checks` が真なら 3 項目すべて OFF、偽なら 3 項目すべて ON。テキストはテンプレのまま（`npm run lint` / `npm test` / `npm run typecheck`）。
+   - 「関連Issue」節: `related_issue` が指定されていればユーザー入力を最優先で出力（`#N` のみなら `Closes #N`、`Closes/Fixes/Refs #N` 形式なら接頭語を維持）。空のときに限りコミット件名から `Closes/Fixes/Refs #N` を抽出。どちらも無ければコメントのみ。
    - 「スクリーンショット」節: 常にコメントのみ（UI 変更があれば呼び出し側が後から編集する前提）。
 
    **更新モード**（既存 PR の本文を再生成）
@@ -145,8 +156,8 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    | 概要 | 既存内容を尊重。空欄（テンプレのコメントのみ）なら新規作成モードと同じ生成を試みる。 |
    | 変更の種類 | **常に手順 3 の結果で上書き**（機械的判定）。 |
    | 変更内容 | 冒頭の箇条書きブロック（`-` で始まる連続行）を最新差分で再生成。その下に人間が書いた散文があれば残す。 |
-   | テスト | **常に `skip_checks` に従う**（手順 4 の本文組み立てと同じルール）。 |
-   | 関連Issue | 既存内容を尊重。コミット件名に新規 `Closes #N` 等があれば追記。 |
+   | テスト | **手順 4 の本文組み立てと同じ判定順を適用**（まずコード本体パス未変更なら 3 項目を強制 OFF。該当しない場合のみ `skip_checks` で ON/OFF）。 |
+   | 関連Issue | 既存内容を尊重。コミット件名に `Closes/Fixes/Refs #N` があり、かつ既存本文中に同じ Issue 番号 `#N` を指す表現が存在しない場合のみ追記（重複は作らない。比較時は `Closes` / `closes` / `Fixes` / `fixes` / `Refs` / `refs` を同一視し、空白・記号差は無視して `#N` 単位で照合）。 |
    | スクリーンショット | 既存内容を尊重。自動では触らない。 |
 
    差し替え後の本文と既存本文の差分をユーザーに提示し、承認を得てから手順 5 へ進む。自動上書き節で人間の手入れらしき痕跡（テンプレのコメント以外の文章）がある場合は、どう扱うかをユーザーに確認する。
@@ -157,14 +168,26 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    実装手順:
 
-   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<pr-or-branch>.md`）。バッククォートは **素のまま** 書く。escape しない。
+   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<slug>.md`）。ファイル名に使う ref（ブランチ名・PR 番号など）は **ファイル名として安全な集合（`A-Za-z0-9._-`）にスラッグ化** する。具体的には:
+      - `/`・改行・制御文字・空白・非 ASCII などを `_` に置換
+      - 連続した `_` は 1 つに畳み、先頭・末尾の `_` は除去
+      - 必要なら長さを 100〜200 文字程度に切り詰める
+
+      生のブランチ名を直結するとサブディレクトリ解釈や制御文字混入で Write／削除が失敗する。バッククォートは **素のまま** 書く。escape しない。
    2. 下の `gh` コマンドをサブシェル内で `trap` と一緒に実行する。`gh` の成功・失敗に関わらず `EXIT` / `INT` / `TERM` のどれでも一時ファイルを確実に削除されるようにする（`&&` で `rm` を繋ぐだけだと失敗時に `/tmp` にゴミが残る）。
    3. `gh` 呼び出しと `rm`（を含む `trap`）は Bash tool の 1 呼び出し内で完結させる。別呼び出しで後片付けすると、前段の呼び出しがエラー／中断で終わった場合にクリーンアップが実行されない。
 
    **新規作成モード**
 
    ```bash
-   BODY_FILE=/tmp/pr-body-<pr-or-branch>.md
+   # ref 名をファイル名として安全な集合（A-Za-z0-9._-）にスラッグ化
+   REF_SLUG="$(printf '%s' '<head>' \
+     | tr -d '\r\n' \
+     | tr -c 'A-Za-z0-9._-' '_' \
+     | sed -E 's/_+/_/g; s/^_+//; s/_+$//' \
+     | cut -c1-100)"
+   REF_SLUG="${REF_SLUG:-pr}"
+   BODY_FILE="/tmp/pr-body-${REF_SLUG}.md"
    (
      trap 'rm -f "$BODY_FILE"' EXIT INT TERM
      gh pr create \
@@ -184,7 +207,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    **更新モード**
 
    ```bash
-   BODY_FILE=/tmp/pr-body-<pr-number>.md
+   BODY_FILE="/tmp/pr-body-${pr_number}.md"
    (
      trap 'rm -f "$BODY_FILE"' EXIT INT TERM
      gh pr edit <pr-number> \
@@ -193,7 +216,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    )
    ```
 
-   - **タイトルは毎回スコープ整合性を再評価する**（AGENTS.md「Keep PR metadata in sync with the branch state」より）。手順 1 のタイトル推論ルールと最新のコミット群を照合し、現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていなければ更新案を提示してユーザー承認を取り、`--title` に含めて反映する。タイトルが最新差分と整合している場合は `--title` を付けない。
+   - **タイトルは原則として既存を維持する**。ただし毎回スコープ整合性を再評価し（AGENTS.md「Keep PR metadata in sync with the branch state」）、手順 1 のタイトル推論ルールと最新のコミット群を照合する。現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていない**重大な不整合**がある場合のみ、更新案を提示してユーザー承認を取り `--title` で上書きする。整合している、または軽微な差分にとどまる場合は `--title` を付けない。
    - Assignee は既に付いていれば再指定しない（重複操作を避ける）。付いてなければ `--add-assignee TinyKitten`。
    - 実行後、PR URL と「タイトルを変更したか・どの節を書き換えたか・変更の種類チェック差分」を簡潔に報告する。
 
