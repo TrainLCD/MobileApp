@@ -22,6 +22,7 @@ import navigationState from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
+import { computeTwoLineTypography } from '~/utils/computeTwoLineTypography';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
@@ -249,6 +250,18 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     [prevTrainTypeText]
   );
 
+  const {
+    fontSize: computedFontSize,
+    lineHeight: computedLineHeight,
+    prevFontSize: prevComputedFontSize,
+    prevLineHeight: prevComputedLineHeight,
+  } = computeTwoLineTypography({
+    baseFontSize: 18,
+    isTablet,
+    numberOfLines,
+    prevNumberOfLines,
+  });
+
   return (
     <View style={styles.root}>
       <View style={styles.container}>
@@ -283,6 +296,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               {
                 paddingLeft,
                 letterSpacing,
+                fontSize: computedFontSize,
+                lineHeight: computedLineHeight,
               },
             ]}
           >
@@ -301,6 +316,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               {
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
+                fontSize: prevComputedFontSize,
+                lineHeight: prevComputedLineHeight,
               },
             ]}
           >
