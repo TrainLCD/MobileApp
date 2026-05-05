@@ -249,6 +249,17 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     [prevTrainTypeText]
   );
 
+  // 2行になる場合は箱の高さに収まるようフォントサイズを縮め、行間も詰める
+  const baseFontSize = isTablet ? 18 * 1.5 : 18;
+  const computedFontSize =
+    numberOfLines === 2 ? baseFontSize * 0.7 : baseFontSize;
+  const computedLineHeight =
+    numberOfLines === 2 ? computedFontSize * 1.05 : undefined;
+  const prevComputedFontSize =
+    prevNumberOfLines === 2 ? baseFontSize * 0.7 : baseFontSize;
+  const prevComputedLineHeight =
+    prevNumberOfLines === 2 ? prevComputedFontSize * 1.05 : undefined;
+
   return (
     <View style={styles.root}>
       <View style={styles.container}>
@@ -283,6 +294,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               {
                 paddingLeft,
                 letterSpacing,
+                fontSize: computedFontSize,
+                lineHeight: computedLineHeight,
               },
             ]}
           >
@@ -301,6 +314,8 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
               {
                 paddingLeft: prevPaddingLeft,
                 letterSpacing: prevLetterSpacing,
+                fontSize: prevComputedFontSize,
+                lineHeight: prevComputedLineHeight,
               },
             ]}
           >

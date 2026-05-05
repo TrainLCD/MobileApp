@@ -281,6 +281,17 @@ const TrainTypeBox: React.FC<Props> = ({
     [prevTrainTypeName]
   );
 
+  // 2行になる場合は箱の高さに収まるようフォントサイズを縮め、行間も詰める
+  const baseFontSize = (isTablet ? 18 * 1.5 : 18) * fontSizeScale;
+  const computedFontSize =
+    numberOfLines === 2 ? baseFontSize * 0.7 : baseFontSize;
+  const computedLineHeight =
+    numberOfLines === 2 ? computedFontSize * 1.05 : undefined;
+  const prevComputedFontSize =
+    prevNumberOfLines === 2 ? baseFontSize * 0.7 : baseFontSize;
+  const prevComputedLineHeight =
+    prevNumberOfLines === 2 ? prevComputedFontSize * 1.05 : undefined;
+
   return (
     <View>
       <View style={styles.box}>
@@ -321,7 +332,8 @@ const TrainTypeBox: React.FC<Props> = ({
                 {
                   letterSpacing,
                   marginLeft,
-                  fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
+                  fontSize: computedFontSize,
+                  lineHeight: computedLineHeight,
                 },
               ],
             ]}
@@ -341,7 +353,8 @@ const TrainTypeBox: React.FC<Props> = ({
             {
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
-              fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
+              fontSize: prevComputedFontSize,
+              lineHeight: prevComputedLineHeight,
             },
           ]}
           adjustsFontSizeToFit
