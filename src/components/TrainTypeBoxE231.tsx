@@ -58,6 +58,7 @@ const SHORT_NAME_JA: Record<string, string> = {
   [TrainTypeKind.Default]: '各駅\n停車',
   [TrainTypeKind.Branch]: '各駅\n停車',
   [TrainTypeKind.Rapid]: '快速',
+  [TrainTypeKind.CommuterRapid]: '通勤\n快速',
   [TrainTypeKind.HighSpeedRapid]: '特快',
   [TrainTypeKind.Express]: '急行',
   [TrainTypeKind.LimitedExpress]: '特急',
@@ -67,6 +68,7 @@ const SHORT_NAME_ZH: Record<string, string> = {
   [TrainTypeKind.Default]: '各站\n停车',
   [TrainTypeKind.Branch]: '各站\n停车',
   [TrainTypeKind.Rapid]: '快速',
+  [TrainTypeKind.CommuterRapid]: '通勤\n快速',
   [TrainTypeKind.HighSpeedRapid]: '特快',
   [TrainTypeKind.Express]: '急行',
   [TrainTypeKind.LimitedExpress]: '特急',
@@ -76,6 +78,7 @@ const SHORT_NAME_KO: Record<string, string> = {
   [TrainTypeKind.Default]: '각역\n정차',
   [TrainTypeKind.Branch]: '각역\n정차',
   [TrainTypeKind.Rapid]: '쾌속',
+  [TrainTypeKind.CommuterRapid]: '통근\n쾌속',
   [TrainTypeKind.HighSpeedRapid]: '특쾌',
   [TrainTypeKind.Express]: '급행',
   [TrainTypeKind.LimitedExpress]: '특급',
@@ -205,6 +208,9 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
           ) {
             return 'Exp.';
           }
+          if (trainType?.kind === TrainTypeKind.CommuterRapid) {
+            return 'Commuter\nRapid';
+          }
           if (
             trainType?.kind === TrainTypeKind.Rapid ||
             trainType?.kind === TrainTypeKind.HighSpeedRapid
@@ -223,6 +229,9 @@ const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
           trainType?.kind === TrainTypeKind.LimitedExpress
         ) {
           return 'Exp.';
+        }
+        if (trainType?.kind === TrainTypeKind.CommuterRapid) {
+          return 'Commuter\nRapid';
         }
         if (
           trainType?.kind === TrainTypeKind.Rapid ||

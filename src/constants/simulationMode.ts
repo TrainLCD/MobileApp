@@ -23,6 +23,7 @@ export const TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S: Record<
   [TrainTypeKind.Branch]: null,
   [TrainTypeKind.Default]: null,
   [TrainTypeKind.Rapid]: null,
+  [TrainTypeKind.CommuterRapid]: null,
   [TrainTypeKind.Express]: null,
   [TrainTypeKind.LimitedExpress]: 36.1111111111, // 130km/h
   [TrainTypeKind.HighSpeedRapid]: 36.1111111111, // 130km/h

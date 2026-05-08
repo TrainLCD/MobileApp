@@ -4,7 +4,11 @@ import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 export const getIsLocal = (tt: TrainType | null): boolean =>
   (tt?.kind ?? TrainTypeKind.Default) === TrainTypeKind.Default;
 export const getIsRapid = (tt: TrainType | null): boolean =>
-  tt?.kind === TrainTypeKind.Rapid || tt?.kind === TrainTypeKind.HighSpeedRapid;
+  tt?.kind === TrainTypeKind.Rapid ||
+  tt?.kind === TrainTypeKind.HighSpeedRapid ||
+  tt?.kind === TrainTypeKind.CommuterRapid;
+export const getIsCommuterRapid = (tt: TrainType | null): boolean =>
+  tt?.kind === TrainTypeKind.CommuterRapid;
 export const getIsLtdExp = (tt: TrainType | null): boolean =>
   tt?.kind === TrainTypeKind.LimitedExpress;
 
@@ -16,6 +20,9 @@ export const findBranchLine = (trainTypes: TrainType[]): TrainType | null =>
 export const findRapidType = (
   trainTypes: TrainType[] | null
 ): TrainType | null => trainTypes?.find((tt) => getIsRapid(tt)) ?? null;
+export const findCommuterRapidType = (
+  trainTypes: TrainType[] | null
+): TrainType | null => trainTypes?.find((tt) => getIsCommuterRapid(tt)) ?? null;
 export const findLtdExpType = (
   trainTypes: TrainType[] | null
 ): TrainType | null => trainTypes?.find((tt) => getIsLtdExp(tt)) ?? null;
