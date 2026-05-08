@@ -57,6 +57,10 @@ describe('resolveThemeForLine', () => {
     expect(resolveThemeForLine(makeLine({ id: 11321 }))).toBe(APP_THEME.SAIKYO);
   });
 
+  it('川越線(11322)はSAIKYOを返す', () => {
+    expect(resolveThemeForLine(makeLine({ id: 11322 }))).toBe(APP_THEME.SAIKYO);
+  });
+
   it('横須賀線(11308)はJOを返す', () => {
     expect(resolveThemeForLine(makeLine({ id: 11308 }))).toBe(APP_THEME.JO);
   });
