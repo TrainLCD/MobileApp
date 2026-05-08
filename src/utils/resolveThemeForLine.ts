@@ -5,6 +5,7 @@ import { APP_THEME, type AppTheme } from '~/models/Theme';
 const LINE_ID_TO_THEME: Record<number, AppTheme> = {
   [YAMANOTE_LINE_ID]: APP_THEME.YAMANOTE,
   11321: APP_THEME.SAIKYO,
+  11322: APP_THEME.SAIKYO, // 川越線（埼京線と直通）
   11308: APP_THEME.JO,
   11314: APP_THEME.JO,
   11344: APP_THEME.JL,
