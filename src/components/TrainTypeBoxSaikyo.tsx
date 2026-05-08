@@ -25,7 +25,11 @@ import { translate } from '~/translation';
 import { computeTwoLineTypography } from '~/utils/computeTwoLineTypography';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
-import { getIsLocal, getIsRapid } from '~/utils/trainTypeString';
+import {
+  getIsCommuterRapid,
+  getIsLocal,
+  getIsRapid,
+} from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
 
 type Props = {
@@ -96,6 +100,9 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const trainTypeColor = useMemo(() => {
     if (getIsLocal(trainType)) {
       return lineColor;
+    }
+    if (getIsCommuterRapid(trainType)) {
+      return '#dc143c';
     }
     if (getIsRapid(trainType)) {
       return '#1e8ad2';
