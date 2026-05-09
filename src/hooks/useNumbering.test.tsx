@@ -2,7 +2,8 @@ import { render, waitFor } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import { StopCondition } from '~/@types/graphql';
+import { StopCondition, TrainTypeKind } from '~/@types/graphql';
+import { JOBAN_LINE_IDS } from '~/constants';
 import {
   createLine,
   createStation,
@@ -243,6 +244,111 @@ describe('useNumbering', () => {
       // firstStop=trueでもpriorCurrent=falseなので、arrivedとgetIsPassの結果による
       // この場合、arrived=falseなので次駅の番号を探すが、nextStationがundefined
       expect(getByTestId('threeLetterCode').props.children).toBe('undefined');
+    });
+  });
+
+  describe('常磐線快速系統 (Joban Line rapid)', () => {
+    const jobanLineId = JOBAN_LINE_IDS[0];
+
+    const buildJobanRapidScenario = (kind: TrainTypeKind) => {
+      const stationNumbers = [
+        createStationNumber('JL', '20'),
+        createStationNumber('JJ', '07'),
+      ];
+      const currentStation = createStation(1, {
+        stationNumbers,
+        stopCondition: StopCondition.All,
+        threeLetterCode: 'UEN',
+      });
+
+      mockUseAtomValue.mockReturnValue({
+        arrived: true,
+        selectedBound: currentStation,
+      });
+      mockUseCurrentLine.mockReturnValue(createLine(jobanLineId));
+      mockUseCurrentStation.mockReturnValue(currentStation);
+      mockUseNextStation.mockReturnValue(undefined);
+      mockUseCurrentTrainType.mockReturnValue({
+        __typename: 'TrainType',
+        id: 1,
+        typeId: 1,
+        groupId: 1,
+        name: '快速系統',
+        nameKatakana: 'カイソク',
+        nameRoman: 'Rapid',
+        nameIpa: null,
+        nameRomanIpa: null,
+        nameTtsSegments: null,
+        nameChinese: null,
+        nameKorean: null,
+        color: '#000000',
+        direction: null,
+        kind,
+        line: null,
+        lines: null,
+      });
+    };
+
+    it('CommuterRapidの場合、JJプレフィックスのstationNumberを返す', async () => {
+      buildJobanRapidScenario(TrainTypeKind.CommuterRapid);
+
+      const { getByTestId } = render(<TestComponent priorCurrent={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe(
+          JSON.stringify({ lineSymbol: 'JJ', stationNumber: '07' })
+        );
+      });
+    });
+
+    it('Rapidの場合、JJプレフィックスのstationNumberを返す（既存挙動）', async () => {
+      buildJobanRapidScenario(TrainTypeKind.Rapid);
+
+      const { getByTestId } = render(<TestComponent priorCurrent={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe(
+          JSON.stringify({ lineSymbol: 'JJ', stationNumber: '07' })
+        );
+      });
+    });
+
+    it('HighSpeedRapidの場合、JJプレフィックスのstationNumberを返す（既存挙動）', async () => {
+      buildJobanRapidScenario(TrainTypeKind.HighSpeedRapid);
+
+      const { getByTestId } = render(<TestComponent priorCurrent={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe(
+          JSON.stringify({ lineSymbol: 'JJ', stationNumber: '07' })
+        );
+      });
+    });
+
+    it('Defaultの場合、JJプレフィックスではなく通常のstationNumberを返す', async () => {
+      buildJobanRapidScenario(TrainTypeKind.Default);
+
+      const { getByTestId } = render(<TestComponent priorCurrent={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe(
+          JSON.stringify({ lineSymbol: 'JL', stationNumber: '20' })
+        );
+      });
+    });
+
+    it('常磐線以外の場合、CommuterRapidでも通常のstationNumberを返す', async () => {
+      buildJobanRapidScenario(TrainTypeKind.CommuterRapid);
+      // 路線を常磐線以外で上書き
+      mockUseCurrentLine.mockReturnValue(createLine(99999));
+
+      const { getByTestId } = render(<TestComponent priorCurrent={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe(
+          JSON.stringify({ lineSymbol: 'JL', stationNumber: '20' })
+        );
+      });
     });
   });
 
