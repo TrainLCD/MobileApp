@@ -494,6 +494,7 @@ export const SelectBoundModal: React.FC<Props> = ({
               disabled={isTransitioning}
               loading={isTransitioning}
               title={title}
+              shrinkBoundAffix
               subtitle={subtitle}
               targetStation={finalStop}
             />
@@ -533,6 +534,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                   ? `${presetOrigin.name}方面`
                   : `for ${presetOrigin.nameRoman ?? ''}`
               }
+              shrinkBoundAffix
               subtitle={reverseSubtitle}
               targetStation={presetOrigin}
             />
@@ -566,6 +568,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           loading={isTransitioning}
           line={lineForCard}
           title={title}
+          shrinkBoundAffix
           subtitle={subtitle}
           targetStation={boundStations[0]}
         />

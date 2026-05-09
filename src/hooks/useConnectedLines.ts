@@ -44,16 +44,20 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
       (lid) => lid === currentLine?.id
     );
 
+    // 以前は belongLines.slice().reverse()[i] を要素ごとに呼んでおり O(n²)。
+    // reverse は1度だけキャッシュする。
+    const reversedBelongLines =
+      selectedDirection === 'INBOUND' ? belongLines.slice().reverse() : null;
+
     const notGroupedJoinedLines: Line[] =
       selectedDirection === 'INBOUND'
         ? joinedLineIds
             .slice(currentLineIndex + 1, joinedLineIds.length)
-            .map((_, i) => belongLines.slice().reverse()[i])
+            .map((_, i) => (reversedBelongLines as Line[])[i])
             .map((l) => ({
               ...l,
               name: l.nameShort?.replace(parenthesisRegexp, ''),
             }))
-            .map((l) => l)
             .reverse()
         : joinedLineIds
             .slice(0, currentLineIndex)
@@ -62,7 +66,6 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
               ...l,
               name: l.nameShort?.replace(parenthesisRegexp, ''),
             }))
-            .map((l) => l)
             .reverse();
     const companyDuplicatedLines = notGroupedJoinedLines
       .filter((l, i, arr) => l.company?.id === arr[i - 1]?.company?.id)

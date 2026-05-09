@@ -2,9 +2,11 @@ import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
 import {
   findBranchLine,
+  findCommuterRapidType,
   findLocalType,
   findLtdExpType,
   findRapidType,
+  getIsCommuterRapid,
   getIsLocal,
   getIsLtdExp,
   getIsRapid,
@@ -61,6 +63,11 @@ describe('getIsLocal', () => {
     expect(getIsLocal(trainType)).toBe(false);
   });
 
+  it('kindがCommuterRapidの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.CommuterRapid);
+    expect(getIsLocal(trainType)).toBe(false);
+  });
+
   it('trainTypeがnullの場合、trueを返す（デフォルト動作）', () => {
     expect(getIsLocal(null)).toBe(true);
   });
@@ -102,6 +109,11 @@ describe('getIsRapid', () => {
     expect(getIsRapid(trainType)).toBe(false);
   });
 
+  it('kindがCommuterRapidの場合、trueを返す（CommuterRapidもRapid系として扱う）', () => {
+    const trainType = createTrainType(TrainTypeKind.CommuterRapid);
+    expect(getIsRapid(trainType)).toBe(true);
+  });
+
   it('trainTypeがnullの場合、falseを返す', () => {
     expect(getIsRapid(null)).toBe(false);
   });
@@ -109,6 +121,52 @@ describe('getIsRapid', () => {
   it('kindがnullの場合、falseを返す', () => {
     const trainType = createTrainType(null);
     expect(getIsRapid(trainType)).toBe(false);
+  });
+});
+
+describe('getIsCommuterRapid', () => {
+  it('kindがCommuterRapidの場合、trueを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.CommuterRapid);
+    expect(getIsCommuterRapid(trainType)).toBe(true);
+  });
+
+  it('kindがRapidの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.Rapid);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
+  });
+
+  it('kindがHighSpeedRapidの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.HighSpeedRapid);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
+  });
+
+  it('kindがDefaultの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.Default);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
+  });
+
+  it('kindがLimitedExpressの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.LimitedExpress);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
+  });
+
+  it('kindがExpressの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.Express);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
+  });
+
+  it('kindがBranchの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.Branch);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
+  });
+
+  it('trainTypeがnullの場合、falseを返す', () => {
+    expect(getIsCommuterRapid(null)).toBe(false);
+  });
+
+  it('kindがnullの場合、falseを返す', () => {
+    const trainType = createTrainType(null);
+    expect(getIsCommuterRapid(trainType)).toBe(false);
   });
 });
 
@@ -130,6 +188,11 @@ describe('getIsLtdExp', () => {
 
   it('kindがHighSpeedRapidの場合、falseを返す', () => {
     const trainType = createTrainType(TrainTypeKind.HighSpeedRapid);
+    expect(getIsLtdExp(trainType)).toBe(false);
+  });
+
+  it('kindがCommuterRapidの場合、falseを返す', () => {
+    const trainType = createTrainType(TrainTypeKind.CommuterRapid);
     expect(getIsLtdExp(trainType)).toBe(false);
   });
 
@@ -240,12 +303,57 @@ describe('findRapidType', () => {
     expect(findRapidType(trainTypes)).toBeNull();
   });
 
+  it('CommuterRapidも対象として返す（Rapid系として扱われる）', () => {
+    const localType = createTrainType(TrainTypeKind.Default);
+    const commuterRapidType = createTrainType(TrainTypeKind.CommuterRapid);
+    const trainTypes = [localType, commuterRapidType];
+    expect(findRapidType(trainTypes)).toBe(commuterRapidType);
+  });
+
   it('trainTypesがnullの場合、nullを返す', () => {
     expect(findRapidType(null)).toBeNull();
   });
 
   it('trainTypesが空配列の場合、nullを返す', () => {
     expect(findRapidType([])).toBeNull();
+  });
+});
+
+describe('findCommuterRapidType', () => {
+  it('CommuterRapid種別が見つかった場合、その種別を返す', () => {
+    const commuterRapidType = createTrainType(TrainTypeKind.CommuterRapid);
+    const localType = createTrainType(TrainTypeKind.Default);
+    const trainTypes = [localType, commuterRapidType];
+    expect(findCommuterRapidType(trainTypes)).toBe(commuterRapidType);
+  });
+
+  it('CommuterRapid種別がない場合、nullを返す（RapidやHighSpeedRapidは対象外）', () => {
+    const localType = createTrainType(TrainTypeKind.Default);
+    const rapidType = createTrainType(TrainTypeKind.Rapid);
+    const highSpeedRapidType = createTrainType(TrainTypeKind.HighSpeedRapid);
+    const trainTypes = [localType, rapidType, highSpeedRapidType];
+    expect(findCommuterRapidType(trainTypes)).toBeNull();
+  });
+
+  it('trainTypesがnullの場合、nullを返す', () => {
+    expect(findCommuterRapidType(null)).toBeNull();
+  });
+
+  it('trainTypesが空配列の場合、nullを返す', () => {
+    expect(findCommuterRapidType([])).toBeNull();
+  });
+
+  it('複数のCommuterRapid種別がある場合、最初のものを返す', () => {
+    const commuterRapidType1 = {
+      ...createTrainType(TrainTypeKind.CommuterRapid),
+      id: 1,
+    };
+    const commuterRapidType2 = {
+      ...createTrainType(TrainTypeKind.CommuterRapid),
+      id: 2,
+    };
+    const trainTypes = [commuterRapidType1, commuterRapidType2];
+    expect(findCommuterRapidType(trainTypes)).toBe(commuterRapidType1);
   });
 });
 

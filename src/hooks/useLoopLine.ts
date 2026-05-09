@@ -95,40 +95,45 @@ export const useLoopLine = (
     [line, stations]
   );
 
+  // OUTBOUND/INBOUND どちらでも参照されうる reverse 結果をメモ化。
+  // 以前は inboundStationsForLoopLine が呼ばれる度にフル配列を slice().reverse() していた。
+  const reversedStations = useMemo(
+    () => stations.slice().reverse(),
+    [stations]
+  );
+
   const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
       return [];
     }
 
-    const reversedStations = stations.slice().reverse();
-
     const currentStationIndex = reversedStations.findIndex(
       (s) => s.groupId === station.groupId
     );
+    // findIndex が -1 の場合、(-1 + step) % total は負値起点になり末尾要素を取りこぼす。
+    // overrideStations 等で current station が配列に居ないケースを安全に扱うため早期 return。
+    if (currentStationIndex === -1) {
+      return [];
+    }
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
     const seenGroupIds = new Set<number>();
-    const majorStations = [
-      ...reversedStations.slice(currentStationIndex),
-      ...reversedStations.slice(0, currentStationIndex),
-    ].filter((s) => {
-      if (s.id === undefined || s.id === null || !majorStationIdSet.has(s.id)) {
-        return false;
-      }
-      if (s.groupId === station.groupId) {
-        return false;
-      }
-      if (s.groupId != null && seenGroupIds.has(s.groupId)) {
-        return false;
-      }
+    const majorStations: Station[] = [];
+    // 連結配列を物理生成せず 2 段スキャンで集める
+    const total = reversedStations.length;
+    for (let step = 0; step < total && majorStations.length < 2; step++) {
+      const idx = (currentStationIndex + step) % total;
+      const s = reversedStations[idx];
+      if (!s || s.id == null || !majorStationIdSet.has(s.id)) continue;
+      if (s.groupId === station.groupId) continue;
       if (s.groupId != null) {
+        if (seenGroupIds.has(s.groupId)) continue;
         seenGroupIds.add(s.groupId);
       }
-      return true;
-    });
-
-    return majorStations.slice(0, 2);
-  }, [isLoopLine, majorStationIdSet, station, stations]);
+      majorStations.push(s);
+    }
+    return majorStations;
+  }, [isLoopLine, majorStationIdSet, station, reversedStations]);
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
@@ -138,29 +143,26 @@ export const useLoopLine = (
     const currentStationIndex = stations.findIndex(
       (s) => s.groupId === station.groupId
     );
+    if (currentStationIndex === -1) {
+      return [];
+    }
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
     const seenGroupIds = new Set<number>();
-    const majorStations = [
-      ...stations.slice(currentStationIndex),
-      ...stations.slice(0, currentStationIndex),
-    ].filter((s) => {
-      if (s.id === undefined || s.id === null || !majorStationIdSet.has(s.id)) {
-        return false;
-      }
-      if (s.groupId === station.groupId) {
-        return false;
-      }
-      if (s.groupId != null && seenGroupIds.has(s.groupId)) {
-        return false;
-      }
+    const majorStations: Station[] = [];
+    const total = stations.length;
+    for (let step = 0; step < total && majorStations.length < 2; step++) {
+      const idx = (currentStationIndex + step) % total;
+      const s = stations[idx];
+      if (!s || s.id == null || !majorStationIdSet.has(s.id)) continue;
+      if (s.groupId === station.groupId) continue;
       if (s.groupId != null) {
+        if (seenGroupIds.has(s.groupId)) continue;
         seenGroupIds.add(s.groupId);
       }
-      return true;
-    });
-
-    return majorStations.slice(0, 2);
+      majorStations.push(s);
+    }
+    return majorStations;
   }, [isLoopLine, majorStationIdSet, station, stations]);
 
   return {

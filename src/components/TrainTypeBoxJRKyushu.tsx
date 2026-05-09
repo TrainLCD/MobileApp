@@ -21,6 +21,7 @@ import navigationState from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
+import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
@@ -218,6 +219,18 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
     [prevTrainTypeName]
   );
 
+  const {
+    fontSize: computedFontSize,
+    lineHeight: computedLineHeight,
+    prevFontSize: prevComputedFontSize,
+    prevLineHeight: prevComputedLineHeight,
+  } = computeTwoLineTypography({
+    baseFontSize: 21,
+    isTablet,
+    numberOfLines,
+    prevNumberOfLines,
+  });
+
   return (
     <View>
       <View style={styles.box}>
@@ -231,6 +244,8 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
               {
                 letterSpacing,
                 marginLeft,
+                fontSize: computedFontSize,
+                lineHeight: computedLineHeight,
               },
             ]}
             adjustsFontSizeToFit
@@ -249,6 +264,8 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
             {
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
+              fontSize: prevComputedFontSize,
+              lineHeight: prevComputedLineHeight,
             },
           ]}
           adjustsFontSizeToFit

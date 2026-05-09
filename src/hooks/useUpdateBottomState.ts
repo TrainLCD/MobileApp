@@ -66,13 +66,17 @@ export const useUpdateBottomState = () => {
         default:
           break;
       }
+      // ref オブジェクト自体は安定なので deps はコンパクトにする。
+      // 以前は `xxxRef.current` を deps に入れていたが lint 違反のうえ、
+      // ref の current は React のレンダリング・サイクルでは追跡されず、
+      // 結果として callback identity が不必要に揺れて useInterval を再生成していた。
     }, [
       bottomStateRef,
       isTypeWillChangeRef,
+      isLEDThemeRef,
+      shouldHideTypeChangeRef,
       setNavigation,
       transferLines.length,
-      isLEDThemeRef.current,
-      shouldHideTypeChangeRef.current,
     ]),
     bottomTransitionInterval
   );

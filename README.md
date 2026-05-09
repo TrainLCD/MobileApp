@@ -60,8 +60,8 @@ This app recreates the authentic experience of Japanese train travel by displayi
 
 Before you begin, ensure you have met the following requirements:
 
-- **Node.js 22.x**
-- **npm 10.x**
+- **Node.js 22.x** (`.nvmrc` で固定。`nvm use` で自動切り替え)
+- **npm 10.x** (Node.js 22 同梱版。`engines` + `engine-strict=true` で他バージョンの `npm install` をブロック)
 - **React Native development environment** set up
 - **Expo CLI** installed globally
 - **Firebase CLI** (for Cloud Functions development)

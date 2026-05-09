@@ -214,6 +214,42 @@ describe('useTransferLinesFromStation', () => {
     expect(lines.map((l: Line) => l.id)).toContain(2);
   });
 
+  it('列車が直通運転で通る路線は乗り換え路線として除外する', () => {
+    const currentLine = createLineNested({ id: 1, nameShort: '東急東横線' });
+    const throughServiceLine = createLineNested({
+      id: 2,
+      nameShort: '東京メトロ副都心線',
+    });
+    const independentLine = createLineNested({ id: 3, nameShort: '銀座線' });
+
+    const currentStation = createStation(100, {
+      line: currentLine,
+      lines: [currentLine, throughServiceLine, independentLine],
+    });
+    const transitionStation = createStation(101, {
+      line: throughServiceLine,
+      lines: [currentLine, throughServiceLine],
+    });
+    const futureStation = createStation(102, {
+      line: throughServiceLine,
+      lines: [throughServiceLine],
+    });
+
+    stationAtomValue.stations = [
+      currentStation,
+      transitionStation,
+      futureStation,
+    ];
+
+    const { getByTestId } = render(<TestComponent station={currentStation} />);
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines.find((l: Line) => l.id === 2)).toBeUndefined();
+    expect(lines.find((l: Line) => l.id === 3)).toBeDefined();
+  });
+
   it('omitJR が true で JR路線が閾値以上の場合、JR線として集約される', () => {
     const currentLine = createLineNested({ id: 1, nameShort: '丸ノ内線' });
     const jrLine1 = createLineNested({

@@ -52,6 +52,7 @@ export const useNumbering = (
       currentLine.id !== null &&
       JOBAN_LINE_IDS.includes(currentLine.id) &&
       (trainType?.kind === TrainTypeKind.Rapid ||
+        trainType?.kind === TrainTypeKind.CommuterRapid ||
         trainType?.kind === TrainTypeKind.HighSpeedRapid),
     [currentLine, trainType?.kind]
   );

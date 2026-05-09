@@ -39,17 +39,20 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const station = useCurrentStation();
   const isBus = isBusLine(station?.line);
 
-  const slicedLeftStations = useMemo(
-    () =>
-      leftStations.slice(0, 8).map((sta) => ({
-        ...sta,
-        name: isBus ? sta.name?.replace(parenthesisRegexp, '') : sta.name,
-        nameRoman: isBus
-          ? sta.nameRoman?.replace(parenthesisRegexp, '')
-          : sta.nameRoman,
-      })),
-    [leftStations, isBus]
-  );
+  const slicedLeftStations = useMemo(() => {
+    // 8 件だけ取り出す。bus 路線の場合は親括弧を駅名から除去する加工が必要。
+    // 鉄道路線では加工が不要 = 元の配列をそのまま返してオブジェクト生成 / 子コンポーネント
+    // の再 memoize を抑える（とくに山手線iPad テーマでアニメーションが何度も走る原因になる）。
+    if (!isBus) {
+      // sliceは新しい配列を返すが要素は同一参照なので、子コンポーネントは memo 効きやすい。
+      return leftStations.length <= 8 ? leftStations : leftStations.slice(0, 8);
+    }
+    return leftStations.slice(0, 8).map((sta) => ({
+      ...sta,
+      name: sta.name?.replace(parenthesisRegexp, ''),
+      nameRoman: sta.nameRoman?.replace(parenthesisRegexp, ''),
+    }));
+  }, [leftStations, isBus]);
 
   const currentStationIndex = useMemo(
     () =>

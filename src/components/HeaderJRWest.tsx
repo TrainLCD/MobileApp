@@ -430,6 +430,7 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
         return fetchJRWLtdExpressLogo();
       case TrainTypeKind.Rapid:
       case TrainTypeKind.HighSpeedRapid:
+      case TrainTypeKind.CommuterRapid:
         return fetchJRWRapidLogo();
       default:
         return fetchJRWLocalLogo();

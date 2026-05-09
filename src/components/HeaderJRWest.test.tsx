@@ -414,6 +414,18 @@ describe('HeaderJRWest', () => {
       }).not.toThrow();
     });
 
+    it('should handle commuter rapid train type', () => {
+      const { useCurrentTrainType } = require('~/hooks');
+      useCurrentTrainType.mockReturnValue({
+        name: '通勤快速',
+        kind: TrainTypeKind.CommuterRapid,
+      });
+
+      expect(() => {
+        render(<HeaderJRWest {...createMockHeaderProps()} />);
+      }).not.toThrow();
+    });
+
     it('should handle regional rapid train type', () => {
       const { useCurrentTrainType } = require('~/hooks');
       useCurrentTrainType.mockReturnValue({

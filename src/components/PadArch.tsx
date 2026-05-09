@@ -727,16 +727,19 @@ const PadArch: React.FC<Props> = ({
       </Animated.View>
 
       <View style={styles.stationNames}>
-        {stations.map((s, i) =>
-          s ? (
+        {stations.map((s, i) => {
+          if (!s) return null;
+          // 同一駅 s に対して getIsPass を複数回呼ばないように1回だけ計算してreuseする。
+          const isPass = getIsPass(s);
+          return (
             <React.Fragment key={s.id}>
               <View
                 style={[
                   styles.circle,
-                  (arrived && i === stations.length - 2) || getIsPass(s)
+                  (arrived && i === stations.length - 2) || isPass
                     ? styles.arrivedCircle
                     : undefined,
-                  getCustomDotStyle(i, stations, arrived, getIsPass(s)),
+                  getCustomDotStyle(i, stations, arrived, isPass),
                 ]}
               />
               <View
@@ -753,7 +756,7 @@ const PadArch: React.FC<Props> = ({
                         .signShape === MARK_SHAPE.SQUARE
                         ? styles.numberingSquareIconContainer
                         : styles.numberingIconContainer,
-                      getIsPass(s) ? styles.halfOpacity : null,
+                      isPass ? styles.halfOpacity : null,
                     ]}
                   >
                     <NumberingIcon
@@ -775,15 +778,15 @@ const PadArch: React.FC<Props> = ({
                   style={[
                     styles.stationName,
                     dynamicStyles.stationName,
-                    getIsPass(s) ? styles.halfOpacity : null,
+                    isPass ? styles.halfOpacity : null,
                   ]}
                 >
                   {isEn ? s.nameRoman : s.name}
                 </Typography>
               </View>
             </React.Fragment>
-          ) : null
-        )}
+          );
+        })}
       </View>
     </>
   );

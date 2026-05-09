@@ -29,6 +29,7 @@ import navigationState from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
+import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
@@ -281,6 +282,19 @@ const TrainTypeBox: React.FC<Props> = ({
     [prevTrainTypeName]
   );
 
+  const {
+    fontSize: computedFontSize,
+    lineHeight: computedLineHeight,
+    prevFontSize: prevComputedFontSize,
+    prevLineHeight: prevComputedLineHeight,
+  } = computeTwoLineTypography({
+    baseFontSize: 18,
+    isTablet,
+    fontSizeScale,
+    numberOfLines,
+    prevNumberOfLines,
+  });
+
   return (
     <View>
       <View style={styles.box}>
@@ -321,7 +335,8 @@ const TrainTypeBox: React.FC<Props> = ({
                 {
                   letterSpacing,
                   marginLeft,
-                  fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
+                  fontSize: computedFontSize,
+                  lineHeight: computedLineHeight,
                 },
               ],
             ]}
@@ -341,7 +356,8 @@ const TrainTypeBox: React.FC<Props> = ({
             {
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
-              fontSize: (isTablet ? 18 * 1.5 : 18) * fontSizeScale,
+              fontSize: prevComputedFontSize,
+              lineHeight: prevComputedLineHeight,
             },
           ]}
           adjustsFontSizeToFit
