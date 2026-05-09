@@ -3,7 +3,7 @@ import type { ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext) => ({
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.4.2',
+  version: '10.4.3',
   plugins: [
     'expo-image',
     'expo-font',
@@ -53,7 +53,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2611',
+    buildNumber: '2612',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -70,7 +70,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000398,
+    versionCode: 100000399,
   },
   owner: 'trainlcd',
 });
