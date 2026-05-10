@@ -2,16 +2,27 @@ import type { Line, Station } from '../../@types/graphql';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import { wrapPhoneme } from '../../utils/phoneme';
 
-/** 既存実装と同じ規則で sub alias を被せる。両方未指定なら 各駅停車 のフォールバック sub を返す。 */
+/**
+ * 既存実装と同じ規則で sub alias を被せる。
+ * `name` が未指定なら `fallback` (デフォルト空文字) を返す。
+ *
+ * NOTE: 以前はヘルパ内で `各駅停車` を返していたが、駅名・路線名・会社名にも使われるため、
+ * 値欠落時に `次は、各駅停車` のような無関係案内へ化ける問題があった (#5917)。
+ * 各駅停車などの train type フォールバックが必要な呼び出し側は明示的に渡す。
+ *
+ * NOTE: `name` だけ nullish で `nameKatakana` が埋まっているケースでは sub 内に
+ * `null` / `undefined` が混入していたため、`name` がない時点で fallback に倒す。
+ */
 export const replaceJapaneseText = (
   name: string | null | undefined,
-  nameKatakana: string | null | undefined
+  nameKatakana: string | null | undefined,
+  fallback = ''
 ): string => {
-  if (!name && !nameKatakana) {
-    return '<sub alias="かくえきていしゃ">各駅停車</sub>';
+  if (!name) {
+    return fallback;
   }
   if (!nameKatakana) {
-    return name ?? '';
+    return name;
   }
   return `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`;
 };
@@ -88,9 +99,17 @@ export const formatJrWestStopsListEn = (
     })
     .join(', ');
 
-/** TY 用: 直通先1路線目のみを `on the X` 形式に整形する。該当がなければ空文字。 */
+/**
+ * TY 用: 直通先1路線目のみを `on the X` 形式に整形する。該当がなければ空文字。
+ *
+ * NOTE: 描画結果ベースで判定する。以前は `nameTtsSegments` の有無だけを見ていたため、
+ * segments が空でも `nameRoman` のみ埋まっているケースで wrapPhoneme の fallback が
+ * 効かず句が丸ごと消えていた (#5917)。
+ */
 export const formatFirstConnectedLineEnPhrase = (lines: Line[]): string => {
   const first = lines[0];
-  if (!first?.nameTtsSegments?.length) return '';
-  return `on the ${wrapPhoneme(first.nameTtsSegments, first.nameRoman)}`;
+  if (!first) return '';
+  const name = wrapPhoneme(first.nameTtsSegments, first.nameRoman);
+  if (!name) return '';
+  return `on the ${name}`;
 };

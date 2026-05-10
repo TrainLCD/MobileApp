@@ -435,3 +435,37 @@ describe('JR_WEST batch cycling', () => {
     expect(result.current.text[1]).toContain('We will be stopping at');
   });
 });
+
+describe('nextStation null guard (#5917)', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([null, '']);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  test('should return empty text when nextStation is null', () => {
+    // nextStation 未解決のとき、context が組み立たず text / nextText は空文字配列になる。
+    // 以前は replaceJapaneseText のフォールバックで `次は、各駅停車です。` のような誤案内が流れていた。
+    (useNextStation as jest.Mock).mockReturnValue(null);
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
+      { wrapper }
+    );
+
+    const [jaText, enText] = result.current.text;
+    const [nextJaText, nextEnText] = result.current.nextText;
+
+    expect(jaText).toBe('');
+    expect(enText).toBe('');
+    expect(nextJaText).toBe('');
+    expect(nextEnText).toBe('');
+
+    // 念のため、無関係案内の 各駅停車 が流れていないことも確認
+    expect(jaText).not.toContain('各駅停車');
+    expect(nextJaText).not.toContain('各駅停車');
+  });
+});

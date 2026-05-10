@@ -283,7 +283,10 @@ export const useTTSText = (
   }, [allStops]);
 
   const context = useMemo<TemplateContext | null>(() => {
-    if (!currentLine || !selectedBound) return null;
+    // nextStation が未解決のまま context を組み立てると
+    // `次は、各駅停車です` のような無関係案内が流れる可能性があるため
+    // currentLine / selectedBound と同様に early return のゲートに含める (#5917)。
+    if (!currentLine || !selectedBound || !nextStation) return null;
 
     const isBoundStop = (s: Station): boolean =>
       s.groupId === selectedBound?.groupId && !isLoopLine;
@@ -334,13 +337,17 @@ export const useTTSText = (
               currentTrainType.nameKatakana
             )
           : '各駅停車'),
-      // JR_WEST 用 (デフォルトなし。currentTrainType が無い場合は replaceJapaneseText のフォールバックで sub 付き 各駅停車 が返る)
+      // JR_WEST 用 (各駅停車 デフォルト)。
+      // 以前は replaceJapaneseText の暗黙フォールバックに依存していたが、
+      // ヘルパは値欠落時に空文字を返すよう変更されたため、ここで明示する (#5917)。
       trainTypeJaPlain:
         yamanoteTrainTypeJa ??
-        replaceJapaneseText(
-          currentTrainType?.name,
-          currentTrainType?.nameKatakana
-        ),
+        (currentTrainType
+          ? replaceJapaneseText(
+              currentTrainType.name,
+              currentTrainType.nameKatakana
+            )
+          : '各駅停車'),
       // JR_KYUSHU 用 (普通 デフォルト)
       trainTypeJaKyushu:
         yamanoteTrainTypeJa ??
