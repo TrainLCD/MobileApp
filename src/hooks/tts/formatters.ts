@@ -48,7 +48,6 @@ export const formatStationsListJa = (stations: Station[]): string =>
  * 末尾ピリオドは付けない。理由:
  * - TY / JR_KYUSHU は list を文中に埋め込む (`transfer to LIST, Please...` や `transfer to LIST at X.`) ため、
  *   ピリオドを足すと文法が壊れる
- * - YAMANOTE NEXT / SAIKYO NEXT / JR_KYUSHU ARRIVING は単数のときだけピリオドを落とす挙動 (※既知の不整合 #5914)
  * - 文末で使うテーマはテンプレ側で `.` を付与する
  */
 export const formatLinesListEn = (lines: Line[]): string => {
