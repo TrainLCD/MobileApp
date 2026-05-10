@@ -114,5 +114,11 @@ describe('templateEngine', () => {
     test('throws on stray endif', () => {
       expect(() => compile('A{/if}B')).toThrow(/\/if/);
     });
+
+    test('throws on duplicate else', () => {
+      expect(() => compile('{#if x}A{:else}B{:else}C{/if}')).toThrow(
+        /Duplicate/
+      );
+    });
   });
 });

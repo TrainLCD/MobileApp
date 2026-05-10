@@ -73,6 +73,9 @@ const parse = (template: string): Node[] => {
       if (!ifNode) {
         throw new Error('{:else} outside of {#if}');
       }
+      if (ifNode.alternate !== null) {
+        throw new Error('Duplicate {:else} in {#if} block');
+      }
       ifNode.alternate = [];
       stack[stack.length - 1] = { children: ifNode.alternate, ifNode };
     } else if (tag === '{/if}') {
