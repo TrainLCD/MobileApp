@@ -39,6 +39,21 @@ describe('replaceJapaneseText', () => {
     // 駅名・路線名のヘルパとして使われるため、誤って `各駅停車` を返してはならない。
     expect(replaceJapaneseText(null, null)).not.toContain('各駅停車');
   });
+
+  it('returns fallback when name is nullish but nameKatakana is provided', () => {
+    // 以前は sub 内に `null` / `undefined` が混入していた。
+    expect(replaceJapaneseText(null, 'シンジュク')).toBe('');
+    expect(replaceJapaneseText(undefined, 'シンジュク')).toBe('');
+    expect(replaceJapaneseText(null, 'シンジュク', '各駅停車')).toBe(
+      '各駅停車'
+    );
+
+    // 念のため null / undefined の文字列が混入していないことも確認
+    expect(replaceJapaneseText(null, 'シンジュク')).not.toContain('null');
+    expect(replaceJapaneseText(undefined, 'シンジュク')).not.toContain(
+      'undefined'
+    );
+  });
 });
 
 const makeLine = (overrides: Partial<Line>): Line =>

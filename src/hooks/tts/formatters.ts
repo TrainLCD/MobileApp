@@ -4,22 +4,25 @@ import { wrapPhoneme } from '../../utils/phoneme';
 
 /**
  * 既存実装と同じ規則で sub alias を被せる。
- * 両方未指定なら `fallback` (デフォルト空文字) を返す。
+ * `name` が未指定なら `fallback` (デフォルト空文字) を返す。
  *
  * NOTE: 以前はヘルパ内で `各駅停車` を返していたが、駅名・路線名・会社名にも使われるため、
  * 値欠落時に `次は、各駅停車` のような無関係案内へ化ける問題があった (#5917)。
  * 各駅停車などの train type フォールバックが必要な呼び出し側は明示的に渡す。
+ *
+ * NOTE: `name` だけ nullish で `nameKatakana` が埋まっているケースでは sub 内に
+ * `null` / `undefined` が混入していたため、`name` がない時点で fallback に倒す。
  */
 export const replaceJapaneseText = (
   name: string | null | undefined,
   nameKatakana: string | null | undefined,
   fallback = ''
 ): string => {
-  if (!name && !nameKatakana) {
+  if (!name) {
     return fallback;
   }
   if (!nameKatakana) {
-    return name ?? '';
+    return name;
   }
   return `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`;
 };
