@@ -436,6 +436,135 @@ describe('JR_WEST batch cycling', () => {
   });
 });
 
+describe('single transferLine period consistency (#5914)', () => {
+  // 東京メトロ副都心線(id=28010)を除外し、次駅 (Shinjuku-sanchome) の
+  // 乗り換え路線を 東京メトロ丸ノ内線 1 本だけに絞る。
+  const FUKUTOSHIN_LINE_ID = 28010;
+
+  const buildSingleTransferNextStation = (): Station => {
+    const base = TOEI_SHINJUKU_LINE_STATIONS[1];
+    return {
+      ...base,
+      lines: base.lines?.filter((l) => l.id !== FUKUTOSHIN_LINE_ID) ?? [],
+    };
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    setupMockUseNextStation(buildSingleTransferNextStation());
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: 'S-02',
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  const renderEn = (theme: AppTheme, state: HeaderStoppingState): string => {
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering(theme, state),
+      { wrapper }
+    );
+    const [, enSSML] = result.current.text;
+    return enSSML ?? '';
+  };
+
+  test('TOKYO_METRO NEXT keeps the trailing period for length=1', () => {
+    expect(renderEn('TOKYO_METRO', 'NEXT')).toBe(
+      'The next stop is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('TOKYO_METRO ARRIVING keeps the trailing period for length=1', () => {
+    expect(renderEn('TOKYO_METRO', 'ARRIVING')).toBe(
+      'Arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('TY NEXT renders list inline for length=1', () => {
+    expect(renderEn('TY', 'NEXT')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Passengers changing to the Tokyo Metro Marunouchi Line, Please transfer at this station.'
+    );
+  });
+
+  test('TY ARRIVING renders list inline for length=1', () => {
+    expect(renderEn('TY', 'ARRIVING')).toBe(
+      'We will soon make a brief stop at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Passengers changing to the Tokyo Metro Marunouchi Line, Please transfer at this station.'
+    );
+  });
+
+  test('YAMANOTE NEXT appends period for length=1', () => {
+    expect(renderEn('YAMANOTE', 'NEXT')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('YAMANOTE ARRIVING appends period for length=1', () => {
+    expect(renderEn('YAMANOTE', 'ARRIVING')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('SAIKYO NEXT appends period for length=1', () => {
+    expect(renderEn('SAIKYO', 'NEXT')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('SAIKYO ARRIVING appends period for length=1', () => {
+    expect(renderEn('SAIKYO', 'ARRIVING')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('JR_WEST NEXT keeps trailing period for length=1', () => {
+    expect(renderEn('JR_WEST', 'NEXT')).toBe(
+      'The next stop is Shinjuku-sanchome station number S <say-as interpret-as="cardinal">2</say-as>. Transfer here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('JR_WEST ARRIVING keeps trailing period for length=1', () => {
+    expect(renderEn('JR_WEST', 'ARRIVING')).toBe(
+      'We will soon be making a brief stop at Shinjuku-sanchome station number S <say-as interpret-as="cardinal">2</say-as>. Transfer here for the Tokyo Metro Marunouchi Line. After leaving Shinjuku-sanchome, We will be stopping at Akebonobashi.'
+    );
+  });
+
+  test('TOEI NEXT keeps trailing period for length=1', () => {
+    expect(renderEn('TOEI', 'NEXT')).toBe(
+      'This is the Local train bound for Motoyawata. The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('TOEI ARRIVING keeps trailing period for length=1', () => {
+    expect(renderEn('TOEI', 'ARRIVING')).toBe(
+      'We will soon be arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('JR_KYUSHU NEXT renders list inline without trailing period for length=1', () => {
+    expect(renderEn('JR_KYUSHU', 'NEXT')).toContain(
+      'You can transfer to the Tokyo Metro Marunouchi Line at Shinjuku-sanchome.'
+    );
+  });
+
+  test('JR_KYUSHU ARRIVING renders list inline without stray period for length=1', () => {
+    const en = renderEn('JR_KYUSHU', 'ARRIVING');
+    expect(en).toContain(
+      'You can transfer to the Tokyo Metro Marunouchi Line at Shinjuku-sanchome.'
+    );
+    // length=1 で "...Line. at X." のような不自然なピリオドが残らないこと
+    expect(en).not.toContain('Marunouchi Line. at');
+  });
+});
+
 describe('nextStation null guard (#5917)', () => {
   beforeEach(() => {
     jest.resetModules();

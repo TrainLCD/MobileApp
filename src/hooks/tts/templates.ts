@@ -214,7 +214,7 @@ const YAMANOTE_EN: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}This is the {currentLineEn} train bound for {boundForEn}. {/if}',
     'The next station is {nextStationEn} {nextStationNumberText} ',
-    '{#if hasTransferLines}Please change here for {transferLinesEnList}{#if hasMultipleTransferLines}.{/if}{/if}'
+    '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if}'
   ),
   ARRIVING: t(
     'The next station is {nextStationEn} {nextStationNumberText}',
@@ -229,7 +229,7 @@ const SAIKYO_EN: ThemeTemplate = {
     '{#if firstSpeech}This is the {currentLineEn} train bound for {boundForEn}. {/if}',
     'The next station is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, terminal{/if} ',
-    '{#if hasTransferLines}Please change here for {transferLinesEnList}{#if hasMultipleTransferLines}.{/if}{/if}'
+    '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if}'
   ),
   ARRIVING: t(
     'The next station is {nextStationEn} {nextStationNumberText}',
@@ -288,7 +288,7 @@ const JR_KYUSHU_EN: ThemeTemplate = {
     'We will soon be arriving at {nextStationEn}',
     '{#if nextStationIsBound} terminal{/if} {nextStationNumberText}. ',
     '{#if hasTransferLines}',
-    'You can transfer to {transferLinesEnList}{#if hasMultipleTransferLines}.{/if} at {nextStationEn}. ',
+    'You can transfer to {transferLinesEnList} at {nextStationEn}. ',
     '{#if nextStationIsBound}Thank you for using the {currentLineEn}.{/if}',
     '{/if}'
   ),

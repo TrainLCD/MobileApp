@@ -297,7 +297,6 @@ export const useTTSText = (
       isNextStopTerminus,
       isAfterNextStopTerminus,
       hasTransferLines: transferLines.length > 0,
-      hasMultipleTransferLines: transferLines.length > 1,
       hasConnectedLines: connectedLines.length > 0,
       hasBetweenStations: betweenNextStation.length > 0,
       hasAfterNextStation: !!afterNextStation,
