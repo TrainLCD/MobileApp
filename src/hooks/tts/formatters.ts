@@ -8,10 +8,20 @@ import { wrapPhoneme } from '../../utils/phoneme';
 // できないため、TTS パイプライン専用に別定義する (issue #1175)。
 const ttsParensRegexp = /[（(][^（）()]*[）)]/g;
 
-/** TTS で読み上げる文字列からカッコ (半角・全角) と中身を取り除く。 */
+/**
+ * TTS で読み上げる文字列からカッコ (半角・全角) と中身を取り除く。
+ * 取り除いたあとに連続空白を 1 つに畳み、両端の空白も落として
+ * `nameRoman` などで残る不自然な空白が読み上げに乗らないようにする。
+ */
 export const stripParensForTTS = <T extends string | null | undefined>(
   value: T
-): T => (value == null ? value : (value.replace(ttsParensRegexp, '') as T));
+): T => {
+  if (value == null) return value;
+  return value
+    .replace(ttsParensRegexp, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim() as T;
+};
 
 const stripTtsSegmentParens = (seg: TtsSegment): TtsSegment => ({
   ...seg,

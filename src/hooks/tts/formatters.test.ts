@@ -141,6 +141,13 @@ describe('stripParensForTTS', () => {
     expect(stripParensForTTS('A(b)C（d）E')).toBe('ACE');
   });
 
+  it('collapses leftover whitespace and trims edges', () => {
+    expect(stripParensForTTS('A (b)  C')).toBe('A C');
+    expect(stripParensForTTS('Dentetsu-Toyama (Toyota Mobility)')).toBe(
+      'Dentetsu-Toyama'
+    );
+  });
+
   it('passes through values without parentheses untouched', () => {
     expect(stripParensForTTS('新宿')).toBe('新宿');
   });
@@ -197,15 +204,13 @@ describe('stripStationParensForTTS', () => {
     const stripped = stripStationParensForTTS(baseStation);
     expect(stripped.name).toBe('電鉄富山');
     expect(stripped.nameKatakana).toBe('デンテツトヤマ');
-    expect(stripped.nameRoman).toBe('Dentetsu-Toyama ');
+    expect(stripped.nameRoman).toBe('Dentetsu-Toyama');
   });
 
   it('strips parentheses from nameTtsSegments fields', () => {
     const stripped = stripStationParensForTTS(baseStation);
-    expect(stripped.nameTtsSegments?.[0]?.surface).toBe('Dentetsu-Toyama ');
-    expect(stripped.nameTtsSegments?.[0]?.fallbackText).toBe(
-      'Dentetsu-Toyama '
-    );
+    expect(stripped.nameTtsSegments?.[0]?.surface).toBe('Dentetsu-Toyama');
+    expect(stripped.nameTtsSegments?.[0]?.fallbackText).toBe('Dentetsu-Toyama');
   });
 
   it('preserves non-TTS fields like groupId and stationNumbers', () => {

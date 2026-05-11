@@ -84,21 +84,28 @@ export const useBusTTSText = (
     [selectedBoundOrigin]
   );
 
+  // directionalStops のカッコ書きも TTS で読み上げないため、
+  // boundForJa / boundForEn に渡す前に取り除く (issue #1175)。
+  const directionalStopsForTTS = useMemo(
+    () => directionalStops.map(stripStationParensForTTS),
+    [directionalStops]
+  );
+
   const boundForJa = useMemo(
     () =>
       isLoopLine
         ? // NOTE: メジャーな駅だからreplaceJapaneseTextは要らない...はず
           loopLineBoundJa?.boundFor?.replace(/・/g, '<break time="250ms"/>')
         : replaceJapaneseText(
-            `${directionalStops?.map((s) => s?.name).join('・')}${
+            `${directionalStopsForTTS.map((s) => s?.name).join('・')}${
               isPartiallyLoopLine ? '方面' : ''
             }`,
-            `${directionalStops?.map((s) => s?.nameKatakana).join('・')}${
+            `${directionalStopsForTTS.map((s) => s?.nameKatakana).join('・')}${
               isPartiallyLoopLine ? 'ホウメン' : ''
             }`
           ),
     [
-      directionalStops,
+      directionalStopsForTTS,
       isLoopLine,
       isPartiallyLoopLine,
       loopLineBoundJa?.boundFor,
@@ -110,11 +117,10 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : (directionalStops
-            ?.map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
-            .join(' and ') ?? ''),
-
-    [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
+        : directionalStopsForTTS
+            .map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
+            .join(' and '),
+    [directionalStopsForTTS, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
   // 駅名に併記されたカッコ書き (命名権スポンサー名など) を TTS で読み上げないため、
