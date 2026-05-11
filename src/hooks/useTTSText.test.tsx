@@ -610,7 +610,14 @@ describe('terminus announcement (#5915)', () => {
         approaching,
       }));
       setLineState((prev) => ({ ...prev, selectedLine }));
-    }, [boundIndex, headerState, nextStationIndex, setLineState, setStationState, theme]);
+    }, [
+      boundIndex,
+      headerState,
+      nextStationIndex,
+      setLineState,
+      setStationState,
+      theme,
+    ]);
 
     return useTTSText(false, true);
   };
@@ -639,9 +646,7 @@ describe('terminus announcement (#5915)', () => {
     overrides: { boundIndex?: number; nextStationIndex?: number } = {}
   ): [string, string] => {
     setupMockUseNextStation(
-      TOEI_SHINJUKU_LINE_STATIONS[
-        overrides.nextStationIndex ?? TERMINUS_INDEX
-      ]
+      TOEI_SHINJUKU_LINE_STATIONS[overrides.nextStationIndex ?? TERMINUS_INDEX]
     );
     const { result } = renderHook(
       () => useTerminusHelper({ theme, headerState, ...overrides }),
@@ -695,8 +700,16 @@ describe('terminus announcement (#5915)', () => {
   const MID_BOUND_INDEX = 5; // 神保町
   const MID_BOUND_CASES = [
     { theme: 'JR_WEST', state: 'NEXT' as HeaderStoppingState, en: 'terminal' },
-    { theme: 'JR_KYUSHU', state: 'NEXT' as HeaderStoppingState, en: 'terminal' },
-    { theme: 'JR_KYUSHU', state: 'ARRIVING' as HeaderStoppingState, en: 'terminal' },
+    {
+      theme: 'JR_KYUSHU',
+      state: 'NEXT' as HeaderStoppingState,
+      en: 'terminal',
+    },
+    {
+      theme: 'JR_KYUSHU',
+      state: 'ARRIVING' as HeaderStoppingState,
+      en: 'terminal',
+    },
   ];
 
   test.each(MID_BOUND_CASES)(
