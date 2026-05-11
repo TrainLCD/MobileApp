@@ -565,6 +565,189 @@ describe('single transferLine period consistency (#5914)', () => {
   });
 });
 
+describe('terminus announcement (#5915)', () => {
+  // 各テーマ NEXT / ARRIVING で「次の駅が終点」のときに
+  // JA/EN いずれにも「終点 / terminal / last stop」相当の語が含まれることを検証。
+
+  const TERMINUS_INDEX = TOEI_SHINJUKU_LINE_STATIONS.length - 1;
+  const TERMINUS = TOEI_SHINJUKU_LINE_STATIONS[TERMINUS_INDEX];
+
+  const useTerminusHelper = ({
+    theme,
+    headerState,
+    boundIndex = TERMINUS_INDEX,
+    nextStationIndex = TERMINUS_INDEX,
+  }: {
+    theme: AppTheme;
+    headerState: HeaderStoppingState;
+    boundIndex?: number;
+    nextStationIndex?: number;
+  }) => {
+    const setLineState = useSetAtom(lineState);
+    const setStationState = useSetAtom(stationState);
+
+    useEffect(() => {
+      // 次駅 = TERMINUS の前提では「現在駅 = 終点の一つ手前」を想定。
+      // ただし selectedBound を中間駅にする検証では nextStationIndex を任意指定する。
+      const station =
+        TOEI_SHINJUKU_LINE_STATIONS[Math.max(0, nextStationIndex - 1)];
+      const stations = TOEI_SHINJUKU_LINE_STATIONS;
+      const selectedDirection = 'INBOUND' as LineDirection;
+      const selectedLine = TOEI_SHINJUKU_LINE_LOCAL;
+      const selectedBound = TOEI_SHINJUKU_LINE_STATIONS[boundIndex];
+
+      const arrived = headerState === 'CURRENT';
+      const approaching = headerState === 'ARRIVING';
+
+      store.set(themePreferenceAtom, theme);
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        stations,
+        selectedDirection,
+        arrived,
+        selectedBound,
+        approaching,
+      }));
+      setLineState((prev) => ({ ...prev, selectedLine }));
+    }, [boundIndex, headerState, nextStationIndex, setLineState, setStationState, theme]);
+
+    return useTTSText(false, true);
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: `S-${String(TERMINUS_INDEX + 1).padStart(2, '0')}`,
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  const renderTexts = (
+    theme: AppTheme,
+    headerState: HeaderStoppingState,
+    overrides: { boundIndex?: number; nextStationIndex?: number } = {}
+  ): [string, string] => {
+    setupMockUseNextStation(
+      TOEI_SHINJUKU_LINE_STATIONS[
+        overrides.nextStationIndex ?? TERMINUS_INDEX
+      ]
+    );
+    const { result } = renderHook(
+      () => useTerminusHelper({ theme, headerState, ...overrides }),
+      { wrapper }
+    );
+    const [ja, en] = result.current.text;
+    return [ja ?? '', en ?? ''];
+  };
+
+  // useIsTerminus は stations[0] / stations[last] と一致するときに true を返す。
+  // TERMINUS のテーマ群はその判定に従う。
+  type TerminusCase = {
+    theme: AppTheme;
+    state: HeaderStoppingState;
+    ja: string;
+    en: string[];
+  };
+
+  const TERMINUS_CASES: TerminusCase[] = [
+    { theme: 'TOKYO_METRO', state: 'NEXT', ja: '終点', en: ['last stop'] },
+    { theme: 'TOKYO_METRO', state: 'ARRIVING', ja: '終点', en: ['last stop'] },
+    { theme: 'TY', state: 'NEXT', ja: '終点', en: ['last stop'] },
+    { theme: 'TY', state: 'ARRIVING', ja: '終点', en: ['last stop'] },
+    { theme: 'YAMANOTE', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'YAMANOTE', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+    { theme: 'SAIKYO', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'SAIKYO', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+    { theme: 'TOEI', state: 'NEXT', ja: '終点', en: ['last stop'] },
+    { theme: 'TOEI', state: 'ARRIVING', ja: '終点', en: ['last stop'] },
+    // JR_WEST / JR_KYUSHU は nextStationIsBound 判定だが、selectedBound が
+    // 物理的な終点と一致するこのケースでは isNextStopTerminus も true になる。
+    { theme: 'JR_WEST', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'JR_WEST', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+    { theme: 'JR_KYUSHU', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'JR_KYUSHU', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+  ];
+
+  test.each(TERMINUS_CASES)(
+    'announces terminus for $theme / $state in both languages',
+    ({ theme, state, ja, en }) => {
+      const [jaText, enText] = renderTexts(theme as AppTheme, state);
+      expect(jaText).toContain(ja);
+      for (const phrase of en) {
+        expect(enText).toContain(phrase);
+      }
+    }
+  );
+
+  // selectedBound が物理的終点ではない中間駅のとき、nextStationIsBound 判定を
+  // 採っているテーマ (JR_WEST / JR_KYUSHU) では引き続き 終点 / terminal を発話する。
+  const MID_BOUND_INDEX = 5; // 神保町
+  const MID_BOUND_CASES = [
+    { theme: 'JR_WEST', state: 'NEXT' as HeaderStoppingState, en: 'terminal' },
+    { theme: 'JR_KYUSHU', state: 'NEXT' as HeaderStoppingState, en: 'terminal' },
+    { theme: 'JR_KYUSHU', state: 'ARRIVING' as HeaderStoppingState, en: 'terminal' },
+  ];
+
+  test.each(MID_BOUND_CASES)(
+    'announces terminus when bound is a mid-line station for $theme / $state',
+    ({ theme, state, en }) => {
+      const [jaText, enText] = renderTexts(theme as AppTheme, state, {
+        boundIndex: MID_BOUND_INDEX,
+        nextStationIndex: MID_BOUND_INDEX,
+      });
+      expect(jaText).toContain('終点');
+      expect(enText).toContain(en);
+    }
+  );
+
+  // 念のため、selectedBound = TERMINUS の通常ケースで JR_WEST ARRIVING JA に
+  // 追加された「終点、X です。」が含まれることを検証する。
+  test('JR_WEST ARRIVING JA prepends 終点 before thanks', () => {
+    const [jaText] = renderTexts('JR_WEST', 'ARRIVING');
+    expect(jaText).toMatch(/終点、.+です。ご乗車ありがとうございました。/);
+  });
+
+  // YAMANOTE / SAIKYO / JR_KYUSHU ARRIVING の thanks が hasTransferLines に
+  // 依存せず終点時に発話されることを検証する (※1)。
+  // 乗り換え路線を取り除いた終点駅をモックすることで、修正前は thanks が
+  // 出なかった経路を踏ませる。
+  test.each([
+    ['YAMANOTE', 'ご利用くださいまして、ありがとうございました'],
+    ['SAIKYO', 'ご利用くださいまして、ありがとうございました'],
+    ['JR_KYUSHU', 'ご利用くださいまして、ありがとうございました'],
+  ])(
+    '%s ARRIVING JA announces thanks even when terminus has no transferLines',
+    (theme, thanksPhrase) => {
+      const terminusWithoutTransfers: Station = {
+        ...TERMINUS,
+        lines: [],
+      };
+      (useNextStation as jest.Mock).mockReturnValue(terminusWithoutTransfers);
+      const { result } = renderHook(
+        () =>
+          useTerminusHelper({
+            theme: theme as AppTheme,
+            headerState: 'ARRIVING',
+          }),
+        { wrapper }
+      );
+      const [jaText] = result.current.text;
+      expect(jaText ?? '').toContain(thanksPhrase);
+    }
+  );
+});
+
 describe('nextStation null guard (#5917)', () => {
   beforeEach(() => {
     jest.resetModules();
