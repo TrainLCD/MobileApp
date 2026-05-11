@@ -112,4 +112,48 @@ describe('SelectBoundSettingListModal', () => {
       expect(onTrainTypePress).not.toHaveBeenCalled();
     });
   });
+
+  describe('テーマボタン', () => {
+    it('onThemePressが未指定の場合、テーマボタンが表示されない', () => {
+      const { queryByText } = render(
+        <SelectBoundSettingListModal {...defaultProps} />
+      );
+      expect(queryByText('theme')).toBeNull();
+    });
+
+    it('onThemePressが指定されている場合、テーマボタンが表示される', () => {
+      const { getByText } = render(
+        <SelectBoundSettingListModal
+          {...defaultProps}
+          onThemePress={jest.fn()}
+          themeLabel="東京メトロ風"
+        />
+      );
+      expect(getByText('theme')).toBeTruthy();
+      expect(getByText('東京メトロ風')).toBeTruthy();
+    });
+
+    it('themeLabelが空の場合、フォールバックテキストが表示される', () => {
+      const { getByText } = render(
+        <SelectBoundSettingListModal
+          {...defaultProps}
+          onThemePress={jest.fn()}
+        />
+      );
+      expect(getByText('autoTheme')).toBeTruthy();
+    });
+
+    it('テーマボタンを押すとonThemePressが呼ばれる', () => {
+      const onThemePress = jest.fn();
+      const { getByText } = render(
+        <SelectBoundSettingListModal
+          {...defaultProps}
+          onThemePress={onThemePress}
+          themeLabel="自動"
+        />
+      );
+      fireEvent.press(getByText('theme'));
+      expect(onThemePress).toHaveBeenCalledTimes(1);
+    });
+  });
 });

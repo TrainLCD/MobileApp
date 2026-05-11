@@ -6,7 +6,13 @@ import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
@@ -14,11 +20,14 @@ import ViewShot from 'react-native-view-shot';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
 import { isDevApp } from '~/utils/isDevApp';
+import { getSettingsThemes } from '~/utils/theme';
 import {
   ALL_AVAILABLE_LANGUAGES,
   APP_STORE_URL,
   ASYNC_STORAGE_KEYS,
+  AUTO_THEME_GRADIENT_COLORS,
   GOOGLE_PLAY_URL,
+  IN_USE_COLOR_MAP,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
 } from '../constants';
@@ -32,7 +41,7 @@ import {
   useWarningInfo,
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
-import type { ThemePreference } from '../models/Theme';
+import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import speechState from '../store/atoms/speech';
@@ -41,6 +50,7 @@ import { themePreferenceAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import NewReportModal from './NewReportModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
+import { ThemeListModal } from './ThemeListModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 import WarningPanel from './WarningPanel';
 
@@ -57,10 +67,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setSpeech = useSetAtom(speechState);
   const setNotify = useSetAtom(notifyState);
   const setTuning = useSetAtom(tuningState);
-  const setThemePreference = useSetAtom(themePreferenceAtom);
+  const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
   const [sendingReport, setSendingReport] = useState(false);
   const [screenShotBase64, setScreenShotBase64] = useState('');
+  const [isThemeListModalVisible, setIsThemeListModalVisible] = useState(false);
+  const pendingThemeListModalRef = useRef(false);
 
   useCheckStoreVersion();
   useAppleWatch();
@@ -94,6 +106,60 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const styles = StyleSheet.create({
     container: { width: '100%', height: '100%' },
   });
+
+  const themeOptions = useMemo(() => getSettingsThemes(), []);
+
+  const themeLabel = useMemo(() => {
+    const found = themeOptions.find((t) => t.value === themePreference);
+    return found?.label ?? translate('autoTheme');
+  }, [themeOptions, themePreference]);
+
+  const themeRowColor = useMemo(() => {
+    if (themePreference === THEME_PREFERENCE.AUTO) {
+      return AUTO_THEME_GRADIENT_COLORS[0];
+    }
+    return IN_USE_COLOR_MAP[themePreference as keyof typeof IN_USE_COLOR_MAP];
+  }, [themePreference]);
+
+  const handleThemePress = useCallback(() => {
+    pendingThemeListModalRef.current = true;
+    closeSettingListModal();
+  }, [closeSettingListModal]);
+
+  const handleSettingListClose = useCallback(() => {
+    handleSettingListCloseAnimationEnd();
+    if (pendingThemeListModalRef.current) {
+      pendingThemeListModalRef.current = false;
+      setIsThemeListModalVisible(true);
+    }
+  }, [handleSettingListCloseAnimationEnd]);
+
+  const handleThemeListClose = useCallback(() => {
+    setIsThemeListModalVisible(false);
+  }, []);
+
+  const handleThemeSelect = useCallback(
+    async (preference: ThemePreference) => {
+      setIsThemeListModalVisible(false);
+      if (preference === themePreference) {
+        return;
+      }
+      try {
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
+          preference
+        );
+        setThemePreference(preference);
+      } catch (err) {
+        console.error(err);
+        Alert.alert(
+          translate('errorTitle'),
+          translate('failedToSavePreference')
+        );
+      }
+    },
+    [setThemePreference, themePreference]
+  );
 
   const handleReport = useCallback(async () => {
     const captureError = (err: unknown) => {
@@ -570,8 +636,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         trainTypeColor={trainTypeColor}
         trainTypeLoading={trainTypeSelectLoading}
         onTrainTypePress={handleTrainTypePress}
-        onCloseAnimationEnd={handleSettingListCloseAnimationEnd}
+        onCloseAnimationEnd={handleSettingListClose}
         trainTypeDisabled={trainTypeDisabled}
+        themeLabel={themeLabel}
+        themeColor={themeRowColor}
+        onThemePress={handleThemePress}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
@@ -579,6 +648,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         loading={fetchTrainTypesLoading}
         onClose={closeTrainTypeModal}
         onSelect={handleTrainTypeModalSelect}
+      />
+      <ThemeListModal
+        visible={isThemeListModalVisible}
+        currentPreference={themePreference}
+        onClose={handleThemeListClose}
+        onSelect={handleThemeSelect}
       />
       {/* NOTE: このViewを外すとフィードバックモーダルのレイアウトが崩御する */}
       <View>
