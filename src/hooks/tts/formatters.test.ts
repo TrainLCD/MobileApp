@@ -1,8 +1,10 @@
-import type { Line } from '~/@types/graphql';
+import type { Line, Station } from '~/@types/graphql';
 import { TtsAlphabet } from '~/@types/graphql';
 import {
   formatFirstConnectedLineEnPhrase,
   replaceJapaneseText,
+  stripParensForTTS,
+  stripStationParensForTTS,
 } from './formatters';
 
 describe('replaceJapaneseText', () => {
@@ -119,5 +121,119 @@ describe('formatFirstConnectedLineEnPhrase', () => {
       nameRoman: null,
     });
     expect(formatFirstConnectedLineEnPhrase([line])).toBe('');
+  });
+});
+
+describe('stripParensForTTS', () => {
+  it('removes half-width parentheses and their contents', () => {
+    expect(stripParensForTTS('電鉄富山(トヨタモビリティ富山)')).toBe(
+      '電鉄富山'
+    );
+  });
+
+  it('removes full-width parentheses and their contents', () => {
+    expect(stripParensForTTS('電鉄富山（トヨタモビリティ富山）')).toBe(
+      '電鉄富山'
+    );
+  });
+
+  it('removes multiple parenthesised groups in a single string', () => {
+    expect(stripParensForTTS('A(b)C（d）E')).toBe('ACE');
+  });
+
+  it('collapses leftover whitespace and trims edges', () => {
+    expect(stripParensForTTS('A (b)  C')).toBe('A C');
+    expect(stripParensForTTS('Dentetsu-Toyama (Toyota Mobility)')).toBe(
+      'Dentetsu-Toyama'
+    );
+  });
+
+  it('passes through values without parentheses untouched', () => {
+    expect(stripParensForTTS('新宿')).toBe('新宿');
+  });
+
+  it('preserves null and undefined inputs', () => {
+    expect(stripParensForTTS(null)).toBeNull();
+    expect(stripParensForTTS(undefined)).toBeUndefined();
+  });
+});
+
+describe('stripStationParensForTTS', () => {
+  const baseStation: Station = {
+    __typename: 'Station',
+    address: null,
+    closedAt: null,
+    distance: null,
+    groupId: 1,
+    hasTrainTypes: null,
+    id: 1,
+    latitude: null,
+    line: null,
+    lines: null,
+    longitude: null,
+    name: '電鉄富山(トヨタモビリティ富山)',
+    nameChinese: null,
+    nameIpa: null,
+    nameKatakana: 'デンテツトヤマ(トヨタモビリティトヤマ)',
+    nameKorean: null,
+    nameRoman: 'Dentetsu-Toyama (Toyota Mobility Toyama)',
+    nameRomanIpa: null,
+    nameTtsSegments: [
+      {
+        __typename: 'TtsSegment',
+        alphabet: TtsAlphabet.Plain,
+        fallbackText: 'Dentetsu-Toyama (fallback)',
+        lang: null,
+        pronunciation: null,
+        separator: null,
+        surface: 'Dentetsu-Toyama (Toyota Mobility Toyama)',
+      },
+    ],
+    openedAt: null,
+    postalCode: null,
+    prefectureId: null,
+    stationNumbers: null,
+    status: null,
+    stopCondition: null,
+    threeLetterCode: null,
+    trainType: null,
+    transportType: null,
+  };
+
+  it('strips parentheses from name / nameKatakana / nameRoman', () => {
+    const stripped = stripStationParensForTTS(baseStation);
+    expect(stripped.name).toBe('電鉄富山');
+    expect(stripped.nameKatakana).toBe('デンテツトヤマ');
+    expect(stripped.nameRoman).toBe('Dentetsu-Toyama');
+  });
+
+  it('strips parentheses from nameTtsSegments fields', () => {
+    const stripped = stripStationParensForTTS(baseStation);
+    expect(stripped.nameTtsSegments?.[0]?.surface).toBe('Dentetsu-Toyama');
+    expect(stripped.nameTtsSegments?.[0]?.fallbackText).toBe('Dentetsu-Toyama');
+  });
+
+  it('preserves non-TTS fields like groupId and stationNumbers', () => {
+    const stripped = stripStationParensForTTS({
+      ...baseStation,
+      stationNumbers: [
+        {
+          __typename: 'StationNumber',
+          lineSymbol: 'T',
+          lineSymbolColor: '#000',
+          lineSymbolShape: 'ROUND',
+          stationNumber: 'T-01',
+        },
+      ],
+    });
+    expect(stripped.groupId).toBe(1);
+    expect(stripped.stationNumbers?.[0]?.stationNumber).toBe('T-01');
+  });
+
+  it('returns a new object without mutating the source', () => {
+    const original = { ...baseStation };
+    const stripped = stripStationParensForTTS(baseStation);
+    expect(stripped).not.toBe(baseStation);
+    expect(baseStation.name).toBe(original.name);
   });
 });
