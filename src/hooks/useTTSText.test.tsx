@@ -766,6 +766,71 @@ describe('terminus announcement (#5915)', () => {
   );
 });
 
+describe('station name parens are not read aloud (issue #1175)', () => {
+  // 駅名に併記されたカッコ書き (命名権スポンサー名など) を TTS で
+  // 読み上げない。`<sub alias>` の中身も含めてカッコと中身が抜ける。
+  const buildStationWithParens = (): Station => {
+    const base = TOEI_SHINJUKU_LINE_STATIONS[1];
+    return {
+      ...base,
+      name: `${base.name}(トヨタモビリティ富山)`,
+      nameKatakana: `${base.nameKatakana}(トヨタモビリティトヤマ)`,
+      nameRoman: `${base.nameRoman} (Toyota Mobility Toyama)`,
+      nameTtsSegments: base.nameTtsSegments?.map((seg) => ({
+        ...seg,
+        surface: seg.surface
+          ? `${seg.surface} (Toyota Mobility Toyama)`
+          : seg.surface,
+        fallbackText: seg.fallbackText
+          ? `${seg.fallbackText} (Toyota Mobility Toyama)`
+          : seg.fallbackText,
+      })),
+    };
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    setupMockUseNextStation(buildStationWithParens());
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: 'S-02',
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  test('strips parens contents from JA SSML including <sub alias>', () => {
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
+      { wrapper }
+    );
+    const [jaText] = result.current.text;
+    expect(jaText ?? '').not.toContain('トヨタモビリティ富山');
+    expect(jaText ?? '').not.toContain('トヨタモビリティトヤマ');
+    expect(jaText ?? '').not.toContain('(');
+    expect(jaText ?? '').not.toContain(')');
+  });
+
+  test('strips parens contents from EN SSML', () => {
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
+      { wrapper }
+    );
+    const [, enText] = result.current.text;
+    expect(enText ?? '').not.toContain('Toyota Mobility Toyama');
+    expect(enText ?? '').not.toContain('(');
+    expect(enText ?? '').not.toContain(')');
+  });
+});
+
 describe('nextStation null guard (#5917)', () => {
   beforeEach(() => {
     jest.resetModules();

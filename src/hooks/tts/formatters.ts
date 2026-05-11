@@ -1,6 +1,49 @@
-import type { Line, Station } from '../../@types/graphql';
+import type { Line, Station, TtsSegment } from '../../@types/graphql';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import { wrapPhoneme } from '../../utils/phoneme';
+
+// 駅名に併記されたカッコ書き (例: 命名権スポンサー名 `電鉄富山(トヨタモビリティ富山)`)
+// を TTS で読み上げないために、半角・全角のカッコと中身を取り除く。
+// 既存の `parenthesisRegexp` は半角のみで駅 API が全角を返すケースをカバー
+// できないため、TTS パイプライン専用に別定義する (issue #1175)。
+const ttsParensRegexp = /[（(][^（）()]*[）)]/g;
+
+/**
+ * TTS で読み上げる文字列からカッコ (半角・全角) と中身を取り除く。
+ * 取り除いたあとに連続空白を 1 つに畳み、両端の空白も落として
+ * `nameRoman` などで残る不自然な空白が読み上げに乗らないようにする。
+ */
+export const stripParensForTTS = <T extends string | null | undefined>(
+  value: T
+): T => {
+  if (value == null) return value;
+  return value
+    .replace(ttsParensRegexp, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim() as T;
+};
+
+const stripTtsSegmentParens = (seg: TtsSegment): TtsSegment => ({
+  ...seg,
+  surface: stripParensForTTS(seg.surface),
+  fallbackText: stripParensForTTS(seg.fallbackText),
+});
+
+/**
+ * Station の TTS 関連フィールド (name / nameKatakana / nameRoman /
+ * nameTtsSegments) からカッコ書きを取り除いた新しい Station を返す。
+ *
+ * `<sub alias="...">name</sub>` のような SSML 構築前にこれを通すことで、
+ * alias 側 (= 実際に読み上げられる読み) にもカッコ内のスポンサー名などが
+ * 残らないようにする (issue #1175)。表示用データには影響しない。
+ */
+export const stripStationParensForTTS = (station: Station): Station => ({
+  ...station,
+  name: stripParensForTTS(station.name),
+  nameKatakana: stripParensForTTS(station.nameKatakana),
+  nameRoman: stripParensForTTS(station.nameRoman),
+  nameTtsSegments: station.nameTtsSegments?.map(stripTtsSegmentParens),
+});
 
 /**
  * 既存実装と同じ規則で sub alias を被せる。
