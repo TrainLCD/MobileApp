@@ -15,6 +15,7 @@ import {
   formatLinesListJa,
   formatStationsListJa,
   replaceJapaneseText,
+  stripStationParensForTTS,
 } from './tts/formatters';
 import type { TemplateContext } from './tts/templateEngine';
 import { EN_TEMPLATES, JA_TEMPLATES } from './tts/templates';
@@ -185,7 +186,14 @@ export const useTTSText = (
     }${symbol} ${num}.`;
   }, [nextStationNumber, theme]);
 
-  const nextStation = nextStationOrigin ?? null;
+  // 駅名に併記されたカッコ書き (命名権スポンサー名など) を TTS で読み上げないため、
+  // context に渡す手前で name / nameKatakana / nameRoman / nameTtsSegments から
+  // カッコと中身を落としておく (issue #1175)。表示用データには影響させない。
+  const nextStation = useMemo(
+    () =>
+      nextStationOrigin ? stripStationParensForTTS(nextStationOrigin) : null,
+    [nextStationOrigin]
+  );
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
   // 以前は new Set + find のチェーンで毎レンダー O(n²) だった。
@@ -197,12 +205,19 @@ export const useTTSText = (
       if (s.groupId == null) continue;
       if (seen.has(s.groupId)) continue;
       seen.add(s.groupId);
-      result.push(s);
+      result.push(stripStationParensForTTS(s));
     }
     return result;
   }, [slicedStationsOrigin]);
 
-  const afterNextStation = useAfterNextStation();
+  const afterNextStationOrigin = useAfterNextStation();
+  const afterNextStation = useMemo(
+    () =>
+      afterNextStationOrigin
+        ? stripStationParensForTTS(afterNextStationOrigin)
+        : undefined,
+    [afterNextStationOrigin]
+  );
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),

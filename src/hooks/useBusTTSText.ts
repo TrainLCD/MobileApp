@@ -8,6 +8,7 @@ import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { wrapPhoneme as ph } from '../utils/phoneme';
+import { stripStationParensForTTS } from './tts/formatters';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -116,17 +117,33 @@ export const useBusTTSText = (
     [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
-  const nextStation = nextStationOrigin ?? null;
+  // 駅名に併記されたカッコ書き (命名権スポンサー名など) を TTS で読み上げないため、
+  // template に渡す手前で TTS 関連フィールドからカッコと中身を落としておく
+  // (issue #1175)。表示用データには影響させない。
+  const nextStation = useMemo(
+    () =>
+      nextStationOrigin ? stripStationParensForTTS(nextStationOrigin) : null,
+    [nextStationOrigin]
+  );
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
-  const slicedStations = Array.from(
-    new Set(slicedStationsOrigin.map((s) => s.groupId))
-  )
-    .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as Station[];
+  const slicedStations = useMemo(
+    () =>
+      Array.from(new Set(slicedStationsOrigin.map((s) => s.groupId)))
+        .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
+        .filter((s): s is Station => !!s)
+        .map(stripStationParensForTTS),
+    [slicedStationsOrigin]
+  );
 
   const afterNextStationOrigin = useAfterNextStation();
-  const afterNextStation = afterNextStationOrigin;
+  const afterNextStation = useMemo(
+    () =>
+      afterNextStationOrigin
+        ? stripStationParensForTTS(afterNextStationOrigin)
+        : undefined,
+    [afterNextStationOrigin]
+  );
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
