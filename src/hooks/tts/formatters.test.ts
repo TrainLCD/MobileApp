@@ -1,6 +1,7 @@
 import type { Line, Station } from '~/@types/graphql';
 import { TtsAlphabet } from '~/@types/graphql';
 import {
+  dedupeLinesByTtsName,
   formatFirstConnectedLineEnPhrase,
   replaceJapaneseText,
   stripParensForTTS,
@@ -69,6 +70,66 @@ const makeLine = (overrides: Partial<Line>): Line =>
     nameRoman: null,
     ...overrides,
   }) as Line;
+
+describe('dedupeLinesByTtsName', () => {
+  it('returns the same array reference when length <= 1', () => {
+    const empty: Line[] = [];
+    expect(dedupeLinesByTtsName(empty)).toBe(empty);
+
+    const single = [makeLine({ id: 1, nameShort: 'A' })];
+    expect(dedupeLinesByTtsName(single)).toBe(single);
+  });
+
+  it('removes later lines whose nameShort already appeared', () => {
+    // 博多駅の方面別 鹿児島本線 を模した重複ケース。
+    const lines = [
+      makeLine({
+        id: 11,
+        nameShort: '鹿児島本線',
+        nameRoman: 'Kagoshima Line',
+      }),
+      makeLine({
+        id: 12,
+        nameShort: '鹿児島本線',
+        nameRoman: 'Kagoshima Line',
+      }),
+      makeLine({
+        id: 13,
+        nameShort: '福北ゆたか線',
+        nameRoman: 'Fukuhoku Yutaka Line',
+      }),
+    ];
+    const result = dedupeLinesByTtsName(lines);
+    expect(result.map((l) => l.id)).toEqual([11, 13]);
+  });
+
+  it('preserves the first occurrence order', () => {
+    const lines = [
+      makeLine({ id: 1, nameShort: 'A' }),
+      makeLine({ id: 2, nameShort: 'B' }),
+      makeLine({ id: 3, nameShort: 'A' }),
+      makeLine({ id: 4, nameShort: 'C' }),
+    ];
+    const result = dedupeLinesByTtsName(lines);
+    expect(result.map((l) => l.id)).toEqual([1, 2, 4]);
+  });
+
+  it('falls back to nameRoman when nameShort is missing', () => {
+    const lines = [
+      makeLine({ id: 1, nameShort: null, nameRoman: 'Foo Line' }),
+      makeLine({ id: 2, nameShort: null, nameRoman: 'Foo Line' }),
+    ];
+    expect(dedupeLinesByTtsName(lines).map((l) => l.id)).toEqual([1]);
+  });
+
+  it('keeps lines with no usable key (does not collapse all nameless lines)', () => {
+    const lines = [
+      makeLine({ id: 1, nameShort: null, nameRoman: null }),
+      makeLine({ id: 2, nameShort: null, nameRoman: null }),
+    ];
+    expect(dedupeLinesByTtsName(lines).map((l) => l.id)).toEqual([1, 2]);
+  });
+});
 
 describe('formatFirstConnectedLineEnPhrase', () => {
   it('returns empty when lines is empty', () => {

@@ -8,6 +8,7 @@ import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import { wrapPhoneme as ph } from '../utils/phoneme';
 import {
+  dedupeLinesByTtsName,
   formatFirstConnectedLineEnPhrase,
   formatJrWestStopsListEn,
   formatJrWestStopsListJa,
@@ -67,6 +68,13 @@ export const useTTSText = (
 
   const connectedLines = useConnectedLines();
   const transferLines = useTransferLines();
+  // 博多駅の鹿児島本線のように、データ上は方面別に同じ路線名が
+  // 別レコードで登録されているケースがある。表示用には両方残したいが、
+  // TTS では同じ路線名を続けて読み上げないように重複を除外する。
+  const ttsTransferLines = useMemo(
+    () => dedupeLinesByTtsName(transferLines),
+    [transferLines]
+  );
   const currentTrainTypeOrigin = useCurrentTrainType();
   const loopLineBoundJa = useLoopLineBound(false, 'JA');
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
@@ -318,7 +326,7 @@ export const useTTSText = (
       firstSpeech,
       isNextStopTerminus,
       isAfterNextStopTerminus,
-      hasTransferLines: transferLines.length > 0,
+      hasTransferLines: ttsTransferLines.length > 0,
       hasConnectedLines: connectedLines.length > 0,
       hasBetweenStations: betweenNextStation.length > 0,
       hasAfterNextStation: !!afterNextStation,
@@ -378,7 +386,7 @@ export const useTTSText = (
               currentTrainType.nameKatakana
             )
           : '普通'),
-      transferLinesListJa: formatLinesListJa(transferLines),
+      transferLinesListJa: formatLinesListJa(ttsTransferLines),
       connectedLinesListJa: formatLinesListJa(connectedLines),
       betweenStationsListJa: formatStationsListJa(betweenNextStation),
       afterNextStationJa: afterNextStation
@@ -412,7 +420,7 @@ export const useTTSText = (
       currentTrainTypeOrLocalEn: currentTrainType
         ? ph(currentTrainType.nameTtsSegments, currentTrainType.nameRoman)
         : 'Local',
-      transferLinesEnList: formatLinesListEn(transferLines),
+      transferLinesEnList: formatLinesListEn(ttsTransferLines),
       connectedLineEnPhrase: formatFirstConnectedLineEnPhrase(connectedLines),
       afterNextStationEn: afterNextStation
         ? ph(afterNextStation.nameTtsSegments, afterNextStation.nameRoman)
@@ -446,7 +454,7 @@ export const useTTSText = (
     nextStationNumberText,
     selectedBound,
     shouldAnnounceJrWestStopList,
-    transferLines,
+    ttsTransferLines,
     viaStation,
     yamanoteTrainTypeEn,
     yamanoteTrainTypeJa,
