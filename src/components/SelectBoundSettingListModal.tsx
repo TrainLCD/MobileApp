@@ -87,6 +87,9 @@ type Props = {
   trainTypeLoading?: boolean;
   onTrainTypePress?: () => void;
   trainTypeDisabled?: boolean;
+  themeLabel?: string;
+  themeColor?: string;
+  onThemePress?: () => void;
 };
 
 export const SelectBoundSettingListModal: React.FC<Props> = ({
@@ -100,6 +103,9 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   trainTypeLoading,
   onTrainTypePress,
   trainTypeDisabled,
+  themeLabel,
+  themeColor,
+  onThemePress,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -111,6 +117,16 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   const trainTypeTextColor = useMemo(
     () => getTrainTypeTextColor(trainTypeColor),
     [trainTypeColor]
+  );
+
+  const themeTextColor = useMemo(
+    () => getTrainTypeTextColor(themeColor),
+    [themeColor]
+  );
+
+  const normalizedThemeColor = useMemo(
+    () => normalizeTrainTypeColor(themeColor),
+    [themeColor]
   );
 
   return (
@@ -189,6 +205,38 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                   </View>
                 </>
               )}
+            </TouchableOpacity>
+          )}
+          {onThemePress && (
+            <TouchableOpacity
+              onPress={onThemePress}
+              style={[
+                styles.trainTypeButton,
+                {
+                  backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
+              ]}
+            >
+              <Typography style={styles.trainTypeLabel}>
+                {translate('theme')}
+              </Typography>
+              <View
+                style={[
+                  styles.trainTypeNamePanel,
+                  {
+                    backgroundColor: normalizedThemeColor,
+                    borderRadius: isLEDTheme ? 0 : 8,
+                  },
+                ]}
+              >
+                <Typography
+                  style={[styles.trainTypeNameText, { color: themeTextColor }]}
+                  numberOfLines={1}
+                >
+                  {themeLabel ?? translate('autoTheme')}
+                </Typography>
+              </View>
             </TouchableOpacity>
           )}
           <Button
