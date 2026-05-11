@@ -30,6 +30,7 @@ import {
   useCurrentLine,
   useFeedback,
   useWarningInfo,
+  useWrongDirectionDetectorEffect,
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import type { ThemePreference } from '../models/Theme';
@@ -65,6 +66,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   useCheckStoreVersion();
   useAppleWatch();
   useAndroidWearable();
+  // 逆方向検知ロジックの計算を 1 箇所だけで実行し、結果は atom 経由で他のフックに配る。
+  // useRefreshStation / useWarningInfo から個別に呼ぶと位置更新ごとに getDistance と
+  // state 更新が二重に走ってバッテリーを余計に消費するため、ここに集約している。
+  useWrongDirectionDetectorEffect();
 
   const user = useCachedInitAnonymousUser();
   const currentLine = useCurrentLine();

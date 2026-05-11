@@ -42,6 +42,7 @@ export const useRefreshStation = (): void => {
   const accuracy = location?.coords.accuracy;
 
   const nextStation = useNextStation();
+  const nextStationId = nextStation?.id ?? null;
   const approachingNotifiedIdRef = useRef<number | null>(null);
   const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
@@ -55,7 +56,9 @@ export const useRefreshStation = (): void => {
   const { arrivedThreshold, approachingThreshold } = useThreshold();
   const { isWrongDirection, isLoopLineWrongDirection } =
     useWrongDirectionDetector();
-  const wrongDirectionNotifiedRef = useRef(false);
+  // 同一の次駅区間で逆方向通知が複数回鳴るのを防ぐため、通知済みの次駅IDを記憶する。
+  // isWrongDirection の単なる false 復帰ではリセットせず、次駅が変わるまで保持する。
+  const lastNotifiedWrongDirectionStationIdRef = useRef<number | null>(null);
 
   // GPS精度に応じた実効閾値を算出する
   // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
@@ -186,24 +189,37 @@ export const useRefreshStation = (): void => {
   ]);
 
   useEffect(() => {
+    // 次駅が変わった場合は通知済みフラグをクリアし、新しい区間で再通知できるようにする
     if (
-      wrongDirectionNotifyEnabled &&
-      (isWrongDirection || isLoopLineWrongDirection) &&
-      !wrongDirectionNotifiedRef.current
+      lastNotifiedWrongDirectionStationIdRef.current !== null &&
+      lastNotifiedWrongDirectionStationIdRef.current !== nextStationId
     ) {
-      const bodyKey = isLoopLineWrongDirection
-        ? 'wrongDirectionLoopLineWarning'
-        : 'wrongDirectionWarning';
-      sendNotificationAsync({
-        title: translate('wrongDirectionNotificationTitle'),
-        body: translate(bodyKey),
-      }).catch(() => {});
-      wrongDirectionNotifiedRef.current = true;
+      lastNotifiedWrongDirectionStationIdRef.current = null;
     }
-    if (!isWrongDirection && !isLoopLineWrongDirection) {
-      wrongDirectionNotifiedRef.current = false;
+
+    if (
+      !wrongDirectionNotifyEnabled ||
+      (!isWrongDirection && !isLoopLineWrongDirection) ||
+      nextStationId == null ||
+      lastNotifiedWrongDirectionStationIdRef.current === nextStationId
+    ) {
+      return;
     }
-  }, [isWrongDirection, isLoopLineWrongDirection, wrongDirectionNotifyEnabled]);
+
+    const bodyKey = isLoopLineWrongDirection
+      ? 'wrongDirectionLoopLineWarning'
+      : 'wrongDirectionWarning';
+    sendNotificationAsync({
+      title: translate('wrongDirectionNotificationTitle'),
+      body: translate(bodyKey),
+    }).catch(() => {});
+    lastNotifiedWrongDirectionStationIdRef.current = nextStationId;
+  }, [
+    isWrongDirection,
+    isLoopLineWrongDirection,
+    nextStationId,
+    wrongDirectionNotifyEnabled,
+  ]);
 
   useEffect(() => {
     if (!nearestStation) {
