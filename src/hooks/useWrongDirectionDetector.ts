@@ -79,13 +79,17 @@ export const useWrongDirectionDetectorEffect = (): void => {
   );
 
   // 検知状態を全てリセットするヘルパー（誤判定要因が発生した際の完全リセット用）
+  // detected=false の場合 writeState は loopLine 引数に関わらず両フラグを false にするため、
+  // ここでは isLoopLine を渡さない。これにより isLoopLine の変化で
+  // resetDetectionState の参照が更新されることを防ぎ、依存している useEffect の
+  // 不要な再実行（と意図しないリセット）を避ける。
   const resetDetectionState = useCallback(() => {
     prevDistanceRef.current = null;
     consecutiveIncreaseCountRef.current = 0;
     cumulativeIncreaseRef.current = 0;
     notifiedForStationIdRef.current = undefined;
-    writeState(false, isLoopLine);
-  }, [isLoopLine, writeState]);
+    writeState(false, false);
+  }, [writeState]);
 
   // 到着時にリセット
   useEffect(() => {
