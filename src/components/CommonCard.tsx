@@ -154,6 +154,9 @@ const styles = StyleSheet.create({
   },
 });
 
+const PAREN_GROUP_REGEX = /([（(][^）)]*[）)])/;
+const PAREN_WRAPPED_REGEX = /^[（(][^）)]*[）)]$/;
+
 type SubtitleProps = {
   inboundText: string;
   outboundText: string;
@@ -357,7 +360,7 @@ export const CommonCard: React.FC<Props> = ({
     }
     return {
       titlePrefix: prefix,
-      titleParts: main.split(/([（(][^）)]*[）)])/),
+      titleParts: main.split(PAREN_GROUP_REGEX),
       titleSuffix: suffix,
     };
   }, [titleOrLineName, shrinkBoundAffix]);
@@ -470,7 +473,7 @@ export const CommonCard: React.FC<Props> = ({
               <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
             ) : null}
             {titleParts.map((part, index) =>
-              /^[（(][^）)]*[）)]$/.test(part) ? (
+              PAREN_WRAPPED_REGEX.test(part) ? (
                 <Typography key={`${index}-${part}`} style={styles.titleParens}>
                   {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
                     ? ' '
