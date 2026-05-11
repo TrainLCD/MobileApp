@@ -70,6 +70,10 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     fontWeight: 'bold',
   },
+  trainTypeNameParens: {
+    fontSize: RFValue(9),
+    fontWeight: 'bold',
+  },
   trainTypeDisabledText: {
     fontSize: isTablet ? RFValue(12) : RFValue(14),
     fontWeight: 'bold',
@@ -77,6 +81,19 @@ const styles = StyleSheet.create({
   },
   heading: { width: '100%' },
 });
+
+const renderWithSmallParens = (text: string) => {
+  const parts = text.split(/([（(][^）)]*[）)])/);
+  return parts.map((part, index) =>
+    /^[（(][^）)]*[）)]$/.test(part) ? (
+      <Typography key={`${index}-${part}`} style={styles.trainTypeNameParens}>
+        {part}
+      </Typography>
+    ) : (
+      part
+    )
+  );
+};
 
 type Props = {
   visible: boolean;
@@ -207,7 +224,9 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                       ]}
                       numberOfLines={1}
                     >
-                      {trainTypeName || translate('trainTypeDefault')}
+                      {renderWithSmallParens(
+                        trainTypeName || translate('trainTypeDefault')
+                      )}
                     </Typography>
                   </View>
                 </>
@@ -241,7 +260,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                   style={[styles.trainTypeNameText, { color: themeTextColor }]}
                   numberOfLines={1}
                 >
-                  {themeLabel ?? translate('autoTheme')}
+                  {renderWithSmallParens(themeLabel ?? translate('autoTheme'))}
                 </Typography>
               </View>
             </TouchableOpacity>
