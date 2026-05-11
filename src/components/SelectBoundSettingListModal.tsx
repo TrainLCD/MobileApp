@@ -83,9 +83,9 @@ const styles = StyleSheet.create({
 });
 
 const renderWithSmallParens = (text: string) => {
-  const parts = text.split(/(\([^)]*\))/);
+  const parts = text.split(/([（(][^）)]*[）)])/);
   return parts.map((part, index) =>
-    /^\(.*\)$/.test(part) ? (
+    /^[（(][^）)]*[）)]$/.test(part) ? (
       <Typography key={`${index}-${part}`} style={styles.trainTypeNameParens}>
         {part}
       </Typography>
