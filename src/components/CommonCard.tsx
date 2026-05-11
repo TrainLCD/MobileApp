@@ -223,10 +223,33 @@ export const CommonCard: React.FC<Props> = ({
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
-  const mark = useMemo(
-    () => getLineMark({ line, stationNumbers: targetStation?.stationNumbers }),
-    [getLineMark, line, targetStation?.stationNumbers]
-  );
+  const mark = useMemo(() => {
+    const m = getLineMark({
+      line,
+      stationNumbers: targetStation?.stationNumbers,
+    });
+    if (!m) {
+      return null;
+    }
+    // 路線シンボルはあるが当該駅の駅番号が無く、画像 (signPath) で代替もできない場合は
+    // NumberingIcon が中途半端な記号だけの描画になるためマーク自体を返さない
+    if (
+      line.lineSymbols?.length &&
+      targetStation &&
+      !m.signPath &&
+      !m.btUnionSignPaths?.length
+    ) {
+      const hasMatchingStationNumber = targetStation.stationNumbers?.some(
+        (sn) =>
+          sn?.stationNumber &&
+          line.lineSymbols?.some((sym) => sym?.symbol === sn?.lineSymbol)
+      );
+      if (!hasMatchingStationNumber) {
+        return null;
+      }
+    }
+    return m;
+  }, [getLineMark, line, targetStation]);
   const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
