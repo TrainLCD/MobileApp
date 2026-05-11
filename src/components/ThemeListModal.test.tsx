@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
 import { THEME_PREFERENCE } from '~/models/Theme';
+import { getSettingsThemes } from '~/utils/theme';
 import { ThemeListModal } from './ThemeListModal';
 
 jest.mock('jotai', () => ({
@@ -42,15 +43,16 @@ describe('ThemeListModal', () => {
     jest.clearAllMocks();
   });
 
-  it('全テーマの選択肢が表示される', () => {
+  it('getSettingsThemes() の全テーマがレンダリングされる', () => {
+    const themes = getSettingsThemes();
     const { getByText } = render(<ThemeListModal {...defaultProps} />);
-    // 翻訳キーをそのまま返すモックなので、各テーマのラベルキーが描画される
-    expect(getByText('autoTheme')).toBeTruthy();
-    expect(getByText('tokyoMetroLike')).toBeTruthy();
-    expect(getByText('ledLike')).toBeTruthy();
+    for (const theme of themes) {
+      expect(getByText(theme.label)).toBeTruthy();
+    }
   });
 
-  it('現在選択中のテーマは inUse、その他は select と表示される', () => {
+  it('現在選択中のテーマのみ inUse、他は全て select と表示される', () => {
+    const themes = getSettingsThemes();
     const { getAllByText } = render(
       <ThemeListModal
         {...defaultProps}
@@ -58,8 +60,7 @@ describe('ThemeListModal', () => {
       />
     );
     expect(getAllByText('inUse')).toHaveLength(1);
-    // 全テーマ数 - 1（選択中以外）が select 表示
-    expect(getAllByText('select').length).toBeGreaterThan(1);
+    expect(getAllByText('select')).toHaveLength(themes.length - 1);
   });
 
   it('テーマを押すと onSelect がそのテーマで呼ばれる', () => {

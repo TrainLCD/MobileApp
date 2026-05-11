@@ -192,6 +192,7 @@ export const ThemeListModal: React.FC<Props> = ({
         style={styles.list}
         contentContainerStyle={styles.listContent}
         removeClippedSubviews={Platform.OS === 'android'}
+        initialNumToRender={items.length}
       />
       <View style={styles.closeButtonContainer}>
         <Button
