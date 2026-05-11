@@ -81,6 +81,29 @@ const replaceStationNameJa = (
 export const formatLinesListJa = (lines: Line[]): string =>
   lines.map(replaceLineNameJa).join('、');
 
+/**
+ * 同じ路線名が複数レコードに分かれて返ってくるケース (例: 博多駅の方面別
+ * 鹿児島本線) で、TTS の乗換案内が同じ路線名を連続で読み上げるのを防ぐため、
+ * `nameShort` (fallback で `nameRoman`) が一致する Line を最初の出現だけ残して
+ * 間引く。表示用の経路は両方残したいので、TTS 直前のこの段でのみ適用する。
+ * `useTransferLinesFromStation` が `nameShort` / `nameRoman` から既にカッコ書き
+ * を取り除いているため、ここでは生の文字列比較で十分。
+ */
+export const dedupeLinesByTtsName = (lines: Line[]): Line[] => {
+  if (lines.length <= 1) return lines;
+  const seen = new Set<string>();
+  const result: Line[] = [];
+  for (const line of lines) {
+    const key = line.nameShort ?? line.nameRoman ?? '';
+    if (key) {
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
+    result.push(line);
+  }
+  return result;
+};
+
 /** 駅名を sub alias 付きで `、` 連結する。 */
 export const formatStationsListJa = (stations: Station[]): string =>
   stations.map(replaceStationNameJa).join('、');
