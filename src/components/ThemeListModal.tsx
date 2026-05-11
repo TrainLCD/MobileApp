@@ -43,6 +43,9 @@ const styles = StyleSheet.create({
     width: '100%',
     overflow: 'hidden',
   },
+  list: {
+    flex: 1,
+  },
   headerContainer: {
     height: HEADER_HEIGHT,
     justifyContent: 'center',
@@ -186,6 +189,7 @@ export const ThemeListModal: React.FC<Props> = ({
         data={items}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        style={styles.list}
         contentContainerStyle={styles.listContent}
         removeClippedSubviews={Platform.OS === 'android'}
       />
