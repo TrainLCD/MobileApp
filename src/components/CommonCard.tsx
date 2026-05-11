@@ -154,6 +154,9 @@ const styles = StyleSheet.create({
   },
 });
 
+const PAREN_GROUP_REGEX = /([（(][^）)]*[）)])/;
+const PAREN_WRAPPED_REGEX = /^[（(][^）)]*[）)]$/;
+
 type SubtitleProps = {
   inboundText: string;
   outboundText: string;
@@ -342,7 +345,7 @@ export const CommonCard: React.FC<Props> = ({
       if (isJapanese) {
         // 「○○方面」末尾の「方面」を分離（カッコ内の「方面」は対象外）
         const match = /^(.+?)方面$/.exec(main);
-        if (match && !match[1].endsWith(')')) {
+        if (match && !match[1].endsWith(')') && !match[1].endsWith('）')) {
           main = match[1];
           suffix = '方面';
         }
@@ -357,7 +360,7 @@ export const CommonCard: React.FC<Props> = ({
     }
     return {
       titlePrefix: prefix,
-      titleParts: main.split(/(\([^)]*\))/),
+      titleParts: main.split(PAREN_GROUP_REGEX),
       titleSuffix: suffix,
     };
   }, [titleOrLineName, shrinkBoundAffix]);
@@ -470,7 +473,7 @@ export const CommonCard: React.FC<Props> = ({
               <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
             ) : null}
             {titleParts.map((part, index) =>
-              /^\(.*\)$/.test(part) ? (
+              PAREN_WRAPPED_REGEX.test(part) ? (
                 <Typography key={`${index}-${part}`} style={styles.titleParens}>
                   {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
                     ? ' '
