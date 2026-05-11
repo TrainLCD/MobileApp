@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { useMemo } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import {
@@ -29,8 +29,10 @@ const styles = StyleSheet.create({
     marginTop: 24,
     width: '100%',
   },
-  container: {
-    justifyContent: 'center',
+  scrollView: {
+    width: '100%',
+  },
+  scrollContent: {
     alignItems: 'center',
   },
   closeButton: { marginTop: 24 },
@@ -150,7 +152,12 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
         },
       ]}
     >
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Heading style={styles.heading}>{translate('settings')}</Heading>
 
         <View style={styles.buttonsContainer}>
@@ -247,7 +254,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
             {translate('close')}
           </Button>
         </View>
-      </View>
+      </ScrollView>
     </CustomModal>
   );
 };
