@@ -93,8 +93,11 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
 
   const horizontalAdditionalStyle = useMemo(() => {
     if (!hasNumbering) {
+      // iPadでは stationNumber が position: 'relative' で約20px分の高さを占めるため、
+      // ナンバリングが無い場合に marginBottom を縮めすぎると駅名がバーへ沈み込む。
+      // with-numbering と同じ値を使い、stationNumber 不在分だけ自然に下がるに留める。
       return {
-        marginBottom: isTablet ? dim.height / 14 : dim.height / 10,
+        marginBottom: dim.height / 10,
         width: isTablet ? dim.height / 3 : dim.height / 2.5,
       };
     }
