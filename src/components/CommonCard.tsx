@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   titleParens: {
-    fontSize: RFValue(13),
+    fontSize: isTablet ? 13 : RFValue(13),
     fontWeight: 'bold',
     color: '#fff',
   },
