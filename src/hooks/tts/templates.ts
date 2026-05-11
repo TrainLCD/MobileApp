@@ -103,7 +103,7 @@ const JR_WEST: ThemeTemplate = {
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}'
   ),
   ARRIVING: t(
-    '{#if isNextStopTerminus}',
+    '{#if nextStationIsBound}',
     '終点、{nextStationJa}です。',
     'ご乗車ありがとうございました。',
     'まもなく{nextStationJa}、{nextStationJa}です。',

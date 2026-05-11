@@ -701,6 +701,11 @@ describe('terminus announcement (#5915)', () => {
   const MID_BOUND_CASES = [
     { theme: 'JR_WEST', state: 'NEXT' as HeaderStoppingState, en: 'terminal' },
     {
+      theme: 'JR_WEST',
+      state: 'ARRIVING' as HeaderStoppingState,
+      en: 'terminal',
+    },
+    {
       theme: 'JR_KYUSHU',
       state: 'NEXT' as HeaderStoppingState,
       en: 'terminal',
