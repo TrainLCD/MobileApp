@@ -24,7 +24,7 @@ export default ({ config }: ConfigContext) => ({
       {
         url: 'https://sentry.io/',
         note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
-        project: process.env.SENTRY_PROJECT_NAME || '',
+        project: 'trainlcd',
         organization: 'tinykitten',
       },
     ],
@@ -53,7 +53,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2627',
+    buildNumber: '2628',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -70,7 +70,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000414,
+    versionCode: 100000415,
   },
   owner: 'trainlcd',
 });
