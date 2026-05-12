@@ -24,7 +24,7 @@ export default ({ config }: ConfigContext) => ({
       {
         url: 'https://sentry.io/',
         note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
-        project: process.env.SENTRY_PROJECT_NAME || '',
+        project: 'trainlcd',
         organization: 'tinykitten',
       },
     ],
