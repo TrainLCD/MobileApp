@@ -7,6 +7,7 @@ import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
+import notifyState from '~/store/atoms/notify';
 import stationState from '~/store/atoms/station';
 import wrongDirectionAtom from '~/store/atoms/wrongDirection';
 import { useLoopLine } from './useLoopLine';
@@ -62,7 +63,10 @@ const makeLocation = (
   timestamp,
 });
 
-const seedStore = (store: ReturnType<typeof createStore>) => {
+const seedStore = (
+  store: ReturnType<typeof createStore>,
+  { wrongDirectionNotifyEnabled = true } = {}
+) => {
   // 「逆走通知が動くべき」前提条件を満たす状態を作る
   store.set(stationState, {
     arrived: false,
@@ -81,6 +85,10 @@ const seedStore = (store: ReturnType<typeof createStore>) => {
     ...prev,
     autoModeEnabled: false,
   }));
+  store.set(notifyState, {
+    targetStationIds: [],
+    wrongDirectionNotifyEnabled,
+  });
 };
 
 const setLocationLon = (
@@ -200,6 +208,40 @@ describe('useWrongDirectionDetector (hysteresis)', () => {
     });
 
     expect(result.current.isWrongDirection).toBe(false);
+  });
+
+  it('wrongDirectionNotifyEnabled が false のときは逆方向と判定されない', () => {
+    const store = createStore();
+    seedStore(store, { wrongDirectionNotifyEnabled: false });
+
+    const { result } = renderDetector(store);
+
+    act(() => setLocationLon(store, BASE_LON));
+    advanceWest(store, [-0.001, -0.001, -0.001, -0.001, -0.001]);
+
+    expect(result.current.isWrongDirection).toBe(false);
+    expect(result.current.isLoopLineWrongDirection).toBe(false);
+  });
+
+  it('逆方向と判定された状態で wrongDirectionNotifyEnabled が false に変わるとリセットされる', () => {
+    const store = createStore();
+    seedStore(store);
+
+    const { result } = renderDetector(store);
+
+    act(() => setLocationLon(store, BASE_LON));
+    advanceWest(store, [-0.001, -0.001, -0.001, -0.001, -0.001]);
+    expect(result.current.isWrongDirection).toBe(true);
+
+    act(() => {
+      store.set(notifyState, (prev) => ({
+        ...prev,
+        wrongDirectionNotifyEnabled: false,
+      }));
+    });
+
+    expect(result.current.isWrongDirection).toBe(false);
+    expect(result.current.isLoopLineWrongDirection).toBe(false);
   });
 
   it('公開フックは atom を読むだけで、Effectフックを呼ばなくても初期値を返す', () => {
