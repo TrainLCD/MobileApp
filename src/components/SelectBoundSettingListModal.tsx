@@ -1,7 +1,14 @@
+import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import {
@@ -20,8 +27,6 @@ import Typography from './Typography';
 const styles = StyleSheet.create({
   contentView: {
     width: '100%',
-    paddingVertical: 24,
-    paddingHorizontal: 24,
     minHeight: 256,
   },
   buttonsContainer: {
@@ -34,8 +39,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 96,
   },
-  closeButton: { marginTop: 24 },
+  closeButtonContainer: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    width: '100%',
+    height: 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  closeButton: { width: '100%' },
   closeButtonText: { fontWeight: 'bold' },
   trainTypeButton: {
     flexDirection: 'row',
@@ -272,15 +290,36 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
               </View>
             </TouchableOpacity>
           )}
-          <Button
-            style={styles.closeButton}
-            textStyle={styles.closeButtonText}
-            onPress={onClose}
-          >
-            {translate('close')}
-          </Button>
         </View>
       </ScrollView>
+      <View
+        style={[
+          styles.closeButtonContainer,
+          { backgroundColor: isLEDTheme ? '#212121' : undefined },
+        ]}
+      >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={onClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
     </CustomModal>
   );
 };
