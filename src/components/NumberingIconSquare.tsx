@@ -39,8 +39,11 @@ const styles = StyleSheet.create({
   // TLC デフォルト: ヘッダー等の大きなスペース用 (0.7x)
   tlcRoot: {
     justifyContent: 'center',
+    alignItems: 'center',
   },
   tlcContainer: {
+    alignItems: 'center',
+    alignSelf: 'center',
     backgroundColor: '#231e1f',
     borderWidth: 1,
     borderColor: 'white',
