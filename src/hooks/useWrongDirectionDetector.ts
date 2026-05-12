@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
+import notifyState from '~/store/atoms/notify';
 import stationState from '~/store/atoms/station';
 import wrongDirectionAtom, {
   type WrongDirectionState,
@@ -35,6 +36,7 @@ export const useWrongDirectionDetectorEffect = (): void => {
   const location = useAtomValue(locationAtom);
   const { arrived, selectedBound } = useAtomValue(stationState);
   const { autoModeEnabled } = useAtomValue(navigationState);
+  const { wrongDirectionNotifyEnabled } = useAtomValue(notifyState);
   const nextStation = useNextStation();
   const { isLoopLine } = useLoopLine();
   const setWrongDirection = useSetAtom(wrongDirectionAtom);
@@ -108,7 +110,14 @@ export const useWrongDirectionDetectorEffect = (): void => {
   // 位置更新ごとに距離変化を計算し、逆方向判定を行う
   useEffect(() => {
     // 前提条件を満たさない場合は検知状態をリセットして終了
+    // 逆走通知設定が OFF の場合も検知を完全停止する。
+    // 検知ロジック自体を止めることで `getDistance` 計算と atom 書き込みが
+    // 発生しなくなり、位置更新ごとの CPU 消費を最小化する。
+    // 結果として画面の逆走警告パネル（useWarningInfo の `isWrongDirection`
+    // 分岐）も出なくなるが、他の警告（offline / badAccuracy など）は
+    // 影響を受けない。
     if (
+      !wrongDirectionNotifyEnabled ||
       selectedBoundId == null ||
       autoModeEnabled ||
       latitude == null ||
@@ -186,6 +195,7 @@ export const useWrongDirectionDetectorEffect = (): void => {
     nextStationLon,
     resetDetectionState,
     selectedBoundId,
+    wrongDirectionNotifyEnabled,
     writeState,
   ]);
 };
