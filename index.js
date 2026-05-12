@@ -6,30 +6,12 @@ import App from './src';
 import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
 import { setLocation } from './src/store/atoms/location';
 
-if (process.env.NODE_ENV === 'production') {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    enableAutoSessionTracking: true,
-    tracesSampleRate: 1.0,
-    profilingOptions: {
-      profileSessionSampleRate: 1.0,
-      lifecycle: 'trace',
-      startOnAppStart: true,
-    },
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-    integrations: [
-      Sentry.mobileReplayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-        privacyOptions: {
-          maskAllInputs: true,
-          blockClass: ['sensitive-screen', 'payment-view'],
-        },
-      }),
-    ],
-  });
-}
+Sentry.init({
+  dsn: SENTRY_DSN,
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+});
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
   TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
