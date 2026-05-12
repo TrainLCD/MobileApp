@@ -11,7 +11,11 @@ if (process.env.NODE_ENV === 'production') {
     dsn: SENTRY_DSN,
     enableAutoSessionTracking: true,
     tracesSampleRate: 1.0,
-    profilesSampleRate: 1.0,
+    profilingOptions: {
+      profileSessionSampleRate: 1.0,
+      lifecycle: 'trace',
+      startOnAppStart: true,
+    },
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
     integrations: [
