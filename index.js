@@ -8,9 +8,8 @@ import { setLocation } from './src/store/atoms/location';
 
 Sentry.init({
   dsn: SENTRY_DSN,
-  sendDefaultPii: true,
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
+  tracesSampleRate: 0.1,
+  profilesSampleRate: 0.02,
 });
 
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
