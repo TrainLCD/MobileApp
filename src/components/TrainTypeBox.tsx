@@ -116,31 +116,33 @@ const TrainTypeBox: React.FC<Props> = ({
 
   const isBus = isBusLine(currentLine);
 
+  const localKey = localTypePrefix ? 'Local' : 'local';
+
   const localTypeText = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
-        return translate(`${localTypePrefix}localEn`);
+        return translate(`${localTypePrefix}${localKey}En`);
       case 'ZH':
-        return translate(`${localTypePrefix}localZh`);
+        return translate(`${localTypePrefix}${localKey}Zh`);
       case 'KO':
-        return translate(`${localTypePrefix}localKo`);
+        return translate(`${localTypePrefix}${localKey}Ko`);
       default:
-        return translate(`${localTypePrefix}local`);
+        return translate(`${localTypePrefix}${localKey}`);
     }
-  }, [headerLangState, localTypePrefix]);
+  }, [headerLangState, localTypePrefix, localKey]);
 
   const trainTypeNameJa = (trainType?.name || localTypeText)?.replace(
     parenthesisRegexp,
     ''
   );
   const trainTypeNameR = truncateTrainType(
-    trainType?.nameRoman || translate(`${localTypePrefix}localEn`)
+    trainType?.nameRoman || translate(`${localTypePrefix}${localKey}En`)
   );
   const trainTypeNameZh = truncateTrainType(
-    trainType?.nameChinese || translate(`${localTypePrefix}localZh`)
+    trainType?.nameChinese || translate(`${localTypePrefix}${localKey}Zh`)
   );
   const trainTypeNameKo = truncateTrainType(
-    trainType?.nameKorean || translate(`${localTypePrefix}localKo`)
+    trainType?.nameKorean || translate(`${localTypePrefix}${localKey}Ko`)
   );
 
   const lineNameJa = currentLine?.nameShort?.replace(parenthesisRegexp, '');
