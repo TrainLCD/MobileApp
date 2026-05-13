@@ -1,10 +1,9 @@
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
 import { Dimensions } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import {
-  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
   locationAtom,
 } from '~/store/atoms/location';
@@ -34,14 +33,16 @@ jest.mock('~/hooks', () => ({
 // Mock utils
 jest.mock('~/utils/accuracyChart', () => ({
   generateAccuracyChart: jest.fn((history: number[] | null | undefined) => {
-    // Mock implementation that returns AccuracyBlock[] format
+    // Mock implementation that mirrors generateAccuracyChart's invalid-value filter
     if (!history || history.length === 0) {
       return [];
     }
-    return history.map((_accuracy) => ({
-      char: '▇',
-      color: '#ffffff',
-    }));
+    return history
+      .filter((value) => Number.isFinite(value) && value >= 0)
+      .map(() => ({
+        char: '▇',
+        color: '#ffffff',
+      }));
   }),
 }));
 
@@ -78,19 +79,14 @@ describe('DevOverlay', () => {
         accuracy: 15,
       },
     },
-    accuracyHistory = [10, 15, 20],
     backgroundLocationTracking = false,
   }: {
     location?: unknown;
-    accuracyHistory?: unknown;
     backgroundLocationTracking?: boolean;
   } = {}) => {
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
         return location as never;
-      }
-      if (atom === accuracyHistoryAtom) {
-        return accuracyHistory as never;
       }
       if (atom === backgroundLocationTrackingAtom) {
         return backgroundLocationTracking as never;
@@ -157,7 +153,6 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: 10, accuracy: 15 },
         },
-        accuracyHistory: [10, 15, 20],
         backgroundLocationTracking: true,
       });
 
@@ -193,7 +188,6 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: 10, accuracy: 15.9 },
         },
-        accuracyHistory: [10, 15, 20],
         backgroundLocationTracking: false,
       });
 
@@ -220,11 +214,54 @@ describe('DevOverlay', () => {
       );
     });
 
-    it('精度チャートを表示する', () => {
+    it('精度チャートをマウント直後に1サンプル分描画する', () => {
       const { getByTestId } = render(<DevOverlay />);
+      // マウント時の即時サンプリングで1件積まれる
       expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-        '▇▇▇'
+        /^▇$/
       );
+    });
+
+    it('精度チャートが1秒ごとに無条件で更新される', () => {
+      jest.useFakeTimers();
+      try {
+        const { getByTestId } = render(<DevOverlay />);
+        // 初回サンプル
+        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
+          /^▇$/
+        );
+
+        act(() => {
+          jest.advanceTimersByTime(3000);
+        });
+
+        // 位置情報イベントが届かなくても interval 由来で履歴が積み増される
+        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
+          /^▇{4}$/
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('位置情報が取得できない状態で精度チャートが空のまま維持される', () => {
+      setupAtomValues({
+        location: null,
+        backgroundLocationTracking: false,
+      });
+      jest.useFakeTimers();
+      try {
+        const { getByTestId } = render(<DevOverlay />);
+        act(() => {
+          jest.advanceTimersByTime(5000);
+        });
+        // NaN だけが積まれるため generateAccuracyChart 側で全件除外され '---' になる
+        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
+          '---'
+        );
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
@@ -232,7 +269,6 @@ describe('DevOverlay', () => {
     it('位置情報がnullの場合にクラッシュしない', () => {
       setupAtomValues({
         location: null,
-        accuracyHistory: [],
         backgroundLocationTracking: false,
       });
 
@@ -246,7 +282,6 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: null, accuracy: 15 },
         },
-        accuracyHistory: [],
         backgroundLocationTracking: false,
       });
 
@@ -259,7 +294,6 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: -5, accuracy: 15 },
         },
-        accuracyHistory: [],
         backgroundLocationTracking: false,
       });
 
@@ -272,40 +306,11 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: 10, accuracy: null },
         },
-        accuracyHistory: [],
         backgroundLocationTracking: false,
       });
 
       const { getByTestId } = render(<DevOverlay />);
       expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('--');
-    });
-
-    it('accuracyHistoryが空配列の場合にクラッシュしない', () => {
-      setupAtomValues({
-        location: {
-          coords: { speed: 10, accuracy: 15 },
-        },
-        accuracyHistory: [],
-        backgroundLocationTracking: false,
-      });
-
-      expect(() => {
-        render(<DevOverlay />);
-      }).not.toThrow();
-    });
-
-    it('accuracyHistoryがnullの場合にクラッシュしない', () => {
-      setupAtomValues({
-        location: {
-          coords: { speed: 10, accuracy: 15 },
-        },
-        accuracyHistory: null,
-        backgroundLocationTracking: false,
-      });
-
-      expect(() => {
-        render(<DevOverlay />);
-      }).not.toThrow();
     });
 
     it('次の駅までの距離が0の場合に適切に表示する', () => {
@@ -338,7 +343,6 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: 0, accuracy: 15 },
         },
-        accuracyHistory: [],
         backgroundLocationTracking: false,
       });
 
@@ -351,7 +355,6 @@ describe('DevOverlay', () => {
         location: {
           coords: { speed: 13.89, accuracy: 15 },
         },
-        accuracyHistory: [],
         backgroundLocationTracking: false,
       });
 
