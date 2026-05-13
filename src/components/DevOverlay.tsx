@@ -17,7 +17,6 @@ import {
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import {
-  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
   locationAtom,
 } from '~/store/atoms/location';
@@ -25,6 +24,12 @@ import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
 
 const EXPAND_DURATION = 280;
+
+// 1Hzで現在の測位精度をサンプリングして履歴に積む。
+// 位置情報イベントの到着有無に依存せず確実にチャートを描き換えることで、
+// 「GPSが止まっているのに動いて見える」状態を視覚的に区別できるようにする。
+const ACCURACY_CHART_SAMPLE_INTERVAL_MS = 1000;
+const ACCURACY_CHART_LIMIT = 12;
 
 const PANEL_BORDER = 'rgba(255,255,255,0.18)';
 const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
@@ -293,7 +298,6 @@ const DevOverlay: React.FC = () => {
   const location = useAtomValue(locationAtom);
   const speed = location?.coords?.speed;
   const accuracy = location?.coords?.accuracy;
-  const accuracyHistory = useAtomValue(accuracyHistoryAtom);
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
@@ -314,9 +318,33 @@ const DevOverlay: React.FC = () => {
     [coordsSpeed, speed]
   );
 
+  // 最新の測位精度を ref で保持し、setInterval から常に最新値を参照できるようにする
+  const latestAccuracyRef = useRef<number | null | undefined>(accuracy);
+  useEffect(() => {
+    latestAccuracyRef.current = accuracy;
+  }, [accuracy]);
+
+  const [chartHistory, setChartHistory] = useState<number[]>([]);
+
+  useEffect(() => {
+    const pushSample = () => {
+      const current = latestAccuracyRef.current;
+      // 無効値(null/NaN/負値)は NaN を積み、generateAccuracyChart 側で除外させる。
+      // 位置情報が取れない状態が続くとチャートが自然に痩せていき、停止が一目で分かる。
+      const sample =
+        current != null && Number.isFinite(current) && current >= 0
+          ? current
+          : Number.NaN;
+      setChartHistory((prev) => [...prev, sample].slice(-ACCURACY_CHART_LIMIT));
+    };
+    pushSample();
+    const id = setInterval(pushSample, ACCURACY_CHART_SAMPLE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const accuracyChartBlocks = useMemo(
-    () => generateAccuracyChart(accuracyHistory),
-    [accuracyHistory]
+    () => generateAccuracyChart(chartHistory),
+    [chartHistory]
   );
 
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
