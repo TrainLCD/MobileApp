@@ -1,6 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useKeepAwake } from 'expo-keep-awake';
 import * as Location from 'expo-location';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -29,6 +28,7 @@ import {
   useCurrentStation,
   useCurrentTrainType,
   useFirstStop,
+  useKeepAwake,
   useLockLandscapeOnActive,
   useLoopLine,
   useNextStation,
@@ -219,7 +219,7 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
-  useKeepAwake(undefined, { suppressDeactivateWarnings: true });
+  useKeepAwake();
   useStartBackgroundLocationUpdates();
   const resetMainState = useResetMainState();
   useTTS();
