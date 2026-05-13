@@ -2,9 +2,23 @@ diff --git a/node_modules/expo-task-manager/android/src/main/java/expo/modules/t
 index 4dd0e94..1d850e7 100644
 --- a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
 +++ b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
-@@ -213,8 +213,20 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
-       // For Android 9 (API 28) to Android 11 (API 30)
-       jobBuilder.setImportantWhileForeground(true);
+@@ -210,11 +210,32 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
+       jobBuilder.setMinimumLatency(0)
+           .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
+     } else if (Build.VERSION.SDK_INT < 31) {
+-      // For Android 9 (API 28) to Android 11 (API 30)
+-      jobBuilder.setImportantWhileForeground(true);
++      // For Android 9 (API 28) to Android 11 (API 30).
++      // setImportantWhileForeground(true) alone is treated as a priority hint
++      // rather than a JobInfo constraint by the JobInfo.Builder validator on
++      // some OEM Android 9-11 builds (observed in production Sentry data on
++      // Sony / Sharp / Fujitsu / LG carrier-locked devices in Japan), so
++      // JobInfo.Builder.build() throws IllegalArgumentException("You're trying
++      // to build a job with no constraints, this is not allowed."). Apply the
++      // same minimum-latency + override-deadline fallback as the < API 28
++      // branch to ensure the builder always has an accepted constraint.
++      jobBuilder.setMinimumLatency(0)
++          .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
      } else {
 -      // For Android 12 (API 31) and above
 -      jobBuilder.setExpedited(true);
@@ -23,5 +37,5 @@ index 4dd0e94..1d850e7 100644
 +      jobBuilder.setMinimumLatency(0)
 +          .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
      }
- 
+
      return jobBuilder.build();
