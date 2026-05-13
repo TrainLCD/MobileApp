@@ -1,0 +1,23 @@
+diff --git a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
+index 4dd0e94..f6d1886 100644
+--- a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
++++ b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
+@@ -213,8 +213,16 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
+       // For Android 9 (API 28) to Android 11 (API 30)
+       jobBuilder.setImportantWhileForeground(true);
+     } else {
+-      // For Android 12 (API 31) and above
+-      jobBuilder.setExpedited(true);
++      // For Android 12 (API 31) and above.
++      // setExpedited(true) alone causes JobInfo.Builder.build() to throw
++      // IllegalArgumentException("You're trying to build a job with no constraints,
++      // this is not allowed.") on Android 14+/16 because expedited jobs do not
++      // register an early/late/functional constraint, and the build-time validator
++      // counts none of setPersisted/setRequiresDeviceIdle(false) as a constraint.
++      // Falling back to a minimum-latency + override-deadline pair satisfies the
++      // validator and avoids the additional expedited-vs-persisted conflict.
++      jobBuilder.setMinimumLatency(0)
++          .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
+     }
+ 
+     return jobBuilder.build();
