@@ -219,7 +219,7 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
-  useKeepAwake();
+  useKeepAwake(undefined, { suppressDeactivateWarnings: true });
   useStartBackgroundLocationUpdates();
   const resetMainState = useResetMainState();
   useTTS();
