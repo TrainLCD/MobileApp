@@ -11,6 +11,7 @@ import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../../constants';
 import { useHeaderAnimation } from '../../hooks';
 import isTablet from '../../utils/isTablet';
 import { RFValue } from '../../utils/rfValue';
+import { calcStationNameMinScale } from '../../utils/stationNameScale';
 import type { CommonHeaderProps } from '../Header.types';
 import NumberingIcon from '../NumberingIcon';
 import TrainTypeBox from '../TrainTypeBox';
@@ -298,6 +299,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
             >
               <RNAnimated.Text
                 adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
                 numberOfLines={1}
                 style={[
                   styles.stationName,
@@ -323,6 +325,10 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
             >
               <RNAnimated.Text
                 adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(
+                  animation.prevStationText,
+                  0.55
+                )}
                 numberOfLines={1}
                 style={[
                   styles.stationName,
