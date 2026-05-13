@@ -12,6 +12,7 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
+import { calcStationNameMinScale } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -240,6 +241,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
             <View style={styles.stationNameContainer}>
               <RNAnimated.Text
                 adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
                 numberOfLines={1}
                 style={[
                   animation.topNameAnimatedStyles,
@@ -258,6 +260,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
             <View style={styles.stationNameContainer}>
               <RNAnimated.Text
                 adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(
+                  animation.prevStationText,
+                  0.55
+                )}
                 numberOfLines={1}
                 style={[
                   animation.bottomNameAnimatedStyles,
