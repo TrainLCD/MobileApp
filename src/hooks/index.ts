@@ -36,6 +36,7 @@ export { useIsDifferentStationName } from './useIsDifferentStationName';
 export { useIsNextLastStop } from './useIsNextLastStop';
 export { useIsPassing } from './useIsPassing';
 export { useIsTerminus } from './useIsTerminus';
+export { useKeepAwake } from './useKeepAwake';
 export { useLazyPrevious } from './useLazyPrevious';
 export { useLineSelection } from './useLineSelection';
 export { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
@@ -81,4 +82,7 @@ export { useUpdateLiveActivities } from './useUpdateLiveActivities';
 export { useValueRef } from './useValueRef';
 export { useWalkthroughCompleted } from './useWalkthroughCompleted';
 export { useWarningInfo } from './useWarningInfo';
-export { useWrongDirectionDetector } from './useWrongDirectionDetector';
+export {
+  useWrongDirectionDetector,
+  useWrongDirectionDetectorEffect,
+} from './useWrongDirectionDetector';

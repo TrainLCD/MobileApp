@@ -98,12 +98,12 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   titleParens: {
-    fontSize: RFValue(13),
+    fontSize: isTablet ? 13 : RFValue(13),
     fontWeight: 'bold',
     color: '#fff',
   },
   titleAffix: {
-    fontSize: RFValue(13),
+    fontSize: isTablet ? 13 : RFValue(13),
     fontWeight: 'bold',
     color: '#fff',
   },
@@ -153,6 +153,9 @@ const styles = StyleSheet.create({
     padding: 12,
   },
 });
+
+const PAREN_GROUP_REGEX = /([（(][^）)]*[）)])/;
+const PAREN_WRAPPED_REGEX = /^[（(][^）)]*[）)]$/;
 
 type SubtitleProps = {
   inboundText: string;
@@ -223,10 +226,33 @@ export const CommonCard: React.FC<Props> = ({
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
-  const mark = useMemo(
-    () => getLineMark({ line, stationNumbers: targetStation?.stationNumbers }),
-    [getLineMark, line, targetStation?.stationNumbers]
-  );
+  const mark = useMemo(() => {
+    const m = getLineMark({
+      line,
+      stationNumbers: targetStation?.stationNumbers,
+    });
+    if (!m) {
+      return null;
+    }
+    // 路線シンボルはあるが当該駅の駅番号が無く、画像 (signPath) で代替もできない場合は
+    // NumberingIcon が中途半端な記号だけの描画になるためマーク自体を返さない
+    if (
+      line.lineSymbols?.length &&
+      targetStation &&
+      !m.signPath &&
+      !m.btUnionSignPaths?.length
+    ) {
+      const hasMatchingStationNumber = targetStation.stationNumbers?.some(
+        (sn) =>
+          sn?.stationNumber &&
+          line.lineSymbols?.some((sym) => sym?.symbol === sn?.lineSymbol)
+      );
+      if (!hasMatchingStationNumber) {
+        return null;
+      }
+    }
+    return m;
+  }, [getLineMark, line, targetStation]);
   const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
@@ -319,7 +345,7 @@ export const CommonCard: React.FC<Props> = ({
       if (isJapanese) {
         // 「○○方面」末尾の「方面」を分離（カッコ内の「方面」は対象外）
         const match = /^(.+?)方面$/.exec(main);
-        if (match && !match[1].endsWith(')')) {
+        if (match && !match[1].endsWith(')') && !match[1].endsWith('）')) {
           main = match[1];
           suffix = '方面';
         }
@@ -334,7 +360,7 @@ export const CommonCard: React.FC<Props> = ({
     }
     return {
       titlePrefix: prefix,
-      titleParts: main.split(/(\([^)]*\))/),
+      titleParts: main.split(PAREN_GROUP_REGEX),
       titleSuffix: suffix,
     };
   }, [titleOrLineName, shrinkBoundAffix]);
@@ -447,7 +473,7 @@ export const CommonCard: React.FC<Props> = ({
               <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
             ) : null}
             {titleParts.map((part, index) =>
-              /^\(.*\)$/.test(part) ? (
+              PAREN_WRAPPED_REGEX.test(part) ? (
                 <Typography key={`${index}-${part}`} style={styles.titleParens}>
                   {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
                     ? ' '

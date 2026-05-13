@@ -435,3 +435,432 @@ describe('JR_WEST batch cycling', () => {
     expect(result.current.text[1]).toContain('We will be stopping at');
   });
 });
+
+describe('single transferLine period consistency (#5914)', () => {
+  // 東京メトロ副都心線(id=28010)を除外し、次駅 (Shinjuku-sanchome) の
+  // 乗り換え路線を 東京メトロ丸ノ内線 1 本だけに絞る。
+  const FUKUTOSHIN_LINE_ID = 28010;
+
+  const buildSingleTransferNextStation = (): Station => {
+    const base = TOEI_SHINJUKU_LINE_STATIONS[1];
+    return {
+      ...base,
+      lines: base.lines?.filter((l) => l.id !== FUKUTOSHIN_LINE_ID) ?? [],
+    };
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    setupMockUseNextStation(buildSingleTransferNextStation());
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: 'S-02',
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  const renderEn = (theme: AppTheme, state: HeaderStoppingState): string => {
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering(theme, state),
+      { wrapper }
+    );
+    const [, enSSML] = result.current.text;
+    return enSSML ?? '';
+  };
+
+  test('TOKYO_METRO NEXT keeps the trailing period for length=1', () => {
+    expect(renderEn('TOKYO_METRO', 'NEXT')).toBe(
+      'The next stop is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('TOKYO_METRO ARRIVING keeps the trailing period for length=1', () => {
+    expect(renderEn('TOKYO_METRO', 'ARRIVING')).toBe(
+      'Arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('TY NEXT renders list inline for length=1', () => {
+    expect(renderEn('TY', 'NEXT')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Passengers changing to the Tokyo Metro Marunouchi Line, Please transfer at this station.'
+    );
+  });
+
+  test('TY ARRIVING renders list inline for length=1', () => {
+    expect(renderEn('TY', 'ARRIVING')).toBe(
+      'We will soon make a brief stop at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Passengers changing to the Tokyo Metro Marunouchi Line, Please transfer at this station.'
+    );
+  });
+
+  test('YAMANOTE NEXT appends period for length=1', () => {
+    expect(renderEn('YAMANOTE', 'NEXT')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('YAMANOTE ARRIVING appends period for length=1', () => {
+    expect(renderEn('YAMANOTE', 'ARRIVING')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('SAIKYO NEXT appends period for length=1', () => {
+    expect(renderEn('SAIKYO', 'NEXT')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('SAIKYO ARRIVING appends period for length=1', () => {
+    expect(renderEn('SAIKYO', 'ARRIVING')).toBe(
+      'The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('JR_WEST NEXT keeps trailing period for length=1', () => {
+    expect(renderEn('JR_WEST', 'NEXT')).toBe(
+      'The next stop is Shinjuku-sanchome station number S <say-as interpret-as="cardinal">2</say-as>. Transfer here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('JR_WEST ARRIVING keeps trailing period for length=1', () => {
+    expect(renderEn('JR_WEST', 'ARRIVING')).toBe(
+      'We will soon be making a brief stop at Shinjuku-sanchome station number S <say-as interpret-as="cardinal">2</say-as>. Transfer here for the Tokyo Metro Marunouchi Line. After leaving Shinjuku-sanchome, We will be stopping at Akebonobashi.'
+    );
+  });
+
+  test('TOEI NEXT keeps trailing period for length=1', () => {
+    expect(renderEn('TOEI', 'NEXT')).toBe(
+      'This is the Local train bound for Motoyawata. The next station is Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('TOEI ARRIVING keeps trailing period for length=1', () => {
+    expect(renderEn('TOEI', 'ARRIVING')).toBe(
+      'We will soon be arriving at Shinjuku-sanchome S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line.'
+    );
+  });
+
+  test('JR_KYUSHU NEXT renders list inline without trailing period for length=1', () => {
+    expect(renderEn('JR_KYUSHU', 'NEXT')).toContain(
+      'You can transfer to the Tokyo Metro Marunouchi Line at Shinjuku-sanchome.'
+    );
+  });
+
+  test('JR_KYUSHU ARRIVING renders list inline without stray period for length=1', () => {
+    const en = renderEn('JR_KYUSHU', 'ARRIVING');
+    expect(en).toContain(
+      'You can transfer to the Tokyo Metro Marunouchi Line at Shinjuku-sanchome.'
+    );
+    // length=1 で "...Line. at X." のような不自然なピリオドが残らないこと
+    expect(en).not.toContain('Marunouchi Line. at');
+  });
+});
+
+describe('terminus announcement (#5915)', () => {
+  // 各テーマ NEXT / ARRIVING で「次の駅が終点」のときに
+  // JA/EN いずれにも「終点 / terminal / last stop」相当の語が含まれることを検証。
+
+  const TERMINUS_INDEX = TOEI_SHINJUKU_LINE_STATIONS.length - 1;
+  const TERMINUS = TOEI_SHINJUKU_LINE_STATIONS[TERMINUS_INDEX];
+
+  const useTerminusHelper = ({
+    theme,
+    headerState,
+    boundIndex = TERMINUS_INDEX,
+    nextStationIndex = TERMINUS_INDEX,
+  }: {
+    theme: AppTheme;
+    headerState: HeaderStoppingState;
+    boundIndex?: number;
+    nextStationIndex?: number;
+  }) => {
+    const setLineState = useSetAtom(lineState);
+    const setStationState = useSetAtom(stationState);
+
+    useEffect(() => {
+      // 次駅 = TERMINUS の前提では「現在駅 = 終点の一つ手前」を想定。
+      // ただし selectedBound を中間駅にする検証では nextStationIndex を任意指定する。
+      const station =
+        TOEI_SHINJUKU_LINE_STATIONS[Math.max(0, nextStationIndex - 1)];
+      const stations = TOEI_SHINJUKU_LINE_STATIONS;
+      const selectedDirection = 'INBOUND' as LineDirection;
+      const selectedLine = TOEI_SHINJUKU_LINE_LOCAL;
+      const selectedBound = TOEI_SHINJUKU_LINE_STATIONS[boundIndex];
+
+      const arrived = headerState === 'CURRENT';
+      const approaching = headerState === 'ARRIVING';
+
+      store.set(themePreferenceAtom, theme);
+      setStationState((prev) => ({
+        ...prev,
+        station,
+        stations,
+        selectedDirection,
+        arrived,
+        selectedBound,
+        approaching,
+      }));
+      setLineState((prev) => ({ ...prev, selectedLine }));
+    }, [
+      boundIndex,
+      headerState,
+      nextStationIndex,
+      setLineState,
+      setStationState,
+      theme,
+    ]);
+
+    return useTTSText(false, true);
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: `S-${String(TERMINUS_INDEX + 1).padStart(2, '0')}`,
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  const renderTexts = (
+    theme: AppTheme,
+    headerState: HeaderStoppingState,
+    overrides: { boundIndex?: number; nextStationIndex?: number } = {}
+  ): [string, string] => {
+    setupMockUseNextStation(
+      TOEI_SHINJUKU_LINE_STATIONS[overrides.nextStationIndex ?? TERMINUS_INDEX]
+    );
+    const { result } = renderHook(
+      () => useTerminusHelper({ theme, headerState, ...overrides }),
+      { wrapper }
+    );
+    const [ja, en] = result.current.text;
+    return [ja ?? '', en ?? ''];
+  };
+
+  // useIsTerminus は stations[0] / stations[last] と一致するときに true を返す。
+  // TERMINUS のテーマ群はその判定に従う。
+  type TerminusCase = {
+    theme: AppTheme;
+    state: HeaderStoppingState;
+    ja: string;
+    en: string[];
+  };
+
+  const TERMINUS_CASES: TerminusCase[] = [
+    { theme: 'TOKYO_METRO', state: 'NEXT', ja: '終点', en: ['last stop'] },
+    { theme: 'TOKYO_METRO', state: 'ARRIVING', ja: '終点', en: ['last stop'] },
+    { theme: 'TY', state: 'NEXT', ja: '終点', en: ['last stop'] },
+    { theme: 'TY', state: 'ARRIVING', ja: '終点', en: ['last stop'] },
+    { theme: 'YAMANOTE', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'YAMANOTE', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+    { theme: 'SAIKYO', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'SAIKYO', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+    { theme: 'TOEI', state: 'NEXT', ja: '終点', en: ['last stop'] },
+    { theme: 'TOEI', state: 'ARRIVING', ja: '終点', en: ['last stop'] },
+    // JR_WEST / JR_KYUSHU は nextStationIsBound 判定だが、selectedBound が
+    // 物理的な終点と一致するこのケースでは isNextStopTerminus も true になる。
+    { theme: 'JR_WEST', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'JR_WEST', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+    { theme: 'JR_KYUSHU', state: 'NEXT', ja: '終点', en: ['terminal'] },
+    { theme: 'JR_KYUSHU', state: 'ARRIVING', ja: '終点', en: ['terminal'] },
+  ];
+
+  test.each(TERMINUS_CASES)(
+    'announces terminus for $theme / $state in both languages',
+    ({ theme, state, ja, en }) => {
+      const [jaText, enText] = renderTexts(theme as AppTheme, state);
+      expect(jaText).toContain(ja);
+      for (const phrase of en) {
+        expect(enText).toContain(phrase);
+      }
+    }
+  );
+
+  // selectedBound が物理的終点ではない中間駅のとき、nextStationIsBound 判定を
+  // 採っているテーマ (JR_WEST / JR_KYUSHU) では引き続き 終点 / terminal を発話する。
+  const MID_BOUND_INDEX = 5; // 神保町
+  const MID_BOUND_CASES = [
+    { theme: 'JR_WEST', state: 'NEXT' as HeaderStoppingState, en: 'terminal' },
+    {
+      theme: 'JR_WEST',
+      state: 'ARRIVING' as HeaderStoppingState,
+      en: 'terminal',
+    },
+    {
+      theme: 'JR_KYUSHU',
+      state: 'NEXT' as HeaderStoppingState,
+      en: 'terminal',
+    },
+    {
+      theme: 'JR_KYUSHU',
+      state: 'ARRIVING' as HeaderStoppingState,
+      en: 'terminal',
+    },
+  ];
+
+  test.each(MID_BOUND_CASES)(
+    'announces terminus when bound is a mid-line station for $theme / $state',
+    ({ theme, state, en }) => {
+      const [jaText, enText] = renderTexts(theme as AppTheme, state, {
+        boundIndex: MID_BOUND_INDEX,
+        nextStationIndex: MID_BOUND_INDEX,
+      });
+      expect(jaText).toContain('終点');
+      expect(enText).toContain(en);
+    }
+  );
+
+  // 念のため、selectedBound = TERMINUS の通常ケースで JR_WEST ARRIVING JA に
+  // 追加された「終点、X です。」が含まれることを検証する。
+  test('JR_WEST ARRIVING JA prepends 終点 before thanks', () => {
+    const [jaText] = renderTexts('JR_WEST', 'ARRIVING');
+    expect(jaText).toMatch(/終点、.+です。ご乗車ありがとうございました。/);
+  });
+
+  // YAMANOTE / SAIKYO / JR_KYUSHU ARRIVING の thanks が hasTransferLines に
+  // 依存せず終点時に発話されることを検証する (※1)。
+  // 乗り換え路線を取り除いた終点駅をモックすることで、修正前は thanks が
+  // 出なかった経路を踏ませる。
+  test.each([
+    ['YAMANOTE', 'ご利用くださいまして、ありがとうございました'],
+    ['SAIKYO', 'ご利用くださいまして、ありがとうございました'],
+    ['JR_KYUSHU', 'ご利用くださいまして、ありがとうございました'],
+  ])(
+    '%s ARRIVING JA announces thanks even when terminus has no transferLines',
+    (theme, thanksPhrase) => {
+      const terminusWithoutTransfers: Station = {
+        ...TERMINUS,
+        lines: [],
+      };
+      (useNextStation as jest.Mock).mockReturnValue(terminusWithoutTransfers);
+      const { result } = renderHook(
+        () =>
+          useTerminusHelper({
+            theme: theme as AppTheme,
+            headerState: 'ARRIVING',
+          }),
+        { wrapper }
+      );
+      const [jaText] = result.current.text;
+      expect(jaText ?? '').toContain(thanksPhrase);
+    }
+  );
+});
+
+describe('station name parens are not read aloud (issue #1175)', () => {
+  // 駅名に併記されたカッコ書き (命名権スポンサー名など) を TTS で
+  // 読み上げない。`<sub alias>` の中身も含めてカッコと中身が抜ける。
+  const buildStationWithParens = (): Station => {
+    const base = TOEI_SHINJUKU_LINE_STATIONS[1];
+    return {
+      ...base,
+      name: `${base.name}(トヨタモビリティ富山)`,
+      nameKatakana: `${base.nameKatakana}(トヨタモビリティトヤマ)`,
+      nameRoman: `${base.nameRoman} (Toyota Mobility Toyama)`,
+      nameTtsSegments: base.nameTtsSegments?.map((seg) => ({
+        ...seg,
+        surface: seg.surface
+          ? `${seg.surface} (Toyota Mobility Toyama)`
+          : seg.surface,
+        fallbackText: seg.fallbackText
+          ? `${seg.fallbackText} (Toyota Mobility Toyama)`
+          : seg.fallbackText,
+      })),
+    };
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    setupMockUseNextStation(buildStationWithParens());
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([
+      {
+        lineSymbol: 'S',
+        lineSymbolColor: '#B0BF1E',
+        lineSymbolShape: 'ROUND',
+        stationNumber: 'S-02',
+      },
+      '',
+    ]);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  test('strips parens contents from JA SSML including <sub alias>', () => {
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
+      { wrapper }
+    );
+    const [jaText] = result.current.text;
+    expect(jaText ?? '').not.toContain('トヨタモビリティ富山');
+    expect(jaText ?? '').not.toContain('トヨタモビリティトヤマ');
+    expect(jaText ?? '').not.toContain('(');
+    expect(jaText ?? '').not.toContain(')');
+  });
+
+  test('strips parens contents from EN SSML', () => {
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
+      { wrapper }
+    );
+    const [, enText] = result.current.text;
+    expect(enText ?? '').not.toContain('Toyota Mobility Toyama');
+    expect(enText ?? '').not.toContain('(');
+    expect(enText ?? '').not.toContain(')');
+  });
+});
+
+describe('nextStation null guard (#5917)', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    require('~/hooks/useNumbering').useNumbering.mockReturnValue([null, '']);
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+  });
+
+  test('should return empty text when nextStation is null', () => {
+    // nextStation 未解決のとき、context が組み立たず text / nextText は空文字配列になる。
+    // 以前は replaceJapaneseText のフォールバックで `次は、各駅停車です。` のような誤案内が流れていた。
+    (useNextStation as jest.Mock).mockReturnValue(null);
+    const { result } = renderHook(
+      () => useTTSTextWithJotaiAndNumbering('TOKYO_METRO', 'NEXT'),
+      { wrapper }
+    );
+
+    const [jaText, enText] = result.current.text;
+    const [nextJaText, nextEnText] = result.current.nextText;
+
+    expect(jaText).toBe('');
+    expect(enText).toBe('');
+    expect(nextJaText).toBe('');
+    expect(nextEnText).toBe('');
+
+    // 念のため、無関係案内の 各駅停車 が流れていないことも確認
+    expect(jaText).not.toContain('各駅停車');
+    expect(nextJaText).not.toContain('各駅停車');
+  });
+});

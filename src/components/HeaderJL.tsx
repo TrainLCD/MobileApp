@@ -6,6 +6,7 @@ import { useLoopLine } from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
+import { calcStationNameMinScale } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -230,6 +231,7 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
           <Typography
             style={styles.stationName}
             adjustsFontSizeToFit
+            minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
             numberOfLines={1}
           >
             {stationText}

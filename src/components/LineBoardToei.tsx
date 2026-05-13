@@ -64,6 +64,9 @@ const localStyles = StyleSheet.create({
     bottom: isTablet ? 0 : 64,
     textAlign: 'center',
   },
+  stationNumberPlaceholder: {
+    opacity: 0,
+  },
 });
 
 const styles = { ...commonLineBoardStyles, ...localStyles };
@@ -94,7 +97,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
   const horizontalAdditionalStyle = useMemo(() => {
     if (!hasNumbering) {
       return {
-        marginBottom: isTablet ? dim.height / 14 : dim.height / 10,
+        marginBottom: dim.height / 10,
         width: isTablet ? dim.height / 3 : dim.height / 2.5,
       };
     }
@@ -410,6 +413,17 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             numberOfLines={1}
           >
             {numberingObj.stationNumber}
+          </Typography>
+        ) : isTablet ? (
+          // iPadではstationNumberがposition:'relative'で高さを占めるため、
+          // ナンバリング非表示時も同サイズの不可視プレースホルダーを描画し、
+          // 駅名（特に斜め表示）がバーへ沈み込むのを防ぐ
+          <Typography
+            style={[styles.stationNumber, styles.stationNumberPlaceholder]}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {' '}
           </Typography>
         ) : null}
         <BackgroundBars line={line} barLeft={barLeft} barWidth={barWidth} />

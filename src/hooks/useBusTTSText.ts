@@ -8,6 +8,7 @@ import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { wrapPhoneme as ph } from '../utils/phoneme';
+import { stripStationParensForTTS } from './tts/formatters';
 import { useAfterNextStation } from './useAfterNextStation';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -83,21 +84,28 @@ export const useBusTTSText = (
     [selectedBoundOrigin]
   );
 
+  // directionalStops のカッコ書きも TTS で読み上げないため、
+  // boundForJa / boundForEn に渡す前に取り除く (issue #1175)。
+  const directionalStopsForTTS = useMemo(
+    () => directionalStops.map(stripStationParensForTTS),
+    [directionalStops]
+  );
+
   const boundForJa = useMemo(
     () =>
       isLoopLine
         ? // NOTE: メジャーな駅だからreplaceJapaneseTextは要らない...はず
           loopLineBoundJa?.boundFor?.replace(/・/g, '<break time="250ms"/>')
         : replaceJapaneseText(
-            `${directionalStops?.map((s) => s?.name).join('・')}${
+            `${directionalStopsForTTS.map((s) => s?.name).join('・')}${
               isPartiallyLoopLine ? '方面' : ''
             }`,
-            `${directionalStops?.map((s) => s?.nameKatakana).join('・')}${
+            `${directionalStopsForTTS.map((s) => s?.nameKatakana).join('・')}${
               isPartiallyLoopLine ? 'ホウメン' : ''
             }`
           ),
     [
-      directionalStops,
+      directionalStopsForTTS,
       isLoopLine,
       isPartiallyLoopLine,
       loopLineBoundJa?.boundFor,
@@ -109,24 +117,39 @@ export const useBusTTSText = (
     () =>
       isLoopLine
         ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : (directionalStops
-            ?.map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
-            .join(' and ') ?? ''),
-
-    [directionalStops, isLoopLine, loopLineBoundEn?.boundFor]
+        : directionalStopsForTTS
+            .map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
+            .join(' and '),
+    [directionalStopsForTTS, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
-  const nextStation = nextStationOrigin ?? null;
+  // 駅名に併記されたカッコ書き (命名権スポンサー名など) を TTS で読み上げないため、
+  // template に渡す手前で TTS 関連フィールドからカッコと中身を落としておく
+  // (issue #1175)。表示用データには影響させない。
+  const nextStation = useMemo(
+    () =>
+      nextStationOrigin ? stripStationParensForTTS(nextStationOrigin) : null,
+    [nextStationOrigin]
+  );
 
   // 直通時、同じGroupIDの駅が違う駅として扱われるのを防ぐ(ex. 渋谷の次は渋谷に止まります)
-  const slicedStations = Array.from(
-    new Set(slicedStationsOrigin.map((s) => s.groupId))
-  )
-    .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
-    .filter((s) => !!s) as Station[];
+  const slicedStations = useMemo(
+    () =>
+      Array.from(new Set(slicedStationsOrigin.map((s) => s.groupId)))
+        .map((gid) => slicedStationsOrigin.find((s) => s.groupId === gid))
+        .filter((s): s is Station => !!s)
+        .map(stripStationParensForTTS),
+    [slicedStationsOrigin]
+  );
 
   const afterNextStationOrigin = useAfterNextStation();
-  const afterNextStation = afterNextStationOrigin;
+  const afterNextStation = useMemo(
+    () =>
+      afterNextStationOrigin
+        ? stripStationParensForTTS(afterNextStationOrigin)
+        : undefined,
+    [afterNextStationOrigin]
+  );
 
   const nextStationIndex = useMemo(
     () => slicedStations.findIndex((s) => s.groupId === nextStation?.groupId),
