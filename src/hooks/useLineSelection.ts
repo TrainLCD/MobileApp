@@ -11,6 +11,7 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
+import { isBusLine } from '~/utils/line';
 import lineStateAtom from '../store/atoms/line';
 import { locationAtom } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -144,15 +145,37 @@ export const useLineSelection = (): UseLineSelectionResult => {
         const designatedTrainType =
           fetchedTrainTypes.find((tt) => tt.id === designatedTrainTypeId) ??
           null;
+        // バスは station.trainType を持たないため、最初の列車種別を自動選択する
+        const fallbackTrainType =
+          !designatedTrainType && isBusLine(line)
+            ? (fetchedTrainTypes[0] ?? null)
+            : null;
+        const initialTrainType = designatedTrainType ?? fallbackTrainType;
+
         setNavigationState((prev) => ({
           ...prev,
           fetchedTrainTypes,
-          pendingTrainType: designatedTrainType as TrainType | null,
+          pendingTrainType: initialTrainType as TrainType | null,
         }));
+
+        if (fallbackTrainType?.groupId != null) {
+          const groupResult = await fetchStationsByLineGroupId({
+            variables: { lineGroupId: fallbackTrainType.groupId },
+          });
+          const lineGroupStations = groupResult.data?.lineGroupStations ?? [];
+          setStationState((prev) => ({
+            ...prev,
+            pendingStations: lineGroupStations,
+            pendingStation:
+              lineGroupStations.find((s) => s.id === lineStationId) ??
+              prev.pendingStation,
+          }));
+        }
       }
     },
     [
       fetchTrainTypes,
+      fetchStationsByLineGroupId,
       setNavigationState,
       setStationState,
       setLineState,

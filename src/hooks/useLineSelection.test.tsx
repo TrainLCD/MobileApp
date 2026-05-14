@@ -3,6 +3,7 @@ import { act, render } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, TrainType } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
 import { createLine, createStation } from '~/utils/test/factories';
 import type { LineState } from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
@@ -199,6 +200,110 @@ describe('useLineSelection', () => {
     const navSetter = mockSetNavigationState.mock.calls[0][0];
     const navResult = navSetter(createNavigationState());
     expect(navResult.fetchedTrainTypes).toEqual([]);
+    expect(navResult.pendingTrainType).toBeNull();
+  });
+
+  it('バス路線で hasTrainTypes の場合に最初の列車種別を自動選択し lineGroup の駅を取得する', async () => {
+    const { mockSetStationState, mockSetNavigationState } = setupMolecules();
+    const { mockFetchByLineId, mockFetchByGroupId, mockFetchTrainTypes } =
+      setupQueries();
+
+    // 路線駅一覧（station.trainType は無い: バスは station 単位で trainType を持たない）
+    const lineStations = [createStation(10), createStation(20)];
+    mockFetchByLineId.mockResolvedValue({
+      data: { lineStations },
+    });
+
+    // 自動選択される最初の列車種別と、その lineGroup の駅一覧
+    const trainTypes = [
+      { id: 1, groupId: 500, name: 'A系統' } as TrainType,
+      { id: 2, groupId: 501, name: 'B系統' } as TrainType,
+    ];
+    mockFetchTrainTypes.mockResolvedValue({
+      data: { stationTrainTypes: trainTypes },
+    });
+    const groupStations = [createStation(10), createStation(30)];
+    mockFetchByGroupId.mockResolvedValue({
+      data: { lineGroupStations: groupStations },
+    });
+
+    const line = createLine(100, {
+      transportType: TransportType.Bus,
+      station: { id: 10, hasTrainTypes: true } as Line['station'],
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      await hookRef.current?.handleLineSelected(line);
+    });
+
+    // 最初の列車種別の groupId で駅一覧を取得している
+    expect(mockFetchByGroupId).toHaveBeenCalledWith({
+      variables: { lineGroupId: 500 },
+    });
+
+    // navigationState の更新で pendingTrainType が先頭の列車種別に設定されている
+    const navSetterCalls = mockSetNavigationState.mock.calls;
+    const lastNavSetter = navSetterCalls[navSetterCalls.length - 1][0];
+    const navResult = lastNavSetter(createNavigationState());
+    expect(navResult.fetchedTrainTypes).toEqual(trainTypes);
+    expect(navResult.pendingTrainType).toEqual(trainTypes[0]);
+
+    // stationState の最後の更新で lineGroup の駅一覧に差し替わっている
+    const stationSetterCalls = mockSetStationState.mock.calls;
+    const lastStationSetter =
+      stationSetterCalls[stationSetterCalls.length - 1][0];
+    const stationResult = lastStationSetter(createStationState());
+    expect(stationResult.pendingStations).toEqual(groupStations);
+    expect(stationResult.pendingStation?.id).toBe(10);
+  });
+
+  it('鉄道路線で hasTrainTypes でも station.trainType が無ければ自動選択しない', async () => {
+    const { mockSetNavigationState } = setupMolecules();
+    const { mockFetchByLineId, mockFetchByGroupId, mockFetchTrainTypes } =
+      setupQueries();
+
+    const lineStations = [createStation(10)];
+    mockFetchByLineId.mockResolvedValue({
+      data: { lineStations },
+    });
+    const trainTypes = [{ id: 1, groupId: 500, name: '快速' } as TrainType];
+    mockFetchTrainTypes.mockResolvedValue({
+      data: { stationTrainTypes: trainTypes },
+    });
+
+    const line = createLine(100, {
+      transportType: TransportType.Rail,
+      station: { id: 10, hasTrainTypes: true } as Line['station'],
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      await hookRef.current?.handleLineSelected(line);
+    });
+
+    // 鉄道は自動フォールバックしないので groupId 経由の駅取得は呼ばれない
+    expect(mockFetchByGroupId).not.toHaveBeenCalled();
+
+    const navSetterCalls = mockSetNavigationState.mock.calls;
+    const lastNavSetter = navSetterCalls[navSetterCalls.length - 1][0];
+    const navResult = lastNavSetter(createNavigationState());
     expect(navResult.pendingTrainType).toBeNull();
   });
 
