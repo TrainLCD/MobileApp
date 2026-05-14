@@ -27,6 +27,8 @@ export const TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S: Record<
   [TrainTypeKind.Express]: null,
   [TrainTypeKind.LimitedExpress]: 36.1111111111, // 130km/h
   [TrainTypeKind.HighSpeedRapid]: 36.1111111111, // 130km/h
+  // バス系統は useSimulationMode 側で isBus 分岐により BUS_MAX_SPEED_IN_M_S が適用されるため null
+  [TrainTypeKind.BusRoute]: null,
 } as const;
 // 路線種別による加速度
 export const LINE_TYPE_MAX_ACCEL_IN_M_S: Record<LineType, number> = {
