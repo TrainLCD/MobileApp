@@ -127,6 +127,7 @@ type Props = {
   trainTypeLoading?: boolean;
   onTrainTypePress?: () => void;
   trainTypeDisabled?: boolean;
+  isBus?: boolean;
   themeLabel?: string;
   themeColor?: string;
   onThemePress?: () => void;
@@ -143,6 +144,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   trainTypeLoading,
   onTrainTypePress,
   trainTypeDisabled,
+  isBus,
   themeLabel,
   themeColor,
   onThemePress,
@@ -221,12 +223,14 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
             >
               {trainTypeDisabled ? (
                 <Typography style={styles.trainTypeDisabledText}>
-                  {translate('trainTypesNotExist')}
+                  {translate(
+                    isBus ? 'busRoutesNotExist' : 'trainTypesNotExist'
+                  )}
                 </Typography>
               ) : (
                 <>
                   <Typography style={styles.trainTypeLabel}>
-                    {translate('trainType')}
+                    {translate(isBus ? 'busRoute' : 'trainType')}
                   </Typography>
                   <View
                     style={[
