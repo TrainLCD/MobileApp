@@ -353,6 +353,7 @@ export type TrainType = {
 
 export enum TrainTypeKind {
   Branch = 'Branch',
+  BusRoute = 'BusRoute',
   CommuterRapid = 'CommuterRapid',
   Default = 'Default',
   Express = 'Express',
