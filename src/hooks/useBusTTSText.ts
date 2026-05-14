@@ -446,7 +446,7 @@ export const useBusTTSText = (
           }、${
             replaceJapaneseText(nextStation?.name, nextStation?.nameKatakana) ??
             ''
-          }。このバスは、${boundForJa}ゆきです。${
+          }。${firstSpeech ? `このバスは、${boundForJa}ゆきです。` : ''}${
             afterNextStation
               ? `${replaceJapaneseText(
                   nextStation?.name,
@@ -690,9 +690,9 @@ export const useBusTTSText = (
         [APP_THEME.TOEI]: {
           NEXT: `${
             firstSpeech
-              ? `Thank you for using the ${station?.line?.company?.nameEnglishShort ?? ''}. `
+              ? `Thank you for using the ${station?.line?.company?.nameEnglishShort ?? ''}. This bus is bound for ${boundForEn}. `
               : ''
-          }This bus is bound for ${boundForEn}. The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.`,
+          }The next stop is ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.`,
           ARRIVING: `We will soon be arriving at ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}.${
             afterNextStation
               ? ` The stop after ${ph(nextStation?.nameTtsSegments, nextStation?.nameRoman)}, will be ${ph(

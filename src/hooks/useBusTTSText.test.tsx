@@ -332,6 +332,25 @@ describe('useBusTTSText', () => {
       expect(enText).toContain('This bus is bound for');
     });
 
+    // 回帰テスト: TOEIの「このバスは、〜ゆきです。」/ "This bus is bound for ..." は
+    // 初回放送 (firstSpeech=true) のみで再生される必要がある。
+    // 以前はテンプレート構造の都合で firstSpeech 条件の外に出ており、停車のたびに
+    // 繰り返し再生されていた。
+    test('should omit bound-for phrase on subsequent NEXT (firstSpeech=false)', () => {
+      const { result } = renderHook(
+        () => useBusTTSTextWithJotai('TOEI', 'NEXT', false),
+        {
+          wrapper: wrapper,
+        }
+      );
+      const [jaText, enText] = result.current.text;
+      expect(jaText).toContain('次は');
+      expect(jaText).not.toContain('このバスは');
+      expect(jaText).not.toContain('ご利用くださいまして');
+      expect(enText).not.toContain('This bus is bound for');
+      expect(enText).not.toContain('Thank you for using the');
+    });
+
     test('should generate ARRIVING text', () => {
       const { result } = renderHook(
         () => useBusTTSTextWithJotai('TOEI', 'ARRIVING'),
