@@ -250,7 +250,10 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                       numberOfLines={1}
                     >
                       {renderWithSmallParens(
-                        trainTypeName || translate('trainTypeDefault'),
+                        trainTypeName ||
+                          translate(
+                            isBus ? 'notSpecified' : 'trainTypeDefault'
+                          ),
                         trainTypeTextColor
                       )}
                     </Typography>
