@@ -468,7 +468,12 @@ export const CommonCard: React.FC<Props> = ({
           </View>
         )}
         <View style={styles.texts}>
-          <Typography style={styles.title} numberOfLines={1}>
+          <Typography
+            style={styles.title}
+            // バス系統名は長くなりがちなので 2 行まで許容する
+            numberOfLines={isBus ? 2 : 1}
+            adjustsFontSizeToFit
+          >
             {titlePrefix ? (
               <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
             ) : null}
