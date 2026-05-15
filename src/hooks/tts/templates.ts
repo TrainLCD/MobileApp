@@ -11,10 +11,10 @@ const TOKYO_METRO: ThemeTemplate = {
     '{#if firstSpeech}',
     '{currentLineJa}をご利用くださいまして、ありがとうございます。',
     '次は、{nextStationJa}{#if isNextStopTerminus}、終点{/if}です。',
-    'この電車は、',
+    '{vehicleJa}は、',
     '{#if hasConnectedLines}{connectedLinesListJa}直通、{/if}',
-    '{trainTypeJa}、{boundForJa}ゆきです。',
-    '{#if hasTrainTypeAndAfterNext}',
+    '{#if hasTrainType}{trainTypeJa}、{/if}{boundForJa}ゆきです。',
+    '{#if shouldAnnounceAfterNextStop}',
     '{nextStationJa}の次は、',
     '{#if isAfterNextStopTerminus}終点、{/if}',
     '{afterNextStationJa}に停まります。',
@@ -23,7 +23,7 @@ const TOKYO_METRO: ThemeTemplate = {
     '{:else}',
     '次は、{nextStationJa}{#if isNextStopTerminus}、終点{/if}です。',
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
-    '{#if hasTrainTypeAndAfterNext}',
+    '{#if shouldAnnounceAfterNextStop}',
     '{nextStationJa}の次は、',
     '{#if isAfterNextStopTerminus}終点、{/if}',
     '{afterNextStationJa}に停まります。',
@@ -42,9 +42,9 @@ const TY: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}',
     '{currentLineJa}をご利用くださいまして、ありがとうございます。',
-    'この電車は',
+    '{vehicleJa}は',
     '{#if hasConnectedLines}{connectedLinesListJa}直通、{/if}',
-    '{trainTypeJa}、{boundForJa}ゆきです。',
+    '{#if hasTrainType}{trainTypeJa}、{/if}{boundForJa}ゆきです。',
     '{/if}',
     '次は、{nextStationJa}{#if isNextStopTerminus}、終点{/if}です。',
     '{#if hasTransferLines}{transferLinesListJa}をご利用のお客様はお乗り換えです。{/if}'
@@ -63,7 +63,7 @@ const TY: ThemeTemplate = {
 
 const YAMANOTE: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}今日も、{currentLineCompanyShortJa}をご利用くださいまして、ありがとうございます。この電車は、{boundForJa}ゆきです。{/if}',
+    '{#if firstSpeech}今日も、{currentLineCompanyShortJa}をご利用くださいまして、ありがとうございます。{vehicleJa}は、{boundForJa}ゆきです。{/if}',
     '次は、{nextStationJa}、{nextStationJa}{#if isNextStopTerminus}、終点です{/if}。',
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}'
   ),
@@ -76,7 +76,7 @@ const YAMANOTE: ThemeTemplate = {
 
 const SAIKYO: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}今日も、{currentLineCompanyShortJa}をご利用くださいまして、ありがとうございます。この電車は、{boundForJa}ゆきです。{/if}',
+    '{#if firstSpeech}今日も、{currentLineCompanyShortJa}をご利用くださいまして、ありがとうございます。{vehicleJa}は、{boundForJa}ゆきです。{/if}',
     '次は、{#if isNextStopTerminus}終点、{/if}{nextStationJa}、{nextStationJa}。',
     '{#if hasTransferLines}{transferLinesListJa}は、お乗り換えです。{/if}'
   ),
@@ -91,7 +91,7 @@ const JR_WEST: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}',
     '今日も、{currentLineCompanyShortJa}をご利用くださいまして、ありがとうございます。',
-    'この電車は、{trainTypeJaPlain}、',
+    '{vehicleJa}は、{#if hasTrainType}{trainTypeJaPlain}、{/if}',
     '{#if hasViaStation}{viaStationJa}方面、{/if}',
     '{boundForJa}ゆきです。',
     '{/if}',
@@ -123,10 +123,12 @@ const TOEI: ThemeTemplate = {
     '{#if firstSpeech}{currentLineJa}をご利用くださいまして、ありがとうございます。{/if}',
     '次は、{nextStationJa}、{nextStationJa}{#if isNextStopTerminus}、終点です{/if}。 ',
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
-    'この電車は、',
+    '{#if announceVehicleSummary}',
+    '{vehicleJa}は、',
     '{#if hasConnectedLines}{connectedLinesListJa}直通、{/if}',
-    '{trainTypeJa}、{boundForJa}ゆきです。',
-    '{#if hasTrainTypeAndAfterNext}',
+    '{#if hasTrainType}{trainTypeJa}、{/if}{boundForJa}ゆきです。',
+    '{/if}',
+    '{#if shouldAnnounceAfterNextStop}',
     '{nextStationJa}の次は、',
     '{#if isAfterNextStopTerminus}終点、{/if}',
     '{afterNextStationJa}に停まります。',
@@ -136,7 +138,7 @@ const TOEI: ThemeTemplate = {
   ARRIVING: t(
     'まもなく、{#if isNextStopTerminus}終点、{/if}{nextStationJa}、{nextStationJa}。',
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
-    '{#if hasTrainTypeAndAfterNext}',
+    '{#if shouldAnnounceAfterNextStop}',
     '{nextStationJa}の次は、',
     '{#if isAfterNextStopTerminus}終点、{/if}',
     '{afterNextStationJa}に停まります。',
@@ -148,7 +150,7 @@ const TOEI: ThemeTemplate = {
 
 const JR_KYUSHU: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}この列車は{trainTypeJaKyushu}、{boundForJa}行きです。{/if}',
+    '{#if firstSpeech}{vehicleJa}は{#if hasTrainType}{trainTypeJaKyushu}、{/if}{boundForJa}行きです。{/if}',
     '次は{#if nextStationIsBound}終点、{/if}{nextStationJa}、{nextStationJa}。',
     '{#if hasTransferLines}{nextStationJa}では、{transferLinesListJa}にお乗り換えいただけます。{/if}'
   ),
@@ -166,34 +168,33 @@ const TOKYO_METRO_EN: ThemeTemplate = {
     '{#if isNextStopTerminus} The last stop.{/if}',
     '{#if hasTransferLines} Please change here for {transferLinesEnList}.{/if}',
     '{#if firstSpeech}',
-    ' This train is the ',
-    '{#if yamanoteTrainTypeEn}{yamanoteTrainTypeEn} train',
-    '{:else}{currentTrainTypeOrLocalEn} Service on the {currentLineEn}{/if}',
+    ' This {vehicleEn} is',
+    '{#if yamanoteTrainTypeEn} the {yamanoteTrainTypeEn} {vehicleEn}',
+    '{:else}{#if hasTrainType} the {currentTrainTypeOrLocalEn} Service{/if} on the {currentLineEn}{/if}',
     ' bound for {boundForEn}. ',
-    '{#if hasTrainTypeAndAfterNext}',
+    '{#if shouldAnnounceAfterNextStop}',
     'The next stop after {nextStationEn}, is {afterNextStationEn}',
     '{#if isAfterNextStopTerminus} terminal{/if}.',
     '{/if}',
-    '{#if hasBetweenStations} For stations in between, Please change trains at the next stop.{/if}',
+    '{#if hasBetweenStations} For stations in between, Please change {vehicleEnPlural} at the next stop.{/if}',
     '{/if}'
   ),
   ARRIVING: t(
     'Arriving at {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, the last stop.{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}{/if}. ',
-    '{#if isNextStopTerminus}Thank you for using the {currentLineEn}.{/if}'
+    '{#if isNextStopTerminus}Thank you for using the {currentLineThanksEn}.{/if}'
   ),
 };
 
 const TY_EN: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}',
-    'Thank you for using the {currentLineEn}. ',
-    'This is the {trainTypeEn} train ',
-    '{connectedLineEnPhrase}',
-    ' to {boundForEn}. ',
+    'Thank you for using the {currentLineThanksEn}. ',
+    '{#if hasTrainType}This is the {trainTypeEn} {vehicleEn} {connectedLineEnPhrase} to {boundForEn}. ',
+    '{:else}This {vehicleEn} is bound for {boundForEn}. {/if}',
     '{/if}',
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, the last stop{/if} ',
     '{#if hasTransferLines}Passengers changing to {transferLinesEnList}, Please transfer at this station.{/if}'
   ),
@@ -201,20 +202,20 @@ const TY_EN: ThemeTemplate = {
     'We will soon make a brief stop at {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, the last stop{/if}',
     '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, Please transfer at this station.{/if}',
-    '{#if hasTrainTypeAndAfterNext} The stop after {nextStationEn}, will be {afterNextStationEn}{#if isAfterNextStopTerminus} the last stop{/if}.{/if}',
-    '{#if isNextStopTerminus} Thank you for using the {currentLineEn}.{/if}'
+    '{#if shouldAnnounceAfterNextStop} The stop after {nextStationEn}, will be {afterNextStationEn}{#if isAfterNextStopTerminus} the last stop{/if}.{/if}',
+    '{#if isNextStopTerminus} Thank you for using the {currentLineThanksEn}.{/if}'
   ),
 };
 
 const YAMANOTE_EN: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}This is the {currentLineEn} train bound for {boundForEn}. {/if}',
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    '{#if firstSpeech}This is the {currentLineEn} {vehicleEn} bound for {boundForEn}. {/if}',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, terminal.{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if}'
   ),
   ARRIVING: t(
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, terminal.{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}{/if}. ',
     '{#if isNextStopTerminus}Thank you for traveling with us, and look forward to serving you again.{/if}'
@@ -223,13 +224,13 @@ const YAMANOTE_EN: ThemeTemplate = {
 
 const SAIKYO_EN: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}This is the {currentLineEn} train bound for {boundForEn}. {/if}',
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    '{#if firstSpeech}This is the {currentLineEn} {vehicleEn} bound for {boundForEn}. {/if}',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, terminal{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if}'
   ),
   ARRIVING: t(
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, terminal.{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if} ',
     '{#if isNextStopTerminus}Thank you for traveling with us, and look forward to serving you again.{/if}'
@@ -240,8 +241,8 @@ const JR_WEST_EN: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}',
     'Thank you for using {currentLineCompanyEn}. ',
-    'This is the {trainTypeEn} Service bound for {boundForEn} ',
-    '{#if hasViaStation}via {viaStationEn}{/if}. ',
+    '{#if hasTrainType}This is the {trainTypeEn} Service{:else}This {vehicleEn} is{/if} bound for {boundForEn}',
+    '{#if hasViaStation} via {viaStationEn}{/if}. ',
     '{/if}',
     '{#if shouldAnnounceJrWestStopList}',
     'We will be stopping at {jrWestStopsListEn}. ',
@@ -261,9 +262,9 @@ const JR_WEST_EN: ThemeTemplate = {
 
 const TOEI_EN: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}Thank you for using the {currentLineEn}. {/if}',
-    'This is the {trainTypeEn} train bound for {boundForEn}. ',
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    '{#if firstSpeech}Thank you for using the {currentLineThanksEn}. {/if}',
+    '{#if announceVehicleSummary}{#if hasTrainType}This is the {trainTypeEn} {vehicleEn}{:else}This {vehicleEn} is{/if} bound for {boundForEn}. {/if}',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, the last stop{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if}'
   ),
@@ -271,15 +272,15 @@ const TOEI_EN: ThemeTemplate = {
     'We will soon be arriving at {nextStationEn} {nextStationNumberText}',
     '{#if isNextStopTerminus}, the last stop{/if} ',
     '{#if hasTransferLines}Please change here for {transferLinesEnList}.{/if}',
-    '{#if hasTrainTypeAndAfterNext} The stop after {nextStationEn}, will be {afterNextStationEn}{#if isAfterNextStopTerminus} the last stop{/if}.{/if}',
-    '{#if isNextStopTerminus} Thank you for using the {currentLineEn}.{/if}'
+    '{#if shouldAnnounceAfterNextStop} The stop after {nextStationEn}, will be {afterNextStationEn}{#if isAfterNextStopTerminus} the last stop{/if}.{/if}',
+    '{#if isNextStopTerminus} Thank you for using the {currentLineThanksEn}.{/if}'
   ),
 };
 
 const JR_KYUSHU_EN: ThemeTemplate = {
   NEXT: t(
-    '{#if firstSpeech}This is a {trainTypeEn} train bound for {boundForEn}.{/if} ',
-    'The next station is {nextStationEn} {nextStationNumberText}',
+    '{#if firstSpeech}{#if hasTrainType}This is a {trainTypeEn} {vehicleEn}{:else}This {vehicleEn} is{/if} bound for {boundForEn}.{/if} ',
+    'The next {placeEn} is {nextStationEn} {nextStationNumberText}',
     '{#if nextStationIsBound} terminal{/if}. ',
     '{#if hasTransferLines}You can transfer to {transferLinesEnList} at {nextStationEn}.{/if}'
   ),
@@ -288,7 +289,7 @@ const JR_KYUSHU_EN: ThemeTemplate = {
     '{#if nextStationIsBound} terminal{/if} {nextStationNumberText}. ',
     '{#if hasTransferLines}',
     'You can transfer to {transferLinesEnList} at {nextStationEn}. ',
-    '{#if nextStationIsBound}Thank you for using the {currentLineEn}.{/if}',
+    '{#if nextStationIsBound}Thank you for using the {currentLineThanksEn}.{/if}',
     '{/if}'
   ),
 };

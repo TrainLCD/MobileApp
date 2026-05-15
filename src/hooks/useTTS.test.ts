@@ -29,13 +29,6 @@ jest.mock('./useTTSText', () => ({
   })),
 }));
 
-jest.mock('./useBusTTSText', () => ({
-  useBusTTSText: jest.fn(() => ({
-    text: ['ja text', 'en text'],
-    nextText: ['ja next', 'en next'],
-  })),
-}));
-
 jest.mock('./usePrevious', () => ({
   usePrevious: jest.fn(() => ['', '']),
 }));
