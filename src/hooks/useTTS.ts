@@ -18,7 +18,6 @@ import {
   safeRemovePlayer,
 } from '../utils/ttsAudioPlayer';
 import { fetchSpeechAudio } from '../utils/ttsSpeechFetcher';
-import { useBusTTSText } from './useBusTTSText';
 import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
@@ -64,12 +63,8 @@ export const useTTS = (): void => {
   const speechWithTextRef = useRef<
     ((ja: string, en: string) => Promise<void>) | null
   >(null);
-  const trainTTSResult = useTTSText(firstSpeechRef.current, enabled);
-  const busTTSResult = useBusTTSText(firstSpeechRef.current, enabled);
-  const ttsResult =
-    currentLine?.transportType === TransportType.Bus
-      ? busTTSResult
-      : trainTTSResult;
+  const isBus = currentLine?.transportType === TransportType.Bus;
+  const ttsResult = useTTSText(firstSpeechRef.current, enabled, isBus);
   const ttsText = ttsResult.text;
   const prefetchText = ttsResult.nextText;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);

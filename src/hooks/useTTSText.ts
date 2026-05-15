@@ -54,7 +54,8 @@ const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
 
 export const useTTSText = (
   firstSpeech = true,
-  enabled = false
+  enabled = false,
+  isBus = false
 ): TTSTextResult => {
   const theme = useAtomValue(themeAtom);
 
@@ -66,8 +67,14 @@ export const useTTSText = (
   const station = useCurrentStation();
   const currentLineOrigin = useCurrentLine();
 
-  const connectedLines = useConnectedLines();
-  const transferLines = useTransferLines();
+  const connectedLinesOrigin = useConnectedLines();
+  const transferLinesOrigin = useTransferLines();
+  // バスは直通・乗換・列車種別・駅ナンバリングを案内しない。
+  // フックのルートで配列を空にしておけば、以降の dedupe / format / 番号計算は
+  // すべて空入力に対する no-op となり、テンプレ側の hasTransferLines などの
+  // 真偽フラグも自動で false になる。
+  const connectedLines = isBus ? [] : connectedLinesOrigin;
+  const transferLines = isBus ? [] : transferLinesOrigin;
   // 博多駅の鹿児島本線のように、データ上は方面別に同じ路線名が
   // 別レコードで登録されているケースがある。表示用には両方残したいが、
   // TTS では同じ路線名を続けて読み上げないように重複を除外する。
@@ -75,7 +82,8 @@ export const useTTSText = (
     () => dedupeLinesByTtsName(transferLines),
     [transferLines]
   );
-  const currentTrainTypeOrigin = useCurrentTrainType();
+  const currentTrainTypeFromHook = useCurrentTrainType();
+  const currentTrainTypeOrigin = isBus ? null : currentTrainTypeFromHook;
   const loopLineBoundJa = useLoopLineBound(false, 'JA');
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
   const { directionalStops } = useBounds(stations);
@@ -87,6 +95,7 @@ export const useTTSText = (
   const getStationNumberIndex = useStationNumberIndexFunc();
 
   const nextStationNumber = useMemo(() => {
+    if (isBus) return;
     if (!nextStationOrigin) return;
     if (!nextStationOrigin.stationNumbers) return;
 
@@ -102,7 +111,7 @@ export const useTTSText = (
     }
 
     return nextStationOrigin.stationNumbers[stationNumberIndex];
-  }, [getStationNumberIndex, nextStationOrigin]);
+  }, [getStationNumberIndex, nextStationOrigin, isBus]);
 
   const currentLine = currentLineOrigin ?? null;
 
@@ -130,13 +139,13 @@ export const useTTSText = (
   );
 
   const yamanoteTrainTypeJa = useMemo(() => {
-    if (!isYamanoteLine || !selectedDirection) return null;
+    if (isBus || !isYamanoteLine || !selectedDirection) return null;
     return selectedDirection === 'INBOUND'
       ? 'やまのて線内回り'
       : 'やまのて線外回り';
-  }, [isYamanoteLine, selectedDirection]);
+  }, [isBus, isYamanoteLine, selectedDirection]);
 
-  const yamanoteTrainTypeEn = isYamanoteLine ? 'Yamanote Line' : null;
+  const yamanoteTrainTypeEn = !isBus && isYamanoteLine ? 'Yamanote Line' : null;
 
   // directionalStops のカッコ書きも TTS で読み上げないため、
   // boundForJa / boundForEn に渡す前に取り除く (issue #1175)。
@@ -321,6 +330,22 @@ export const useTTSText = (
     const isBoundStop = (s: Station): boolean =>
       s.groupId === selectedBound?.groupId && !isLoopLine;
 
+    // バスは元アナウンス上「列車種別」概念を持たないので、
+    // テンプレ側の `{#if hasTrainType}` で 各駅停車/Local Service 等の挿入を抑止する。
+    // 鉄道時は常に true (列車種別未設定でも `各駅停車` / `Local` にフォールバックする既存挙動を維持)。
+    const hasTrainType = !isBus;
+    // 鉄道は列車種別が無いと「次の停車駅」案内を出さない (各駅停車では自明)。
+    // バスは元アナウンスが常に「次の停車駅」を案内するため、列車種別の有無を問わず
+    // afterNextStation があれば announce する。
+    const shouldAnnounceAfterNextStop = isBus
+      ? !!afterNextStation
+      : !!(currentTrainType && afterNextStation);
+    // TOEI 等で `{vehicleJa}は、…{boundForJa}ゆきです` の塊を出すかどうか。
+    // 鉄道は停車のたびに繰り返し読み上げる (常に true)。
+    // バスは初回放送のみ (実機の都営バスがそういう挙動なので、PR #5990 で
+    // バス版だけ明示的に firstSpeech ゲートを入れていた)。
+    const announceVehicleSummary = !isBus || firstSpeech;
+
     return {
       // フラグ
       firstSpeech,
@@ -330,7 +355,9 @@ export const useTTSText = (
       hasConnectedLines: connectedLines.length > 0,
       hasBetweenStations: betweenNextStation.length > 0,
       hasAfterNextStation: !!afterNextStation,
-      hasTrainTypeAndAfterNext: !!(currentTrainType && afterNextStation),
+      hasTrainType,
+      shouldAnnounceAfterNextStop,
+      announceVehicleSummary,
       hasViaStation: !!viaStation,
       nextStationIsBound:
         nextStation?.groupId === selectedBound?.groupId && !isLoopLine,
@@ -340,6 +367,20 @@ export const useTTSText = (
       hasNextStationNumberLineSymbol: !!nextStationNumber?.lineSymbol?.length,
       hasNextStationNumberText: nextStationNumberText.length > 0,
       yamanoteTrainTypeEn: yamanoteTrainTypeEn ?? '',
+
+      // 乗り物名 (アナウンスで `この電車` / `この列車` / `このバス` をテーマと
+      // モードで切り替える)。JR_KYUSHU の鉄道のみ歴史的に `この列車` を使うため
+      // 個別分岐させる。
+      vehicleJa: isBus
+        ? 'このバス'
+        : theme === APP_THEME.JR_KYUSHU
+          ? 'この列車'
+          : 'この電車',
+      vehicleEn: isBus ? 'bus' : 'train',
+      vehicleEnPlural: isBus ? 'buses' : 'trains',
+      // 「次の停車場」を表す語。バスアナウンスは慣習的に "stop" を用いる。
+      // 鉄道は既存表記 "station" を維持。
+      placeEn: isBus ? 'stop' : 'station',
 
       // 日本語
       nextStationJa: replaceJapaneseText(
@@ -410,6 +451,12 @@ export const useTTSText = (
       nextStationEn: ph(nextStation?.nameTtsSegments, nextStation?.nameRoman),
       currentLineEn: ph(currentLine.nameTtsSegments, currentLine.nameRoman),
       currentLineCompanyEn: currentLine.company?.nameEnglishShort ?? '',
+      // "Thank you for using the X" に差し込む語。鉄道は路線名 (e.g. "Tokyo Metro Tozai Line")、
+      // バスは路線レコードに英語名が無いケースが多いので会社名 (e.g. "Toei Bus") を使う。
+      // 旧 useBusTTSText が `station.line.company.nameEnglishShort` を採用していた挙動に揃える。
+      currentLineThanksEn: isBus
+        ? (currentLine.company?.nameEnglishShort ?? '')
+        : ph(currentLine.nameTtsSegments, currentLine.nameRoman),
       boundForEn,
       // 多くのテーマで使う共通形 (yamanote ?? phoneme || 'Local')
       trainTypeEn:
@@ -446,6 +493,7 @@ export const useTTSText = (
     currentTrainType,
     firstSpeech,
     isAfterNextStopTerminus,
+    isBus,
     isLoopLine,
     isNextStopTerminus,
     lastAnnouncedStop,
@@ -454,6 +502,7 @@ export const useTTSText = (
     nextStationNumberText,
     selectedBound,
     shouldAnnounceJrWestStopList,
+    theme,
     ttsTransferLines,
     viaStation,
     yamanoteTrainTypeEn,
