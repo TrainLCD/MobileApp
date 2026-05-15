@@ -5,8 +5,8 @@ import { useEffect } from 'react';
 import type { Station } from '~/@types/graphql';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
-import { useBusTTSText } from '~/hooks/useBusTTSText';
 import { useNextStation } from '~/hooks/useNextStation';
+import { useTTSText } from '~/hooks/useTTSText';
 import type { LineDirection } from '~/models/Bound';
 import type { HeaderStoppingState } from '~/models/HeaderTransitionState';
 import type { AppTheme } from '~/models/Theme';
@@ -20,6 +20,8 @@ jest.mock('~/hooks/useNextStation', () => ({
   useNextStation: jest.fn(),
 }));
 
+// バスモード (useTTSText の isBus=true) の TTS テキスト生成テスト。
+// 旧 useBusTTSText を useTTSText に統合した後の回帰確認を兼ねる。
 const useBusTTSTextWithJotai = (
   theme: AppTheme,
   headerState: HeaderStoppingState,
@@ -52,7 +54,7 @@ const useBusTTSTextWithJotai = (
     setLineState((prev) => ({ ...prev, selectedLine }));
   }, [headerState, setLineState, setStationState, theme]);
 
-  const texts = useBusTTSText(firstSpeech, true);
+  const texts = useTTSText(firstSpeech, true, true);
   return texts;
 };
 
@@ -63,7 +65,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 const setupMockUseNextStation = (station: Station) =>
   (useNextStation as jest.Mock).mockReturnValue(station);
 
-describe('useBusTTSText', () => {
+describe('useTTSText (bus mode)', () => {
   beforeEach(() => {
     jest.resetModules();
     setupMockUseNextStation(TOEI_SHINJUKU_LINE_STATIONS[1]);
@@ -104,7 +106,7 @@ describe('useBusTTSText', () => {
             setLineState((prev) => ({ ...prev, selectedLine }));
           }, [setLineState, setStationState]);
 
-          return useBusTTSText(true, false);
+          return useTTSText(true, false, true);
         },
         {
           wrapper: wrapper,
@@ -330,6 +332,25 @@ describe('useBusTTSText', () => {
       expect(jaText).toContain('このバスは');
       expect(enText).toContain('Thank you for using the');
       expect(enText).toContain('This bus is bound for');
+    });
+
+    // 回帰テスト: TOEIの「このバスは、〜ゆきです。」/ "This bus is bound for ..." は
+    // 初回放送 (firstSpeech=true) のみで再生される必要がある。
+    // 以前はテンプレート構造の都合で firstSpeech 条件の外に出ており、停車のたびに
+    // 繰り返し再生されていた。
+    test('should omit bound-for phrase on subsequent NEXT (firstSpeech=false)', () => {
+      const { result } = renderHook(
+        () => useBusTTSTextWithJotai('TOEI', 'NEXT', false),
+        {
+          wrapper: wrapper,
+        }
+      );
+      const [jaText, enText] = result.current.text;
+      expect(jaText).toContain('次は');
+      expect(jaText).not.toContain('このバスは');
+      expect(jaText).not.toContain('ご利用くださいまして');
+      expect(enText).not.toContain('This bus is bound for');
+      expect(enText).not.toContain('Thank you for using the');
     });
 
     test('should generate ARRIVING text', () => {
