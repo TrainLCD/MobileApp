@@ -358,12 +358,33 @@ export const CommonCard: React.FC<Props> = ({
         }
       }
     }
+    // バス系統名が title として渡された場合は「行」も「方面」と同様に縮小する。
+    // 「池袋駅東口行（新宿伊勢丹前経由・循環）」のように後続にカッコが続くケースに対応するため、
+    // カッコで分割した各セグメントの末尾の「行」を切り出す。
+    const shouldShrinkYuki = isBus && !!title && isJapanese;
+    const parts: { text: string; kind: 'main' | 'parens' | 'affix' }[] = [];
+    for (const seg of main.split(PAREN_GROUP_REGEX)) {
+      if (!seg) continue;
+      if (PAREN_WRAPPED_REGEX.test(seg)) {
+        parts.push({ text: seg, kind: 'parens' });
+        continue;
+      }
+      if (shouldShrinkYuki) {
+        const match = /^(.+?)(行)$/.exec(seg);
+        if (match) {
+          if (match[1]) parts.push({ text: match[1], kind: 'main' });
+          parts.push({ text: match[2], kind: 'affix' });
+          continue;
+        }
+      }
+      parts.push({ text: seg, kind: 'main' });
+    }
     return {
       titlePrefix: prefix,
-      titleParts: main.split(PAREN_GROUP_REGEX),
+      titleParts: parts,
       titleSuffix: suffix,
     };
-  }, [titleOrLineName, shrinkBoundAffix]);
+  }, [titleOrLineName, shrinkBoundAffix, isBus, title]);
 
   const additionalRootStyle = useMemo(
     () => ({
@@ -468,22 +489,40 @@ export const CommonCard: React.FC<Props> = ({
           </View>
         )}
         <View style={styles.texts}>
-          <Typography style={styles.title} numberOfLines={1}>
+          <Typography
+            style={styles.title}
+            // バス系統名は長くなりがちなので 3 行まで許容する
+            numberOfLines={isBus ? 3 : 1}
+            adjustsFontSizeToFit
+          >
             {titlePrefix ? (
               <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
             ) : null}
-            {titleParts.map((part, index) =>
-              PAREN_WRAPPED_REGEX.test(part) ? (
-                <Typography key={`${index}-${part}`} style={styles.titleParens}>
-                  {index > 0 && !/\s$/.test(titleParts[index - 1] ?? '')
-                    ? ' '
-                    : ''}
-                  {hideParens ? part.slice(1, -1) : part}
-                </Typography>
-              ) : (
-                part
-              )
-            )}
+            {titleParts.map((part, index) => {
+              if (part.kind === 'parens') {
+                const prevText = titleParts[index - 1]?.text ?? '';
+                return (
+                  <Typography
+                    key={`${index}-${part.text}`}
+                    style={styles.titleParens}
+                  >
+                    {index > 0 && !/\s$/.test(prevText) ? ' ' : ''}
+                    {hideParens ? part.text.slice(1, -1) : part.text}
+                  </Typography>
+                );
+              }
+              if (part.kind === 'affix') {
+                return (
+                  <Typography
+                    key={`${index}-${part.text}`}
+                    style={styles.titleAffix}
+                  >
+                    {part.text}
+                  </Typography>
+                );
+              }
+              return part.text;
+            })}
             {titleSuffix ? (
               <Typography style={styles.titleAffix}>{titleSuffix}</Typography>
             ) : null}

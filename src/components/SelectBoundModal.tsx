@@ -911,7 +911,9 @@ export const SelectBoundModal: React.FC<Props> = ({
               >
                 {translate(
                   fetchedTrainTypes.length > 1
-                    ? 'settingsAndTrainType'
+                    ? isBus
+                      ? 'settingsAndBusRoute'
+                      : 'settingsAndTrainType'
                     : 'settings'
                 )}
               </Button>
@@ -985,6 +987,7 @@ export const SelectBoundModal: React.FC<Props> = ({
           }
         }}
         trainTypeDisabled={fetchedTrainTypes.length <= 1}
+        isBus={isBus}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
