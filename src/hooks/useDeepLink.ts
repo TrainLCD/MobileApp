@@ -146,15 +146,16 @@ export const useDeepLink = () => {
     }
   }, []);
 
+  // sids deep links express intent purely through station order: the first
+  // entry is the origin and the last is the destination. Direction is fixed to
+  // INBOUND — callers reverse the sids list to share the opposite direction.
   const openRouteByStationIds = useCallback(
     async ({
       stationIds,
-      direction,
       autoMode,
       theme,
     }: {
       stationIds: number[];
-      direction: 0 | 1;
       autoMode: boolean;
       theme: ThemePreference | undefined;
     }) => {
@@ -185,8 +186,6 @@ export const useDeepLink = () => {
       if (!line) {
         return;
       }
-      const lineDirection: LineDirection =
-        direction === 0 ? 'INBOUND' : 'OUTBOUND';
 
       setLineState((prev) => ({
         ...prev,
@@ -197,11 +196,8 @@ export const useDeepLink = () => {
         ...prev,
         station: head,
         stations,
-        selectedBound:
-          lineDirection === 'INBOUND'
-            ? stations[stations.length - 1]
-            : stations[0],
-        selectedDirection: lineDirection,
+        selectedBound: stations[stations.length - 1],
+        selectedDirection: 'INBOUND',
         pendingStation: null,
         pendingStations: [],
         wantedDestination: null,
@@ -310,7 +306,8 @@ export const useDeepLink = () => {
           ? (theme as ThemePreference)
           : undefined;
 
-      // New `sids` form takes precedence and ignores sgid/lid/lgid entirely.
+      // New `sids` form takes precedence and ignores sgid/lid/lgid/dir
+      // entirely — station order alone encodes the intended direction.
       if (typeof sids === 'string' && sids.length > 0) {
         const rawStationIds = sids.split(',').map((raw) => raw.trim());
         // Reject the entire link if any token is not a strict positive integer
@@ -321,17 +318,9 @@ export const useDeepLink = () => {
         ) {
           return;
         }
-        // `dir` defaults to 0 (INBOUND) when omitted for sids-based links;
-        // explicit invalid values still cause a no-op.
-        const sidsDirection =
-          typeof dir === 'string' && dir.length > 0 ? Number(dir) : 0;
-        if (sidsDirection !== 0 && sidsDirection !== 1) {
-          return;
-        }
         const stationIds = rawStationIds.map((raw) => Number(raw));
         await openRouteByStationIds({
           stationIds,
-          direction: sidsDirection,
           autoMode,
           theme: parsedTheme,
         });
