@@ -302,11 +302,6 @@ export const useDeepLink = () => {
       }
       const { sgid, dir, lgid, lid, sids, auto, theme } = parsed.queryParams;
 
-      const direction = Number(dir);
-      if (direction !== 0 && direction !== 1) {
-        return;
-      }
-
       const autoMode = auto === '1';
       const parsedTheme =
         typeof theme === 'string' &&
@@ -326,13 +321,26 @@ export const useDeepLink = () => {
         ) {
           return;
         }
+        // `dir` defaults to 0 (INBOUND) when omitted for sids-based links;
+        // explicit invalid values still cause a no-op.
+        const sidsDirection =
+          typeof dir === 'string' && dir.length > 0 ? Number(dir) : 0;
+        if (sidsDirection !== 0 && sidsDirection !== 1) {
+          return;
+        }
         const stationIds = rawStationIds.map((raw) => Number(raw));
         await openRouteByStationIds({
           stationIds,
-          direction,
+          direction: sidsDirection,
           autoMode,
           theme: parsedTheme,
         });
+        return;
+      }
+
+      // Legacy `sgid`/`lid` form: `dir` is required.
+      const direction = Number(dir);
+      if (direction !== 0 && direction !== 1) {
         return;
       }
 

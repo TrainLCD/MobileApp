@@ -764,6 +764,72 @@ describe('useDeepLink', () => {
     expect(mockSetStationState).not.toHaveBeenCalled();
   });
 
+  it('sidsでdirが省略された場合はINBOUNDとして扱う', async () => {
+    const stationA = createStation(1131211, {
+      line: { id: 11302 },
+    } as Parameters<typeof createStation>[1]);
+    const stationB = createStation(1131310, {
+      line: { id: 11302 },
+    } as Parameters<typeof createStation>[1]);
+
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://route?sids=1131211,1131310'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { sids: '1131211,1131310' },
+    });
+
+    const { mockSetStationState } = setupAtoms();
+    const { mockFetchByIds } = setupQueries();
+    mockFetchByIds.mockResolvedValue({
+      data: { stations: [stationA, stationB] },
+    });
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockFetchByIds).toHaveBeenCalled();
+    });
+
+    const stationSetter = mockSetStationState.mock.calls[0][0];
+    const stationResult = stationSetter(createStationState());
+    expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
+    expect(stationResult.selectedBound?.id).toBe(1131310);
+  });
+
+  it('sidsでdirが不正値の場合はstateを変更しない', async () => {
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://route?sids=1131211,1131310&dir=2'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { sids: '1131211,1131310', dir: '2' },
+    });
+
+    const { mockSetStationState } = setupAtoms();
+    const { mockFetchByIds } = setupQueries();
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockFetchByIds).not.toHaveBeenCalled();
+    expect(mockSetStationState).not.toHaveBeenCalled();
+  });
+
   it('sidsに不正なトークンが含まれる場合はstateを変更しない', async () => {
     mockGetInitialURL.mockResolvedValue(
       'CanaryTrainLCD://route?sids=1131211,123x,2800217&dir=0'
