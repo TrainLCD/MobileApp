@@ -317,13 +317,16 @@ export const useDeepLink = () => {
 
       // New `sids` form takes precedence and ignores sgid/lid/lgid entirely.
       if (typeof sids === 'string' && sids.length > 0) {
-        const stationIds = sids
-          .split(',')
-          .map((raw) => Number.parseInt(raw.trim(), 10))
-          .filter((id) => Number.isInteger(id) && id > 0);
-        if (stationIds.length < 2) {
+        const rawStationIds = sids.split(',').map((raw) => raw.trim());
+        // Reject the entire link if any token is not a strict positive integer
+        // (Number.parseInt would silently accept "123x" as 123).
+        if (
+          rawStationIds.length < 2 ||
+          rawStationIds.some((raw) => !/^[1-9]\d*$/.test(raw))
+        ) {
           return;
         }
+        const stationIds = rawStationIds.map((raw) => Number(raw));
         await openRouteByStationIds({
           stationIds,
           direction,

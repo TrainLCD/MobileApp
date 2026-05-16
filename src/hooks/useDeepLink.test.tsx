@@ -764,6 +764,33 @@ describe('useDeepLink', () => {
     expect(mockSetStationState).not.toHaveBeenCalled();
   });
 
+  it('sidsに不正なトークンが含まれる場合はstateを変更しない', async () => {
+    mockGetInitialURL.mockResolvedValue(
+      'CanaryTrainLCD://route?sids=1131211,123x,2800217&dir=0'
+    );
+    mockParse.mockReturnValue({
+      queryParams: { sids: '1131211,123x,2800217', dir: '0' },
+    });
+
+    const { mockSetStationState } = setupAtoms();
+    const { mockFetchByIds } = setupQueries();
+
+    render(
+      <HookBridge
+        onReady={() => {
+          /* noop */
+        }}
+      />
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockFetchByIds).not.toHaveBeenCalled();
+    expect(mockSetStationState).not.toHaveBeenCalled();
+  });
+
   it('sidsの解決結果が空の場合はstateを変更しない', async () => {
     mockGetInitialURL.mockResolvedValue(
       'CanaryTrainLCD://route?sids=1,2,3&dir=0'
