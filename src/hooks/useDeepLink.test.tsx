@@ -737,44 +737,50 @@ describe('useDeepLink', () => {
     expect(navResult.autoModeEnabled).toBe(false);
   });
 
-  it('sidsとdir=1の場合はselectedBoundが先頭駅になる', async () => {
-    const stationA = createStation(1131211, {
-      line: { id: 11302 },
-    } as Parameters<typeof createStation>[1]);
-    const stationB = createStation(1131310, {
-      line: { id: 11302 },
-    } as Parameters<typeof createStation>[1]);
+  it.each([
+    ['dir=0', { sids: '1131211,1131310', dir: '0' }],
+    ['dir=1', { sids: '1131211,1131310', dir: '1' }],
+    ['dir=任意の値', { sids: '1131211,1131310', dir: '42' }],
+    ['dir=非数値', { sids: '1131211,1131310', dir: 'abc' }],
+  ])(
+    'sidsで%sが渡されても無視されINBOUNDとして扱う',
+    async (_label, queryParams) => {
+      const stationA = createStation(1131211, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+      const stationB = createStation(1131310, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
 
-    mockGetInitialURL.mockResolvedValue(
-      'CanaryTrainLCD://route?sids=1131211,1131310&dir=1'
-    );
-    mockParse.mockReturnValue({
-      queryParams: { sids: '1131211,1131310', dir: '1' },
-    });
+      mockGetInitialURL.mockResolvedValue(
+        `CanaryTrainLCD://route?sids=${queryParams.sids}&dir=${queryParams.dir}`
+      );
+      mockParse.mockReturnValue({ queryParams });
 
-    const { mockSetStationState } = setupAtoms();
-    const { mockFetchByIds } = setupQueries();
-    mockFetchByIds.mockResolvedValue({
-      data: { stations: [stationA, stationB] },
-    });
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: [stationA, stationB] },
+      });
 
-    render(
-      <HookBridge
-        onReady={() => {
-          /* noop */
-        }}
-      />
-    );
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
 
-    await waitFor(() => {
-      expect(mockFetchByIds).toHaveBeenCalled();
-    });
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
 
-    const stationSetter = mockSetStationState.mock.calls[0][0];
-    const stationResult = stationSetter(createStationState());
-    expect(stationResult.selectedDirection).toBe<LineDirection>('OUTBOUND');
-    expect(stationResult.selectedBound?.id).toBe(1131211);
-  });
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
+      expect(stationResult.selectedBound?.id).toBe(1131310);
+    }
+  );
 
   it('sidsが1件以下の場合はstateを変更しない', async () => {
     mockGetInitialURL.mockResolvedValue(
@@ -842,33 +848,6 @@ describe('useDeepLink', () => {
     expect(stationResult.selectedBound?.id).toBe(1131310);
   });
 
-  it('sidsでdirが不正値の場合はstateを変更しない', async () => {
-    mockGetInitialURL.mockResolvedValue(
-      'CanaryTrainLCD://route?sids=1131211,1131310&dir=2'
-    );
-    mockParse.mockReturnValue({
-      queryParams: { sids: '1131211,1131310', dir: '2' },
-    });
-
-    const { mockSetStationState } = setupAtoms();
-    const { mockFetchByIds } = setupQueries();
-
-    render(
-      <HookBridge
-        onReady={() => {
-          /* noop */
-        }}
-      />
-    );
-
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    expect(mockFetchByIds).not.toHaveBeenCalled();
-    expect(mockSetStationState).not.toHaveBeenCalled();
-  });
-
   it('sidsに不正なトークンが含まれる場合はstateを変更しない', async () => {
     mockGetInitialURL.mockResolvedValue(
       'CanaryTrainLCD://route?sids=1131211,123x,2800217&dir=0'
@@ -923,13 +902,16 @@ describe('useDeepLink', () => {
     expect(mockSetStationState).not.toHaveBeenCalled();
   });
 
-  it('sidsが指定されている場合はsgid/lid/lgidを無視する', async () => {
-    const station = createStation(1131211, {
+  it('sidsが指定されている場合はsgid/lid/lgid/dirを無視する', async () => {
+    const stationA = createStation(1131211, {
+      line: { id: 11302 },
+    } as Parameters<typeof createStation>[1]);
+    const stationB = createStation(1131310, {
       line: { id: 11302 },
     } as Parameters<typeof createStation>[1]);
 
     mockGetInitialURL.mockResolvedValue(
-      'CanaryTrainLCD://route?sids=1131211,1131310&sgid=99&lid=999&lgid=42&dir=0'
+      'CanaryTrainLCD://route?sids=1131211,1131310&sgid=99&lid=999&lgid=42&dir=1'
     );
     mockParse.mockReturnValue({
       queryParams: {
@@ -937,15 +919,15 @@ describe('useDeepLink', () => {
         sgid: '99',
         lid: '999',
         lgid: '42',
-        dir: '0',
+        dir: '1',
       },
     });
 
-    setupAtoms();
+    const { mockSetStationState } = setupAtoms();
     const { mockFetchByIds, mockFetchByLine, mockFetchByGroup } =
       setupQueries();
     mockFetchByIds.mockResolvedValue({
-      data: { stations: [station] },
+      data: { stations: [stationA, stationB] },
     });
 
     render(
@@ -962,6 +944,13 @@ describe('useDeepLink', () => {
 
     expect(mockFetchByLine).not.toHaveBeenCalled();
     expect(mockFetchByGroup).not.toHaveBeenCalled();
+
+    // dir=1 is ignored: direction stays INBOUND and selectedBound is the last
+    // station, identical to the dir-omitted case.
+    const stationSetter = mockSetStationState.mock.calls[0][0];
+    const stationResult = stationSetter(createStationState());
+    expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
+    expect(stationResult.selectedBound?.id).toBe(1131310);
   });
 
   it('sidsにautoとthemeを併用できる', async () => {
