@@ -7,6 +7,7 @@ import type { Station, TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
+  GET_STATIONS_BY_IDS,
 } from '~/lib/graphql/queries';
 import type { LineDirection } from '../models/Bound';
 import { APP_THEME, type ThemePreference } from '../models/Theme';
@@ -34,6 +35,14 @@ type GetLineGroupStationsData = {
 
 type GetLineGroupStationsVariables = {
   lineGroupId: number;
+};
+
+type GetStationsByIdsData = {
+  stations: Station[];
+};
+
+type GetStationsByIdsVariables = {
+  ids: number[];
 };
 
 const navigateToMainAction = CommonActions.navigate({
@@ -83,6 +92,12 @@ export const useDeepLink = () => {
   ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
+  const [
+    fetchStationsByIds,
+    { loading: fetchStationsByIdsLoading, error: fetchStationsByIdsError },
+  ] = useLazyQuery<GetStationsByIdsData, GetStationsByIdsVariables>(
+    GET_STATIONS_BY_IDS
+  );
 
   const applyRoute = useCallback(
     (station: Station, stations: Station[], direction: LineDirection) => {
@@ -130,6 +145,85 @@ export const useDeepLink = () => {
       );
     }
   }, []);
+
+  const openRouteByStationIds = useCallback(
+    async ({
+      stationIds,
+      direction,
+      autoMode,
+      theme,
+    }: {
+      stationIds: number[];
+      direction: 0 | 1;
+      autoMode: boolean;
+      theme: ThemePreference | undefined;
+    }) => {
+      if (theme) {
+        setThemePreference(theme);
+      }
+
+      const { data } = await fetchStationsByIds({
+        variables: { ids: stationIds },
+      });
+      const fetched = data?.stations ?? [];
+      if (fetched.length === 0) {
+        return;
+      }
+
+      // Preserve the order specified in the deep link; server response order is
+      // not guaranteed and stations not resolved are silently dropped.
+      const byId = new Map(fetched.map((sta) => [sta.id, sta] as const));
+      const stations = stationIds
+        .map((id) => byId.get(id))
+        .filter((sta): sta is Station => sta != null);
+      if (stations.length === 0) {
+        return;
+      }
+
+      const head = stations[0];
+      const line = head.line;
+      if (!line) {
+        return;
+      }
+      const lineDirection: LineDirection =
+        direction === 0 ? 'INBOUND' : 'OUTBOUND';
+
+      setLineState((prev) => ({
+        ...prev,
+        selectedLine: line,
+        pendingLine: null,
+      }));
+      setStationState((prev) => ({
+        ...prev,
+        station: head,
+        stations,
+        selectedBound:
+          lineDirection === 'INBOUND'
+            ? stations[stations.length - 1]
+            : stations[0],
+        selectedDirection: lineDirection,
+        pendingStation: null,
+        pendingStations: [],
+        wantedDestination: null,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        leftStations: [],
+        trainType: (head.trainType ?? null) as TrainType | null,
+        autoModeEnabled: autoMode ? true : prev.autoModeEnabled,
+      }));
+
+      await navigateToMain();
+    },
+    [
+      fetchStationsByIds,
+      navigateToMain,
+      setLineState,
+      setNavigationState,
+      setStationState,
+      setThemePreference,
+    ]
+  );
 
   // lineId is always required: it serves as the fallback query key when
   // lineGroupId is absent and is validated upstream in handleUrl.
@@ -206,20 +300,8 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
-      const { sgid, dir, lgid, lid, auto, theme } = parsed.queryParams;
+      const { sgid, dir, lgid, lid, sids, auto, theme } = parsed.queryParams;
 
-      const stationGroupId = Number(sgid);
-      const direction = Number(dir);
-      const lineId = Number(lid);
-
-      if (!stationGroupId || !lineId) {
-        return;
-      }
-      if (direction !== 0 && direction !== 1) {
-        return;
-      }
-
-      const lineGroupId = lgid ? Number(lgid) : undefined;
       const autoMode = auto === '1';
       const parsedTheme =
         typeof theme === 'string' &&
@@ -227,6 +309,49 @@ export const useDeepLink = () => {
           (Object.values(APP_THEME) as string[]).includes(theme))
           ? (theme as ThemePreference)
           : undefined;
+
+      // New `sids` form takes precedence and ignores sgid/lid/lgid entirely.
+      if (typeof sids === 'string' && sids.length > 0) {
+        const rawStationIds = sids.split(',').map((raw) => raw.trim());
+        // Reject the entire link if any token is not a strict positive integer
+        // (Number.parseInt would silently accept "123x" as 123).
+        if (
+          rawStationIds.length < 2 ||
+          rawStationIds.some((raw) => !/^[1-9]\d*$/.test(raw))
+        ) {
+          return;
+        }
+        // `dir` defaults to 0 (INBOUND) when omitted for sids-based links;
+        // explicit invalid values still cause a no-op.
+        const sidsDirection =
+          typeof dir === 'string' && dir.length > 0 ? Number(dir) : 0;
+        if (sidsDirection !== 0 && sidsDirection !== 1) {
+          return;
+        }
+        const stationIds = rawStationIds.map((raw) => Number(raw));
+        await openRouteByStationIds({
+          stationIds,
+          direction: sidsDirection,
+          autoMode,
+          theme: parsedTheme,
+        });
+        return;
+      }
+
+      // Legacy `sgid`/`lid` form: `dir` is required.
+      const direction = Number(dir);
+      if (direction !== 0 && direction !== 1) {
+        return;
+      }
+
+      const stationGroupId = Number(sgid);
+      const lineId = Number(lid);
+
+      if (!stationGroupId || !lineId) {
+        return;
+      }
+
+      const lineGroupId = lgid ? Number(lgid) : undefined;
 
       await openLink({
         stationGroupId,
@@ -237,7 +362,7 @@ export const useDeepLink = () => {
         theme: parsedTheme,
       });
     },
-    [openLink]
+    [openLink, openRouteByStationIds]
   );
 
   const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);
@@ -271,7 +396,12 @@ export const useDeepLink = () => {
   return {
     initialUrlProcessed,
     isLoading:
-      fetchStationsByLineGroupIdLoading || fetchStationsByLineIdLoading,
-    error: fetchStationsByLineGroupIdError || fetchStationsByLineIdError,
+      fetchStationsByLineGroupIdLoading ||
+      fetchStationsByLineIdLoading ||
+      fetchStationsByIdsLoading,
+    error:
+      fetchStationsByLineGroupIdError ||
+      fetchStationsByLineIdError ||
+      fetchStationsByIdsError,
   };
 };

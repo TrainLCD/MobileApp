@@ -368,6 +368,16 @@ export const GET_LINE_GROUP_STATIONS = gql`
   }
 `;
 
+// Query for getting multiple stations by their IDs (per-operator unique row IDs)
+export const GET_STATIONS_BY_IDS = gql`
+  ${STATION_FRAGMENT}
+  query GetStationsByIds($ids: [Int!]!) {
+    stations(ids: $ids) {
+      ...StationFields
+    }
+  }
+`;
+
 // Lightweight fragment for route/train-type selection (TrainTypeListModal + computeCurrentStationInRoutes)
 export const LINE_ROUTE_FRAGMENT = gql`
   ${LINE_SYMBOL_FRAGMENT}
