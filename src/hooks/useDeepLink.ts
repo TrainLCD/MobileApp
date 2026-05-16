@@ -344,14 +344,31 @@ export const useDeepLink = () => {
         return;
       }
 
-      const stationGroupId = Number(sgid);
-      const lineId = Number(lid);
-
-      if (!stationGroupId || !lineId) {
+      // Match the strict positive-integer validation used for `sids` so that
+      // values like "1.5" or "Infinity" no longer leak into GraphQL `Int`
+      // variables. `lgid` is optional but, when present, must be a positive
+      // integer; otherwise we reject the entire link instead of silently
+      // falling through to the lineId path with a malformed value.
+      const rawStationGroupId = typeof sgid === 'string' ? sgid.trim() : '';
+      const rawLineId = typeof lid === 'string' ? lid.trim() : '';
+      if (
+        !/^[1-9]\d*$/.test(rawStationGroupId) ||
+        !/^[1-9]\d*$/.test(rawLineId)
+      ) {
         return;
       }
 
-      const lineGroupId = lgid ? Number(lgid) : undefined;
+      const stationGroupId = Number(rawStationGroupId);
+      const lineId = Number(rawLineId);
+
+      let lineGroupId: number | undefined;
+      if (typeof lgid === 'string' && lgid.trim().length > 0) {
+        const rawLineGroupId = lgid.trim();
+        if (!/^[1-9]\d*$/.test(rawLineGroupId)) {
+          return;
+        }
+        lineGroupId = Number(rawLineGroupId);
+      }
 
       await openLink({
         stationGroupId,

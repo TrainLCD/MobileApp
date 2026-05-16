@@ -320,6 +320,45 @@ describe('useDeepLink', () => {
     expect(mockSetStationState).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['sgidが小数', { lid: '999', sgid: '1.5', dir: '0' }],
+    ['sgidがInfinity', { lid: '999', sgid: 'Infinity', dir: '0' }],
+    ['sgidが0', { lid: '999', sgid: '0', dir: '0' }],
+    ['sgidに余分な文字', { lid: '999', sgid: '123x', dir: '0' }],
+    ['lidが小数', { lid: '1.5', sgid: '1', dir: '0' }],
+    ['lidが指数表記', { lid: '1e3', sgid: '1', dir: '0' }],
+    ['lgidが小数', { lid: '999', sgid: '1', lgid: '1.5', dir: '0' }],
+    ['lgidが不正値', { lid: '999', sgid: '1', lgid: 'abc', dir: '0' }],
+  ])(
+    'レガシー経路で%sの場合はstateを変更しない',
+    async (_label, queryParams) => {
+      mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://?legacy');
+      mockParse.mockReturnValue({ queryParams });
+
+      const { mockSetStationState, mockSetNavigationState, mockSetLineState } =
+        setupAtoms();
+      const { mockFetchByLine, mockFetchByGroup } = setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockFetchByLine).not.toHaveBeenCalled();
+      expect(mockFetchByGroup).not.toHaveBeenCalled();
+      expect(mockSetStationState).not.toHaveBeenCalled();
+      expect(mockSetNavigationState).not.toHaveBeenCalled();
+      expect(mockSetLineState).not.toHaveBeenCalled();
+    }
+  );
+
   it('駅が見つからなければstateを変更しない', async () => {
     mockGetInitialURL.mockResolvedValue(
       'CanaryTrainLCD://?lid=999&sgid=99&dir=0'
