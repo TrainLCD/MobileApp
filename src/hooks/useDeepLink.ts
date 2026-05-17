@@ -9,6 +9,11 @@ import {
   GET_LINE_STATIONS,
   GET_STATIONS_BY_IDS,
 } from '~/lib/graphql/queries';
+import {
+  ROUTE_RESOLVER_ID_PATTERN,
+  ROUTE_RESOLVER_TIMEOUT_MS,
+  resolveSidsFromShortId,
+} from '~/lib/routeResolver';
 import type { LineDirection } from '../models/Bound';
 import { APP_THEME, type ThemePreference } from '../models/Theme';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -98,6 +103,9 @@ export const useDeepLink = () => {
   ] = useLazyQuery<GetStationsByIdsData, GetStationsByIdsVariables>(
     GET_STATIONS_BY_IDS
   );
+
+  const [resolverError, setResolverError] = useState<Error | null>(null);
+  const [resolverLoading, setResolverLoading] = useState(false);
 
   const applyRoute = useCallback(
     (station: Station, stations: Station[], direction: LineDirection) => {
@@ -310,7 +318,7 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
-      const { sgid, dir, lgid, lid, sids, skips, auto, theme } =
+      const { sgid, dir, lgid, lid, sids, skips, id, auto, theme } =
         parsed.queryParams;
 
       const autoMode = auto === '1';
@@ -320,6 +328,42 @@ export const useDeepLink = () => {
           (Object.values(APP_THEME) as string[]).includes(theme))
           ? (theme as ThemePreference)
           : undefined;
+
+      // `id` (resolver short code) supersedes every other route param. When it
+      // is present we must not silently fall through to sids/sgid: doing so
+      // would resolve a different route than the one the user shared. Use
+      // `!= null` rather than a length check so that `?id=` (empty string) and
+      // non-string shapes (e.g. an array of values) still fail validation and
+      // no-op, instead of leaking to the sids/legacy paths.
+      if (id != null) {
+        if (typeof id !== 'string' || !ROUTE_RESOLVER_ID_PATTERN.test(id)) {
+          return;
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          ROUTE_RESOLVER_TIMEOUT_MS
+        );
+        setResolverLoading(true);
+        try {
+          const { stationIds, skipIndices } = await resolveSidsFromShortId(
+            id,
+            controller.signal
+          );
+          await openRouteByStationIds({
+            stationIds,
+            skipIndices,
+            autoMode,
+            theme: parsedTheme,
+          });
+        } catch (err) {
+          setResolverError(err instanceof Error ? err : new Error(String(err)));
+        } finally {
+          clearTimeout(timeoutId);
+          setResolverLoading(false);
+        }
+        return;
+      }
 
       // New `sids` form takes precedence and ignores sgid/lid/lgid/dir
       // entirely — station order alone encodes the intended direction.
@@ -445,10 +489,12 @@ export const useDeepLink = () => {
     isLoading:
       fetchStationsByLineGroupIdLoading ||
       fetchStationsByLineIdLoading ||
-      fetchStationsByIdsLoading,
+      fetchStationsByIdsLoading ||
+      resolverLoading,
     error:
       fetchStationsByLineGroupIdError ||
       fetchStationsByLineIdError ||
-      fetchStationsByIdsError,
+      fetchStationsByIdsError ||
+      resolverError,
   };
 };
