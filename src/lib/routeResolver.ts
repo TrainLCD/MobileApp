@@ -29,24 +29,42 @@ export const getRouteResolverHost = (): string => {
   return host.replace(/\/+$/, '');
 };
 
+// GraphQL `Int` is a signed 32-bit integer per spec, and the station ID is
+// shipped into `stations(ids: [Int!]!)` — anything larger silently overflows
+// on the server.
+const GRAPHQL_INT_MAX = 2_147_483_647;
+
 // Resolver responses are user-controlled in practice — keep parsing strict so
 // a stray string / negative value cannot leak into GraphQL Int variables.
+// `Number.isSafeInteger` rejects long digit strings that would round on the
+// `Number(...)` cast (e.g. "9007199254740993" → 9007199254740992).
 const coerceStationId = (raw: unknown): number => {
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw > 0) {
+  if (
+    typeof raw === 'number' &&
+    Number.isSafeInteger(raw) &&
+    raw > 0 &&
+    raw <= GRAPHQL_INT_MAX
+  ) {
     return raw;
   }
   if (typeof raw === 'string' && /^[1-9]\d*$/.test(raw)) {
-    return Number(raw);
+    const parsed = Number(raw);
+    if (Number.isSafeInteger(parsed) && parsed <= GRAPHQL_INT_MAX) {
+      return parsed;
+    }
   }
   throw new Error('route resolver returned non-integer sid');
 };
 
 const coerceSkipIndex = (raw: unknown): number => {
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0) {
+  if (typeof raw === 'number' && Number.isSafeInteger(raw) && raw >= 0) {
     return raw;
   }
   if (typeof raw === 'string' && /^(0|[1-9]\d*)$/.test(raw)) {
-    return Number(raw);
+    const parsed = Number(raw);
+    if (Number.isSafeInteger(parsed)) {
+      return parsed;
+    }
   }
   throw new Error('route resolver returned non-integer skip index');
 };
@@ -87,8 +105,14 @@ export const resolveSidsFromShortId = async (
   signal: AbortSignal,
   host: string = getRouteResolverHost()
 ): Promise<ResolvedRoute> => {
+  // Defense-in-depth: useDeepLink already validates `id`, but enforce the
+  // contract at the library boundary so any future caller (tooling, tests)
+  // cannot inject arbitrary path segments.
+  if (!ROUTE_RESOLVER_ID_PATTERN.test(id)) {
+    throw new Error('invalid route resolver id');
+  }
   const base = host.replace(/\/+$/, '');
-  const response = await fetch(`${base}/api/routes/${id}`, {
+  const response = await fetch(`${base}/api/routes/${encodeURIComponent(id)}`, {
     signal,
     headers: { Accept: 'application/json' },
   });

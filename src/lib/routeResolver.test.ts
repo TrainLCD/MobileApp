@@ -207,6 +207,9 @@ describe('resolveSidsFromShortId', () => {
     ['小数', [1131211, 1.5]],
     ['末尾不正の文字列', [1131211, '12abc']],
     ['null', [1131211, null]],
+    ['Number.MAX_SAFE_INTEGER 超え文字列', [1131211, '9007199254740993']],
+    ['GraphQL Int 上限超え (2^31)', [1131211, 2_147_483_648]],
+    ['GraphQL Int 上限超え文字列', [1131211, '2147483648']],
   ])('sidsに%sが含まれる場合はエラーを投げる', async (_label, sids) => {
     setupFetch(
       async () => new Response(JSON.stringify({ sids }), { status: 200 })
@@ -217,6 +220,37 @@ describe('resolveSidsFromShortId', () => {
     ).rejects.toThrow(/non-integer sid/);
   });
 
+  it('GraphQL Int 上限ちょうど (2^31 - 1) は受理する', async () => {
+    setupFetch(
+      async () =>
+        new Response(JSON.stringify({ sids: [1131211, 2_147_483_647] }), {
+          status: 200,
+        })
+    );
+
+    const result = await resolveSidsFromShortId(
+      'edge',
+      new AbortController().signal,
+      TEST_HOST
+    );
+
+    expect(result.stationIds).toEqual([1131211, 2_147_483_647]);
+  });
+
+  it('skipsに Number.MAX_SAFE_INTEGER 超え文字列が含まれる場合はエラーを投げる', async () => {
+    setupFetch(
+      async () =>
+        new Response(
+          JSON.stringify({ sids: [1, 2], skips: ['9007199254740993'] }),
+          { status: 200 }
+        )
+    );
+
+    await expect(
+      resolveSidsFromShortId('bad', new AbortController().signal, TEST_HOST)
+    ).rejects.toThrow(/non-integer skip/);
+  });
+
   it('fetchが例外を投げた場合はそのまま伝播する', async () => {
     setupFetch(async () => {
       throw new Error('network down');
@@ -225,5 +259,22 @@ describe('resolveSidsFromShortId', () => {
     await expect(
       resolveSidsFromShortId('net', new AbortController().signal, TEST_HOST)
     ).rejects.toThrow('network down');
+  });
+
+  it.each([
+    ['空文字', ''],
+    ['許可外文字 (パス区切り)', 'a/b'],
+    ['許可外文字 (空白)', 'a b'],
+    ['許可外文字 (記号)', 'a.b'],
+    ['33文字超過', 'a'.repeat(33)],
+  ])('不正なidが渡された場合はfetchせずthrowする (%s)', async (_label, id) => {
+    const mockFetch = setupFetch(async () => {
+      throw new Error('should not be called');
+    });
+
+    await expect(
+      resolveSidsFromShortId(id, new AbortController().signal, TEST_HOST)
+    ).rejects.toThrow(/invalid route resolver id/);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });
