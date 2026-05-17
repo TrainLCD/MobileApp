@@ -4,6 +4,7 @@ import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
 import type React from 'react';
 import { StopCondition, type TrainType } from '~/@types/graphql';
+import { resolveSidsFromShortId } from '~/lib/routeResolver';
 import { createStation } from '~/utils/test/factories';
 import type { LineDirection } from '../models/Bound';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -29,6 +30,11 @@ jest.mock('../stacks/rootNavigation', () => ({
     isReady: jest.fn().mockReturnValue(false),
     dispatch: jest.fn(),
   },
+}));
+jest.mock('~/lib/routeResolver', () => ({
+  ROUTE_RESOLVER_ID_PATTERN: /^[A-Za-z0-9_-]{1,32}$/,
+  ROUTE_RESOLVER_TIMEOUT_MS: 10_000,
+  resolveSidsFromShortId: jest.fn(),
 }));
 
 type HookResult = ReturnType<typeof useDeepLink> | null;
@@ -1284,6 +1290,300 @@ describe('useDeepLink', () => {
 
       expect(mockFetchByIds).not.toHaveBeenCalled();
       expect(mockSetStationState).not.toHaveBeenCalled();
+    });
+  });
+  describe('id (resolver short code)', () => {
+    const mockResolveSids = resolveSidsFromShortId as jest.MockedFunction<
+      typeof resolveSidsFromShortId
+    >;
+
+    afterEach(() => {
+      mockResolveSids.mockReset();
+    });
+
+    it('idが指定された場合はresolverからsidsを取得しstations(ids)で解決する', async () => {
+      const stationA = createStation(1131211, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+      const stationB = createStation(1131310, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?id=abc123XYZ_-'
+      );
+      mockParse.mockReturnValue({
+        queryParams: { id: 'abc123XYZ_-' },
+      });
+
+      mockResolveSids.mockResolvedValue([1131211, 1131310]);
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds, mockFetchByLine, mockFetchByGroup } =
+        setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: [stationA, stationB] },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      expect(mockResolveSids).toHaveBeenCalledWith(
+        'abc123XYZ_-',
+        expect.any(Object)
+      );
+      expect(mockFetchByIds).toHaveBeenCalledWith({
+        variables: { ids: [1131211, 1131310] },
+      });
+      // legacy/sids queries must not be called when id takes precedence
+      expect(mockFetchByLine).not.toHaveBeenCalled();
+      expect(mockFetchByGroup).not.toHaveBeenCalled();
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      expect(stationResult.stations.map((s: { id: number }) => s.id)).toEqual([
+        1131211, 1131310,
+      ]);
+      expect(stationResult.selectedDirection).toBe<LineDirection>('INBOUND');
+      expect(stationResult.selectedBound?.id).toBe(1131310);
+    });
+
+    it.each([
+      ['空文字', ''],
+      ['33文字超過', 'a'.repeat(33)],
+      ['許可外文字 (空白)', 'abc def'],
+      ['許可外文字 (記号)', 'abc.def'],
+      ['許可外文字 (マルチバイト)', 'abc日本'],
+    ])(
+      'idが%sの場合はresolverを呼び出さずstateを変更しない',
+      async (_label, id) => {
+        mockGetInitialURL.mockResolvedValue(`CanaryTrainLCD://route?id=${id}`);
+        mockParse.mockReturnValue({ queryParams: { id } });
+
+        const { mockSetStationState } = setupAtoms();
+        const { mockFetchByIds } = setupQueries();
+
+        render(
+          <HookBridge
+            onReady={() => {
+              /* noop */
+            }}
+          />
+        );
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(mockResolveSids).not.toHaveBeenCalled();
+        expect(mockFetchByIds).not.toHaveBeenCalled();
+        expect(mockSetStationState).not.toHaveBeenCalled();
+      }
+    );
+
+    it('resolverが404相当のエラーを投げた場合はerrorを公開しstateを変更しない', async () => {
+      mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=missing');
+      mockParse.mockReturnValue({ queryParams: { id: 'missing' } });
+
+      mockResolveSids.mockRejectedValue(
+        new Error('route resolver responded with 404')
+      );
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+
+      const hookRef: { current: HookResult } = { current: null };
+      render(
+        <HookBridge
+          onReady={(value) => {
+            hookRef.current = value;
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(hookRef.current?.error).toBeTruthy();
+      });
+
+      expect(mockFetchByIds).not.toHaveBeenCalled();
+      expect(mockSetStationState).not.toHaveBeenCalled();
+      expect(hookRef.current?.error?.message).toContain('404');
+    });
+
+    it('resolverのネットワークエラー時はerrorを公開する', async () => {
+      mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=net');
+      mockParse.mockReturnValue({ queryParams: { id: 'net' } });
+
+      mockResolveSids.mockRejectedValue(new Error('network down'));
+
+      setupAtoms();
+      setupQueries();
+
+      const hookRef: { current: HookResult } = { current: null };
+      render(
+        <HookBridge
+          onReady={(value) => {
+            hookRef.current = value;
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(hookRef.current?.error?.message).toBe('network down');
+      });
+    });
+
+    it('idが指定されている場合はsids/sgid/lid/lgid/dirを全て無視する', async () => {
+      const stationA = createStation(1131211, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+      const stationB = createStation(1131310, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?id=abc&sids=999,888&sgid=1&lid=2&lgid=3&dir=1'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          id: 'abc',
+          sids: '999,888',
+          sgid: '1',
+          lid: '2',
+          lgid: '3',
+          dir: '1',
+        },
+      });
+
+      mockResolveSids.mockResolvedValue([1131211, 1131310]);
+
+      setupAtoms();
+      const { mockFetchByIds, mockFetchByLine, mockFetchByGroup } =
+        setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: [stationA, stationB] },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalledWith({
+          variables: { ids: [1131211, 1131310] },
+        });
+      });
+      // sids in the URL must be ignored when id wins precedence
+      expect(mockFetchByIds).not.toHaveBeenCalledWith({
+        variables: { ids: [999, 888] },
+      });
+      expect(mockFetchByLine).not.toHaveBeenCalled();
+      expect(mockFetchByGroup).not.toHaveBeenCalled();
+    });
+
+    it('idでauto/themeを併用できる', async () => {
+      const stationA = createStation(1131211, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+      const stationB = createStation(1131310, {
+        line: { id: 11302 },
+      } as Parameters<typeof createStation>[1]);
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?id=abc&auto=1&theme=AUTO'
+      );
+      mockParse.mockReturnValue({
+        queryParams: { id: 'abc', auto: '1', theme: 'AUTO' },
+      });
+
+      mockResolveSids.mockResolvedValue([1131211, 1131310]);
+
+      const mockSetThemePreference = jest.fn();
+      const mockSetStationState = jest.fn();
+      const mockSetNavigationState = jest.fn();
+      const mockSetLineState = jest.fn();
+      const setters = [
+        mockSetStationState,
+        mockSetNavigationState,
+        mockSetLineState,
+        mockSetThemePreference,
+      ];
+      let atomCallIdx = 0;
+      mockUseSetAtom.mockImplementation(() => {
+        const result = setters[atomCallIdx % setters.length];
+        atomCallIdx++;
+        return result;
+      });
+
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: [stationA, stationB] },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      expect(mockSetThemePreference).toHaveBeenCalledWith('AUTO');
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      expect(navResult.autoModeEnabled).toBe(true);
+    });
+
+    it('resolver取得中はisLoadingがtrue', async () => {
+      mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=slow');
+      mockParse.mockReturnValue({ queryParams: { id: 'slow' } });
+
+      let resolveResolver: (value: number[]) => void = () => {};
+      mockResolveSids.mockImplementation(
+        () =>
+          new Promise<number[]>((resolve) => {
+            resolveResolver = resolve;
+          })
+      );
+
+      setupAtoms();
+      setupQueries();
+
+      const hookRef: { current: HookResult } = { current: null };
+      render(
+        <HookBridge
+          onReady={(value) => {
+            hookRef.current = value;
+          }}
+        />
+      );
+
+      // Wait for resolverLoading to flip after the async chain kicks off
+      await waitFor(() => {
+        expect(hookRef.current?.isLoading).toBe(true);
+      });
+
+      await act(async () => {
+        resolveResolver([1131211, 1131310]);
+        await Promise.resolve();
+      });
     });
   });
 
