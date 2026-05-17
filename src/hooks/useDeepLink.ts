@@ -346,13 +346,13 @@ export const useDeepLink = () => {
         );
         setResolverLoading(true);
         try {
-          const stationIds = await resolveSidsFromShortId(
+          const { stationIds, skipIndices } = await resolveSidsFromShortId(
             id,
             controller.signal
           );
           await openRouteByStationIds({
             stationIds,
-            skipIndices: null,
+            skipIndices,
             autoMode,
             theme: parsedTheme,
           });

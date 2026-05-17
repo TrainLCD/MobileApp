@@ -1316,7 +1316,10 @@ describe('useDeepLink', () => {
         queryParams: { id: 'abc123XYZ_-' },
       });
 
-      mockResolveSids.mockResolvedValue([1131211, 1131310]);
+      mockResolveSids.mockResolvedValue({
+        stationIds: [1131211, 1131310],
+        skipIndices: null,
+      });
 
       const { mockSetStationState } = setupAtoms();
       const { mockFetchByIds, mockFetchByLine, mockFetchByGroup } =
@@ -1494,7 +1497,10 @@ describe('useDeepLink', () => {
         },
       });
 
-      mockResolveSids.mockResolvedValue([1131211, 1131310]);
+      mockResolveSids.mockResolvedValue({
+        stationIds: [1131211, 1131310],
+        skipIndices: null,
+      });
 
       setupAtoms();
       const { mockFetchByIds, mockFetchByLine, mockFetchByGroup } =
@@ -1539,7 +1545,10 @@ describe('useDeepLink', () => {
         queryParams: { id: 'abc', auto: '1', theme: 'AUTO' },
       });
 
-      mockResolveSids.mockResolvedValue([1131211, 1131310]);
+      mockResolveSids.mockResolvedValue({
+        stationIds: [1131211, 1131310],
+        skipIndices: null,
+      });
 
       const mockSetThemePreference = jest.fn();
       const mockSetStationState = jest.fn();
@@ -1581,14 +1590,66 @@ describe('useDeepLink', () => {
       expect(navResult.autoModeEnabled).toBe(true);
     });
 
+    it('resolverが返したskipIndicesが該当駅のstopConditionに反映される', async () => {
+      const buildStation = (id: number) =>
+        createStation(id, {
+          line: { id: 11302 },
+          stopCondition: StopCondition.All,
+        } as Parameters<typeof createStation>[1]);
+      const stations = [
+        buildStation(1131211),
+        buildStation(1131310),
+        buildStation(2800217),
+        buildStation(2800218),
+      ];
+
+      mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=withSkip');
+      mockParse.mockReturnValue({ queryParams: { id: 'withSkip' } });
+
+      mockResolveSids.mockResolvedValue({
+        stationIds: [1131211, 1131310, 2800217, 2800218],
+        skipIndices: new Set([1, 2]),
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({ data: { stations } });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      const conditions = stationResult.stations.map(
+        (s: { stopCondition: StopCondition | null | undefined }) =>
+          s.stopCondition
+      );
+      expect(conditions).toEqual([
+        StopCondition.All,
+        StopCondition.Not,
+        StopCondition.Not,
+        StopCondition.All,
+      ]);
+    });
+
     it('resolver取得中はisLoadingがtrue', async () => {
       mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=slow');
       mockParse.mockReturnValue({ queryParams: { id: 'slow' } });
 
-      let resolveResolver: (value: number[]) => void = () => {};
+      type ResolvedRoute = Awaited<ReturnType<typeof resolveSidsFromShortId>>;
+      let resolveResolver: (value: ResolvedRoute) => void = () => {};
       mockResolveSids.mockImplementation(
         () =>
-          new Promise<number[]>((resolve) => {
+          new Promise<ResolvedRoute>((resolve) => {
             resolveResolver = resolve;
           })
       );
@@ -1611,7 +1672,10 @@ describe('useDeepLink', () => {
       });
 
       await act(async () => {
-        resolveResolver([1131211, 1131310]);
+        resolveResolver({
+          stationIds: [1131211, 1131310],
+          skipIndices: null,
+        });
         await Promise.resolve();
       });
     });
