@@ -106,6 +106,11 @@ const parseSkipIndices = (
 // `color` requirement, same enum / HEX constraints. A malformed payload
 // throws so useDeepLink turns the entire link into a no-op rather than
 // reflecting a partially-trusted TrainType in navigation state.
+//
+// `null` / `undefined` is the absence signal (field omitted by the server);
+// an empty object — or one whose accepted fields are all null — is a contract
+// violation (the server sent the field but with no usable content), so it is
+// thrown rather than silently treated as absent.
 const parseResolverTrainType = (raw: unknown): TrainTypeNested | null => {
   if (raw === undefined || raw === null) {
     return null;
@@ -114,10 +119,7 @@ const parseResolverTrainType = (raw: unknown): TrainTypeNested | null => {
     throw new Error('route resolver returned malformed trainType');
   }
   const result = parseTrainTypeOverride(raw as Record<string, unknown>);
-  if (result.status === 'absent') {
-    return null;
-  }
-  if (result.status === 'invalid') {
+  if (result.status === 'absent' || result.status === 'invalid') {
     throw new Error('route resolver returned malformed trainType');
   }
   return result.trainType;

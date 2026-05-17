@@ -340,6 +340,14 @@ describe('resolveSidsFromShortId', () => {
     it.each([
       ['trainType が配列', { sids: [1, 2], trainType: [] }],
       ['trainType が文字列', { sids: [1, 2], trainType: 'Rapid' }],
+      ['trainType が空オブジェクト', { sids: [1, 2], trainType: {} }],
+      [
+        'trainType の全フィールドが null',
+        {
+          sids: [1, 2],
+          trainType: { name: null, color: null, kind: null },
+        },
+      ],
       ['name 欠落', { sids: [1, 2], trainType: { color: '#ff0000' } }],
       ['color 欠落', { sids: [1, 2], trainType: { name: '快速' } }],
       [
