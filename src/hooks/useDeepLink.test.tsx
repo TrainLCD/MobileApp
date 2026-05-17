@@ -1319,6 +1319,7 @@ describe('useDeepLink', () => {
       mockResolveSids.mockResolvedValue({
         stationIds: [1131211, 1131310],
         skipIndices: null,
+        trainType: null,
       });
 
       const { mockSetStationState } = setupAtoms();
@@ -1500,6 +1501,7 @@ describe('useDeepLink', () => {
       mockResolveSids.mockResolvedValue({
         stationIds: [1131211, 1131310],
         skipIndices: null,
+        trainType: null,
       });
 
       setupAtoms();
@@ -1548,6 +1550,7 @@ describe('useDeepLink', () => {
       mockResolveSids.mockResolvedValue({
         stationIds: [1131211, 1131310],
         skipIndices: null,
+        trainType: null,
       });
 
       const mockSetThemePreference = jest.fn();
@@ -1609,6 +1612,7 @@ describe('useDeepLink', () => {
       mockResolveSids.mockResolvedValue({
         stationIds: [1131211, 1131310, 2800217, 2800218],
         skipIndices: new Set([1, 2]),
+        trainType: null,
       });
 
       const { mockSetStationState } = setupAtoms();
@@ -1751,9 +1755,423 @@ describe('useDeepLink', () => {
         resolveResolver({
           stationIds: [1131211, 1131310],
           skipIndices: null,
+          trainType: null,
         });
         await Promise.resolve();
       });
+    });
+
+    it('resolverがtrainTypeを返した場合はnavigationStateに反映される', async () => {
+      const stationA = createStation(1131211, {
+        line: { id: 11302 },
+        trainType: createTrainType({ typeId: 9999 }),
+      } as Parameters<typeof createStation>[1]);
+      const stationB = createStation(1131310, {
+        line: { id: 11302 },
+        trainType: createTrainType({ typeId: 9999 }),
+      } as Parameters<typeof createStation>[1]);
+
+      mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=withTT');
+      mockParse.mockReturnValue({ queryParams: { id: 'withTT' } });
+
+      mockResolveSids.mockResolvedValue({
+        stationIds: [1131211, 1131310],
+        skipIndices: null,
+        trainType: {
+          __typename: 'TrainTypeNested',
+          name: '快速',
+          color: '#ff0000',
+          kind: null,
+          direction: null,
+          nameRoman: null,
+          nameKatakana: null,
+          nameChinese: null,
+          nameKorean: null,
+          nameIpa: null,
+          nameRomanIpa: null,
+          id: null,
+          typeId: null,
+          groupId: null,
+          line: null,
+          lines: null,
+          nameTtsSegments: null,
+        },
+      });
+
+      const { mockSetStationState, mockSetNavigationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: [stationA, stationB] },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      expect(navResult.trainType).toMatchObject({
+        name: '快速',
+        color: '#ff0000',
+      });
+      // server-derived typeId must not leak into the override
+      expect(navResult.trainType?.typeId).toBeNull();
+
+      // every station in stationState carries the override so useCurrentTrainType
+      // (which looks at stations[].trainType when transferring lines) keeps the
+      // shared TrainType stable.
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      for (const sta of stationResult.stations) {
+        expect(sta.trainType).toMatchObject({
+          name: '快速',
+          color: '#ff0000',
+        });
+      }
+    });
+  });
+
+  describe('tt* parameters (custom TrainType override)', () => {
+    const mockResolveSids = resolveSidsFromShortId as jest.MockedFunction<
+      typeof resolveSidsFromShortId
+    >;
+
+    afterEach(() => {
+      mockResolveSids.mockReset();
+    });
+
+    const buildTwoStations = () => [
+      createStation(1131211, {
+        line: { id: 11302 },
+        trainType: createTrainType({ typeId: 9999 }),
+      } as Parameters<typeof createStation>[1]),
+      createStation(1131310, {
+        line: { id: 11302 },
+        trainType: createTrainType({ typeId: 9999 }),
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    it('sids 形式で ttname + ttcolor が指定されたら navigationState.trainType が上書きされる', async () => {
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310&ttname=%E5%BF%AB%E9%80%9F&ttcolor=%23ff0000'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          sids: '1131211,1131310',
+          ttname: '快速',
+          ttcolor: '#ff0000',
+        },
+      });
+
+      const { mockSetStationState, mockSetNavigationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: buildTwoStations() },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      expect(navResult.trainType).toMatchObject({
+        __typename: 'TrainTypeNested',
+        name: '快速',
+        color: '#ff0000',
+      });
+      // override never carries a server typeId / groupId
+      expect(navResult.trainType?.typeId).toBeNull();
+      expect(navResult.trainType?.groupId).toBeNull();
+
+      // stations[].trainType is replaced too, so useCurrentTrainType stays
+      // pinned to the override even on line transfers.
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      for (const sta of stationResult.stations) {
+        expect(sta.trainType?.name).toBe('快速');
+        expect(sta.trainType?.color).toBe('#ff0000');
+        expect(sta.trainType?.typeId).toBeNull();
+      }
+    });
+
+    it('sgid+lid 形式でも ttname + ttcolor が反映される', async () => {
+      const stations = [
+        createStation(1, {
+          groupId: 1,
+          line: { id: 999, nameShort: 'Yamanote' },
+          trainType: createTrainType({ typeId: 9999 }),
+        } as Parameters<typeof createStation>[1]),
+        createStation(2, {
+          groupId: 2,
+          line: { id: 999, nameShort: 'Yamanote' },
+          trainType: createTrainType({ typeId: 9999 }),
+        } as Parameters<typeof createStation>[1]),
+      ];
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://?lid=999&sgid=1&dir=0&ttname=%E5%BF%AB%E9%80%9F&ttcolor=%23ff0000'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          lid: '999',
+          sgid: '1',
+          dir: '0',
+          ttname: '快速',
+          ttcolor: '#ff0000',
+        },
+      });
+
+      const { mockSetStationState, mockSetNavigationState } = setupAtoms();
+      const { mockFetchByLine } = setupQueries();
+      mockFetchByLine.mockResolvedValue({
+        data: { lineStations: stations },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByLine).toHaveBeenCalled();
+      });
+
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      expect(navResult.trainType?.name).toBe('快速');
+      expect(navResult.trainType?.color).toBe('#ff0000');
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      for (const sta of stationResult.stations) {
+        expect(sta.trainType?.name).toBe('快速');
+      }
+    });
+
+    it('ttkind / ttnameroman 等の任意フィールドも反映される', async () => {
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310&ttname=Rapid&ttcolor=%23ff0000&ttkind=Rapid&ttnameroman=Rapid'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          sids: '1131211,1131310',
+          ttname: 'Rapid',
+          ttcolor: '#ff0000',
+          ttkind: 'Rapid',
+          ttnameroman: 'Rapid',
+        },
+      });
+
+      const { mockSetNavigationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: buildTwoStations() },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      expect(navResult.trainType).toMatchObject({
+        name: 'Rapid',
+        color: '#ff0000',
+        kind: 'Rapid',
+        nameRoman: 'Rapid',
+      });
+    });
+
+    it.each([
+      [
+        'ttname 欠落で他フィールドあり',
+        { ttcolor: '#ff0000', ttkind: 'Rapid' },
+      ],
+      ['ttcolor 欠落で他フィールドあり', { ttname: '快速', ttkind: 'Rapid' }],
+      ['ttkind だけ', { ttkind: 'Rapid' }],
+      ['ttnameroman だけ', { ttnameroman: 'Rapid' }],
+      ['ttcolor が #RRGGBB 形式外', { ttname: '快速', ttcolor: 'red' }],
+      ['ttcolor が #fff (3桁)', { ttname: '快速', ttcolor: '#fff' }],
+      [
+        'ttkind が enum 外',
+        { ttname: '快速', ttcolor: '#ff0000', ttkind: 'Unknown' },
+      ],
+    ])(
+      'sids 形式: %s の場合はリンク全体を no-op',
+      async (_label, extraParams) => {
+        mockGetInitialURL.mockResolvedValue(
+          'CanaryTrainLCD://route?sids=1131211,1131310'
+        );
+        mockParse.mockReturnValue({
+          queryParams: {
+            sids: '1131211,1131310',
+            ...extraParams,
+          },
+        });
+
+        const { mockSetStationState } = setupAtoms();
+        const { mockFetchByIds } = setupQueries();
+
+        render(
+          <HookBridge
+            onReady={() => {
+              /* noop */
+            }}
+          />
+        );
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(mockFetchByIds).not.toHaveBeenCalled();
+        expect(mockSetStationState).not.toHaveBeenCalled();
+      }
+    );
+
+    it.each([
+      ['ttname 欠落', { ttcolor: '#ff0000' }],
+      ['ttcolor 欠落', { ttname: '快速' }],
+      [
+        'ttkind が enum 外',
+        { ttname: '快速', ttcolor: '#ff0000', ttkind: 'Unknown' },
+      ],
+    ])(
+      'sgid+lid 形式: %s の場合はリンク全体を no-op',
+      async (_label, extraParams) => {
+        mockGetInitialURL.mockResolvedValue(
+          'CanaryTrainLCD://?lid=999&sgid=1&dir=0'
+        );
+        mockParse.mockReturnValue({
+          queryParams: {
+            lid: '999',
+            sgid: '1',
+            dir: '0',
+            ...extraParams,
+          },
+        });
+
+        const { mockSetStationState } = setupAtoms();
+        const { mockFetchByLine, mockFetchByGroup } = setupQueries();
+
+        render(
+          <HookBridge
+            onReady={() => {
+              /* noop */
+            }}
+          />
+        );
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(mockFetchByLine).not.toHaveBeenCalled();
+        expect(mockFetchByGroup).not.toHaveBeenCalled();
+        expect(mockSetStationState).not.toHaveBeenCalled();
+      }
+    );
+
+    it('id 形式の場合は URL の tt* は無視される (resolver の trainType だけが使われる)', async () => {
+      // URL has tt* but `?id=` wins precedence — even an invalid tt* combo here
+      // must not reject the link, because the resolver payload is the
+      // authoritative source.
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?id=abc&ttname=%E5%BF%AB%E9%80%9F&ttcolor=notHex'
+      );
+      mockParse.mockReturnValue({
+        queryParams: { id: 'abc', ttname: '快速', ttcolor: 'notHex' },
+      });
+
+      mockResolveSids.mockResolvedValue({
+        stationIds: [1131211, 1131310],
+        skipIndices: null,
+        trainType: null,
+      });
+
+      const { mockSetNavigationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: buildTwoStations() },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      // resolver supplied null trainType, so navigationState.trainType falls
+      // back to the head station's server-derived trainType.
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      expect(navResult.trainType?.typeId).toBe(9999);
+    });
+
+    it('ttname / ttcolor が両方とも未指定なら override はせずレガシー挙動', async () => {
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310'
+      );
+      mockParse.mockReturnValue({
+        queryParams: { sids: '1131211,1131310' },
+      });
+
+      const { mockSetNavigationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({
+        data: { stations: buildTwoStations() },
+      });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const navSetter = mockSetNavigationState.mock.calls[0][0];
+      const navResult = navSetter(createNavigationState());
+      // head station's server-derived trainType is preserved as-is
+      expect(navResult.trainType?.typeId).toBe(9999);
     });
   });
 
