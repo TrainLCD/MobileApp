@@ -1641,6 +1641,82 @@ describe('useDeepLink', () => {
       ]);
     });
 
+    it('resolver失敗後にlegacy経路で成功すればerrorはnullに戻る', async () => {
+      // Apollo errors auto-reset between queries, but resolverError lives in
+      // local state — without an explicit reset the previous failure would
+      // leak into the next handleUrl call.
+      const mockIsReady = navigationRef.isReady as jest.Mock;
+      mockIsReady.mockReturnValue(true);
+
+      const stations = [
+        createStation(1, {
+          groupId: 1,
+          line: { id: 999, nameShort: 'Yamanote' },
+          trainType: createTrainType(),
+        } as Parameters<typeof createStation>[1]),
+        createStation(2, {
+          groupId: 2,
+          line: { id: 999, nameShort: 'Yamanote' },
+        } as Parameters<typeof createStation>[1]),
+      ];
+
+      // Skip the initial URL entirely; we drive both calls through the runtime
+      // listener. setupAtoms uses `% 3` for the hook's 4 useSetAtom slots,
+      // which destabilizes useCallback deps and re-runs the addEventListener
+      // effect after each re-render — feeding a persistent initial URL here
+      // would cause it to be re-processed on every re-render.
+      mockGetInitialURL.mockResolvedValue(null);
+      mockParse.mockImplementation((url: string) => {
+        if (url.includes('id=missing')) {
+          return { queryParams: { id: 'missing' } };
+        }
+        return {
+          queryParams: { lid: '999', sgid: '1', dir: '0' },
+        };
+      });
+
+      mockResolveSids.mockRejectedValue(
+        new Error('route resolver responded with 404')
+      );
+
+      setupAtoms();
+      const { mockFetchByLine } = setupQueries();
+      mockFetchByLine.mockResolvedValue({
+        data: { lineStations: stations },
+      });
+
+      const hookRef: { current: HookResult } = { current: null };
+      render(
+        <HookBridge
+          onReady={(value) => {
+            hookRef.current = value;
+          }}
+        />
+      );
+
+      // Always grab the most recently registered listener — the effect re-runs
+      // on every re-render due to the setupAtoms slot drift.
+      const fireLatestListener = async (url: string) => {
+        const lastCall = mockAddEventListener.mock.calls.at(-1) ?? [];
+        const listenerCallback = lastCall[1];
+        await act(async () => {
+          await listenerCallback({ url });
+        });
+      };
+
+      // 1. resolver-failing URL → resolverError gets populated
+      await fireLatestListener('CanaryTrainLCD://route?id=missing');
+      await waitFor(() => {
+        expect(hookRef.current?.error?.message).toContain('404');
+      });
+
+      // 2. legacy success URL → resolverError must be cleared
+      await fireLatestListener('CanaryTrainLCD://?lid=999&sgid=1&dir=0');
+      await waitFor(() => {
+        expect(hookRef.current?.error).toBeFalsy();
+      });
+    });
+
     it('resolver取得中はisLoadingがtrue', async () => {
       mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=slow');
       mockParse.mockReturnValue({ queryParams: { id: 'slow' } });
