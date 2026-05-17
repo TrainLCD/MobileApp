@@ -3,7 +3,7 @@ import { act, render, waitFor } from '@testing-library/react-native';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
 import type React from 'react';
-import type { TrainType } from '~/@types/graphql';
+import { StopCondition, type TrainType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import type { LineDirection } from '../models/Bound';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -1013,6 +1013,278 @@ describe('useDeepLink', () => {
     const navSetter = mockSetNavigationState.mock.calls[0][0];
     const navResult = navSetter(createNavigationState());
     expect(navResult.autoModeEnabled).toBe(true);
+  });
+
+  describe('skips parameter', () => {
+    const buildStations = () => [
+      createStation(1131211, {
+        line: { id: 11302 },
+        stopCondition: StopCondition.All,
+      } as Parameters<typeof createStation>[1]),
+      createStation(1131310, {
+        line: { id: 11302 },
+        stopCondition: StopCondition.All,
+      } as Parameters<typeof createStation>[1]),
+      createStation(2800217, {
+        line: { id: 11302 },
+        stopCondition: StopCondition.All,
+      } as Parameters<typeof createStation>[1]),
+      createStation(2800218, {
+        line: { id: 11302 },
+        stopCondition: StopCondition.All,
+      } as Parameters<typeof createStation>[1]),
+    ];
+
+    it('skipsで指定したインデックスのstopConditionをNotに上書きする', async () => {
+      const stations = buildStations();
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310,2800217,2800218&skips=1,2'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          sids: '1131211,1131310,2800217,2800218',
+          skips: '1,2',
+        },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({ data: { stations } });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      const overridden = stationResult.stations.map(
+        (s: { stopCondition: StopCondition | null | undefined }) =>
+          s.stopCondition
+      );
+      expect(overridden).toEqual([
+        StopCondition.All,
+        StopCondition.Not,
+        StopCondition.Not,
+        StopCondition.All,
+      ]);
+    });
+
+    it('skips省略時は全駅のstopConditionを変更しない', async () => {
+      const stations = buildStations();
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310,2800217,2800218'
+      );
+      mockParse.mockReturnValue({
+        queryParams: { sids: '1131211,1131310,2800217,2800218' },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({ data: { stations } });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      // factory default is StopCondition.All — no station should be overridden
+      expect(
+        stationResult.stations.every(
+          (s: { stopCondition: StopCondition | null | undefined }) =>
+            s.stopCondition === StopCondition.All
+        )
+      ).toBe(true);
+    });
+
+    it('skipsが空文字の場合は全駅停車として扱う', async () => {
+      const stations = buildStations();
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310,2800217,2800218&skips='
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          sids: '1131211,1131310,2800217,2800218',
+          skips: '',
+        },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({ data: { stations } });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      expect(
+        stationResult.stations.every(
+          (s: { stopCondition: StopCondition | null | undefined }) =>
+            s.stopCondition === StopCondition.All
+        )
+      ).toBe(true);
+    });
+
+    it('skipsで先頭駅も通過扱いにできる', async () => {
+      const stations = buildStations();
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310,2800217,2800218&skips=0'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          sids: '1131211,1131310,2800217,2800218',
+          skips: '0',
+        },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({ data: { stations } });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      expect(stationResult.stations[0].stopCondition).toBe(StopCondition.Not);
+    });
+
+    it('サーバが一部の駅を返さなくても残りの駅のskipインデックスはずれない', async () => {
+      // server omits sids[1] (1131310) — fetched stations: [A, C, D]
+      const stations = [
+        createStation(1131211, {
+          line: { id: 11302 },
+          stopCondition: StopCondition.All,
+        } as Parameters<typeof createStation>[1]),
+        createStation(2800217, {
+          line: { id: 11302 },
+          stopCondition: StopCondition.All,
+        } as Parameters<typeof createStation>[1]),
+        createStation(2800218, {
+          line: { id: 11302 },
+          stopCondition: StopCondition.All,
+        } as Parameters<typeof createStation>[1]),
+      ];
+
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?sids=1131211,1131310,2800217,2800218&skips=2'
+      );
+      mockParse.mockReturnValue({
+        queryParams: {
+          sids: '1131211,1131310,2800217,2800218',
+          skips: '2',
+        },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+      mockFetchByIds.mockResolvedValue({ data: { stations } });
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockFetchByIds).toHaveBeenCalled();
+      });
+
+      const stationSetter = mockSetStationState.mock.calls[0][0];
+      const stationResult = stationSetter(createStationState());
+      // skip index 2 in the requested sids points to id 2800217 — that station
+      // (after filtering out missing 1131310) must still be the one marked Not.
+      const byId = new Map(
+        stationResult.stations.map(
+          (s: {
+            id: number;
+            stopCondition: StopCondition | null | undefined;
+          }) => [s.id, s.stopCondition] as const
+        )
+      );
+      expect(byId.get(1131211)).toBe(StopCondition.All);
+      expect(byId.get(2800217)).toBe(StopCondition.Not);
+      expect(byId.get(2800218)).toBe(StopCondition.All);
+    });
+
+    it.each([
+      ['範囲外 (=sids長)', '1131211,1131310', '2'],
+      ['範囲外 (>>sids長)', '1131211,1131310', '99'],
+      ['重複', '1131211,1131310,2800217', '1,1'],
+      ['昇順でない', '1131211,1131310,2800217', '2,1'],
+      ['負数', '1131211,1131310', '-1'],
+      ['小数', '1131211,1131310', '0.5'],
+      ['非整数文字', '1131211,1131310', '1x'],
+      ['指数表記', '1131211,1131310,2800217,2800218', '1e0'],
+      ['空トークン', '1131211,1131310', '0,'],
+      ['先頭ゼロ付き', '1131211,1131310,2800217', '01'],
+    ])('%sの場合はリンク全体をno-opする', async (_label, sids, skips) => {
+      mockGetInitialURL.mockResolvedValue(
+        `CanaryTrainLCD://route?sids=${sids}&skips=${skips}`
+      );
+      mockParse.mockReturnValue({
+        queryParams: { sids, skips },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockFetchByIds).not.toHaveBeenCalled();
+      expect(mockSetStationState).not.toHaveBeenCalled();
+    });
   });
 
   it('ナビゲーターがリトライ中に準備完了した場合はナビゲートする', async () => {
