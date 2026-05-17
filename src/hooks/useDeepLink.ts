@@ -3,7 +3,7 @@ import { CommonActions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import type { Station, TrainType } from '~/@types/graphql';
+import { type Station, StopCondition, type TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -149,13 +149,19 @@ export const useDeepLink = () => {
   // sids deep links express intent purely through station order: the first
   // entry is the origin and the last is the destination. Direction is fixed to
   // INBOUND — callers reverse the sids list to share the opposite direction.
+  // `skipIndices` marks 0-origin positions in `stationIds` whose stopCondition
+  // should be overridden to `Not` (通過扱い). Indices are resolved against the
+  // requested `stationIds` order, not the (possibly filtered) fetched result —
+  // missing stations are dropped without shifting other stations' skip state.
   const openRouteByStationIds = useCallback(
     async ({
       stationIds,
+      skipIndices,
       autoMode,
       theme,
     }: {
       stationIds: number[];
+      skipIndices: ReadonlySet<number> | null;
       autoMode: boolean;
       theme: ThemePreference | undefined;
     }) => {
@@ -175,7 +181,15 @@ export const useDeepLink = () => {
       // not guaranteed and stations not resolved are silently dropped.
       const byId = new Map(fetched.map((sta) => [sta.id, sta] as const));
       const stations = stationIds
-        .map((id) => byId.get(id))
+        .map((id, idx) => {
+          const sta = byId.get(id);
+          if (!sta) {
+            return undefined;
+          }
+          return skipIndices?.has(idx)
+            ? { ...sta, stopCondition: StopCondition.Not }
+            : sta;
+        })
         .filter((sta): sta is Station => sta != null);
       if (stations.length === 0) {
         return;
@@ -296,7 +310,8 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
-      const { sgid, dir, lgid, lid, sids, auto, theme } = parsed.queryParams;
+      const { sgid, dir, lgid, lid, sids, skips, auto, theme } =
+        parsed.queryParams;
 
       const autoMode = auto === '1';
       const parsedTheme =
@@ -319,8 +334,34 @@ export const useDeepLink = () => {
           return;
         }
         const stationIds = rawStationIds.map((raw) => Number(raw));
+
+        // Optional `skips` lists 0-origin indices into `stationIds` whose
+        // stations should be marked as 通過 (StopCondition.Not). The whole
+        // link is rejected on malformed input — non-integer, out-of-range,
+        // duplicate, or non-ascending — rather than silently ignoring it,
+        // so receivers never display a partially-misinterpreted route.
+        let skipIndices: ReadonlySet<number> | null = null;
+        if (typeof skips === 'string' && skips.length > 0) {
+          const rawSkips = skips.split(',').map((raw) => raw.trim());
+          if (rawSkips.some((raw) => !/^(0|[1-9]\d*)$/.test(raw))) {
+            return;
+          }
+          const parsedSkips = rawSkips.map((raw) => Number(raw));
+          for (let i = 0; i < parsedSkips.length; i++) {
+            if (parsedSkips[i] >= stationIds.length) {
+              return;
+            }
+            // Strict ascending order also rules out duplicates.
+            if (i > 0 && parsedSkips[i] <= parsedSkips[i - 1]) {
+              return;
+            }
+          }
+          skipIndices = new Set(parsedSkips);
+        }
+
         await openRouteByStationIds({
           stationIds,
+          skipIndices,
           autoMode,
           theme: parsedTheme,
         });
