@@ -318,6 +318,11 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
+      // Apollo-derived errors auto-reset on the next query, but resolverError
+      // is held in local state — without an explicit reset, a previous failure
+      // leaks into the next handleUrl call (including subsequent legacy-path
+      // successes). Clear it once we know the URL has parseable params.
+      setResolverError(null);
       const { sgid, dir, lgid, lid, sids, skips, id, auto, theme } =
         parsed.queryParams;
 
