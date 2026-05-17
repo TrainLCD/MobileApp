@@ -43,6 +43,7 @@ describe('resolveSidsFromShortId', () => {
 
     expect(result.stationIds).toEqual([1131211, 1131310, 2800217]);
     expect(result.skipIndices).toBeNull();
+    expect(result.trainType).toBeNull();
     expect(mockFetch).toHaveBeenCalledWith(
       `${TEST_HOST}/api/routes/abc123`,
       expect.objectContaining({
@@ -276,5 +277,134 @@ describe('resolveSidsFromShortId', () => {
       resolveSidsFromShortId(id, new AbortController().signal, TEST_HOST)
     ).rejects.toThrow(/invalid route resolver id/);
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  describe('trainType フィールド', () => {
+    it('trainType が返れば TrainType として展開する', async () => {
+      setupFetch(
+        async () =>
+          new Response(
+            JSON.stringify({
+              sids: [1131211, 1131310],
+              trainType: {
+                name: '快速',
+                color: '#ff0000',
+                kind: 'Rapid',
+                direction: 'Inbound',
+                nameRoman: 'Rapid',
+              },
+            }),
+            { status: 200 }
+          )
+      );
+
+      const result = await resolveSidsFromShortId(
+        'tt',
+        new AbortController().signal,
+        TEST_HOST
+      );
+
+      expect(result.trainType).toMatchObject({
+        __typename: 'TrainTypeNested',
+        name: '快速',
+        color: '#ff0000',
+        kind: 'Rapid',
+        direction: 'Inbound',
+        nameRoman: 'Rapid',
+        id: null,
+        typeId: null,
+        groupId: null,
+        line: null,
+        lines: null,
+        nameTtsSegments: null,
+      });
+    });
+
+    it.each([
+      ['trainType フィールドなし', { sids: [1, 2] }],
+      ['trainType が null', { sids: [1, 2], trainType: null }],
+    ])('%s の場合は trainType が null', async (_label, payload) => {
+      setupFetch(
+        async () => new Response(JSON.stringify(payload), { status: 200 })
+      );
+
+      const result = await resolveSidsFromShortId(
+        'tt',
+        new AbortController().signal,
+        TEST_HOST
+      );
+
+      expect(result.trainType).toBeNull();
+    });
+
+    it.each([
+      ['trainType が配列', { sids: [1, 2], trainType: [] }],
+      ['trainType が文字列', { sids: [1, 2], trainType: 'Rapid' }],
+      ['name 欠落', { sids: [1, 2], trainType: { color: '#ff0000' } }],
+      ['color 欠落', { sids: [1, 2], trainType: { name: '快速' } }],
+      [
+        'color が #RRGGBB 形式外',
+        { sids: [1, 2], trainType: { name: '快速', color: 'red' } },
+      ],
+      [
+        'kind が enum 外',
+        {
+          sids: [1, 2],
+          trainType: { name: '快速', color: '#ff0000', kind: 'Unknown' },
+        },
+      ],
+      [
+        'direction が enum 外',
+        {
+          sids: [1, 2],
+          trainType: { name: '快速', color: '#ff0000', direction: 'Reverse' },
+        },
+      ],
+    ])('%s の場合はエラーを投げる', async (_label, payload) => {
+      setupFetch(
+        async () => new Response(JSON.stringify(payload), { status: 200 })
+      );
+
+      await expect(
+        resolveSidsFromShortId('tt', new AbortController().signal, TEST_HOST)
+      ).rejects.toThrow(/malformed trainType/);
+    });
+
+    it('受理されない id / typeId / groupId / line / lines / nameTtsSegments は無視される', async () => {
+      setupFetch(
+        async () =>
+          new Response(
+            JSON.stringify({
+              sids: [1, 2],
+              trainType: {
+                name: '快速',
+                color: '#ff0000',
+                id: 999,
+                typeId: 1,
+                groupId: 1,
+                line: { id: 1 },
+                lines: [],
+                nameTtsSegments: [],
+              },
+            }),
+            { status: 200 }
+          )
+      );
+
+      const result = await resolveSidsFromShortId(
+        'tt',
+        new AbortController().signal,
+        TEST_HOST
+      );
+
+      expect(result.trainType).toMatchObject({
+        id: null,
+        typeId: null,
+        groupId: null,
+        line: null,
+        lines: null,
+        nameTtsSegments: null,
+      });
+    });
   });
 });

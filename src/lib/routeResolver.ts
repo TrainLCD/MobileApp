@@ -2,7 +2,9 @@ import {
   DEV_ROUTE_RESOLVER_API_URL,
   PRODUCTION_ROUTE_RESOLVER_API_URL,
 } from 'react-native-dotenv';
+import type { TrainTypeNested } from '~/@types/graphql';
 import { isDevApp } from '~/utils/isDevApp';
+import { parseTrainTypeOverride } from './deepLinkTrainType';
 
 export const ROUTE_RESOLVER_ID_PATTERN = /^[A-Za-z0-9_-]{1,32}$/;
 export const ROUTE_RESOLVER_TIMEOUT_MS = 10_000;
@@ -10,11 +12,13 @@ export const ROUTE_RESOLVER_TIMEOUT_MS = 10_000;
 type ResolverResponse = {
   sids: unknown;
   skips?: unknown;
+  trainType?: unknown;
 };
 
 export type ResolvedRoute = {
   stationIds: number[];
   skipIndices: ReadonlySet<number> | null;
+  trainType: TrainTypeNested | null;
 };
 
 export const getRouteResolverHost = (): string => {
@@ -98,6 +102,27 @@ const parseSkipIndices = (
   return new Set(parsed);
 };
 
+// Mirrors the URL-form tt* validation: same field whitelist, same `name` +
+// `color` requirement, same enum / HEX constraints. A malformed payload
+// throws so useDeepLink turns the entire link into a no-op rather than
+// reflecting a partially-trusted TrainType in navigation state.
+const parseResolverTrainType = (raw: unknown): TrainTypeNested | null => {
+  if (raw === undefined || raw === null) {
+    return null;
+  }
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('route resolver returned malformed trainType');
+  }
+  const result = parseTrainTypeOverride(raw as Record<string, unknown>);
+  if (result.status === 'absent') {
+    return null;
+  }
+  if (result.status === 'invalid') {
+    throw new Error('route resolver returned malformed trainType');
+  }
+  return result.trainType;
+};
+
 // `host` is exposed for testability — production callers should omit it so the
 // env-derived value is used.
 export const resolveSidsFromShortId = async (
@@ -125,5 +150,6 @@ export const resolveSidsFromShortId = async (
   }
   const stationIds = payload.sids.map(coerceStationId);
   const skipIndices = parseSkipIndices(payload.skips, stationIds.length);
-  return { stationIds, skipIndices };
+  const trainType = parseResolverTrainType(payload.trainType);
+  return { stationIds, skipIndices, trainType };
 };
