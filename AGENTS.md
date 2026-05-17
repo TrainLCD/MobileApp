@@ -101,7 +101,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 ## Security & Configuration Guardrails
 
-- Store secrets in `.env.local`; treat `.env` as the template, and keep `.env.example` synchronized for onboarding.
+- Store secrets in `.env.local`; treat `.env.example` as the template for onboarding (copy it to `.env.local` and fill in values).
 - Never commit credentials, access tokens, or production endpoints.
 - Protect Expo credentials with 2FA and rotate access when automations change.
 - After dependency upgrades (`npm update`) or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, and `npm run typecheck`, then capture results in `docs/changelog.md`.

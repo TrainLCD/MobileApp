@@ -3,12 +3,23 @@ import { CommonActions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import type { Station, TrainType } from '~/@types/graphql';
+import {
+  type Station,
+  StopCondition,
+  type TrainType,
+  type TrainTypeNested,
+} from '~/@types/graphql';
+import { parseTrainTypeOverride } from '~/lib/deepLinkTrainType';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
   GET_STATIONS_BY_IDS,
 } from '~/lib/graphql/queries';
+import {
+  ROUTE_RESOLVER_ID_PATTERN,
+  ROUTE_RESOLVER_TIMEOUT_MS,
+  resolveSidsFromShortId,
+} from '~/lib/routeResolver';
 import type { LineDirection } from '../models/Bound';
 import { APP_THEME, type ThemePreference } from '../models/Theme';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -99,12 +110,50 @@ export const useDeepLink = () => {
     GET_STATIONS_BY_IDS
   );
 
+  const [resolverError, setResolverError] = useState<Error | null>(null);
+  const [resolverLoading, setResolverLoading] = useState(false);
+
+  // When the deep link supplied a custom TrainType, every fetched station's
+  // `trainType` is replaced with the override. `useCurrentTrainType` reads
+  // `currentStation?.trainType` (and falls back to other stations[].trainType
+  // when transferring lines), so only overriding `navigationState.trainType`
+  // would be undone on the next render. Replacing it on every station keeps
+  // the override stable throughout the shared route — which is what the user
+  // signed up for when they encoded `ttname` / `ttcolor` in the URL.
+  const applyOverrideToStations = useCallback(
+    (stations: Station[], override: TrainTypeNested | null): Station[] => {
+      if (!override) {
+        return stations;
+      }
+      return stations.map(
+        (station) =>
+          ({
+            ...station,
+            trainType: override,
+          }) as Station
+      );
+    },
+    []
+  );
+
   const applyRoute = useCallback(
-    (station: Station, stations: Station[], direction: LineDirection) => {
+    (
+      station: Station,
+      stations: Station[],
+      direction: LineDirection,
+      trainTypeOverride: TrainTypeNested | null
+    ) => {
       const line = station?.line;
       if (!line) {
         return;
       }
+
+      const overriddenStations = applyOverrideToStations(
+        stations,
+        trainTypeOverride
+      );
+      const overriddenHead =
+        overriddenStations.find((s) => s.id === station.id) ?? station;
 
       setLineState((prev) => ({
         ...prev,
@@ -113,10 +162,12 @@ export const useDeepLink = () => {
       }));
       setStationState((prev) => ({
         ...prev,
-        station,
-        stations,
+        station: overriddenHead,
+        stations: overriddenStations,
         selectedBound:
-          direction === 'INBOUND' ? stations[stations.length - 1] : stations[0],
+          direction === 'INBOUND'
+            ? overriddenStations[overriddenStations.length - 1]
+            : overriddenStations[0],
         selectedDirection: direction,
         pendingStation: null,
         pendingStations: [],
@@ -125,10 +176,12 @@ export const useDeepLink = () => {
       setNavigationState((prev) => ({
         ...prev,
         leftStations: [],
-        trainType: (station.trainType ?? null) as TrainType | null,
+        trainType: (trainTypeOverride ??
+          overriddenHead.trainType ??
+          null) as TrainType | null,
       }));
     },
-    [setLineState, setStationState, setNavigationState]
+    [applyOverrideToStations, setLineState, setStationState, setNavigationState]
   );
 
   const navigateToMain = useCallback(async () => {
@@ -149,13 +202,21 @@ export const useDeepLink = () => {
   // sids deep links express intent purely through station order: the first
   // entry is the origin and the last is the destination. Direction is fixed to
   // INBOUND — callers reverse the sids list to share the opposite direction.
+  // `skipIndices` marks 0-origin positions in `stationIds` whose stopCondition
+  // should be overridden to `Not` (通過扱い). Indices are resolved against the
+  // requested `stationIds` order, not the (possibly filtered) fetched result —
+  // missing stations are dropped without shifting other stations' skip state.
   const openRouteByStationIds = useCallback(
     async ({
       stationIds,
+      skipIndices,
+      trainTypeOverride,
       autoMode,
       theme,
     }: {
       stationIds: number[];
+      skipIndices: ReadonlySet<number> | null;
+      trainTypeOverride: TrainTypeNested | null;
       autoMode: boolean;
       theme: ThemePreference | undefined;
     }) => {
@@ -174,12 +235,22 @@ export const useDeepLink = () => {
       // Preserve the order specified in the deep link; server response order is
       // not guaranteed and stations not resolved are silently dropped.
       const byId = new Map(fetched.map((sta) => [sta.id, sta] as const));
-      const stations = stationIds
-        .map((id) => byId.get(id))
+      const baseStations = stationIds
+        .map((id, idx) => {
+          const sta = byId.get(id);
+          if (!sta) {
+            return undefined;
+          }
+          return skipIndices?.has(idx)
+            ? { ...sta, stopCondition: StopCondition.Not }
+            : sta;
+        })
         .filter((sta): sta is Station => sta != null);
-      if (stations.length === 0) {
+      if (baseStations.length === 0) {
         return;
       }
+
+      const stations = applyOverrideToStations(baseStations, trainTypeOverride);
 
       const head = stations[0];
       const line = head.line;
@@ -205,13 +276,16 @@ export const useDeepLink = () => {
       setNavigationState((prev) => ({
         ...prev,
         leftStations: [],
-        trainType: (head.trainType ?? null) as TrainType | null,
+        trainType: (trainTypeOverride ??
+          head.trainType ??
+          null) as TrainType | null,
         autoModeEnabled: autoMode ? true : prev.autoModeEnabled,
       }));
 
       await navigateToMain();
     },
     [
+      applyOverrideToStations,
       fetchStationsByIds,
       navigateToMain,
       setLineState,
@@ -229,6 +303,7 @@ export const useDeepLink = () => {
       direction,
       lineGroupId,
       lineId,
+      trainTypeOverride,
       autoMode,
       theme,
     }: {
@@ -236,6 +311,7 @@ export const useDeepLink = () => {
       direction: 0 | 1;
       lineGroupId: number | undefined;
       lineId: number;
+      trainTypeOverride: TrainTypeNested | null;
       autoMode: boolean;
       theme: ThemePreference | undefined;
     }) => {
@@ -256,7 +332,7 @@ export const useDeepLink = () => {
           return;
         }
 
-        applyRoute(station, stations, lineDirection);
+        applyRoute(station, stations, lineDirection, trainTypeOverride);
         if (autoMode) {
           setNavigationState((prev) => ({ ...prev, autoModeEnabled: true }));
         }
@@ -274,7 +350,7 @@ export const useDeepLink = () => {
         return;
       }
 
-      applyRoute(station, stations, lineDirection);
+      applyRoute(station, stations, lineDirection, trainTypeOverride);
       if (autoMode) {
         setNavigationState((prev) => ({ ...prev, autoModeEnabled: true }));
       }
@@ -296,7 +372,31 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
-      const { sgid, dir, lgid, lid, sids, auto, theme } = parsed.queryParams;
+      // Apollo-derived errors auto-reset on the next query, but resolverError
+      // is held in local state — without an explicit reset, a previous failure
+      // leaks into the next handleUrl call (including subsequent legacy-path
+      // successes). Clear it once we know the URL has parseable params.
+      setResolverError(null);
+      const {
+        sgid,
+        dir,
+        lgid,
+        lid,
+        sids,
+        skips,
+        id,
+        auto,
+        theme,
+        ttname,
+        ttcolor,
+        ttkind,
+        ttnameroman,
+        ttnamekatakana,
+        ttnamechinese,
+        ttnamekorean,
+        ttnameipa,
+        ttnameromanipa,
+      } = parsed.queryParams;
 
       const autoMode = auto === '1';
       const parsedTheme =
@@ -305,6 +405,69 @@ export const useDeepLink = () => {
           (Object.values(APP_THEME) as string[]).includes(theme))
           ? (theme as ThemePreference)
           : undefined;
+
+      // `id` (resolver short code) supersedes every other route param. When it
+      // is present we must not silently fall through to sids/sgid: doing so
+      // would resolve a different route than the one the user shared. Use
+      // `!= null` rather than a length check so that `?id=` (empty string) and
+      // non-string shapes (e.g. an array of values) still fail validation and
+      // no-op, instead of leaking to the sids/legacy paths.
+      if (id != null) {
+        if (typeof id !== 'string' || !ROUTE_RESOLVER_ID_PATTERN.test(id)) {
+          return;
+        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          ROUTE_RESOLVER_TIMEOUT_MS
+        );
+        setResolverLoading(true);
+        try {
+          // `tt*` URL params are ignored on the `?id=` path: the resolver
+          // payload is the single source of TrainType truth for short codes,
+          // and any malformed trainType in that payload causes resolver to
+          // throw, which we catch and surface as `resolverError` below.
+          const { stationIds, skipIndices, trainType } =
+            await resolveSidsFromShortId(id, controller.signal);
+          await openRouteByStationIds({
+            stationIds,
+            skipIndices,
+            trainTypeOverride: trainType,
+            autoMode,
+            theme: parsedTheme,
+          });
+        } catch (err) {
+          setResolverError(err instanceof Error ? err : new Error(String(err)));
+        } finally {
+          clearTimeout(timeoutId);
+          setResolverLoading(false);
+        }
+        return;
+      }
+
+      // `tt*` parameters override the head station's TrainType for both
+      // `sids` and `sgid`+`lid` URL forms. `direction` is intentionally not
+      // forwarded: the URL forms encode direction through station order /
+      // the legacy `dir` flag, so accepting it here would duplicate intent.
+      // Validation failure (missing required field, malformed color, enum
+      // miss, non-string optional) rejects the whole link to avoid showing
+      // a half-built TrainType.
+      const trainTypeResult = parseTrainTypeOverride({
+        name: ttname,
+        color: ttcolor,
+        kind: ttkind,
+        nameRoman: ttnameroman,
+        nameKatakana: ttnamekatakana,
+        nameChinese: ttnamechinese,
+        nameKorean: ttnamekorean,
+        nameIpa: ttnameipa,
+        nameRomanIpa: ttnameromanipa,
+      });
+      if (trainTypeResult.status === 'invalid') {
+        return;
+      }
+      const trainTypeOverride =
+        trainTypeResult.status === 'valid' ? trainTypeResult.trainType : null;
 
       // New `sids` form takes precedence and ignores sgid/lid/lgid/dir
       // entirely — station order alone encodes the intended direction.
@@ -319,8 +482,35 @@ export const useDeepLink = () => {
           return;
         }
         const stationIds = rawStationIds.map((raw) => Number(raw));
+
+        // Optional `skips` lists 0-origin indices into `stationIds` whose
+        // stations should be marked as 通過 (StopCondition.Not). The whole
+        // link is rejected on malformed input — non-integer, out-of-range,
+        // duplicate, or non-ascending — rather than silently ignoring it,
+        // so receivers never display a partially-misinterpreted route.
+        let skipIndices: ReadonlySet<number> | null = null;
+        if (typeof skips === 'string' && skips.length > 0) {
+          const rawSkips = skips.split(',').map((raw) => raw.trim());
+          if (rawSkips.some((raw) => !/^(0|[1-9]\d*)$/.test(raw))) {
+            return;
+          }
+          const parsedSkips = rawSkips.map((raw) => Number(raw));
+          for (let i = 0; i < parsedSkips.length; i++) {
+            if (parsedSkips[i] >= stationIds.length) {
+              return;
+            }
+            // Strict ascending order also rules out duplicates.
+            if (i > 0 && parsedSkips[i] <= parsedSkips[i - 1]) {
+              return;
+            }
+          }
+          skipIndices = new Set(parsedSkips);
+        }
+
         await openRouteByStationIds({
           stationIds,
+          skipIndices,
+          trainTypeOverride,
           autoMode,
           theme: parsedTheme,
         });
@@ -364,6 +554,7 @@ export const useDeepLink = () => {
         direction,
         lineGroupId,
         lineId,
+        trainTypeOverride,
         autoMode,
         theme: parsedTheme,
       });
@@ -404,10 +595,12 @@ export const useDeepLink = () => {
     isLoading:
       fetchStationsByLineGroupIdLoading ||
       fetchStationsByLineIdLoading ||
-      fetchStationsByIdsLoading,
+      fetchStationsByIdsLoading ||
+      resolverLoading,
     error:
       fetchStationsByLineGroupIdError ||
       fetchStationsByLineIdError ||
-      fetchStationsByIdsError,
+      fetchStationsByIdsError ||
+      resolverError,
   };
 };
