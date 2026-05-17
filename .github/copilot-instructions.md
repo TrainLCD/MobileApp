@@ -146,7 +146,7 @@ CI が失敗した場合は、根本原因のメモと再現手順を追加す�
 ## セキュリティとコンフィグレーション
 
 - シークレットは`.env.local`に保存
-- `.env`をテンプレートとして扱い、`.env.example`をオンボーディング用に同期
+- `.env.example`をオンボーディング用テンプレートとして扱い、`.env.local`にコピーして値を設定
 - クレデンシャル、アクセストークン、本番エンドポイントは絶対にコミットしない
 - 依存関係のアップグレード（`npm update`）や Expo SDK マイグレーション後は、`expo-doctor`、`npm run lint`、`npm test`、`npm run typecheck`を実行し、結果を`docs/changelog.md`に記録
 
