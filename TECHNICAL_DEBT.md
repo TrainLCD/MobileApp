@@ -807,7 +807,7 @@ EXPERIMENTAL_TELEMETRY_TOKEN
 ```
 
 ##### セキュリティ
-- `.env`ファイルは`.gitignore`で適切に除外
+- 実環境ファイル (`.env`, `.env.local`) は`.gitignore`で除外、`.env.example`をテンプレートとして管理
 - シークレットがコードにハードコーディングされていない ✅
 
 **推奨**: 現状維持。必要に応じて環境変数の検証ロジック追加
