@@ -331,9 +331,12 @@ export const useDeepLink = () => {
 
       // `id` (resolver short code) supersedes every other route param. When it
       // is present we must not silently fall through to sids/sgid: doing so
-      // would resolve a different route than the one the user shared.
-      if (typeof id === 'string' && id.length > 0) {
-        if (!ROUTE_RESOLVER_ID_PATTERN.test(id)) {
+      // would resolve a different route than the one the user shared. Use
+      // `!= null` rather than a length check so that `?id=` (empty string) and
+      // non-string shapes (e.g. an array of values) still fail validation and
+      // no-op, instead of leaking to the sids/legacy paths.
+      if (id != null) {
+        if (typeof id !== 'string' || !ROUTE_RESOLVER_ID_PATTERN.test(id)) {
           return;
         }
         const controller = new AbortController();

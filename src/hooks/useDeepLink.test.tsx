@@ -1390,6 +1390,36 @@ describe('useDeepLink', () => {
       }
     );
 
+    it('idが空文字でsidsが併記されていてもsidsへフォールスルーしない', async () => {
+      // `?id=&sids=...` would be a malformed share link; receiving it must be a
+      // total no-op rather than silently resolving the sids route.
+      mockGetInitialURL.mockResolvedValue(
+        'CanaryTrainLCD://route?id=&sids=1131211,1131310'
+      );
+      mockParse.mockReturnValue({
+        queryParams: { id: '', sids: '1131211,1131310' },
+      });
+
+      const { mockSetStationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockResolveSids).not.toHaveBeenCalled();
+      expect(mockFetchByIds).not.toHaveBeenCalled();
+      expect(mockSetStationState).not.toHaveBeenCalled();
+    });
+
     it('resolverが404相当のエラーを投げた場合はerrorを公開しstateを変更しない', async () => {
       mockGetInitialURL.mockResolvedValue('CanaryTrainLCD://route?id=missing');
       mockParse.mockReturnValue({ queryParams: { id: 'missing' } });
