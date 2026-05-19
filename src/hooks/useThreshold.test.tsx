@@ -213,7 +213,8 @@ describe('useThreshold', () => {
   });
 
   it('駅間距離がapproachingThreshold上限付近の場合、正しく判定する', () => {
-    // 約1000mの距離を設定 -> approachingThreshold = 500, arrivedThreshold = 250
+    // 約1000mの距離を設定 -> approachingThreshold = 500 (スケール内),
+    // arrivedThreshold = 250 -> ARRIVED_MAX_THRESHOLD(150) でクランプ
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
@@ -231,7 +232,7 @@ describe('useThreshold', () => {
     const result = JSON.parse(getByTestId('thresholds').props.children);
 
     expect(result.approachingThreshold).toBeLessThan(APPROACHING_MAX_THRESHOLD);
-    expect(result.arrivedThreshold).toBeLessThan(ARRIVED_MAX_THRESHOLD);
+    expect(result.arrivedThreshold).toBe(ARRIVED_MAX_THRESHOLD);
   });
 
   it('駅間距離がarrivedThreshold上限付近でapproachingThresholdが最大値の場合', () => {
@@ -257,7 +258,8 @@ describe('useThreshold', () => {
   });
 
   it('駅間距離が非常に短い場合、最小閾値にクランプされる', () => {
-    // 約200mの距離 -> distance/4 = 50 < ARRIVED_MIN_THRESHOLD(100)
+    // 約200mの距離 -> distance/4 ≈ 50 (= ARRIVED_MIN_THRESHOLD),
+    // distance/2 ≈ 100 < APPROACHING_MIN_THRESHOLD(200) で APPROACHING がクランプされる
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
