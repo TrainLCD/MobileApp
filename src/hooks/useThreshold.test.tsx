@@ -258,8 +258,8 @@ describe('useThreshold', () => {
   });
 
   it('駅間距離が非常に短い場合、最小閾値にクランプされる', () => {
-    // 約200mの距離 -> distance/4 ≈ 50 (= ARRIVED_MIN_THRESHOLD),
-    // distance/2 ≈ 100 < APPROACHING_MIN_THRESHOLD(200) で APPROACHING がクランプされる
+    // 約200mの距離 -> distance/4 ≈ 50 < ARRIVED_MIN_THRESHOLD(75) でクランプ、
+    // distance/2 ≈ 100 < APPROACHING_MIN_THRESHOLD(200) で APPROACHING もクランプされる
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
