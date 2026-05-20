@@ -214,7 +214,7 @@ describe('useThreshold', () => {
 
   it('駅間距離がapproachingThreshold上限付近の場合、正しく判定する', () => {
     // 約1000mの距離を設定 -> approachingThreshold = 500 (スケール内),
-    // arrivedThreshold = 250 -> ARRIVED_MAX_THRESHOLD(150) でクランプ
+    // arrivedThreshold = 250 -> ARRIVED_MAX_THRESHOLD(200) でクランプ
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
