@@ -2,6 +2,8 @@ import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import {
+  DISNEY_RESORT_LINE_ID,
+  DISNEY_RESORT_LINE_MAJOR_STATIONS_ID,
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
   OSAKA_LOOP_LINE_ID,
@@ -63,6 +65,13 @@ export const useLoopLine = (
         : stations.every((s) => s.line?.id === TOEI_OEDO_LINE_ID),
     [line, stations]
   );
+  const isDisneyResortLine = useMemo(
+    (): boolean =>
+      line
+        ? line?.id === DISNEY_RESORT_LINE_ID
+        : stations.every((s) => s.line?.id === DISNEY_RESORT_LINE_ID),
+    [line, stations]
+  );
 
   const majorStationIdSet = useMemo(() => {
     if (isYamanoteLine) {
@@ -76,15 +85,27 @@ export const useLoopLine = (
       return new Set(MEIJO_LINE_MAJOR_STATIONS_ID);
     }
 
+    if (isDisneyResortLine) {
+      return new Set(DISNEY_RESORT_LINE_MAJOR_STATIONS_ID);
+    }
+
     return new Set<number>();
-  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine]);
+  }, [isDisneyResortLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine]);
 
   const isLoopLine = useMemo((): boolean => {
     if (trainType && !getIsLocal(trainType)) {
       return false;
     }
-    return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
-  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, trainType]);
+    return (
+      isYamanoteLine || isOsakaLoopLine || isMeijoLine || isDisneyResortLine
+    );
+  }, [
+    isDisneyResortLine,
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    trainType,
+  ]);
 
   const isPartiallyLoopLine = useMemo(
     () =>
@@ -104,6 +125,12 @@ export const useLoopLine = (
 
   const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
+      return [];
+    }
+
+    // ディズニーリゾートラインは反時計回り (=API 駅順方向=OUTBOUND) の一方向運行。
+    // 時計回り側 (INBOUND) を経路探索・行先表示の候補に含めないため常に空配列を返す。
+    if (isDisneyResortLine) {
       return [];
     }
 
@@ -133,7 +160,13 @@ export const useLoopLine = (
       majorStations.push(s);
     }
     return majorStations;
-  }, [isLoopLine, majorStationIdSet, station, reversedStations]);
+  }, [
+    isDisneyResortLine,
+    isLoopLine,
+    majorStationIdSet,
+    station,
+    reversedStations,
+  ]);
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
@@ -170,6 +203,7 @@ export const useLoopLine = (
     isOsakaLoopLine,
     isMeijoLine,
     isOedoLine,
+    isDisneyResortLine,
     isLoopLine,
     isPartiallyLoopLine,
     inboundStationsForLoopLine,

@@ -24,7 +24,8 @@ export const useRefreshLeftStations = (): void => {
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
-  const { isOsakaLoopLine, isYamanoteLine, isMeijoLine } = useLoopLine();
+  const { isOsakaLoopLine, isYamanoteLine, isMeijoLine, isDisneyResortLine } =
+    useLoopLine();
 
   const stations = useMemo(
     () =>
@@ -62,6 +63,29 @@ export const useRefreshLeftStations = (): void => {
   const getStationsForLoopLine = useCallback(
     (currentStationIndex: number): Station[] => {
       if (!currentLine) {
+        return [];
+      }
+
+      // LineBoard 各テーマの最大表示枠 (通常 8 駅 / 山手線 iPad アーチは 6 駅) より
+      // 路線の駅数が少ない場合、従来ロジックは折返し用に同じ駅を 2 度含めて返し、
+      // 子コンポーネントの React key (station.id) が衝突する。
+      // ディズニーリゾートライン (4 駅) のような短い環状線では、現在駅を先頭にして
+      // 1 周分だけユニークに並べた配列を返し、不足分は各テーマのパディング枠に任せる
+      // (テーマは手動でも切り替わるため、表示枠サイズに依存しないユニーク化が必要)。
+      if (stations.length <= 8) {
+        if (selectedDirection === 'OUTBOUND') {
+          return [
+            ...stations.slice(currentStationIndex),
+            ...stations.slice(0, currentStationIndex),
+          ];
+        }
+        if (selectedDirection === 'INBOUND') {
+          return [
+            stations[currentStationIndex],
+            ...stations.slice(0, currentStationIndex).reverse(),
+            ...stations.slice(currentStationIndex + 1).reverse(),
+          ];
+        }
         return [];
       }
 
@@ -158,8 +182,17 @@ export const useRefreshLeftStations = (): void => {
     if (isOsakaLoopLine && !getIsLocal(trainType)) {
       return false;
     }
-    return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
-  }, [currentLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine, trainType]);
+    return (
+      isYamanoteLine || isOsakaLoopLine || isMeijoLine || isDisneyResortLine
+    );
+  }, [
+    currentLine,
+    isDisneyResortLine,
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    trainType,
+  ]);
 
   useEffect(() => {
     if (!station) {
