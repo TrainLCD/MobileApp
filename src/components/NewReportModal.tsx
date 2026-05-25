@@ -115,6 +115,12 @@ const NewReportModal: React.FC<Props> = ({
     onSubmit(textRef.current);
   }, [onSubmit]);
 
+  const handleShow = useCallback(() => {
+    if (Platform.OS === 'ios') {
+      textInputRef.current?.focus();
+    }
+  }, []);
+
   const handleClose = useCallback(() => {
     const hasInput = textRef.current.trim().length > 0;
 
@@ -145,6 +151,7 @@ const NewReportModal: React.FC<Props> = ({
     <CustomModal
       visible={visible}
       onClose={handleClose}
+      onShow={handleShow}
       backdropStyle={styles.backdrop}
       contentContainerStyle={[
         styles.modalView,
@@ -171,7 +178,7 @@ const NewReportModal: React.FC<Props> = ({
 
             <TextInput
               ref={textInputRef}
-              autoFocus={Platform.OS === 'ios'}
+              autoFocus={Platform.OS !== 'ios'}
               defaultValue=""
               onChangeText={handleChangeText}
               multiline
