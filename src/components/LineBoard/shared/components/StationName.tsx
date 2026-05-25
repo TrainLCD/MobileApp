@@ -1,11 +1,7 @@
 import React, { useMemo } from 'react';
-import {
-  type StyleProp,
-  type TextStyle,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { type StyleProp, type TextStyle, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
+import { useLandscapeWindowDimensions } from '~/hooks';
 import getStationNameR from '~/utils/getStationNameR';
 import isTablet from '~/utils/isTablet';
 import Typography from '../../../Typography';
@@ -35,7 +31,7 @@ export const StationName: React.FC<StationNameProps> = React.memo(
       () => station.name?.split('') ?? [],
       [station.name]
     );
-    const dim = useWindowDimensions();
+    const dim = useLandscapeWindowDimensions();
 
     const horizontalAdditionalStyle = useMemo(
       () => ({

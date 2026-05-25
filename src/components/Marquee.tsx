@@ -12,10 +12,10 @@ import {
   ScrollView,
   type StyleProp,
   StyleSheet,
-  useWindowDimensions,
   type View,
   type ViewStyle,
 } from 'react-native';
+import { useLandscapeWindowDimensions } from '~/hooks';
 
 type Props = {
   children: React.ReactElement;
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
 const PIXELS_PER_SECOND = 400;
 
 const Marquee = ({ children }: Props) => {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const wrapperViewRef = useRef<View>(null);
   const offsetX = useRef(new Animated.Value(dim.width)).current;

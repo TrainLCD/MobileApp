@@ -1,11 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
+  useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
@@ -208,7 +209,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   chevronColor,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const { widthScale } = useScale();
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
@@ -301,7 +302,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,

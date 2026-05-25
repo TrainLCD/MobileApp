@@ -28,6 +28,7 @@ jest.mock('expo-linear-gradient', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(() => ({
     id: 1,
     nameShort: 'テスト線',

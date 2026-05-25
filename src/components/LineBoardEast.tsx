@@ -1,11 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
+  useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
@@ -333,7 +334,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const additionalChevronStyle = useChevronPosition(index, arrived, passed);
   const includesLongStationName = useIncludesLongStationName(stations);
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const hasDrawableNumbering = useMemo(
     () =>
@@ -478,7 +479,7 @@ const LineBoardEast: React.FC<Props> = ({
   const nextStation = useNextStation();
   const afterNextStation = useAfterNextStation();
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,

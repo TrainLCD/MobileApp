@@ -1,11 +1,12 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentStation,
   useIsPassing,
+  useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -34,7 +35,7 @@ interface Props {
 }
 
 const useBarWidth = () => {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   return isTablet ? (dim.width - 120) / 8 : (dim.width - 96) / 7.835;
 };
 
@@ -129,7 +130,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     () => stationInLoop.stationNumbers?.[stationNumberIndex],
     [stationInLoop.stationNumbers, stationNumberIndex]
   );
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const additionalPadLineMarksContainerStyle = useMemo(() => {
     // rootWestJOのbottomがAndroidでは'30%'、iPadでは'40%'のため、
