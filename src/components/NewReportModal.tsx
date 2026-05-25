@@ -5,6 +5,7 @@ import {
   Keyboard,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   type TextInput as TextInputType,
@@ -13,7 +14,6 @@ import {
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -29,23 +29,15 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-    padding: 0,
-  },
   backdrop: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
   },
   modalView: {
+    borderRadius: 16,
+  },
+  scrollContent: {
+    paddingHorizontal: 32,
     paddingVertical: 32,
-    width: '100%',
-    // iPhoneのみ全方位に角丸を設定(KeyboardAvoidingViewでの見栄え関係)
-    borderRadius: !isTablet && Platform.OS === 'ios' ? 16 : 0,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
   },
   textInput: {
     borderWidth: 1,
@@ -153,83 +145,87 @@ const NewReportModal: React.FC<Props> = ({
     <CustomModal
       visible={visible}
       onClose={handleClose}
-      containerStyle={styles.modalContainer}
       backdropStyle={styles.backdrop}
       contentContainerStyle={[
         styles.modalView,
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-          paddingLeft: 32,
-          paddingRight: 32,
         },
       ]}
       dismissOnBackdropPress={!sending}
       avoidKeyboard
     >
-      <Pressable onPress={Keyboard.dismiss}>
-        <Heading style={styles.title}>{translate('reportModalTitle')}</Heading>
-
-        <View style={styles.modalContent}>
-          <Heading style={styles.subtitle}>
-            {translate('reportBodyTitle')}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Pressable onPress={Keyboard.dismiss}>
+          <Heading style={styles.title}>
+            {translate('reportModalTitle')}
           </Heading>
 
-          <TextInput
-            ref={textInputRef}
-            autoFocus={Platform.OS === 'ios'}
-            defaultValue=""
-            onChangeText={handleChangeText}
-            multiline
+          <View style={styles.modalContent}>
+            <Heading style={styles.subtitle}>
+              {translate('reportBodyTitle')}
+            </Heading>
+
+            <TextInput
+              ref={textInputRef}
+              autoFocus={Platform.OS === 'ios'}
+              defaultValue=""
+              onChangeText={handleChangeText}
+              multiline
+              style={[
+                styles.textInput,
+                {
+                  color: isLEDTheme ? '#fff' : '#000',
+                  fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                },
+              ]}
+              placeholder={translate('reportPlaceholder', {
+                lowerLimit: descriptionLowerLimit,
+              })}
+            />
+
+            {needsLeftCount < 0 ? (
+              <Typography style={styles.charCount}>
+                {translate('remainingCharacters', { count: -needsLeftCount })}
+              </Typography>
+            ) : (
+              <Typography style={styles.charCount}>
+                {translate('sendable')}
+              </Typography>
+            )}
+          </View>
+
+          <Typography
             style={[
-              styles.textInput,
+              styles.caution,
               {
                 color: isLEDTheme ? '#fff' : '#000',
-                fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
+                lineHeight: Platform.select({ ios: RFValue(14) }),
               },
             ]}
-            placeholder={translate('reportPlaceholder', {
-              lowerLimit: descriptionLowerLimit,
-            })}
-          />
-
-          {needsLeftCount < 0 ? (
-            <Typography style={styles.charCount}>
-              {translate('remainingCharacters', { count: -needsLeftCount })}
-            </Typography>
-          ) : (
-            <Typography style={styles.charCount}>
-              {translate('sendable')}
-            </Typography>
-          )}
-        </View>
-
-        <Typography
-          style={[
-            styles.caution,
-            {
-              color: isLEDTheme ? '#fff' : '#000',
-              lineHeight: Platform.select({ ios: RFValue(14) }),
-            },
-          ]}
-        >
-          {translate('reportCaution')}
-        </Typography>
-        <View style={styles.buttonContainer}>
-          <Button disabled={sending} onPress={handleClose} outline>
-            {translate('close')}
-          </Button>
-
-          <Button
-            style={styles.sendButton}
-            disabled={charCount < descriptionLowerLimit || sending}
-            onPress={handleSubmit}
           >
-            {sending
-              ? translate('reportSendInProgress')
-              : translate('reportSend')}
-          </Button>
-        </View>
-      </Pressable>
+            {translate('reportCaution')}
+          </Typography>
+          <View style={styles.buttonContainer}>
+            <Button disabled={sending} onPress={handleClose} outline>
+              {translate('close')}
+            </Button>
+
+            <Button
+              style={styles.sendButton}
+              disabled={charCount < descriptionLowerLimit || sending}
+              onPress={handleSubmit}
+            >
+              {sending
+                ? translate('reportSendInProgress')
+                : translate('reportSend')}
+            </Button>
+          </View>
+        </Pressable>
+      </ScrollView>
     </CustomModal>
   );
 };
