@@ -14,6 +14,9 @@ jest.mock('jotai', () => ({
     if (atom === require('../store/atoms/theme').themeAtom) {
       return 'TOKYO_METRO';
     }
+    if (atom === require('../store/atoms/navigation').default) {
+      return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+    }
     return {};
   }),
   atom: jest.fn((initialValue) => initialValue),
@@ -73,6 +76,11 @@ jest.mock('../store/atoms/theme', () => ({
   themeAtom: {},
 }));
 
+jest.mock('../store/atoms/navigation', () => ({
+  __esModule: true,
+  default: {},
+}));
+
 jest.mock('./BarTerminalEast', () => ({
   BarTerminalEast: jest.fn(() => null),
 }));
@@ -126,6 +134,9 @@ describe('TypeChangeNotify', () => {
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'SAIKYO';
       }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+      }
       return {};
     });
 
@@ -147,6 +158,9 @@ describe('TypeChangeNotify', () => {
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'JO';
       }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+      }
       return {};
     });
 
@@ -167,6 +181,9 @@ describe('TypeChangeNotify', () => {
       }
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'ODAKYU';
+      }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
       }
       return {};
     });
@@ -305,6 +322,9 @@ describe('TypeChangeNotify', () => {
       }
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'TOKYO_METRO';
+      }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
       }
       return {};
     });

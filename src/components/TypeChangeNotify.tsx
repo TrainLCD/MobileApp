@@ -368,7 +368,7 @@ const EastBars = React.memo(function EastBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={styles.textEn}
+              style={isJaEnabled ? styles.textEn : styles.text}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -423,7 +423,7 @@ const EastBars = React.memo(function EastBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={styles.textEn}
+              style={isJaEnabled ? styles.textEn : styles.text}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -657,7 +657,7 @@ const OdakyuBars = React.memo(function OdakyuBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={styles.textEn}
+              style={isJaEnabled ? styles.textEn : styles.text}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -727,7 +727,7 @@ const OdakyuBars = React.memo(function OdakyuBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={styles.textEn}
+              style={isJaEnabled ? styles.textEn : styles.text}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -906,7 +906,7 @@ const SaikyoBars = React.memo(function SaikyoBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={styles.textEn}
+              style={isJaEnabled ? styles.textEn : styles.text}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -1089,7 +1089,10 @@ const JOBars = React.memo(function JOBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={[styles.textEn, { shadowOpacity: 0 }]}
+              style={[
+                isJaEnabled ? styles.textEn : styles.text,
+                { shadowOpacity: 0 },
+              ]}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -1146,7 +1149,10 @@ const JOBars = React.memo(function JOBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={[styles.textEn, { shadowOpacity: 0 }]}
+              style={[
+                isJaEnabled ? styles.textEn : styles.text,
+                { shadowOpacity: 0 },
+              ]}
               numberOfLines={1}
             >
               {truncateTrainType(
@@ -1224,6 +1230,7 @@ const HeadingJa = React.memo(
 const HeadingEn = React.memo(
   ({
     headingTexts,
+    isJaEnabled,
   }: {
     headingTexts: {
       jaPrefix: string;
@@ -1231,6 +1238,7 @@ const HeadingEn = React.memo(
       jaSuffix?: string;
       enSuffix?: string;
     } | null;
+    isJaEnabled: boolean;
   }) => {
     const trainType = useCurrentTrainType();
     const nextTrainType = useNextTrainType();
@@ -1239,9 +1247,11 @@ const HeadingEn = React.memo(
       return null;
     }
 
+    const headingStyle = isJaEnabled ? styles.headingEn : styles.headingJa;
+
     if (headingTexts.enSuffix) {
       return (
-        <Typography style={styles.headingEn}>
+        <Typography style={headingStyle}>
           {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
           {headingTexts.enPrefix}{' '}
           <Typography
@@ -1260,7 +1270,7 @@ const HeadingEn = React.memo(
     }
 
     return (
-      <Typography style={styles.headingEn}>{headingTexts.enPrefix}</Typography>
+      <Typography style={headingStyle}>{headingTexts.enPrefix}</Typography>
     );
   }
 );
@@ -1524,7 +1534,9 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
         {isJaEnabled ? <HeadingJa headingTexts={headingTexts} /> : null}
-        {isEnEnabled ? <HeadingEn headingTexts={headingTexts} /> : null}
+        {isEnEnabled ? (
+          <HeadingEn headingTexts={headingTexts} isJaEnabled={isJaEnabled} />
+        ) : null}
       </View>
       <View style={styles.bottom}>
         {isJaEnabled && currentTypeFinalStation?.name ? (
@@ -1533,7 +1545,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
           </Typography>
         ) : null}
         {isEnEnabled && currentTypeFinalStation?.nameRoman ? (
-          <Typography style={styles.headingEn}>
+          <Typography style={isJaEnabled ? styles.headingEn : styles.headingJa}>
             {currentTypeFinalStation.nameRoman}
           </Typography>
         ) : null}
