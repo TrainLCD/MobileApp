@@ -129,6 +129,7 @@ describe('useWrongDirectionDetector (hysteresis)', () => {
       isOsakaLoopLine: false,
       isMeijoLine: false,
       isOedoLine: false,
+      isDisneyResortLine: false,
       isPartiallyLoopLine: false,
       inboundStationsForLoopLine: [],
       outboundStationsForLoopLine: [],

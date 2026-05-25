@@ -25,6 +25,17 @@ export const MEIJO_LINE_MAJOR_STATIONS_ID = [
   9951419, // 新瑞橋
 ];
 
+// ディズニーリゾートラインは 4 駅のみのため全駅を主要駅として扱う。
+// 反時計回り (リゾートゲートウェイ → ディズニーランド → ベイサイド → ディズニーシー → リゾートゲートウェイ) の
+// 一方向運行で、outboundStationsForLoopLine 側だけで参照する想定。
+// 駅 ID は StationAPI 側の並び順 (ディズニーランド → ベイサイド → ディズニーシー → リゾートゲートウェイ) に従う。
+export const DISNEY_RESORT_LINE_MAJOR_STATIONS_ID = [
+  1134501, // 東京ディズニーランド・ステーション
+  1134502, // ベイサイド・ステーション
+  1134503, // 東京ディズニーシー・ステーション
+  1134504, // リゾートゲートウェイ・ステーション
+];
+
 export const TOEI_OEDO_LINE_MAJOR_STATIONS_ID = [
   9930101, // 都庁前`
   9930107, // 飯田橋

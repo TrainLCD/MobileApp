@@ -3,7 +3,7 @@ import type { ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext) => ({
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.5.1',
+  version: '10.6.0',
   plugins: [
     'expo-image',
     'expo-font',
