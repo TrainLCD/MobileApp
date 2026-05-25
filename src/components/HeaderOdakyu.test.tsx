@@ -50,6 +50,7 @@ jest.mock('~/store/atoms/tuning', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentStation: jest.fn(() => ({ id: 1, name: 'Test' })),
   useCurrentLine: jest.fn(() => ({ id: 1, name: 'Test', color: '#FF0000' })),
   useNextStation: jest.fn(() => ({ id: 2, name: 'Next' })),
