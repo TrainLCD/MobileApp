@@ -26,6 +26,7 @@ jest.mock('expo-application', () => ({
 
 // Mock hooks
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useDistanceToNextStation: jest.fn(),
   useNextStation: jest.fn(),
 }));

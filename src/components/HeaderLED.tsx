@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useNumbering } from '~/hooks';
+import { StyleSheet, View } from 'react-native';
+import { useLandscapeWindowDimensions, useNumbering } from '~/hooks';
 import { LED_THEME_BG_COLOR, STATION_NAME_FONT_SIZE } from '../constants';
 import { translate } from '../translation';
 import type { CommonHeaderProps } from './Header.types';
@@ -61,7 +61,7 @@ const HeaderLED: React.FC<CommonHeaderProps> = (props) => {
   // HeaderLEDは現在駅と次駅両方のナンバリングが必要
   const [nextStationNumber] = useNumbering();
   const [currentStationNumber] = useNumbering(true);
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const [stateText, setStateText] = useState('');
   const [stationText, setStationText] = useState(station?.name ?? '');

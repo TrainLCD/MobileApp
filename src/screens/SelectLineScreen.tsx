@@ -1,4 +1,3 @@
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtom, useAtomValue } from 'jotai';
 import React, {
@@ -141,11 +140,6 @@ const SelectLineScreen = () => {
     handlePresetPress,
     setNavigationState,
   ]);
-
-  // --- 画面回転ロック解除 ---
-  useEffect(() => {
-    ScreenOrientation.unlockAsync().catch(console.error);
-  }, []);
 
   // --- RefreshControl tintColor ワークアラウンド ---
   const [refreshTintColor, setRefreshTintColor] = useState<

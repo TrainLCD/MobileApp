@@ -1,11 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
+  useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
@@ -252,7 +253,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
   chevronColor,
 }: StationNameCellProps) => {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const {
     currentStationIndex,
     arrived,
@@ -393,7 +394,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const [chevronColor, setChevronColor] = useState<'BLUE' | 'BLACK'>('BLACK');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
 

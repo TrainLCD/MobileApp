@@ -1,14 +1,9 @@
 import { darken } from 'polished';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Animated,
-  Easing,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, LineNested, Station } from '~/@types/graphql';
+import { useLandscapeWindowDimensions } from '~/hooks';
 import { isBusLine } from '~/utils/line';
 import {
   MANY_LINES_THRESHOLD,
@@ -411,7 +406,8 @@ const PadArch: React.FC<Props> = ({
   trainTypeLines,
   isEn,
 }: Props) => {
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } =
+    useLandscapeWindowDimensions();
 
   // Animated.Value（RN Animated API — Reanimated 4.2 の mapper バグ回避）
   const bgScale = useRef(new Animated.Value(0.95)).current;

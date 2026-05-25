@@ -1,6 +1,5 @@
 import { CommonActions } from '@react-navigation/native';
 import * as QuickActions from 'expo-quick-actions';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
@@ -18,8 +17,6 @@ const navigateToSelectLine = () => {
     );
     return false;
   }
-
-  ScreenOrientation.unlockAsync().catch(console.error);
 
   navigationRef.dispatch(
     CommonActions.reset({

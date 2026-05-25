@@ -11,6 +11,7 @@ jest.mock('jotai', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useInterval: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),

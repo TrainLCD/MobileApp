@@ -10,6 +10,7 @@ jest.mock('jotai', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(() => ({ id: 1, name: 'Test', color: '#FFD400' })),
   useClock: jest.fn(() => ['12', '34']),
   useInterval: jest.fn(),
