@@ -118,6 +118,11 @@ const NewReportModal: React.FC<Props> = ({
   }, [visible]);
 
   useEffect(() => {
+    if (!visible) {
+      setIsKeyboardVisible(false);
+      return;
+    }
+
     const showSubscription = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       () => setIsKeyboardVisible(true)
@@ -131,7 +136,7 @@ const NewReportModal: React.FC<Props> = ({
       showSubscription.remove();
       hideSubscription.remove();
     };
-  }, []);
+  }, [visible]);
 
   const handleChangeText = useCallback((text: string) => {
     textRef.current = text;
