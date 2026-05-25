@@ -40,8 +40,12 @@ const styles = StyleSheet.create({
     maxHeight: '100%',
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 32,
     paddingVertical: 32,
+  },
+  pressableContent: {
+    flex: 1,
   },
   textInput: {
     borderWidth: 1,
@@ -49,6 +53,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     width: '100%',
+    flex: 1,
     fontSize: RFValue(14),
     marginTop: 8,
     textAlignVertical: 'top',
@@ -81,6 +86,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   modalContent: {
+    flex: 1,
     marginTop: 21,
   },
   subtitle: {
@@ -188,7 +194,7 @@ const NewReportModal: React.FC<Props> = ({
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable onPress={Keyboard.dismiss}>
+        <Pressable onPress={Keyboard.dismiss} style={styles.pressableContent}>
           <Heading style={styles.title}>
             {translate('reportModalTitle')}
           </Heading>
