@@ -35,6 +35,10 @@ const styles = StyleSheet.create({
   modalView: {
     borderRadius: 16,
   },
+  modalViewExpanded: {
+    flex: 1,
+    maxHeight: '100%',
+  },
   scrollContent: {
     paddingHorizontal: 32,
     paddingVertical: 32,
@@ -96,6 +100,7 @@ const NewReportModal: React.FC<Props> = ({
   const textInputRef = useRef<TextInputType>(null);
   const textRef = useRef('');
   const [charCount, setCharCount] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   // モーダルが開かれたときに初期化
   useEffect(() => {
@@ -105,6 +110,22 @@ const NewReportModal: React.FC<Props> = ({
       textInputRef.current?.clear();
     }
   }, [visible]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setIsKeyboardVisible(true)
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setIsKeyboardVisible(false)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleChangeText = useCallback((text: string) => {
     textRef.current = text;
@@ -158,6 +179,7 @@ const NewReportModal: React.FC<Props> = ({
         {
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
         },
+        isKeyboardVisible && styles.modalViewExpanded,
       ]}
       dismissOnBackdropPress={!sending}
       avoidKeyboard
