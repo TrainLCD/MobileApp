@@ -963,7 +963,7 @@ const SaikyoBars = React.memo(function SaikyoBars({
           {isEnEnabled ? (
             <Typography
               adjustsFontSizeToFit
-              style={styles.textEn}
+              style={isJaEnabled ? styles.textEn : styles.text}
               numberOfLines={1}
             >
               {truncateTrainType(
