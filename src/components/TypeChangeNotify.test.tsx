@@ -14,6 +14,9 @@ jest.mock('jotai', () => ({
     if (atom === require('../store/atoms/theme').themeAtom) {
       return 'TOKYO_METRO';
     }
+    if (atom === require('../store/atoms/navigation').default) {
+      return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+    }
     return {};
   }),
   atom: jest.fn((initialValue) => initialValue),
@@ -73,6 +76,11 @@ jest.mock('../store/atoms/theme', () => ({
   themeAtom: {},
 }));
 
+jest.mock('../store/atoms/navigation', () => ({
+  __esModule: true,
+  default: {},
+}));
+
 jest.mock('./BarTerminalEast', () => ({
   BarTerminalEast: jest.fn(() => null),
 }));
@@ -126,6 +134,9 @@ describe('TypeChangeNotify', () => {
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'SAIKYO';
       }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+      }
       return {};
     });
 
@@ -147,6 +158,9 @@ describe('TypeChangeNotify', () => {
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'JO';
       }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+      }
       return {};
     });
 
@@ -167,6 +181,9 @@ describe('TypeChangeNotify', () => {
       }
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'ODAKYU';
+      }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
       }
       return {};
     });
@@ -306,6 +323,9 @@ describe('TypeChangeNotify', () => {
       if (atom === require('../store/atoms/theme').themeAtom) {
         return 'TOKYO_METRO';
       }
+      if (atom === require('../store/atoms/navigation').default) {
+        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
+      }
       return {};
     });
 
@@ -318,5 +338,116 @@ describe('TypeChangeNotify', () => {
 
     const odakyuTexts = queryAllByText(/小田急多摩線/);
     expect(odakyuTexts).toHaveLength(0);
+  });
+
+  describe('enabledLanguages による表示切替', () => {
+    const setupLanguageScenario = (enabledLanguages: string[]) => {
+      const { useAtomValue } = require('jotai');
+      const {
+        useCurrentLine,
+        useCurrentStation,
+        useCurrentTrainType,
+        useNextTrainType,
+      } = require('~/hooks');
+
+      const odakyuTamaLine = {
+        id: 100,
+        nameShort: '小田急多摩線',
+        nameRoman: 'Odakyu Tama Line',
+        color: '#0D82C7',
+      };
+      const jobanLine = {
+        id: 300,
+        nameShort: '常磐線',
+        nameRoman: 'Joban Line',
+        color: '#00B264',
+      };
+      const stations = [
+        {
+          id: 1,
+          groupId: 1,
+          name: '新百合ヶ丘',
+          nameRoman: 'Shin-Yurigaoka',
+          line: odakyuTamaLine,
+          lines: [odakyuTamaLine],
+          trainType: { typeId: 2, name: '準急', nameRoman: 'Semi Express' },
+          stopCondition: 'STOP',
+        },
+        {
+          id: 2,
+          groupId: 2,
+          name: '綾瀬',
+          nameRoman: 'Ayase',
+          line: jobanLine,
+          lines: [jobanLine],
+          trainType: { typeId: 3, name: '各停', nameRoman: 'Local' },
+          stopCondition: 'STOP',
+        },
+      ];
+
+      useCurrentLine.mockReturnValue(odakyuTamaLine);
+      useCurrentStation.mockReturnValue(stations[0]);
+      useCurrentTrainType.mockReturnValue({
+        typeId: 2,
+        name: '準急',
+        nameRoman: 'Semi Express',
+        color: '#009944',
+        line: odakyuTamaLine,
+      });
+      useNextTrainType.mockReturnValue({
+        typeId: 3,
+        name: '各停',
+        nameRoman: 'Local',
+        color: '#00B264',
+        line: jobanLine,
+      });
+
+      useAtomValue.mockImplementation((atom: unknown) => {
+        if (atom === require('../store/atoms/station').default) {
+          return {
+            selectedDirection: 'INBOUND',
+            stations,
+            selectedBound: { name: '取手', nameRoman: 'Toride' },
+          };
+        }
+        if (atom === require('../store/atoms/theme').themeAtom) {
+          return 'TOKYO_METRO';
+        }
+        if (atom === require('../store/atoms/navigation').default) {
+          return { enabledLanguages };
+        }
+        return {};
+      });
+    };
+
+    it('JAのみ有効時は日本語ラベルだけが表示される', () => {
+      setupLanguageScenario(['JA']);
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/準急/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/各停/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Semi Express/)).toHaveLength(0);
+      expect(queryAllByText(/Local/)).toHaveLength(0);
+    });
+
+    it('ENのみ有効時は英語ラベルだけが表示される', () => {
+      setupLanguageScenario(['EN']);
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/Semi Express/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Local/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/準急/)).toHaveLength(0);
+      expect(queryAllByText(/各停/)).toHaveLength(0);
+    });
+
+    it('JAとEN両方有効時は両言語のラベルが共存する', () => {
+      setupLanguageScenario(['JA', 'EN']);
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/準急/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/各停/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Semi Express/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Local/).length).toBeGreaterThan(0);
+    });
   });
 });
