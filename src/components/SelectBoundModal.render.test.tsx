@@ -17,6 +17,7 @@ jest.mock('jotai', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useBounds: jest.fn(() => ({
     bounds: [[{ id: 1, groupId: 1 }], [{ id: 2, groupId: 2 }]],
   })),

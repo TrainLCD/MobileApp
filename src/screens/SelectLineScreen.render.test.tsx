@@ -39,7 +39,6 @@ jest.mock('~/lib/gql', () => ({
 }));
 
 jest.mock('expo-screen-orientation', () => ({
-  unlockAsync: jest.fn().mockResolvedValue(undefined),
   Orientation: {
     PORTRAIT_UP: 1,
     PORTRAIT_DOWN: 2,
@@ -586,15 +585,6 @@ describe('SelectLineScreen', () => {
       render(<SelectLineScreen />);
 
       expect(useStationsCache).toHaveBeenCalledWith(null);
-    });
-
-    it('ScreenOrientation.unlockAsync が呼ばれる', () => {
-      setupDefaults();
-
-      render(<SelectLineScreen />);
-
-      const ScreenOrientation = require('expo-screen-orientation');
-      expect(ScreenOrientation.unlockAsync).toHaveBeenCalled();
     });
   });
 });

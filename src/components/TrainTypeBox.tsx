@@ -12,13 +12,13 @@ import {
   Platform,
   Animated as RNAnimated,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
+  useLandscapeWindowDimensions,
   useLazyPrevious,
   useNextTrainType,
   usePrevious,
@@ -97,7 +97,7 @@ const TrainTypeBox: React.FC<Props> = ({
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth } = useLandscapeWindowDimensions();
   const { headerState } = useAtomValue(navigationState);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);

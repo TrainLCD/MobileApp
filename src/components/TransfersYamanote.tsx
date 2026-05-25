@@ -4,13 +4,16 @@ import {
   Platform,
   StyleSheet,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import { useGetLineMark, useTransferLines } from '../hooks';
+import {
+  useGetLineMark,
+  useLandscapeWindowDimensions,
+  useTransferLines,
+} from '../hooks';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -66,7 +69,7 @@ const styles = StyleSheet.create({
 const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   const getLineMarkFunc = useGetLineMark();
   const lines = useTransferLines();
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const flexBasis = useMemo(() => dim.width / 3, [dim.width]);
 

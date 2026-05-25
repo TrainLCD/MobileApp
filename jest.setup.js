@@ -26,6 +26,7 @@ jest.mock("~/hooks", () => ({
   useNumbering: jest.fn(() => []),
   useClock: jest.fn(() => []),
   useInterval: jest.fn(() => null),
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
 }));
 
 jest.mock("react-native-reanimated", () => {

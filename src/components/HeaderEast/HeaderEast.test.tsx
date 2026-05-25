@@ -53,6 +53,7 @@ jest.mock('~/store/atoms/tuning', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentStation: jest.fn(() => ({
     id: 1,
     name: 'Test Station',

@@ -1,17 +1,13 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import {
-  type StyleProp,
-  type TextStyle,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { type StyleProp, type TextStyle, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentStation,
   useHasPassStationInRegion,
   useIsPassing,
+  useLandscapeWindowDimensions,
   useNextStation,
   usePreviousStation,
   useStationNumberIndexFunc,
@@ -37,7 +33,7 @@ interface Props {
 }
 
 const useBarWidth = () => {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   return useMemo(
     () => (isTablet ? (dim.width - 72) / 8 : (dim.width - 48) / 8),
     [dim.width]
@@ -314,7 +310,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const { stations: allStations } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth } = useLandscapeWindowDimensions();
 
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
@@ -416,7 +412,7 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { selectedLine } = useAtomValue(lineState);
   const { arrived, approaching } = useAtomValue(stationState);
   const barWidth = useBarWidth();
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const isPassing = useIsPassing();
   const currentLine = useCurrentLine();

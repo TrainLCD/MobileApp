@@ -1,14 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import {
-  Animated as RNAnimated,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Animated as RNAnimated, StyleSheet, Text, View } from 'react-native';
 import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../../constants';
-import { useHeaderAnimation } from '../../hooks';
+import { useHeaderAnimation, useLandscapeWindowDimensions } from '../../hooks';
 import isTablet from '../../utils/isTablet';
 import { RFValue } from '../../utils/rfValue';
 import { calcStationNameMinScale } from '../../utils/stationNameScale';
@@ -125,7 +119,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
     isJapaneseState,
   });
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const stationNameColor = config.stationNameColor ?? config.textColor;
 

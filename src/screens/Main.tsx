@@ -1,7 +1,6 @@
 import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
@@ -10,7 +9,16 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, Linking, Platform, Pressable, StyleSheet } from 'react-native';
+import {
+  Alert,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import {
   LineType,
@@ -29,7 +37,6 @@ import {
   useCurrentTrainType,
   useFirstStop,
   useKeepAwake,
-  useLockLandscapeOnActive,
   useLoopLine,
   useNextStation,
   useRefreshLeftStations,
@@ -95,7 +102,6 @@ type GetStationTrainTypesVariables = {
 };
 
 const MainScreen: React.FC = () => {
-  const [isRotated, setIsRotated] = useState(false);
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
 
   const theme = useAtomValue(themeAtom);
@@ -114,9 +120,26 @@ const MainScreen: React.FC = () => {
   const trainType = useCurrentTrainType();
   const nextStation = useNextStation();
 
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
+  // OS 側で orientation lock せず、物理的に portrait のときはコンテンツ側を 90deg
+  // 回転して横長レイアウトを維持する。端末の回転ロック ON でも横表示を保てる。
+  const landscapeKeepStyle = useMemo<ViewStyle>(() => {
+    if (windowHeight <= windowWidth) {
+      return StyleSheet.absoluteFillObject;
+    }
+    return {
+      position: 'absolute',
+      top: (windowHeight - windowWidth) / 2,
+      left: (windowWidth - windowHeight) / 2,
+      width: windowHeight,
+      height: windowWidth,
+      transform: [{ rotate: '90deg' }],
+    };
+  }, [windowWidth, windowHeight]);
+
   useSimulationMode();
   useFirstStop(true);
-  useLockLandscapeOnActive();
 
   useTelemetrySender(true);
   useConsoleTelemetry();
@@ -155,9 +178,6 @@ const MainScreen: React.FC = () => {
 
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
-    ScreenOrientation.lockAsync(
-      ScreenOrientation.OrientationLock.LANDSCAPE
-    ).catch(console.error);
   }, []);
 
   const handleTrainTypeSelect = useCallback(
@@ -249,30 +269,6 @@ const MainScreen: React.FC = () => {
   }, [selectedDirection]);
 
   useEffect(() => {
-    const lockOrientationAsync = async () => {
-      try {
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE
-        );
-      } catch (_e) {
-        // ignore and proceed
-      } finally {
-        // fail-open to avoid blocking UI even if locking fails
-        setIsRotated(true);
-      }
-    };
-    lockOrientationAsync();
-    return () => {
-      ScreenOrientation.unlockAsync().catch(console.error);
-    };
-  }, []);
-
-  useEffect(() => {
-    // 横画面になるのを待たないと2回スクリーンロックがかかる
-    if (!isRotated) {
-      return;
-    }
-
     if (
       stationsFromCurrentStation.some(
         (s) => s.line?.lineType === LineType.Subway
@@ -306,16 +302,11 @@ const MainScreen: React.FC = () => {
 
       alertAsync();
     }
-  }, [stationsFromCurrentStation, isRotated]);
+  }, [stationsFromCurrentStation]);
 
   const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
 
   useEffect(() => {
-    // 横画面になるのを待たないと2回スクリーンロックがかかる
-    if (!isRotated) {
-      return;
-    }
-
     const alertAsync = async () => {
       // 土休日通過
       const holidayNoticeDismissed = await AsyncStorage.getItem(
@@ -396,7 +387,7 @@ const MainScreen: React.FC = () => {
       }
     };
     alertAsync();
-  }, [stationsFromCurrentStation, isHoliday, isRotated]);
+  }, [stationsFromCurrentStation, isHoliday]);
 
   const transferLines = useTransferLines();
 
@@ -455,11 +446,6 @@ const MainScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // 横画面になるのを待たないと2回スクリーンロックがかかる
-    if (!isRotated) {
-      return;
-    }
-
     const f = async (): Promise<void> => {
       const warningDismissed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
@@ -549,7 +535,7 @@ const MainScreen: React.FC = () => {
       }
     };
     f();
-  }, [isRotated]);
+  }, []);
 
   const changeOperatingLine = useCallback(
     async (selectedStation: Station) => {
@@ -557,8 +543,6 @@ const MainScreen: React.FC = () => {
       if (!selectedStation.id || !selectedLine?.id) {
         return;
       }
-
-      await ScreenOrientation.unlockAsync().catch(console.error);
 
       setIsSelectBoundModalOpen(true);
 
@@ -668,31 +652,31 @@ const MainScreen: React.FC = () => {
     }
   }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
 
-  if (!isRotated) {
-    return null;
-  }
-
   if (isLEDTheme) {
     return (
-      <>
+      <View style={landscapeKeepStyle}>
         <Header />
         <LineBoard hasTerminus={hasTerminus} />
-      </>
+      </View>
     );
   }
 
   return (
     <>
-      <Pressable
-        style={[
-          StyleSheet.absoluteFill,
-          theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
-        ]}
-        onPress={updateBottomState}
-      >
-        <Header />
-        {inner}
-      </Pressable>
+      <View style={landscapeKeepStyle}>
+        <Pressable
+          style={[
+            StyleSheet.absoluteFill,
+            theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
+          ]}
+          onPress={updateBottomState}
+        >
+          <Header />
+          {inner}
+        </Pressable>
+
+        {isDevApp && devOverlayEnabled && <DevOverlay />}
+      </View>
 
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
@@ -711,8 +695,6 @@ const MainScreen: React.FC = () => {
           null
         }
       />
-
-      {isDevApp && devOverlayEnabled && <DevOverlay />}
     </>
   );
 };

@@ -10,11 +10,14 @@ import {
   StyleSheet,
   Text,
   type TextStyle,
-  useWindowDimensions,
   View,
   type ViewStyle,
 } from 'react-native';
-import { useDistanceToNextStation, useNextStation } from '~/hooks';
+import {
+  useDistanceToNextStation,
+  useLandscapeWindowDimensions,
+  useNextStation,
+} from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import {
   backgroundLocationTrackingAtom,
@@ -357,7 +360,7 @@ const DevOverlay: React.FC = () => {
     .filter(Boolean)
     .join(' / ');
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const [basePosition, setBasePosition] = useState({ x: 0, y: 0 });
   const isLandscape = dim.width > dim.height;
   const panelWidth = isLandscape
