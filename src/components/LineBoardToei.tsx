@@ -1,11 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
+  useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -92,7 +93,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
   hasNumbering,
 }) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const horizontalAdditionalStyle = useMemo(() => {
     if (!hasNumbering) {
@@ -367,7 +368,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const additionalChevronStyle = useChevronPosition(index, arrived, passed);
   const includesLongStationName = useIncludesLongStationName(stations);
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const stationNumberIndex = useMemo(
     () => getStationNumberIndex(currentStation ?? undefined),
@@ -497,7 +498,7 @@ const LineBoardToei: React.FC<Props> = ({
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,

@@ -1,8 +1,12 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
-import { useCurrentLine, useTransferLinesFromStation } from '~/hooks';
+import {
+  useCurrentLine,
+  useLandscapeWindowDimensions,
+  useTransferLinesFromStation,
+} from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
 import { RFValue } from '~/utils/rfValue';
@@ -158,7 +162,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const { widthScale } = useScale();
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
 
@@ -300,7 +304,7 @@ const LineBoardE231: React.FC<Props> = ({
 }: Props) => {
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,

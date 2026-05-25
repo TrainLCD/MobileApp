@@ -4,7 +4,6 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { addScreenshotListener } from 'expo-screen-capture';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
@@ -217,7 +216,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const base64 = await file.base64();
       setScreenShotBase64(base64);
       setReportModalShow(true);
-      await ScreenOrientation.unlockAsync();
     } catch (err) {
       captureError(err);
     }
@@ -258,11 +256,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         url: urlString,
         type: 'image/png',
       };
-      await ScreenOrientation.unlockAsync().catch(console.error);
       await Share.open(options).catch(console.warn);
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE
-      ).catch(console.error);
     } catch (err) {
       captureError(err);
     }
@@ -554,10 +548,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleNewReportModalClose = useCallback(() => {
     setScreenShotBase64('');
     setReportModalShow(false);
-
-    ScreenOrientation.lockAsync(
-      ScreenOrientation.OrientationLock.LANDSCAPE
-    ).catch(console.error);
   }, [setReportModalShow]);
 
   const handleReportSend = useCallback(

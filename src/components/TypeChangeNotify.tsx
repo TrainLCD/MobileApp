@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
@@ -9,6 +9,7 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useLandscapeWindowDimensions,
   useNextTrainType,
 } from '~/hooks';
 import { RFValue } from '~/utils/rfValue';
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
 });
 
 const useBarWidth = () => {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   return Math.max(0, dim.width / 2 - edgeOffset);
 };
 
@@ -206,7 +207,7 @@ const EastBars = React.memo(function EastBars({
   getBarGradient?: ColorGradientFn;
   getBoxGradient?: ColorGradientFn;
 }) {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
 
@@ -445,7 +446,7 @@ const OdakyuBars = React.memo(function OdakyuBars({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - odakyuTerminalWidth);
 
@@ -714,7 +715,7 @@ const SaikyoBars = React.memo(function SaikyoBars({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
 
@@ -938,7 +939,7 @@ const JOBars = React.memo(function JOBars({
   trainType: TrainType;
   nextTrainType: TrainType;
 }) {
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
   const barWidth = useBarWidth();
   const rightBarWidth = Math.max(0, barWidth - barTerminalWidth);
 
