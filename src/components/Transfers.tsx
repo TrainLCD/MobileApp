@@ -5,6 +5,7 @@ import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useGetLineMark, useTransferLines } from '../hooks';
 import type { AppTheme } from '../models/Theme';
+import navigationState from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -68,6 +69,12 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines();
   const getLineMarkFunc = useGetLineMark();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const { enabledLanguages } = useAtomValue(navigationState);
+
+  const isJaEnabled = enabledLanguages.includes('JA');
+  const isEnEnabled = enabledLanguages.includes('EN');
+  const isZhEnabled = enabledLanguages.includes('ZH');
+  const isKoEnabled = enabledLanguages.includes('KO');
 
   const stationNumbers = useMemo(
     () =>
@@ -122,6 +129,26 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       const includesNumberedStation = stationNumbers.some(
         (sn) => !!sn?.stationNumber
       );
+
+      const cjkLineName = [
+        isZhEnabled ? line.nameChinese : null,
+        isKoEnabled ? line.nameKorean : null,
+      ]
+        .filter((s): s is string => !!s?.length)
+        .map((s) => s.replace(parenthesisRegexp, ''))
+        .join(' / ');
+
+      const cjkStationName = [
+        isZhEnabled && line.station?.nameChinese
+          ? `${line.station.nameChinese.replace(parenthesisRegexp, '')}站`
+          : null,
+        isKoEnabled && line.station?.nameKorean
+          ? `${line.station.nameKorean.replace(parenthesisRegexp, '')}역`
+          : null,
+      ]
+        .filter((s): s is string => !!s?.length)
+        .join(' / ');
+
       return (
         <View style={styles.transferLine} key={line.id}>
           <View style={styles.transferLineInnerLeft}>
@@ -164,20 +191,21 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   } as Station);
                 }}
               >
-                <Typography style={styles.lineName}>
-                  {line.nameShort?.replace(parenthesisRegexp, '')}
-                </Typography>
-                {line.nameRoman ? (
-                  <Typography style={styles.lineNameEn}>
+                {isJaEnabled && line.nameShort ? (
+                  <Typography style={styles.lineName}>
+                    {line.nameShort.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
+                {isEnEnabled && line.nameRoman ? (
+                  <Typography
+                    style={isJaEnabled ? styles.lineNameEn : styles.lineName}
+                  >
                     {line.nameRoman.replace(parenthesisRegexp, '')}
                   </Typography>
                 ) : null}
-                {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
+                {cjkLineName ? (
                   <Typography style={styles.lineNameEn}>
-                    {`${line.nameChinese.replace(
-                      parenthesisRegexp,
-                      ''
-                    )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
+                    {cjkLineName}
                   </Typography>
                 ) : null}
               </TouchableOpacity>
@@ -228,24 +256,26 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                     } as Station);
                   }}
                 >
-                  <Typography style={styles.lineName}>
-                    {`${line.station?.name?.replace(parenthesisRegexp, '')}駅`}
-                  </Typography>
-                  <Typography style={styles.lineNameEn}>
-                    {`${(line.station?.nameRoman ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )} Sta.`}
-                  </Typography>
-                  <Typography style={styles.lineNameEn}>
-                    {`${(line.station?.nameChinese ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )}站 / ${(line.station?.nameKorean ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )}역`}
-                  </Typography>
+                  {isJaEnabled && line.station?.name ? (
+                    <Typography style={styles.lineName}>
+                      {`${line.station.name.replace(parenthesisRegexp, '')}駅`}
+                    </Typography>
+                  ) : null}
+                  {isEnEnabled && line.station?.nameRoman ? (
+                    <Typography
+                      style={isJaEnabled ? styles.lineNameEn : styles.lineName}
+                    >
+                      {`${line.station.nameRoman.replace(
+                        parenthesisRegexp,
+                        ''
+                      )} Sta.`}
+                    </Typography>
+                  ) : null}
+                  {cjkStationName ? (
+                    <Typography style={styles.lineNameEn}>
+                      {cjkStationName}
+                    </Typography>
+                  ) : null}
                 </TouchableOpacity>
               )}
             </View>
@@ -253,7 +283,16 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         </View>
       );
     },
-    [getLineMarkFunc, onPress, stationNumbers, lines]
+    [
+      getLineMarkFunc,
+      onPress,
+      stationNumbers,
+      lines,
+      isJaEnabled,
+      isEnEnabled,
+      isZhEnabled,
+      isKoEnabled,
+    ]
   );
 
   if (isLEDTheme) {

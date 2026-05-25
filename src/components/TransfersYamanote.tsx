@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
@@ -14,6 +15,7 @@ import {
   useLandscapeWindowDimensions,
   useTransferLines,
 } from '../hooks';
+import navigationState from '../store/atoms/navigation';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -70,6 +72,12 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   const getLineMarkFunc = useGetLineMark();
   const lines = useTransferLines();
   const dim = useLandscapeWindowDimensions();
+  const { enabledLanguages } = useAtomValue(navigationState);
+
+  const isJaEnabled = enabledLanguages.includes('JA');
+  const isEnEnabled = enabledLanguages.includes('EN');
+  const isZhEnabled = enabledLanguages.includes('ZH');
+  const isKoEnabled = enabledLanguages.includes('KO');
 
   const flexBasis = useMemo(() => dim.width / 3, [dim.width]);
 
@@ -82,6 +90,14 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
         line,
         stationNumbers: station.stationNumbers,
       });
+
+      const cjkLineName = [
+        isZhEnabled ? line.nameChinese : null,
+        isKoEnabled ? line.nameKorean : null,
+      ]
+        .filter((s): s is string => !!s?.length)
+        .map((s) => s.replace(parenthesisRegexp, ''))
+        .join(' / ');
 
       return (
         <SafeAreaView
@@ -128,12 +144,21 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
                   } as Station)
                 }
               >
-                <Typography style={styles.lineName}>
-                  {line.nameShort?.replace(parenthesisRegexp, '')}
-                </Typography>
-                {line.nameRoman ? (
-                  <Typography style={styles.lineNameEn}>
+                {isJaEnabled && line.nameShort ? (
+                  <Typography style={styles.lineName}>
+                    {line.nameShort.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
+                {isEnEnabled && line.nameRoman ? (
+                  <Typography
+                    style={isJaEnabled ? styles.lineNameEn : styles.lineName}
+                  >
                     {line.nameRoman.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
+                {cjkLineName ? (
+                  <Typography style={styles.lineNameEn}>
+                    {cjkLineName}
                   </Typography>
                 ) : null}
               </TouchableOpacity>
@@ -142,7 +167,17 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
         </SafeAreaView>
       );
     },
-    [flexBasis, onPress, station, getLineMarkFunc, lines]
+    [
+      flexBasis,
+      onPress,
+      station,
+      getLineMarkFunc,
+      lines,
+      isJaEnabled,
+      isEnEnabled,
+      isZhEnabled,
+      isKoEnabled,
+    ]
   );
 
   return (
