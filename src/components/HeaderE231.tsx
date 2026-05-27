@@ -165,8 +165,11 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
 
   const [stationNameSlotWidth, onStationNameSlotLayout] =
     useStationNameContainerWidth();
-  const { onTextLayout: onStationTextLayout, scaleX: stationNameScaleX } =
-    useStationNameScaleX(stationText, stationNameSlotWidth);
+  const {
+    onTextLayout: onStationTextLayout,
+    scaleX: stationNameScaleX,
+    naturalTextWidth: stationNaturalTextWidth,
+  } = useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const boundSuffixText = useMemo(() => {
     switch (headerLangState) {
@@ -271,8 +274,15 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
               </Typography>
               <Typography
                 numberOfLines={1}
+                ellipsizeMode="clip"
                 style={[
                   styles.stationName,
+                  // 自然幅を width に渡してスロット幅で ellipsize されないようにし、
+                  // 視覚的な収まりは scaleX に任せる。ellipsizeMode="clip" は scaleX が下限
+                  // に到達してなお収まらない場合の「…」表示を抑止する。
+                  stationNaturalTextWidth > 0
+                    ? { width: stationNaturalTextWidth }
+                    : null,
                   { transform: [{ scaleX: stationNameScaleX }] },
                 ]}
               >

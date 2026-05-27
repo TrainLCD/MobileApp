@@ -340,6 +340,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
             >
               <RNAnimated.Text
                 numberOfLines={1}
+                // scaleX が下限に達してなお収まらない場合の「…」表示を抑止する。
+                ellipsizeMode="clip"
                 style={[
                   styles.stationName,
                   animation.topNameAnimatedStyles,
@@ -365,6 +367,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
             >
               <RNAnimated.Text
                 numberOfLines={1}
+                ellipsizeMode="clip"
                 style={[
                   styles.stationName,
                   animation.bottomNameAnimatedStyles,

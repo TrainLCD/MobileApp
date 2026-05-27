@@ -267,6 +267,8 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
             >
               <RNAnimated.Text
                 numberOfLines={1}
+                // scaleX が下限に達してなお収まらない場合の「…」表示を抑止する。
+                ellipsizeMode="clip"
                 style={[
                   animation.topNameAnimatedStyles,
                   styles.stationName,
@@ -288,6 +290,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
             >
               <RNAnimated.Text
                 numberOfLines={1}
+                ellipsizeMode="clip"
                 style={[
                   animation.bottomNameAnimatedStyles,
                   styles.stationName,
