@@ -14,8 +14,6 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(() => ({ id: 1, name: 'Test', color: '#FFD400' })),
   useClock: jest.fn(() => ['12', '34']),
   useInterval: jest.fn(),
-  useStationNameContainerWidth: jest.fn(() => [0, jest.fn()]),
-  useStationNameScaleX: jest.fn(() => ({ onTextLayout: jest.fn(), scaleX: 1 })),
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({

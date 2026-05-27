@@ -2,14 +2,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import {
-  useLoopLine,
-  useStationNameContainerWidth,
-  useStationNameScaleX,
-} from '~/hooks';
+import { useLoopLine } from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
+import { calcStationNameMinScale } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -41,34 +38,16 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontSize: RFValue(14),
   },
-  // 駅名 Text は自然な幅で描画し、収まらないぶんは transform: scaleX で字詰めする。
-  // flex: 1 を Text に持たせると先に幅で切り詰められてしまうので、
-  // 縦横方向の領域確保は stationNameSlot 側に分離する。
   stationName: {
     fontWeight: 'bold',
     color: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+    flexWrap: 'wrap',
+    flex: 1,
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
-  },
-  // 自然描画幅を実測するための非可視 Text。position: 'absolute' でレイアウト
-  // から切り離し、画面外に配置することで親スロットの幅制約を受けずに自然な
-  // 幅を計測する。
-  stationNameMeasurer: {
-    position: 'absolute',
-    opacity: 0,
-    top: -9999,
-    left: 0,
-  },
-  stationNameSlot: {
-    flex: 1,
-    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
-    // 内側 Text の `width: naturalTextWidth` がスロット自身を押し広げてしまい、
-    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
-    minWidth: 0,
-    marginTop: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'visible',
   },
   left: {
     flex: 0.2,
@@ -135,14 +114,6 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
   } = props;
 
   const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
-
-  const [stationNameSlotWidth, onStationNameSlotLayout] =
-    useStationNameContainerWidth();
-  const {
-    onTextLayout: onStationTextLayout,
-    scaleX: stationNameScaleX,
-    naturalTextWidth: stationNaturalTextWidth,
-  } = useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
@@ -257,36 +228,14 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <View
-            style={styles.stationNameSlot}
-            onLayout={onStationNameSlotLayout}
+          <Typography
+            style={styles.stationName}
+            adjustsFontSizeToFit
+            minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
+            numberOfLines={1}
           >
-            <Typography
-              style={[styles.stationName, styles.stationNameMeasurer]}
-              numberOfLines={1}
-              onTextLayout={onStationTextLayout}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              {stationText}
-            </Typography>
-            <Typography
-              style={[
-                styles.stationName,
-                // 自然幅を width に渡してスロット幅で ellipsize されないようにし、
-                // 視覚的な収まりは scaleX に任せる。ellipsizeMode="clip" は scaleX が下限
-                // に到達してなお収まらない場合の「…」表示を抑止する。
-                stationNaturalTextWidth > 0
-                  ? { width: stationNaturalTextWidth }
-                  : null,
-                { transform: [{ scaleX: stationNameScaleX }] },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="clip"
-            >
-              {stationText}
-            </Typography>
-          </View>
+            {stationText}
+          </Typography>
         </View>
       </View>
       <View style={styles.clockContainer}>

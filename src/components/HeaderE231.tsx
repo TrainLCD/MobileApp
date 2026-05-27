@@ -1,13 +1,10 @@
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import {
-  useClock,
-  useStationNameContainerWidth,
-  useStationNameScaleX,
-} from '../hooks';
+import { useClock } from '../hooks';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
+import { calcStationNameMinScale } from '../utils/stationNameScale';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxE231';
@@ -83,10 +80,6 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flex: 1,
-    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
-    // 内側 Text の `width: naturalTextWidth` が wrapper 自身を押し広げてしまい、
-    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
-    minWidth: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -95,14 +88,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#1B432B',
     fontSize: RFValue(64),
-  },
-  // 自然描画幅の計測専用 Text。レイアウトから切り離して画面外に置くことで
-  // 親 View による幅制約を受けない真の自然幅を取得する。
-  stationNameMeasurer: {
-    position: 'absolute',
-    opacity: 0,
-    top: -9999,
-    left: 0,
   },
   headerTexts: {
     flexDirection: 'row',
@@ -166,14 +151,6 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
   } = props;
 
   const [hours, minutes] = useClock();
-
-  const [stationNameSlotWidth, onStationNameSlotLayout] =
-    useStationNameContainerWidth();
-  const {
-    onTextLayout: onStationTextLayout,
-    scaleX: stationNameScaleX,
-    naturalTextWidth: stationNaturalTextWidth,
-  } = useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const boundSuffixText = useMemo(() => {
     switch (headerLangState) {
@@ -263,32 +240,16 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
                 transformOrigin="center"
               />
             ) : null}
-            <View
-              style={styles.stationNameWrapper}
-              onLayout={onStationNameSlotLayout}
-            >
+            <View style={styles.stationNameWrapper}>
               <Typography
+                adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(
+                  stationText,
+                  0.5,
+                  styles.stationName.fontSize
+                )}
                 numberOfLines={1}
-                style={[styles.stationName, styles.stationNameMeasurer]}
-                onTextLayout={onStationTextLayout}
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-              >
-                {stationText}
-              </Typography>
-              <Typography
-                numberOfLines={1}
-                ellipsizeMode="clip"
-                style={[
-                  styles.stationName,
-                  // 自然幅を width に渡してスロット幅で ellipsize されないようにし、
-                  // 視覚的な収まりは scaleX に任せる。ellipsizeMode="clip" は scaleX が下限
-                  // に到達してなお収まらない場合の「…」表示を抑止する。
-                  stationNaturalTextWidth > 0
-                    ? { width: stationNaturalTextWidth }
-                    : null,
-                  { transform: [{ scaleX: stationNameScaleX }] },
-                ]}
+                style={styles.stationName}
               >
                 {stationText}
               </Typography>
