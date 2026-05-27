@@ -5,7 +5,7 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useLoopLine } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
+import { calcStationNameScaleX } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { HeaderE235Props } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -38,15 +38,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'right',
   },
+  // 駅名 Text は自然な幅でレンダリングさせ、横方向の縮みは transform: scaleX で行う。
+  // flex: 1 を Text 自身に持たせると幅が拘束されて先に切り詰められてしまうため、
+  // 隣接アイコンの右側の余白を埋める役割は stationNameSlot 側に持たせる。
   stationName: {
     fontWeight: 'bold',
     color: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    flex: 1,
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
+  },
+  stationNameSlot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   left: {
     flex: 0.3,
@@ -225,14 +230,21 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <Typography
-            style={styles.stationName}
-            adjustsFontSizeToFit
-            minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
-            numberOfLines={1}
-          >
-            {stationText}
-          </Typography>
+          <View style={styles.stationNameSlot}>
+            <Typography
+              style={[
+                styles.stationName,
+                {
+                  transform: [
+                    { scaleX: calcStationNameScaleX(stationText, 0.5) },
+                  ],
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {stationText}
+            </Typography>
+          </View>
         </View>
       </View>
       <Clock white style={styles.clockOverride} />

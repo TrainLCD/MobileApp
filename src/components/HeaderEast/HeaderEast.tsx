@@ -5,7 +5,7 @@ import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../../constants';
 import { useHeaderAnimation, useLandscapeWindowDimensions } from '../../hooks';
 import isTablet from '../../utils/isTablet';
 import { RFValue } from '../../utils/rfValue';
-import { calcStationNameMinScale } from '../../utils/stationNameScale';
+import { calcStationNameScaleX } from '../../utils/stationNameScale';
 import type { CommonHeaderProps } from '../Header.types';
 import NumberingIcon from '../NumberingIcon';
 import TrainTypeBox from '../TrainTypeBox';
@@ -289,11 +289,17 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 config.stationNameContainerAlignItems
                   ? { alignItems: config.stationNameContainerAlignItems }
                   : undefined,
+                // 文字サイズは縮めず、Text 自体は自然な幅で描画させ、
+                // 折返し進入アニメーション（scaleY）と独立した横方向圧縮を
+                // ラッパー View 側の transform で行う。
+                {
+                  transform: [
+                    { scaleX: calcStationNameScaleX(stationText, 0.55) },
+                  ],
+                },
               ]}
             >
               <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
                 numberOfLines={1}
                 style={[
                   styles.stationName,
@@ -315,14 +321,19 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 config.stationNameContainerAlignItems
                   ? { alignItems: config.stationNameContainerAlignItems }
                   : undefined,
+                {
+                  transform: [
+                    {
+                      scaleX: calcStationNameScaleX(
+                        animation.prevStationText,
+                        0.55
+                      ),
+                    },
+                  ],
+                },
               ]}
             >
               <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(
-                  animation.prevStationText,
-                  0.55
-                )}
                 numberOfLines={1}
                 style={[
                   styles.stationName,
