@@ -10,6 +10,10 @@ import {
   useStationNameScaleX,
 } from './useStationNameScaleX';
 
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 const layoutEvent = (width: number): LayoutChangeEvent =>
   ({
     nativeEvent: {
