@@ -44,6 +44,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: STATION_NAME_FONT_SIZE * 2 - 24,
+    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
+    // 内側 Text の `width: naturalTextWidth` がコンテナ自身を押し広げてしまい、
+    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
+    minWidth: 0,
   },
   stationName: {
     textAlign: 'center',
