@@ -27,6 +27,8 @@ jest.mock("~/hooks", () => ({
   useClock: jest.fn(() => []),
   useInterval: jest.fn(() => null),
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
+  useStationNameContainerWidth: jest.fn(() => [0, jest.fn()]),
+  useStationNameScaleX: jest.fn(() => ({ onTextLayout: jest.fn(), scaleX: 1 })),
 }));
 
 jest.mock("react-native-reanimated", () => {

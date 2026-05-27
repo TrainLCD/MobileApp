@@ -83,6 +83,8 @@ jest.mock('~/hooks', () => ({
     boundTopAnimatedStyles: {},
     boundBottomAnimatedStyles: {},
   })),
+  useStationNameContainerWidth: jest.fn(() => [0, jest.fn()]),
+  useStationNameScaleX: jest.fn(() => ({ onTextLayout: jest.fn(), scaleX: 1 })),
 }));
 
 jest.mock('~/utils/isTablet', () => ({ __esModule: true, default: false }));

@@ -1,11 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
+import { Animated as RNAnimated, StyleSheet, Text, View } from 'react-native';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import { useHeaderAnimation } from '../hooks';
+import {
+  useHeaderAnimation,
+  useStationNameContainerWidth,
+  useStationNameScaleX,
+} from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameScaleX } from '../utils/stationNameScale';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
@@ -97,6 +100,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  // 自然描画幅計測用の非可視 Text。position: 'absolute' でレイアウトから切り離し、
+  // 画面外に配置することで親 View の幅制約を受けずに自然な幅で描画させる。
+  stationNameMeasurer: {
+    position: 'absolute',
+    opacity: 0,
+    top: -9999,
+    left: 0,
+    fontSize: STATION_NAME_FONT_SIZE,
+    fontWeight: 'bold',
+  },
   divider: {
     width: '100%',
     alignSelf: 'stretch',
@@ -143,6 +156,13 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
     connectionText,
     isJapaneseState,
   });
+
+  const [stationNameSlotWidth, onStationNameSlotLayout] =
+    useStationNameContainerWidth();
+  const { onTextLayout: onTopTextLayout, scaleX: topStationNameScaleX } =
+    useStationNameScaleX(stationText, stationNameSlotWidth);
+  const { onTextLayout: onBottomTextLayout, scaleX: bottomStationNameScaleX } =
+    useStationNameScaleX(animation.prevStationText, stationNameSlotWidth);
 
   return (
     <View style={styles.root}>
@@ -214,18 +234,35 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
             </RNAnimated.Text>
           </View>
 
-          <View style={styles.stationNameWrapper}>
+          <View
+            style={styles.stationNameWrapper}
+            onLayout={onStationNameSlotLayout}
+          >
+            <Text
+              style={styles.stationNameMeasurer}
+              numberOfLines={1}
+              onTextLayout={onTopTextLayout}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {stationText}
+            </Text>
+            <Text
+              style={styles.stationNameMeasurer}
+              numberOfLines={1}
+              onTextLayout={onBottomTextLayout}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {animation.prevStationText}
+            </Text>
             <View
               style={[
                 styles.stationNameContainer,
                 // 文字サイズは縮めず、Text 自体は自然な幅で描画させて、
                 // 切替アニメーション（scaleY）と独立した横方向圧縮を
                 // ラッパー View 側の transform で行う。
-                {
-                  transform: [
-                    { scaleX: calcStationNameScaleX(stationText, 0.55) },
-                  ],
-                },
+                { transform: [{ scaleX: topStationNameScaleX }] },
               ]}
             >
               <RNAnimated.Text
@@ -246,16 +283,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
             <View
               style={[
                 styles.stationNameContainer,
-                {
-                  transform: [
-                    {
-                      scaleX: calcStationNameScaleX(
-                        animation.prevStationText,
-                        0.55
-                      ),
-                    },
-                  ],
-                },
+                { transform: [{ scaleX: bottomStationNameScaleX }] },
               ]}
             >
               <RNAnimated.Text

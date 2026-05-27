@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { useClock } from '../hooks';
+import {
+  useClock,
+  useStationNameContainerWidth,
+  useStationNameScaleX,
+} from '../hooks';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameScaleX } from '../utils/stationNameScale';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxE231';
@@ -89,6 +92,14 @@ const styles = StyleSheet.create({
     color: '#1B432B',
     fontSize: RFValue(64),
   },
+  // 自然描画幅の計測専用 Text。レイアウトから切り離して画面外に置くことで
+  // 親 View による幅制約を受けない真の自然幅を取得する。
+  stationNameMeasurer: {
+    position: 'absolute',
+    opacity: 0,
+    top: -9999,
+    left: 0,
+  },
   headerTexts: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -151,6 +162,11 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
   } = props;
 
   const [hours, minutes] = useClock();
+
+  const [stationNameSlotWidth, onStationNameSlotLayout] =
+    useStationNameContainerWidth();
+  const { onTextLayout: onStationTextLayout, scaleX: stationNameScaleX } =
+    useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const boundSuffixText = useMemo(() => {
     switch (headerLangState) {
@@ -240,22 +256,24 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
                 transformOrigin="center"
               />
             ) : null}
-            <View style={styles.stationNameWrapper}>
+            <View
+              style={styles.stationNameWrapper}
+              onLayout={onStationNameSlotLayout}
+            >
+              <Typography
+                numberOfLines={1}
+                style={[styles.stationName, styles.stationNameMeasurer]}
+                onTextLayout={onStationTextLayout}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                {stationText}
+              </Typography>
               <Typography
                 numberOfLines={1}
                 style={[
                   styles.stationName,
-                  {
-                    transform: [
-                      {
-                        scaleX: calcStationNameScaleX(
-                          stationText,
-                          0.5,
-                          styles.stationName.fontSize
-                        ),
-                      },
-                    ],
-                  },
+                  { transform: [{ scaleX: stationNameScaleX }] },
                 ]}
               >
                 {stationText}

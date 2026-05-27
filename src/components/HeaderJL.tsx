@@ -2,11 +2,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useLoopLine } from '~/hooks';
+import {
+  useLoopLine,
+  useStationNameContainerWidth,
+  useStationNameScaleX,
+} from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameScaleX } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -46,6 +49,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
+  },
+  // 自然描画幅を実測するための非可視 Text。position: 'absolute' でレイアウト
+  // から切り離し、画面外に配置することで親スロットの幅制約を受けずに自然な
+  // 幅を計測する。
+  stationNameMeasurer: {
+    position: 'absolute',
+    opacity: 0,
+    top: -9999,
+    left: 0,
   },
   stationNameSlot: {
     flex: 1,
@@ -119,6 +131,11 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
   } = props;
 
   const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
+
+  const [stationNameSlotWidth, onStationNameSlotLayout] =
+    useStationNameContainerWidth();
+  const { onTextLayout: onStationTextLayout, scaleX: stationNameScaleX } =
+    useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
@@ -233,15 +250,23 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <View style={styles.stationNameSlot}>
+          <View
+            style={styles.stationNameSlot}
+            onLayout={onStationNameSlotLayout}
+          >
+            <Typography
+              style={[styles.stationName, styles.stationNameMeasurer]}
+              numberOfLines={1}
+              onTextLayout={onStationTextLayout}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {stationText}
+            </Typography>
             <Typography
               style={[
                 styles.stationName,
-                {
-                  transform: [
-                    { scaleX: calcStationNameScaleX(stationText, 0.5) },
-                  ],
-                },
+                { transform: [{ scaleX: stationNameScaleX }] },
               ]}
               numberOfLines={1}
             >
