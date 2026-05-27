@@ -119,8 +119,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
 
   const [stationNameSlotWidth, onStationNameSlotLayout] =
     useStationNameContainerWidth();
-  const { onTextLayout: onStationTextLayout, scaleX: stationNameScaleX } =
-    useStationNameScaleX(stationText, stationNameSlotWidth);
+  const {
+    onTextLayout: onStationTextLayout,
+    scaleX: stationNameScaleX,
+    naturalTextWidth: stationNaturalTextWidth,
+  } = useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
@@ -559,8 +562,17 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
             </Typography>
             <Typography
               numberOfLines={1}
+              ellipsizeMode="clip"
               style={[
                 styles.stationName,
+                // 自然幅を明示的に width に渡してスロット幅で ellipsize されないようにし、
+                // 視覚的な収まりは scaleX に任せる。未計測時は width 指定なし
+                // （= スロット幅にフォールバック）で初期描画の見た目を維持する。
+                // ellipsizeMode="clip" は scaleX が下限に到達してなお収まらない極端な
+                // ケースで「…」が表示されるのを防ぐためのフォールバック。
+                stationNaturalTextWidth > 0
+                  ? { width: stationNaturalTextWidth }
+                  : null,
                 { transform: [{ scaleX: stationNameScaleX }] },
               ]}
             >

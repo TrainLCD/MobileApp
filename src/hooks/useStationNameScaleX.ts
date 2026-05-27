@@ -6,8 +6,10 @@ import type {
 } from 'react-native';
 
 // 実機の駅名 LCD（JR 東日本 E235 系など）は長い駅名をおよそ 50% 程度まで字幅を詰めて
-// 表示するため、その下限に合わせて 0.5 を採用する。これより下げると視認性が著しく落ちる。
-const MIN_SCALE_FLOOR = 0.5;
+// 表示するが、「長者ヶ浜潮騒はまなす公園前」のような極端に長い駅名は 0.5 では
+// 1 行スロットに収まらず ellipsize される。視認性下限と全文字表示の折衷として
+// 0.3 を採用する（これより下げると判読が著しく困難になる）。
+const MIN_SCALE_FLOOR = 0.3;
 
 // onLayout が報告する幅のジッターを無視するための閾値（px）。
 const MEASUREMENT_EPSILON = 0.5;
@@ -82,5 +84,8 @@ export const useStationNameScaleX = (text: string, containerWidth: number) => {
     return Math.max(MIN_SCALE_FLOOR, containerWidth / naturalTextWidth);
   }, [text, containerWidth, naturalTextWidth]);
 
-  return { onTextLayout, scaleX };
+  // 可視 Text 側で width を `naturalTextWidth` に固定するために露出する。
+  // numberOfLines={1} だけだとスロット幅で ellipsize されてしまい、transform: scaleX
+  // が掛かる前に末尾が「…」に置き換わるため、レイアウト段階で自然幅を確保する必要がある。
+  return { onTextLayout, scaleX, naturalTextWidth };
 };
