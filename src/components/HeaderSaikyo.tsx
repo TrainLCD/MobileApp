@@ -9,10 +9,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import { useHeaderAnimation } from '../hooks';
+import {
+  useHeaderAnimation,
+  useStationNameContainerWidth,
+  useStationNameScaleX,
+} from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameScaleX } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -88,6 +91,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#3a3a3a',
+  },
+  // 自然描画幅計測用の非可視 Text。position: 'absolute' でレイアウトから切り離し、
+  // 画面外に飛ばすことで親の幅制約を受けずに自然な幅で描画させる。
+  stationNameMeasurer: {
+    position: 'absolute',
+    opacity: 0,
+    top: -9999,
+    left: 0,
+    fontSize: STATION_NAME_FONT_SIZE,
+    fontWeight: 'bold',
   },
   headerTexts: {
     flexDirection: 'row',
@@ -168,6 +181,13 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
   const { right: safeAreaRight } = useSafeAreaInsets();
   const lineColor = currentLine?.color ?? '#00ac9a';
 
+  const [stationNameSlotWidth, onStationNameSlotLayout] =
+    useStationNameContainerWidth();
+  const { onTextLayout: onTopTextLayout, scaleX: topStationNameScaleX } =
+    useStationNameScaleX(stationText, stationNameSlotWidth);
+  const { onTextLayout: onBottomTextLayout, scaleX: bottomStationNameScaleX } =
+    useStationNameScaleX(animation.prevStationText, stationNameSlotWidth);
+
   return (
     <View style={styles.root}>
       <HeaderBar height={15} lineColor={lineColor} />
@@ -237,18 +257,35 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <View style={styles.stationNameWrapper}>
+          <View
+            style={styles.stationNameWrapper}
+            onLayout={onStationNameSlotLayout}
+          >
+            <Text
+              style={styles.stationNameMeasurer}
+              numberOfLines={1}
+              onTextLayout={onTopTextLayout}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {stationText}
+            </Text>
+            <Text
+              style={styles.stationNameMeasurer}
+              numberOfLines={1}
+              onTextLayout={onBottomTextLayout}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              {animation.prevStationText}
+            </Text>
             <View
               style={[
                 styles.stationNameContainer,
                 // 文字サイズは縮めず、Text 自体は自然な幅で描画させて、
                 // 切替アニメーション（scaleY）と独立した横方向圧縮を
                 // ラッパー View 側の transform で行う。
-                {
-                  transform: [
-                    { scaleX: calcStationNameScaleX(stationText, 0.55) },
-                  ],
-                },
+                { transform: [{ scaleX: topStationNameScaleX }] },
               ]}
             >
               <RNAnimated.Text
@@ -270,16 +307,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
             <View
               style={[
                 styles.stationNameContainer,
-                {
-                  transform: [
-                    {
-                      scaleX: calcStationNameScaleX(
-                        animation.prevStationText,
-                        0.55
-                      ),
-                    },
-                  ],
-                },
+                { transform: [{ scaleX: bottomStationNameScaleX }] },
               ]}
             >
               <RNAnimated.Text
