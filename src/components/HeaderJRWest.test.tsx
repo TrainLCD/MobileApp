@@ -77,8 +77,6 @@ jest.mock('~/hooks', () => ({
   })),
   useCurrentTrainType: jest.fn(() => null),
   useGetLineMark: jest.fn(() => jest.fn(() => null)),
-  useStationNameContainerWidth: jest.fn(() => [0, jest.fn()]),
-  useStationNameScaleX: jest.fn(() => ({ onTextLayout: jest.fn(), scaleX: 1 })),
 }));
 
 jest.mock('~/translation', () => ({

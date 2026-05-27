@@ -2,14 +2,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated as RNAnimated, StyleSheet, Text, View } from 'react-native';
 import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../../constants';
-import {
-  useHeaderAnimation,
-  useLandscapeWindowDimensions,
-  useStationNameContainerWidth,
-  useStationNameScaleX,
-} from '../../hooks';
+import { useHeaderAnimation, useLandscapeWindowDimensions } from '../../hooks';
 import isTablet from '../../utils/isTablet';
 import { RFValue } from '../../utils/rfValue';
+import { calcStationNameMinScale } from '../../utils/stationNameScale';
 import type { CommonHeaderProps } from '../Header.types';
 import NumberingIcon from '../NumberingIcon';
 import TrainTypeBox from '../TrainTypeBox';
@@ -77,17 +73,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  // 自然描画幅の計測専用 Text。position: 'absolute' でレイアウトから切り離し、
-  // 画面外（top: -9999）に配置することで親 View の幅制約を受けずに自然な幅を
-  // 計測し、その値で実際に圧縮が必要かどうかを判定する。
-  stationNameMeasurer: {
-    position: 'absolute',
-    opacity: 0,
-    top: -9999,
-    left: 0,
-    fontSize: STATION_NAME_FONT_SIZE,
-    fontWeight: 'bold',
-  },
   divider: {
     width: '100%',
     alignSelf: 'stretch',
@@ -135,13 +120,6 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
   });
 
   const dim = useLandscapeWindowDimensions();
-
-  const [stationNameSlotWidth, onStationNameSlotLayout] =
-    useStationNameContainerWidth();
-  const { onTextLayout: onTopTextLayout, scaleX: topStationNameScaleX } =
-    useStationNameScaleX(stationText, stationNameSlotWidth);
-  const { onTextLayout: onBottomTextLayout, scaleX: bottomStationNameScaleX } =
-    useStationNameScaleX(animation.prevStationText, stationNameSlotWidth);
 
   const stationNameColor = config.stationNameColor ?? config.textColor;
 
@@ -304,44 +282,19 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
 
           {renderNumberingIcon()}
 
-          <View
-            style={styles.stationNameWrapper}
-            onLayout={onStationNameSlotLayout}
-          >
-            <Text
-              style={styles.stationNameMeasurer}
-              numberOfLines={1}
-              onTextLayout={onTopTextLayout}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              {stationText}
-            </Text>
-            <Text
-              style={styles.stationNameMeasurer}
-              numberOfLines={1}
-              onTextLayout={onBottomTextLayout}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              {animation.prevStationText}
-            </Text>
+          <View style={styles.stationNameWrapper}>
             <View
               style={[
                 styles.stationNameContainer,
                 config.stationNameContainerAlignItems
                   ? { alignItems: config.stationNameContainerAlignItems }
                   : undefined,
-                // 文字サイズは縮めず、Text 自体は自然な幅で描画させ、
-                // 折返し進入アニメーション（scaleY）と独立した横方向圧縮を
-                // ラッパー View 側の transform で行う。
-                { transform: [{ scaleX: topStationNameScaleX }] },
               ]}
             >
               <RNAnimated.Text
+                adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
                 numberOfLines={1}
-                // scaleX が下限に達してなお収まらない場合の「…」表示を抑止する。
-                ellipsizeMode="clip"
                 style={[
                   styles.stationName,
                   animation.topNameAnimatedStyles,
@@ -362,12 +315,15 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 config.stationNameContainerAlignItems
                   ? { alignItems: config.stationNameContainerAlignItems }
                   : undefined,
-                { transform: [{ scaleX: bottomStationNameScaleX }] },
               ]}
             >
               <RNAnimated.Text
+                adjustsFontSizeToFit
+                minimumFontScale={calcStationNameMinScale(
+                  animation.prevStationText,
+                  0.55
+                )}
                 numberOfLines={1}
-                ellipsizeMode="clip"
                 style={[
                   styles.stationName,
                   animation.bottomNameAnimatedStyles,
