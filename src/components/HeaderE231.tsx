@@ -83,12 +83,22 @@ const styles = StyleSheet.create({
   },
   stationNameWrapper: {
     flex: 1,
-    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
-    // 内側 Text の `width: naturalTextWidth` が wrapper 自身を押し広げてしまい、
-    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
     minWidth: 0,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // 可視 Text を absolute 配置の wrapper でラップしてレイアウトフローから切り離す。
+  // これをやらないと内側 Text の `width: naturalTextWidth` が wrapper や祖先 View まで
+  // 押し広げ、onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
+  stationNameVisibleWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   stationName: {
     fontWeight: 'bold',
@@ -276,22 +286,24 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
               >
                 {stationText}
               </Typography>
-              <Typography
-                numberOfLines={1}
-                ellipsizeMode="clip"
-                style={[
-                  styles.stationName,
-                  // 自然幅を width に渡してスロット幅で ellipsize されないようにし、
-                  // 視覚的な収まりは scaleX に任せる。ellipsizeMode="clip" は scaleX が下限
-                  // に到達してなお収まらない場合の「…」表示を抑止する。
-                  stationNaturalTextWidth > 0
-                    ? { width: stationNaturalTextWidth }
-                    : null,
-                  { transform: [{ scaleX: stationNameScaleX }] },
-                ]}
+              <View
+                style={styles.stationNameVisibleWrapper}
+                pointerEvents="none"
               >
-                {stationText}
-              </Typography>
+                <Typography
+                  numberOfLines={1}
+                  ellipsizeMode="clip"
+                  style={[
+                    styles.stationName,
+                    stationNaturalTextWidth > 0
+                      ? { width: stationNaturalTextWidth }
+                      : null,
+                    { transform: [{ scaleX: stationNameScaleX }] },
+                  ]}
+                >
+                  {stationText}
+                </Typography>
+              </View>
             </View>
           </View>
           <View style={styles.spacer}>

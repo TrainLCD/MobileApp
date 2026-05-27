@@ -183,10 +183,16 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
 
   const [stationNameSlotWidth, onStationNameSlotLayout] =
     useStationNameContainerWidth();
-  const { onTextLayout: onTopTextLayout, scaleX: topStationNameScaleX } =
-    useStationNameScaleX(stationText, stationNameSlotWidth);
-  const { onTextLayout: onBottomTextLayout, scaleX: bottomStationNameScaleX } =
-    useStationNameScaleX(animation.prevStationText, stationNameSlotWidth);
+  const {
+    onTextLayout: onTopTextLayout,
+    scaleX: topStationNameScaleX,
+    naturalTextWidth: topStationNaturalTextWidth,
+  } = useStationNameScaleX(stationText, stationNameSlotWidth);
+  const {
+    onTextLayout: onBottomTextLayout,
+    scaleX: bottomStationNameScaleX,
+    naturalTextWidth: bottomStationNaturalTextWidth,
+  } = useStationNameScaleX(animation.prevStationText, stationNameSlotWidth);
 
   return (
     <View style={styles.root}>
@@ -282,6 +288,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
             <View
               style={[
                 styles.stationNameContainer,
+                // absolute container の幅を自然幅に明示固定する。
+                // 指定しないと Yoga の挙動次第で container が 0 や parent 幅に張り付き、
+                // 結果として scaleX の効きが視認できない（または scaleX=1 と等価）になる。
+                topStationNaturalTextWidth > 0
+                  ? { width: topStationNaturalTextWidth }
+                  : null,
                 // 文字サイズは縮めず、Text 自体は自然な幅で描画させて、
                 // 切替アニメーション（scaleY）と独立した横方向圧縮を
                 // ラッパー View 側の transform で行う。
@@ -309,6 +321,9 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
             <View
               style={[
                 styles.stationNameContainer,
+                bottomStationNaturalTextWidth > 0
+                  ? { width: bottomStationNaturalTextWidth }
+                  : null,
                 { transform: [{ scaleX: bottomStationNameScaleX }] },
               ]}
             >

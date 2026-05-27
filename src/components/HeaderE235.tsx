@@ -62,10 +62,22 @@ const styles = StyleSheet.create({
   },
   stationNameSlot: {
     flex: 1,
-    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
-    // 内側 Text の `width: naturalTextWidth` がスロット自身を押し広げてしまい、
-    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
     minWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  // 可視 Text を absolute 配置の wrapper でラップしてレイアウトフローから切り離す。
+  // これをやらないと内側 Text の `width: naturalTextWidth` がスロットや祖先 View まで
+  // 押し広げ、onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
+  // wrapper 自身は left/right/top/bottom: 0 でスロット全体を覆い、その内側で
+  // alignItems/justifyContent: center により Text を視覚的に中央寄せする。
+  stationNameVisibleWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
@@ -268,21 +280,21 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
             >
               {stationText}
             </Typography>
-            <Typography
-              style={[
-                styles.stationName,
-                // 自然幅を明示的に width に渡してスロット幅で ellipsize されないようにする。
-                // 視覚的な収まりは scaleX に任せ、ellipsizeMode="clip" で「…」を抑止する。
-                stationNaturalTextWidth > 0
-                  ? { width: stationNaturalTextWidth }
-                  : null,
-                { transform: [{ scaleX: stationNameScaleX }] },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="clip"
-            >
-              {stationText}
-            </Typography>
+            <View style={styles.stationNameVisibleWrapper} pointerEvents="none">
+              <Typography
+                style={[
+                  styles.stationName,
+                  stationNaturalTextWidth > 0
+                    ? { width: stationNaturalTextWidth }
+                    : null,
+                  { transform: [{ scaleX: stationNameScaleX }] },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="clip"
+              >
+                {stationText}
+              </Typography>
+            </View>
           </View>
         </View>
       </View>

@@ -61,11 +61,21 @@ const styles = StyleSheet.create({
   },
   stationNameSlot: {
     flex: 1,
-    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
-    // 内側 Text の `width: naturalTextWidth` がスロット自身を押し広げてしまい、
-    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
     minWidth: 0,
     marginTop: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  // 可視 Text を absolute 配置の wrapper でラップしてレイアウトフローから切り離す。
+  // これをやらないと内側 Text の `width: naturalTextWidth` がスロットや祖先 View まで
+  // 押し広げ、onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
+  stationNameVisibleWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
@@ -270,22 +280,21 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
             >
               {stationText}
             </Typography>
-            <Typography
-              style={[
-                styles.stationName,
-                // 自然幅を width に渡してスロット幅で ellipsize されないようにし、
-                // 視覚的な収まりは scaleX に任せる。ellipsizeMode="clip" は scaleX が下限
-                // に到達してなお収まらない場合の「…」表示を抑止する。
-                stationNaturalTextWidth > 0
-                  ? { width: stationNaturalTextWidth }
-                  : null,
-                { transform: [{ scaleX: stationNameScaleX }] },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="clip"
-            >
-              {stationText}
-            </Typography>
+            <View style={styles.stationNameVisibleWrapper} pointerEvents="none">
+              <Typography
+                style={[
+                  styles.stationName,
+                  stationNaturalTextWidth > 0
+                    ? { width: stationNaturalTextWidth }
+                    : null,
+                  { transform: [{ scaleX: stationNameScaleX }] },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="clip"
+              >
+                {stationText}
+              </Typography>
+            </View>
           </View>
         </View>
       </View>

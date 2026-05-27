@@ -44,10 +44,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: STATION_NAME_FONT_SIZE * 2 - 24,
-    // minWidth: 0 を明示しないと flex 子要素の既定 min-width: auto により、
-    // 内側 Text の `width: naturalTextWidth` がコンテナ自身を押し広げてしまい、
-    // onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
     minWidth: 0,
+  },
+  // 可視 Text を absolute 配置の wrapper でラップしてレイアウトフローから切り離す。
+  // これをやらないと内側 Text の `width: naturalTextWidth` がコンテナや祖先 View まで
+  // 押し広げ、onLayout が natural と同じ値を返して scaleX = 1（圧縮なし）になる。
+  stationNameVisibleWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   stationName: {
     textAlign: 'center',
@@ -564,24 +574,21 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
             >
               {stationText}
             </Typography>
-            <Typography
-              numberOfLines={1}
-              ellipsizeMode="clip"
-              style={[
-                styles.stationName,
-                // 自然幅を明示的に width に渡してスロット幅で ellipsize されないようにし、
-                // 視覚的な収まりは scaleX に任せる。未計測時は width 指定なし
-                // （= スロット幅にフォールバック）で初期描画の見た目を維持する。
-                // ellipsizeMode="clip" は scaleX が下限に到達してなお収まらない極端な
-                // ケースで「…」が表示されるのを防ぐためのフォールバック。
-                stationNaturalTextWidth > 0
-                  ? { width: stationNaturalTextWidth }
-                  : null,
-                { transform: [{ scaleX: stationNameScaleX }] },
-              ]}
-            >
-              {stationText}
-            </Typography>
+            <View style={styles.stationNameVisibleWrapper} pointerEvents="none">
+              <Typography
+                numberOfLines={1}
+                ellipsizeMode="clip"
+                style={[
+                  styles.stationName,
+                  stationNaturalTextWidth > 0
+                    ? { width: stationNaturalTextWidth }
+                    : null,
+                  { transform: [{ scaleX: stationNameScaleX }] },
+                ]}
+              >
+                {stationText}
+              </Typography>
+            </View>
           </View>
         </View>
       </LinearGradient>
