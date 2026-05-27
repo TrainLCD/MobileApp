@@ -5,7 +5,7 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
+import { calcStationNameScaleX } from '../utils/stationNameScale';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
@@ -215,10 +215,20 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
           </View>
 
           <View style={styles.stationNameWrapper}>
-            <View style={styles.stationNameContainer}>
+            <View
+              style={[
+                styles.stationNameContainer,
+                // 文字サイズは縮めず、Text 自体は自然な幅で描画させて、
+                // 切替アニメーション（scaleY）と独立した横方向圧縮を
+                // ラッパー View 側の transform で行う。
+                {
+                  transform: [
+                    { scaleX: calcStationNameScaleX(stationText, 0.55) },
+                  ],
+                },
+              ]}
+            >
               <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
                 numberOfLines={1}
                 style={[
                   animation.topNameAnimatedStyles,
@@ -233,13 +243,22 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                 {stationText}
               </RNAnimated.Text>
             </View>
-            <View style={styles.stationNameContainer}>
+            <View
+              style={[
+                styles.stationNameContainer,
+                {
+                  transform: [
+                    {
+                      scaleX: calcStationNameScaleX(
+                        animation.prevStationText,
+                        0.55
+                      ),
+                    },
+                  ],
+                },
+              ]}
+            >
               <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(
-                  animation.prevStationText,
-                  0.55
-                )}
                 numberOfLines={1}
                 style={[
                   animation.bottomNameAnimatedStyles,
