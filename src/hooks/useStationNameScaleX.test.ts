@@ -109,12 +109,21 @@ describe('useStationNameScaleX', () => {
     expect(result.current.scaleX).toBeCloseTo(200 / 300, 5);
   });
 
-  it('過度に長い駅名でも下限 0.5 にクランプされる', () => {
+  it('過度に長い駅名でも下限 0.3 にクランプされる', () => {
     const { result } = renderHook(() => useStationNameScaleX('長い駅名', 100));
     act(() => {
       result.current.onTextLayout(textLayoutEvent([1000]));
     });
-    expect(result.current.scaleX).toBe(0.5);
+    expect(result.current.scaleX).toBe(0.3);
+  });
+
+  it('onTextLayout で計測した自然幅を返す', () => {
+    const { result } = renderHook(() => useStationNameScaleX('長い駅名', 200));
+    expect(result.current.naturalTextWidth).toBe(0);
+    act(() => {
+      result.current.onTextLayout(textLayoutEvent([320]));
+    });
+    expect(result.current.naturalTextWidth).toBe(320);
   });
 
   it('text が変わったら計測値はリセットされ、再計測前は 1 に戻る', () => {
@@ -126,6 +135,7 @@ describe('useStationNameScaleX', () => {
       result.current.onTextLayout(textLayoutEvent([400]));
     });
     expect(result.current.scaleX).toBe(0.5);
+    // 自然幅 400 / 200 = 0.5 でクランプを超えないため、下限変更の影響を受けない
 
     rerender({ text: '駅' });
     expect(result.current.scaleX).toBe(1);

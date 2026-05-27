@@ -122,8 +122,11 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
 
   const [stationNameSlotWidth, onStationNameSlotLayout] =
     useStationNameContainerWidth();
-  const { onTextLayout: onStationTextLayout, scaleX: stationNameScaleX } =
-    useStationNameScaleX(stationText, stationNameSlotWidth);
+  const {
+    onTextLayout: onStationTextLayout,
+    scaleX: stationNameScaleX,
+    naturalTextWidth: stationNaturalTextWidth,
+  } = useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
@@ -264,9 +267,15 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
             <Typography
               style={[
                 styles.stationName,
+                // 自然幅を明示的に width に渡してスロット幅で ellipsize されないようにする。
+                // 視覚的な収まりは scaleX に任せ、ellipsizeMode="clip" で「…」を抑止する。
+                stationNaturalTextWidth > 0
+                  ? { width: stationNaturalTextWidth }
+                  : null,
                 { transform: [{ scaleX: stationNameScaleX }] },
               ]}
               numberOfLines={1}
+              ellipsizeMode="clip"
             >
               {stationText}
             </Typography>
