@@ -63,6 +63,10 @@ export { useShouldHideTypeChange } from './useShouldHideTypeChange';
 export { useSimulationMode } from './useSimulationMode';
 export { useSlicedStations } from './useSlicedStations';
 export { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationUpdates';
+export {
+  useStationNameContainerWidth,
+  useStationNameScaleX,
+} from './useStationNameScaleX';
 export { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 export { useStationsCache } from './useStationsCache';
 export { useStoppingState } from './useStoppingState';
