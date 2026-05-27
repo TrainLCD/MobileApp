@@ -6,7 +6,7 @@ import { useLoopLine } from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
+import { calcStationNameScaleX } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
 import NumberingIcon from './NumberingIcon';
@@ -38,16 +38,21 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontSize: RFValue(14),
   },
+  // 駅名 Text は自然な幅で描画し、収まらないぶんは transform: scaleX で字詰めする。
+  // flex: 1 を Text に持たせると先に幅で切り詰められてしまうので、
+  // 縦横方向の領域確保は stationNameSlot 側に分離する。
   stationName: {
     fontWeight: 'bold',
     color: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-    flexWrap: 'wrap',
-    flex: 1,
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
+  },
+  stationNameSlot: {
+    flex: 1,
+    marginTop: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   left: {
     flex: 0.2,
@@ -228,14 +233,21 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <Typography
-            style={styles.stationName}
-            adjustsFontSizeToFit
-            minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
-            numberOfLines={1}
-          >
-            {stationText}
-          </Typography>
+          <View style={styles.stationNameSlot}>
+            <Typography
+              style={[
+                styles.stationName,
+                {
+                  transform: [
+                    { scaleX: calcStationNameScaleX(stationText, 0.5) },
+                  ],
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {stationText}
+            </Typography>
+          </View>
         </View>
       </View>
       <View style={styles.clockContainer}>

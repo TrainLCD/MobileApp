@@ -1,7 +1,7 @@
 import { Dimensions } from 'react-native';
-import { calcStationNameMinScale } from './stationNameScale';
+import { calcStationNameScaleX } from './stationNameScale';
 
-describe('calcStationNameMinScale', () => {
+describe('calcStationNameScaleX', () => {
   const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
 
   beforeEach(() => {
@@ -19,36 +19,32 @@ describe('calcStationNameMinScale', () => {
   });
 
   it('空文字は早期 return で 1 を返す', () => {
-    expect(calcStationNameMinScale('', 0.6, 50)).toBe(1);
+    expect(calcStationNameScaleX('', 0.6, 50)).toBe(1);
   });
 
-  it('短い駅名は上限 1 にクランプされる', () => {
-    expect(calcStationNameMinScale('あ', 0.6, 50)).toBe(1);
+  it('短い駅名は上限 1 にクランプされる（圧縮しない）', () => {
+    expect(calcStationNameScaleX('あ', 0.6, 50)).toBe(1);
   });
 
-  it('極端に長い駅名はフロア値 0.1 にクランプされる', () => {
-    expect(calcStationNameMinScale('あ'.repeat(1000), 0.6, 50)).toBe(0.1);
+  it('極端に長い駅名はフロア値 0.5 にクランプされる', () => {
+    expect(calcStationNameScaleX('あ'.repeat(1000), 0.6, 50)).toBe(0.5);
   });
 
-  it('中間長の駅名は (0.1, 1) の範囲内のスケールを返す', () => {
-    const scale = calcStationNameMinScale(
-      'はねだくうこうだいさんたーみなる',
-      0.55,
-      45
-    );
-    expect(scale).toBeGreaterThan(0.1);
-    expect(scale).toBeLessThan(1);
+  it('中間長の駅名は (0.5, 1) の範囲内の圧縮率を返す', () => {
+    const scaleX = calcStationNameScaleX('はねだくうこうだい', 0.55, 45);
+    expect(scaleX).toBeGreaterThan(0.5);
+    expect(scaleX).toBeLessThan(1);
   });
 
-  it('文字数に応じて単調にスケールが減少する', () => {
-    const shortScale = calcStationNameMinScale('みと', 0.55, 45);
-    const midScale = calcStationNameMinScale('はねだくうこう', 0.55, 45);
-    const longScale = calcStationNameMinScale(
+  it('文字数に応じて単調に圧縮率が減少する', () => {
+    const shortScaleX = calcStationNameScaleX('みと', 0.55, 45);
+    const midScaleX = calcStationNameScaleX('はねだくうこう', 0.55, 45);
+    const longScaleX = calcStationNameScaleX(
       'ちょうじゃがはまましおさいはまなすこうえんまえ',
       0.55,
       45
     );
-    expect(shortScale).toBeGreaterThanOrEqual(midScale);
-    expect(midScale).toBeGreaterThan(longScale);
+    expect(shortScaleX).toBeGreaterThanOrEqual(midScaleX);
+    expect(midScaleX).toBeGreaterThan(longScaleX);
   });
 });
