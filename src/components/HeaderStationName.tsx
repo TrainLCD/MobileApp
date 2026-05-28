@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minWidth: 0,
     maxWidth: '100%',
-    overflow: 'hidden',
   },
   measureText: {
     position: 'absolute',
@@ -41,11 +40,11 @@ const styles = StyleSheet.create({
   scaledText: {
     alignItems: 'center',
     justifyContent: 'center',
+    transformOrigin: 'center',
   },
   viewport: {
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
     maxWidth: '100%',
   },
 });
