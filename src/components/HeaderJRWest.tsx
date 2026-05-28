@@ -4,11 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LineType, TrainTypeKind } from '~/@types/graphql';
-import {
-  useGetLineMark,
-  useStationNameContainerWidth,
-  useStationNameScaleX,
-} from '~/hooks';
+import { useGetLineMark } from '~/hooks';
 import {
   NUMBERING_ICON_SIZE,
   parenthesisRegexp,
@@ -17,6 +13,7 @@ import {
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
@@ -50,14 +47,6 @@ const styles = StyleSheet.create({
     fontSize: STATION_NAME_FONT_SIZE,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  // 自然描画幅の計測専用 Text。レイアウト計算から切り離して画面外に
-  // 配置することで、親 View の幅制約を受けない真の自然幅を計測する。
-  stationNameMeasurer: {
-    position: 'absolute',
-    opacity: 0,
-    top: -9999,
-    left: 0,
   },
   top: {
     position: 'absolute',
@@ -116,14 +105,6 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
     numberingColor,
     trainType,
   } = props;
-
-  const [stationNameSlotWidth, onStationNameSlotLayout] =
-    useStationNameContainerWidth();
-  const {
-    onTextLayout: onStationTextLayout,
-    scaleX: stationNameScaleX,
-    naturalTextWidth: stationNaturalTextWidth,
-  } = useStationNameScaleX(stationText, stationNameSlotWidth);
 
   const fetchJRWLocalLogo = useCallback((): number => {
     switch (headerLangState) {
@@ -547,37 +528,12 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
               />
             </View>
           ) : null}
-          <View
-            style={styles.stationNameContainer}
-            onLayout={onStationNameSlotLayout}
-          >
-            <Typography
-              numberOfLines={1}
-              style={[styles.stationName, styles.stationNameMeasurer]}
-              onTextLayout={onStationTextLayout}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              {stationText}
-            </Typography>
-            <Typography
-              numberOfLines={1}
-              ellipsizeMode="clip"
-              style={[
-                styles.stationName,
-                // 自然幅を明示的に width に渡してスロット幅で ellipsize されないようにし、
-                // 視覚的な収まりは scaleX に任せる。未計測時は width 指定なし
-                // （= スロット幅にフォールバック）で初期描画の見た目を維持する。
-                // ellipsizeMode="clip" は scaleX が下限に到達してなお収まらない極端な
-                // ケースで「…」が表示されるのを防ぐためのフォールバック。
-                stationNaturalTextWidth > 0
-                  ? { width: stationNaturalTextWidth }
-                  : null,
-                { transform: [{ scaleX: stationNameScaleX }] },
-              ]}
-            >
-              {stationText}
-            </Typography>
+          <View style={styles.stationNameContainer}>
+            <HeaderStationName
+              TextComponent={Typography}
+              text={stationText}
+              textStyle={styles.stationName}
+            />
           </View>
         </View>
       </LinearGradient>

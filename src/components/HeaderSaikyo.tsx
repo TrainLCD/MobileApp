@@ -9,15 +9,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import {
-  useHeaderAnimation,
-  useStationNameContainerWidth,
-  useStationNameScaleX,
-} from '../hooks';
+import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
@@ -84,6 +81,8 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
@@ -91,16 +90,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#3a3a3a',
-  },
-  // 自然描画幅計測用の非可視 Text。position: 'absolute' でレイアウトから切り離し、
-  // 画面外に飛ばすことで親の幅制約を受けずに自然な幅で描画させる。
-  stationNameMeasurer: {
-    position: 'absolute',
-    opacity: 0,
-    top: -9999,
-    left: 0,
-    fontSize: STATION_NAME_FONT_SIZE,
-    fontWeight: 'bold',
   },
   headerTexts: {
     flexDirection: 'row',
@@ -181,13 +170,6 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
   const { right: safeAreaRight } = useSafeAreaInsets();
   const lineColor = currentLine?.color ?? '#00ac9a';
 
-  const [stationNameSlotWidth, onStationNameSlotLayout] =
-    useStationNameContainerWidth();
-  const { onTextLayout: onTopTextLayout, scaleX: topStationNameScaleX } =
-    useStationNameScaleX(stationText, stationNameSlotWidth);
-  const { onTextLayout: onBottomTextLayout, scaleX: bottomStationNameScaleX } =
-    useStationNameScaleX(animation.prevStationText, stationNameSlotWidth);
-
   return (
     <View style={styles.root}>
       <HeaderBar height={15} lineColor={lineColor} />
@@ -257,42 +239,12 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <View
-            style={styles.stationNameWrapper}
-            onLayout={onStationNameSlotLayout}
-          >
-            <Text
-              style={styles.stationNameMeasurer}
-              numberOfLines={1}
-              onTextLayout={onTopTextLayout}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              {stationText}
-            </Text>
-            <Text
-              style={styles.stationNameMeasurer}
-              numberOfLines={1}
-              onTextLayout={onBottomTextLayout}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
-              {animation.prevStationText}
-            </Text>
-            <View
-              style={[
-                styles.stationNameContainer,
-                // 文字サイズは縮めず、Text 自体は自然な幅で描画させて、
-                // 切替アニメーション（scaleY）と独立した横方向圧縮を
-                // ラッパー View 側の transform で行う。
-                { transform: [{ scaleX: topStationNameScaleX }] },
-              ]}
-            >
-              <RNAnimated.Text
-                numberOfLines={1}
-                // scaleX が下限に達してなお収まらない場合の「…」表示を抑止する。
-                ellipsizeMode="clip"
-                style={[
+          <View style={styles.stationNameWrapper}>
+            <View style={styles.stationNameContainer}>
+              <HeaderStationName
+                TextComponent={RNAnimated.Text}
+                text={stationText}
+                textStyle={[
                   animation.topNameAnimatedStyles,
                   styles.stationName,
                   animation.topNameAnimatedAnchorStyle,
@@ -301,21 +253,14 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                     transformOrigin: 'top',
                   },
                 ]}
-              >
-                {stationText}
-              </RNAnimated.Text>
+              />
             </View>
 
-            <View
-              style={[
-                styles.stationNameContainer,
-                { transform: [{ scaleX: bottomStationNameScaleX }] },
-              ]}
-            >
-              <RNAnimated.Text
-                numberOfLines={1}
-                ellipsizeMode="clip"
-                style={[
+            <View style={styles.stationNameContainer}>
+              <HeaderStationName
+                TextComponent={RNAnimated.Text}
+                text={animation.prevStationText}
+                textStyle={[
                   animation.bottomNameAnimatedStyles,
                   styles.stationName,
                   animation.bottomNameAnimatedAnchorStyle,
@@ -324,9 +269,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                     transformOrigin: 'bottom',
                   },
                 ]}
-              >
-                {animation.prevStationText}
-              </RNAnimated.Text>
+              />
             </View>
           </View>
         </View>
