@@ -4,8 +4,8 @@ import { useClock } from '../hooks';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxE231';
 import Typography from './Typography';
@@ -241,18 +241,11 @@ const HeaderE231: React.FC<CommonHeaderProps> = (props) => {
               />
             ) : null}
             <View style={styles.stationNameWrapper}>
-              <Typography
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(
-                  stationText,
-                  0.5,
-                  styles.stationName.fontSize
-                )}
-                numberOfLines={1}
-                style={styles.stationName}
-              >
-                {stationText}
-              </Typography>
+              <HeaderStationName
+                TextComponent={Typography}
+                text={stationText}
+                textStyle={styles.stationName}
+              />
             </View>
           </View>
           <View style={styles.spacer}>

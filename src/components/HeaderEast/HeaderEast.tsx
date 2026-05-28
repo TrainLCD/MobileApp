@@ -5,8 +5,8 @@ import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../../constants';
 import { useHeaderAnimation, useLandscapeWindowDimensions } from '../../hooks';
 import isTablet from '../../utils/isTablet';
 import { RFValue } from '../../utils/rfValue';
-import { calcStationNameMinScale } from '../../utils/stationNameScale';
 import type { CommonHeaderProps } from '../Header.types';
+import HeaderStationName from '../HeaderStationName';
 import NumberingIcon from '../NumberingIcon';
 import TrainTypeBox from '../TrainTypeBox';
 import type { HeaderEastThemeConfig } from './config';
@@ -67,6 +67,8 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     justifyContent: 'center',
   },
   stationName: {
@@ -291,11 +293,10 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   : undefined,
               ]}
             >
-              <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
-                numberOfLines={1}
-                style={[
+              <HeaderStationName
+                TextComponent={RNAnimated.Text}
+                text={stationText}
+                textStyle={[
                   styles.stationName,
                   animation.topNameAnimatedStyles,
                   animation.topNameAnimatedAnchorStyle,
@@ -305,9 +306,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                     color: stationNameColor,
                   },
                 ]}
-              >
-                {stationText}
-              </RNAnimated.Text>
+              />
             </View>
             <View
               style={[
@@ -317,14 +316,10 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   : undefined,
               ]}
             >
-              <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(
-                  animation.prevStationText,
-                  0.55
-                )}
-                numberOfLines={1}
-                style={[
+              <HeaderStationName
+                TextComponent={RNAnimated.Text}
+                text={animation.prevStationText}
+                textStyle={[
                   styles.stationName,
                   animation.bottomNameAnimatedStyles,
                   animation.bottomNameAnimatedAnchorStyle,
@@ -334,9 +329,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                     color: stationNameColor,
                   },
                 ]}
-              >
-                {animation.prevStationText}
-              </RNAnimated.Text>
+              />
             </View>
           </View>
 
