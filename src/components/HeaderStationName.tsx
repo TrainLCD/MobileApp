@@ -97,7 +97,7 @@ const HeaderStationName: React.FC<Props> = ({
       <TextComponent
         {...textProps}
         accessible={false}
-        importantForAccessibility="no-hide-descendants"
+        importantForAccessibility={'no-hide-descendants'}
         ellipsizeMode="clip"
         numberOfLines={1}
         onLayout={handleTextFallbackLayout}
