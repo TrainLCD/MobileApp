@@ -12,8 +12,8 @@ import {
 } from '../constants';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
@@ -529,14 +529,11 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
             </View>
           ) : null}
           <View style={styles.stationNameContainer}>
-            <Typography
-              adjustsFontSizeToFit
-              minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
-              numberOfLines={1}
-              style={styles.stationName}
-            >
-              {stationText}
-            </Typography>
+            <HeaderStationName
+              TextComponent={Typography}
+              text={stationText}
+              textStyle={styles.stationName}
+            />
           </View>
         </View>
       </LinearGradient>

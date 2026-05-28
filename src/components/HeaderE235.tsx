@@ -5,9 +5,9 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useLoopLine } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { HeaderE235Props } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJO from './TrainTypeBoxJO';
 import Typography from './Typography';
@@ -43,8 +43,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    flex: 1,
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
   },
@@ -225,14 +223,11 @@ const HeaderE235: React.FC<HeaderE235Props> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <Typography
-            style={styles.stationName}
-            adjustsFontSizeToFit
-            minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
-            numberOfLines={1}
-          >
-            {stationText}
-          </Typography>
+          <HeaderStationName
+            TextComponent={Typography}
+            text={stationText}
+            textStyle={styles.stationName}
+          />
         </View>
       </View>
       <Clock white style={styles.clockOverride} />

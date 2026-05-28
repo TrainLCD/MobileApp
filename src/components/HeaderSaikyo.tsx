@@ -12,9 +12,9 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
 
@@ -81,6 +81,8 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
@@ -239,11 +241,10 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
           ) : null}
           <View style={styles.stationNameWrapper}>
             <View style={styles.stationNameContainer}>
-              <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(stationText, 0.55)}
-                numberOfLines={1}
-                style={[
+              <HeaderStationName
+                TextComponent={RNAnimated.Text}
+                text={stationText}
+                textStyle={[
                   animation.topNameAnimatedStyles,
                   styles.stationName,
                   animation.topNameAnimatedAnchorStyle,
@@ -252,20 +253,14 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                     transformOrigin: 'top',
                   },
                 ]}
-              >
-                {stationText}
-              </RNAnimated.Text>
+              />
             </View>
 
             <View style={styles.stationNameContainer}>
-              <RNAnimated.Text
-                adjustsFontSizeToFit
-                minimumFontScale={calcStationNameMinScale(
-                  animation.prevStationText,
-                  0.55
-                )}
-                numberOfLines={1}
-                style={[
+              <HeaderStationName
+                TextComponent={RNAnimated.Text}
+                text={animation.prevStationText}
+                textStyle={[
                   animation.bottomNameAnimatedStyles,
                   styles.stationName,
                   animation.bottomNameAnimatedAnchorStyle,
@@ -274,9 +269,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                     transformOrigin: 'bottom',
                   },
                 ]}
-              >
-                {animation.prevStationText}
-              </RNAnimated.Text>
+              />
             </View>
           </View>
         </View>
