@@ -5,8 +5,6 @@ import android.app.PictureInPictureParams
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Rational
 
 import com.facebook.react.ReactActivity
@@ -17,7 +15,6 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
-  private val pictureInPictureHandler = Handler(Looper.getMainLooper())
 
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
@@ -74,19 +71,17 @@ class MainActivity : ReactActivity() {
       }
       .build()
 
-    pictureInPictureHandler.postDelayed({
-      try {
-        val result = enterPictureInPictureMode(params)
-        if (result) {
-          PictureInPictureModule.emitPictureInPictureModeChanged(true)
-        } else {
-          PictureInPictureModule.emitPictureInPictureModeChanged(false)
-        }
-      } catch (_: IllegalStateException) {
+    try {
+      val result = enterPictureInPictureMode(params)
+      if (result) {
+        PictureInPictureModule.emitPictureInPictureModeChanged(true)
+      } else {
         PictureInPictureModule.emitPictureInPictureModeChanged(false)
-        // PiP can be rejected by device policy or transient lifecycle state.
       }
-    }, 120)
+    } catch (_: IllegalStateException) {
+      PictureInPictureModule.emitPictureInPictureModeChanged(false)
+      // PiP can be rejected by device policy or transient lifecycle state.
+    }
   }
 
   override fun onPictureInPictureModeChanged(
