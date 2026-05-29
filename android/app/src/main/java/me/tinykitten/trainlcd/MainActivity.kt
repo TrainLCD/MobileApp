@@ -16,6 +16,13 @@ import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
 
+  /**
+   * Initializes the activity and registers Expo splash-screen handling on Android 12+ before delegating to the base implementation.
+   *
+   * On Android S (API level 31) and above, registers the SplashScreenManager for this activity so the Expo splash-screen API can be used, then calls `super.onCreate(null)`.
+   *
+   * @param savedInstanceState The previously saved state of the activity; this value is not forwarded to the superclass (super is called with `null`).
+   */
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
@@ -52,6 +59,16 @@ class MainActivity : ReactActivity() {
           ){})
   }
 
+  /**
+   * Attempts to enter Picture-in-Picture (PiP) when the user leaves the activity.
+   *
+   * If the device API level is at least Android O, the activity is not already in PiP,
+   * and PictureInPictureModule indicates PiP should be entered, this method constructs
+   * PiP parameters (16:9 aspect ratio; seamless resize enabled on Android 12+) and
+   * calls enterPictureInPictureMode. It emits PictureInPictureModule.emitPictureInPictureModeChanged(`true`)
+   * when PiP is entered successfully and emits `false` when entering fails or is rejected
+   * (including when an IllegalStateException occurs). Does nothing otherwise.
+   */
   override fun onUserLeaveHint() {
     super.onUserLeaveHint()
 
@@ -84,6 +101,13 @@ class MainActivity : ReactActivity() {
     }
   }
 
+  /**
+   * Handles activity transitions into or out of picture-in-picture (PiP) mode and notifies
+   * the PictureInPictureModule of the new PiP state.
+   *
+   * @param isInPictureInPictureMode `true` if the activity is now in PiP mode, `false` otherwise.
+   * @param newConfig The new device configuration associated with the mode change.
+   */
   override fun onPictureInPictureModeChanged(
     isInPictureInPictureMode: Boolean,
     newConfig: Configuration
