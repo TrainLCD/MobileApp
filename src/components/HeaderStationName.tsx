@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 const MEASURE_TEXT_WIDTH = 10000;
+const MEASURED_TEXT_WIDTH_BUFFER = 8;
 
 type Props = {
   text: string;
@@ -58,7 +59,9 @@ const HeaderStationName: React.FC<Props> = ({
 }) => {
   const [containerWidth, setContainerWidth] = useState(0);
   const [measuredText, setMeasuredText] = useState({ text: '', width: 0 });
-  const textWidth = measuredText.text === text ? measuredText.width : 0;
+  const measuredTextWidth = measuredText.text === text ? measuredText.width : 0;
+  const renderTextWidth =
+    measuredTextWidth > 0 ? measuredTextWidth + MEASURED_TEXT_WIDTH_BUFFER : 0;
 
   const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
     setContainerWidth(event.nativeEvent.layout.width);
@@ -86,11 +89,11 @@ const HeaderStationName: React.FC<Props> = ({
   );
 
   const widthScale = useMemo(() => {
-    if (containerWidth <= 0 || textWidth <= 0) {
+    if (containerWidth <= 0 || renderTextWidth <= 0) {
       return 1;
     }
-    return Math.min(1, containerWidth / textWidth);
-  }, [containerWidth, textWidth]);
+    return Math.min(1, containerWidth / renderTextWidth);
+  }, [containerWidth, renderTextWidth]);
 
   return (
     <View
@@ -121,7 +124,7 @@ const HeaderStationName: React.FC<Props> = ({
           style={[
             styles.scaledText,
             {
-              width: textWidth || MEASURE_TEXT_WIDTH,
+              width: renderTextWidth || MEASURE_TEXT_WIDTH,
               transform: [{ scaleX: widthScale }],
             },
           ]}
