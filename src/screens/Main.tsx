@@ -26,11 +26,13 @@ import {
   StopCondition,
   type TrainType,
 } from '~/@types/graphql';
+import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureView';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
+  useAndroidPictureInPicture,
   useConsoleTelemetry,
   useCurrentLine,
   useCurrentStation,
@@ -72,6 +74,7 @@ import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import navigationState from '../store/atoms/navigation';
+import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
 import stationState from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
@@ -106,6 +109,7 @@ const MainScreen: React.FC = () => {
 
   const theme = useAtomValue(themeAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
 
   const [{ stations, selectedDirection, arrived }, setStationState] =
     useAtom(stationState);
@@ -244,6 +248,7 @@ const MainScreen: React.FC = () => {
   const resetMainState = useResetMainState();
   useTTS();
   useUpdateLiveActivities();
+  useAndroidPictureInPicture();
 
   const { pause: pauseBottomTimer } = useUpdateBottomState();
 
@@ -651,6 +656,10 @@ const MainScreen: React.FC = () => {
         return <></>;
     }
   }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
+
+  if (pictureInPictureActive) {
+    return <AndroidPictureInPictureView />;
+  }
 
   if (isLEDTheme) {
     return (
