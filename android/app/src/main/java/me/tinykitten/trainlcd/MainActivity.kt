@@ -1,8 +1,13 @@
 package me.tinykitten.trainlcd
 import expo.modules.splashscreen.SplashScreenManager
 
+import android.app.PictureInPictureParams
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Rational
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -12,6 +17,8 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
+  private val pictureInPictureHandler = Handler(Looper.getMainLooper())
+
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
@@ -46,6 +53,48 @@ class MainActivity : ReactActivity() {
               mainComponentName,
               fabricEnabled
           ){})
+  }
+
+  override fun onUserLeaveHint() {
+    super.onUserLeaveHint()
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || isInPictureInPictureMode) {
+      return
+    }
+    if (!PictureInPictureModule.shouldEnterPictureInPicture()) {
+      return
+    }
+
+    val params = PictureInPictureParams.Builder()
+      .setAspectRatio(Rational(16, 9))
+      .apply {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          setSeamlessResizeEnabled(true)
+        }
+      }
+      .build()
+
+    pictureInPictureHandler.postDelayed({
+      try {
+        val result = enterPictureInPictureMode(params)
+        if (result) {
+          PictureInPictureModule.emitPictureInPictureModeChanged(true)
+        } else {
+          PictureInPictureModule.emitPictureInPictureModeChanged(false)
+        }
+      } catch (_: IllegalStateException) {
+        PictureInPictureModule.emitPictureInPictureModeChanged(false)
+        // PiP can be rejected by device policy or transient lifecycle state.
+      }
+    }, 120)
+  }
+
+  override fun onPictureInPictureModeChanged(
+    isInPictureInPictureMode: Boolean,
+    newConfig: Configuration
+  ) {
+    super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+    PictureInPictureModule.emitPictureInPictureModeChanged(isInPictureInPictureMode)
   }
 
   /**

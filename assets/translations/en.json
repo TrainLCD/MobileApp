@@ -306,5 +306,9 @@
   "toeiBusBadge": "Toei Bus",
   "notificationSettings": "Notifications",
   "wrongDirectionNotifyToggle": "Reverse direction alert",
-  "wrongDirectionNotifyDescription": "Get notified when you are traveling in the opposite direction from the one set in the app."
+  "wrongDirectionNotifyDescription": "Get notified when you are traveling in the opposite direction from the one set in the app.",
+  "androidSettings": "For Android",
+  "pictureInPictureTitle": "Picture in Picture",
+  "pictureInPictureDescription": "Show a compact floating window with the next station when you leave the app while riding.",
+  "passingStation": "Passing %{stationName}"
 }
