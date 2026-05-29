@@ -14,6 +14,15 @@ class TrainLCDPackage : ReactPackage {
     reactContext: ReactApplicationContext
   ): MutableList<ViewManager<View, ReactShadowNode<*>>> = mutableListOf()
 
+  /**
+   * Create and return the native modules that this React package exposes to JavaScript.
+   *
+   * Constructs a mutable list of NativeModule instances backed by the provided ReactApplicationContext:
+   * WearableModule, IgnoreBatteryOptimizationsModule, GnssModule, LiveUpdateModule, and PictureInPictureModule.
+   *
+   * @param reactContext The React application context used to construct each native module.
+   * @return A mutable list containing the package's registered NativeModule instances.
+   */
   override fun createNativeModules(
     reactContext: ReactApplicationContext
   ): MutableList<NativeModule> = listOf(
