@@ -68,6 +68,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setSpeech = useSetAtom(speechState);
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
+  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
@@ -622,6 +623,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ]
   );
 
+  const warningPanel =
+    warningInfo?.text && warningInfo?.level ? (
+      <WarningPanel
+        behindContent={pictureInPictureActive}
+        onPress={clearWarningInfo}
+        text={warningInfo.text}
+        warningLevel={warningInfo.level}
+      />
+    ) : null;
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -629,14 +640,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
+          {pictureInPictureActive && warningPanel}
           {children}
-          {warningInfo?.text && warningInfo?.level && (
-            <WarningPanel
-              onPress={clearWarningInfo}
-              text={warningInfo.text}
-              warningLevel={warningInfo.level}
-            />
-          )}
+          {!pictureInPictureActive && warningPanel}
         </View>
       </LongPressGestureHandler>
       <SelectBoundSettingListModal
