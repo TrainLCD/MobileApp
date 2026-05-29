@@ -98,4 +98,30 @@ describe('HeaderStationName', () => {
     expect(scaledWrapperStyle.transformOrigin).toBe('center');
     expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 240 / 360 }]);
   });
+
+  it('does not reuse the previous short station width while measuring a changed station name', () => {
+    const { UNSAFE_getAllByType, rerender } = render(
+      <HeaderStationName text="練馬春日" textStyle={{ fontSize: 50 }} />
+    );
+
+    fireEvent(UNSAFE_getAllByType(View)[0], 'layout', {
+      nativeEvent: { layout: { width: 240 } },
+    });
+    fireEvent(UNSAFE_getAllByType(Text)[0], 'textLayout', {
+      nativeEvent: { lines: [{ width: 200 }] },
+    });
+
+    rerender(
+      <HeaderStationName text="練馬春日町" textStyle={{ fontSize: 50 }} />
+    );
+
+    const textNodes = UNSAFE_getAllByType(Text);
+    const scaledWrapperStyle = StyleSheet.flatten(
+      UNSAFE_getAllByType(View)[2].props.style
+    );
+
+    expect(textNodes[1].props.children).toBe('練馬春日町');
+    expect(scaledWrapperStyle.width).toBe(10000);
+    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 1 }]);
+  });
 });
