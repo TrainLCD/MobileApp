@@ -74,10 +74,14 @@ class MainActivity : ReactActivity() {
       }
       .build()
 
-    PictureInPictureModule.emitPictureInPictureModeChanged(true)
     pictureInPictureHandler.postDelayed({
       try {
-        enterPictureInPictureMode(params)
+        val result = enterPictureInPictureMode(params)
+        if (result) {
+          PictureInPictureModule.emitPictureInPictureModeChanged(true)
+        } else {
+          PictureInPictureModule.emitPictureInPictureModeChanged(false)
+        }
       } catch (_: IllegalStateException) {
         PictureInPictureModule.emitPictureInPictureModeChanged(false)
         // PiP can be rejected by device policy or transient lifecycle state.
