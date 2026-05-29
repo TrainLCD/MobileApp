@@ -20,7 +20,7 @@ class TrainLCDPackage : ReactPackage {
     WearableModule(reactContext),
     IgnoreBatteryOptimizationsModule(reactContext),
     GnssModule(reactContext),
-    LiveUpdateModule(reactContext)
+    LiveUpdateModule(reactContext),
+    PictureInPictureModule(reactContext)
   ).toMutableList()
 }
-

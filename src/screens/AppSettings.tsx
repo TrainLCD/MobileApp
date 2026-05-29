@@ -13,6 +13,7 @@ import React, {
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  Platform,
   Animated as RNAnimated,
   StyleSheet,
   TouchableOpacity,
@@ -42,6 +43,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
+  personalize_android: 'personalize_android',
   about_app_licenses: 'about_app_licenses',
   developer_tuning: 'developer_tuning',
 } as const;
@@ -110,6 +112,8 @@ const SettingsItem = ({
         return 'globe';
       case 'personalize_notifications':
         return 'notifications';
+      case 'personalize_android':
+        return 'phone-portrait';
       case 'about_app_licenses':
         return 'key';
       case 'developer_tuning':
@@ -308,6 +312,16 @@ const AppSettingsScreen: React.FC = () => {
           color: '#FF3B30',
           onPress: () => navigation.navigate('NotificationSettings' as never),
         },
+        ...(Platform.OS === 'android'
+          ? [
+              {
+                id: SETTING_ITEM_ID_MAP.personalize_android,
+                title: translate('androidSettings'),
+                color: '#3A86FF',
+                onPress: () => navigation.navigate('AndroidSettings' as never),
+              },
+            ]
+          : []),
       ].filter((dat) =>
         isClip() ? dat.id !== SETTING_ITEM_ID_MAP.personalize_tts : true
       ) as SettingsSectionData[],
@@ -397,9 +411,17 @@ const AppSettingsScreen: React.FC = () => {
             <SettingsItem
               item={personalizeItems[showTtsItem ? 3 : 2]}
               isFirst={false}
-              isLast={true}
+              isLast={Platform.OS !== 'android'}
               onPress={personalizeItems[showTtsItem ? 3 : 2].onPress}
             />
+            {Platform.OS === 'android' && (
+              <SettingsItem
+                item={personalizeItems[showTtsItem ? 4 : 3]}
+                isFirst={false}
+                isLast={true}
+                onPress={personalizeItems[showTtsItem ? 4 : 3].onPress}
+              />
+            )}
           </View>
 
           {/* アプリについてセクション */}
