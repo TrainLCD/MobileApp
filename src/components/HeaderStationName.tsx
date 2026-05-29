@@ -57,7 +57,8 @@ const HeaderStationName: React.FC<Props> = ({
   TextComponent = Text,
 }) => {
   const [containerWidth, setContainerWidth] = useState(0);
-  const [textWidth, setTextWidth] = useState(0);
+  const [measuredText, setMeasuredText] = useState({ text: '', width: 0 });
+  const textWidth = measuredText.text === text ? measuredText.width : 0;
 
   const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
     setContainerWidth(event.nativeEvent.layout.width);
@@ -69,17 +70,20 @@ const HeaderStationName: React.FC<Props> = ({
         (maxWidth, line) => Math.max(maxWidth, line.width),
         0
       );
-      setTextWidth(measuredWidth);
+      setMeasuredText({ text, width: measuredWidth });
     },
-    []
+    [text]
   );
 
-  const handleTextFallbackLayout = useCallback((event: LayoutChangeEvent) => {
-    const measuredWidth = event.nativeEvent.layout.width;
-    if (measuredWidth < MEASURE_TEXT_WIDTH) {
-      setTextWidth(measuredWidth);
-    }
-  }, []);
+  const handleTextFallbackLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const measuredWidth = event.nativeEvent.layout.width;
+      if (measuredWidth < MEASURE_TEXT_WIDTH) {
+        setMeasuredText({ text, width: measuredWidth });
+      }
+    },
+    [text]
+  );
 
   const widthScale = useMemo(() => {
     if (containerWidth <= 0 || textWidth <= 0) {
@@ -117,7 +121,7 @@ const HeaderStationName: React.FC<Props> = ({
           style={[
             styles.scaledText,
             {
-              width: textWidth || '100%',
+              width: textWidth || MEASURE_TEXT_WIDTH,
               transform: [{ scaleX: widthScale }],
             },
           ]}
