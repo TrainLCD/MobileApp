@@ -38,9 +38,9 @@ describe('HeaderStationName', () => {
       'no-hide-descendants'
     );
     expect(textNodes[1].props.ellipsizeMode).toBe('clip');
-    expect(scaledWrapperStyle.width).toBe(240);
+    expect(scaledWrapperStyle.width).toBe(248);
     expect(scaledWrapperStyle.transformOrigin).toBe('center');
-    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 0.5 }]);
+    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 120 / 248 }]);
     expect(StyleSheet.flatten(textNodes[1].props.style).fontSize).toBe(50);
   });
 
@@ -67,8 +67,8 @@ describe('HeaderStationName', () => {
       UNSAFE_getAllByType(View)[2].props.style
     );
 
-    expect(scaledWrapperStyle.width).toBe(360);
-    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 300 / 360 }]);
+    expect(scaledWrapperStyle.width).toBe(368);
+    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 300 / 368 }]);
   });
 
   it('compresses the full station name without clipping the suffix', () => {
@@ -94,9 +94,9 @@ describe('HeaderStationName', () => {
     expect(textNodes[1].props.children).toBe(
       '北野白梅町・きたのはくばいちょう'
     );
-    expect(scaledWrapperStyle.width).toBe(360);
+    expect(scaledWrapperStyle.width).toBe(368);
     expect(scaledWrapperStyle.transformOrigin).toBe('center');
-    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 240 / 360 }]);
+    expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 240 / 368 }]);
   });
 
   it('does not reuse the previous short station width while measuring a changed station name', () => {
@@ -123,5 +123,18 @@ describe('HeaderStationName', () => {
     expect(textNodes[1].props.children).toBe('練馬春日町');
     expect(scaledWrapperStyle.width).toBe(10000);
     expect(scaledWrapperStyle.transform).toEqual([{ scaleX: 1 }]);
+
+    fireEvent(textNodes[0], 'textLayout', {
+      nativeEvent: { lines: [{ width: 240 }] },
+    });
+
+    const measuredScaledWrapperStyle = StyleSheet.flatten(
+      UNSAFE_getAllByType(View)[2].props.style
+    );
+
+    expect(measuredScaledWrapperStyle.width).toBe(248);
+    expect(measuredScaledWrapperStyle.transform).toEqual([
+      { scaleX: 240 / 248 },
+    ]);
   });
 });
