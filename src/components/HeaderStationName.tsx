@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 
 const MEASURE_TEXT_WIDTH = 10000;
+// 8px covers small native text-measurement underestimates seen with Japanese
+// glyphs and renderer/font quirks. renderTextWidth adds this to measured width;
+// adjust only if station names still clip or start shrinking too aggressively.
 const MEASURED_TEXT_WIDTH_BUFFER = 8;
 
 type Props = {
