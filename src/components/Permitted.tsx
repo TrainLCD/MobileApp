@@ -44,6 +44,7 @@ import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
+import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
 import speechState from '../store/atoms/speech';
 import stationState from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
@@ -66,6 +67,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     useAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setNotify = useSetAtom(notifyState);
+  const setPictureInPicture = useSetAtom(pictureInPictureAtom);
+  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
@@ -405,6 +408,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         bottomTransitionIntervalStr,
         untouchableModeEnabledStr,
         wrongDirectionNotifyEnabledStr,
+        pictureInPictureEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
@@ -419,6 +423,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED),
       ]);
 
       if (themePreferenceKey) {
@@ -523,10 +528,23 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
             wrongDirectionNotifyEnabledStr === 'true',
         }));
       }
+      if (pictureInPictureEnabledStr) {
+        setPictureInPicture((prev) => ({
+          ...prev,
+          enabled: pictureInPictureEnabledStr === 'true',
+        }));
+      }
     };
 
     loadSettings();
-  }, [setNavigation, setSpeech, setTuning, setThemePreference, setNotify]);
+  }, [
+    setNavigation,
+    setSpeech,
+    setTuning,
+    setThemePreference,
+    setNotify,
+    setPictureInPicture,
+  ]);
 
   useEffect(() => {
     const { remove } = addScreenshotListener(() => {
@@ -605,6 +623,16 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ]
   );
 
+  const warningPanel =
+    warningInfo?.text && warningInfo?.level ? (
+      <WarningPanel
+        behindContent={pictureInPictureActive}
+        onPress={clearWarningInfo}
+        text={warningInfo.text}
+        warningLevel={warningInfo.level}
+      />
+    ) : null;
+
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
       <LongPressGestureHandler
@@ -612,14 +640,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
+          {pictureInPictureActive && warningPanel}
           {children}
-          {warningInfo?.text && warningInfo?.level && (
-            <WarningPanel
-              onPress={clearWarningInfo}
-              text={warningInfo.text}
-              warningLevel={warningInfo.level}
-            />
-          )}
+          {!pictureInPictureActive && warningPanel}
         </View>
       </LongPressGestureHandler>
       <SelectBoundSettingListModal

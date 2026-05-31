@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   type TextStyle,
+  useWindowDimensions,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -42,6 +43,24 @@ const AURORA_COLORS = [
   'rgba(56, 189, 248, 0.28)',
   'rgba(217, 70, 239, 0.2)',
 ] as const;
+
+export const getDevOverlayDragTranslation = (
+  dx: number,
+  dy: number,
+  isRotatedToLandscape: boolean
+) => {
+  if (isRotatedToLandscape) {
+    return {
+      x: -dy,
+      y: -dx,
+    };
+  }
+
+  return {
+    x: -dx,
+    y: dy,
+  };
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -361,8 +380,10 @@ const DevOverlay: React.FC = () => {
     .join(' / ');
 
   const dim = useLandscapeWindowDimensions();
+  const physicalDim = useWindowDimensions();
   const [basePosition, setBasePosition] = useState({ x: 0, y: 0 });
   const isLandscape = dim.width > dim.height;
+  const isRotatedToLandscape = physicalDim.height > physicalDim.width;
   const panelWidth = isLandscape
     ? Math.min(Math.max(dim.width * 0.29, 360), 520)
     : Math.min(Math.max(dim.width * 0.34, 280), 430);
@@ -526,11 +547,13 @@ const DevOverlay: React.FC = () => {
             isDraggingRef.current = true;
           }
           if (isDraggingRef.current) {
-            // right基準なのでdxを反転
-            dragTranslation.setValue({
-              x: -gestureState.dx,
-              y: gestureState.dy,
-            });
+            dragTranslation.setValue(
+              getDevOverlayDragTranslation(
+                gestureState.dx,
+                gestureState.dy,
+                isRotatedToLandscape
+              )
+            );
           }
         },
         onPanResponderRelease: () => {
@@ -579,6 +602,7 @@ const DevOverlay: React.FC = () => {
       panelWidth,
       isExpanded,
       resolvedExpandedHeight,
+      isRotatedToLandscape,
     ]
   );
 

@@ -4,6 +4,7 @@ import {
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import AndroidSettings from '~/screens/AndroidSettings';
 import Licenses from '~/screens/Licenses';
 import NotificationSettings from '~/screens/NotificationSettings';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
@@ -104,6 +105,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="NotificationSettings"
           component={NotificationSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="AndroidSettings"
+          component={AndroidSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}

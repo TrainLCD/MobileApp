@@ -6,9 +6,9 @@ import { useLoopLine } from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { calcStationNameMinScale } from '../utils/stationNameScale';
 import Clock from './Clock';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 import Typography from './Typography';
@@ -44,8 +44,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
-    flexWrap: 'wrap',
-    flex: 1,
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
   },
@@ -228,14 +226,11 @@ const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
               transformOrigin="bottom"
             />
           ) : null}
-          <Typography
-            style={styles.stationName}
-            adjustsFontSizeToFit
-            minimumFontScale={calcStationNameMinScale(stationText, 0.5)}
-            numberOfLines={1}
-          >
-            {stationText}
-          </Typography>
+          <HeaderStationName
+            TextComponent={Typography}
+            text={stationText}
+            textStyle={styles.stationName}
+          />
         </View>
       </View>
       <View style={styles.clockContainer}>

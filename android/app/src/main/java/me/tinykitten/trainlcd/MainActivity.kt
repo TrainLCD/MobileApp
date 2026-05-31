@@ -1,8 +1,11 @@
 package me.tinykitten.trainlcd
 import expo.modules.splashscreen.SplashScreenManager
 
+import android.app.PictureInPictureParams
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -12,6 +15,14 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
+
+  /**
+   * Initializes the activity and registers Expo splash-screen handling on Android 12+ before delegating to the base implementation.
+   *
+   * On Android S (API level 31) and above, registers the SplashScreenManager for this activity so the Expo splash-screen API can be used, then calls `super.onCreate(null)`.
+   *
+   * @param savedInstanceState The previously saved state of the activity; this value is not forwarded to the superclass (super is called with `null`).
+   */
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
@@ -46,6 +57,63 @@ class MainActivity : ReactActivity() {
               mainComponentName,
               fabricEnabled
           ){})
+  }
+
+  /**
+   * Attempts to enter Picture-in-Picture (PiP) when the user leaves the activity.
+   *
+   * If the device API level is at least Android O, the activity is not already in PiP,
+   * and PictureInPictureModule indicates PiP should be entered, this method constructs
+   * PiP parameters (16:9 aspect ratio; seamless resize enabled on Android 12+) and
+   * calls enterPictureInPictureMode. It emits PictureInPictureModule.emitPictureInPictureModeChanged(`true`)
+   * when PiP is entered successfully and emits `false` when entering fails or is rejected
+   * (including when an IllegalStateException occurs). Does nothing otherwise.
+   */
+  override fun onUserLeaveHint() {
+    super.onUserLeaveHint()
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || isInPictureInPictureMode) {
+      return
+    }
+    if (!PictureInPictureModule.shouldEnterPictureInPicture()) {
+      return
+    }
+
+    val params = PictureInPictureParams.Builder()
+      .setAspectRatio(Rational(16, 9))
+      .apply {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          setSeamlessResizeEnabled(true)
+        }
+      }
+      .build()
+
+    try {
+      val result = enterPictureInPictureMode(params)
+      if (result) {
+        PictureInPictureModule.emitPictureInPictureModeChanged(true)
+      } else {
+        PictureInPictureModule.emitPictureInPictureModeChanged(false)
+      }
+    } catch (_: IllegalStateException) {
+      PictureInPictureModule.emitPictureInPictureModeChanged(false)
+      // PiP can be rejected by device policy or transient lifecycle state.
+    }
+  }
+
+  /**
+   * Handles activity transitions into or out of picture-in-picture (PiP) mode and notifies
+   * the PictureInPictureModule of the new PiP state.
+   *
+   * @param isInPictureInPictureMode `true` if the activity is now in PiP mode, `false` otherwise.
+   * @param newConfig The new device configuration associated with the mode change.
+   */
+  override fun onPictureInPictureModeChanged(
+    isInPictureInPictureMode: Boolean,
+    newConfig: Configuration
+  ) {
+    super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+    PictureInPictureModule.emitPictureInPictureModeChanged(isInPictureInPictureMode)
   }
 
   /**

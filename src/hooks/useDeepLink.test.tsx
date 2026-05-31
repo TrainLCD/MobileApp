@@ -157,8 +157,31 @@ describe('useDeepLink', () => {
     return { mockFetchByGroup, mockFetchByLine, mockFetchByIds };
   };
 
+  beforeEach(() => {
+    // jest.clearAllMocks (afterEach) clears call history but not
+    // mockReturnValue / mockReturnValueOnce settings — those leak across
+    // tests and cause order-dependent flakes (e.g. an isReady queue from
+    // a previous test resuming on the next render). Reset and re-seed the
+    // module-level mocks here so every test starts from the same baseline.
+    mockGetInitialURL.mockReset().mockResolvedValue(null);
+    mockParse.mockReset();
+    mockAddEventListener.mockReset().mockReturnValue({ remove: jest.fn() });
+    (navigationRef.isReady as jest.Mock).mockReset().mockReturnValue(false);
+    (navigationRef.dispatch as jest.Mock).mockReset();
+    (
+      resolveSidsFromShortId as jest.MockedFunction<
+        typeof resolveSidsFromShortId
+      >
+    ).mockReset();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
+    // Belt-and-suspenders: if a test forgot to call useRealTimers, leaked
+    // fake timers would silently change the behavior of every subsequent
+    // test. Force-restore real timers and drop any pending fake timers.
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   it('初回URLがある場合にstateを設定する', async () => {
@@ -439,13 +462,18 @@ describe('useDeepLink', () => {
   });
 
   it('初回URL処理完了前はinitialUrlProcessedがfalse', () => {
+    // The pending Promise from getInitialURL never resolves, so the
+    // initialUrlProcessed effect stays awaiting forever. Unmounting at the
+    // end releases React's hold on the resolver, otherwise the dangling
+    // microtask lingers past the test and contributes to Jest's
+    // "did not exit one second after" warning.
     mockGetInitialURL.mockReturnValue(new Promise(() => {}));
 
     setupAtoms();
     setupQueries();
 
     const hookRef: { current: HookResult } = { current: null };
-    render(
+    const { unmount } = render(
       <HookBridge
         onReady={(value) => {
           hookRef.current = value;
@@ -454,6 +482,7 @@ describe('useDeepLink', () => {
     );
 
     expect(hookRef.current?.initialUrlProcessed).toBe(false);
+    unmount();
   });
 
   it('初回URL処理完了後にinitialUrlProcessedがtrue', async () => {
@@ -640,21 +669,16 @@ describe('useDeepLink', () => {
       />
     );
 
-    // Flush the async chain: getInitialURL → handleUrl → openLink → fetchByLine → navigateToMain → waitForNavReady
+    // advanceTimersByTimeAsync interleaves timer firing with microtask
+    // flushing, so the whole chain (getInitialURL → handleUrl → openLink →
+    // fetchByLine → navigateToMain → waitForNavReady retry loop → warn)
+    // progresses deterministically. The manual `for` + `Promise.resolve()`
+    // pattern relied on a fixed number of microtask drains that could fall
+    // short under load and leave `warnSpy` un-invoked.
+    // Retry delays: 100 + 200 + 400 + 800 = 1500ms — 2000ms covers the
+    // whole sequence plus the final reject microtask.
     await act(async () => {
-      for (let i = 0; i < 10; i++) {
-        await Promise.resolve();
-      }
-    });
-
-    // Advance past all retry delays (100 + 200 + 400 + 800 = 1500ms)
-    await act(async () => {
-      jest.advanceTimersByTime(1500);
-    });
-
-    // Flush the promise resolution after retries exhaust
-    await act(async () => {
-      await Promise.resolve();
+      await jest.advanceTimersByTimeAsync(2000);
     });
 
     expect(mockDispatch).not.toHaveBeenCalled();
@@ -663,7 +687,6 @@ describe('useDeepLink', () => {
     );
 
     warnSpy.mockRestore();
-    jest.useRealTimers();
   });
 
   it('sidsが指定された場合はstations(ids)で取得し順序を保つ', async () => {
@@ -1297,10 +1320,6 @@ describe('useDeepLink', () => {
       typeof resolveSidsFromShortId
     >;
 
-    afterEach(() => {
-      mockResolveSids.mockReset();
-    });
-
     it('idが指定された場合はresolverからsidsを取得しstations(ids)で解決する', async () => {
       const stationA = createStation(1131211, {
         line: { id: 11302 },
@@ -1844,10 +1863,6 @@ describe('useDeepLink', () => {
       typeof resolveSidsFromShortId
     >;
 
-    afterEach(() => {
-      mockResolveSids.mockReset();
-    });
-
     const buildTwoStations = () => [
       createStation(1131211, {
         line: { id: 11302 },
@@ -2176,6 +2191,11 @@ describe('useDeepLink', () => {
   });
 
   it('ナビゲーターがリトライ中に準備完了した場合はナビゲートする', async () => {
+    // The previous version used real timers and waited up to 5s for the
+    // 100ms retry to fire — under CI load that real-time wait was the
+    // primary flake. Fake timers make the retry deterministic.
+    jest.useFakeTimers();
+
     const mockDispatch = navigationRef.dispatch as jest.Mock;
     const mockIsReady = navigationRef.isReady as jest.Mock;
     // First two calls return false (navigateToMain check + waitForNavReady first check),
@@ -2218,17 +2238,17 @@ describe('useDeepLink', () => {
       />
     );
 
-    // Wait for the retry to succeed and dispatch to be called (~100ms for first retry)
-    await waitFor(
-      () => {
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'NAVIGATE',
-            payload: { name: 'MainStack', params: { screen: 'Main' } },
-          })
-        );
-      },
-      { timeout: 5000 }
+    // First retry fires at 100ms. 200ms gives a comfortable margin for the
+    // async chain + microtasks that follow the timer callback.
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(200);
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'NAVIGATE',
+        payload: { name: 'MainStack', params: { screen: 'Main' } },
+      })
     );
   });
 });

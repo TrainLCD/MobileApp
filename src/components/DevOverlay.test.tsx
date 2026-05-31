@@ -8,7 +8,7 @@ import {
   locationAtom,
 } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import DevOverlay from './DevOverlay';
+import DevOverlay, { getDevOverlayDragTranslation } from './DevOverlay';
 
 jest.mock('jotai', () => {
   const actual = jest.requireActual('jotai');
@@ -172,6 +172,22 @@ describe('DevOverlay', () => {
 
       const { getByTestId } = render(<DevOverlay />);
       expect(getByTestId('dev-overlay-landscape')).toBeTruthy();
+    });
+  });
+
+  describe('D&D座標変換', () => {
+    it('物理横向きではドラッグ量をright/top基準の移動量に変換する', () => {
+      expect(getDevOverlayDragTranslation(24, 10, false)).toEqual({
+        x: -24,
+        y: 10,
+      });
+    });
+
+    it('物理縦向きで90度回転表示している場合はドラッグ量をローカル座標へ変換する', () => {
+      expect(getDevOverlayDragTranslation(24, 10, true)).toEqual({
+        x: -10,
+        y: -24,
+      });
     });
   });
 
