@@ -43,7 +43,7 @@ const options: NativeStackNavigationOptions = {
   },
 };
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   useEffect(() => {
     type TextProps = {
       defaultProps: {
@@ -72,61 +72,63 @@ const App: React.FC = () => {
   }, [fontsLoadError, fontsLoaded]);
 
   return (
-    <StrictMode>
+    <>
       {Platform.OS === 'ios' ? (
         <StatusBar hidden translucent backgroundColor="transparent" />
       ) : (
         <SystemBars hidden style="auto" />
       )}
 
-      <CustomErrorBoundary>
-        <GestureHandlerRootView>
-          <ApolloProvider client={gqlClient}>
-            <ActionSheetProvider>
-              <Provider store={store}>
-                <NavigationContainer ref={navigationRef}>
-                  <DeepLinkProvider>
-                    <QuickActionsProvider>
-                      <PortalProvider>
-                        <Stack.Navigator screenOptions={screenOptions}>
-                          {!permStatus?.granted ? (
-                            <Stack.Screen
-                              options={options}
-                              name="Privacy"
-                              component={PrivacyScreen}
-                            />
-                          ) : null}
+      <Stack.Navigator screenOptions={screenOptions}>
+        {!permStatus?.granted ? (
+          <Stack.Screen
+            options={options}
+            name="Privacy"
+            component={PrivacyScreen}
+          />
+        ) : null}
 
-                          <Stack.Screen
-                            options={options}
-                            name="MainStack"
-                            component={MainStack}
-                          />
+        <Stack.Screen
+          options={options}
+          name="MainStack"
+          component={MainStack}
+        />
 
-                          <Stack.Screen
-                            options={options}
-                            name="TuningSettings"
-                            component={TuningSettings}
-                          />
-                        </Stack.Navigator>
-                      </PortalProvider>
-                    </QuickActionsProvider>
-                    <GlobalToast />
-                  </DeepLinkProvider>
-                </NavigationContainer>
-              </Provider>
-            </ActionSheetProvider>
-          </ApolloProvider>
-        </GestureHandlerRootView>
-      </CustomErrorBoundary>
-    </StrictMode>
+        <Stack.Screen
+          options={options}
+          name="TuningSettings"
+          component={TuningSettings}
+        />
+      </Stack.Navigator>
+    </>
   );
 };
 
-const AppWithStrictMode: React.FC = () => (
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+const App: React.FC = () => {
+  return (
+    <CustomErrorBoundary>
+      <GestureHandlerRootView>
+        <ApolloProvider client={gqlClient}>
+          <ActionSheetProvider>
+            <Provider store={store}>
+              <NavigationContainer ref={navigationRef}>
+                <DeepLinkProvider>
+                  <QuickActionsProvider>
+                    <PortalProvider>
+                      <StrictMode>
+                        <AppContent />
+                      </StrictMode>
+                    </PortalProvider>
+                  </QuickActionsProvider>
+                  <GlobalToast />
+                </DeepLinkProvider>
+              </NavigationContainer>
+            </Provider>
+          </ActionSheetProvider>
+        </ApolloProvider>
+      </GestureHandlerRootView>
+    </CustomErrorBoundary>
+  );
+};
 
-export default React.memo(AppWithStrictMode);
+export default React.memo(App);
