@@ -1,16 +1,18 @@
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import { Alert, Linking, Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import VersionCheck from 'react-native-version-check';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from '~/constants';
 import navigationState from '~/store/atoms/navigation';
 import { translate } from '../translation';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 
 export const useCheckStoreVersion = (): void => {
   const setNavigationState = useSetAtom(navigationState);
 
   const showUpdateRequestDialog = useCallback((storeURL: string) => {
-    Alert.alert(
+    showAlertWhilePresenting(
+      'storeVersionUpdateRequest',
       translate('announcementTitle'),
       translate('newVersionAvailableText'),
       [

@@ -12,7 +12,7 @@ import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
 import React, { StrictMode, useEffect } from 'react';
-import { Alert, Platform, StatusBar, Text } from 'react-native';
+import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
@@ -26,6 +26,7 @@ import MainStack from './stacks/MainStack';
 import { navigationRef } from './stacks/rootNavigation';
 import { store } from './store';
 import { setI18nConfig } from './translation';
+import { showAlertWhilePresenting } from './utils/alertPresentation';
 
 SplashScreen.preventAutoHideAsync();
 setI18nConfig();
@@ -65,7 +66,11 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (fontsLoaded || fontsLoadError) {
       if (fontsLoadError) {
-        Alert.alert('Font Load Error', 'Failed to load fonts.');
+        showAlertWhilePresenting(
+          'fontLoadError',
+          'Font Load Error',
+          'Failed to load fonts.'
+        );
       }
       SplashScreen.hideAsync();
     }

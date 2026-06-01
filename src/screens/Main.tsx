@@ -77,6 +77,7 @@ import TypeChangeNotify from '../components/TypeChangeNotify';
 import navigationState from '../store/atoms/navigation';
 import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
 import stationState from '../store/atoms/station';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
 
@@ -287,7 +288,8 @@ const MainScreen: React.FC = () => {
         );
 
         if (subwayAlertDismissed !== 'true') {
-          Alert.alert(
+          showAlertWhilePresenting(
+            ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
             translate('subwayAlertTitle'),
             translate('subwayAlertText'),
             [
@@ -326,19 +328,24 @@ const MainScreen: React.FC = () => {
         isHoliday &&
         holidayNoticeDismissed !== 'true'
       ) {
-        Alert.alert(translate('notice'), translate('holidayNotice'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+          translate('notice'),
+          translate('holidayNotice'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+                  'true'
+                );
+              },
             },
-          },
-          { text: 'OK' },
-        ]);
+            { text: 'OK' },
+          ]
+        );
       }
 
       // 平日通過
@@ -353,19 +360,24 @@ const MainScreen: React.FC = () => {
         !isHoliday &&
         weekdayNoticeDismissed !== 'true'
       ) {
-        Alert.alert(translate('notice'), translate('weekdayNotice'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+          translate('notice'),
+          translate('weekdayNotice'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+                  'true'
+                );
+              },
             },
-          },
-          { text: 'OK' },
-        ]);
+            { text: 'OK' },
+          ]
+        );
       }
 
       // 一部通過
@@ -378,19 +390,24 @@ const MainScreen: React.FC = () => {
         ) !== -1 &&
         partiallyPassNoticeDismissed !== 'true'
       ) {
-        Alert.alert(translate('notice'), translate('partiallyPassNotice'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+          translate('notice'),
+          translate('partiallyPassNotice'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+                  'true'
+                );
+              },
             },
-          },
-          { text: 'OK' },
-        ]);
+            { text: 'OK' },
+          ]
+        );
       }
     };
     alertAsync();
@@ -462,7 +479,8 @@ const MainScreen: React.FC = () => {
 
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
-        Alert.alert(
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
           translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
@@ -505,7 +523,8 @@ const MainScreen: React.FC = () => {
           ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
-          Alert.alert(
+          showAlertWhilePresenting(
+            ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
             translate('announcementTitle'),
             translate('dozeAlertText'),
             [

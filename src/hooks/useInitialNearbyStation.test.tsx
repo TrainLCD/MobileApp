@@ -157,7 +157,8 @@ describe('useInitialNearbyStation', () => {
     expect(Alert.alert).toHaveBeenCalledWith(
       'notice',
       'firstAlertText',
-      expect.any(Array)
+      expect.any(Array),
+      expect.objectContaining({ onDismiss: expect.any(Function) })
     );
   });
 });
