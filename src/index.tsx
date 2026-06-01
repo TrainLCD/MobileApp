@@ -123,4 +123,10 @@ const App: React.FC = () => {
   );
 };
 
-export default React.memo(App);
+const AppWithStrictMode: React.FC = () => (
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+export default React.memo(AppWithStrictMode);
