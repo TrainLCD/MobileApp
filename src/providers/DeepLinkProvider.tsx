@@ -1,7 +1,7 @@
 import { memo, type ReactNode, useEffect } from 'react';
-import { Alert } from 'react-native';
 import { useDeepLink } from '../hooks/useDeepLink';
 import { translate } from '../translation';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 
 type Props = {
   children: ReactNode;
@@ -12,7 +12,11 @@ const DeepLinkProvider = ({ children }: Props) => {
   useEffect(() => {
     if (error) {
       console.error(error);
-      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
+      showAlertWhilePresenting(
+        'deepLinkFetchStationError',
+        translate('errorTitle'),
+        translate('failedToFetchStation')
+      );
     }
   }, [error]);
   if (!initialUrlProcessed || (isLoading && !error)) {

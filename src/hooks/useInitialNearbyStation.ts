@@ -2,13 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Alert } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
 import { locationAtom, setLocation } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { translate } from '../translation';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
 import { useFetchNearbyStation } from './useFetchNearbyStation';
 
@@ -128,17 +128,22 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
         ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
       );
       if (firstLaunchPassed === null) {
-        Alert.alert(translate('notice'), translate('firstAlertText'), [
-          {
-            text: 'OK',
-            onPress: (): void => {
-              AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+          translate('notice'),
+          translate('firstAlertText'),
+          [
+            {
+              text: 'OK',
+              onPress: (): void => {
+                AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+                  'true'
+                );
+              },
             },
-          },
-        ]);
+          ]
+        );
       }
     };
     checkFirstLaunch();
@@ -148,7 +153,11 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
   useEffect(() => {
     if (nearbyStationFetchError) {
       console.error(nearbyStationFetchError);
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+      showAlertWhilePresenting(
+        'initialNearbyStationFetchError',
+        translate('errorTitle'),
+        translate('apiErrorText')
+      );
     }
   }, [nearbyStationFetchError]);
 
