@@ -73,4 +73,7 @@ export default ({ config }: ConfigContext) => ({
     versionCode: 100000443,
   },
   owner: 'trainlcd',
+  experiments: {
+    reactCompiler: true,
+  },
 });
