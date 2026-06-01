@@ -1,5 +1,6 @@
 import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, {
@@ -179,6 +180,7 @@ const MainScreen: React.FC = () => {
 
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
+  const navigation = useNavigation();
 
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);
@@ -443,12 +445,9 @@ const MainScreen: React.FC = () => {
     transferLines.length,
   ]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
   useEffect(() => {
-    return () => {
-      resetMainState();
-    };
-  }, []);
+    return navigation.addListener('beforeRemove', resetMainState);
+  }, [navigation, resetMainState]);
 
   useEffect(() => {
     const f = async (): Promise<void> => {
