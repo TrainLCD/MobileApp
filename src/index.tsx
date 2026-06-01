@@ -11,7 +11,7 @@ import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { useEffect } from 'react';
+import React, { StrictMode, useEffect } from 'react';
 import { Alert, Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -72,7 +72,7 @@ const App: React.FC = () => {
   }, [fontsLoadError, fontsLoaded]);
 
   return (
-    <>
+    <StrictMode>
       {Platform.OS === 'ios' ? (
         <StatusBar hidden translucent backgroundColor="transparent" />
       ) : (
@@ -119,7 +119,7 @@ const App: React.FC = () => {
           </ApolloProvider>
         </GestureHandlerRootView>
       </CustomErrorBoundary>
-    </>
+    </StrictMode>
   );
 };
 
