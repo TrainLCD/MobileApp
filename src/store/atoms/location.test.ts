@@ -4,8 +4,10 @@ import { store } from '..';
 import {
   accuracyHistoryAtom,
   locationAtom,
+  rawLocationAtom,
   resetLocationState,
   setLocation,
+  setRawLocation,
 } from './location';
 import stationState from './station';
 
@@ -46,6 +48,27 @@ describe('setLocation', () => {
   beforeEach(() => {
     resetLocationState();
     setStationLineType(null);
+  });
+
+  describe('生の測位値の記録', () => {
+    it('setRawLocationはlocationAtomを更新せずrawLocationAtomへ生の値を記録する', () => {
+      const loc = makeLocation(35.0, 139.0, 5000, 1000);
+      setRawLocation(loc);
+
+      // フィルタで棄却される想定の値でもrawLocationAtomには記録される
+      expect(store.get(rawLocationAtom)?.coords.accuracy).toBe(5000);
+      // locationAtomは更新しない（フィルタ後の値はsetLocation側が管理する）
+      expect(store.get(locationAtom)).toBeNull();
+    });
+
+    it('setLocationはrawLocationAtomを更新しない（background経路のみが記録責務を持つ）', () => {
+      const loc = makeLocation(35.0, 139.0, 30, 1000);
+      setLocation(loc);
+
+      // watchPositionAsync経路ではlocationAtomが生の精度を持つため、rawLocationは触らない
+      expect(store.get(rawLocationAtom)).toBeNull();
+      expect(store.get(locationAtom)?.coords.accuracy).toBe(30);
+    });
   });
 
   describe('非地下鉄路線', () => {
