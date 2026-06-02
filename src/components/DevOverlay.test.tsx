@@ -1,11 +1,13 @@
 import { act, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
-import { Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import type { Station } from '~/@types/graphql';
+import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
+  rawLocationAtom,
 } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import DevOverlay, { getDevOverlayDragTranslation } from './DevOverlay';
@@ -80,14 +82,22 @@ describe('DevOverlay', () => {
         accuracy: 15,
       },
     },
+    rawLocation,
     backgroundLocationTracking = false,
   }: {
     location?: unknown;
+    rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
   } = {}) => {
+    // 精度はrawLocationAtomから読むため、未指定時はlocationと同じ値にフォールバックさせる
+    const resolvedRawLocation =
+      rawLocation === undefined ? location : rawLocation;
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
         return location as never;
+      }
+      if (atom === rawLocationAtom) {
+        return resolvedRawLocation as never;
       }
       if (atom === backgroundLocationTrackingAtom) {
         return backgroundLocationTracking as never;
@@ -212,6 +222,71 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent(
         '15m'
       );
+    });
+
+    it('生の精度がMAX_PERMIT_ACCURACYを超える場合は赤字で表示する', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY + 100 },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).toBe('#f87171');
+    });
+
+    it('生の精度がMAX_PERMIT_ACCURACY以下の場合は赤字にしない', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).not.toBe('#f87171');
+    });
+
+    it('継続測位の生の値（rawLocation）が無い場合は精度を表示しない', () => {
+      // 継続測位（watch/background）はhandleTrackingLocation経由でrawLocationを記録する。
+      // ワンショット取得や手動選択のみでrawLocationが無い状態では精度を出さない。
+      setupAtomValues({
+        location: {
+          coords: { speed: 10, accuracy: 42 },
+        },
+        rawLocation: null,
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('--');
+    });
+
+    it('startLocationUpdatesAsync経路でlocationAtomがフィルタ後の値でも生の精度を表示する', () => {
+      // バックグラウンドタスクはMAX_PERMIT_ACCURACY超過を棄却するため、
+      // locationAtomには直近のフィルタ通過値が残り、rawLocationAtomに生の値が入る
+      setupAtomValues({
+        location: {
+          coords: { speed: 10, accuracy: 15 },
+        },
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY + 500 },
+        },
+        backgroundLocationTracking: true,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueNode = getByTestId('dev-overlay-accuracy-value');
+      // フィルタ後の15mではなく生の精度を表示し、赤字で警告する
+      expect(valueNode).toHaveTextContent(`${MAX_PERMIT_ACCURACY + 500}m`);
+      expect(StyleSheet.flatten(valueNode.props.style).color).toBe('#f87171');
     });
 
     it('速度情報をkm/hで表示する', () => {

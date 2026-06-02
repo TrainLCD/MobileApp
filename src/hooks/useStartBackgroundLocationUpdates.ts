@@ -2,11 +2,9 @@ import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { store } from '~/store';
-import {
-  backgroundLocationTrackingAtom,
-  setLocation,
-} from '~/store/atoms/location';
+import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
+import { handleTrackingLocation } from '~/utils/handleTrackingLocation';
 import {
   LOCATION_START_MAX_RETRIES,
   LOCATION_START_RETRY_BASE_DELAY_MS,
@@ -99,7 +97,7 @@ export const useStartBackgroundLocationUpdates = () => {
               try {
                 const sub = await Location.watchPositionAsync(
                   LOCATION_WATCH_OPTIONS,
-                  setLocation
+                  handleTrackingLocation
                 );
                 if (cancelled) {
                   sub.remove();
@@ -158,7 +156,7 @@ export const useStartBackgroundLocationUpdates = () => {
       try {
         const sub = await Location.watchPositionAsync(
           LOCATION_WATCH_OPTIONS,
-          setLocation
+          handleTrackingLocation
         );
         if (cancelled) {
           sub.remove();

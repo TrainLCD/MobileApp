@@ -3,8 +3,8 @@ import { registerRootComponent } from 'expo';
 import * as TaskManager from 'expo-task-manager';
 import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
-import { LOCATION_TASK_NAME, MAX_PERMIT_ACCURACY } from './src/constants';
-import { setLocation } from './src/store/atoms/location';
+import { LOCATION_TASK_NAME } from './src/constants';
+import { handleTrackingLocation } from './src/utils/handleTrackingLocation';
 
 Sentry.init({
   dsn: SENTRY_DSN,
@@ -21,10 +21,7 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
 
     const latestLocation = data.locations[data.locations.length - 1];
     if (latestLocation) {
-      if (latestLocation.coords.accuracy > MAX_PERMIT_ACCURACY) {
-        return;
-      }
-      setLocation(latestLocation);
+      handleTrackingLocation(latestLocation);
     }
   });
 }

@@ -23,7 +23,9 @@ jest.mock('~/store', () => ({
 }));
 jest.mock('~/store/atoms/location', () => ({
   backgroundLocationTrackingAtom: {},
-  setLocation: jest.fn(),
+}));
+jest.mock('~/utils/handleTrackingLocation', () => ({
+  handleTrackingLocation: jest.fn(),
 }));
 jest.mock('~/store/atoms/navigation', () => ({
   __esModule: true,
