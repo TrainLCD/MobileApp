@@ -76,28 +76,32 @@ describe('DevOverlay', () => {
   const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
 
   const setupAtomValues = ({
+    // locationAtomはフィルタ・スムージング後の値で、速度や次駅距離の表示元
     location = {
       coords: {
         speed: 10,
         accuracy: 15,
       },
     },
-    rawLocation,
+    // rawLocationAtomは継続測位の生の値で、精度表示はlocationAtomではなくここから読む。
+    // 既定は精度15mの測位が継続取得できている状態を表す（locationAtomとは独立した別物）。
+    rawLocation = {
+      coords: {
+        accuracy: 15,
+      },
+    },
     backgroundLocationTracking = false,
   }: {
     location?: unknown;
     rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
   } = {}) => {
-    // 精度はrawLocationAtomから読むため、未指定時はlocationと同じ値にフォールバックさせる
-    const resolvedRawLocation =
-      rawLocation === undefined ? location : rawLocation;
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
         return location as never;
       }
       if (atom === rawLocationAtom) {
-        return resolvedRawLocation as never;
+        return rawLocation as never;
       }
       if (atom === backgroundLocationTrackingAtom) {
         return backgroundLocationTracking as never;
@@ -212,8 +216,8 @@ describe('DevOverlay', () => {
 
     it('精度情報の小数点を切り捨てて表示する', () => {
       setupAtomValues({
-        location: {
-          coords: { speed: 10, accuracy: 15.9 },
+        rawLocation: {
+          coords: { accuracy: 15.9 },
         },
         backgroundLocationTracking: false,
       });
@@ -339,6 +343,7 @@ describe('DevOverlay', () => {
     it('位置情報が取得できない状態で精度チャートが空のまま維持される', () => {
       setupAtomValues({
         location: null,
+        rawLocation: null,
         backgroundLocationTracking: false,
       });
       jest.useFakeTimers();
@@ -395,8 +400,8 @@ describe('DevOverlay', () => {
 
     it('精度がnullの場合に空文字を表示する', () => {
       setupAtomValues({
-        location: {
-          coords: { speed: 10, accuracy: null },
+        rawLocation: {
+          coords: { accuracy: null },
         },
         backgroundLocationTracking: false,
       });
