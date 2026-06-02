@@ -43,6 +43,11 @@ const isAccuracyStable = (history: number[]): boolean => {
 };
 
 export const locationAtom = atom<Location.LocationObject | null>(null);
+// MAX_PERMIT_ACCURACYフィルタで棄却される測位も含めた、継続測位の生の値。
+// handleTrackingLocation経由でwatch/background双方が更新し、DevOverlayの診断表示で
+// 「フィルタで棄却された精度」も確認できるようにする。
+// DevOverlayはisDevApp時しか描画されないので、更新もそのとき（isDevApp）だけ行えば十分。
+export const rawLocationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
 export const backgroundLocationTrackingAtom = atom(false);
 
@@ -53,8 +58,17 @@ const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
   store.set(locationAtom, null);
+  store.set(rawLocationAtom, null);
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
+};
+
+// MAX_PERMIT_ACCURACYフィルタで棄却される測位も含め、生の測位値を記録する。
+// startLocationUpdatesAsync経路ではフィルタがsetLocation到達前に値を捨てるため、
+// フィルタ前に本関数を呼ぶことで生の精度をDevOverlayから観測できるようにする。
+// 呼び出し側でisDevApp判定を行い、本番ビルドでは更新しないこと。
+export const setRawLocation = (location: Location.LocationObject) => {
+  store.set(rawLocationAtom, location);
 };
 
 export const setLocation = (location: Location.LocationObject) => {

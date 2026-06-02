@@ -14,6 +14,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import {
   useDistanceToNextStation,
   useLandscapeWindowDimensions,
@@ -23,6 +24,7 @@ import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
+  rawLocationAtom,
 } from '~/store/atoms/location';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
 import Typography from './Typography';
@@ -39,6 +41,7 @@ const PANEL_BORDER = 'rgba(255,255,255,0.18)';
 const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
 const LABEL_COLOR = 'rgba(199, 210, 254, 0.72)';
 const VALUE_COLOR = '#f8fafc';
+const DANGER_COLOR = '#f87171';
 const AURORA_COLORS = [
   'rgba(56, 189, 248, 0.28)',
   'rgba(217, 70, 239, 0.2)',
@@ -190,6 +193,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 22,
   },
+  metricValueDanger: {
+    color: DANGER_COLOR,
+  },
   metricSuffix: {
     color: 'rgba(191, 219, 254, 0.78)',
     fontSize: 11,
@@ -256,6 +262,7 @@ type MetricCardProps = {
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
   valueStyle?: StyleProp<TextStyle>;
+  suffixStyle?: StyleProp<TextStyle>;
   metaStyle?: StyleProp<TextStyle>;
 };
 
@@ -294,6 +301,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   style,
   labelStyle,
   valueStyle,
+  suffixStyle,
   metaStyle,
 }) => (
   <View style={[styles.metricCard, style]}>
@@ -302,7 +310,9 @@ const MetricCard: React.FC<MetricCardProps> = ({
       <Typography style={[styles.metricValue, valueStyle]} testID={valueTestID}>
         {value}
         {suffix && value !== '--' ? (
-          <Typography style={styles.metricSuffix}>{suffix}</Typography>
+          <Typography style={[styles.metricSuffix, suffixStyle]}>
+            {suffix}
+          </Typography>
         ) : null}
       </Typography>
     </View>
@@ -318,8 +328,12 @@ const DevOverlay: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
   const location = useAtomValue(locationAtom);
+  // 精度はMAX_PERMIT_ACCURACYフィルタを通らない生の測位値から取得する。
+  // 継続測位（watch/background両経路）はhandleTrackingLocation経由でフィルタ前に
+  // rawLocationAtomへ生の値を記録するため、棄却された精度もここから観測できる。
+  const rawLocation = useAtomValue(rawLocationAtom);
   const speed = location?.coords?.speed;
-  const accuracy = location?.coords?.accuracy;
+  const accuracy = rawLocation?.coords?.accuracy;
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
@@ -330,6 +344,9 @@ const DevOverlay: React.FC = () => {
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
   const accuracyMeters =
     accuracy != null ? Math.max(0, Math.floor(accuracy)) : null;
+  // MAX_PERMIT_ACCURACYのフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する
+  const isAccuracyOverLimit =
+    accuracy != null && accuracy > MAX_PERMIT_ACCURACY;
 
   const speedKMH = useMemo(
     () =>
@@ -741,7 +758,13 @@ const DevOverlay: React.FC = () => {
                     style={[{ width: leftMetricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-accuracy-value"
                     labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
+                    valueStyle={[
+                      metricValueStyle,
+                      isAccuracyOverLimit && styles.metricValueDanger,
+                    ]}
+                    suffixStyle={
+                      isAccuracyOverLimit ? styles.metricValueDanger : null
+                    }
                     metaStyle={metricMetaStyle}
                   />
                   <MetricCard
@@ -795,7 +818,13 @@ const DevOverlay: React.FC = () => {
                     style={[{ width: metricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-accuracy-value"
                     labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
+                    valueStyle={[
+                      metricValueStyle,
+                      isAccuracyOverLimit && styles.metricValueDanger,
+                    ]}
+                    suffixStyle={
+                      isAccuracyOverLimit ? styles.metricValueDanger : null
+                    }
                     metaStyle={metricMetaStyle}
                   />
                   <MetricCard
