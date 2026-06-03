@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
     textAlign: 'right',
-    lineHeight: Platform.select({ android: RFValue(21) }),
+    lineHeight: Platform.select({ android: RFValue(28) }),
   },
   stationArea: {
     width: '60%',
