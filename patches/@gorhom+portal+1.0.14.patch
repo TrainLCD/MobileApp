@@ -1,0 +1,53 @@
+diff --git a/node_modules/@gorhom/portal/lib/commonjs/components/portal/Portal.js b/node_modules/@gorhom/portal/lib/commonjs/components/portal/Portal.js
+index 5a4872e..5bc32b0 100644
+--- a/node_modules/@gorhom/portal/lib/commonjs/components/portal/Portal.js
++++ b/node_modules/@gorhom/portal/lib/commonjs/components/portal/Portal.js
+@@ -70,11 +70,7 @@ const PortalComponent = ({
+     return () => {
+       var _handleOnUnmountRef$c;
+ 
+-      (_handleOnUnmountRef$c = handleOnUnmountRef.current) === null || _handleOnUnmountRef$c === void 0 ? void 0 : _handleOnUnmountRef$c.call(handleOnUnmountRef); // remove callbacks refs
+-
+-      handleOnMountRef.current = undefined;
+-      handleOnUnmountRef.current = undefined;
+-      handleOnUpdateRef.current = undefined;
++      (_handleOnUnmountRef$c = handleOnUnmountRef.current) === null || _handleOnUnmountRef$c === void 0 ? void 0 : _handleOnUnmountRef$c.call(handleOnUnmountRef); // NOTE: StrictMode の mount→unmount→remount に耐えるため ref はクリアしない
+     };
+   }, []);
+   (0, _react.useEffect)(() => {
+diff --git a/node_modules/@gorhom/portal/lib/module/components/portal/Portal.js b/node_modules/@gorhom/portal/lib/module/components/portal/Portal.js
+index 2e4c868..d2f3978 100644
+--- a/node_modules/@gorhom/portal/lib/module/components/portal/Portal.js
++++ b/node_modules/@gorhom/portal/lib/module/components/portal/Portal.js
+@@ -61,11 +61,7 @@ const PortalComponent = ({
+     return () => {
+       var _handleOnUnmountRef$c;
+ 
+-      (_handleOnUnmountRef$c = handleOnUnmountRef.current) === null || _handleOnUnmountRef$c === void 0 ? void 0 : _handleOnUnmountRef$c.call(handleOnUnmountRef); // remove callbacks refs
+-
+-      handleOnMountRef.current = undefined;
+-      handleOnUnmountRef.current = undefined;
+-      handleOnUpdateRef.current = undefined;
++      (_handleOnUnmountRef$c = handleOnUnmountRef.current) === null || _handleOnUnmountRef$c === void 0 ? void 0 : _handleOnUnmountRef$c.call(handleOnUnmountRef); // NOTE: StrictMode の mount→unmount→remount に耐えるため ref はクリアしない
+     };
+   }, []);
+   useEffect(() => {
+diff --git a/node_modules/@gorhom/portal/src/components/portal/Portal.tsx b/node_modules/@gorhom/portal/src/components/portal/Portal.tsx
+index d03811a..85d0958 100644
+--- a/node_modules/@gorhom/portal/src/components/portal/Portal.tsx
++++ b/node_modules/@gorhom/portal/src/components/portal/Portal.tsx
+@@ -63,10 +63,10 @@ const PortalComponent = ({
+     return () => {
+       handleOnUnmountRef.current?.();
+ 
+-      // remove callbacks refs
+-      handleOnMountRef.current = undefined;
+-      handleOnUnmountRef.current = undefined;
+-      handleOnUpdateRef.current = undefined;
++      // NOTE: StrictMode (React 19) は初回マウントを mount→unmount→remount で
++      // シミュレートする。ここで ref を undefined に潰すと remount 時の
++      // handleOnMountRef.current?.() が no-op になり、Portal がホストへ再登録されず
++      // モーダルが表示されなくなる。再マウントに耐えるため ref はクリアしない。
+     };
+   }, []);
+   useEffect(() => {
